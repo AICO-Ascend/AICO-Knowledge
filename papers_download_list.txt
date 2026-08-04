@@ -46,3 +46,5 @@ efficient-llm-training-gpu-clusters-megatron | https://arxiv.org/abs/2104.04473 
 megatron-lm-multi-billion-model-parallelism | https://arxiv.org/abs/1909.08053 | https://arxiv.org/pdf/1909.08053
 survey-llm-acceleration-kv-cache | https://arxiv.org/abs/2412.19442 | https://arxiv.org/pdf/2412.19442
 efficient-llm-training-distributed-infra-survey | https://arxiv.org/abs/2407.20018 | https://arxiv.org/pdf/2407.20018
+from-atop-to-zcube-automated-topology-optimization-pipeline | https://dl.acm.org/doi/10.1145/3718958.3750503 | https://dl.acm.org/doi/pdf/10.1145/3718958.3750503
+linear-optimal-topic-transport-for-document-similarity | https://openreview.net/forum?id=f8SlF0Vzbq | https://openreview.net/pdf?id=f8SlF0Vzbq
