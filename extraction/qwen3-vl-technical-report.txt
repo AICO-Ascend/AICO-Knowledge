@@ -1,0 +1,78 @@
+December 1, 2025
+Qwen3-VL Technical Report
+Qwen Team
+htps:/chat.qwen.ai
+htps:/hugingface.co/Qwen
+htps:/modelscope.cn/organization/qwen
+htps:/github.com/QwenLM/Qwen3-VL
+Abstract
+We introduce Qwen3-VL, the most capable visionlanguage model in the Qwen series to
+date, achieving superior performance acros a broad range of multimodal benchmarks.
+It natively suports interleaved contexts of up to 256K tokens, seamlesly integrat-
+ing text, images, and video. The model family includes both dense (2B/4B/8B/32B)
+and mixture-of-experts (30B-A3B/235B-A2B) variants to acomodate diverse la-
+tencyquality trade-ofs. Qwen3-VL delivers thre core pilars: (i) markedly stronger
+pure-text understanding, surpasing comparable text-only backbones in several cases;
+(i) robust long-context comprehension with a native 256K-token window for both text
+and interleaved multimodal inputs, enabling faithful retention, retrieval, and cros-
+referencing acros long documents and videos; and (i) advanced multimodal reasoning
+acros single-image, multi-image, and video tasks, demonstrating leading performance
+on comprehensive evaluations such as MU and visual-math benchmarks (e.g., Math-
+Vista and MathVision). Architecturaly, we introduce thre key upgrades: (i) an enhanced
+interleaved-MRoPE for stronger spatialtemporal modeling acros images and video; (i)
+DepStack integration, which efectively leverages multi-level ViT features to tighten
+visionlanguage alignment; and (i) text-based time alignment for video, evolving from
+T-RoPE to explicit textual timestamp alignment for more precise temporal grounding. To
+balance text-only and multimodal learning objectives, we aply square-rot reweight-
+ing, which bosts multimodal performance without compromising text capabilities.
+We extend pretraining to a context length of 256K tokens and bifurcate post-training
+into non-thinking and thinking variants to adres distinct aplication requirements.
+Furthermore, we alocate aditional compute resources to the post-training phase to
+further enhance model performance. Under comparable token budgets and latency
+constraints, Qwen3-VL achieves superior performance in both dense and Mixture-of-
+Experts (MoE) architectures. We envision Qwen3-VL serving as a foundational engine for
+image-grounded reasoning, agentic decision-making, and multimodal code inteligence
+in real-world workows.
+1
+arXiv:2511.21631v2  [cs.CV]  27 Nov 2025
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

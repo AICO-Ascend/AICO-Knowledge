@@ -1,0 +1,70 @@
+Beyond Ten Turns: Unlocking Long-Horizon Agentic
+Search with Large-Scale Asynchronous RL
+Jiaxuan Gao
+1 , Wei Fu
+12
+, Minyang Xie
+1 , Shusheng Xu
+2 ,
+Chuyi He
+2 , Zhiyu Mei
+2 , Banghua Zhu
+3 , Yi Wu
+1
+1 IS, Tsinghua University,
+2 Ant Group
+3 University of Washington
+samjia20@gmail.com, jxwuyi@gmail.com
+Abstract
+Recent advancements in LM-based agents have demonstrated remarkable capa-
+bilities in handling complex, knowledge-intensive tasks by integrating external
+tols. Among diverse choices of tols, search tols play a pivotal role in acesing
+vast external knowledge. However, open-source agents stil fal short of achieving
+expert-level Search Inteligence, the ability to resolve ambiguous queries, generate
+precise searches, analyze results, and conduct thorough exploration. Existing ap-
+proaches fal short in scalability, efciency, and data quality. For example, smal
+turn limits in existing online RL methods, e.g.
+ 10
+, restrict complex strategy
+learning. This paper introduces ASearcher, an open-source project for large-scale
+RL training of search agents. Our key contributions include: (1) Scalable fuly
+asynchronous RL training that enables long-horizon search while maintaining
+high training efciency. (2) A prompt-based LM agent that autonomously synthe-
+sizes high-quality and chalenging QAs. Through RL training, our prompt-based
+QwQ-32B agent achieves substantial improvements. Notably, our agent exhibits
+extreme long-horizon search, with tol cals exceding 10 turns and output tokens
+exceding 40k during training time. With a simple agent design and no external
+LMs, ASearcher-Web-QwQ achieves Avg@4 scores of 51.1 on xBench and 58.7
+on GAIA, surpasing existing open-source 32B agents. Finaly, we also show that
+ASearcher-Web-QwQ could achieve performance of comercial systems using
+external sumary tol in a zero-shot transfer maner and test-time search.
+2
+Figure 1: (Left) Asynchronous RL brings substantial improvements: Through RL training, our
+agent, ASearcher-Web-QwQ, obtains +15.0, +2.4, and +15.6 improvements on GAIA, xBench, and
+Frames, respectively. (Midle) & (Right) Through RL training, ASearcher-Web-QwQ learns to
+conduct long-horizon search, with tol cals exceding 10 turns and output tokens exceding 40k
+during training. The agent also learns expert-level search strategies (Se case study in Sec. 2)
+ Coresponding author
+2 We open-source our models, training data, and codes in htps:/github.com/inclusionAI/ASearcher.
+Preprint.
+arXiv:2508.07976v4  [cs.CL]  26 Oct 2025
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

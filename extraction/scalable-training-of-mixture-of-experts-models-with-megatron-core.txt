@@ -1,0 +1,347 @@
+2026-3-1
+Scalable Training of Mixture-of-Experts Models with
+Megatron Core
+Technical Report
+NVIDIA
+1
+Abstract
+Scaling Mixture-of-Experts (MoE) training introduces systems chalenges absent in dense models. Because each
+token activates only a subset of experts, this sparsity alows total parameters to grow much faster than per-token
+computation, creating coupled constraints acros memory, comunication, and computation. Optimizing one
+dimension often shifts presure to another, demanding co-design acros the ful system stack.
+We adres these chalenges for MoE training through integrated optimizations spaning memory (ne-grained
+recomputation, ooading, etc.), comunication (optimized dispatchers, overlaping, etc.), and computation
+(Grouped GEM, fusions, CUDA Graphs, etc.). The framework also provides Paralel Folding for exible
+multi-dimensional paralelism, low-precision training suport for FP8 and NVFP4, and ecient long-context
+training. On NVIDIA GB30 and GB20, it achieves 1,23/1,048 TFLOPS/GPU for DepSek-V3-685B and
+974/919 TFLOPS/GPU for Qwen3-235B. As a performant, scalable, and production-ready open-source solution,
+it has ben used acros academia and industry for training MoE models ranging from bilions to trilions of
+parameters on clusters scaling up to thousands of GPUs.
+This report explains how these techniques work, their trade-os, and their interactions at the systems level,
+providing practical guidance for scaling MoE models with Megatron Core.
+1 For the complete list of authors, please refer to the Contributions and Acknowledgments section. Coresponding authors:
+{zijiey,
+juney, jiajiey}@nvidia.com.
+' 2026 NVIDIA. Al rights reserved.
+arXiv:2603.07685v2  [cs.DC]  10 Mar 2026
+
+Scalable Training of Mixture-of-Experts Models with Megatron Core
+Contents
+1
+Introduction
+5
+1.1
+Mixture of Experts
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5
+1.2
+Chalenges in Training Large-Scale MoE Models . . . . . . . . . . . . . . . . . . . . . . . . . .
+6
+1.3
+Megatron-Core MoE
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+7
+1.4
+Structure of This Paper . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+7
+2
+Megatron-Core MoE Architecture
+8
+2.1
+MoE Layer Architecture and Forward Pas
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+8
+2.1.1
+Forward Pas: Route, Dispatch, Compute, Combine . . . . . . . . . . . . . . . . . . . .
+9
+2.1.2
+Router: Token-to-Expert Asignment . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+9
+2.1.3
+Token Dispatcher: Comunication Abstraction
+. . . . . . . . . . . . . . . . . . . . . .
+9
+2.1.4
+Experts: Computation Module . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.2
+System Integration: Paralelism and Optimizer . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.2.1
+Paralel Group Management . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.2.2
+Optimizer and Gradient Handling . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1
+3
+Scaling MoE: Paralel Folding and Multi-Dimensional Paralelism
+1
+3.1
+Why Paralelism, and Why MoE is Dierent
+. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+12
+3.1.1
+Why Large Model Training Neds Paralelism
+. . . . . . . . . . . . . . . . . . . . . . .
+12
+3.1.2
+The Trade-o of Paralelism . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+12
+3.2
+The Chalenge of MoE Paralelism . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+12
+3.2.1
+The Paralelism Paradox of MoE . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+13
+3.2.2
+Traditional Paralelism Strategies . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+14
+3.2.3
+Expert Paralelism: The Fifth Dimension . . . . . . . . . . . . . . . . . . . . . . . . . .
+14
+3.2.4
+The Chalenges of Combining EP with Traditional Paralelism
+. . . . . . . . . . . . . .
+15
+3.3
+Megatron-Core’s Solution: Paralel Folding and Multi-Dimensional Framework . . . . . . . . .
+16
+3.3.1
+Decoupled Paralelism Mapings
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+3.3.2
+Complete Multi-Dimensional Paralelism Stack . . . . . . . . . . . . . . . . . . . . . . .
+16
+3.3.3
+Benets of Paralel Folding . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+17
+3.3.4
+Sumary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+18
+4
+Scaling MoE: Breaking the Memory, Comunication, and Compute Eciency Wals
+18
+4.1
+Breaking the Memory Wal . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+4.1.1
+Memory Anatomy: Sources of Memory Consumption . . . . . . . . . . . . . . . . . . .
+20
+4.1.2
+Memory-Ecient Permutation: Zero-Overhead Activation Reduction . . . . . . . . . . .
+21
+4.1.3
+Reduced-Precision Training: FP8/FP4 for Activation Memory Reduction . . . . . . . . .
+21
+4.1.4
+Recomputation: Trading Compute for Memory . . . . . . . . . . . . . . . . . . . . . . .
+2
+4.1.5
+Fine-grained Activation Ooading . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+23
+4.1.6
+Weight and Optimizer Optimization: Low-Precision Storage and Ooading . . . . . . .
+25
+4.1.7
+FSDP for MoE . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+27
+4.1.8
+Sumary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+29
+4.2
+Breaking the Comunication Wal . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+29
+4.2.1
+Comunication Anatomy: The Expert Paralel Patern
+. . . . . . . . . . . . . . . . . .
+30
+4.2.2
+DepEP and HybridEP: Maximizing EP Bandwidth
+. . . . . . . . . . . . . . . . . . . .
+30
+4.2.3
+EP Comunication Overlaping: Hiding EP Comunication Latency
+. . . . . . . . . .
+32
+4.2.4
+Sumary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+34
+4.3
+Breaking the Compute Eciency Wal . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+35
+2
+
+Scalable Training of Mixture-of-Experts Models with Megatron Core
+4.3.1
+Compute Anatomy: Sources of Ineciency . . . . . . . . . . . . . . . . . . . . . . . . .
+35
+4.3.2
+Grouped GEMM and Kernel Fusion: Improving Kernel Eciency . . . . . . . . . . . . .
+36
+4.3.3
+Permutation Fusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+36
+4.3.4
+Router and Aux-Loss Fusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+37
+4.3.5
+Reduced-Precision Training: Low-Precision Acceleration
+. . . . . . . . . . . . . . . . .
+38
+4.3.6
+CUDA Graphs: Eliminating Host Overhead . . . . . . . . . . . . . . . . . . . . . . . . .
+38
+4.3.7
+Full CUDA Graphs Coverage for Dropless MoE via Sync-Free Kernels, ECHO, and Paged
+Stashing . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+43
+4.3.8
+Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+47
+4.4
+Summary: Breaking the Three Walls
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+47
+5
+Reduced-Precision Training in FP8/FP4 for MoE
+48
+5.1
+Why Reduced-Precision Training Matters for MoE . . . . . . . . . . . . . . . . . . . . . . . . .
+48
+5.2
+The Impact from Reduced-Precision Training on All Three Walls . . . . . . . . . . . . . . . . .
+49
+5.2.1
+Breaking the Memory Wall with Reduced-Precision Training . . . . . . . . . . . . . . .
+49
+5.2.2
+Breaking the Communication Wall with Reduced-Precision Training . . . . . . . . . . .
+49
+5.2.3
+Breaking the Compute Eciency Wall with Reduced-Precision Training . . . . . . . . .
+50
+5.3
+Reduced-Precision Training Recipes: Per-Tensor FP8, Blockwise FP8, MXFP8, and NVFP4 . . .
+50
+5.3.1
+Per-Tensor FP8 Recipe . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+51
+5.3.2
+Blockwise FP8 on Hopper . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+51
+5.3.3
+MXFP8 on Blackwell . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+51
+5.3.4
+NVFP4 on Blackwell . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+52
+5.3.5
+FP8/FP4 Primary Weights: Eliminating Redundant Storage . . . . . . . . . . . . . . . .
+53
+5.4
+MoE-Specic Challenges and Solutions of Reduced-Precision Training . . . . . . . . . . . . . .
+54
+5.4.1
+Fusion of Padding and Unpadding: Dynamic Shape Alignment . . . . . . . . . . . . . .
+54
+5.4.2
+Grouped Quantization and Grouped GEMM . . . . . . . . . . . . . . . . . . . . . . . .
+55
+5.4.3
+NVFP4 Quantization Fusion . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+55
+6
+Long-Context MoE Training
+57
+6.1
+When Attention Dominates: The Computational Shift . . . . . . . . . . . . . . . . . . . . . . .
+57
+6.2
+Managing Activation Memory Growth . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+58
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
