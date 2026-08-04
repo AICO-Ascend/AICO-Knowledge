@@ -11,7 +11,7 @@ kimi-k2-5-visual-agentic-intelligence | https://arxiv.org/abs/2602.02276 | https
 scalable-training-of-mixture-of-experts-models-with-megatron-core | https://arxiv.org/abs/2603.07685 | https://arxiv.org/pdf/2603.07685
 qwen3-vl-technical-report | https://arxiv.org/abs/2511.21631 | https://arxiv.org/pdf/2511.21631
 deepstack-visual-tokens-lmm | https://arxiv.org/abs/2406.04334 | https://arxiv.org/pdf/2406.04334
-ascend-950-npu-architecture-whitepaper | NONE | https://public-download.obs.cn-east-2.myhuaweicloud.com/ascend/%E6%98%87%E8%85%BE950%20NPU%E6%9E%B6%E6%9E%84%E7%99%BD%E7%99%BD%E7%9A%AE%E4%B9%A6.pdf
+ascend-950-npu-architecture-whitepaper | NONE | https://public-download.obs.cn-east-2.myhuaweicloud.com/ascend/%E6%98%87%E8%85%BE950%20NPU%E6%9E%B6%E6%9E%84%E7%99%BD%E7%9A%AE%E4%B9%A6.pdf
 gepa-reflective-prompt-evolution | https://arxiv.org/abs/2507.19457 | https://arxiv.org/pdf/2507.19457
 sarathi-piggybacking-decodes-chunked-prefills | https://arxiv.org/abs/2308.16369 | https://arxiv.org/pdf/2308.16369
 sarathi-serve-throughput-latency-llm | https://arxiv.org/abs/2403.02310 | https://arxiv.org/pdf/2403.02310
