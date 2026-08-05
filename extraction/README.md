@@ -66,9 +66,8 @@ MiniMax 深度解读增量加到 `extraction/minimax_captions.json`（key=图片
 - **11 张核心架构图** MiniMax 多模态深度解读（IndexCache / EAGLE-1/3 / Medusa / DFlash / JetSpec / Sarathi / Mooncake / SGLang / Step-3 / DeepSeek-V4）
 - 主索引 `figures_index.md`：精选区 + 主题分类 + 按论文
 
-### 待补（9 篇，arxiv 大文件网络截断，`chunk_download.py` 后台分块续传中）
-hyper-connections / megascale / qwen2.5-vl / deepseek-v3 / zero / megatron-lm / hybridflow / let-it-flow / efficient-training-survey。
-这些论文的**元数据 + 摘要 + arxiv 链接**已在 `papers_effective.md`（#16-51 对应行），仅缺全文 + 图表深度萃取；下完后重跑 `python3 skills/paper-extraction/extract_phase1.py` 即补全。
+### 全部完成
+55 篇全部深度萃取（340 图、17 张架构图 MiniMax 解读）。`verify_pdfs.py` 报 0 截断。
 
 ## 工具脚本
 

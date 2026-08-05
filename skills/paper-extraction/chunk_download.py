@@ -18,7 +18,7 @@ def total_size(url):
         with urllib.request.urlopen(req, timeout=30) as r:
             return int(r.headers.get("Content-Length",0) or 0)
 
-def chunk_dl(url, dest, chunk=1048576, max_retries=8):
+def chunk_dl(url, dest, chunk=262144, max_retries=15):
     total=total_size(url)
     if not total:
         print("  no content-length"); return False, 0
@@ -30,7 +30,7 @@ def chunk_dl(url, dest, chunk=1048576, max_retries=8):
             for attempt in range(max_retries):
                 req=urllib.request.Request(url, headers={"User-Agent":UA,"Range":f"bytes={pos}-{end}"})
                 try:
-                    with urllib.request.urlopen(req, timeout=60) as r:
+                    with urllib.request.urlopen(req, timeout=90) as r:
                         data=r.read()
                         if data:
                             f.write(data); f.flush()
@@ -38,17 +38,21 @@ def chunk_dl(url, dest, chunk=1048576, max_retries=8):
                 except Exception as e:
                     if attempt==max_retries-1:
                         print(f"  chunk {pos}-{end} failed: {e}"); return False, pos
-                    time.sleep(2)
+                    time.sleep(3)
             if not done:
                 print(f"  stuck at {pos}"); return False, pos
     return True, pos
 
 JOBS=[
-("2309.06180","efficient-memory-management-for-large-language-model-serving-with-pagedattention"),
-("2404.00242","deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference"),
-("2408.12757","nanoflow-towards-optimal-large-language-model-serving-throughput"),
-("2412.06464","gated-delta-networks-improving-mamba2-with-delta-rule"),
-("2505.15112","parallel-scan-on-ascend-ai-accelerators"),
+("2409.19606","hyper-connections"),
+("2409.19256","hybridflow-a-flexible-and-efficient-rlhf-framework"),
+("2512.24873","let-it-flow-agentic-crafting-on-rock-and-roll"),
+("2502.13923","qwen2-5-vl-technical-report"),
+("2412.19437","deepseek-v3-technical-report"),
+("2402.15627","megascale-scaling-large-language-model-training-to-more-than-10000-gpus"),
+("1910.02054","zero-memory-optimizations-toward-training-trillion-parameter-models"),
+("1909.08053","megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism"),
+("2407.20018","efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey"),
 ]
 
 if __name__=="__main__":

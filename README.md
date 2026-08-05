@@ -33,5 +33,5 @@ AICO-knowledge/
 
 ## 现状
 
-- 50 篇论文索引 + 41 篇深度萃取（333 张图、11 张核心架构图 MiniMax 深度解读）
-- 9 篇大 PDF（>3MB）受 arxiv 网络单连接 ~1MB 上限截断，元数据+摘要+链接已留，下完后重跑 Phase 1 即补
+- 55 篇论文全部深度萃取（340 张图、17 张核心架构图 MiniMax 多模态深度解读）
+- 全部 PDF 校验有效（verify_pdfs.py 报 0 截断）；chunk_download.py（256KB 块+15 重试）解决了 arxiv 大文件截断

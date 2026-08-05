@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 388 张图，来自 41 篇论文；其中 ⭐16 张已深度解读。
+共 472 张图，来自 49 篇论文；其中 ⭐17 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -48,6 +48,11 @@
 ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p15.png]]
 > [!tip] 【MiniMax 解读】DeepSeek-V4 细粒度 EP(Fig.5)：MoE 层拆 Dispatch/Linear-1/Linear-2/Combine 四段。Comet 仅粗粒度重叠 Dispatch↔L1、L2↔Combine；本方案把 expert 再切 wave，一波 dispatch 完即开算、下一波并行 dispatch→稳态下「当前波计算+下一波 token 传输+上一波结果回送」三路并发=连续计算-通信流水。因单层通信<计算，融合成单流水 kernel 藏住互连延迟→低带宽互连也不掉吞吐。架构核心图，与 MoE/EP 相关。
 *caption: This forms a fine-grained pipeline among experts, keeping both computation and communication continuous throughout the wave. The wave-based scheduling… ｜ 论文 [[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]] ｜ arxiv 见 MD 元信息*
+
+### HYPER-CONNECTIONS — Fig.2 (p.2)
+![[assets/hyper-connections-p02.png]]
+> [!tip] 【MiniMax 解读】Hyper-Connections 架构(Fig.2)：(a) 传统残差连接=层输出与单隐层 h 求和；(b) HC n=2 把输入复制成两个隐向量 h1/h2，层输出经可学习标量(β,α)路由回→加权连接矩阵灵活跨深+宽组合特征。解耦成 (c) depth-connections（层输出与 h1 加权和）+ (d) width-connections（h1/h2 横向混合）。核心：用可学习、输入依赖的路由替固定恒等 skip，让网络自主调制 skip 强度→缓解固定 Pre/Post-Norm 残差的表征塌缩+梯度消失。架构核心图。
+*caption: Hyper-connections (HC) with an expansion rate of n = 2. (a) Residual connections. (b) Hyper-connections: β1, β2, α0,0, α0,1, α1,0, α1,1, α2,1, and α2,… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.4 (p.8)
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p08.png]]
@@ -233,7 +238,7 @@
 - ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]] — **DeepSeek-V4: Towards Highly Efficient Million-Toke** Fig.1 (p.14): 2.4. Muon Optimizer…  `[[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]]`
 - ⭐ ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p15.png]] — **DeepSeek-V4: Towards Highly Efficient Million-Toke** Fig.5 (p.15): This forms a fine-grained pipeline among experts, keeping both computation and c…  `[[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]]`
 
-### multimodal (42)
+### multimodal (43)
 
 - ![[assets/kimi-k2-5-visual-agentic-intelligence-p01.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.1 (p.1): Kimi K2.5 main results. 1…  `[[kimi-k2-5-visual-agentic-intelligence]]`
 - ![[assets/kimi-k2-5-visual-agentic-intelligence-p04.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.2 (p.4): Vision RL training curves on vision benchmarks starting from minimal zero-vision…  `[[kimi-k2-5-visual-agentic-intelligence]]`
@@ -265,6 +270,7 @@
 - ![[assets/kimi-vl-technical-report-p16.png]] — **KIMI-VL TECHNICAL REPORT** Fig.11 (p.16): Video scene splitting. Kimi-VL processes a long-form video by segmenting it into…  `[[kimi-vl-technical-report]]`
 - ![[assets/kimi-vl-technical-report-p17.png]] — **KIMI-VL TECHNICAL REPORT** Fig.12 (p.17): Catching and understanding key details from an hour-long video course. Kimi-VL d…  `[[kimi-vl-technical-report]]`
 - ![[assets/kimi-vl-technical-report-p16.png]] — **KIMI-VL TECHNICAL REPORT** Fig.13 (p.16): Specifically, increasing the max thinking token length at inference time consist…  `[[kimi-vl-technical-report]]`
+- ![[assets/qwen2-5-vl-technical-report-p03.png]] — **Qwen2.5-VL Technical Report** Fig.1 (p.3): The Qwen2.5-VL framework demonstrates the integration of a vision encoder and a …  `[[qwen2-5-vl-technical-report]]`
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p01.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.1 (p.1): Aggregated (top) vs. disaggregated (bottom) sys- tem architectures. In the aggre…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p02.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.2 (p.2): Impact of disaggregation on supported batch size and number of images per reques…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p03.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.3 (p.3): The inference pipeline of EPD Disaggregation. stages—EP-migration and PD-migrati…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
@@ -278,7 +284,7 @@
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p13.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.11 (p.13): SLO attainment (↑) for end-to-end inference across multiple models and image cou…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p16.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.12 (p.16): Breakdown of latency for encode and prefill stages using the InternVL2-8B model …  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 
-### rl (73)
+### rl (89)
 
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
@@ -341,6 +347,22 @@
 - ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p18.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.5 (p.18): Training dynamics of SEARCH-R1 with PPO and GRPO as the base RL method across fo…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
 - ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p19.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.6 (p.19): The training dynamics of SEARCH-R1 with a different number of retrieved pas- sag…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
 - ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p19.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.7 (p.19): We observe that a larger group size generally leads to faster convergence but ma…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.1 (p.3): Dataflow graph of 3 RLHF algorithms [19, 43, 55].…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.2 (p.3): Programming model used in RLHF systems. (a)…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p04.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.3 (p.4): Dataflow execution given a model placement plan.…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.4 (p.6): Architecture of HybridFlow. 3D-HybridEngine and Auto-Mapping algorithm. The hybr…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.5 (p.6): An illustration of hierarchical APIs. (a) Model with 3D parallel configuration, …  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p07.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.6 (p.7): Implementation of PPO [55], ReMax [43], and Safe- RLHF [19]. Users can adapt to …  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.7 (p.8): 3D-HybridEngine workflow in one RLHF iteration. 4 GPUs are used for actor traini…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.8 (p.8): Model weights resharding. 2 machines each with 4 GPUs are used for actor trainin…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.9 (p.11): PPO throughput. Numbers in parentheses are HybridFlow speedups compared with bas…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.10 (p.11): ReMax throughput. Numbers in parentheses are HybridFlow speedups compared with b…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.11 (p.11): Safe-RLHF throughput. Numbers in the parentheses are HybridFlow speedups compare…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.12 (p.12): Throughput of HybridFlow under different placements 32 64 96 128 # of GPUs…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.13 (p.12): Placement comparison under 13B actor and reference policy & 70B critic and rewar…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.14 (p.13): Transition time between actor training and generation.…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.15 (p.13): Time breakdown on different generation parallel sizes of the actor model on 16 G…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
+- ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]] — **HybridFlow: A Flexible and Efficient RLHF Framewor** Fig.16 (p.13): Runtime of device mapping algorithm. The model size and # of GPUs are simultaneo…  `[[hybridflow-a-flexible-and-efficient-rlhf-framework]]`
 - ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p04.png]] — **AREAL: A Large-Scale Asynchronous Reinforcement Le** Fig.1 (p.4): Execution timeline of a synchronous (left) and a one-step overlap (right) RL sys…  `[[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]]`
 - ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p04.png]] — **AREAL: A Large-Scale Asynchronous Reinforcement Le** Fig.2 (p.4): The AREAL architecture featuring asynchronous generation and training components…  `[[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]]`
 - ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p04.png]] — **AREAL: A Large-Scale Asynchronous Reinforcement Le** Fig.3 (p.4): Illustration of generation management in AREAL. Vertical lines show the ready ti…  `[[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]]`
@@ -430,7 +452,7 @@
 - ![[assets/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-p18.png]] — **JETSPEC: Breaking the Scaling Ceiling of Speculati** Fig.5 (p.18): Figure 5: Causal attention mask used for training with multiple sampled blocks. …  `[[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]]`
 - ![[assets/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-p19.png]] — **JETSPEC: Breaking the Scaling Ceiling of Speculati** Fig.6 (p.19): Each sampled block includes an anchor position and multiple future token positio…  `[[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]]`
 
-### training (62)
+### training (90)
 
 - ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p01.png]] — **EAGLE-3: Scaling up Inference Acceleration of Larg** Fig.1 (p.1): Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target …  `[[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]`
 - ⭐ ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]] — **EAGLE-3: Scaling up Inference Acceleration of Larg** Fig.2 (p.2): Speedup ratios of different methods at temperature=0. For the standard speculati…  `[[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]`
@@ -476,6 +498,26 @@
 - ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p04.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.4 (p.4): Performance comparison of different check- point conversion methods for T5-Large…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
 - ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p04.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.5 (p.4): Performance as a function of uptraining pro- portion for T5 XXL models with MQA …  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
 - ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p04.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.6 (p.4): Time per sample for GQA-XXL as a function of the number of GQA groups with input…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p02.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.1 (p.2): Data parallel training with ZeRO2. dependencies that contribute to stability iss…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.2 (p.3): Interleaved 1F1B pipeline. update the model. Instead of duplicating model states…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.3 (p.4): Overlapping communication in tensor parallelism (TP) and sequence parallelism (S…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.4 (p.4): The cool-down phase can be viewed as the inverse of the warm-up phase, allowing …  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p06.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.5 (p.6): Robust training workflow. interval and help recover the transmission more quickl…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p08.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.6 (p.8): Inconsistent MFU observed in large-scale training. Differ- ent colors denote dis…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p08.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.7 (p.8): We gather latency data of the computation phase (forward and backward) across de…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p09.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.8 (p.9): The trace shows events collected in a pipeline group on a unified timeline. Depe…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p10.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.9 (p.10): Weak-scaling training performance of Megatron-LM and…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p11.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.10 (p.11): The training loss curves in microbenchmark experiments.…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p11.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.11 (p.11): The normalized training loss curve of a real production run on more than 10,000 …  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p12.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.12 (p.12): The MFU becomes stable after addressing the stragglers and problematic code segm…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p03.png]] — **ZeRO: Memory Optimizations Toward Training Trillio** Fig.1 (p.3): Comparing the per-device memory consumption of model states, with three stages o…  `[[zero-memory-optimizations-toward-training-trillion-parameter-models]]`
+- ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p04.png]] — **ZeRO: Memory Optimizations Toward Training Trillio** Fig.2 (p.4): ZeRO training throughput and speedup w.r.t SOTA baseline for varying model sizes…  `[[zero-memory-optimizations-toward-training-trillion-parameter-models]]`
+- ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p05.png]] — **ZeRO: Memory Optimizations Toward Training Trillio** Fig.3 (p.5): Superlinear scalability and per GPU training throughput of a 60B parameter model…  `[[zero-memory-optimizations-toward-training-trillion-parameter-models]]`
+- ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]] — **ZeRO: Memory Optimizations Toward Training Trillio** Fig.4 (p.16): Max model throughput with ZeRO-DP.…  `[[zero-memory-optimizations-toward-training-trillion-parameter-models]]`
+- ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]] — **ZeRO: Memory Optimizations Toward Training Trillio** Fig.5 (p.16): SOTA Turing-NLG enabled by ZeRO.…  `[[zero-memory-optimizations-toward-training-trillion-parameter-models]]`
+- ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]] — **ZeRO: Memory Optimizations Toward Training Trillio** Fig.6 (p.16): Max model size .…  `[[zero-memory-optimizations-toward-training-trillion-parameter-models]]`
+- ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]] — **ZeRO: Memory Optimizations Toward Training Trillio** Fig.7 (p.16): Max cache allo- cated.…  `[[zero-memory-optimizations-toward-training-trillion-parameter-models]]`
+- ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]] — **ZeRO: Memory Optimizations Toward Training Trillio** Fig.8 (p.16): Throughput per GPU. a Bert-Large model for a data sample. Even if we assume the …  `[[zero-memory-optimizations-toward-training-trillion-parameter-models]]`
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p01.png]] — **Efficient Large-Scale Language Model Training on G** Fig.1 (p.1): Trend of sizes of state-of-the-art Natural Language Pro- cessing (NLP) models wi…  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p03.png]] — **Efficient Large-Scale Language Model Training on G** Fig.2 (p.3): Combination of tensor and pipeline model parallelism (MP) used in this work for …  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p03.png]] — **Efficient Large-Scale Language Model Training on G** Fig.3 (p.3): GPipe pipeline schedule with forward passes (blue) for all microbatches (represe…  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
@@ -494,6 +536,14 @@
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p10.png]] — **Efficient Large-Scale Language Model Training on G** Fig.16 (p.10): Throughput per GPU of a (𝑡, 𝑝) = (8, 8) parallel configura- tion for different m…  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]] — **Efficient Large-Scale Language Model Training on G** Fig.17 (p.11): Throughput (in sequences per second) with and without activation recomputation f…  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]] — **Efficient Large-Scale Language Model Training on G** Fig.18 (p.11): Throughput per GPU with and without the scatter/gather optimization for a GPT mo…  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
+- ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p02.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.1 (p.2): Model (blue) and model+data (green) parallel FLOPS as a function of number of GP…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p03.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.2 (p.3): Transformer Architecture. Purple blocks correspond to fully connected layers. Ea…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p04.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.3 (p.4): Blocks of Transformer with Model Parallelism. f and g are conjugate. f is an ide…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p05.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.4 (p.5): Communication operations in a transformer layer. There are 4 total communication…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p06.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.5 (p.6): Model and model + data parallel weak scaling efﬁciency as a function of the numb…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.6 (p.7): Validation set perplexity. All language models are trained for 300k iterations. …  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p08.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.7 (p.8): Training loss for BERT model using the original architec- ture (a) and the rearr…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p12.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.8 (p.12): Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 
 ## 按论文
 
@@ -1022,6 +1072,45 @@
 - Fig.7 (p.19) ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p19.png]]
   - We observe that a larger group size generally leads to faster convergence but may also increase the risk of collapse due to the inherent instability of reinforcement learning.
 
+### #26 HYPER-CONNECTIONS
+
+- Fig.1 (p.1) ![[assets/hyper-connections-p01.png]]
+  - The performance of the baseline model OLMoE-1B-7B and the model with hyper- connections, OLMoE-1B-7B-DHC×4. (1) and (2) show the training loss (0.99 EMA smoothed) and the C4-en validation loss, respec
+- ⭐ Fig.2 (p.2) ![[assets/hyper-connections-p02.png]]
+  - Hyper-connections (HC) with an expansion rate of n = 2. (a) Residual connections. (b) Hyper-connections: β1, β2, α0,0, α0,1, α1,0, α1,1, α2,1, and α2,2 are learnable scalars or scalars predicted by th
+- ⭐ Fig.3 (p.2) ![[assets/hyper-connections-p02.png]]
+  - Cosine similarity be- tween the input of the current and the previous layers for the OLMo-1B models (Groeneveld et al., 2024). The curve represents the median of similarity, while the shaded area indi
+- Fig.4 (p.5) ![[assets/hyper-connections-p05.png]]
+  - Sequential and parallel arrangements of hyper-connections with n = 2.
+- Fig.5 (p.6) ![[assets/hyper-connections-p06.png]]
+  - Comparison of training loss curves for different expansion rate. The left subfigure includes models with dynamic hyper-connections (DHC) at various expansion rates, while the right subfigure shows the
+- Fig.6 (p.8) ![[assets/hyper-connections-p08.png]]
+  - (1) and (2) Training loss (0.99 EMA smoothed) and C4-en validation loss for OLMo-7B and OLMo-7B-DHC×4 models. (3) and (4) Accuracy curves on hellaswag and sciq, demonstrating the superior performance 
+- Fig.7 (p.9) ![[assets/hyper-connections-p09.png]]
+  - Visualization of connection matrices for hyper-connections and various related baseline methods. The attention layers, which have odd ids, are marked with green tick marks.
+- Fig.8 (p.14) ![[assets/hyper-connections-p14.png]]
+  - Comparison between transformers with hyper-connections and that with residual connec- tions. 14
+- Fig.9 (p.17) ![[assets/hyper-connections-p17.png]]
+  - Loss curves in V3 validation sets and accuracy curves on downstream tasks for OLMoE-1B7B and OLMoE-1B7B-DHC×4 models. 17
+- Fig.10 (p.18) ![[assets/hyper-connections-p18.png]]
+  - Loss curves in V3 validation set and accuracy curves on downstream tasks for OLMo-7B and OLMo-7B-DHC×4 models. 18
+- Fig.11 (p.20) ![[assets/hyper-connections-p20.png]]
+  - Training loss curves of ViT/16-Large and ViT/16-Large-DHC×2, smoothed using an
+- Fig.12 (p.21) ![[assets/hyper-connections-p21.png]]
+  - Distribution of weights of last DHC in ViT-Base/16-DHC×2 model. F MORE VISUALIZATION AND ANALYSIS
+- Fig.13 (p.22) ![[assets/hyper-connections-p22.png]]
+  - Visualization of unfolded connection matrix.
+- Fig.14 (p.23) ![[assets/hyper-connections-p23.png]]
+  - Comparison of unfolded connection matrices for OLMo-1B-DHC×1, OLMo-1B-DHC×2 and OLMo-1B-DHC×4 model.
+- Fig.15 (p.31) ![[assets/hyper-connections-p31.png]]
+  - Training loss curves of related works, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99. 31
+- Fig.16 (p.32) ![[assets/hyper-connections-p32.png]]
+  - Training loss curves of DHC with tanh over 500 billion tokens, smoothed using
+- Fig.17 (p.32) ![[assets/hyper-connections-p32.png]]
+  - Training loss curves of DHC without tanh over 500 billion tokens, smoothed using
+- Fig.18 (p.33) ![[assets/hyper-connections-p33.png]]
+  - Training loss curves comparied with parallel transformer blocks (PTB), smoothed using
+
 ### #27 BERTopic: Neural topic modeling with a class-based TF-IDF pr
 
 - Fig.1 (p.7) ![[assets/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-p07.png]]
@@ -1040,6 +1129,80 @@
   - 3.1
 - Fig.9 (p.7) ![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p07.png]]
   - 4.3
+
+### #30 HybridFlow: A Flexible and Efficient RLHF Framework
+
+- Fig.1 (p.3) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]]
+  - Dataflow graph of 3 RLHF algorithms [19, 43, 55].
+- Fig.2 (p.3) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]]
+  - Programming model used in RLHF systems. (a)
+- Fig.3 (p.4) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p04.png]]
+  - Dataflow execution given a model placement plan.
+- Fig.4 (p.6) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]]
+  - Architecture of HybridFlow. 3D-HybridEngine and Auto-Mapping algorithm. The hybrid programming model includes a set of hierarchical APIs to enable flexible expression of the RLHF dataflow and effi- ci
+- Fig.5 (p.6) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]]
+  - An illustration of hierarchical APIs. (a) Model with 3D parallel configuration, resource allocation, and 3DParallelWorker initialization. (b) Asynchronous data re- sharding between two models with col
+- Fig.6 (p.7) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p07.png]]
+  - Implementation of PPO [55], ReMax [43], and Safe- RLHF [19]. Users can adapt to different RLHF algorithms by simply adding or deleting a few lines of code. our programming model, HybridFlow is flexibl
+- Fig.7 (p.8) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]]
+  - 3D-HybridEngine workflow in one RLHF iteration. 4 GPUs are used for actor training and generation. 1-2-2 (𝑝-𝑡-𝑑) parallel groups are used in training and 1-1-2-2 (𝑝𝑔- 𝑡𝑔-𝑑𝑔-𝑑) parallel groups are used
+- Fig.8 (p.8) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]]
+  - Model weights resharding. 2 machines each with 4 GPUs are used for actor training and generation. model parameters updated in iteration 𝑖(step 1○in Figure 7), for generation within each micro DP group
+- Fig.9 (p.11) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]
+  - PPO throughput. Numbers in parentheses are HybridFlow speedups compared with baselines. 8 16 32 64 128 # of GPUs 0 1 2 3
+- Fig.10 (p.11) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]
+  - ReMax throughput. Numbers in parentheses are HybridFlow speedups compared with baselines 8 16 32 64 128 # of GPUs 0 1 2 3
+- Fig.11 (p.11) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]
+  - Safe-RLHF throughput. Numbers in the parentheses are HybridFlow speedups compared with the baselines reward models. Each model is a Llama [73] model with sizes ranging from 7B to 70B. Safe-RLHF has an
+- Fig.12 (p.12) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]]
+  - Throughput of HybridFlow under different placements 32 64 96 128 # of GPUs
+- Fig.13 (p.12) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]]
+  - Placement comparison under 13B actor and reference policy & 70B critic and reward model.
+- Fig.14 (p.13) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]
+  - Transition time between actor training and generation.
+- Fig.15 (p.13) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]
+  - Time breakdown on different generation parallel sizes of the actor model on 16 GPUs. various model scales, which is the time to reshard model weights from training to generation, under the same settin
+- Fig.16 (p.13) ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]
+  - Runtime of device mapping algorithm. The model size and # of GPUs are simultaneously scaled.
+
+### #31 Let It Flow: Agentic Crafting on Rock and Roll
+
+- Fig.1 (p.1) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p01.png]]
+  - Overview of the Agentic Learning Ecosystem (ALE) and ROME Performance. 1[cs.AI] 12 Mar 2026
+- Fig.2 (p.4) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p04.png]]
+  - The overview of agentic RL ecosystem (a) and its training pipeline (b). technical stack, ALE is also a call to reframe the community’s priorities. In complex agentic settings, the central challenge is
+- Fig.3 (p.5) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p05.png]]
+  - ROLL Architecture. (a) ROLL pipelines LLM generation, environment interaction, and reward phases at trajectory-level granularity. Training is also decoupled via a sample buffer using an asyn- chronous
+- Fig.4 (p.6) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p06.png]]
+  - ROCK System Architecture.
+- Fig.5 (p.8) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p08.png]]
+  - The overview of iFlow CLI architecture and execution. these requests already contain the complete historical context, fully orchestrated by the iFlow CLI. The proxy then forwards these requests to the
+- Fig.6 (p.10) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p10.png]]
+  - Overview of data sources and composition pipelines for training agentic models, spanning code centric basic data and agentic data. 3
+- Fig.7 (p.16) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p16.png]]
+  - Overview of ROME’s Training Pipeline. incidents. Finally, we generated corresponding golden trajectories devoid of general-security issues for subsequent post-training (e.g., SFT and RL). Our overarch
+- Fig.8 (p.20) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p20.png]]
+  - Overview of the Proposed Interaction-Perceptive Agentic Policy Optimization (IPA) training pipeline. sample efficiency(§3.2.4.4). An overview of our framework, including its key components and data fl
+- Fig.9 (p.22) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p22.png]]
+  - Comparison of importance sampling strategies across token-level, chunk-level, and sentence- level granularities, where chunk-level aligns with the natural granularity of interactions.
+- Fig.10 (p.23) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p23.png]]
+  - Comparison of Chunk-Level Optimization and baseline on a mini-set of the training data. Left:
+- Fig.11 (p.24) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p24.png]]
+  - Illustration of the Chunk-Level Initialized Resampling Strategy (Sequential Rollback). Left: In challenging tasks, sampling high-quality trajectories from the beginning is difficult, severely limiting
+- Fig.12 (p.25) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p25.png]]
+  - Performance of Sequential Rollback and baseline (naive sampling) on a challenging training task. Left: Average success rate during training, which reflects the percentage of positive signals in traini
+- Fig.13 (p.26) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p26.png]]
+  - Comparison of IPA with & without Chunk-Level Initialized Resampling (Parallelized Initial- ization) on a mini-set of the training data. Left: Average success rate on training tasks. The gap between cu
+- Fig.14 (p.27) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p27.png]]
+  - Benchmark characterization and cross-benchmark comparison of Terminal Bench Pro against other benchmarks.
+- Fig.15 (p.28) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p28.png]]
+  - Performance-parameter trade-offs in agentic tasks. Scores represent averages on general agentic and code agent benchmarks. Models with known parameters are shown as circles, while proprietary models w
+- Fig.16 (p.34) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p34.png]]
+  - Pairwise win-rate matrix (%) on the 100-task real-world benchmark under 30-expert blinded majority voting. Each cell reports the percentage of tasks where the row model is judged better than the col- 
+- Fig.17 (p.36) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p36.png]]
+  - Case study 1 screenshot examples: Sleep Management System Generation. 36
+- Fig.18 (p.37) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p37.png]]
+  - Case study 2 screenshot examples: Solar System Modeling. 37
 
 ### #32 Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with
 
@@ -1123,6 +1286,20 @@
   - Performance as a function of uptraining pro- portion for T5 XXL models with MQA and GQA-8.
 - Fig.6 (p.4) ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p04.png]]
   - Time per sample for GQA-XXL as a function of the number of GQA groups with input length 2048 and output length 512. Going from 1 (MQA) to 8 groups adds modest inference overhead, with increasing cost 
+
+### #40 Qwen2.5-VL Technical Report
+
+- Fig.1 (p.3) ![[assets/qwen2-5-vl-technical-report-p03.png]]
+  - The Qwen2.5-VL framework demonstrates the integration of a vision encoder and a language model decoder to process multimodal inputs, including images and videos. The vision encoder is designed to hand
+
+### #41 DeepSeek-V3 Technical Report
+
+- Fig.5 (p.12) ![[assets/deepseek-v3-technical-report-p12.png]]
+  - It employs a bidirectional pipeline scheduling, which feeds micro-batches from both ends of the pipeline simultaneously and a significant portion of communications can be fully overlapped. This overla
+- Fig.6 (p.15) ![[assets/deepseek-v3-technical-report-p15.png]]
+  - Firstly, in order to accelerate model training, the majority of core computation kernels, i.e., GEMM operations, are implemented in FP8 precision. These GEMM operations accept FP8 tensors as inputs an
+- Fig.10 (p.48) ![[assets/deepseek-v3-technical-report-p48.png]]
+  - 48
 
 ### #42 Step-3 is Large yet Affordable: Model-system Co-design for C
 
@@ -1232,6 +1409,52 @@
 - Fig.13 (p.17) ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p17.png]]
   - Request TTFT and TBT distributions of Mooncake and vLLM under real workloads
 
+### #46 MegaScale: Scaling Large Language Model Training to More Tha
+
+- Fig.1 (p.2) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p02.png]]
+  - Data parallel training with ZeRO2. dependencies that contribute to stability issues. We develop a robust training framework to automate fault localization and recovery. We design heartbeat messages en
+- Fig.2 (p.3) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]]
+  - Interleaved 1F1B pipeline. update the model. Instead of duplicating model states (like the optimizer states, gradients, and parameters), Zero Redun- dancy Optimizer (ZeRO) [11] shards these states acr
+- Fig.3 (p.4) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]]
+  - Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB). with a large receptive field created by stacking layers of such windowed atten
+- Fig.4 (p.4) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]]
+  - The cool-down phase can be viewed as the inverse of the warm-up phase, allowing for the inverse application of the same technique. As for the steady phase, both the forward and backward computation ar
+- Fig.5 (p.6) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p06.png]]
+  - Robust training workflow. interval and help recover the transmission more quickly when the link flapping period is short. 4
+- Fig.6 (p.8) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p08.png]]
+  - Inconsistent MFU observed in large-scale training. Differ- ent colors denote distinct executions of the same training job. mitigates the bandwidth constraints of HDFS, leading to a substantial reducti
+- Fig.7 (p.8) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p08.png]]
+  - We gather latency data of the computation phase (forward and backward) across devices and average the latency across steps. The aggregated data is visualized host 0 0 1 2 3 host 3 12 13 14 15 host 6 2
+- Fig.8 (p.9) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p09.png]]
+  - The trace shows events collected in a pipeline group on a unified timeline. Dependencies become visible when an event is selected.
+- Fig.9 (p.10) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p10.png]]
+  - Weak-scaling training performance of Megatron-LM and
+- Fig.10 (p.11) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p11.png]]
+  - The training loss curves in microbenchmark experiments.
+- Fig.11 (p.11) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p11.png]]
+  - The normalized training loss curve of a real production run on more than 10,000 GPUs for several weeks. This run trains a model with hundreds of billions of parameters on multi-trillion tokens. Differ
+- Fig.12 (p.12) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p12.png]]
+  - The MFU becomes stable after addressing the stragglers and problematic code segments. Different colors represent different training trials with the same setup. executing diagnostic tests is less than 
+
+### #47 ZeRO: Memory Optimizations Toward Training Trillion Paramete
+
+- Fig.1 (p.3) ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p03.png]]
+  - Comparing the per-device memory consumption of model states, with three stages of
+- Fig.2 (p.4) ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p04.png]]
+  - ZeRO training throughput and speedup w.r.t SOTA baseline for varying model sizes.
+- Fig.3 (p.5) ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p05.png]]
+  - Superlinear scalability and per GPU training throughput of a 60B parameter model using ZeRO-100B. 38 TFlops per GPU, and aggregate performance over 15 Petaﬂops. This is more than 10x improvement in tr
+- Fig.4 (p.16) ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]]
+  - Max model throughput with ZeRO-DP.
+- Fig.5 (p.16) ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]]
+  - SOTA Turing-NLG enabled by ZeRO.
+- Fig.6 (p.16) ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]]
+  - Max model size .
+- Fig.7 (p.16) ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]]
+  - Max cache allo- cated.
+- Fig.8 (p.16) ![[assets/zero-memory-optimizations-toward-training-trillion-parameter-models-p16.png]]
+  - Throughput per GPU. a Bert-Large model for a data sample. Even if we assume the same sequence length and the total number of samples required to train the model, training a 1T model would take 140 day
+
 ### #48 Efficient Large-Scale Language Model Training on GPU Cluster
 
 - Fig.1 (p.1) ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p01.png]]
@@ -1270,6 +1493,25 @@
   - Throughput (in sequences per second) with and without activation recomputation for a GPT model with 145 billion param- eters using 128 A100 GPUs ((𝑡, 𝑝) = (8, 16)). 12 24 36 48 60
 - Fig.18 (p.11) ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]]
   - Throughput per GPU with and without the scatter/gather optimization for a GPT model with 175 billion parameters using 96 A100 GPUs and the interleaved schedule.
+
+### #49 Megatron-LM: Training Multi-Billion Parameter Language Model
+
+- Fig.1 (p.2) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p02.png]]
+  - Model (blue) and model+data (green) parallel FLOPS as a function of number of GPUs. Model parallel (blue): up to 8-way model parallel weak scaling with approximately 1 billion parameters per GPU (e.g.
+- Fig.2 (p.3) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p03.png]]
+  - Transformer Architecture. Purple blocks correspond to fully connected layers. Each blue block represents a single trans- former layer that is replicated N times. and compute efﬁciency. The original tr
+- Fig.3 (p.4) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p04.png]]
+  - Blocks of Transformer with Model Parallelism. f and g are conjugate. f is an identity operator in the forward pass and all reduce in the backward pass while g is an all reduce in the forward pass and 
+- Fig.4 (p.5) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p05.png]]
+  - Communication operations in a transformer layer. There are 4 total communication operations in the forward and backward pass of a single model parallel transformer layer. contains a portion of the emb
+- Fig.5 (p.6) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p06.png]]
+  - Model and model + data parallel weak scaling efﬁciency as a function of the number of GPUs. done by scaling the batch-size, however, this approach does not address training large models that do not ﬁt
+- Fig.6 (p.7) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]]
+  - Validation set perplexity. All language models are trained for 300k iterations. Larger language models converge notice- ably faster and converge to lower validation perplexities than their smaller cou
+- Fig.7 (p.8) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p08.png]]
+  - Training loss for BERT model using the original architec- ture (a) and the rearranged architecture (b). Left ﬁgure shows the training loss for 336M and 752M BERT model. While the original architecture
+- Fig.8 (p.12) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p12.png]]
+  - Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel and 64-way data parallel. C. Text Samples
 
 ### #52 Efficient Memory Management for Large Language Model Serving
 
