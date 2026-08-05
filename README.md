@@ -31,6 +31,10 @@ AICO-knowledge/
 
 **其他知识库复用此 skill**：把 `skills/paper-extraction/` 拷到任意论文仓即可（脚本路径相对，clone 即用）。
 
+## 文档
+- `skills/paper-extraction/SKILL.md` — 操作手册（5 阶段工作流 + 决策树 + 约定 + 踩坑/效率）
+- `EXPERIENCE.md` — 案例复盘（55 篇建库全过程踩坑与解法）
+
 ## 现状
 
 - 55 篇论文全部深度萃取（340 张图、17 张核心架构图 MiniMax 多模态深度解读）
