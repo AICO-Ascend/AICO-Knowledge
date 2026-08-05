@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 333 张图，来自 36 篇论文；其中 ⭐11 张已深度解读。
+共 388 张图，来自 41 篇论文；其中 ⭐16 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -64,9 +64,34 @@
 > [!tip] 【MiniMax 解读】Mooncake 解耦式 KVCache 服务架构：prefill（compute-bound，注意力二次复杂度）与 decode（memory-bound，自回归批处理）分到独立节点池。核心是 disaggregated KVCache 层，池化 CPU/DRAM/SSD/RDMA 资源→跨节点 cache 复用、减冗余计算；调度器做 early rejection + SLO 准入(TTFT/TBT)+负载均衡。把计算阶段与 KVCache 存储解耦→弹性扩展、严 SLO 下更高吞吐。架构核心图。
 *caption: Normalized throughput and latency of prefill and decoding stages with different sequence lengths or batch sizes for the dummy LLaMA2-70B model. the co… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
+### Efficient Memory Management for Large Language Model Serving — Fig.1 (p.1)
+![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p01.png]]
+> [!tip] 【MiniMax 解读】PagedAttention 内存布局(Fig.1)：13B 模型在 A100-40G 上参数占 65%（26GB 常驻）、KV cache >30%（每请求动态）、激活小片。传统系统把每请求 KV 存成单连续张量→内部+外部碎片严重、batch 受限。PagedAttention 借 OS 虚拟内存分页：KV 切成固定块（如 16 token）存非连续物理显存，每请求 block table 映射逻辑→物理（类比页表）；请求间可共享物理块（并行采样/beam search/前缀共享）；碎片仅剩 sub-block 余量（~1 token vs GB 级）→近乎零 KV 浪费、吞吐 2-4x。架构核心图，KV-cache/serving 基石。
+*caption: Left: Memory layout when serving an LLM with 13B parameters on NVIDIA A100. The parameters (gray) persist in GPU memory throughout serving. The memory… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
+
+### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.2 (p.5)
+![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p05.png]]
+> [!tip] 【MiniMax 解读】DeFT flash 树注意力(Fig.2)：① Input Metadata（Q + 共享前缀 K0 + 分支 K1/K2 + 树拓扑）载入 SM；② Phase1 QKV 准备(HBM 2TB/s)：KV-Guided Grouping 跨分支复用 K0、Flattened Tree KV Splitting 把树切成均衡组 G0/G1/G2 并行；③ Phase2 注意力计算(Shared Mem 19TB/s)：DeFT kernel 各 split 跑部分注意力 + 树拓扑感知全局归约(A0/A1/A2→Final)，避免跨全分支全局同步。消除共享前缀冗余 KV IO、平衡 SM 负载→内存高效、硬件友好的树结构投机解码注意力。架构核心图。
+*caption: Overview of DEFT. Input Metadata is prepared in the system elaborated in Appendix A.1. In QKV… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
+
+### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.1 (p.3)
+![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p03.png]]
+> [!tip] 【MiniMax 解读】NanoFlow Transformer 流水(Fig.1)：算子分三类——compute-bound（W_O/K/V/up/down/gate 密集投影，跨请求共享权重、大 batch 摊权重载入）、memory-bound（prefill/decode attention，载每请求 KV、小 batch 避压 KV）、network-bound（AllGather/AllReduce，NVLink 同步）。device-stream 级算子融合：沿关键路径重排+协调度，单设备内只跨 CUDA stream 注入 micro-batch 状态→串行依赖转并行，吞吐 1.91x、达理论峰 68.5%。异构 batch 是关键。架构核心图。
+*caption: Transformer architecture. The operations in the yellow boxes have large batch sizes and share model weight parameters across requests; hence, they are… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
+
+### Gated Delta Networks: Improving Mamba2 with Delta Rule — Fig.1 (p.7)
+![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p07.png]]
+> [!tip] 【MiniMax 解读】Gated DeltaNet 架构(Fig.1)：delta-rule 线性注意力 + 乘性门控(α,β)增联想召回；H1/H2 混合变体把 Gated DeltaNet 与 Mamba2(SSM) + Sliding-Window Attention 交错，融合选择性长程记忆+结构化递归+局部上下文。block 设计：q/k 路径=线性投影+shortconv+SiLU+L2norm，v=线性投影+shortconv+SiLU，α/β=线性投影，输出 gate=线性投影+SiLU。Wiki ppl 16.42、zero-shot 55.32，H2 混合 ppl 15.91 最优。线性注意力/SSM 架构核心图。
+*caption: Visualization of the (hybrid) architecture and block design of Gated DeltaNet models.… ｜ 论文 [[gated-delta-networks-improving-mamba2-with-delta-rule]] ｜ arxiv 见 MD 元信息*
+
+### Parallel Scan on Ascend AI Accelerators — Fig.3 (p.3)
+![[assets/parallel-scan-on-ascend-ai-accelerators-p03.png]]
+> [!tip] 【MiniMax 解读】⭐Ascend 910B AI Core 架构(Fig.3)：单 AI Core = 1 个 AI Cube(AIC 矩阵乘引擎) + 2 个 AI Vector(AIV SIMD 核)，各有独立 Unified Buffer(UB) scratchpad，加 Memory Transfer Engine(MTE)+标量+控制块。AIC/AIV 共享全局 HBM/L2，Cube↔Vector 数据交换须走全局内存/L2（AIC 无直接写 AIV UB 的本地路径）。并行 scan：AIV 跑 element-wise/局部 scan + 解耦 look-back（在 UB 上），AIC 改作跨块前缀累积（矩阵乘式），MTE 编排块级 tile 传输。⭐结论：Ascend 非对称 Cube/Vector 划分 + UB 局部计算 + Cube↔Vector 仅全局通信→偏好 block-tiled、通信最小化的解耦 scan 设计，而非密集 GEMM 中心。直击昇腾线性注意力/SSM scan。
+*caption: 1 shows the Ascend architecture where the… ｜ 论文 [[parallel-scan-on-ascend-ai-accelerators]] ｜ arxiv 见 MD 元信息*
+
 ## 按主题分类
 
-### architecture (42)
+### architecture (45)
 
 - ![[assets/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-p01.png]] — **From ATOP to ZCube: Automated Topology Optimizatio** Fig.1 (p.1): ATOP search results on different GPU scales, each point representing a topology.…  `[[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]]`
 - ![[assets/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-p03.png]] — **From ATOP to ZCube: Automated Topology Optimizatio** Fig.2 (p.3): GPT-3 training timeline on rank 0 of classical in- terleaved 1F1B schedule, excl…  `[[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]]`
@@ -110,6 +135,9 @@
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p10.png]] — **Efficient Large-Scale Language Model Training on G** Fig.16 (p.10): Throughput per GPU of a (𝑡, 𝑝) = (8, 8) parallel configura- tion for different m…  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]] — **Efficient Large-Scale Language Model Training on G** Fig.17 (p.11): Throughput (in sequences per second) with and without activation recomputation f…  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
 - ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]] — **Efficient Large-Scale Language Model Training on G** Fig.18 (p.11): Throughput per GPU with and without the scatter/gather optimization for a GPT mo…  `[[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]]`
+- ⭐ ![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p07.png]] — **Gated Delta Networks: Improving Mamba2 with Delta ** Fig.1 (p.7): Visualization of the (hybrid) architecture and block design of Gated DeltaNet mo…  `[[gated-delta-networks-improving-mamba2-with-delta-rule]]`
+- ![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p08.png]] — **Gated Delta Networks: Improving Mamba2 with Delta ** Fig.2 (p.8): Length extrapolation on six long benchmarks.…  `[[gated-delta-networks-improving-mamba2-with-delta-rule]]`
+- ![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p09.png]] — **Gated Delta Networks: Improving Mamba2 with Delta ** Fig.3 (p.9): Training throughput comparison of 1.3B models on a single H100 GPU. standalone m…  `[[gated-delta-networks-improving-mamba2-with-delta-rule]]`
 
 ### disaggregated-serving (66)
 
@@ -1242,3 +1270,128 @@
   - Throughput (in sequences per second) with and without activation recomputation for a GPT model with 145 billion param- eters using 128 A100 GPUs ((𝑡, 𝑝) = (8, 16)). 12 24 36 48 60
 - Fig.18 (p.11) ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]]
   - Throughput per GPU with and without the scatter/gather optimization for a GPT model with 175 billion parameters using 96 A100 GPUs and the interleaved schedule.
+
+### #52 Efficient Memory Management for Large Language Model Serving
+
+- ⭐ Fig.1 (p.1) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p01.png]]
+  - Left: Memory layout when serving an LLM with 13B parameters on NVIDIA A100. The parameters (gray) persist in GPU memory throughout serving. The memory for the KV cache (red) is (de)allocated per servi
+- Fig.2 (p.2) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p02.png]]
+  - Average percentage of memory wastes in different LLM serving systems during the experiment in §6.2. percentage of memory is used for other data, including ac- tivations – the ephemeral tensors created
+- Fig.3 (p.4) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p04.png]]
+  - KV cache memory management in existing systems. Three types of memory wastes – reserved, internal fragmentation, and external fragmentation – exist that prevent other requests from fitting into the me
+- Fig.4 (p.5) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p05.png]]
+  - vLLM system overview.
+- Fig.5 (p.5) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p05.png]]
+  - Illustration of the PagedAttention algorithm, where the attention key and values vectors are stored as non-contiguous blocks in the memory. block size (𝐵). Denote the key block 𝐾𝑗= (𝑘(𝑗−1)𝐵+1, . . . ,
+- Fig.6 (p.6) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p06.png]]
+  - Block table translation in vLLM. divides it into physical KV blocks (this is also done on CPU RAM for swapping; see §4.5). The KV block manager also maintains block tables—the mapping between logical 
+- Fig.7 (p.6) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p06.png]]
+  - Storing the KV cache of two requests at the same time in vLLM. requests and the latest tokens for generation phase requests) as one sequence and feeds it into the LLM. During LLM’s computation, vLLM u
+- Fig.8 (p.7) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p07.png]]
+  - Parallel sampling example. generates a single sequence. In the remainder of this paper, we assume the more general case in which a request gener- ates multiple sequences. In parallel sampling, one req
+- Fig.9 (p.7) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p07.png]]
+  - Beam search example. sample space. The algorithm relies on the beam width pa- rameter 𝑘, which determines the number of top candidates retained at every step. During decoding, beam search ex- pands ea
+- Fig.10 (p.8) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p08.png]]
+  - Shared prompt example for machine translation.
+- Fig.11 (p.9) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p09.png]]
+  - Input and output length distributions of the (a)
+- Fig.12 (p.10) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p10.png]]
+  - Single sequence generation with OPT models on the ShareGPT and Alpaca dataset
+- Fig.13 (p.10) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p10.png]]
+  - Average number of batched requests when serv- ing OPT-13B for the ShareGPT (2 reqs/s) and Alpaca (30 reqs/s) traces.
+- Fig.14 (p.11) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p11.png]]
+  - Parallel generation and beam search with OPT-13B on the Alpaca dataset.
+- Fig.15 (p.11) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p11.png]]
+  - Average amount of memory saving from sharing KV blocks, when serving OPT-13B for the Alpaca trace.
+- Fig.16 (p.12) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p12.png]]
+  - Translation workload where the input prompts share a common prefix. The prefix includes (a) 1 example with 80 tokens or (b) 5 examples with 341 tokens.
+- Fig.17 (p.12) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p12.png]]
+  - Performance on chatbot workload.
+- Fig.18 (p.12) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p12.png]]
+  - Ablation experiments. handle the long prompts, as PagedAttention resolves the problem of memory fragmentation and reservation. 7
+- Fig.19 (p.13) ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p13.png]]
+  - (a) Overhead of recomputation and swapping for different block sizes. (b) Performance when serving OPT-13B with the ShareGPT traces at the same request rate.
+
+### #53 DeFT: Decoding with Flash Tree-attention for Efficient Tree-
+
+- Fig.1 (p.1) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p01.png]]
+  - Usually, these applications produce substantially more tokens than traditional ones, to provide large space for tree search (Graves, 2012; Lu et al., 2022; Liu et al., 2023) or selection, as shown in 
+- ⭐ Fig.2 (p.5) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p05.png]]
+  - Overview of DEFT. Input Metadata is prepared in the system elaborated in Appendix A.1. In QKV
+- Fig.3 (p.6) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p06.png]]
+  - Comparison of QKV partitioning strategies during the QKV Preparation Phase between DEFT-
+- Fig.4 (p.9) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p09.png]]
+  - Latency breakdown for specula- tive decoding with a token tree of 32 queries, whose tree topology is from Medusa (Cai et al., 2024). U means unpaged memory.
+- Fig.5 (p.15) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p15.png]]
+  - Illustration of DEFT. (Left) System overview. (Right) The data flow of DEFT-Node (DEFT-Flatten is similar except for QKV partitioning) using a decoding tree example.
+- Fig.6 (p.16) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p16.png]]
+  - Discussion of tree-based decoding with tree queries (Miao et al., 2023) and tree KV.
+- Fig.7 (p.17) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p17.png]]
+  - Analysis for two case studies of tree-based decoding. (Left) Multi-step reasoning. (Right) Speculative decoding. Blue boxes mean shareable past KV cache in storage and memory access during the tree at
+- Fig.8 (p.19) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p19.png]]
+  - Operations of Tree Attention-Medusa (Cai et al., 2024). No Kernel Fusion or Tiling strategy is applied, which introduces significant IO of partial results like QK⊤, DCM, and Softmax between GPU global
+- Fig.9 (p.19) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p19.png]]
+  - Overview of two stages in DEFT Attention Kernel (DEFT-Node for example, and DEFT-Flatten is similar). Stage 1–calculate partial attentions. Based on the QKV grouping results after KV-Guided Grouping
+- Fig.10 (p.20) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p20.png]]
+  - Detailed attention operations of DEFT kernel (DEFT-Node for example, and DEFT-Flatten is similar). Based on the same decoding tree in Figure 3.
+- Fig.11 (p.21) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p21.png]]
+  - When the number of leaf nodes/queries ln is sufficiently large, the IO cost of partial results might become comparable to that of the KV cache. For instance, in the Llama models (Touvron et al., 2023a
+- Fig.12 (p.23) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p23.png]]
+  - The detailed procedure of reconstructing tree templates for multi-step reasoning. (Left)
+- Fig.13 (p.25) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p25.png]]
+  - Comparison of split strategies DEFT-Node and DEFT-Flatten in sorting task. Speedup ratio refers to the ratio between the per iteration latency of DEFT-Node and DEFT-Flatten. Tree Node Len std represen
+- Fig.14 (p.26) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p26.png]]
+  - Per iteration latency for few-shot prompting tasks with different tree width. e2e means decoding latency(optimal end-to-end latency), while Attn means only the attention overhead.
+- Fig.15 (p.26) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p26.png]]
+  - The chunk size selection is a trade-off between IO redundancy and threadblock scheduling: a larger chunk size means less redundancy of Query IO but may cause potential idle SMs of GPUs due to fewer th
+- Fig.16 (p.27) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p27.png]]
+  - Time per output token(TPOT) of DEFT with different prompt lengths in speculative decoding. 2500 5000 7500 10000 12500 15000 17500 20000
+- Fig.17 (p.27) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p27.png]]
+  - Decoding latency of DEFT with different prompt lengths in speculative decoding.
+- Fig.18 (p.28) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p28.png]]
+  - Attention latency of DEFT with different prompt lengths in speculative decoding.
+
+### #54 NanoFlow: Towards Optimal Large Language Model Serving Throu
+
+- ⭐ Fig.1 (p.3) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p03.png]]
+  - Transformer architecture. The operations in the yellow boxes have large batch sizes and share model weight parameters across requests; hence, they are compute-bound. Operations in green boxes require 
+- Fig.2 (p.5) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p05.png]]
+  - Comparison of network time and compute time. The closer to yellow, the more compute-bound the workload is, whereas the closer to blue indicates the workload is more network-bound. LMSYS-Chat Splitwise
+- Fig.3 (p.5) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p05.png]]
+  - Comparison of compute time and memory time.
+- Fig.4 (p.8) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p08.png]]
+  - Execution pipeline of existing systems. The green, yellow, and blue operations correspond to memory-, compute-, and network-bound operations. Operations in the previous and next layer are denoted by d
+- Fig.5 (p.8) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p08.png]]
+  - Interference characteristics between GEMM and GEMV kernels. The points on the x-axis correspond unique GEMM-GEMV implementation pairs. The y-axis denotes the GEMM and GEMV kernels’ normalized performa
+- Fig.6 (p.11) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p11.png]]
+  - Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow. The solid background and shaded background represents input batch 0-768 and 768-2048, respectively. R stands for resource utiliz
+- Fig.7 (p.11) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p11.png]]
+  - Offline throughput comparison. NanoFlow outper- forms all baselines for all the workload settings. TP stands for the number of GPUs used with tensor parallelism. • How do the various techniques propos
+- Fig.8 (p.13) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
+  - Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints.
+- Fig.9 (p.13) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
+  - Ablation study results for NanoFlow. Nano-batching and overlapping improves NanoFlow’s performance.
+- Fig.10 (p.13) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
+  - While the non-overlapping baseline sequentially executes operations, which mostly uses only one resource at a given time, the NanoFlow instance can concurrently utilize multiple resources and achieves
+- Fig.11 (p.13) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
+  - We find that
+
+### #55 Gated Delta Networks: Improving Mamba2 with Delta Rule
+
+- ⭐ Fig.1 (p.7) ![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p07.png]]
+  - Visualization of the (hybrid) architecture and block design of Gated DeltaNet models.
+- Fig.2 (p.8) ![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p08.png]]
+  - Length extrapolation on six long benchmarks.
+- Fig.3 (p.9) ![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p09.png]]
+  - Training throughput comparison of 1.3B models on a single H100 GPU. standalone mixers: Samba outperforms Mamba, while Gated DeltaNet-H1 and -H2 outperform
+
+### #56 Parallel Scan on Ascend AI Accelerators
+
+- ⭐ Fig.3 (p.3) ![[assets/parallel-scan-on-ascend-ai-accelerators-p03.png]]
+  - 1 shows the Ascend architecture where the
+- Fig.4 (p.4) ![[assets/parallel-scan-on-ascend-ai-accelerators-p04.png]]
+  - 1: Data path from an input tile xℓto an output tile yℓof the ScanU (Algorithm 4.1).
+- Fig.5 (p.7) ![[assets/parallel-scan-on-ascend-ai-accelerators-p07.png]]
+  - 1: A diagram of well-known parallel scan applica- tions considered here along with their dependencies.
+- Fig.6 (p.8) ![[assets/parallel-scan-on-ascend-ai-accelerators-p08.png]]
+  - 1:

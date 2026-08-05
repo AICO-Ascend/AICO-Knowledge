@@ -44,15 +44,11 @@ def chunk_dl(url, dest, chunk=1048576, max_retries=8):
     return True, pos
 
 JOBS=[
-("2409.19606","hyper-connections"),
-("2402.15627","megascale-scaling-large-language-model-training-to-more-than-10000-gpus"),
-("2502.13923","qwen2-5-vl-technical-report"),
-("2412.19437","deepseek-v3-technical-report"),
-("1910.02054","zero-memory-optimizations-toward-training-trillion-parameter-models"),
-("1909.08053","megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism"),
-("2409.19256","hybridflow-a-flexible-and-efficient-rlhf-framework"),
-("2512.24873","let-it-flow-agentic-crafting-on-rock-and-roll"),
-("2407.20018","efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey"),
+("2309.06180","efficient-memory-management-for-large-language-model-serving-with-pagedattention"),
+("2404.00242","deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference"),
+("2408.12757","nanoflow-towards-optimal-large-language-model-serving-throughput"),
+("2412.06464","gated-delta-networks-improving-mamba2-with-delta-rule"),
+("2505.15112","parallel-scan-on-ascend-ai-accelerators"),
 ]
 
 if __name__=="__main__":

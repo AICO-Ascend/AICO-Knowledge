@@ -26,7 +26,8 @@ Encodes the workflow proven on `AICO-knowledge` (50 inference-accel papers). Por
 ├── skills/paper-extraction/    # THIS skill + scripts
 │   ├── SKILL.md
 │   ├── extract_phase1.py
-│   └── chunk_download.py
+│   ├── chunk_download.py
+│   └── verify_pdfs.py
 └── extraction/                 # generated knowledge base
     ├── <slug>.md               # per-paper structured (Obsidian-flavored)
     ├── fulltext/<slug>.txt     # full text for grep
@@ -95,6 +96,7 @@ git remote set-url --push origin "https://gitcode.com/<user>/<repo>.git"  # stri
 
 ## Tools (this skill's scripts)
 
+- `verify_pdfs.py` — file-integrity pre-check (truncated/corrupt/missing/orphan). **Run first.**
 - `extract_phase1.py` — Phase 1 + merges MiniMax captions. Args: none (reads `papers_effective.md`, writes `extraction/`). Path-relative.
 - `chunk_download.py` — arxiv large-file resume. Edit `JOBS=[("arxiv_id","slug"),...]` list, run. Path-relative.
 - MiniMax MCP: `understand_image(image_source=<local path or URL>, prompt=...)` — multimodal figure reading.
@@ -113,3 +115,42 @@ git remote set-url --push origin "https://gitcode.com/<user>/<repo>.git"  # stri
 3. `python3 skills/paper-extraction/extract_phase1.py` — picks up new PDFs, preserves existing `minimax_captions.json`.
 4. (Optional) MiniMax-caption new architecture figures → append to `minimax_captions.json` → re-run Phase 1.
 5. Commit + push.
+
+## Pitfalls & efficiency (bake these in — they cost real time)
+
+**Always run `verify_pdfs.py` first** — 0-page `%PDF`-header files are *truncated downloads*, not "missing" or "HTML error". Don't waste cycles re-running Phase 1 on truncated PDFs; download-fix first, then extract once.
+
+**Download strategy — don't use parallel `curl` for arxiv**. 6-concurrent looked fast but rate-limited → ~13/50 came back truncated (%PDF header, 0 pages) → re-download cycle cost more than it saved. **Fast path = `chunk_download.py` for everything** (sequential, HTTP Range, 8 retries/chunk). It's not slower in practice because it avoids rework. Only fall back to plain `curl` for tiny (<500KB) PDFs.
+
+**arxiv large files (>3MB) on flaky networks**: connections get cut at ~1MB and even Range requests for later bytes can fail repeatedly. `chunk_download.py` with 1MB chunks + retries is the only reliable server-side path; if even that stalls, the file exceeds this environment's per-connection ceiling — mark `✗ 网络` and have the user drop the PDF in `papers/` manually (browser session works).
+
+**arxiv API (`export.arxiv.org/api/query`) returns empty XML** — don't use it. Scrape title from `https://arxiv.org/abs/<id>` HTML `<title>` tag instead.
+
+**Don't capture binary PDFs in bash `$(curl ...)`** — null bytes get stripped, corrupting the file. Use `curl -o file` or Python `urllib` (binary-safe) / Range requests writing to file in append mode.
+
+**Two-column PDFs scramble `get_text`** → abstract regex may miss. Robust: try `Abstract|ABSTRACT` → stop at `1 Introduction`/`Keywords:`/`CCS Concepts`; if miss, fall back to first 380 chars of body text. Phase 1 uses the index's abstract field, so get it right there or leave a placeholder.
+
+**Figure-page ≠ architecture figure**. "Figure 2 page" can be a results bar-chart, not the method diagram. Pick architecture figures by **caption keywords** (overview/architecture/framework/design/method/system/scan), not by figure number.
+
+**Featured-figure dedupe by PNG path** — the same PNG hosts multiple figure numbers (Fig.2 + Fig.4 on one page). Dedupe featured list by `img` or you'll list the same image N times.
+
+**Duplicate index rows for one paper** (e.g. GEPA appears twice) → one PDF, two rows. Canonicalize to one slug, point both rows at it.
+
+**`git push` non-fast-forward** when the repo was pushed from elsewhere → always `git pull --rebase <url> main` before push. Token in push URL: set, push, then strip token (`git remote set-url --push origin <clean-url>`).
+
+**OpenReview**: `ChallengeRequiredError` on both web `/pdf` and API; headless chromium (even with stealth) stuck on "Verifying your browser". Server-side can't pass — go manual (browser download → drop PDF in `papers/`).
+
+**ACM DL**: `403` = subscription paywall, no bypass without institutional auth — record link, mark `✗ ACM 订阅墙`.
+
+**TOML dotted keys** (`glm-5.2`): MUST quote `"glm-5.2"` or TOML parses nested table → custom value silently drops. (Applies to pricing config, not this skill directly, but a recurring trap.)
+
+**Efficiency levers**:
+- `verify_pdfs.py` pre-check (seconds) → fix downloads → extract once. Avoids "extract → find broken → re-download → re-extract" loops.
+- MiniMax calls: batch 3-5 `understand_image` tool calls per message (parallel), not one-at-a-time.
+- Phase 1 is idempotent + skips existing PNGs (`if not path.exists`) — safe to re-run; only changed papers re-render.
+- Abstract: prefer arxiv abs-page scrape for new rows (reliable) over PDF parsing (two-column fragile).
+
+## File-integrity helpers
+
+- `verify_pdfs.py` — `python3 skills/paper-extraction/verify_pdfs.py`. Reports truncated (0-page), corrupt (open-error), missing, and orphan PDFs. Exit 1 if any bad → use in CI/gate.
+- `chunk_download.py` — edit `JOBS=[("arxiv_id","slug"),...]`, run. The only reliable arxiv downloader in flaky-network environments.

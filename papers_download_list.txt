@@ -48,3 +48,8 @@ a-survey-on-large-language-model-acceleration-based-on-kv-cache-management | htt
 efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey | https://arxiv.org/abs/2407.20018 | https://arxiv.org/pdf/2407.20018
 from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training | https://dl.acm.org/doi/10.1145/3718958.3750503 | https://dl.acm.org/doi/pdf/10.1145/3718958.3750503
 linear-optimal-topic-transport-for-document-similarity | https://openreview.net/forum?id=f8SlF0Vzbq | https://openreview.net/pdf?id=f8SlF0Vzbq
+efficient-memory-management-for-large-language-model-serving-with-pagedattention | https://arxiv.org/abs/2309.06180 | https://arxiv.org/pdf/2309.06180
+deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference | https://arxiv.org/abs/2404.00242 | https://arxiv.org/pdf/2404.00242
+nanoflow-towards-optimal-large-language-model-serving-throughput | https://arxiv.org/abs/2408.12757 | https://arxiv.org/pdf/2408.12757
+gated-delta-networks-improving-mamba2-with-delta-rule | https://arxiv.org/abs/2412.06464 | https://arxiv.org/pdf/2412.06464
+parallel-scan-on-ascend-ai-accelerators | https://arxiv.org/abs/2505.15112 | https://arxiv.org/pdf/2505.15112
