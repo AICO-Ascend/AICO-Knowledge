@@ -7,11 +7,10 @@
 ```
 extraction/
 ├── <slug>.md              # 每篇论文的结构化解析（Obsidian-flavored：properties + 图表 embed + caption）
-├── <slug>.txt             # 每篇全文纯文本（供关键词检索 / 引用原文片段）
+├── fulltext/<slug>.txt    # 每篇全文纯文本（供关键词检索 / 引用原文片段）
 ├── assets/<slug>-pNN.png  # 抽取的图表页渲染图（150 DPI）
 ├── figures_index.md       # ⭐ 主索引：按主题分组 + 精选深度解读，插图入口
-├── minimax_captions.json  # MiniMax 多模态对关键架构图的技术解读（图路径 → 解读）
-└── extract_phase1.py      # 萃取脚本（可重跑）
+└── minimax_captions.json  # MiniMax 多模态对关键架构图的技术解读（图路径 → 解读）
 ```
 
 ## 快速插图 + 引用（工作流）
@@ -34,7 +33,7 @@ extraction/
 > 「EAGLE 通过在特征层自回归并引入超前一步的 token 序列解决特征预测不确定性 [EAGLE, Fig.4, arXiv:2401.15077]」
 
 ### 5. 检索原文片段
-`grep -l "关键词" extraction/*.txt` 找到论文，再 `<slug>.md` 看摘要 + 图表，或直接读 `<slug>.txt` 全文。
+`grep -l "关键词" extraction/fulltext/*.txt` 找到论文，再 `<slug>.md` 看摘要 + 图表，或直接读 `<slug>.txt` 全文。
 
 ## 单篇 MD 结构
 
@@ -57,7 +56,7 @@ paper_num / title / authors / date / arxiv / pdf / slug / tags
 
 ```bash
 cd /mnt/project/g00952465/AICO-knowledge
-python3 extraction/extract_phase1.py   # 重跑 Phase 1（文本+图表+caption，merge MiniMax 解读）
+python3 skills/paper-extraction/extract_phase1.py  # 重跑 Phase 1（脚本已移至 skills/）（文本+图表+caption，merge MiniMax 解读）
 ```
 MiniMax 深度解读增量加到 `extraction/minimax_captions.json`（key=图片相对路径 `assets/xxx.png` 或 `extraction/assets/xxx.png`），重跑脚本自动 merge。
 
@@ -69,7 +68,7 @@ MiniMax 深度解读增量加到 `extraction/minimax_captions.json`（key=图片
 
 ### 待补（9 篇，arxiv 大文件网络截断，`chunk_download.py` 后台分块续传中）
 hyper-connections / megascale / qwen2.5-vl / deepseek-v3 / zero / megatron-lm / hybridflow / let-it-flow / efficient-training-survey。
-这些论文的**元数据 + 摘要 + arxiv 链接**已在 `papers_effective.md`（#16-51 对应行），仅缺全文 + 图表深度萃取；下完后重跑 `python3 extraction/extract_phase1.py` 即补全。
+这些论文的**元数据 + 摘要 + arxiv 链接**已在 `papers_effective.md`（#16-51 对应行），仅缺全文 + 图表深度萃取；下完后重跑 `python3 skills/paper-extraction/extract_phase1.py` 即补全。
 
 ## 工具脚本
 

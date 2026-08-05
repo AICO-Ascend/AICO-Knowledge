@@ -25,4 +25,4 @@ tags: [moe, training]
 _未检测到带 caption 的 figure_
 
 ## 全文文本
-全文已存 `extraction/scalable-training-of-mixture-of-experts-models-with-megatron-core.txt`（8903 字符）供引用检索。
+全文已存 `extraction/fulltext/scalable-training-of-mixture-of-experts-models-with-megatron-core.txt`（8903 字符）供引用检索。

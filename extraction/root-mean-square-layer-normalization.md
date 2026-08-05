@@ -59,4 +59,4 @@ tags: []
 > SacreBLEU score curve over train- ing steps on newstest2013 (devset) for the RNNSearch. Models are trained with Nema- tus in Theano.
 
 ## 全文文本
-全文已存 `extraction/root-mean-square-layer-normalization.txt`（46403 字符）供引用检索。
+全文已存 `extraction/fulltext/root-mean-square-layer-normalization.txt`（46403 字符）供引用检索。

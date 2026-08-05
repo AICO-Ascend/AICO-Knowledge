@@ -84,4 +84,4 @@ tags: [multimodal]
 > Qualitative examples of Kimi K2.5 solving visual reasoning tasks via tool use. 29
 
 ## 全文文本
-全文已存 `extraction/kimi-k2-5-visual-agentic-intelligence.txt`（95693 字符）供引用检索。
+全文已存 `extraction/fulltext/kimi-k2-5-visual-agentic-intelligence.txt`（95693 字符）供引用检索。

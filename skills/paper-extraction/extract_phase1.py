@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 """Phase 1: extract text + metadata + figure pages + text captions for all papers.
-Produces per-paper Obsidian-flavored MD + a master figures index. Cheap, no MiniMax."""
+Produces per-paper Obsidian-flavored MD + a master figures index. Cheap, no MiniMax.
+
+Portable: derives REPO root from this script's location
+(skills/paper-extraction/extract_phase1.py → repo root 2 levels up)."""
 import fitz, re, os, json, sys
 from pathlib import Path
 
-REPO=Path("/mnt/project/g00952465/AICO-knowledge")
+# repo root = 2 levels up from this script (skills/paper-extraction/..)
+SCRIPT=Path(__file__).resolve()
+REPO=SCRIPT.parents[2]
 PAPERS=REPO/"papers"
 OUT=REPO/"extraction"
+FULLTEXT=OUT/"fulltext"
 ASSETS=OUT/"assets"
-OUT.mkdir(exist_ok=True); ASSETS.mkdir(exist_ok=True)
+OUT.mkdir(exist_ok=True); ASSETS.mkdir(exist_ok=True); FULLTEXT.mkdir(exist_ok=True)
 
 def parse_index():
     """num -> (title, date, abs_link, pdf_link, slug, tags)"""
@@ -137,9 +143,9 @@ def write_paper_md(num, meta, doc, full_text, figs, fig_paths, mm):
             m.append(f"> {mmcap}")
     m.append("")
     m.append("## 全文文本")
-    m.append(f"全文已存 `extraction/{slug}.txt`（{len(full_text)} 字符）供引用检索。")
+    m.append(f"全文已存 `extraction/fulltext/{slug}.txt`（{len(full_text)} 字符）供引用检索。")
     # save full text
-    (OUT/f"{slug}.txt").write_text(full_text,encoding="utf-8")
+    (FULLTEXT/f"{slug}.txt").write_text(full_text,encoding="utf-8")
     (OUT/f"{slug}.md").write_text("\n".join(m),encoding="utf-8")
     return len(full_text)
 

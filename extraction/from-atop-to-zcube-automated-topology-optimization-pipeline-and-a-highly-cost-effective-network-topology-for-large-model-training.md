@@ -144,4 +144,4 @@ tags: [training, architecture]
 > ZCube(128,2) topology for a 16384 GPU cluster based on 51.2 Tbps switches. 880
 
 ## 全文文本
-全文已存 `extraction/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.txt`（107386 字符）供引用检索。
+全文已存 `extraction/fulltext/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.txt`（107386 字符）供引用检索。

@@ -142,4 +142,4 @@ tags: [speculative]
 > Simulated speedup with batch size 4 for Llama-7B. 27
 
 ## 全文文本
-全文已存 `extraction/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.txt`（86865 字符）供引用检索。
+全文已存 `extraction/fulltext/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.txt`（86865 字符）供引用检索。

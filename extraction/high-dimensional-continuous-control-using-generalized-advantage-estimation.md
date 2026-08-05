@@ -44,4 +44,4 @@ tags: []
 > (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up. 7 DISCUSSION
 
 ## 全文文本
-全文已存 `extraction/high-dimensional-continuous-control-using-generalized-advantage-estimation.txt`（43324 字符）供引用检索。
+全文已存 `extraction/fulltext/high-dimensional-continuous-control-using-generalized-advantage-estimation.txt`（43324 字符）供引用检索。

@@ -159,4 +159,4 @@ tags: [rl]
 > We also note that generation stochasticity (temperature based sampling) is eliminated by operating under a cache; this ensures that ob- served improvements tie closely to inference scaling through prompt updates and GEPA’s diverse prompt exploration, rather than stochasticity in the model’s sampling process. NPU Kernels: We create a sequential refinement agent that iteratively generates kernels (u
 
 ## 全文文本
-全文已存 `extraction/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.txt`（98756 字符）供引用检索。
+全文已存 `extraction/fulltext/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.txt`（98756 字符）供引用检索。

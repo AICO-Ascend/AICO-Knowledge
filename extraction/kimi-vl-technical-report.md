@@ -89,4 +89,4 @@ tags: [multimodal]
 > Specifically, increasing the max thinking token length at inference time consistently improves test-time accuracy across all three 16
 
 ## 全文文本
-全文已存 `extraction/kimi-vl-technical-report.txt`（122024 字符）供引用检索。
+全文已存 `extraction/fulltext/kimi-vl-technical-report.txt`（122024 字符）供引用检索。

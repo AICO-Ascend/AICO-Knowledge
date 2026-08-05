@@ -4,7 +4,9 @@ Downloads in small byte-ranges (handles flaky connections + binary safely)."""
 import urllib.request, os, time, sys, fitz
 
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
-REPO="/mnt/project/g00952465/AICO-knowledge"
+import os
+from pathlib import Path
+REPO=Path(__file__).resolve().parents[2]
 
 def total_size(url):
     req=urllib.request.Request(url, headers={"User-Agent":UA}, method="HEAD")

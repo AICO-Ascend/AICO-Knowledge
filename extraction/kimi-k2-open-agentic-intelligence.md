@@ -89,4 +89,4 @@ tags: []
 > pipeline for RL weight update
 
 ## 全文文本
-全文已存 `extraction/kimi-k2-open-agentic-intelligence.txt`（112693 字符）供引用检索。
+全文已存 `extraction/fulltext/kimi-k2-open-agentic-intelligence.txt`（112693 字符）供引用检索。

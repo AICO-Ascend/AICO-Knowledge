@@ -25,4 +25,4 @@ tags: []
 _未检测到带 caption 的 figure_
 
 ## 全文文本
-全文已存 `extraction/ascend-950-npu-architecture-whitepaper.txt`（28777 字符）供引用检索。
+全文已存 `extraction/fulltext/ascend-950-npu-architecture-whitepaper.txt`（28777 字符）供引用检索。

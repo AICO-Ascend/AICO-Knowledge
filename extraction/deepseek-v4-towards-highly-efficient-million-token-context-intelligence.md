@@ -37,4 +37,4 @@ tags: [long-context]
 > 【MiniMax 解读】DeepSeek-V4 细粒度 EP(Fig.5)：MoE 层拆 Dispatch/Linear-1/Linear-2/Combine 四段。Comet 仅粗粒度重叠 Dispatch↔L1、L2↔Combine；本方案把 expert 再切 wave，一波 dispatch 完即开算、下一波并行 dispatch→稳态下「当前波计算+下一波 token 传输+上一波结果回送」三路并发=连续计算-通信流水。因单层通信<计算，融合成单流水 kernel 藏住互连延迟→低带宽互连也不掉吞吐。架构核心图，与 MoE/EP 相关。
 
 ## 全文文本
-全文已存 `extraction/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.txt`（45725 字符）供引用检索。
+全文已存 `extraction/fulltext/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.txt`（45725 字符）供引用检索。

@@ -34,4 +34,4 @@ tags: []
 > 4.3
 
 ## 全文文本
-全文已存 `extraction/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.txt`（61312 字符）供引用检索。
+全文已存 `extraction/fulltext/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.txt`（61312 字符）供引用检索。

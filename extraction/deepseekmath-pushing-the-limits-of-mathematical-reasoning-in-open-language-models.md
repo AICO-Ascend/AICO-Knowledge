@@ -25,4 +25,4 @@ tags: []
 _未检测到带 caption 的 figure_
 
 ## 全文文本
-全文已存 `extraction/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.txt`（81353 字符）供引用检索。
+全文已存 `extraction/fulltext/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.txt`（81353 字符）供引用检索。

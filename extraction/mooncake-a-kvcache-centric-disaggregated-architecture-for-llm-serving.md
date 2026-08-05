@@ -92,4 +92,4 @@ tags: [kv-cache, disaggregated-serving]
 > Request TTFT and TBT distributions of Mooncake and vLLM under real workloads
 
 ## 全文文本
-全文已存 `extraction/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.txt`（81350 字符）供引用检索。
+全文已存 `extraction/fulltext/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.txt`（81350 字符）供引用检索。

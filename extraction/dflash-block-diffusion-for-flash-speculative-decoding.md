@@ -52,4 +52,4 @@ tags: [speculative]
 > The loss decay makes training converge faster and better. A.5.2. RANDOM SAMPLING OF MASKED BLOCKS
 
 ## 全文文本
-全文已存 `extraction/dflash-block-diffusion-for-flash-speculative-decoding.txt`（54200 字符）供引用检索。
+全文已存 `extraction/fulltext/dflash-block-diffusion-for-flash-speculative-decoding.txt`（54200 字符）供引用检索。

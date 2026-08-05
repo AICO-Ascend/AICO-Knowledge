@@ -54,4 +54,4 @@ tags: [training]
 > Time per sample for GQA-XXL as a function of the number of GQA groups with input length 2048 and output length 512. Going from 1 (MQA) to 8 groups adds modest inference overhead, with increasing cost to adding more groups. is especially helpful for long inputs (Pope et al., 2022; de Jong et al., 2022). Rabe (2023) indepen- dently developed GQA with public implementa- tion. Other works have explore
 
 ## 全文文本
-全文已存 `extraction/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.txt`（23726 字符）供引用检索。
+全文已存 `extraction/fulltext/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.txt`（23726 字符）供引用检索。

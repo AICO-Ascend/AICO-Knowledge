@@ -65,4 +65,4 @@ tags: [speculative, training]
 > Acceptance rate of EAGLE and EAGLE-3 on MT-bench, with the target model being LLaMA-
 
 ## 全文文本
-全文已存 `extraction/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.txt`（45552 字符）供引用检索。
+全文已存 `extraction/fulltext/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.txt`（45552 字符）供引用检索。

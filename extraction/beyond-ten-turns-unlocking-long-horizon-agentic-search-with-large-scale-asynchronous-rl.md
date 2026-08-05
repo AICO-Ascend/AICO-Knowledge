@@ -29,4 +29,4 @@ tags: []
 > (Left) Asynchronous RL brings substantial improvements: Through RL training, our agent, ASearcher-Web-QwQ, obtains +15.0, +2.4, and +15.6 improvements on GAIA, xBench, and
 
 ## 全文文本
-全文已存 `extraction/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.txt`（2528 字符）供引用检索。
+全文已存 `extraction/fulltext/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.txt`（2528 字符）供引用检索。

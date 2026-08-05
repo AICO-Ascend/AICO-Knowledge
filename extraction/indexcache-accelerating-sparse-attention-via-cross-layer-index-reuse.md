@@ -47,4 +47,4 @@ tags: [sparse-attention, kv-cache]
 > Pairwise top-k index overlap ratio between all layer pairs of the 30B DSA model.
 
 ## 全文文本
-全文已存 `extraction/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse.txt`（58028 字符）供引用检索。
+全文已存 `extraction/fulltext/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse.txt`（58028 字符）供引用检索。

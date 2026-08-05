@@ -34,4 +34,4 @@ tags: []
 > t-SNE on CLASSIC
 
 ## 全文文本
-全文已存 `extraction/linear-optimal-topic-transport-for-document-similarity.txt`（58255 字符）供引用检索。
+全文已存 `extraction/fulltext/linear-optimal-topic-transport-for-document-similarity.txt`（58255 字符）供引用检索。

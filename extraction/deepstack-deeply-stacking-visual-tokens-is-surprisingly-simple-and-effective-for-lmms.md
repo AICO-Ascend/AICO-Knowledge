@@ -49,4 +49,4 @@ tags: [multimodal]
 > Visualization of three sam- pling methods for DeepStack.
 
 ## 全文文本
-全文已存 `extraction/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.txt`（62336 字符）供引用检索。
+全文已存 `extraction/fulltext/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.txt`（62336 字符）供引用检索。

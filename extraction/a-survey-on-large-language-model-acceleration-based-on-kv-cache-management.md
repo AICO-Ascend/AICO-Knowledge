@@ -25,4 +25,4 @@ tags: [kv-cache]
 _未检测到带 caption 的 figure_
 
 ## 全文文本
-全文已存 `extraction/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.txt`（233789 字符）供引用检索。
+全文已存 `extraction/fulltext/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.txt`（233789 字符）供引用检索。
