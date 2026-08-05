@@ -68,7 +68,7 @@ For core method/architecture diagrams (pick by caption keywords: overview/archit
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| 404 / HTML page | wrong arxiv ID (hallucinated) | search arxiv API `http://export.arxiv.org/api/query?search_query=ti:"..."` for correct ID |
+| 404 / HTML page | wrong arxiv ID (hallucinated) | scrape `https://arxiv.org/abs/<id>` HTML `<title>` to verify ID/title (arxiv API `export.arxiv.org/api/query` returns empty — don't use) |
 | HTTP 200 + small + pages=0 | parallel batch got rate-limited → truncated | retry **sequential** with browser UA + Referer, 1 req at a time |
 | Large PDF (>3MB), keeps truncating ~1MB | flaky network caps connection | `chunk_download.py` — HTTP Range in 1MB chunks, 8 retries/chunk, resume |
 | OpenReview `ChallengeRequiredError` / "Verifying your browser" | Cloudflare JS challenge | server curl/headless chromium can't pass → user downloads in browser, drops PDF into `papers/` |
