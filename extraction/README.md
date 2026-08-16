@@ -62,12 +62,15 @@ MiniMax 深度解读增量加到 `extraction/minimax_captions.json`（key=图片
 
 ## 当前覆盖
 
-- **41 篇论文**全文 + 图表 caption 萃取（333 张图）
-- **11 张核心架构图** MiniMax 多模态深度解读（IndexCache / EAGLE-1/3 / Medusa / DFlash / JetSpec / Sarathi / Mooncake / SGLang / Step-3 / DeepSeek-V4）
-- 主索引 `figures_index.md`：精选区 + 主题分类 + 按论文
+- **61 篇论文**全文 + 图表 caption 萃取（515 张图）
+- **22 张核心架构图**多模态深度解读（IndexCache / EAGLE-1/3 / Medusa / DFlash / JetSpec / Sarathi / Mooncake / SGLang / Step-3 / DeepSeek-V4 / Kimi K3 / PrfaaS / LongSpec / SpecExtend 等）
+- 主索引 `figures_index.md`：精选区 + 主题分类 + 按论文；图谱导航 `MOC.md`；manifest `papers.json`
 
-### 全部完成
-55 篇全部深度萃取（340 图、17 张架构图 MiniMax 解读）。`verify_pdfs.py` 报 0 截断。
+### 全部完成（2026-08-16 刷新）
+61 篇全部深度萃取（515 图、22 张架构图多模态深度解读）。`verify_pdfs.py` 报 0 截断。
+新增：`MOC.md` 主题图谱导航（wikilink 节点，Obsidian 图谱可视化）、`papers.json` 机器可读 manifest（RAG 摄取用）、`formulas.json` LaTeX 源公式库（arxiv e-print 提取，可直接粘贴）、单篇 MD 内「相关论文」交叉链接。
+
+2026-08-16 增量：#57 Kimi K3 / #58 PrfaaS / #59 LongSpec / #60 SpecExtend / #61 A Survey of LLMs（源列表 58 条 diff 出 7 条新条目，2 条歧义待确认：Delivery Note、Reinforcement learning）。
 
 ## 工具脚本
 

@@ -38,5 +38,12 @@ tags: []
 > [!quote] caption
 > 48
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.11 `where [·; ·] denotes concatenation. Especially, when 𝑘= 1, h𝑘−1`
+- p.23 `scale 𝑠= 40, 𝛼= 1, 𝛽= 32, and the scaling factor √`
+- p.30 `J𝐺𝑅𝑃𝑂(𝜃) = E[𝑞∼𝑃(𝑄), {𝑜𝑖}𝐺`
+- p.30 `𝐴𝑖= 𝑟𝑖−mean({𝑟1, 𝑟2, · · · , 𝑟𝐺})`
+
 ## 全文文本
 全文已存 `extraction/fulltext/deepseek-v3-technical-report.txt`（150416 字符）供引用检索。

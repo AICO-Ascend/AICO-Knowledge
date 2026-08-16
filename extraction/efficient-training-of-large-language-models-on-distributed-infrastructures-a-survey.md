@@ -24,5 +24,20 @@ tags: [training]
 ## 图表（原文 caption + 页码）
 _未检测到带 caption 的 figure_
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.2 `Suppose the input token vector is X = [x1, x2, · · · , xn].`
+- p.2 `Attention(Q, K, V ) = softmax`
+- p.18 `i = softmax(si) =`
+
+## 相关论文
+
+- [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] — Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM
+- [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] — EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test
+- [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] — Scalable Training of Mixture-of-Experts Models with Megatron Core
+- [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] — Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism
+- [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] — MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs
+- [[zero-memory-optimizations-toward-training-trillion-parameter-models]] — ZeRO: Memory Optimizations Toward Training Trillion Parameter Models
+
 ## 全文文本
 全文已存 `extraction/fulltext/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.txt`（271696 字符）供引用检索。

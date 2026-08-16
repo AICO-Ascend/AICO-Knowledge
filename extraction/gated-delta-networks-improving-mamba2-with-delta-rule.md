@@ -23,12 +23,12 @@ tags: [architecture]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.7) ⭐MiniMax深度解读
+### Figure 1 (p.7) ⭐深度解读
 ![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p07.png]]
 > [!quote] caption
 > Visualization of the (hybrid) architecture and block design of Gated DeltaNet models.
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】Gated DeltaNet 架构(Fig.1)：delta-rule 线性注意力 + 乘性门控(α,β)增联想召回；H1/H2 混合变体把 Gated DeltaNet 与 Mamba2(SSM) + Sliding-Window Attention 交错，融合选择性长程记忆+结构化递归+局部上下文。block 设计：q/k 路径=线性投影+shortconv+SiLU+L2norm，v=线性投影+shortconv+SiLU，α/β=线性投影，输出 gate=线性投影+SiLU。Wiki ppl 16.42、zero-shot 55.32，H2 混合 ppl 15.91 最优。线性注意力/SSM 架构核心图。
 
 ### Figure 2 (p.8)
@@ -40,6 +40,29 @@ tags: [architecture]
 ![[assets/gated-delta-networks-improving-mamba2-with-delta-rule-p09.png]]
 > [!quote] caption
 > Training throughput comparison of 1.3B models on a single H100 GPU. standalone mixers: Samba outperforms Mamba, while Gated DeltaNet-H1 and -H2 outperform
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.2 `ot = Stqt ∈Rdv`
+- p.2 `O = (QK⊺⊙M)V ∈RL×dv`
+- p.2 `St = αtSt−1 + vtk⊺`
+- p.2 `lative decay product γj = Qj`
+- p.2 `i=1 αi, and by expanding the recurrence, we can express the result in`
+- p.2 `O = ((QK⊺) ⊙Γ) V`
+- p.3 `γj if i ≥j and Γij = 0 otherwise.`
+- p.3 `S[t+1] = −→`
+- p.3 `O[t] = ←−−`
+- p.3 `j=tC+1 αj. 1 Here we use the left arrow (←−· ) or the right arrow (−→· )`
+- p.3 `[t] = γr`
+- p.3 `S[t] = γC`
+- p.3 `t = St−1 (I −βtktk⊺`
+- p.4 `[t] = βr`
+- p.4 `[t]K[t] ∈Rdk×dk, H[t] = U⊤`
+
+## 相关论文
+
+- [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] — From ATOP to ZCube: Automated Topology Optimization Pipeline and A Highly Cost-Effective Network Topology for Large Model Training
+- [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] — Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM
 
 ## 全文文本
 全文已存 `extraction/fulltext/gated-delta-networks-improving-mamba2-with-delta-rule.txt`（79000 字符）供引用检索。

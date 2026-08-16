@@ -43,17 +43,25 @@ def chunk_dl(url, dest, chunk=262144, max_retries=15):
                 print(f"  stuck at {pos}"); return False, pos
     return True, pos
 
-JOBS=[
-("2409.19606","hyper-connections"),
-("2409.19256","hybridflow-a-flexible-and-efficient-rlhf-framework"),
-("2512.24873","let-it-flow-agentic-crafting-on-rock-and-roll"),
-("2502.13923","qwen2-5-vl-technical-report"),
-("2412.19437","deepseek-v3-technical-report"),
-("2402.15627","megascale-scaling-large-language-model-training-to-more-than-10000-gpus"),
-("1910.02054","zero-memory-optimizations-toward-training-trillion-parameter-models"),
-("1909.08053","megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism"),
-("2407.20018","efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey"),
-]
+# Jobs: pass a file path as argv[1] (lines: "<arxiv_id> <slug>", # comments ok),
+# or inline pairs: chunk_download.py 2607.24653 kimi-k3-open-frontier-intelligence ...
+# (kept generic on purpose — never hardcode per-batch job lists here again)
+def load_jobs():
+    args = sys.argv[1:]
+    if len(args) == 1 and os.path.isfile(args[0]):
+        jobs = []
+        for ln in open(args[0], encoding="utf-8"):
+            ln = ln.strip()
+            if not ln or ln.startswith("#"):
+                continue
+            aid, slug = ln.split(None, 1)
+            jobs.append((aid.strip(), slug.strip()))
+        return jobs
+    if args and len(args) % 2 == 0:
+        return [(args[i], args[i + 1]) for i in range(0, len(args), 2)]
+    return []
+
+JOBS = load_jobs()
 
 if __name__=="__main__":
     os.chdir(REPO)

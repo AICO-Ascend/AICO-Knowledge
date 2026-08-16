@@ -88,5 +88,13 @@ tags: [multimodal]
 > [!quote] caption
 > Specifically, increasing the max thinking token length at inference time consistently improves test-time accuracy across all three 16
 
+## 相关论文
+
+- [[qwen3-vl-technical-report]] — Qwen3-VL Technical Report
+- [[qwen2-5-vl-technical-report]] — Qwen2.5-VL Technical Report
+- [[kimi-k2-5-visual-agentic-intelligence]] — KIMI K2.5: VISUAL AGENTIC INTELLIGENCE
+- [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] — DeepStack: Deeply Stacking Visual Tokens is Surprisingly Simple and Effective for LMMs
+- [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
+
 ## 全文文本
 全文已存 `extraction/fulltext/kimi-vl-technical-report.txt`（122024 字符）供引用检索。

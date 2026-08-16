@@ -109,3 +109,19 @@ extraction/                # 生成知识库
 - `skills/paper-extraction/verify_pdfs.py` — PDF 体检（截断/损坏/缺失/孤儿），CI gate
 
 **下次任何论文仓做深度萃取 + 图文素材库**：clone `skills/paper-extraction/` 过去，按 SKILL.md 走，本文档当踩坑参考。
+
+## 9. 增量刷新与知识库深化（2026-08-16 追加）
+
+**触发**：用户更新 Moonlight 源库导出（58 条），要求全自主增量同步 + 知识库深化（图/公式/文本可被工程高效引用，Obsidian 图谱化 + RAG 友好）。
+
+**增量同步流程（已固化进 SKILL.md「Source-list sync」）**：解析 moonlight 表格 → token-Jaccard 模糊 diff 现有索引（>0.6 同篇；注意同篇改名行如 LOTT 两版标题）→ web 搜索解析新标题的 arxiv ID → abs 页 HTML 抓摘要 → HEAD 查大小 → `chunk_download.py jobs.txt`（脚本已泛化：JOBS 从文件/命令行进，不再硬编码）→ `verify_pdfs.py` → 更新索引 → 萃取 → 深度解读 → 推送。
+
+**本次结果**：58 条 diff 出 7 条候选新；5 条确认并下全（Kimi K3 2607.24653 / PrfaaS 2604.15039 / LongSpec 2502.17421 / SpecExtend 2505.20776 / LLM 综述 2303.18223，144 页 5.9MB 也 chunk 下成）；2 条歧义跳过待确认（"Delivery Note" arxiv 无同名、"Reinforcement learning" 标题太泛——**不猜来源，报给用户**）。
+
+**知识库深化四件套**（extract_phase1.py 扩展，全库重跑幂等）：
+1. **MOC.md** — 主题聚类 + wikilink 节点，Obsidian 图谱视图直接可视化。
+2. **相关论文交叉链接** — 共享标签×2 + 标题 token Jaccard，top6 写进每篇 MD；speculative 簇（EAGLE/Medusa/LongSpec/SpecExtend/DFlash/JetSpec）自动成网。
+3. **papers.json** — 全量机器可读 manifest（num/title/slug/arxiv/tags/页数/图数/路径/字符数），RAG 摄取入口。
+4. **LaTeX 公式库** — ⚠️关键教训：PDF 文本抽取会把多行公式撕成碎片（"O≥j = attn" 这种不可用）。正解=抓 arxiv e-print LaTeX 源（`eprint_formulas.py`，缓存 `.cache/eprints/` 已 gitignore），正则 equation/align/gather/\[\] 环境，去 label/注释，$$块直贴 Obsidian。启发式 PDF 抽取仅作 e-print 缺失时的 fallback。
+
+**MiniMax key 过期对策**：MCP 报 "token is unusable" 时，Claude 直接 Read PNG 写深度解读（本次 5 张即此路径），caption JSON 格式不变、模板标签已泛化为「多模态」。

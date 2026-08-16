@@ -1,0 +1,238 @@
+{
+ "indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse": [
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}^{\\mathrm{I}}_{\\mathrm{multi}} = \\sum_{j=0}^{m} \\frac{1}{m+1}\\sum_{t} D_{\\mathrm{KL}}\\!\\left( \\mathbf{p}^{(\\ell+j)}_{t} \\,\\big\\|\\, \\mathbf{q}^{(\\ell)}_t \\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}^{\\mathrm{I}}_{\\mathrm{avg}} = \\sum_{t} D_{\\mathrm{KL}}\\!\\left( \\bar{\\mathbf{p}}_{t} \\,\\big\\|\\, \\mathbf{q}^{(\\ell)}_t \\right)."
+  },
+  {
+   "env": "align",
+   "latex": "\\nabla_\\theta \\, \\mathcal{L}^{\\mathrm{I}}_{\\mathrm{multi}} &= -\\sum_{j=0}^{m} \\frac{1}{m+1} \\sum_{t} \\nabla_\\theta \\sum_{s} \\mathbf{p}^{(\\ell+j)}_{t}(s) \\log \\mathbf{q}^{(\\ell)}_t(s) \\notag \\\\ &= -\\sum_{t} \\nabla_\\theta \\sum_{s} \\underbrace{\\Bigl(\\textstyle\\sum_{j=0}^{m} \\frac{1}{m+1} \\mathbf{p}^{(\\ell+j)}_{t}(s)\\Bigr)}_{\\bar{\\mathbf{p}}_{t}(s)} \\log \\mathbf{q}^{(\\ell)}_t(s) \\;=\\; \\nabla_\\theta \\, \\mathcal{L}^{\\mathrm{I}}_{\\mathrm{avg}}."
+  }
+ ],
+ "medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads": [
+  {
+   "env": "align",
+   "latex": "p_t^{(k)} = \\text{softmax}\\left(W_2^{(k)} \\cdot \\left(\\text{SiLU}(W_1^{(k)} \\cdot h_t)+h_t\\right)\\right),\\\\ \\text{where } W_2^{(k)}\\in\\mathbb{R}^{d\\times V}, W_1^{(k)}\\in\\mathbb{R}^{d\\times d}."
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_{\\text{\\ours-1}} = \\sum_{k=1}^K -\\lambda_k\\log p_t^{(k)}(y_{t+k+1})."
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_{\\text{\\ours-2}} = \\mathcal{L}_{\\text{LM}} + \\lambda_0\\mathcal{L}_{\\text{\\ours-1}}."
+  },
+  {
+   "env": "align",
+   "latex": "p_{\\text{original}}(x_{n+k}|x_1, x_2, \\cdots, x_{n+k-1}) > \\\\\\min\\rbr{\\epsilon, \\delta\\exp\\rbr{-H(p_{\\text{original}}(\\cdot|x_1, x_2, \\cdots, x_{n+k-1}))}},"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_{\\text{LM-distill}} = KL(p_{\\text{original},t}^{(0)}||p_t^{(0)}),"
+  },
+  {
+   "env": "align",
+   "latex": "\\sum_{\\sbr{i_1, i_2, \\cdots, i_k}\\in I}\\prod_{j=1}^k a_j^{(i_j)}."
+  }
+ ],
+ "eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test": [],
+ "eagle-speculative-sampling-requires-rethinking-feature-uncertainty": [
+  {
+   "env": "equation",
+   "latex": "L_{reg} = \\text{Smooth L1}(f_{i+1}, \\text{Draft\\_Model}(T_{2:i+1}, F_{1:i}))."
+  },
+  {
+   "env": "gather",
+   "latex": "{p}_{i+2}=\\text{Softmax}(\\text{LM\\_Head}({f}_{i+1})), \\\\ \\hat{p}_{i+2}=\\text{Softmax}(\\text{LM\\_Head}(\\hat{f}_{i+1})), \\\\ L_{cls} = \\text{Cross\\_Entropy}({p}_{i+2},\\hat{p}_{i+2})."
+  }
+ ],
+ "eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees": [
+  {
+   "env": "equation",
+   "latex": "V_i=\\prod_{t_j \\in \\text{Path}\\left(\\text{root}, t_i\\right)} p_j \\approx \\prod_{t_j \\in \\text{Path}\\left(\\text{root}, t_i\\right)} c_j,"
+  }
+ ],
+ "block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models": [
+  {
+   "env": "equation",
+   "latex": "\\M_{\\text{full}} = \\begin{bmatrix} \\M_{BD} & \\M_{OBC} \\\\ \\mathbf{0} & \\M_{BC} \\end{bmatrix}"
+  },
+  {
+   "env": "align",
+   "latex": "\\log p_\\theta(\\x) = \\sum_{\\ell=1}^L \\log p_\\theta(\\xl \\mid \\x^{<\\ell}),"
+  },
+  {
+   "env": "align",
+   "latex": "p_\\theta(\\x_s \\mid \\x_t) = \\prod_{\\ell=1}^L p_\\theta(\\xl_s \\mid \\x_t) = \\sum_{\\x} \\left[\\prod_{\\ell=1}^L q(\\xl_s \\mid \\xl_t, \\xl) p_\\theta(\\xl \\mid \\x_t)\\right],"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}(\\x; \\theta) = \\E_q\\Bigg[- \\log p_\\theta( \\x | \\x_{t(1)}) + \\sum_{j=1}^T \\KL[q(\\x_{s(j)} | \\x_{t(j)}, \\x) \\| p_\\theta(\\x_{s(j)} | \\x_{t(j)})] + \\KL[q(\\x_{t(T)} | \\x) \\| p_\\theta(\\x_{t(T)})] \\Bigg]"
+  },
+  {
+   "env": "align",
+   "latex": "\\log p_\\theta(\\x) &= \\sum_{b = 1}^{B} \\log p_\\theta(\\x^{b} \\mid \\x^{<b}),"
+  },
+  {
+   "env": "align",
+   "latex": "p_\\theta(\\x_s^b \\mid \\x_t^b, \\x^{<b}) = \\sum_{\\x^b} q(\\x_s^b \\mid \\x_t^b, \\x^b)p_\\theta(\\x^b\\mid \\x^b_t,\\x^{<b})"
+  },
+  {
+   "env": "align",
+   "latex": "- \\log p_\\theta(\\x) \\leq \\mathcal{L}_\\text{BD}(\\x; \\theta) := \\sum_{b=1}^{B} \\mathcal{L}(\\x^b, \\x^{<b}; \\theta),"
+  },
+  {
+   "env": "align",
+   "latex": "\\x_\\text{logits}^b, \\mathbf{K}^b, \\mathbf{V}^b \\gets \\x^b_\\theta(\\x^b_t, \\mathbf{K}^{1:b-1}, \\mathbf{V}^{1:b-1}) := \\x^b_\\theta(\\x^b_t, \\x^{<b}),"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_\\text{BD}(\\mathbf{X}; \\theta) := l(\\mathbf{X}; \\theta) = \\frac{1}{K} \\sum_{k=1}^K \\sum_{b=1}^B \\frac{\\alpha_{t(k, b)}'}{1-\\alpha_{t(k,b)}} \\log p_\\theta \\left( \\x^{(k),b} \\mid \\x_{t(k,b)}^{(k),b}, \\x^{(k), <b} \\right)"
+  },
+  {
+   "env": "align",
+   "latex": "\\text{Var}_{\\mathbf{X}, t}\\left[ \\nabla_\\theta l (\\mathbf{X}; \\theta) \\right] &\\approx \\frac{1}{M-1} \\sum_{m=1}^M \\left\\lVert \\nabla_\\theta l (\\mathbf{X}^m; \\theta) - \\frac{1}{M} \\sum_{m=1}^M \\nabla_\\theta l(\\mathbf{X}^m; \\theta) \\right\\rVert^2_2"
+  },
+  {
+   "env": "align",
+   "latex": "[Q_t]_{ij} = \\begin{cases} 1 & \\text{if } i = j = m \\\\ \\at & \\text{if } i = j \\neq m \\\\ 1-\\at & \\text{if } j = m, i \\neq m \\end{cases}"
+  },
+  {
+   "env": "align",
+   "latex": "[Q_{t|s}]_{ij} = \\begin{cases} 1 & \\text{if } i = j = m \\\\ \\ats & \\text{if } i = j \\neq m \\\\ 1-\\ats & \\text{if } j = m, i \\neq m \\end{cases}"
+  },
+  {
+   "env": "align",
+   "latex": "q(\\xl_t | \\xl) = \\text{Cat} \\left( \\xl_t; \\overline{Q}_t \\xl \\right), \\quad \\text{with} \\quad \\overline{Q}_{t(i)} = Q_{t(1)} Q_{t(2)} \\dots Q_{t(i)}"
+  },
+  {
+   "env": "align",
+   "latex": "q(\\xl_{s} | \\xl_t, \\xl) = \\frac{q(\\xl_t | \\xl_{s}, \\xl) q(\\xl_{s} | \\xl)}{q(\\xl_t | \\xl)} = \\text{Cat} \\left( \\xl_{s}; \\frac{Q_{t|s} \\xl_t \\odot Q_s^\\top \\xl}{{(\\xl_t)}^\\top Q_t^\\top \\xl} \\right)"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_{\\text{diffusion}} &= \\sum_{b=1}^{B} \\mathbb{E}_{t \\sim [0, 1]} \\mathbb{E}_{q} \\left[ \\frac{\\at'}{1-\\at} \\log p_\\theta(\\x^b \\mid \\x_t^b, \\x^{<b}) \\right]"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_{\\text{recons}} &= - \\mathbb{E}_q \\log \\p (\\x^b | \\x_{t(1)}^b, \\x^{<b}) \\nonumber \\\\ &= - \\log \\p (\\x^b | \\x_{t(1)}^b = \\x^b, \\x^{<b}) \\nonumber \\\\ &= 0"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_{\\text{BD}} (\\x; \\theta) &= \\sum_{b=1}^{B} \\mathbb{E}_{t \\sim [0, 1]} \\mathbb{E}_{q} \\left[ \\frac{\\at'}{1-\\at} \\log p_\\theta(\\x^b \\mid \\x_t^b, \\x^{<b}) \\right]"
+  },
+  {
+   "env": "align",
+   "latex": "-\\log \\p(\\x) &\\leq - \\sum_{b=1}^{L} \\mathbb{E}_{t \\sim [0, 1]} \\frac{1}{t} q(\\x_t^b = \\m | \\x^b) \\log p_\\theta(\\x^b \\mid \\x_t^b = \\m,\\x^{<b}) \\nonumber \\\\ & \\text{\\footnotesize{ $\\because q(\\x^b_t = \\m | \\x^b) = t$, we get:}} \\nonumber \\\\ &= - \\sum_{b=1}^{L} \\mathbb{E}_{t \\sim [0, 1]} \\log p_\\theta(\\x^b \\mid \\x_t^b = \\m,\\x^{<b}) \\nonumber \\\\ &= - \\sum_{b=1}^{L} \\log p_\\theta(\\x^b \\mid \\m, \\x^{<b})"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_1 &= \\sum_{b=1}^{L} \\log \\mathbb{E}_{t \\sim [0, 1]} \\mathbb{E}_q \\frac{\\at'}{1-\\at} p_\\theta(\\x^b \\mid \\x_t^b,\\x^{<b}) \\nonumber \\\\ &= - \\sum_{b=1}^{L} \\log p_\\theta(\\x^b \\mid \\m,\\x^{<b})"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_2 = \\sum_{b=1}^{L/2} \\log \\mathbb{E}_{t \\sim [0, 1]} \\mathbb{E}_q \\frac{\\at'}{1-\\at} p_\\theta(\\x^b \\mid \\x_t^b, \\x^{<b})"
+  }
+ ],
+ "dflash-block-diffusion-for-flash-speculative-decoding": [
+  {
+   "env": "display",
+   "latex": "\\mathbf{H}_{t} = \\mathrm{RMSNorm} \\left( W_c[\\mathbf{H}^{(l_1)};\\ldots;\\mathbf{H}^{(l_5)}] \\right)."
+  },
+  {
+   "env": "display",
+   "latex": "\\begin{aligned} \\mathbf{Q}_i &= W_i^Q \\mathbf{H}_d, \\\\ \\mathbf{K}_i &= [W_i^K \\mathbf{H}_t;\\, W_i^K \\mathbf{H}_d]_{\\mathrm{seq}}, \\\\ \\mathbf{V}_i &= [W_i^V \\mathbf{H}_t;\\, W_i^V \\mathbf{H}_d]_{\\mathrm{seq}}. \\end{aligned}"
+  },
+  {
+   "env": "display",
+   "latex": "5 \\times 2048 \\times 2048 \\times 2 \\approx 42\\text{ MB},"
+  }
+ ],
+ "dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation": [
+  {
+   "env": "equation",
+   "latex": "P(X \\mid x_0) = \\prod_{k=1}^{\\gamma} p_k(x_k \\mid x_0, x_{<k}), \\qquad p_k(v \\mid x_0, x_{<k}) = \\frac{ \\exp\\!\\left(U_k(v) + B_k(x_0, x_{<k}, v)\\right) }{ \\sum_{u \\in \\mathcal{V}} \\exp\\!\\left(U_k(u) + B_k(x_0, x_{<k}, u)\\right) }."
+  },
+  {
+   "env": "equation",
+   "latex": "B(x_{k-1},\\, \\cdot\\,) = W_1[x_{k-1}] \\, W_2 \\;\\in\\; \\RR^{V},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} s_k = \\sigma(W_g\\, z_k)& \\odot s_{k-1} \\;+\\; \\bigl(1 - \\sigma(W_g\\, z_k)\\bigr) \\odot \\tanh(W_c\\, z_k), \\\\ &B_k(x_{<k},\\, \\cdot\\,) = W_2^\\top\\, \\tanh(W_o\\, z_k), \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "c_k = \\sigma\\bigl(w^\\top [h_k;\\, W_1[x_{k-1}]]\\bigr),"
+  },
+  {
+   "env": "equation",
+   "latex": "c_k^* = 1 - \\tfrac{1}{2}\\|p_k^d - p_k^t\\|_1."
+  },
+  {
+   "env": "equation",
+   "latex": "\\Ll_{\\text{ce}} = -\\sum_{k=1}^{\\gamma} w_k \\log p^d_{k}(x_k^*),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\Ll_{\\text{tv}} = \\sum_{k=1}^{\\gamma} w_k \\|p_k^d - p_k^t\\|_1."
+  },
+  {
+   "env": "equation",
+   "latex": "\\Ll_{\\text{conf}} = -\\sum_{k=1}^{\\gamma} w_k \\bigl[c_k^* \\log c_k + (1 - c_k^*) \\log(1 - c_k)\\bigr]."
+  },
+  {
+   "env": "equation",
+   "latex": "\\Ll = \\alpha_{\\text{ce}}\\,\\Ll_{\\text{ce}} + \\alpha_{\\text{tv}}\\,\\Ll_{\\text{tv}} + \\alpha_{\\text{conf}}\\,\\Ll_{\\text{conf}}"
+  },
+  {
+   "env": "equation",
+   "latex": "L = \\frac{T_{\\text{draft}} + T_{\\text{verify}}}{\\tau}."
+  },
+  {
+   "env": "equation",
+   "latex": "H_{\\text{ctx}} = \\mathrm{RMSNorm}\\bigl(W_c\\,[H^{(l_1)};\\, \\ldots;\\, H^{(l_m)}]\\bigr),"
+  },
+  {
+   "env": "equation",
+   "latex": "K_i = [W_i^K H_{\\text{ctx}};\\; W_i^K H_d], \\quad V_i = [W_i^V H_{\\text{ctx}};\\; W_i^V H_d]."
+  },
+  {
+   "env": "align",
+   "latex": "\\Theta_0 &= 1 \\cdot \\mathrm{SPS}(1) = 1.0, \\\\ \\Theta_1 &= (1 + 0.8) \\cdot \\mathrm{SPS}(2) = 0.9."
+  },
+  {
+   "env": "display",
+   "latex": "\\mathrm{SPS}(1) = 1.0,\\qquad \\mathrm{SPS}(2) = 0.5,\\qquad \\mathrm{SPS}(3) = 0.45."
+  },
+  {
+   "env": "display",
+   "latex": "a_2 = a_1 c_2"
+  },
+  {
+   "env": "display",
+   "latex": "a_2 = 0.8 \\times 0.9 = 0.72."
+  },
+  {
+   "env": "display",
+   "latex": "\\Theta_2 = (1 + 0.8 + 0.72) \\times 0.45 = 1.134."
+  },
+  {
+   "env": "display",
+   "latex": "\\Theta_2 = (1 + 0.8 + 0) \\times 0.45 = 0.81."
+  },
+  {
+   "env": "display",
+   "latex": "p_{\\mathrm{t}}(A)=0.7,\\qquad p_{\\mathrm{t}}(B)=0.3,"
+  },
+  {
+   "env": "display",
+   "latex": "p_{\\mathrm{d}}(A)=0.5,\\qquad p_{\\mathrm{d}}(B)=0.5."
+  }
+ ],
+ "jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting": []
+}

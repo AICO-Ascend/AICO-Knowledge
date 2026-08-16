@@ -83,5 +83,13 @@ tags: [multimodal]
 > [!quote] caption
 > Qualitative examples of Kimi K2.5 solving visual reasoning tasks via tool use. 29
 
+## 相关论文
+
+- [[kimi-vl-technical-report]] — KIMI-VL TECHNICAL REPORT
+- [[qwen2-5-vl-technical-report]] — Qwen2.5-VL Technical Report
+- [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] — DeepStack: Deeply Stacking Visual Tokens is Surprisingly Simple and Effective for LMMs
+- [[qwen3-vl-technical-report]] — Qwen3-VL Technical Report
+- [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
+
 ## 全文文本
 全文已存 `extraction/fulltext/kimi-k2-5-visual-agentic-intelligence.txt`（95693 字符）供引用检索。

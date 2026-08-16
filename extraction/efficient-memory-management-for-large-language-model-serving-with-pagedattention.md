@@ -23,12 +23,12 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.1) ⭐MiniMax深度解读
+### Figure 1 (p.1) ⭐深度解读
 ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p01.png]]
 > [!quote] caption
 > Left: Memory layout when serving an LLM with 13B parameters on NVIDIA A100. The parameters (gray) persist in GPU memory throughout serving. The memory for the KV cache (red) is (de)allocated per serving request. A small amount of memory (yellow) is used ephemerally for activation. Right: vLLM smooths out the rapid growth curve of KV cache memory seen in existing systems [31, 60], leading to a nota
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】PagedAttention 内存布局(Fig.1)：13B 模型在 A100-40G 上参数占 65%（26GB 常驻）、KV cache >30%（每请求动态）、激活小片。传统系统把每请求 KV 存成单连续张量→内部+外部碎片严重、batch 受限。PagedAttention 借 OS 虚拟内存分页：KV 切成固定块（如 16 token）存非连续物理显存，每请求 block table 映射逻辑→物理（类比页表）；请求间可共享物理块（并行采样/beam search/前缀共享）；碎片仅剩 sub-block 余量（~1 token vs GB 级）→近乎零 KV 浪费、吞吐 2-4x。架构核心图，KV-cache/serving 基石。
 
 ### Figure 2 (p.2)
@@ -120,6 +120,11 @@ tags: []
 ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p13.png]]
 > [!quote] caption
 > (a) Overhead of recomputation and swapping for different block sizes. (b) Performance when serving OPT-13B with the ShareGPT traces at the same request rate.
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.3 `𝑃(𝑥) = 𝑃(𝑥1) · 𝑃(𝑥2 | 𝑥1) · · · 𝑃(𝑥𝑛| 𝑥1, . . . ,𝑥𝑛−1).`
+- p.3 `𝑡=1 exp(𝑞⊤`
 
 ## 全文文本
 全文已存 `extraction/fulltext/efficient-memory-management-for-large-language-model-serving-with-pagedattention.txt`（82023 字符）供引用检索。

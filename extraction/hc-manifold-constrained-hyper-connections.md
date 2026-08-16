@@ -24,5 +24,11 @@ tags: []
 ## 图表（原文 caption + 页码）
 _未检测到带 caption 的 figure_
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.9 `matrix M(0) = exp( ˜Hres`
+- p.9 `= M(𝑡max) as 𝑡max →∞. We choose 𝑡max = 20 as a practical value in`
+- p.11 `𝑟= arg min`
+
 ## 全文文本
 全文已存 `extraction/fulltext/hc-manifold-constrained-hyper-connections.txt`（55403 字符）供引用检索。

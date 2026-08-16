@@ -1,0 +1,943 @@
+[
+ {
+  "num": 1,
+  "title": "IndexCache: Accelerating Sparse Attention via Cross-Layer Index Reuse",
+  "slug": "indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse",
+  "date": "2026/3/12",
+  "arxiv": "https://arxiv.org/abs/2603.12201",
+  "pdf_url": "https://arxiv.org/pdf/2603.12201",
+  "tags": [
+   "sparse-attention",
+   "kv-cache"
+  ],
+  "pages": 18,
+  "figs": 4,
+  "md": "extraction/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse.md",
+  "fulltext": "extraction/fulltext/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse.txt",
+  "fulltext_chars": 58028
+ },
+ {
+  "num": 2,
+  "title": "MEDUSA: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads",
+  "slug": "medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads",
+  "date": "2024/1/19",
+  "arxiv": "https://arxiv.org/abs/2401.10774",
+  "pdf_url": "https://arxiv.org/pdf/2401.10774",
+  "tags": [
+   "speculative"
+  ],
+  "pages": 27,
+  "figs": 23,
+  "md": "extraction/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.md",
+  "fulltext": "extraction/fulltext/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.txt",
+  "fulltext_chars": 86865
+ },
+ {
+  "num": 3,
+  "title": "EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test",
+  "slug": "eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test",
+  "date": "2025/3/3",
+  "arxiv": "https://arxiv.org/abs/2503.01840",
+  "pdf_url": "https://arxiv.org/pdf/2503.01840",
+  "tags": [
+   "speculative",
+   "training"
+  ],
+  "pages": 12,
+  "figs": 7,
+  "md": "extraction/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.md",
+  "fulltext": "extraction/fulltext/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.txt",
+  "fulltext_chars": 45552
+ },
+ {
+  "num": 4,
+  "title": "EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty",
+  "slug": "eagle-speculative-sampling-requires-rethinking-feature-uncertainty",
+  "date": "2026/6/29",
+  "arxiv": "https://arxiv.org/abs/2401.15077",
+  "pdf_url": "https://arxiv.org/pdf/2401.15077",
+  "tags": [
+   "speculative"
+  ],
+  "pages": 13,
+  "figs": 9,
+  "md": "extraction/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.md",
+  "fulltext": "extraction/fulltext/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.txt",
+  "fulltext_chars": 50318
+ },
+ {
+  "num": 5,
+  "title": "EAGLE-2: Faster Inference of Language Models with Dynamic Draft Trees",
+  "slug": "eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees",
+  "date": "2024/6/24",
+  "arxiv": "https://arxiv.org/abs/2406.16858",
+  "pdf_url": "https://arxiv.org/pdf/2406.16858",
+  "tags": [
+   "speculative"
+  ],
+  "pages": 12,
+  "figs": 7,
+  "md": "extraction/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees.md",
+  "fulltext": "extraction/fulltext/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees.txt",
+  "fulltext_chars": 46933
+ },
+ {
+  "num": 6,
+  "title": "BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DIFFUSION LANGUAGE MODELS",
+  "slug": "block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models",
+  "date": "2025/3/12",
+  "arxiv": "https://arxiv.org/abs/2503.09573",
+  "pdf_url": "https://arxiv.org/pdf/2503.09573",
+  "tags": [
+   "speculative"
+  ],
+  "pages": 28,
+  "figs": 8,
+  "md": "extraction/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models.md",
+  "fulltext": "extraction/fulltext/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models.txt",
+  "fulltext_chars": 98874
+ },
+ {
+  "num": 7,
+  "title": "DFlash: Block Diffusion for Flash Speculative Decoding",
+  "slug": "dflash-block-diffusion-for-flash-speculative-decoding",
+  "date": "2026/2/4",
+  "arxiv": "https://arxiv.org/abs/2602.06036",
+  "pdf_url": "https://arxiv.org/pdf/2602.06036",
+  "tags": [
+   "speculative"
+  ],
+  "pages": 13,
+  "figs": 5,
+  "md": "extraction/dflash-block-diffusion-for-flash-speculative-decoding.md",
+  "fulltext": "extraction/fulltext/dflash-block-diffusion-for-flash-speculative-decoding.txt",
+  "fulltext_chars": 54200
+ },
+ {
+  "num": 8,
+  "title": "DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation",
+  "slug": "dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation",
+  "date": "2024/1/1",
+  "arxiv": "https://arxiv.org/abs/2607.05147",
+  "pdf_url": "https://arxiv.org/pdf/2607.05147",
+  "tags": [
+   "speculative"
+  ],
+  "pages": 33,
+  "figs": 1,
+  "md": "extraction/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation.md",
+  "fulltext": "extraction/fulltext/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation.txt",
+  "fulltext_chars": 102452
+ },
+ {
+  "num": 9,
+  "title": "JETSPEC: Breaking the Scaling Ceiling of Speculative Decoding with Parallel Tree Drafting",
+  "slug": "jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting",
+  "date": "2026/6/16",
+  "arxiv": "https://arxiv.org/abs/2606.18394",
+  "pdf_url": "https://arxiv.org/pdf/2606.18394",
+  "tags": [
+   "speculative"
+  ],
+  "pages": 21,
+  "figs": 6,
+  "md": "extraction/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting.md",
+  "fulltext": "extraction/fulltext/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting.txt",
+  "fulltext_chars": 70018
+ },
+ {
+  "num": 10,
+  "title": "From ATOP to ZCube: Automated Topology Optimization Pipeline and A Highly Cost-Effective Network Topology for Large Model Training",
+  "slug": "from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training",
+  "date": "2025/8/27",
+  "arxiv": "https://dl.acm.org/doi/10.1145/3718958.3750503",
+  "pdf_url": "https://dl.acm.org/doi/pdf/10.1145/3718958.3750503",
+  "tags": [
+   "training",
+   "architecture"
+  ],
+  "pages": 21,
+  "figs": 24,
+  "md": "extraction/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.md",
+  "fulltext": "extraction/fulltext/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.txt",
+  "fulltext_chars": 107386
+ },
+ {
+  "num": 11,
+  "title": "KIMI K2.5: VISUAL AGENTIC INTELLIGENCE",
+  "slug": "kimi-k2-5-visual-agentic-intelligence",
+  "date": "2026/2/1",
+  "arxiv": "https://arxiv.org/abs/2602.02276",
+  "pdf_url": "https://arxiv.org/pdf/2602.02276",
+  "tags": [
+   "multimodal"
+  ],
+  "pages": 30,
+  "figs": 12,
+  "md": "extraction/kimi-k2-5-visual-agentic-intelligence.md",
+  "fulltext": "extraction/fulltext/kimi-k2-5-visual-agentic-intelligence.txt",
+  "fulltext_chars": 95693
+ },
+ {
+  "num": 12,
+  "title": "Scalable Training of Mixture-of-Experts Models with Megatron Core",
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "date": "2026/3/8",
+  "arxiv": "https://arxiv.org/abs/2603.07685",
+  "pdf_url": "https://arxiv.org/pdf/2603.07685",
+  "tags": [
+   "moe",
+   "training"
+  ],
+  "pages": 88,
+  "figs": 0,
+  "md": "extraction/scalable-training-of-mixture-of-experts-models-with-megatron-core.md",
+  "fulltext": "extraction/fulltext/scalable-training-of-mixture-of-experts-models-with-megatron-core.txt",
+  "fulltext_chars": 8903
+ },
+ {
+  "num": 13,
+  "title": "Qwen3-VL Technical Report",
+  "slug": "qwen3-vl-technical-report",
+  "date": "2026/6/10",
+  "arxiv": "https://arxiv.org/abs/2511.21631",
+  "pdf_url": "https://arxiv.org/pdf/2511.21631",
+  "tags": [
+   "multimodal"
+  ],
+  "pages": 42,
+  "figs": 0,
+  "md": "extraction/qwen3-vl-technical-report.md",
+  "fulltext": "extraction/fulltext/qwen3-vl-technical-report.txt",
+  "fulltext_chars": 2448
+ },
+ {
+  "num": 14,
+  "title": "DeepStack: Deeply Stacking Visual Tokens is Surprisingly Simple and Effective for LMMs",
+  "slug": "deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms",
+  "date": "2026/6/10",
+  "arxiv": "https://arxiv.org/abs/2406.04334",
+  "pdf_url": "https://arxiv.org/pdf/2406.04334",
+  "tags": [
+   "multimodal"
+  ],
+  "pages": 17,
+  "figs": 5,
+  "md": "extraction/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.md",
+  "fulltext": "extraction/fulltext/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.txt",
+  "fulltext_chars": 62336
+ },
+ {
+  "num": 15,
+  "title": "昇腾 950 NPU 架构白皮书",
+  "slug": "ascend-950-npu-architecture-whitepaper",
+  "date": "2026/1/1",
+  "arxiv": "—",
+  "pdf_url": "https://public-download.obs.cn-east-2.myhuaweicloud.com/ascend/%E6%98%87%E8%85%BE950%20NPU%E6%9E%B6%E6%9E%84%E7%99%BD%E7%9A%AE%E4%B9%A6.pdf",
+  "tags": [],
+  "pages": 40,
+  "figs": 0,
+  "md": "extraction/ascend-950-npu-architecture-whitepaper.md",
+  "fulltext": "extraction/fulltext/ascend-950-npu-architecture-whitepaper.txt",
+  "fulltext_chars": 28777
+ },
+ {
+  "num": 16,
+  "title": "GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING",
+  "slug": "gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning",
+  "date": "2026/1/1",
+  "arxiv": "https://arxiv.org/abs/2507.19457",
+  "pdf_url": "https://arxiv.org/pdf/2507.19457",
+  "tags": [
+   "rl"
+  ],
+  "pages": 96,
+  "figs": 27,
+  "md": "extraction/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.md",
+  "fulltext": "extraction/fulltext/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.txt",
+  "fulltext_chars": 98756
+ },
+ {
+  "num": 17,
+  "title": "SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills",
+  "slug": "sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills",
+  "date": "2023/8/31",
+  "arxiv": "https://arxiv.org/abs/2308.16369",
+  "pdf_url": "https://arxiv.org/pdf/2308.16369",
+  "tags": [
+   "disaggregated-serving"
+  ],
+  "pages": 16,
+  "figs": 13,
+  "md": "extraction/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills.md",
+  "fulltext": "extraction/fulltext/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills.txt",
+  "fulltext_chars": 76688
+ },
+ {
+  "num": 18,
+  "title": "Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve",
+  "slug": "taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve",
+  "date": "2024/3/4",
+  "arxiv": "https://arxiv.org/abs/2403.02310",
+  "pdf_url": "https://arxiv.org/pdf/2403.02310",
+  "tags": [
+   "disaggregated-serving"
+  ],
+  "pages": 18,
+  "figs": 14,
+  "md": "extraction/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve.md",
+  "fulltext": "extraction/fulltext/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve.txt",
+  "fulltext_chars": 82501
+ },
+ {
+  "num": 19,
+  "title": "GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEMENT LEARNING",
+  "slug": "gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning",
+  "date": "2025/4/27",
+  "arxiv": "https://arxiv.org/abs/2507.19457",
+  "pdf_url": "https://arxiv.org/pdf/2507.19457",
+  "tags": [
+   "rl"
+  ],
+  "pages": 96,
+  "figs": 27,
+  "md": "extraction/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.md",
+  "fulltext": "extraction/fulltext/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.txt",
+  "fulltext_chars": 98756
+ },
+ {
+  "num": 20,
+  "title": "DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence",
+  "slug": "deepseek-v4-towards-highly-efficient-million-token-context-intelligence",
+  "date": "2026/4/28",
+  "arxiv": "https://arxiv.org/abs/2606.19348",
+  "pdf_url": "https://arxiv.org/pdf/2606.19348",
+  "tags": [
+   "long-context"
+  ],
+  "pages": 58,
+  "figs": 2,
+  "md": "extraction/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.md",
+  "fulltext": "extraction/fulltext/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.txt",
+  "fulltext_chars": 45725
+ },
+ {
+  "num": 21,
+  "title": "KIMI-VL TECHNICAL REPORT",
+  "slug": "kimi-vl-technical-report",
+  "date": "2025/4/10",
+  "arxiv": "https://arxiv.org/abs/2504.07491",
+  "pdf_url": "https://arxiv.org/pdf/2504.07491",
+  "tags": [
+   "multimodal"
+  ],
+  "pages": 24,
+  "figs": 13,
+  "md": "extraction/kimi-vl-technical-report.md",
+  "fulltext": "extraction/fulltext/kimi-vl-technical-report.txt",
+  "fulltext_chars": 122024
+ },
+ {
+  "num": 22,
+  "title": "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models",
+  "slug": "deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models",
+  "date": "2026/1/19",
+  "arxiv": "https://arxiv.org/abs/2402.03300",
+  "pdf_url": "https://arxiv.org/pdf/2402.03300",
+  "tags": [],
+  "pages": 30,
+  "figs": 0,
+  "md": "extraction/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.md",
+  "fulltext": "extraction/fulltext/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.txt",
+  "fulltext_chars": 81353
+ },
+ {
+  "num": 23,
+  "title": "High-Dimensional Continuous Control Using Generalized Advantage Estimation",
+  "slug": "high-dimensional-continuous-control-using-generalized-advantage-estimation",
+  "date": "2026/1/19",
+  "arxiv": "https://arxiv.org/abs/1506.02438",
+  "pdf_url": "https://arxiv.org/pdf/1506.02438",
+  "tags": [],
+  "pages": 14,
+  "figs": 4,
+  "md": "extraction/high-dimensional-continuous-control-using-generalized-advantage-estimation.md",
+  "fulltext": "extraction/fulltext/high-dimensional-continuous-control-using-generalized-advantage-estimation.txt",
+  "fulltext_chars": 43324
+ },
+ {
+  "num": 24,
+  "title": "KIMI K2: OPEN AGENTIC INTELLIGENCE",
+  "slug": "kimi-k2-open-agentic-intelligence",
+  "date": "2026/1/19",
+  "arxiv": "https://arxiv.org/abs/2507.20534",
+  "pdf_url": "https://arxiv.org/pdf/2507.20534",
+  "tags": [],
+  "pages": 32,
+  "figs": 13,
+  "md": "extraction/kimi-k2-open-agentic-intelligence.md",
+  "fulltext": "extraction/fulltext/kimi-k2-open-agentic-intelligence.txt",
+  "fulltext_chars": 112693
+ },
+ {
+  "num": 25,
+  "title": "Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning",
+  "slug": "search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning",
+  "date": "—",
+  "arxiv": "https://arxiv.org/abs/2503.09516",
+  "pdf_url": "https://arxiv.org/pdf/2503.09516",
+  "tags": [
+   "training",
+   "rl"
+  ],
+  "pages": 31,
+  "figs": 7,
+  "md": "extraction/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning.md",
+  "fulltext": "extraction/fulltext/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning.txt",
+  "fulltext_chars": 100895
+ },
+ {
+  "num": 26,
+  "title": "HYPER-CONNECTIONS",
+  "slug": "hyper-connections",
+  "date": "2026/1/19",
+  "arxiv": "https://arxiv.org/abs/2409.19606",
+  "pdf_url": "https://arxiv.org/pdf/2409.19606",
+  "tags": [],
+  "pages": 37,
+  "figs": 18,
+  "md": "extraction/hyper-connections.md",
+  "fulltext": "extraction/fulltext/hyper-connections.txt",
+  "fulltext_chars": 82287
+ },
+ {
+  "num": 27,
+  "title": "BERTopic: Neural topic modeling with a class-based TF-IDF procedure",
+  "slug": "bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure",
+  "date": "2026/1/19",
+  "arxiv": "https://arxiv.org/abs/2203.05794",
+  "pdf_url": "https://arxiv.org/pdf/2203.05794",
+  "tags": [],
+  "pages": 10,
+  "figs": 1,
+  "md": "extraction/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure.md",
+  "fulltext": "extraction/fulltext/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure.txt",
+  "fulltext_chars": 38314
+ },
+ {
+  "num": 28,
+  "title": "Dual-Head Reasoning Distillation: Improving Classifier Accuracy with Train-Time-Only Reasoning",
+  "slug": "dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning",
+  "date": "2026/1/19",
+  "arxiv": "https://arxiv.org/abs/2509.21487",
+  "pdf_url": "https://arxiv.org/pdf/2509.21487",
+  "tags": [],
+  "pages": 12,
+  "figs": 2,
+  "md": "extraction/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning.md",
+  "fulltext": "extraction/fulltext/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning.txt",
+  "fulltext_chars": 40047
+ },
+ {
+  "num": 29,
+  "title": "Dynamic Large Concept Models: Latent Reasoning in an Adaptive Semantic Space",
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "date": "2026/1/19",
+  "arxiv": "https://arxiv.org/abs/2512.24617",
+  "pdf_url": "https://arxiv.org/pdf/2512.24617",
+  "tags": [],
+  "pages": 24,
+  "figs": 2,
+  "md": "extraction/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.md",
+  "fulltext": "extraction/fulltext/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.txt",
+  "fulltext_chars": 61312
+ },
+ {
+  "num": 30,
+  "title": "HybridFlow: A Flexible and Efficient RLHF Framework",
+  "slug": "hybridflow-a-flexible-and-efficient-rlhf-framework",
+  "date": "2026/1/17",
+  "arxiv": "https://arxiv.org/abs/2409.19256",
+  "pdf_url": "https://arxiv.org/pdf/2409.19256",
+  "tags": [
+   "rl"
+  ],
+  "pages": 19,
+  "figs": 16,
+  "md": "extraction/hybridflow-a-flexible-and-efficient-rlhf-framework.md",
+  "fulltext": "extraction/fulltext/hybridflow-a-flexible-and-efficient-rlhf-framework.txt",
+  "fulltext_chars": 109820
+ },
+ {
+  "num": 31,
+  "title": "Let It Flow: Agentic Crafting on Rock and Roll",
+  "slug": "let-it-flow-agentic-crafting-on-rock-and-roll",
+  "date": "2026/1/17",
+  "arxiv": "https://arxiv.org/abs/2512.24873",
+  "pdf_url": "https://arxiv.org/pdf/2512.24873",
+  "tags": [],
+  "pages": 41,
+  "figs": 18,
+  "md": "extraction/let-it-flow-agentic-crafting-on-rock-and-roll.md",
+  "fulltext": "extraction/fulltext/let-it-flow-agentic-crafting-on-rock-and-roll.txt",
+  "fulltext_chars": 160353
+ },
+ {
+  "num": 32,
+  "title": "Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with Large-Scale Asynchronous RL",
+  "slug": "beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl",
+  "date": "2026/1/17",
+  "arxiv": "https://arxiv.org/abs/2508.07976",
+  "pdf_url": "https://arxiv.org/pdf/2508.07976",
+  "tags": [],
+  "pages": 21,
+  "figs": 1,
+  "md": "extraction/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.md",
+  "fulltext": "extraction/fulltext/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.txt",
+  "fulltext_chars": 2528
+ },
+ {
+  "num": 33,
+  "title": "AREAL: A Large-Scale Asynchronous Reinforcement Learning System for Language Reasoning",
+  "slug": "areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning",
+  "date": "2026/1/17",
+  "arxiv": "https://arxiv.org/abs/2505.24298",
+  "pdf_url": "https://arxiv.org/pdf/2505.24298",
+  "tags": [
+   "rl"
+  ],
+  "pages": 27,
+  "figs": 6,
+  "md": "extraction/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning.md",
+  "fulltext": "extraction/fulltext/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning.txt",
+  "fulltext_chars": 88470
+ },
+ {
+  "num": 34,
+  "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "date": "2026/1/17",
+  "arxiv": "https://arxiv.org/abs/2501.12948",
+  "pdf_url": "https://arxiv.org/pdf/2501.12948",
+  "tags": [
+   "rl"
+  ],
+  "pages": 86,
+  "figs": 6,
+  "md": "extraction/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning.md",
+  "fulltext": "extraction/fulltext/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning.txt",
+  "fulltext_chars": 223572
+ },
+ {
+  "num": 35,
+  "title": "Conditional Memory via Scalable Lookup: A New Axis of Sparsity for Large Language Models",
+  "slug": "conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models",
+  "date": "2026/1/17",
+  "arxiv": "https://arxiv.org/abs/2601.07372",
+  "pdf_url": "https://arxiv.org/pdf/2601.07372",
+  "tags": [],
+  "pages": 35,
+  "figs": 3,
+  "md": "extraction/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models.md",
+  "fulltext": "extraction/fulltext/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models.txt",
+  "fulltext_chars": 100228
+ },
+ {
+  "num": 36,
+  "title": "HC: Manifold-Constrained Hyper-Connections",
+  "slug": "hc-manifold-constrained-hyper-connections",
+  "date": "2026/1/5",
+  "arxiv": "https://arxiv.org/abs/2512.24880",
+  "pdf_url": "https://arxiv.org/pdf/2512.24880",
+  "tags": [],
+  "pages": 19,
+  "figs": 0,
+  "md": "extraction/hc-manifold-constrained-hyper-connections.md",
+  "fulltext": "extraction/fulltext/hc-manifold-constrained-hyper-connections.txt",
+  "fulltext_chars": 55403
+ },
+ {
+  "num": 37,
+  "title": "Linear Optimal Topic Transport for Document Similarity",
+  "slug": "linear-optimal-topic-transport-for-document-similarity",
+  "date": "2026/1/17",
+  "arxiv": "https://openreview.net/forum?id=f8SlF0Vzbq",
+  "pdf_url": "https://openreview.net/pdf?id=f8SlF0Vzbq",
+  "tags": [],
+  "pages": 15,
+  "figs": 2,
+  "md": "extraction/linear-optimal-topic-transport-for-document-similarity.md",
+  "fulltext": "extraction/fulltext/linear-optimal-topic-transport-for-document-similarity.txt",
+  "fulltext_chars": 58255
+ },
+ {
+  "num": 38,
+  "title": "Root Mean Square Layer Normalization",
+  "slug": "root-mean-square-layer-normalization",
+  "date": "2026/1/7",
+  "arxiv": "https://arxiv.org/abs/1910.07467",
+  "pdf_url": "https://arxiv.org/pdf/1910.07467",
+  "tags": [],
+  "pages": 14,
+  "figs": 7,
+  "md": "extraction/root-mean-square-layer-normalization.md",
+  "fulltext": "extraction/fulltext/root-mean-square-layer-normalization.txt",
+  "fulltext_chars": 46403
+ },
+ {
+  "num": 39,
+  "title": "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints",
+  "slug": "gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints",
+  "date": "2026/1/7",
+  "arxiv": "https://arxiv.org/abs/2305.13245",
+  "pdf_url": "https://arxiv.org/pdf/2305.13245",
+  "tags": [
+   "training"
+  ],
+  "pages": 7,
+  "figs": 6,
+  "md": "extraction/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.md",
+  "fulltext": "extraction/fulltext/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.txt",
+  "fulltext_chars": 23726
+ },
+ {
+  "num": 40,
+  "title": "Qwen2.5-VL Technical Report",
+  "slug": "qwen2-5-vl-technical-report",
+  "date": "2026/1/5",
+  "arxiv": "https://arxiv.org/abs/2502.13923",
+  "pdf_url": "https://arxiv.org/pdf/2502.13923",
+  "tags": [
+   "multimodal"
+  ],
+  "pages": 23,
+  "figs": 1,
+  "md": "extraction/qwen2-5-vl-technical-report.md",
+  "fulltext": "extraction/fulltext/qwen2-5-vl-technical-report.txt",
+  "fulltext_chars": 91584
+ },
+ {
+  "num": 41,
+  "title": "DeepSeek-V3 Technical Report",
+  "slug": "deepseek-v3-technical-report",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2412.19437",
+  "pdf_url": "https://arxiv.org/pdf/2412.19437",
+  "tags": [],
+  "pages": 53,
+  "figs": 3,
+  "md": "extraction/deepseek-v3-technical-report.md",
+  "fulltext": "extraction/fulltext/deepseek-v3-technical-report.txt",
+  "fulltext_chars": 150416
+ },
+ {
+  "num": 42,
+  "title": "Step-3 is Large yet Affordable: Model-system Co-design for Cost-effective Decoding",
+  "slug": "step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2507.19427",
+  "pdf_url": "https://arxiv.org/pdf/2507.19427",
+  "tags": [],
+  "pages": 18,
+  "figs": 9,
+  "md": "extraction/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding.md",
+  "fulltext": "extraction/fulltext/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding.txt",
+  "fulltext_chars": 78380
+ },
+ {
+  "num": 43,
+  "title": "SGLang: Efficient Execution of Structured Language Model Programs",
+  "slug": "sglang-efficient-execution-of-structured-language-model-programs",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2312.07104",
+  "pdf_url": "https://arxiv.org/pdf/2312.07104",
+  "tags": [
+   "disaggregated-serving"
+  ],
+  "pages": 20,
+  "figs": 14,
+  "md": "extraction/sglang-efficient-execution-of-structured-language-model-programs.md",
+  "fulltext": "extraction/fulltext/sglang-efficient-execution-of-structured-language-model-programs.txt",
+  "fulltext_chars": 79774
+ },
+ {
+  "num": 44,
+  "title": "Efficiently Serving Large Multimodal Models Using EPD Disaggregation",
+  "slug": "efficiently-serving-large-multimodal-models-using-epd-disaggregation",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2501.05460",
+  "pdf_url": "https://arxiv.org/pdf/2501.05460",
+  "tags": [
+   "multimodal",
+   "disaggregated-serving"
+  ],
+  "pages": 17,
+  "figs": 12,
+  "md": "extraction/efficiently-serving-large-multimodal-models-using-epd-disaggregation.md",
+  "fulltext": "extraction/fulltext/efficiently-serving-large-multimodal-models-using-epd-disaggregation.txt",
+  "fulltext_chars": 69151
+ },
+ {
+  "num": 45,
+  "title": "Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving",
+  "slug": "mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2407.00079",
+  "pdf_url": "https://arxiv.org/pdf/2407.00079",
+  "tags": [
+   "kv-cache",
+   "disaggregated-serving"
+  ],
+  "pages": 23,
+  "figs": 13,
+  "md": "extraction/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.md",
+  "fulltext": "extraction/fulltext/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.txt",
+  "fulltext_chars": 81350
+ },
+ {
+  "num": 46,
+  "title": "MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs",
+  "slug": "megascale-scaling-large-language-model-training-to-more-than-10000-gpus",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2402.15627",
+  "pdf_url": "https://arxiv.org/pdf/2402.15627",
+  "tags": [
+   "training"
+  ],
+  "pages": 16,
+  "figs": 12,
+  "md": "extraction/megascale-scaling-large-language-model-training-to-more-than-10000-gpus.md",
+  "fulltext": "extraction/fulltext/megascale-scaling-large-language-model-training-to-more-than-10000-gpus.txt",
+  "fulltext_chars": 77210
+ },
+ {
+  "num": 47,
+  "title": "ZeRO: Memory Optimizations Toward Training Trillion Parameter Models",
+  "slug": "zero-memory-optimizations-toward-training-trillion-parameter-models",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/1910.02054",
+  "pdf_url": "https://arxiv.org/pdf/1910.02054",
+  "tags": [
+   "training"
+  ],
+  "pages": 24,
+  "figs": 8,
+  "md": "extraction/zero-memory-optimizations-toward-training-trillion-parameter-models.md",
+  "fulltext": "extraction/fulltext/zero-memory-optimizations-toward-training-trillion-parameter-models.txt",
+  "fulltext_chars": 67057
+ },
+ {
+  "num": 48,
+  "title": "Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM",
+  "slug": "efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2104.04473",
+  "pdf_url": "https://arxiv.org/pdf/2104.04473",
+  "tags": [
+   "training",
+   "architecture"
+  ],
+  "pages": 13,
+  "figs": 18,
+  "md": "extraction/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm.md",
+  "fulltext": "extraction/fulltext/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm.txt",
+  "fulltext_chars": 74320
+ },
+ {
+  "num": 49,
+  "title": "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism",
+  "slug": "megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/1909.08053",
+  "pdf_url": "https://arxiv.org/pdf/1909.08053",
+  "tags": [
+   "training"
+  ],
+  "pages": 15,
+  "figs": 8,
+  "md": "extraction/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism.md",
+  "fulltext": "extraction/fulltext/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism.txt",
+  "fulltext_chars": 68294
+ },
+ {
+  "num": 50,
+  "title": "A Survey on Large Language Model Acceleration based on KV Cache Management",
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2412.19442",
+  "pdf_url": "https://arxiv.org/pdf/2412.19442",
+  "tags": [
+   "kv-cache"
+  ],
+  "pages": 40,
+  "figs": 0,
+  "md": "extraction/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.md",
+  "fulltext": "extraction/fulltext/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.txt",
+  "fulltext_chars": 233789
+ },
+ {
+  "num": 51,
+  "title": "Efficient Training of Large Language Models on Distributed Infrastructures: A Survey",
+  "slug": "efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey",
+  "date": "2026/1/4",
+  "arxiv": "https://arxiv.org/abs/2407.20018",
+  "pdf_url": "https://arxiv.org/pdf/2407.20018",
+  "tags": [
+   "training"
+  ],
+  "pages": 42,
+  "figs": 0,
+  "md": "extraction/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.md",
+  "fulltext": "extraction/fulltext/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.txt",
+  "fulltext_chars": 271696
+ },
+ {
+  "num": 52,
+  "title": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+  "slug": "efficient-memory-management-for-large-language-model-serving-with-pagedattention",
+  "date": "2023/9/13",
+  "arxiv": "https://arxiv.org/abs/2309.06180",
+  "pdf_url": "https://arxiv.org/pdf/2309.06180",
+  "tags": [],
+  "pages": 16,
+  "figs": 19,
+  "md": "extraction/efficient-memory-management-for-large-language-model-serving-with-pagedattention.md",
+  "fulltext": "extraction/fulltext/efficient-memory-management-for-large-language-model-serving-with-pagedattention.txt",
+  "fulltext_chars": 82023
+ },
+ {
+  "num": 53,
+  "title": "DeFT: Decoding with Flash Tree-attention for Efficient Tree-structured LLM Inference",
+  "slug": "deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference",
+  "date": "2024/4/1",
+  "arxiv": "https://arxiv.org/abs/2404.00242",
+  "pdf_url": "https://arxiv.org/pdf/2404.00242",
+  "tags": [],
+  "pages": 32,
+  "figs": 18,
+  "md": "extraction/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference.md",
+  "fulltext": "extraction/fulltext/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference.txt",
+  "fulltext_chars": 112630
+ },
+ {
+  "num": 54,
+  "title": "NanoFlow: Towards Optimal Large Language Model Serving Throughput",
+  "slug": "nanoflow-towards-optimal-large-language-model-serving-throughput",
+  "date": "2024/8/23",
+  "arxiv": "https://arxiv.org/abs/2408.12757",
+  "pdf_url": "https://arxiv.org/pdf/2408.12757",
+  "tags": [],
+  "pages": 17,
+  "figs": 11,
+  "md": "extraction/nanoflow-towards-optimal-large-language-model-serving-throughput.md",
+  "fulltext": "extraction/fulltext/nanoflow-towards-optimal-large-language-model-serving-throughput.txt",
+  "fulltext_chars": 78749
+ },
+ {
+  "num": 55,
+  "title": "Gated Delta Networks: Improving Mamba2 with Delta Rule",
+  "slug": "gated-delta-networks-improving-mamba2-with-delta-rule",
+  "date": "2024/12/9",
+  "arxiv": "https://arxiv.org/abs/2412.06464",
+  "pdf_url": "https://arxiv.org/pdf/2412.06464",
+  "tags": [
+   "architecture"
+  ],
+  "pages": 22,
+  "figs": 3,
+  "md": "extraction/gated-delta-networks-improving-mamba2-with-delta-rule.md",
+  "fulltext": "extraction/fulltext/gated-delta-networks-improving-mamba2-with-delta-rule.txt",
+  "fulltext_chars": 79000
+ },
+ {
+  "num": 56,
+  "title": "Parallel Scan on Ascend AI Accelerators",
+  "slug": "parallel-scan-on-ascend-ai-accelerators",
+  "date": "2025/5/20",
+  "arxiv": "https://arxiv.org/abs/2505.15112",
+  "pdf_url": "https://arxiv.org/pdf/2505.15112",
+  "tags": [],
+  "pages": 16,
+  "figs": 4,
+  "md": "extraction/parallel-scan-on-ascend-ai-accelerators.md",
+  "fulltext": "extraction/fulltext/parallel-scan-on-ascend-ai-accelerators.txt",
+  "fulltext_chars": 66637
+ },
+ {
+  "num": 57,
+  "title": "Kimi K3: Open Frontier Intelligence",
+  "slug": "kimi-k3-open-frontier-intelligence",
+  "date": "2026/7/27",
+  "arxiv": "https://arxiv.org/abs/2607.24653",
+  "pdf_url": "https://arxiv.org/pdf/2607.24653",
+  "tags": [],
+  "pages": 47,
+  "figs": 16,
+  "md": "extraction/kimi-k3-open-frontier-intelligence.md",
+  "fulltext": "extraction/fulltext/kimi-k3-open-frontier-intelligence.txt",
+  "fulltext_chars": 189122
+ },
+ {
+  "num": 58,
+  "title": "Prefill-as-a-Service: KVCache of Next-Generation Models Could Go Cross-Datacenter",
+  "slug": "prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter",
+  "date": "2026/4/16",
+  "arxiv": "https://arxiv.org/abs/2604.15039",
+  "pdf_url": "https://arxiv.org/pdf/2604.15039",
+  "tags": [
+   "kv-cache"
+  ],
+  "pages": 16,
+  "figs": 5,
+  "md": "extraction/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter.md",
+  "fulltext": "extraction/fulltext/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter.txt",
+  "fulltext_chars": 58766
+ },
+ {
+  "num": 59,
+  "title": "LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification",
+  "slug": "longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification",
+  "date": "2025/2/24",
+  "arxiv": "https://arxiv.org/abs/2502.17421",
+  "pdf_url": "https://arxiv.org/pdf/2502.17421",
+  "tags": [
+   "speculative",
+   "long-context"
+  ],
+  "pages": 19,
+  "figs": 6,
+  "md": "extraction/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification.md",
+  "fulltext": "extraction/fulltext/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification.txt",
+  "fulltext_chars": 76029
+ },
+ {
+  "num": 60,
+  "title": "SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences",
+  "slug": "specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences",
+  "date": "2025/5/27",
+  "arxiv": "https://arxiv.org/abs/2505.20776",
+  "pdf_url": "https://arxiv.org/pdf/2505.20776",
+  "tags": [
+   "speculative"
+  ],
+  "pages": 12,
+  "figs": 6,
+  "md": "extraction/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences.md",
+  "fulltext": "extraction/fulltext/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences.txt",
+  "fulltext_chars": 44368
+ },
+ {
+  "num": 61,
+  "title": "A Survey of Large Language Models",
+  "slug": "a-survey-of-large-language-models",
+  "date": "2023/3/31",
+  "arxiv": "https://arxiv.org/abs/2303.18223",
+  "pdf_url": "https://arxiv.org/pdf/2303.18223",
+  "tags": [],
+  "pages": 144,
+  "figs": 10,
+  "md": "extraction/a-survey-of-large-language-models.md",
+  "fulltext": "extraction/fulltext/a-survey-of-large-language-models.txt",
+  "fulltext_chars": 860409
+ }
+]

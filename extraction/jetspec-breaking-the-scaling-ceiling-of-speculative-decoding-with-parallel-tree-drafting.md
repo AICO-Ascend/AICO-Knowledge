@@ -28,12 +28,12 @@ tags: [speculative]
 > [!quote] caption
 > End-to-end decoding speedup over standard autoregressive decoding on H100 GPUs across math, coding, and chat benchmarks. DFlash denotes the original block-parallel drafting method, DDTree is tree-based variant of DFlash, and JetSpec denotes our method. Both employ a tree budget of 256 tokens using Algorithm 1. acceleration. Despite these advances, head-based SD still faces a causality-efficiency d
 
-### Figure 2 (p.3) ⭐MiniMax深度解读
+### Figure 2 (p.3) ⭐深度解读
 ![[assets/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-p03.png]]
 > [!quote] caption
 > Expected speculative decoding speedup scales as a function of draft length γ, under different per-token drafting costs c and acceptance rates α. Comparing the two panels shows that reducing c substantially improves the scalability of speculative decoding with respect to γ, and increasing α further amplifies this effect. The results highlight that pushing per-token drafting cost c low and acceptanc
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】JetSpec 因果并行草稿头(Fig.3)：轻量 draft head 接冻结目标模型 M_q 中间层融合特征，单次前向并行预测所有 γ 个 draft 位的 top-k 候选→组成 k^γ 候选树；输出重排为广度优先、分支级因果序列再回灌 M_q 验证（满足 tree-SD 左到右依赖）。M_q 冻结只训 head。把草稿成本 c 压到 head 级、接受率 α 保持高→加速随 γ 单调增长，破解 c/α 鱼与熊掌。架构核心图。
 
 ### Figure 3 (p.4)
@@ -55,6 +55,33 @@ tags: [speculative]
 ![[assets/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-p19.png]]
 > [!quote] caption
 > Each sampled block includes an anchor position and multiple future token positions. The anchor is retained as block context and excluded from the loss, while loss is applied only to future token positions within each block. allowing the causal draft head to condition on rich target-model features while keeping the target model frozen.
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.2 `MATH-500, and remaining effective on MT-Bench with τ = 5.9 and over 4× speedup. We further`
+- p.2 `up to τ = 10.7 and more than 9.5× end-to-end speedup.`
+- p.3 `α = 0.70`
+- p.3 `α = 0.75`
+- p.3 `α = 0.80`
+- p.3 `α = 0.85`
+- p.3 `α = 0.90`
+- p.3 `α = 0.95`
+- p.3 `E[#tokens] = 1 −αN+1`
+- p.5 `Attn(Qv, K, V ) = softmax`
+- p.5 `q(π(v) | x) =`
+- p.5 `vocabulary V. We define temperature-normalized distributions ˜q(m) = softmax(z(m)`
+- p.5 `˜p(m) = softmax(z(m)`
+- p.5 `s(π(v)) =`
+- p.6 `αt = α(yt; q(· | x, y<t), p(· | x, y<t)) ,`
+
+## 相关论文
+
+- [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] — LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification
+- [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] — DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation
+- [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] — SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences
+- [[dflash-block-diffusion-for-flash-speculative-decoding]] — DFlash: Block Diffusion for Flash Speculative Decoding
+- [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] — MEDUSA: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads
+- [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] — EAGLE-2: Faster Inference of Language Models with Dynamic Draft Trees
 
 ## 全文文本
 全文已存 `extraction/fulltext/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting.txt`（70018 字符）供引用检索。

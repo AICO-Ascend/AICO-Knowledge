@@ -28,12 +28,12 @@ tags: []
 > [!quote] caption
 > Usually, these applications produce substantially more tokens than traditional ones, to provide large space for tree search (Graves, 2012; Lu et al., 2022; Liu et al., 2023) or selection, as shown in Table 1.
 
-### Figure 2 (p.5) ⭐MiniMax深度解读
+### Figure 2 (p.5) ⭐深度解读
 ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p05.png]]
 > [!quote] caption
 > Overview of DEFT. Input Metadata is prepared in the system elaborated in Appendix A.1. In QKV
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】DeFT flash 树注意力(Fig.2)：① Input Metadata（Q + 共享前缀 K0 + 分支 K1/K2 + 树拓扑）载入 SM；② Phase1 QKV 准备(HBM 2TB/s)：KV-Guided Grouping 跨分支复用 K0、Flattened Tree KV Splitting 把树切成均衡组 G0/G1/G2 并行；③ Phase2 注意力计算(Shared Mem 19TB/s)：DeFT kernel 各 split 跑部分注意力 + 树拓扑感知全局归约(A0/A1/A2→Final)，避免跨全分支全局同步。消除共享前缀冗余 KV IO、平衡 SM 负载→内存高效、硬件友好的树结构投机解码注意力。架构核心图。
 
 ### Figure 3 (p.6)
@@ -115,6 +115,20 @@ tags: []
 ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p28.png]]
 > [!quote] caption
 > Attention latency of DEFT with different prompt lengths in speculative decoding.
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.26 `significant decoding speedup—1.24× with a width of w = 20, and 1.33× with a width of`
+- p.29 `Input: query Q ∈R(bq,d), Key cache list KL = (K0, ...KN−1), Value cache list V L =`
+- p.29 `Qi= GroupQueryToKV(Q, Ki, Vi, T) ∈Rbi,d ⊂Q`
+- p.30 `FO = (0)bq×d ∈R(bq,d)`
+- p.30 `Qi= KV MapQ[i] ∈R(bi,d)`
+- p.30 `oi, lsei = FlashAttention(Qi, Ki, Vi)`
+- p.31 `Qi= GroupQueryToKV(Q, Kbi, V bi, T) ∈Rbi,d ⊂Q`
+- p.32 `bitmask = CausalMask[i] ∈Rnbi,where nbi is the total number of nodes for subtree i.`
+- p.32 `SubOfst = SubInfo[i] ∈Rnbi`
+- p.32 `mask = ReconstructMask(bitmask, SubOfst) ∈R(bi,bkv)`
+- p.32 `oi, lsei = FlashAttention(Qi, Kbi, V bi, mask)`
 
 ## 全文文本
 全文已存 `extraction/fulltext/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference.txt`（112630 字符）供引用检索。

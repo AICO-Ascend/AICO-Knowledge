@@ -23,12 +23,12 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 3 (p.3) ⭐MiniMax深度解读
+### Figure 3 (p.3) ⭐深度解读
 ![[assets/parallel-scan-on-ascend-ai-accelerators-p03.png]]
 > [!quote] caption
 > 1 shows the Ascend architecture where the
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】⭐Ascend 910B AI Core 架构(Fig.3)：单 AI Core = 1 个 AI Cube(AIC 矩阵乘引擎) + 2 个 AI Vector(AIV SIMD 核)，各有独立 Unified Buffer(UB) scratchpad，加 Memory Transfer Engine(MTE)+标量+控制块。AIC/AIV 共享全局 HBM/L2，Cube↔Vector 数据交换须走全局内存/L2（AIC 无直接写 AIV UB 的本地路径）。并行 scan：AIV 跑 element-wise/局部 scan + 解耦 look-back（在 UB 上），AIC 改作跨块前缀累积（矩阵乘式），MTE 编排块级 tile 传输。⭐结论：Ascend 非对称 Cube/Vector 划分 + UB 局部计算 + Cube↔Vector 仅全局通信→偏好 block-tiled、通信最小化的解耦 scan 设计，而非密集 GEMM 中心。直击昇腾线性注意力/SSM scan。
 
 ### Figure 4 (p.4)
@@ -45,6 +45,10 @@ tags: []
 ![[assets/parallel-scan-on-ascend-ai-accelerators-p08.png]]
 > [!quote] caption
 > 1:
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.8 `s = 32, 64, 128. MCScan has 15.2× speedup against ScanU on`
 
 ## 全文文本
 全文已存 `extraction/fulltext/parallel-scan-on-ascend-ai-accelerators.txt`（66637 字符）供引用检索。

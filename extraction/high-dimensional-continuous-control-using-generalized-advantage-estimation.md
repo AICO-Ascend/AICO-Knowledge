@@ -43,5 +43,23 @@ tags: []
 > [!quote] caption
 > (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up. 7 DISCUSSION
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.2 `t=0 γtrt) can be handled as an instance of the undiscounted`
+- p.2 `g := ∇θE [P∞`
+- p.2 `V π(st) := Est+1:∞,`
+- p.2 `Qπ(st, at) := Est+1:∞,`
+- p.2 `Aπ(st, at) := Qπ(st, at) −V π(st),`
+- p.3 `The choice Ψt = Aπ(st, at) yields almost the lowest possible variance, though in practice, the`
+- p.3 `V π,γ(st) := Est+1:∞,`
+- p.3 `Qπ,γ(st, at) := Est+1:∞,`
+- p.3 `Aπ,γ(st, at) := Qπ,γ(st, at) −V π,γ(st).`
+- p.3 `gγ := Es0:∞`
+- p.4 `l=0 γlrt+l`
+- p.4 `t = rt + γV (st+1) −V (st), i.e., the TD residual`
+- p.4 `= Est+1 [rt + γV π,γ(st+1) −V π,γ(st)]`
+- p.4 `= Est+1 [Qπ,γ(st, at) −V π,γ(st)] = Aπ,γ(st, at).`
+- p.4 `However, this estimator is only γ-just for V = V π,γ, otherwise it will yield biased policy gradient`
+
 ## 全文文本
 全文已存 `extraction/fulltext/high-dimensional-continuous-control-using-generalized-advantage-estimation.txt`（43324 字符）供引用检索。

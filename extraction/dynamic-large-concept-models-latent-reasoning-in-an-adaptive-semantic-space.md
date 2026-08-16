@@ -33,5 +33,9 @@ tags: []
 > [!quote] caption
 > 4.3
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.11 `Obtained via log-linear regression, this model achieves R2 = 0.93, accurately predicting late-stage loss drops`
+
 ## 全文文本
 全文已存 `extraction/fulltext/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.txt`（61312 字符）供引用检索。

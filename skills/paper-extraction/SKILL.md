@@ -29,10 +29,12 @@ Encodes the workflow proven on `AICO-knowledge` (50 inference-accel papers). Por
 │   ├── chunk_download.py
 │   └── verify_pdfs.py
 └── extraction/                 # generated knowledge base
-    ├── <slug>.md               # per-paper structured (Obsidian-flavored)
+    ├── <slug>.md               # per-paper structured (Obsidian-flavored, 含相关论文交叉链接+关键公式)
     ├── fulltext/<slug>.txt     # full text for grep
     ├── assets/<slug>-pNN.png   # figure-page renders (150 DPI)
     ├── figures_index.md        # ⭐ figure library: featured + topic + per-paper
+    ├── MOC.md                  # 🗺️ map of content: topic clusters + wikilinks (Obsidian graph)
+    ├── papers.json             # machine-readable manifest (RAG/programmatic ingestion)
     ├── minimax_captions.json   # MiniMax deep-captioned figures (png→解读)
     └── README.md
 ```
@@ -51,8 +53,12 @@ Per paper (PyMuPDF):
 - Full text → `extraction/fulltext/<slug>.txt` (for `grep`).
 - Find figure pages (regex `Figure N:` per page) → render page @150 DPI → `extraction/assets/<slug>-pNN.png`.
 - Extract caption (text after `Figure N:`), strip arxiv boilerplate.
-- Per-paper MD: frontmatter (title/authors/date/arxiv/slug/tags) + abstract + figures (embed `![[assets/...]]` + `[!quote] caption`) + fulltext pointer.
+- Heuristic key-formula extraction (lines with `=` + math symbols) → `## 关键公式` section (marked heuristic — verify against PDF page before quoting).
+- Per-paper MD: frontmatter (title/authors/date/arxiv/slug/tags) + abstract + figures (embed `![[assets/...]]` + `[!quote] caption`) + 相关论文 wikilinks + fulltext pointer.
+- Cross-paper graph: `## 相关论文` auto-computed (shared tags ×2 + title-token Jaccard, top 6) → Obsidian graph view works out of the box.
 - Master `figures_index.md`: ⭐featured (deduped) + topic-tagged catalog + per-paper listing.
+- `MOC.md`: topic clusters with wikilinks (map of content).
+- `papers.json`: full manifest (num/title/slug/arxiv/tags/pages/figs/paths/char counts) — ingest this for RAG indexing.
 Tags auto-derived: speculative / sparse-attention / kv-cache / moe / training / rl / multimodal / disaggregated-serving / long-context / architecture.
 
 ### Phase 2 — MiniMax multimodal deep-caption key architecture figures (optional, high-value)
@@ -70,7 +76,7 @@ For core method/architecture diagrams (pick by caption keywords: overview/archit
 |---|---|---|
 | 404 / HTML page | wrong arxiv ID (hallucinated) | scrape `https://arxiv.org/abs/<id>` HTML `<title>` to verify ID/title (arxiv API `export.arxiv.org/api/query` returns empty — don't use) |
 | HTTP 200 + small + pages=0 | parallel batch got rate-limited → truncated | retry **sequential** with browser UA + Referer, 1 req at a time |
-| Large PDF (>3MB), keeps truncating ~1MB | flaky network caps connection | `chunk_download.py` — HTTP Range in 1MB chunks, 8 retries/chunk, resume |
+| Large PDF (>3MB), keeps truncating ~1MB | flaky network caps connection | `chunk_download.py` — HTTP Range 256KB chunks, 15 retries/chunk, 90s timeout |
 | OpenReview `ChallengeRequiredError` / "Verifying your browser" | Cloudflare JS challenge | server curl/headless chromium can't pass → user downloads in browser, drops PDF into `papers/` |
 | ACM `403` | subscription paywall | needs institutional auth; mark `✗ ACM 订阅墙`, keep link |
 | Chinese-title PDF | auto-slug drops CJK → `950-npu` | keep English transliteration name, don't slugify |
@@ -97,8 +103,8 @@ git remote set-url --push origin "https://gitcode.com/<user>/<repo>.git"  # stri
 ## Tools (this skill's scripts)
 
 - `verify_pdfs.py` — file-integrity pre-check (truncated/corrupt/missing/orphan). **Run first.**
-- `extract_phase1.py` — Phase 1 + merges MiniMax captions. Args: none (reads `papers_effective.md`, writes `extraction/`). Path-relative.
-- `chunk_download.py` — arxiv large-file resume. Edit `JOBS=[("arxiv_id","slug"),...]` list, run. Path-relative.
+- `extract_phase1.py` — Phase 1 + merges MiniMax captions. Args: none (reads `papers_effective.md`, writes `extraction/` incl. MOC.md + papers.json). Path-relative.
+- `chunk_download.py` — arxiv downloader. Args: `chunk_download.py jobs.txt` (lines `<arxiv_id> <slug>`) or inline pairs `chunk_download.py <aid> <slug> ...`. 256KB Range chunks + 15 retries/chunk + 90s timeout. Path-relative.
 - MiniMax MCP: `understand_image(image_source=<local path or URL>, prompt=...)` — multimodal figure reading.
 
 ## Quick-insert workflow (the payoff)
@@ -116,13 +122,28 @@ git remote set-url --push origin "https://gitcode.com/<user>/<repo>.git"  # stri
 4. (Optional) MiniMax-caption new architecture figures → append to `minimax_captions.json` → re-run Phase 1.
 5. Commit + push.
 
+## Source-list sync (autonomous full refresh — the "user drops a new source export" flow)
+
+When the user updates the raw source list (e.g. `archive/paper_source_moonlight.md` — Moonlight library export), do the **whole pipeline autonomously**:
+
+1. **Parse source**: extract `[title](https://www.themoonlight.io/paper/<uuid>) ... date` rows via regex. Moonlight exports are one long line per table row; the file also embeds full-text captures — ignore everything except the table rows. There are **no arxiv links in the export** — titles only.
+2. **Diff vs `papers_effective.md`**: fuzzy title match (token-set Jaccard; >0.6 = same paper, 0.35-0.6 = eyeball, <0.35 = new). Watch for same-paper-different-title-version rows (e.g. "LOTT for Document Similarity" vs "…for Scalable Document Similarity" = same paper).
+3. **Resolve new titles → arxiv IDs**: web search `"<exact title>" arxiv`. Confirm by scraping the abs page (title must match). Ambiguous generic titles ("Delivery Note", "Reinforcement learning") that don't resolve → **don't guess**: list them in the commit/report as 待确认 and skip.
+4. **HEAD-check sizes** (`arxiv.org/pdf/<id>` Content-Length) → write jobs file `<aid> <slug>` per line.
+5. **Download**: `python3 skills/paper-extraction/chunk_download.py jobs.txt` (takes a jobs file or inline `aid slug` pairs — don't edit the script). Poll every 1-2 min.
+6. **Verify**: `verify_pdfs.py` → any 0-page truncated file goes back through chunk_download.
+7. **Index**: append rows to `papers_effective.md` (scrape abs page for abstract — reliable; don't parse from PDF), flip `⏳`→`✓` after download, update header counts.
+8. **Extract**: `extract_phase1.py` (regenerates MOC/papers.json/related-links for the whole graph — cheap, idempotent).
+9. **MiniMax**: caption new architecture figures (caption keywords: overview/architecture/framework/design), 4-5 parallel `understand_image` calls per message → append `minimax_captions.json` → re-run Phase 1.
+10. **Commit + push** (pull --rebase first; strip token from push URL after).
+
 ## Pitfalls & efficiency (bake these in — they cost real time)
 
 **Always run `verify_pdfs.py` first** — 0-page `%PDF`-header files are *truncated downloads*, not "missing" or "HTML error". Don't waste cycles re-running Phase 1 on truncated PDFs; download-fix first, then extract once.
 
 **Download strategy — don't use parallel `curl` for arxiv**. 6-concurrent looked fast but rate-limited → ~13/50 came back truncated (%PDF header, 0 pages) → re-download cycle cost more than it saved. **Fast path = `chunk_download.py` for everything** (sequential, HTTP Range, 8 retries/chunk). It's not slower in practice because it avoids rework. Only fall back to plain `curl` for tiny (<500KB) PDFs.
 
-**arxiv large files (>3MB) on flaky networks**: connections get cut at ~1MB and even Range requests for later bytes can fail repeatedly. `chunk_download.py` with 1MB chunks + retries is the only reliable server-side path; if even that stalls, the file exceeds this environment's per-connection ceiling — mark `✗ 网络` and have the user drop the PDF in `papers/` manually (browser session works).
+**arxiv large files (>3MB) on flaky networks**: connections get cut at ~1MB and even Range requests for later bytes can fail repeatedly. `chunk_download.py` (**256KB chunks + 15 retries + 90s timeout** — small chunks dodge the per-connection ceiling) is the only reliable server-side path; if even that stalls, the file exceeds this environment's per-connection ceiling — mark `✗ 网络` and have the user drop the PDF in `papers/` manually (browser session works).
 
 **arxiv API (`export.arxiv.org/api/query`) returns empty XML** — don't use it. Scrape title from `https://arxiv.org/abs/<id>` HTML `<title>` tag instead.
 
@@ -153,4 +174,4 @@ git remote set-url --push origin "https://gitcode.com/<user>/<repo>.git"  # stri
 ## File-integrity helpers
 
 - `verify_pdfs.py` — `python3 skills/paper-extraction/verify_pdfs.py`. Reports truncated (0-page), corrupt (open-error), missing, and orphan PDFs. Exit 1 if any bad → use in CI/gate.
-- `chunk_download.py` — edit `JOBS=[("arxiv_id","slug"),...]`, run. The only reliable arxiv downloader in flaky-network environments.
+- `chunk_download.py` — `python3 skills/paper-extraction/chunk_download.py jobs.txt`. The only reliable arxiv downloader in flaky-network environments.

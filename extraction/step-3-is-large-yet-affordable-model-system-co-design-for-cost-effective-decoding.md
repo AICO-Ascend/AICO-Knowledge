@@ -38,20 +38,20 @@ tags: []
 > [!quote] caption
 > Second, the time spent on each layer will be largely unbal- anced – when running with long context, the full GQA layers consume much more time than the linear attention layers. This may not be a problem for single-node inference deployment, 6
 
-### Figure 4 (p.8) ⭐MiniMax深度解读
+### Figure 4 (p.8) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p08.png]]
 > [!quote] caption
 > Step-3 and Pangu Pro MoE have very different trends of decoding cost and training cost.
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】Step-3 attention 设计对比(Fig.5)：Decode 计算 vs 内存访问(8K→32K ctx)，对比 DSv3 MLA / Qwen3-MoE GQA / Step-3 MFA，叠 H800/910B/A800/H20 roofline。DSv3 MLA 算术强度512=H800 compute-bound；Qwen3 GQA 强度32=H20 memory-bound；Step-3 MFA 强度128≈910B(175)/A800(156) ridge 点→计算仅 DSv3 1/4、访存仅 Qwen3 1/3，跨硬件都省。⭐直击 910B roofline，与昇腾相关。
 
-### Figure 5 (p.8) ⭐MiniMax深度解读
+### Figure 5 (p.8) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p08.png]]
 > [!quote] caption
 > The compute and memory access of different atten- tion designs during decoding, including DSv3’s MLA, Qwen3
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】Step-3 attention 设计对比(Fig.5)：Decode 计算 vs 内存访问(8K→32K ctx)，对比 DSv3 MLA / Qwen3-MoE GQA / Step-3 MFA，叠 H800/910B/A800/H20 roofline。DSv3 MLA 算术强度512=H800 compute-bound；Qwen3 GQA 强度32=H20 memory-bound；Step-3 MFA 强度128≈910B(175)/A800(156) ridge 点→计算仅 DSv3 1/4、访存仅 Qwen3 1/3，跨硬件都省。⭐直击 910B roofline，与昇腾相关。
 
 ### Figure 6 (p.11)
@@ -73,6 +73,11 @@ tags: []
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p13.png]]
 > [!quote] caption
 > StepMesh framework for multiple accelerators. AF-
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.11 `One L20 can access 864 GB/s × 272µs = 235 MB within`
+- p.11 `50%×272µs = 117 MB. For 61 layers in Step-3, this totals`
 
 ## 全文文本
 全文已存 `extraction/fulltext/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding.txt`（78380 字符）供引用检索。

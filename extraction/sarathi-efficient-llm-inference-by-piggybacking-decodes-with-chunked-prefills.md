@@ -28,12 +28,12 @@ tags: [disaggregated-serving]
 > [!quote] caption
 > Example two-stage pipeline parallel schedule. (a)
 
-### Figure 2 (p.3) ⭐MiniMax深度解读
+### Figure 2 (p.3) ⭐深度解读
 ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p03.png]]
 > [!quote] caption
 > High-level architecture of a decoder block. sequence length of each request (i.e., the number of input tokens in the given query), and H is the model’s embedding size (e.g., 5120 for LLaMA-13B).
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】SARATHI chunked-prefill：把 prompt 切成等长 prefill chunk（匹配流水级算力），在途 decode 请求 piggyback 到每个 prefill chunk 上→单次前向混合 prefill+decode token。解耦长 prefill 与 decode 延迟：每个流水级跑统一 hybrid-phase 步、消除 prefill-decode bubble、打满 GPU。更高单卡利用率+decode 吞吐+更大 batch。架构核心图。
 
 ### Figure 3 (p.4)
@@ -90,6 +90,19 @@ tags: [disaggregated-serving]
 ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p13.png]]
 > [!quote] caption
 > Ablation study: Effect of varying the chunk size on different components of the system for LLaMa 13B on A6000 GPU. measure the time to compute the prefill phase for various se- quence lengths using the full sequence at once - this represents our baseline prefill performance. For each long sequence, we then compute the prefill with chunked-prefills and compare its end-to-end runtime with the baseli
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.9 `improvement of 1.27× at P : D = 14 (≈C/(B−1) = 256/17)`
+- p.10 `(≈C/(B−1) = 512/17) whereas the gains are much lower`
+- p.12 `sampled from a Zipf distribution (θ = 0.4), adhering to the`
+
+## 相关论文
+
+- [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] — Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve
+- [[sglang-efficient-execution-of-structured-language-model-programs]] — SGLang: Efficient Execution of Structured Language Model Programs
+- [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] — Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving
+- [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
 
 ## 全文文本
 全文已存 `extraction/fulltext/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills.txt`（76688 字符）供引用检索。

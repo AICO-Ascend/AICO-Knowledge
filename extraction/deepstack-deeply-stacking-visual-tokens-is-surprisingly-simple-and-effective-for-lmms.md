@@ -48,5 +48,13 @@ tags: [multimodal]
 > [!quote] caption
 > Visualization of three sam- pling methods for DeepStack.
 
+## 相关论文
+
+- [[kimi-k2-5-visual-agentic-intelligence]] — KIMI K2.5: VISUAL AGENTIC INTELLIGENCE
+- [[qwen3-vl-technical-report]] — Qwen3-VL Technical Report
+- [[kimi-vl-technical-report]] — KIMI-VL TECHNICAL REPORT
+- [[qwen2-5-vl-technical-report]] — Qwen2.5-VL Technical Report
+- [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
+
 ## 全文文本
 全文已存 `extraction/fulltext/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.txt`（62336 字符）供引用检索。

@@ -24,5 +24,13 @@ tags: [multimodal]
 ## 图表（原文 caption + 页码）
 _未检测到带 caption 的 figure_
 
+## 相关论文
+
+- [[kimi-vl-technical-report]] — KIMI-VL TECHNICAL REPORT
+- [[qwen2-5-vl-technical-report]] — Qwen2.5-VL Technical Report
+- [[kimi-k2-5-visual-agentic-intelligence]] — KIMI K2.5: VISUAL AGENTIC INTELLIGENCE
+- [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] — DeepStack: Deeply Stacking Visual Tokens is Surprisingly Simple and Effective for LMMs
+- [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
+
 ## 全文文本
 全文已存 `extraction/fulltext/qwen3-vl-technical-report.txt`（2448 字符）供引用检索。

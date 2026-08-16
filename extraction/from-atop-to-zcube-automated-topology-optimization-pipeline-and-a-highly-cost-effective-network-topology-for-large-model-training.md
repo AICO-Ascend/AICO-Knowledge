@@ -143,5 +143,20 @@ tags: [training, architecture]
 > [!quote] caption
 > ZCube(128,2) topology for a 16384 GPU cluster based on 51.2 Tbps switches. 880
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.5 `𝑖𝑗∈{𝑑| 𝑑> 0, 𝑁𝑖mod 𝑑= 0} ∪{0} to H`
+- p.5 `𝑖𝑗∈{𝑑| 𝑑> 0, 𝑁𝑗mod 𝑑= 0} ∪{0} to H`
+- p.6 `𝑖∈{𝑑| 𝑁remained > 0, 𝑁remained mod 𝑑= 0} to H`
+
+## 相关论文
+
+- [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] — Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM
+- [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] — MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs
+- [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] — Efficient Training of Large Language Models on Distributed Infrastructures: A Survey
+- [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] — Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning
+- [[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]] — GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints
+- [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] — Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism
+
 ## 全文文本
 全文已存 `extraction/fulltext/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.txt`（107386 字符）供引用检索。

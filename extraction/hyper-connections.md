@@ -28,20 +28,20 @@ tags: []
 > [!quote] caption
 > The performance of the baseline model OLMoE-1B-7B and the model with hyper- connections, OLMoE-1B-7B-DHC×4. (1) and (2) show the training loss (0.99 EMA smoothed) and the C4-en validation loss, respectively. Our method converges 1.8 times faster compared to the baseline and maintains a significant advantage at the 500B tokens. (3) and (4) show the accuracy curves on HellaSwag and ARC-Challenge, de
 
-### Figure 2 (p.2) ⭐MiniMax深度解读
+### Figure 2 (p.2) ⭐深度解读
 ![[assets/hyper-connections-p02.png]]
 > [!quote] caption
 > Hyper-connections (HC) with an expansion rate of n = 2. (a) Residual connections. (b) Hyper-connections: β1, β2, α0,0, α0,1, α1,0, α1,1, α2,1, and α2,2 are learnable scalars or scalars predicted by the network , depending on the specific HC version. These connections enable lateral information exchange and vertical integration of features across depths. The Transformer with HC is shown in Fig. 17.
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】Hyper-Connections 架构(Fig.2)：(a) 传统残差连接=层输出与单隐层 h 求和；(b) HC n=2 把输入复制成两个隐向量 h1/h2，层输出经可学习标量(β,α)路由回→加权连接矩阵灵活跨深+宽组合特征。解耦成 (c) depth-connections（层输出与 h1 加权和）+ (d) width-connections（h1/h2 横向混合）。核心：用可学习、输入依赖的路由替固定恒等 skip，让网络自主调制 skip 强度→缓解固定 Pre/Post-Norm 残差的表征塌缩+梯度消失。架构核心图。
 
-### Figure 3 (p.2) ⭐MiniMax深度解读
+### Figure 3 (p.2) ⭐深度解读
 ![[assets/hyper-connections-p02.png]]
 > [!quote] caption
 > Cosine similarity be- tween the input of the current and the previous layers for the OLMo-1B models (Groeneveld et al., 2024). The curve represents the median of similarity, while the shaded area indicates the range be- tween the 5th and 95th percentiles.
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】Hyper-Connections 架构(Fig.2)：(a) 传统残差连接=层输出与单隐层 h 求和；(b) HC n=2 把输入复制成两个隐向量 h1/h2，层输出经可学习标量(β,α)路由回→加权连接矩阵灵活跨深+宽组合特征。解耦成 (c) depth-connections（层输出与 h1 加权和）+ (d) width-connections（h1/h2 横向混合）。核心：用可学习、输入依赖的路由替固定恒等 skip，让网络自主调制 skip 强度→缓解固定 Pre/Post-Norm 残差的表征塌缩+梯度消失。架构核心图。
 
 ### Figure 4 (p.5)
@@ -118,6 +118,24 @@ tags: []
 ![[assets/hyper-connections-p33.png]]
 > [!quote] caption
 > Training loss curves comparied with parallel transformer blocks (PTB), smoothed using
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.4 `H = norm(H)`
+- p.4 `B(H) = sβ ◦tanh(HWβ)⊺+ B ∈R1×n`
+- p.4 `Am(H) = sα ◦tanh(HWm) + Am ∈Rn×1`
+- p.4 `Ar(H) = sα ◦tanh(HWr) + Ar ∈Rn×n`
+- p.7 `with the increase to n = 8 providing minimal additional benefits. Notably, OLMo-1B-DHC×8 W/O`
+- p.15 `|θSHC| = |θB| + |θA| = n + n · (n + 1) = n · (n + 2),`
+- p.15 `Pextra = |θSHC| × 2 × L,`
+- p.15 `|θDHC| = |θnorm| + |sβ| + |θWβ| + |θB| + |sα| + |θWm| + |θAm| + |θWr| + |θAr|`
+- p.15 `= |θnorm| + 1 + dmodel + n + 1 + dmodel + n + dmodel × n + n × n`
+- p.15 `= |θnorm| + dmodel × (n + 2) + n × (n + 2) + 2,`
+- p.15 `|θnorm| = 0. In OLMoE, |θnorm| = dmodel. Similar to the static hyper-connections, the number of`
+- p.15 `Pextra = |θDHC| × 2 × L,`
+- p.15 `For example, for OLMo-1B-DHC×4, Pextra = (0 + 2048 × (4 + 2) + 4 × (4 + 2) + 2) × 2 × 16 =`
+- p.20 `Mixup (α = 0.2)`
+- p.20 `AdamW (β1 = 0.9, β2 = 0.999, ϵ = 1e −8)`
 
 ## 全文文本
 全文已存 `extraction/fulltext/hyper-connections.txt`（82287 字符）供引用检索。

@@ -53,5 +53,20 @@ tags: [training]
 > [!quote] caption
 > Time per sample for GQA-XXL as a function of the number of GQA groups with input length 2048 and output length 512. Going from 1 (MQA) to 8 groups adds modest inference overhead, with increasing cost to adding more groups. is especially helpful for long inputs (Pope et al., 2022; de Jong et al., 2022). Rabe (2023) indepen- dently developed GQA with public implementa- tion. Other works have explore
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.2 `et al., 2020). For α = 0.05, training took approxi-`
+- p.3 `proportion α = 0.05. We see that a larger up-`
+- p.4 `MQA with proportion α = 0.05. ‘Mean’ mean-pools`
+
+## 相关论文
+
+- [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] — Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism
+- [[zero-memory-optimizations-toward-training-trillion-parameter-models]] — ZeRO: Memory Optimizations Toward Training Trillion Parameter Models
+- [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] — Scalable Training of Mixture-of-Experts Models with Megatron Core
+- [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] — Efficient Training of Large Language Models on Distributed Infrastructures: A Survey
+- [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] — EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test
+- [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] — From ATOP to ZCube: Automated Topology Optimization Pipeline and A Highly Cost-Effective Network Topology for Large Model Training
+
 ## 全文文本
 全文已存 `extraction/fulltext/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.txt`（23726 字符）供引用检索。

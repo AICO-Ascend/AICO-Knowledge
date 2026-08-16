@@ -53,5 +53,22 @@ tags: [rl]
 > [!quote] caption
 > Ablation studies on system optimizations. experimental setup, we configured 32 micro-batches for the standard setting and established a token budget of 32,768 per micro-batch for the dynamic batching approach. As demonstrated in Figure 6a, dynamic batching yields an average of 30% throughput improvements across various model sizes.
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.3 `J(θ) = Eq∼D,at∼πθ(·|q,a<t)`
+- p.3 `JPPO(θ) = Eq∼D,at∼πold(·|q,a<t)`
+- p.3 `where ut(θ) =`
+- p.6 `J(θ) = Eq∼D,at∼πbehav`
+- p.6 `= Eq∼D,at∼πbehav`
+- p.27 `πbehav(·|s) =`
+
+## 相关论文
+
+- [[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]] — DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning
+- [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] — GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEMENT LEARNING
+- [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] — GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING
+- [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] — Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning
+- [[hybridflow-a-flexible-and-efficient-rlhf-framework]] — HybridFlow: A Flexible and Efficient RLHF Framework
+
 ## 全文文本
 全文已存 `extraction/fulltext/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning.txt`（88470 字符）供引用检索。

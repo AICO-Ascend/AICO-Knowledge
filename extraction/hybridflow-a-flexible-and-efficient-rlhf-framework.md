@@ -103,5 +103,21 @@ tags: [rl]
 > [!quote] caption
 > Runtime of device mapping algorithm. The model size and # of GPUs are simultaneously scaled.
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.7 `critic_metrics = critic.update_critic(batch, loss_func=algo_type)`
+- p.7 `pretrain_loss = actor.compute_loss(pretrain_batch)`
+- p.7 `batch[“pretrain_loss”] = pretrain_loss`
+- p.7 `actor_metrics = actor.update_actor(batch, loss_func=algo_type)`
+- p.8 `𝑁𝑎=𝑝×𝑡×𝑑=𝑝𝑔×𝑡𝑔×𝑑𝑔×𝑑such that 𝑑𝑔=`
+
+## 相关论文
+
+- [[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]] — AREAL: A Large-Scale Asynchronous Reinforcement Learning System for Language Reasoning
+- [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] — Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning
+- [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] — GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING
+- [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] — GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEMENT LEARNING
+- [[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]] — DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning
+
 ## 全文文本
 全文已存 `extraction/fulltext/hybridflow-a-flexible-and-efficient-rlhf-framework.txt`（109820 字符）供引用检索。

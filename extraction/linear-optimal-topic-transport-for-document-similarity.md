@@ -33,5 +33,14 @@ tags: []
 > [!quote] caption
 > t-SNE on CLASSIC
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.2 `matrix C = (cij) ∈Rn×m, where cij represents`
+- p.2 `γ = (γij) that redistributes mass from X to Y,`
+- p.2 `Γp,q = {γ ∈(R+)n×m : γ1m = µ, γT 1n = ν}.`
+- p.3 `Fσ(µ) = T µ`
+- p.3 `LOTT(dk1, dk2) = ∥Fσ( ¯dk1) −Fσ( ¯dk2)∥σ`
+- p.4 `LOT( ¯dk) = [z1, z2, . . . , z|T|] ∈R|T|d.`
+
 ## 全文文本
 全文已存 `extraction/fulltext/linear-optimal-topic-transport-for-document-similarity.txt`（58255 字符）供引用检索。

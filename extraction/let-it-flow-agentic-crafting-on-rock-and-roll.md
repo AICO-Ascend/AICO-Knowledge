@@ -113,5 +113,16 @@ tags: []
 > [!quote] caption
 > Case study 2 screenshot examples: Solar System Modeling. 37
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.19 `LSFT(θ) = −`
+- p.20 `∇JREINFORCE(π) = Eτ∼π [R(τ) ∇log π(τ)] ,`
+- p.20 `∇JRL(π) = Eτ∼µSGLang`
+- p.21 `∇JRL(π) = ∑`
+- p.21 `we define a binary loss mask: mk = I`
+- p.23 `Gk = γ∆(j,k) × Rfinal,`
+- p.24 `∇JChunk-RL(π) = ∑`
+- p.26 `LIPA = λIL · ∑`
+
 ## 全文文本
 全文已存 `extraction/fulltext/let-it-flow-agentic-crafting-on-rock-and-roll.txt`（160353 字符）供引用检索。

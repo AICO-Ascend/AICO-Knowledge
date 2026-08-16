@@ -28,5 +28,13 @@ tags: [multimodal]
 > [!quote] caption
 > The Qwen2.5-VL framework demonstrates the integration of a vision encoder and a language model decoder to process multimodal inputs, including images and videos. The vision encoder is designed to handle inputs at their native resolution and supports dynamic FPS sampling. Images of varying sizes and video frames with different FPS rates are dynamically mapped to token sequences of varying lengths. 
 
+## 相关论文
+
+- [[qwen3-vl-technical-report]] — Qwen3-VL Technical Report
+- [[kimi-vl-technical-report]] — KIMI-VL TECHNICAL REPORT
+- [[kimi-k2-5-visual-agentic-intelligence]] — KIMI K2.5: VISUAL AGENTIC INTELLIGENCE
+- [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] — DeepStack: Deeply Stacking Visual Tokens is Surprisingly Simple and Effective for LMMs
+- [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
+
 ## 全文文本
 全文已存 `extraction/fulltext/qwen2-5-vl-technical-report.txt`（91584 字符）供引用检索。

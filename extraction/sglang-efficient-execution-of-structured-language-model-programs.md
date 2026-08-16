@@ -23,12 +23,12 @@ tags: [disaggregated-serving]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.2) ⭐MiniMax深度解读
+### Figure 1 (p.2) ⭐深度解读
 ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p02.png]]
 > [!quote] caption
 > System architecture: An interpreter executes language primitives with optimized runtime.
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】SGLang 系统架构(Fig.1)：Python 嵌入式前端+高性能 runtime，流式 interpreter 提交原语(extend/gen/fork)异步执行并保留依赖。RadixAttention 用 LRU 基数树缓存 KV，跨请求共享前缀自动复用中间注意力态。Frontiers&Dependencies 跟踪就绪原语+数据依赖→批独立操作、重叠执行藏延迟。DSL+radix-cache+依赖调度统一，比 vLLM/Guidance/LMQL 快至 6.4x。架构核心图。
 
 ### Figure 2 (p.3)
@@ -95,6 +95,13 @@ tags: [disaggregated-serving]
 ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p20.png]]
 > [!quote] caption
 > An SGLang program and its corresponding dataflow graph.
+
+## 相关论文
+
+- [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] — SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills
+- [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] — Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve
+- [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
+- [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] — Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving
 
 ## 全文文本
 全文已存 `extraction/fulltext/sglang-efficient-execution-of-structured-language-model-programs.txt`（79774 字符）供引用检索。

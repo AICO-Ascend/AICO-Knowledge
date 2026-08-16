@@ -24,5 +24,15 @@ tags: [kv-cache]
 ## 图表（原文 caption + 页码）
 _未检测到带 caption 的 figure_
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.16 `and the normalization factor z t =`
+
+## 相关论文
+
+- [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] — Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving
+- [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] — Prefill-as-a-Service: KVCache of Next-Generation Models Could Go Cross-Datacenter
+- [[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]] — IndexCache: Accelerating Sparse Attention via Cross-Layer Index Reuse
+
 ## 全文文本
 全文已存 `extraction/fulltext/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.txt`（233789 字符）供引用检索。

@@ -158,5 +158,17 @@ tags: [rl]
 > [!quote] caption
 > We also note that generation stochasticity (temperature based sampling) is eliminated by operating under a cache; this ensures that ob- served improvements tie closely to inference scaling through prompt updates and GEPA’s diverse prompt exploration, rather than stochasticity in the model’s sampling process. NPU Kernels: We create a sequential refinement agent that iteratively generates kernels (u
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.26 `= 0:01, reward scale normaliza-`
+
+## 相关论文
+
+- [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] — GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING
+- [[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]] — DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning
+- [[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]] — AREAL: A Large-Scale Asynchronous Reinforcement Learning System for Language Reasoning
+- [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] — Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning
+- [[hybridflow-a-flexible-and-efficient-rlhf-framework]] — HybridFlow: A Flexible and Efficient RLHF Framework
+
 ## 全文文本
 全文已存 `extraction/fulltext/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.txt`（98756 字符）供引用检索。

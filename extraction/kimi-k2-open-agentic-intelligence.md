@@ -88,5 +88,9 @@ tags: []
 > [!quote] caption
 > pipeline for RL weight update
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.3 `Oh = softmax`
+
 ## 全文文本
 全文已存 `extraction/fulltext/kimi-k2-open-agentic-intelligence.txt`（112693 字符）供引用检索。

@@ -28,5 +28,11 @@ tags: []
 > [!quote] caption
 > Computation time (wall time) in seconds of each topic model on the Trump dataset. Increasing sizes of vocabularies were regulated through selection of documents ranging from 1000 documents until 43000 documents with steps of 2000. Left: computational results with CTM. Right: computational results without CTM as it inﬂates the y-axis making differentiation between other topic models difﬁcult to vis
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.3 `Wt,d = tft,d · log( N`
+- p.3 `Wt,c = tft,c · log(1 + A`
+- p.4 `Wt,c,i = tft,c,i · log(1 + A`
+
 ## 全文文本
 全文已存 `extraction/fulltext/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure.txt`（38314 字符）供引用检索。

@@ -94,7 +94,40 @@ def slugify_topic(title):
         if any(k in t for k in kws): tags.append(tag)
     return tags
 
-def write_paper_md(num, meta, doc, full_text, figs, fig_paths, mm):
+MATH_CHARS = set("∑∏√≈≤≥∈∀αβγδθλμπσφωΣΠ·×⊗⊙→←↑↓ⁿ")
+MATH_WORDS = ("softmax", "argmax", "arg min", "argmin", "Attention(", "exp(", "log ",
+              "E[", "KL(", "loss", "Loss", "∇", "norm")
+
+def extract_formulas(doc, max_keep=15):
+    """Heuristic key-formula extraction: short display-ish lines containing '='
+    plus math indicators. Lossy on two-column PDFs — marked heuristic in output.
+    Returns [{page, text}]."""
+    out, seen = [], set()
+    for p in range(doc.page_count):
+        for ln in doc[p].get_text().splitlines():
+            s = re.sub(r'\s+', ' ', ln).strip()
+            if not (8 <= len(s) <= 180):
+                continue
+            if '=' not in s:
+                continue
+            if not (any(c in MATH_CHARS for c in s) or any(w in s for w in MATH_WORDS)):
+                continue
+            # skip prose sentences (too many words before the '=')
+            if len(s.split('=', 1)[0].split()) > 8:
+                continue
+            # skip URLs / refs / code-ish
+            if re.search(r'http|arxiv|figure|table|section', s, re.I):
+                continue
+            key = s[:60]
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({"page": p + 1, "text": s})
+            if len(out) >= max_keep:
+                return out
+    return out
+
+def write_paper_md(num, meta, doc, full_text, figs, fig_paths, mm, related=None, formulas=None):
     slug=meta["slug"]
     authors=extract_authors(doc[0].get_text())
     tags=slugify_topic(meta["title"])
@@ -132,16 +165,35 @@ def write_paper_md(num, meta, doc, full_text, figs, fig_paths, mm):
         mmcap=mm.get(rel) or (mm.get("extraction/"+rel) if rel else None)
         has_mm = bool(mmcap)
         m.append("")
-        m.append(f"### Figure {f['num']} (p.{f['page']}){' ⭐MiniMax深度解读' if has_mm else ''}")
+        m.append(f"### Figure {f['num']} (p.{f['page']}){' ⭐深度解读' if has_mm else ''}")
         if rel:
             m.append(f"![[{rel}]]")
         m.append(f'> [!quote] caption')
         m.append(f'> {f["caption"]}')
         if has_mm:
             m.append("")
-            m.append(f"> [!tip] 技术解读（MiniMax 多模态）")
+            m.append(f"> [!tip] 技术解读（多模态）")
             m.append(f"> {mmcap}")
     m.append("")
+    if formulas:
+        if any("latex" in fo for fo in formulas):
+            m.append("## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）")
+            m.append("")
+            for fo in formulas:
+                m.append(f"$$\n{fo['latex']}\n$$")
+                m.append("")
+        else:
+            m.append("## 关键公式（启发式抽取，引用前请核对原文页码）")
+            m.append("")
+            for fo in formulas:
+                m.append(f"- p.{fo['page']} `{fo['text']}`")
+            m.append("")
+    if related:
+        m.append("## 相关论文")
+        m.append("")
+        for rslug, rtitle in related:
+            m.append(f"- [[{rslug}]] — {rtitle}")
+        m.append("")
     m.append("## 全文文本")
     m.append(f"全文已存 `extraction/fulltext/{slug}.txt`（{len(full_text)} 字符）供引用检索。")
     # save full text
@@ -158,8 +210,26 @@ def load_minimax():
 def main():
     info=parse_index()
     mm=load_minimax()
-    print(f"papers to extract: {len(info)} | MiniMax captions: {len(mm)}")
+    fj=OUT/"formulas.json"
+    latex_formulas=json.loads(fj.read_text(encoding="utf-8")) if fj.exists() else {}
+    print(f"papers to extract: {len(info)} | MiniMax captions: {len(mm)} | latex-formula papers: {sum(1 for v in latex_formulas.values() if v)}")
+    # related-paper graph: shared tags (weight 2) + title token Jaccard (weight 1)
+    def tset(t): return set(re.findall(r'[a-z0-9]+', t.lower()))
+    ptags={n: slugify_topic(m["title"]) for n,m in info.items()}
+    ttoks={n: tset(m["title"]) for n,m in info.items()}
+    related_map={}
+    for n in info:
+        scored=[]
+        for n2 in info:
+            if n2==n: continue
+            sc=2*len(set(ptags[n])&set(ptags[n2]))
+            u=ttoks[n]|ttoks[n2]
+            sc+= (len(ttoks[n]&ttoks[n2])/len(u)) if u else 0
+            if sc>=2: scored.append((sc,info[n2]["slug"],info[n2]["title"]))
+        scored.sort(key=lambda x:-x[0])
+        related_map[n]=[(s,t) for _,s,t in scored[:6]]
     figures_catalog=[]  # for master index
+    manifest=[]
     for num,meta in sorted(info.items(),key=lambda x:int(x[0])):
         slug=meta["slug"]; pdf=PAPERS/f"{slug}.pdf"
         if not pdf.exists():
@@ -169,14 +239,40 @@ def main():
             full_text="\n".join(doc[i].get_text() for i in range(doc.page_count))
             figs=extract_figures(full_text,doc)
             fig_paths=render_figure_pages(doc,slug,figs)
-            nch=write_paper_md(num,meta,doc,full_text,figs,fig_paths,mm)
+            formulas=latex_formulas.get(slug) or extract_formulas(doc)
+            nch=write_paper_md(num,meta,doc,full_text,figs,fig_paths,mm,
+                               related=related_map.get(num),formulas=formulas)
             for f in figs:
                 figures_catalog.append({"num":num,"title":meta["title"],"slug":slug,
                     "fig":f["num"],"page":f["page"],"caption":f["caption"],
                     "img":fig_paths.get(f["page"],""),"tags":slugify_topic(meta["title"])})
-            print(f"  [{num}] {slug[:50]}: pages={doc.page_count} figs={len(figs)} text={nch}")
+            manifest.append({"num":int(num),"title":meta["title"],"slug":slug,
+                "date":meta["date"],"arxiv":meta["abs"],"pdf_url":meta["pdf"],
+                "tags":ptags[num],"pages":doc.page_count,"figs":len(figs),
+                "md":f"extraction/{slug}.md","fulltext":f"extraction/fulltext/{slug}.txt",
+                "fulltext_chars":nch})
+            print(f"  [{num}] {slug[:50]}: pages={doc.page_count} figs={len(figs)} formulas={len(formulas)} text={nch}")
         except Exception as e:
             print(f"  [ERR {num}] {slug}: {e}")
+    # machine-readable manifest (RAG / programmatic consumption)
+    (OUT/"papers.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=1),encoding="utf-8")
+    # MOC: map of content, topic clusters with wikilinks
+    mo=["# 🗺️ 知识图谱总览（MOC — Map of Content）","",
+        "> 按主题聚类的全库导航；每篇论文是一个 `[[wikilink]]` 节点，Obsidian 图谱视图可直接可视化。",
+        "> 单篇 MD 内含「相关论文」交叉链接（共享主题标签 + 标题相似度自动计算）。",""]
+    by_tag={}
+    for m0 in manifest:
+        for t in m0["tags"]: by_tag.setdefault(t,[]).append(m0)
+    for t in sorted(by_tag):
+        ps=sorted(by_tag[t],key=lambda x:x["num"])
+        mo.append(f"## {t} ({len(ps)})"); mo.append("")
+        for p0 in ps:
+            mo.append(f"- [[{p0['slug']}]] — {p0['title']} ({p0['date']})")
+        mo.append("")
+    mo.append("## 全部论文（按编号）"); mo.append("")
+    for p0 in manifest:
+        mo.append(f"- #{p0['num']} [[{p0['slug']}]] — {p0['title']}")
+    (OUT/"MOC.md").write_text("\n".join(mo)+"\n",encoding="utf-8")
     # master figures index
     b=["# 📊 图表素材索引（figures_index）","","",
        "> 按主题分类的图表清单，含 caption + 页码 + 本地图片路径，便于技术报告快速插入与引用。","",

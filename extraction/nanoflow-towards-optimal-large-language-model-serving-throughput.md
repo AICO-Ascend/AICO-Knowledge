@@ -23,12 +23,12 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.3) ⭐MiniMax深度解读
+### Figure 1 (p.3) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p03.png]]
 > [!quote] caption
 > Transformer architecture. The operations in the yellow boxes have large batch sizes and share model weight parameters across requests; hence, they are compute-bound. Operations in green boxes require loading a unique KV cache for each request; hence, they are memory-bound. The blue box represents network operations that perform synchronization between operations. • A comprehensive evaluation of Na
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】NanoFlow Transformer 流水(Fig.1)：算子分三类——compute-bound（W_O/K/V/up/down/gate 密集投影，跨请求共享权重、大 batch 摊权重载入）、memory-bound（prefill/decode attention，载每请求 KV、小 batch 避压 KV）、network-bound（AllGather/AllReduce，NVLink 同步）。device-stream 级算子融合：沿关键路径重排+协调度，单设备内只跨 CUDA stream 注入 micro-batch 状态→串行依赖转并行，吞吐 1.91x、达理论峰 68.5%。异构 batch 是关键。架构核心图。
 
 ### Figure 2 (p.5)
@@ -80,6 +80,10 @@ tags: []
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
 > [!quote] caption
 > We find that
+
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.5 `4Pmodel = ((WK +WQ +WV )+WO +WU +WG +WD)L ≈((1/RGQA +1+`
 
 ## 全文文本
 全文已存 `extraction/fulltext/nanoflow-towards-optimal-large-language-model-serving-throughput.txt`（78749 字符）供引用检索。

@@ -24,5 +24,23 @@ tags: []
 ## 图表（原文 caption + 页码）
 _未检测到带 caption 的 figure_
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.11 `J𝑃𝑃𝑂(𝜃) = E[𝑞∼𝑃(𝑄), 𝑜∼𝜋𝜃𝑜𝑙𝑑(𝑂|𝑞)] 1`
+- p.13 `𝑟𝑡= 𝑟𝜑(𝑞, 𝑜≤𝑡) −𝛽log 𝜋𝜃(𝑜𝑡|𝑞, 𝑜<𝑡)`
+- p.13 `J𝐺𝑅𝑃𝑂(𝜃) = E[𝑞∼𝑃(𝑄), {𝑜𝑖}𝐺`
+- p.14 `𝑖=1 ∼𝜋𝜃𝑜𝑙𝑑(· | 𝑞) for each question 𝑞∈D𝑏`
+- p.14 `r = {𝑟1, 𝑟2, · · · , 𝑟𝐺} correspondingly. Subsequently, these rewards are normalized by subtracting`
+- p.14 `the output as the normalized reward, i.e., ˆ𝐴𝑖,𝑡= e𝑟𝑖= 𝑟𝑖−mean(r)`
+- p.18 `∇𝜃JA(𝜃) = E[(𝑞, 𝑜) ∼D`
+- p.28 `J𝑆𝐹𝑇(𝜃) = E[𝑞, 𝑜∼𝑃𝑠𝑓𝑡(𝑄, 𝑂)]`
+- p.28 `∇𝜃J𝑆𝐹𝑇= E[𝑞, 𝑜∼𝑃𝑠𝑓𝑡(𝑄, 𝑂)]`
+- p.28 `J𝑅𝐹𝑇(𝜃) = E[𝑞∼𝑃𝑠𝑓𝑡(𝑄), 𝑜∼𝜋𝑠𝑓𝑡(𝑂|𝑞)]`
+- p.28 `∇𝜃J𝑅𝐹𝑇(𝜃) = E[𝑞∼𝑃𝑠𝑓𝑡(𝑄), 𝑜∼𝜋𝑠𝑓𝑡(𝑂|𝑞)]`
+- p.28 `∇𝜃J𝑂𝑛𝑅𝐹𝑇(𝜃) = E[𝑞∼𝑃𝑠𝑓𝑡(𝑄), 𝑜∼𝜋𝜃(𝑂|𝑞)]`
+- p.29 `J𝐷𝑃𝑂(𝜃) = E[𝑞∼𝑃𝑠𝑓𝑡(𝑄), 𝑜+, 𝑜−∼𝜋𝑠𝑓𝑡(𝑂|𝑞)] log 𝜎©­`
+- p.29 `∇𝜃J𝐷𝑃𝑂(𝜃) = E[𝑞∼𝑃𝑠𝑓𝑡(𝑄), 𝑜+, 𝑜−∼𝜋𝑠𝑓𝑡(𝑂|𝑞)] ©­`
+- p.29 `J𝑃𝑃𝑂(𝜃) = E[𝑞∼𝑃𝑠𝑓𝑡(𝑄), 𝑜∼𝜋𝜃𝑜𝑙𝑑(𝑂|𝑞)] 1`
+
 ## 全文文本
 全文已存 `extraction/fulltext/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.txt`（81353 字符）供引用检索。

@@ -28,20 +28,20 @@ tags: [speculative]
 > [!quote] caption
 > Speedup ratio of Vicuna and LLaMA2-Chat inference latency on the MT-bench for greedy (temperature=0) settings. Speedup ratio of Medusa and Lookahead are copied from their original technical reports. With speculative sampling, there is a lack of suitable draft models to accelerate the 7B model. Employing a 7B model as the draft model for a 13B model results in slow speeds due to the high overhead o
 
-### Figure 2 (p.2) ⭐MiniMax深度解读
+### Figure 2 (p.2) ⭐深度解读
 ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p02.png]]
 > [!quote] caption
 > Speedup ratio on the MT-bench for non-greedy (temperature=1) settings. Lookahead is confined to greedy decoding, and the non-greedy generation of Medusa does not guarantee lossless performance. Therefore, EAGLE is not compared with these methods. I 𝑓I 𝑝(am)=0.6 𝑝(always)=0.4 sampling am 𝑓am 𝑝(excited)=0.3 𝑝(ready)=0.7 sampling always 𝑓always 𝑝(begin)=0.8 𝑝(look)=0.2 𝑝always 𝑝I 𝑝am
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】EAGLE 架构图(Fig.4)：目标 LLM 产出第二顶层特征 f_t 与下一 token t_{t+1}；轻量 draft model 在特征层自回归，输入 f_t + 超前一拍的 t_{t+1}，预测 f_{t+1}，再经 LM head 得 draft token t_{t+2}。「特征+超前 token」消除采样下 f_{t+1} 的不确定性→接受率↑，Vicuna/LLaMA2-70B 上 2.68x。架构核心图。
 
-### Figure 3 (p.2) ⭐MiniMax深度解读
+### Figure 3 (p.2) ⭐深度解读
 ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p02.png]]
 > [!quote] caption
 > Uncertainty in feature sequences. The next fea- ture following fI is contingent on the sampling outcome and cannot be determined solely based on fI, where both “always” and “am” are possible to follow the token “I” and lead to two branches.
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】EAGLE 架构图(Fig.4)：目标 LLM 产出第二顶层特征 f_t 与下一 token t_{t+1}；轻量 draft model 在特征层自回归，输入 f_t + 超前一拍的 t_{t+1}，预测 f_{t+1}，再经 LM head 得 draft token t_{t+2}。「特征+超前 token」消除采样下 f_{t+1} 的不确定性→接受率↑，Vicuna/LLaMA2-70B 上 2.68x。架构核心图。
 
 ### Figure 4 (p.3)
@@ -73,6 +73,25 @@ tags: [speculative]
 ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p12.png]]
 > [!quote] caption
 > However, the optimal tree structure is likely context-dependent. For instance, as batch size increases and redundant computational resources decrease, a smaller tree might be preferable. Tuning the draft structure could potentially lead to improved performance. query query
+
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
+
+$$
+L_{reg} = \text{Smooth L1}(f_{i+1}, \text{Draft\_Model}(T_{2:i+1}, F_{1:i})).
+$$
+
+$$
+{p}_{i+2}=\text{Softmax}(\text{LM\_Head}({f}_{i+1})), \\ \hat{p}_{i+2}=\text{Softmax}(\text{LM\_Head}(\hat{f}_{i+1})), \\ L_{cls} = \text{Cross\_Entropy}({p}_{i+2},\hat{p}_{i+2}).
+$$
+
+## 相关论文
+
+- [[dflash-block-diffusion-for-flash-speculative-decoding]] — DFlash: Block Diffusion for Flash Speculative Decoding
+- [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] — DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation
+- [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] — EAGLE-2: Faster Inference of Language Models with Dynamic Draft Trees
+- [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] — LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification
+- [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] — SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences
+- [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] — JETSPEC: Breaking the Scaling Ceiling of Speculative Decoding with Parallel Tree Drafting
 
 ## 全文文本
 全文已存 `extraction/fulltext/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.txt`（50318 字符）供引用检索。

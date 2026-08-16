@@ -33,5 +33,19 @@ tags: []
 > [!quote] caption
 > Dual-head fine-tuning on a shared decoder. The classification head pools hidden states over the input span (blue) to produce K class logits. The train-only reasoning head applies a causal LM loss over the full sequence, covering both classification input tokens (blue) and teacher rationale tokens (orange). During training, inputs concatenate task text with teacher rationales. At inference, only th
 
+## 关键公式（启发式抽取，引用前请核对原文页码）
+
+- p.3 `Ltotal = β Lcls + α Lreason,`
+- p.4 `pooled baseline for the same backbone (α=0, β=1). All DHRD rows use the optimal weights selected`
+- p.4 `on the validation split: α=β=1 for Llama-3.1-8B, Llama-3.2-3B, and Qwen-3-8B; α=0.5, β=1 for`
+- p.5 `practice, we find α=1 works well for 8B models while Qwen 4B model prefer a milder LM weight`
+- p.9 `compared to each model’s pooled baseline (α=0, β=1). Reasoning / CoT fine-tuned models follows`
+- p.9 `(α=1, β=0) with CoT at inference using the Reasoning Head (refer to Appendix E.6).`
+- p.9 `DHRD (β=1, α=0.5)`
+- p.9 `DHRD (β=1, α=1)`
+- p.9 `DHRD (β=0.5, α=1)`
+- p.11 `r = 16, α = 32, dropout = 0.1`
+- p.11 `• Optimizer: AdamW (optim=adamw_torch), LR 2×10−4, weight decay 0.01.`
+
 ## 全文文本
 全文已存 `extraction/fulltext/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning.txt`（40047 字符）供引用检索。

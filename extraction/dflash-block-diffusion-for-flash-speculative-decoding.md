@@ -28,12 +28,12 @@ tags: [speculative]
 > [!quote] caption
 > Speedup comparison between DFlash, EAGLE-3 against Autoregressive Decoding on Qwen3-8B (Yang et al., 2025) with the
 
-### Figure 2 (p.4) ⭐MiniMax深度解读
+### Figure 2 (p.4) ⭐深度解读
 ![[assets/dflash-block-diffusion-for-flash-speculative-decoding-p04.png]]
 > [!quote] caption
 > DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s
 
-> [!tip] 技术解读（MiniMax 多模态）
+> [!tip] 技术解读（多模态）
 > 【MiniMax 解读】DFlash 设计：block-diffusion draft model 块内并行生成多 token（非逐 token 自回归）→低 draft 延迟；目标 LLM 先 prefill 产首 token 并取若干层隐藏态，concat 后过投影层融成 target context feature，注入每个 draft 层的 KV cache 并跨轮复用，持续提供上下文引导→接受长度随 draft 深度增长，无 token-embedding 稀释（优于 EAGLE 式输入融合）。架构核心图。
 
 ### Figure 3 (p.3)
@@ -50,6 +50,29 @@ tags: [speculative]
 ![[assets/dflash-block-diffusion-for-flash-speculative-decoding-p13.png]]
 > [!quote] caption
 > The loss decay makes training converge faster and better. A.5.2. RANDOM SAMPLING OF MASKED BLOCKS
+
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
+
+$$
+\mathbf{H}_{t} = \mathrm{RMSNorm} \left( W_c[\mathbf{H}^{(l_1)};\ldots;\mathbf{H}^{(l_5)}] \right).
+$$
+
+$$
+\begin{aligned} \mathbf{Q}_i &= W_i^Q \mathbf{H}_d, \\ \mathbf{K}_i &= [W_i^K \mathbf{H}_t;\, W_i^K \mathbf{H}_d]_{\mathrm{seq}}, \\ \mathbf{V}_i &= [W_i^V \mathbf{H}_t;\, W_i^V \mathbf{H}_d]_{\mathrm{seq}}. \end{aligned}
+$$
+
+$$
+5 \times 2048 \times 2048 \times 2 \approx 42\text{ MB},
+$$
+
+## 相关论文
+
+- [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] — SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences
+- [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] — BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DIFFUSION LANGUAGE MODELS
+- [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] — DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation
+- [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] — LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification
+- [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] — JETSPEC: Breaking the Scaling Ceiling of Speculative Decoding with Parallel Tree Drafting
+- [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] — EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty
 
 ## 全文文本
 全文已存 `extraction/fulltext/dflash-block-diffusion-for-flash-speculative-decoding.txt`（54200 字符）供引用检索。

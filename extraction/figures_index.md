@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 472 张图，来自 49 篇论文；其中 ⭐17 张已深度解读。
+共 515 张图，来自 54 篇论文；其中 ⭐22 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -93,6 +93,31 @@
 ![[assets/parallel-scan-on-ascend-ai-accelerators-p03.png]]
 > [!tip] 【MiniMax 解读】⭐Ascend 910B AI Core 架构(Fig.3)：单 AI Core = 1 个 AI Cube(AIC 矩阵乘引擎) + 2 个 AI Vector(AIV SIMD 核)，各有独立 Unified Buffer(UB) scratchpad，加 Memory Transfer Engine(MTE)+标量+控制块。AIC/AIV 共享全局 HBM/L2，Cube↔Vector 数据交换须走全局内存/L2（AIC 无直接写 AIV UB 的本地路径）。并行 scan：AIV 跑 element-wise/局部 scan + 解耦 look-back（在 UB 上），AIC 改作跨块前缀累积（矩阵乘式），MTE 编排块级 tile 传输。⭐结论：Ascend 非对称 Cube/Vector 划分 + UB 局部计算 + Cube↔Vector 仅全局通信→偏好 block-tiled、通信最小化的解耦 scan 设计，而非密集 GEMM 中心。直击昇腾线性注意力/SSM scan。
 *caption: 1 shows the Ascend architecture where the… ｜ 论文 [[parallel-scan-on-ascend-ai-accelerators]] ｜ arxiv 见 MD 元信息*
+
+### Kimi K3: Open Frontier Intelligence — Fig.2 (p.3)
+![[assets/kimi-k3-open-frontier-intelligence-p03.png]]
+> [!tip] Kimi K3 架构总览：每个 block 由 3 层 Kimi Delta Attention (KDA) + 1 层 Gated MLA 组成混合注意力，每个注意力层后接 Stable LatentMoE（16/896 路由专家+共享专家）做稀疏 channel mixing。深度维度引入 Attention Residuals (AttnRes)：用可学习 pseudo-query w 对 embedding 及前序各 block 输出算注意力权重 α，实现跨层选择性信息检索，突破顺序残差累积。输入侧原生视觉通路：MoonViT-V2 编码图像/视频经轻量 projector 映射进共享 embedding 空间。token/channel/layer 三维信息流设计，scaling 效率较 K2 提升 ~2.5×。
+*caption: The Kimi K3 architecture, organized around token, channel, and layer mixing, with a native vision pathway at the input.… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
+
+### Kimi K3: Open Frontier Intelligence — Fig.3 (p.5)
+![[assets/kimi-k3-open-frontier-intelligence-p05.png]]
+> [!tip] 下界衰减与 chunkwise KDA 计算：(a) Kimi Linear 用无界 negative-Softplus 映射 g=−e^A·Softplus(z)，K3 改为 g=g_min·Sigmoid(e^A·z) 把 log-decay 下界到 g_min=−5；(b) 有界范围使所有 causal tile（含对角 tile）都能用稠密 Tensor Core 矩阵乘，消掉逐位置对的 diagonal 路径。g_min=−5 时 16-token tile 累计 log-decay∈(−80,0)，rescale 因子 <e^80 仍在 BF16 动态范围内——分块线性注意力在 Tensor Core/NPU 上高效落地的关键参数化技巧。
+*caption: Lower-bounded decay and its effect on chunkwise KDA computation. (a) Kimi Linear uses an unbounded negative-Softplus mapping, whereas Kimi K3 bounds t… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
+
+### Prefill-as-a-Service: KVCache of Next-Generation Models Coul — Fig.3 (p.6)
+![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p06.png]]
+> [!tip] PrfaaS-PD 部署拓扑：Request Router 按长度阈值 t 分流——长请求 (l>t) 送独立 PrfaaS 集群（高算力 prefill 节点+集群内 RDMA），短请求留本地 PD 集群（高显存带宽）。PrfaaS 产出的 KVCache 经普通跨集群以太网传到本地 PD 集群 decode；两侧各挂 Hybrid Prefix Cache Pool（linear state 与 full-attention KV 分组、统一 block pool），Global KVCache Manager 全局协调。核心洞察：hybrid-attention 模型 KV 流量降一个数量级后（1T 模型 ~170Gbps、万卡总出口 ~1.8Tbps），跨数据中心 prefill 卸载在物理链路上首次可行。
+*caption: Deployment topology of the PrfaaS-PD architecture.… ｜ 论文 [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] ｜ arxiv 见 MD 元信息*
+
+### LongSpec: Long-Context Lossless Speculative Decoding with Ef — Fig.2 (p.4)
+![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p04.png]]
+> [!tip] LongSpec 三件套：(a) 内存高效 draft 模型——滑窗自注意力（定长窗口捕捉局部）+ 无 KV cache 的 cross-attention（直接读 target 模型 last-layer K/V 收长程信息），draft KV 占用变常数；(b) Anchor-Offset Indices——保留前 4 个位置作 attention sink，其余 token 从随机大 offset 连续编号，短上下文训练即可覆盖大位置索引、且 target 模型不 OOD（loss 仅 +0.001），弥合训练-推理位置错配；(c) Hybrid Tree Attention——前缀走 FlashAttention（快）+ tree 走 Triton mask attention（灵活），兼得两者。
+*caption: Illustration of the memory-efficient draft model, the Anchor-Offset Indices, and the Hybrid Tree Attention. (a) We use a sliding window self-attention… ｜ 论文 [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] ｜ arxiv 见 MD 元信息*
+
+### SpecExtend: A Drop-in Enhancement for Speculative Decoding o — Fig.2 (p.2)
+![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p02.png]]
+> [!tip] SpecExtend 总览：长输入分 chunk，target/draft 双模型 prefill 用 FlashAttention、verify 用 Hybrid Tree Attention 加速；核心 Cross-model Retrieval——用 target 模型 verify 阶段产出的 attention score 选出最相关 chunk（图中 1/3/7/8）动态保留进 draft KV cache，免训练同时提升 draft 速度与精度（平均接受长度最高 +2.55×；16K 摘要 2.84×、AIME-24 长推理 3.86× 加速）。training-free drop-in，可直接套 EAGLE-3 等短上下文优化的 draft。
+*caption: Overview of SpecExtend. FlashAttention accelerates the prefill phases of both target and draft models, and Hybrid Tree Attention accelerates the verif… ｜ 论文 [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] ｜ arxiv 见 MD 元信息*
 
 ## 按主题分类
 
@@ -213,7 +238,7 @@
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.12 (p.16): End-to-end experiments of Mooncake and vLLM on simulated data.…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p17.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.13 (p.17): Request TTFT and TBT distributions of Mooncake and vLLM under real workloads…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 
-### kv-cache (17)
+### kv-cache (22)
 
 - ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p01.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.1 (p.1): Benchmark comparison between GLM-5 and GLM-5 + IndexCache. IndexCache removes 50…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 - ⭐ ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p03.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.2 (p.3): Side-by-side comparison of inference loops. (a) Standard DSA runs the lightning …  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
@@ -232,11 +257,22 @@
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.11 (p.16): End-to-end experiments of Mooncake and vLLM on the ArXiv Summarization and L-Eva…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.12 (p.16): End-to-end experiments of Mooncake and vLLM on simulated data.…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p17.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.13 (p.17): Request TTFT and TBT distributions of Mooncake and vLLM under real workloads…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
+- ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p02.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.1 (p.2): Comparison of two deployment paradigms for PD-disaggregated LLM serving.…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
+- ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p04.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.2 (p.4): KV throughput of MiniMax-M2.5 on an 8×H200 instance at various input lengths.…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
+- ⭐ ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p06.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.3 (p.6): Deployment topology of the PrfaaS-PD architecture.…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
+- ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p07.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.4 (p.7): Hybrid prefix cache pool. Linear states and full-attention KVCache are managed b…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
+- ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p11.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.5 (p.11): Illustration of the grid search process for the two optimization variables. (a) …  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
 
-### long-context (2)
+### long-context (8)
 
 - ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]] — **DeepSeek-V4: Towards Highly Efficient Million-Toke** Fig.1 (p.14): 2.4. Muon Optimizer…  `[[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]]`
 - ⭐ ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p15.png]] — **DeepSeek-V4: Towards Highly Efficient Million-Toke** Fig.5 (p.15): This forms a fine-grained pipeline among experts, keeping both computation and c…  `[[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p01.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.1 (p.1): The SoTA SD method, EAGLE, has a training context length of 2048, which is signi…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ⭐ ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p04.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.2 (p.4): Illustration of the memory-efficient draft model, the Anchor-Offset Indices, and…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p07.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.3 (p.7): Decoding speed (tokens/s) across different models and settings. All results are …  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.4 (p.8): Training loss curves on long-context data.…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.5 (p.8): Latency breakdown for a single speculative decoding loop comparing the EAGLE imp…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p09.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.6 (p.9): Throughput comparison of Vanilla, MagicDec, and LONGSPEC. not suitable for such …  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
 
 ### multimodal (43)
 
@@ -383,7 +419,7 @@
 - ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p08.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.3 (p.8): Relative speedup of IndexCache over the DSA baseline across three inference sett…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 - ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p16.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.4 (p.16): Pairwise top-k index overlap ratio between all layer pairs of the 30B DSA model.…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 
-### speculative (66)
+### speculative (78)
 
 - ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p02.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.1 (p.2): MEDUSA introduces multiple heads on top of the last hidden states of the LLM, en…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
 - ⭐ ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p03.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.2 (p.3): Remarkably, similar ideas have also been explored in independent works like Miao…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
@@ -451,6 +487,18 @@
 - ![[assets/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-p15.png]] — **JETSPEC: Breaking the Scaling Ceiling of Speculati** Fig.4 (p.15): Tree-quality failure mode at MATH-500 prompt #0, decode step 0. Both heads draft…  `[[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]]`
 - ![[assets/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-p18.png]] — **JETSPEC: Breaking the Scaling Ceiling of Speculati** Fig.5 (p.18): Figure 5: Causal attention mask used for training with multiple sampled blocks. …  `[[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]]`
 - ![[assets/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-p19.png]] — **JETSPEC: Breaking the Scaling Ceiling of Speculati** Fig.6 (p.19): Each sampled block includes an anchor position and multiple future token positio…  `[[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p01.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.1 (p.1): The SoTA SD method, EAGLE, has a training context length of 2048, which is signi…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ⭐ ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p04.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.2 (p.4): Illustration of the memory-efficient draft model, the Anchor-Offset Indices, and…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p07.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.3 (p.7): Decoding speed (tokens/s) across different models and settings. All results are …  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.4 (p.8): Training loss curves on long-context data.…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.5 (p.8): Latency breakdown for a single speculative decoding loop comparing the EAGLE imp…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p09.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.6 (p.9): Throughput comparison of Vanilla, MagicDec, and LONGSPEC. not suitable for such …  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
+- ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p01.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.1 (p.1): Performance and memory usage of speculative decoding with Llama-3.1-8B-Instruct …  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
+- ⭐ ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p02.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.2 (p.2): Overview of SpecExtend. FlashAttention accelerates the prefill phases of both ta…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
+- ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p04.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.3 (p.4): Left figure shows acceptance rates for hard and easy tokens, where CMR enables m…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
+- ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p05.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.4 (p.5): (a) Average accepted length of Vicuna-7B/68M across different draft model cache …  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
+- ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p06.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.5 (p.6): Speedup comparison of standard speculative decoding and SpecExtend across varyin…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
+- ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p07.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.6 (p.7): Decoding speed (left) and average ac- cepted length (right) of the DeepSeek-R1-D…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
 
 ### training (90)
 
@@ -1637,3 +1685,104 @@
   - 1: A diagram of well-known parallel scan applica- tions considered here along with their dependencies.
 - Fig.6 (p.8) ![[assets/parallel-scan-on-ascend-ai-accelerators-p08.png]]
   - 1:
+
+### #57 Kimi K3: Open Frontier Intelligence
+
+- Fig.1 (p.1) ![[assets/kimi-k3-open-frontier-intelligence-p01.png]]
+  - Kimi K3 main results. 1https://huggingface.co/moonshotai/Kimi-K3[cs.CL] 7 Aug 2026
+- ⭐ Fig.2 (p.3) ![[assets/kimi-k3-open-frontier-intelligence-p03.png]]
+  - The Kimi K3 architecture, organized around token, channel, and layer mixing, with a native vision pathway at the input.
+- ⭐ Fig.3 (p.5) ![[assets/kimi-k3-open-frontier-intelligence-p05.png]]
+  - Lower-bounded decay and its effect on chunkwise KDA computation. (a) Kimi Linear uses an unbounded negative-Softplus mapping, whereas Kimi K3 bounds the log-decay with a scaled sigmoid; the curves sho
+- Fig.4 (p.7) ![[assets/kimi-k3-open-frontier-intelligence-p07.png]]
+  - Gate and up branches of GLU, SwiGLU, and SiTU-GLU, together with their scalar responses, where σ denotes the sigmoid function. Both branches receive the scalar input x, and all curves share the domain
+- Fig.5 (p.8) ![[assets/kimi-k3-open-frontier-intelligence-p08.png]]
+  - Illustration of Quantile Balancing with m = 8 tokens, n = 4 routed experts, and k = 1 selected expert per token. (a)
+- Fig.6 (p.9) ![[assets/kimi-k3-open-frontier-intelligence-p09.png]]
+  - Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lower gradient norms with fewer spikes, indicating mor
+- Fig.7 (p.11) ![[assets/kimi-k3-open-frontier-intelligence-p11.png]]
+  - Fitted scaling-law curves for Kimi K2 and Kimi K3. Kimi K3 achieves 2.5× gain in scaling efficiency over Kimi K2.
+- Fig.8 (p.13) ![[assets/kimi-k3-open-frontier-intelligence-p13.png]]
+  - Scores and the average assistant steps across a variety of public and in-house evaluations during RL. By scaling RL FLOPs, tool-call steps scale up consistently, accompanied by a comprehensive improve
+- Fig.9 (p.15) ![[assets/kimi-k3-open-frontier-intelligence-p15.png]]
+  - Overview of knowledge-graph-guided task synthesis. The hierarchically organized knowledge graph represents concepts at multiple levels, ranging from broad domains to fine-grained concepts. Related nod
+- Fig.10 (p.17) ![[assets/kimi-k3-open-frontier-intelligence-p17.png]]
+  - Completion curves on Camera Repair Management System, a black-box system replication task in which the agent reconstructs a hidden 3D-camera repair system as a web application through oracle queries. 
+- Fig.11 (p.19) ![[assets/kimi-k3-open-frontier-intelligence-p19.png]]
+  - Computation, communication and offloading overlapped in different PP phases.
+- Fig.12 (p.23) ![[assets/kimi-k3-open-frontier-intelligence-p23.png]]
+  - Fine-grained prefix caching within a physical cache block. A 6144-token physical block contains twelve 512-token hash blocks, with cached MLA blocks shown in blue and empty blocks in light gray. The m
+- Fig.13 (p.32) ![[assets/kimi-k3-open-frontier-intelligence-p32.png]]
+  - Score vs. per-task inference cost on Kimi Code Bench 2.0, BrowseComp, GDPval-AA v2, and AA-Briefcase. Kimi K3 is marked with a star.
+- Fig.14 (p.33) ![[assets/kimi-k3-open-frontier-intelligence-p33.png]]
+  - Case study: GPU kernel optimization on AttnRes. 7
+- Fig.15 (p.34) ![[assets/kimi-k3-open-frontier-intelligence-p34.png]]
+  - Case study: GPU compiler development with MiniTriton. (a) CUDA-core and (b) tensor-core rooflines of MiniTriton kernels on an NVIDIA L20 (sm_89) against torch eager, torch.compile, Triton, and cuBLAS 
+- Fig.16 (p.46) ![[assets/kimi-k3-open-frontier-intelligence-p46.png]]
+  - Structure of the Kimi K3 chat template. (a) Context layout: global option messages precede the input messages, while one-shot option messages follow them, so that per-request options leave the history
+
+### #58 Prefill-as-a-Service: KVCache of Next-Generation Models Coul
+
+- Fig.1 (p.2) ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p02.png]]
+  - Comparison of two deployment paradigms for PD-disaggregated LLM serving.
+- Fig.2 (p.4) ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p04.png]]
+  - KV throughput of MiniMax-M2.5 on an 8×H200 instance at various input lengths.
+- ⭐ Fig.3 (p.6) ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p06.png]]
+  - Deployment topology of the PrfaaS-PD architecture.
+- Fig.4 (p.7) ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p07.png]]
+  - Hybrid prefix cache pool. Linear states and full-attention KVCache are managed by separate groups backed by a unified block pool. Blocks are categorized as prefix-cache (intra-cluster only, block-alig
+- Fig.5 (p.11) ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p11.png]]
+  - Illustration of the grid search process for the two optimization variables. (a) fixes t at the optimum and searches over the prefill/decode instance split within the local PD cluster. (b) fixes
+
+### #59 LongSpec: Long-Context Lossless Speculative Decoding with Ef
+
+- Fig.1 (p.1) ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p01.png]]
+  - The SoTA SD method, EAGLE, has a training context length of 2048, which is significantly shorter than the context lengths of modern LLMs. 2023), and their ability to handle extensive con- texts is bec
+- ⭐ Fig.2 (p.4) ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p04.png]]
+  - Illustration of the memory-efficient draft model, the Anchor-Offset Indices, and the Hybrid Tree Attention. (a) We use a sliding window self-attention layer to capture the local context information an
+- Fig.3 (p.7) ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p07.png]]
+  - Decoding speed (tokens/s) across different models and settings. All results are computed at T = 1. The letters G, Q, M, L, and R on the horizontal axis represent the datasets GovReport, QMSum, Multi-N
+- Fig.4 (p.8) ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]]
+  - Training loss curves on long-context data.
+- Fig.5 (p.8) ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]]
+  - Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latency reduction is observed in the target model’s at- 
+- Fig.6 (p.9) ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p09.png]]
+  - Throughput comparison of Vanilla, MagicDec, and LONGSPEC. not suitable for such long-output scenarios because the initial inference stage of the long reasoning task is not the same as the traditional 
+
+### #60 SpecExtend: A Drop-in Enhancement for Speculative Decoding o
+
+- Fig.1 (p.1) ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p01.png]]
+  - Performance and memory usage of speculative decoding with Llama-3.1-8B-Instruct and EAGLE-3 across varying input lengths. Performance significantly declines well before the shift of memory bottleneck.
+- ⭐ Fig.2 (p.2) ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p02.png]]
+  - Overview of SpecExtend. FlashAttention accelerates the prefill phases of both target and draft models, and Hybrid Tree Attention accelerates the verification phase. We use the target model’s attention
+- Fig.3 (p.4) ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p04.png]]
+  - Left figure shows acceptance rates for hard and easy tokens, where CMR enables more accurate drafting in both cases compared to StreamingLLM.
+- Fig.4 (p.5) ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p05.png]]
+  - (a) Average accepted length of Vicuna-7B/68M across different draft model cache settings. (b) End-to-end latency breakdown of speculative decoding on 16K-token inputs. retrieved context to identify an
+- Fig.5 (p.6) ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p06.png]]
+  - Speedup comparison of standard speculative decoding and SpecExtend across varying input lengths on
+- Fig.6 (p.7) ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p07.png]]
+  - Decoding speed (left) and average ac- cepted length (right) of the DeepSeek-R1-Distill-Llama- 8B/EAGLE-3 setup on the long reasoning task with the AIME-24 benchmark.
+
+### #61 A Survey of Large Language Models
+
+- Fig.1 (p.3) ![[assets/a-survey-of-large-language-models-p03.png]]
+  - As discussed before, language model is not a new tech- nical concept specially for LLMs, but has evolved with the advance of artificial intelligence over the decades. Early lan- guage models mainly ai
+- Fig.3 (p.99) ![[assets/a-survey-of-large-language-models-p99.png]]
+  - – Section 4: add LLM-based data filtering and selec- tion methods in Section 4.1.2; update Section 4.2.1, “Emergent Architectures” to include more discus- sions about SSM-based architectures; add Tabl
+- Fig.4 (p.7) ![[assets/a-survey-of-large-language-models-p07.png]]
+  - The basic principle underlying GPT models is to compress the world knowledge into the decoder-only
+- Fig.5 (p.12) ![[assets/a-survey-of-large-language-models-p12.png]]
+  - Public API of LLMs. Instead of directly using the model copies, APIs provide a more convenient way for common users to use LLMs, without the need of running the model locally. As a representative inte
+- Fig.7 (p.18) ![[assets/a-survey-of-large-language-models-p18.png]]
+  - Filtering and Selection. To remove low-quality data from the collected corpus, existing work generally adopts two ap- proaches, namely classifier-based and heuristic-based. The former approach trains 
+- Fig.8 (p.20) ![[assets/a-survey-of-large-language-models-p20.png]]
+  - Data Mixture. Since each kind of data source is closely related to the development of certain capacities for LLMs (referring to the discussions in Section 4.1), it is important to set a suitable distr
+- Fig.9 (p.22) ![[assets/a-survey-of-large-language-models-p22.png]]
+  - Encoder-decoder Architecture. The vanilla Transformer model is built on the encoder-decoder architecture [22], which consists of two stacks of Transformer blocks as the encoder and decoder, respective
+- Fig.13 (p.43) ![[assets/a-survey-of-large-language-models-p43.png]]
+  - Adapter Tuning. Adapter tuning incorporates small neural network modules (called adapter) into the Transformer mod- els [406]. To implement the adapter module, a bottleneck architecture has been propo
+- Fig.16 (p.54) ![[assets/a-survey-of-large-language-models-p54.png]]
+  - In this paradigm, there are typically three components: task planner, plan executor, and environment36. Specifically, task planner, which is played by LLMs, aims to generate the whole plan to solve a 
+- Fig.17 (p.59) ![[assets/a-survey-of-large-language-models-p59.png]]
+  - Hallucination widely occurs in existing LLMs, even the most superior LLMs such as GPT-4 [46]. Furthermore, existing work shows that LLMs encounter difficulties in recognizing the hallucinated con- ten
