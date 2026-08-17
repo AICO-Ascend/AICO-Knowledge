@@ -109,23 +109,87 @@ tags: []
 > [!quote] caption
 > Structure of the Kimi K3 chat template. (a) Context layout: global option messages precede the input messages, while one-shot option messages follow them, so that per-request options leave the history KV cache intact; dynamically loaded tools are injected mid-session as input option messages (dashed). (b) Anatomy of an assistant message: the body is organized into think, response, and tools channe
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.4 `[t] := γ1→r`
-- p.4 `O[t] = (Γ1→C`
-- p.5 `t = exp(gh`
-- p.5 `following [64, 24, 140]. With gmin = −5, every retention factor satisfies αh`
-- p.5 `yt = Wo[Sigmoid(Wgxt) ⊙RMSNorm(˜ot)] .`
-- p.5 `yt = Wo[Sigmoid(Wgxt) ⊙˜ot] .`
-- p.7 `|f(x)| ≤β1β2 = 100`
-- p.7 `near-origin region. SiTU-GLU, shown in red with β1 = 4 and β2 = 25, closely follows SwiGLU near the origin and approaches the`
-- p.7 `bound |f(x)| ≤β1β2 = 100 for large positive inputs, whereas SwiGLU remains unbounded.`
-- p.7 `softcap(x, β) = β tanh(x/β) to the linear factor of the Swish gate and independently to the up branch:`
-- p.18 `At t = Ti+1, both quantities MTi+1←1`
-- p.24 `prefix hits at B = 2560 = 5 × 512, deep inside a 6144-token physical block, and resumes prefill from token B instead`
-- p.43 `∥SiTU-GLU(x)∥∞≤β1β2 = 100,`
-- p.43 `for β1 = 4 and β2 = 25. Unlike hard clamping of gate pre-activations, the smooth cap preserves nonzero gradients`
-- p.43 `i,j = 1 if si,j −αi −βj > 0 and x∗`
+$$
+\mathbf{S}_t = \left(\mathbf{I}-\beta_t\bm{k}_t\bm{k}_t^{\top}\right) \operatorname{Diag}(\bm{\alpha}_t)\mathbf{S}_{t-1} + \beta_t\bm{k}_t\bm{v}_t^{\top}, \qquad \tilde{\bm{o}}_t = \mathbf{S}_t^{\top}\bm{q}_t.
+$$
+
+$$
+\bm{\gamma}_{[t]}^{i\rightarrow j} := \prod_{r=i}^{j}\bm{\alpha}_{[t]}^r, \qquad \bm{\gamma}_{[t]}^r := \bm{\gamma}_{[t]}^{1\rightarrow r}.
+$$
+
+$$
+\bm{y}_t = \mathbf{W}_o\!\left[ \operatorname{Sigmoid}\!\left(\mathbf{W}_g\bm{x}_t\right) \odot \operatorname{RMSNorm}(\tilde{\bm{o}}_t) \right].
+$$
+
+$$
+\bm{k}_{i} = \bm{v}_{i} = \begin{cases} \bm{h}_1 & i = 0 \\ f_i(\bm{h}_{i}) & 1 \leq i \leq l-1 \end{cases}
+$$
+
+$$
+{\alpha_{i \to l}} = \frac{\phi\left(\bm{q}_{l}, \bm{k}_{i}\right)}{\sum_{j=0}^{l-1} \phi\left(\bm{q}_{l}, \bm{k}_{j}\right)}, \qquad \bm{h}_{l} = \sum_{i=0}^{l-1} {\alpha_{i \to l}} \cdot \bm{v}_{i}.
+$$
+
+$$
+\mathbf{V} = \begin{cases} [\bm{b}_0, \bm{b}_1, \ldots, \bm{b}_{n-1}]^\top & \text{if } i = 1 \text{ (first layer of block } n\text{)} \\ [\bm{b}_0, \bm{b}_1, \ldots, \bm{b}_{n-1}, \bm{b}_n^{i-1}]^\top & \text{if } i \geq 2 \text{ (subsequent layers)} \end{cases}
+$$
+
+$$
+\operatorname{SiTU\text{-}GLU}(\bm{x}) = \left[\beta_1\tanh\!\left(\frac{\mathbf{W}_g\bm{x}}{\beta_1}\right)\odot\operatorname{Sigmoid}(\mathbf{W}_g\bm{x})\right] \odot \left[\beta_2\tanh\!\left(\frac{\mathbf{W}_u\bm{x}}{\beta_2}\right)\right],
+$$
+
+$$
+\mathcal{T}_i = \operatorname{argtop}_{k}\!\left(\bm{s}_i+\bm{b}\right), \qquad p_{i,j} = \frac{s_{i,j}}{\sum_{r\in\mathcal{T}_i}s_{i,r}}, \quad j\in\mathcal{T}_i.
+$$
+
+$$
+\sum_{i=1}^{m}\mathbf{1}\!\left[s_{i,j}+\widehat{b}_j^{(t+1)}>\alpha_i^{(t)}\right],
+$$
+
+$$
+\mathcal{L}_{\mathrm{LK}} = -\log \sum_{x \in \mathcal{V}} \min\!\left(p(x), q(x)\right),
+$$
+
+$$
+\begin{aligned} \mathbf{M}_{[i+1]}^{t \leftarrow 1} := \prod_{r \leftarrow 1}^{t}\mathbf{M}_r \in \mathbb{R}^{d_k\times d_k}, \qquad \mathbf{S}_{[i+1]}^{t} & =\widetilde{\mathbf{S}}_{[i+1]}^{t} + \mathbf{M}_{[i+1]}^{t \leftarrow 1}\mathbf{S}_{[i]}^{T_i} \\ & = \widetilde{\mathbf{S}}_{[i+1]}^{t} + \mathbf{M}_{[i+1]}^{t \leftarrow 1}\sum_{j=1}^{i}\Big(\prod_{l \leftarrow j+1}^{i}\mathbf{M}_{[l]}^{T_l \leftarrow 1}\Big)\widetilde{\mathbf{S}}_{[j]}^{T_j}\in \mathbb{R}^{d_k\times d_v}. \end{aligned}
+$$
+
+$$
+\beta\tanh\!\left(\frac{z}{\beta}\right) = z + O\!\left(\frac{z^3}{\beta^2}\right).
+$$
+
+$$
+\left\|\operatorname{SiTU\text{-}GLU}(\bm{x})\right\|_{\infty} \leq \beta_1\beta_2 = 100,
+$$
+
+$$
+\max_{x_{i,j}\in\{0,1\}} \sum_{i,j} x_{i,j}s_{i,j} \qquad \text{s.t.}\qquad \sum_j x_{i,j}=k, \qquad \sum_i x_{i,j}=\frac{mk}{n}.
+$$
+
+$$
+\max_{x_{i,j}\in[0,1]}\min_{\alpha_i,\beta_j}\; \sum_{i,j} x_{i,j}s_{i,j} - \sum_i \alpha_i\Big(\sum_j x_{i,j} - k\Big) - \sum_j \beta_j\Big(\sum_i x_{i,j} - \tfrac{mk}{n}\Big).
+$$
+
+$$
+\min_{\alpha_i,\beta_j}\max_{x_{i,j}\in[0,1]}\; \sum_{i,j} x_{i,j}\big(s_{i,j} - \alpha_i - \beta_j\big) + k\sum_i \alpha_i + \frac{mk}{n}\sum_j \beta_j.
+$$
+
+$$
+\min_{\alpha_i,\beta_j}\; \mathcal{L}(\bm{\alpha},\bm{\beta}) := \sum_{i,j}\max\big(0,\; s_{i,j} - \alpha_i - \beta_j\big) + k\sum_i \alpha_i + \frac{mk}{n}\sum_j \beta_j.
+$$
+
+$$
+\min_{\alpha}\; k\alpha + \sum_{j}\max\big(0,\; s_{i,j} - \beta_j - \alpha\big).
+$$
+
+$$
+\alpha_i^* = \operatorname{quantile}_{1-k/n}\big(\bm{s}_i - \bm{\beta}\big).
+$$
+
+$$
+\beta_j^* = \operatorname{quantile}_{1-k/n}\big(\bm{s}_{:,j} - \bm{\alpha}\big).
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/kimi-k3-open-frontier-intelligence.txt`（189122 字符）供引用检索。

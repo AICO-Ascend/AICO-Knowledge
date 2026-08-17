@@ -81,9 +81,27 @@ tags: []
 > [!quote] caption
 > We find that
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.5 `4Pmodel = ((WK +WQ +WV )+WO +WU +WG +WD)L ≈((1/RGQA +1+`
+$$
+T_{mem} = \frac{MemSize}{MemBW}
+$$
+
+$$
+T_{Compute} &\approx \frac{2B_{Dense} \cdot P_{Model}}{Compute}
+$$
+
+$$
+T_{net} \approx 4\cdot\frac{N_{GPU}B_{Dense}D_{model} S_{type} L }{NetBW}
+$$
+
+$$
+T_R &= \frac{T_{Mem}}{T_{Compute}} \approx \frac{Compute}{MemBW} \frac{MemSize}{P_{model}} \frac{1}{2B_{dense}}
+$$
+
+$$
+\mathrm{Throughput_{optimal}} &= \frac{B_{Dense}}{T_{Compute}} = \frac{Compute}{2 P_{Model}}
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/nanoflow-towards-optimal-large-language-model-serving-throughput.txt`（78749 字符）供引用检索。

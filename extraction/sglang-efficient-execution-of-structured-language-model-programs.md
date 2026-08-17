@@ -96,6 +96,20 @@ tags: [disaggregated-serving]
 > [!quote] caption
 > An SGLang program and its corresponding dataflow graph.
 
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
+
+$$
+C \geq \sum_{e \in \text{edges}(T)} |e|.
+$$
+
+$$
+C = \sum_{e \in \text{edges}(T)} |e|.
+$$
+
+$$
+\frac{\sum_{r\in R}\text{number of cached prefill tokens in $r$}}{\sum_{r\in R}\text{number of prefill tokens in $r$}},
+$$
+
 ## 相关论文
 
 - [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] — SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills

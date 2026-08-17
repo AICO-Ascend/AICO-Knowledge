@@ -74,10 +74,43 @@ tags: []
 > [!quote] caption
 > StepMesh framework for multiple accelerators. AF-
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.11 `One L20 can access 864 GB/s × 272µs = 235 MB within`
-- p.11 `50%×272µs = 117 MB. For 61 layers in Step-3, this totals`
+$$
+\max(FLOP_{Attn}U_{FLOP}, Byte_{KV}U_{byte}) + FLOP_{Linear}U_{FLOP}
+$$
+
+$$
+2 \times N_{\text{token}} \times W_{\text{FFN}}
+$$
+
+$$
+2 \times B_{\text{dense}} \ge \frac{\text{FLOPs}}{\text{Bandwidth}}
+$$
+
+$$
+B_{\text{MoE}} = \frac{B_{\text{dense}}}{S}
+$$
+
+$$
+B_{\text{MoE}} \ge \frac{\text{FLOPs}}{2 \times S \times \text{Bandwidth}}
+$$
+
+$$
+3 \times H \times B_{\text{MoE}}
+$$
+
+$$
+\frac{3 \times H \times B_{\text{MoE}}}{\text{Net}} \le \frac{16.6\text{ms}}{L}
+$$
+
+$$
+\frac{H \times \text{FLOPs} \times L}{\text{Net} \times S \times \text{Bandwidth}} \le \frac{16.6\text{ms} \times 2}{3} = 11.1\text{ms}
+$$
+
+$$
+S \ge \frac{H \times \text{FLOPs} \times L}{\text{Net} \times \text{Bandwidth} \times 11.1\text{ms}}
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding.txt`（78380 字符）供引用检索。

@@ -91,11 +91,11 @@ tags: [disaggregated-serving]
 > [!quote] caption
 > Ablation study: Effect of varying the chunk size on different components of the system for LLaMa 13B on A6000 GPU. measure the time to compute the prefill phase for various se- quence lengths using the full sequence at once - this represents our baseline prefill performance. For each long sequence, we then compute the prefill with chunked-prefills and compare its end-to-end runtime with the baseli
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.9 `improvement of 1.27× at P : D = 14 (≈C/(B−1) = 256/17)`
-- p.10 `(≈C/(B−1) = 512/17) whereas the gains are much lower`
-- p.12 `sampled from a Zipf distribution (θ = 0.4), adhering to the`
+$$
+B = \lfloor \left(\frac{M_G - M_S}{L*m_{kv}}\right) \rfloor
+$$
 
 ## 相关论文
 

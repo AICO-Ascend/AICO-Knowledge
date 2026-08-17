@@ -88,6 +88,12 @@ tags: [multimodal]
 > [!quote] caption
 > Specifically, increasing the max thinking token length at inference time consistently improves test-time accuracy across all three 16
 
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
+
+$$
+\max_\theta \mathbb{E}_{(x, y^*)\sim\mathcal{D}}\left[ \mathbb{E}_{(y, z)\sim\pi_\theta} \left[r(x, y, y^*)\right] - \tau \mathrm{KL} (\pi_{\theta}(x) || \pi_{\theta_i}(x)) \right]\, ,
+$$
+
 ## 相关论文
 
 - [[qwen3-vl-technical-report]] — Qwen3-VL Technical Report

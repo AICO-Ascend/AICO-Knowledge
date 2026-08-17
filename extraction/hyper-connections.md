@@ -119,23 +119,87 @@ tags: []
 > [!quote] caption
 > Training loss curves comparied with parallel transformer blocks (PTB), smoothed using
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.4 `H = norm(H)`
-- p.4 `B(H) = sβ ◦tanh(HWβ)⊺+ B ∈R1×n`
-- p.4 `Am(H) = sα ◦tanh(HWm) + Am ∈Rn×1`
-- p.4 `Ar(H) = sα ◦tanh(HWr) + Ar ∈Rn×n`
-- p.7 `with the increase to n = 8 providing minimal additional benefits. Notably, OLMo-1B-DHC×8 W/O`
-- p.15 `|θSHC| = |θB| + |θA| = n + n · (n + 1) = n · (n + 2),`
-- p.15 `Pextra = |θSHC| × 2 × L,`
-- p.15 `|θDHC| = |θnorm| + |sβ| + |θWβ| + |θB| + |sα| + |θWm| + |θAm| + |θWr| + |θAr|`
-- p.15 `= |θnorm| + 1 + dmodel + n + 1 + dmodel + n + dmodel × n + n × n`
-- p.15 `= |θnorm| + dmodel × (n + 2) + n × (n + 2) + 2,`
-- p.15 `|θnorm| = 0. In OLMoE, |θnorm| = dmodel. Similar to the static hyper-connections, the number of`
-- p.15 `Pextra = |θDHC| × 2 × L,`
-- p.15 `For example, for OLMo-1B-DHC×4, Pextra = (0 + 2048 × (4 + 2) + 4 × (4 + 2) + 2) × 2 × 16 =`
-- p.20 `Mixup (α = 0.2)`
-- p.20 `AdamW (β1 = 0.9, β2 = 0.999, ϵ = 1e −8)`
+$$
+\left|\theta_{\texttt{SHC}}\right|= |\theta_{\mathbf{B}}| + |\theta_{\mathbf{A}}|= n + n \cdot (n+1)=n \cdot (n+2),
+$$
+
+$$
+P_{\texttt{extra}}=\left|\theta_{\texttt{SHC}}\right| \times 2 \times L,
+$$
+
+$$
+P_{\texttt{extra}}=\left|\theta_{\texttt{DHC}}\right| \times 2 \times L,
+$$
+
+$$
+\mathbf{\hat{h}} = \mathcal{T}(\texttt{Norm}(\mathbf{h})) + \mathbf{h}.
+$$
+
+$$
+\mathbf{\hat{h}} = \mathcal{T}(\mathbf{h}) + \mathbf{h}.
+$$
+
+$$
+\mathcal{HC}_{PreNorm}=\begin{pmatrix} 0 & 1 \\ 1 & 1 \\ \end{pmatrix}
+$$
+
+$$
+\begin{aligned} \mathbf{\hat{H}} &= \mathcal{HC}(\mathcal{T}, \mathbf{H}) \\ &=\mathbf{B}^\intercal\mathcal{T}(\mathbf{H}^\intercal\mathbf{A_m})^\intercal + \mathbf{A_r}^\intercal\mathbf{H} \\ &=\mathcal{T}(\mathbf{h})^\intercal + \mathbf{h}^\intercal \\ &=\mathbf{\hat{h}}^\intercal. \end{aligned}
+$$
+
+$$
+\mathbf{h}' = \mathcal{T}(\mathbf{h})
+$$
+
+$$
+\mathbf{\hat{h}} = \texttt{Norm}(\mathbf{h} + \mathbf{h}')
+$$
+
+$$
+\mathcal{T} = \mathcal{C} \circ \mathcal{T} \circ \mathcal{A},
+$$
+
+$$
+\mathcal{HC}_{PostNorm}=\begin{pmatrix} 0 & \frac{1}{\sqrt{\sigma_{\mathbf{h}}^2 + \sigma_{\mathbf{h}'}^2 + 2\sigma_{\mathbf{h}\mathbf{h}'}}} \\ 1 & \frac{1}{\sqrt{\sigma_{\mathbf{h}}^2 + \sigma_{\mathbf{h}'}^2 + 2\sigma_{\mathbf{h}\mathbf{h}'}}} \\ \end{pmatrix}=\begin{pmatrix} 0 & \mathbf{B} \\ \mathbf{A}_m & \mathbf{A}_r \\ \end{pmatrix}.
+$$
+
+$$
+\mathbf{\hat{H}}=\mathbf{\hat{h}}^\intercal.
+$$
+
+$$
+\sigma_{\mathbf{h} + \mathbf{h}'} = \sqrt{\sigma_{\mathbf{h}}^2 + \sigma_{\mathbf{h}'}^2 + 2\sigma_{\mathbf{h}\mathbf{h}'}}.
+$$
+
+$$
+\begin{aligned} \mathbf{\hat{h}} &= \text{Norm}(\mathbf{h}' + \mathbf{h}) \\ &= \frac{\mathbf{h}' + \mathbf{h} - \mu_{\mathbf{h}' + \mathbf{h}}}{\sigma_{\mathbf{h} + \mathbf{h}'}} \\ &= \frac{1}{\sigma_{\mathbf{h}' + \mathbf{h}}} (\mathbf{h}' + \mathbf{h}) \\ &= \frac{1}{\sqrt{\sigma_{\mathbf{h}}^2 + \sigma_{\mathbf{h}'}^2 + 2\sigma_{\mathbf{h}\mathbf{h}'}}} (\mathbf{h}' + \mathbf{h}) \end{aligned}
+$$
+
+$$
+\begin{aligned} \mathbf{\hat{H}} &= \mathbf{B}^\intercal \mathbf{h}'^\intercal + \mathbf{H}' \\ &= \mathbf{B}^\intercal \mathbf{h}'^\intercal + \mathbf{A}_r \mathbf{H} \\ &= \mathbf{B}^\intercal \mathbf{h}'^\intercal + \mathbf{A}_r \mathbf{h}^\intercal \\ &= \frac{1}{\sqrt{\sigma_{\mathbf{h}}^2 + \sigma_{\mathbf{h}'}^2 + 2\sigma_{\mathbf{h}\mathbf{h}'}}} \mathbf{h}'^\intercal + \frac{1}{\sqrt{\sigma_{\mathbf{h}}^2 + \sigma_{\mathbf{h}'}^2 + 2\sigma_{\mathbf{h}\mathbf{h}'}}} \mathbf{h}^\intercal &= \mathbf{\hat{h}}^\intercal. \end{aligned}
+$$
+
+$$
+\mathcal{HC}=\begin{pmatrix} \mathbf{0}_{1 \times 1} & \mathbf{1}_{1 \times n}\\ \mathbf{e}_1 & \mathbf{e}_{n\times n} \end{pmatrix},
+$$
+
+$$
+\mathbf{h}_i^{k+1} = \mathbf{h}_j^{k+1}
+$$
+
+$$
+\mathbf{h}^{k+1}=\sum_{i=1}^{n}(\mathcal{T}^{k\times n+i}(\mathbf{h}^{k}) + \mathbf{h}^k).
+$$
+
+$$
+\mathcal{HC}^{\{ k \mid k-1 \equiv 0 \pmod{n} \}}= \begin{pmatrix} \mathbf{0}_{1\times 1} & \mathbf{e}_1^\intercal \\ \mathbf{1}_{n\times 1} & \mathbf{1}_{n\times n}, \end{pmatrix}
+$$
+
+$$
+\mathcal{HC}^{\{ k \mid k-1 \equiv i \pmod{n}, i \neq 0 \}}= \begin{pmatrix} \mathbf{0}_{1\times 1} & \mathbf{e}_i^\intercal \\ \mathbf{e}_i & \mathbf{e}_{n\times n}, \end{pmatrix}.
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/hyper-connections.txt`（82287 字符）供引用检索。

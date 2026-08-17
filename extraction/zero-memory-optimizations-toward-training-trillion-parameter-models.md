@@ -63,6 +63,12 @@ tags: [training]
 > [!quote] caption
 > Throughput per GPU. a Bert-Large model for a data sample. Even if we assume the same sequence length and the total number of samples required to train the model, training a 1T model would take 140 days, assuming the same hardware and similar computational eﬃciency.
 
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
+
+$$
+\frac{batch \times seq\_length \times n \times h}{B_{gpu}} \leq \frac{24 \times n \times h^2}{B_{data}}
+$$
+
 ## 相关论文
 
 - [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] — Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism

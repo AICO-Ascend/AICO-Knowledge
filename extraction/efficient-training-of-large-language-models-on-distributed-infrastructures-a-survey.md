@@ -24,11 +24,11 @@ tags: [training]
 ## 图表（原文 caption + 页码）
 _未检测到带 caption 的 figure_
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.2 `Suppose the input token vector is X = [x1, x2, · · · , xn].`
-- p.2 `Attention(Q, K, V ) = softmax`
-- p.18 `i = softmax(si) =`
+$$
+\text{Attention}(Q, K, V) = \texttt{softmax}\left(\frac{QK^T}{\sqrt{d}}\right)V
+$$
 
 ## 相关论文
 

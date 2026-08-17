@@ -46,9 +46,15 @@ tags: []
 > [!quote] caption
 > 1:
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.8 `s = 32, 64, 128. MCScan has 15.2× speedup against ScanU on`
+$$
+\texttt{scan}(\z) = \matA_s\ @\ \matU_s + \matL^{-}_s\ @\ \matA_s\ @ \ \ones_s,
+$$
+
+$$
+\matC_1 &= \matA_s\ @\ \ones_s \nonumber \\ \matC_2 &= \matA_s\ @\ \matU_s \nonumber \\ \matC_2 &= \matC_2 + \matL_s^{-}\ @\ \matC_1. \nonumber
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/parallel-scan-on-ascend-ai-accelerators.txt`（66637 字符）供引用检索。

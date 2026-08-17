@@ -38,7 +38,8 @@ def index_slugs():
     return m
 
 def fetch_eprint(aid):
-    """Download e-print tarball to cache (resume-safe, retry). Returns path or None."""
+    """Download e-print tarball to cache (retry; hard total deadline per attempt —
+    urlopen timeout is per-socket-op, a dribbling connection can hang forever)."""
     dest = CACHE / f"{aid}.bin"
     if dest.exists() and dest.stat().st_size > 1000:
         return dest
@@ -46,12 +47,21 @@ def fetch_eprint(aid):
     for attempt in range(6):
         try:
             req = urllib.request.Request(url, headers=UA)
-            with urllib.request.urlopen(req, timeout=120) as r:
-                data = r.read(MAX_EPRINT + 1)
-            if len(data) > MAX_EPRINT:
-                print(f"  {aid}: eprint too big ({len(data)/1e6:.0f}MB), skip")
-                return None
-            dest.write_bytes(data)
+            deadline = time.time() + 180
+            buf = bytearray()
+            with urllib.request.urlopen(req, timeout=60) as r:
+                while True:
+                    remain = deadline - time.time()
+                    if remain <= 0:
+                        raise TimeoutError("total deadline exceeded")
+                    chunk = r.read(262144)
+                    if not chunk:
+                        break
+                    buf.extend(chunk)
+                    if len(buf) > MAX_EPRINT:
+                        print(f"  {aid}: eprint too big ({len(buf)/1e6:.0f}MB), skip")
+                        return None
+            dest.write_bytes(bytes(buf))
             return dest
         except Exception as e:
             if attempt == 5:
@@ -70,7 +80,7 @@ def read_tex_sources(path):
                         if m.isfile() and m.name.endswith(".tex") and m.size < 3_000_000]
                 texs.sort(key=lambda m: (("main" not in m.name.lower()), m.name))
                 return "\n".join(tf.extractfile(m).read().decode("utf-8", "replace")
-                                 for m in texs[:8])
+                                 for m in texs[:30])
         except tarfile.TarError:
             continue
     # single gzipped tex?
@@ -123,30 +133,35 @@ def main():
     slugs = index_slugs()
     fj_path = OUT / "formulas.json"
     formulas = json.loads(fj_path.read_text(encoding="utf-8")) if fj_path.exists() else {}
-    done = 0
-    for slug, aid in slugs.items():
-        if only and slug not in only:
-            continue
-        if slug in formulas and formulas[slug]:
-            continue
+    todo = [(s, a) for s, a in slugs.items()
+            if (not only or s in only) and not (s in formulas and formulas[s])]
+    if limit:
+        todo = todo[:limit]
+    print(f"todo: {len(todo)} papers")
+
+    from concurrent.futures import ThreadPoolExecutor
+    import threading
+    lock = threading.Lock()
+
+    def work(item):
+        slug, aid = item
         ep = fetch_eprint(aid)
         if not ep:
-            formulas.setdefault(slug, [])
-            continue
+            return slug, []
         tex = read_tex_sources(ep)
         if not tex.strip():
-            print(f"  {slug[:45]:47} no tex source (pdf-only submission)")
-            formulas[slug] = []
-            continue
+            print(f"  {slug[:45]:47} no tex source (pdf-only)")
+            return slug, []
         fs = extract_math(tex)
-        formulas[slug] = fs
-        done += 1
         print(f"  {slug[:45]:47} formulas={len(fs)}")
-        fj_path.write_text(json.dumps(formulas, ensure_ascii=False, indent=1),
-                           encoding="utf-8")
-        if limit and done >= limit:
-            break
-        time.sleep(1)  # be polite to arxiv
+        return slug, fs
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        for slug, fs in ex.map(work, todo):
+            with lock:
+                formulas[slug] = fs
+                fj_path.write_text(json.dumps(formulas, ensure_ascii=False, indent=1),
+                                   encoding="utf-8")
     print(f"=== formulas.json: {sum(1 for v in formulas.values() if v)} papers with latex formulas ===")
 
 if __name__ == "__main__":

@@ -121,10 +121,23 @@ tags: []
 > [!quote] caption
 > (a) Overhead of recomputation and swapping for different block sizes. (b) Performance when serving OPT-13B with the ShareGPT traces at the same request rate.
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.3 `𝑃(𝑥) = 𝑃(𝑥1) · 𝑃(𝑥2 | 𝑥1) · · · 𝑃(𝑥𝑛| 𝑥1, . . . ,𝑥𝑛−1).`
-- p.3 `𝑡=1 exp(𝑞⊤`
+$$
+P(x) = P(x_1) \cdot P(x_2\mid x_1) \cdots P(x_n \mid x_1, \ldots, x_{n-1}).
+$$
+
+$$
+q_i = W_q x_i, \ k_i = W_k x_i, \ v_i = W_v x_i.
+$$
+
+$$
+a_{ij} = \frac{\exp(q_i^\top k_j / \sqrt{d})}{\sum_{t=1}^{i}\exp(q_i^\top k_t / \sqrt{d})}, \ o_i = \sum_{j=1}^{i} a_{ij} v_j.
+$$
+
+$$
+A_{ij} = \frac{\exp(q_i^\top K_j / \sqrt{d})}{\sum_{t=1}^{\lceil i/B \rceil}\exp(q_i^\top K_t\mathbf{1} / \sqrt{d})}, \ o_i = \sum_{j=1}^{\lceil i/B \rceil} V_j A_{ij}^\top,
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/efficient-memory-management-for-large-language-model-serving-with-pagedattention.txt`（82023 字符）供引用检索。

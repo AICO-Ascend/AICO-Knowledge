@@ -43,23 +43,87 @@ tags: []
 > [!quote] caption
 > (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up. 7 DISCUSSION
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.2 `t=0 γtrt) can be handled as an instance of the undiscounted`
-- p.2 `g := ∇θE [P∞`
-- p.2 `V π(st) := Est+1:∞,`
-- p.2 `Qπ(st, at) := Est+1:∞,`
-- p.2 `Aπ(st, at) := Qπ(st, at) −V π(st),`
-- p.3 `The choice Ψt = Aπ(st, at) yields almost the lowest possible variance, though in practice, the`
-- p.3 `V π,γ(st) := Est+1:∞,`
-- p.3 `Qπ,γ(st, at) := Est+1:∞,`
-- p.3 `Aπ,γ(st, at) := Qπ,γ(st, at) −V π,γ(st).`
-- p.3 `gγ := Es0:∞`
-- p.4 `l=0 γlrt+l`
-- p.4 `t = rt + γV (st+1) −V (st), i.e., the TD residual`
-- p.4 `= Est+1 [rt + γV π,γ(st+1) −V π,γ(st)]`
-- p.4 `= Est+1 [Qπ,γ(st, at) −V π,γ(st)] = Aπ,γ(st, at).`
-- p.4 `However, this estimator is only γ-just for V = V π,γ, otherwise it will yield biased policy gradient`
+$$
+\begin{tabular}{cc} Task & Reward \\ \hline 3D biped locomotion & $v_{\mathrm{fwd}} - 10^{-5} \norm{u}^2 - 10^{-5} \norm{\fimp}^2 + 0.2$\\ Quadruped locomotion & $v_{\mathrm{fwd}} - 10^{-6} \norm{u}^2 - 10^{-3}\norm{\fimp}^2 + 0.05$\\ Biped getting up & $-(h_{\rm head} - 1.5)^2 - 10^{-5} \norm{u}^2$\\ \end{tabular}
+$$
+
+$$
+\bg = \Ea{\sum_{t=0}^{\infty} \Psi_t \gradth \log \pith(a_t \given s_t)},
+$$
+
+$$
+\Vpi(s_t) &\defeq \Eb{\substack{s_{t+1:\infty},\\a_{t:\infty} } }{\sum_{\delay=0}^{\infty} r_{t+\delay}} \hspace{0.5in} \Qpi(s_t,a_t) \defeq \Eb{\substack{s_{t+1:\infty},\\a_{t+1:\infty}}}{\sum_{\delay=0}^{\infty} r_{t+\delay}} \\ \Api(s_t, a_t) &\defeq \Qpi(s_t, a_t) - \Vpi(s_t), \quad \text{(Advantage function)}.
+$$
+
+$$
+\Vpigam(s_t) &\defeq \Eb{\substack{s_{t+1:\infty},\\a_{t:\infty} } }{\sum_{\delay=0}^{\infty} \gamma^{\delay} r_{t+\delay}}\hspace{0.5in} \Qpigam(s_t,a_t) \defeq \Eb{\substack{s_{t+1:\infty},\\a_{t+1:\infty}}}{\sum_{\delay=0}^{\infty} \gamma^{\delay} r_{t+\delay}}\\ \Apigam(s_t, a_t)&\defeq\Qpigam(s_t,a_t) - \Vpigam(s_t).
+$$
+
+$$
+\bgrad &\defeq \Eb{\substack{s_{0:\infty}\\ a_{0:\infty}}}{ \sum_{t=0}^{\infty}\Apigam(s_t,a_t) \gradth \log \pith(a_t \given s_t)}.
+$$
+
+$$
+\Eb{\substack{s_{0:\infty}\\ a_{0:\infty}}}{ \hata_t(s_{0:\infty},a_{0:\infty}) \gradth \log \pith(a_t \given s_t)} = \Eb{\substack{s_{0:\infty}\\ a_{0:\infty}}}{ \Apigam(s_t,a_t) \gradth \log \pith(a_t \given s_t)}.
+$$
+
+$$
+\Eb{\substack{s_{0:\infty}\\ a_{0:\infty}}}{ \sum_{t=0}^{\infty}\hata_t(s_{0:\infty},a_{0:\infty}) \gradth \log \pith(a_t \given s_t)} = \bgrad
+$$
+
+$$
+\hat g = \frac{1}{N} \sum_{n=1}^N \sum_{t=0}^{\infty} \hata_t^n \gradth \log \pith(a_t^n \given s_t^n)
+$$
+
+$$
+\Eb{s_{t+1}}{\delta^{\Vpigam}_t} &= \Eb{s_{t+1}}{r_t + \gamma \Vpigam(s_{t+1}) - \Vpigam(s_t)} \nonumber \\ &= \Eb{s_{t+1}}{\Qpigam(s_t, a_t) - \Vpigam(s_t)}= \Apigam(s_t, a_t).
+$$
+
+$$
+\hata_t^{(k)} &\defeq \sum_{\delay=0}^{k-1} \gamma^{\delay} \dv_{t+l} = -V(s_t) + r_t + \gamma r_{t+1} + \dots + \gamma^{k-1} r_{t+k-1} + \gamma^{k} V(s_{t+k})
+$$
+
+$$
+\hata_t^{(\infty)} = \sum_{\delay=0}^{\infty} \gamma^{\delay} \dv_{t+l} = -V(s_t) + \sum_{\delay=0}^{\infty} \gamma^{\delay} r_{t+\delay},
+$$
+
+$$
+\hatalam_t &\defeq (1-\lambda)\lrparen*{ \hata_t^{(1)} + \lambda \hata_t^{(2)} + \lambda^2 \hata_t^{(3)} + \dots }\nonumber \\ &= (1-\lambda)\lrparen*{ \dv_t + \lambda (\dv_t + \gamma \dv_{t+1}) + \lambda^2 (\dv_t + \gamma \dv_{t+1} + \gamma^2 \dv_{t+2}) + \dots }\nonumber \\ &= (1-\lambda)( \dv_t (1 + \lambda + \lambda^2 + \dots) +\gamma \dv_{t+1} (\lambda + \lambda^2 + \lambda^3 + \dots)\nonumber \\ &\ \ \ \ \ \ \ \ \ \ \ +\gamma^2 \dv_{t+2} (\lambda^2 + \lambda^3 + \lambda^4 + \dots) +\dots) \nonumber \\ &= (1-\lambda)\lrparen*{ \dv_t \lrparen*{\frac{1}{1-\lambda}} +\gamma \dv_{t+1} \lrparen*{\frac{\lambda}{1-\lambda}} +\gamma^2 \dv_{t+2} \lrparen*{\frac{\lambda^2}{1-\lambda}} +\dots} \nonumber \\ &= \sum_{\delay=0}^{\infty} (\gamma \lambda)^{\delay} \dv_{t+\delay}
+$$
+
+$$
+\bgrad &\approx \Ea{\sum_{t=0}^{\infty} \gradth \log \pith(a_t \given s_t) \hatalam_t} = \Ea{\sum_{t=0}^{\infty} \gradth \log \pith(a_t \given s_t) \sum_{\delay=0}^{\infty} (\gamma \lambda)^{\delay}\dv_{t+\delay}},
+$$
+
+$$
+\tilr(s,a,s') = r(s,a,s') + \gamma \Phi(s') - \Phi(s),
+$$
+
+$$
+\sum_{\delay=0}^{\infty} \gamma^{\delay}\tilr(s_{t+\delay},a_t,s_{t+\delay+1}) &= \sum_{\delay=0}^{\infty} \gamma^{\delay}r(s_{t+\delay},a_{t+\delay},s_{t+\delay+1}) - \Phi(s_{t}).
+$$
+
+$$
+\tilde{Q}^{\pi,\gamma}(s, a) &= \Qpigam(s,a) - \Phi(s)\\ \tilde{V}^{\pi,\gamma}(s, a) &= \Vpigam(s) - \Phi(s)\\ \tilde{A}^{\pi,\gamma}(s, a) &= (\Qpigam(s,a) - \Phi(s)) - (\Vpigam(s) - \Phi(s)) = \Apigam(s,a).
+$$
+
+$$
+\sum_{\delay=0}^{\infty} (\gamma \lambda)^{\delay}\tilr(s_{t+\delay},a_t,s_{t+\delay+1}) &= \sum_{\delay=0}^{\infty} (\gamma \lambda)^{\delay} \dv_{t+\delay} = \hatalam_t.
+$$
+
+$$
+\resp(\delay; s_t, a_t) = \Ea{r_{t+\delay} \given s_t, a_t} - \Ea{r_{t+\delay} \given s_t}.
+$$
+
+$$
+\gradth \log \pith(a_t \given s_t) A^{\pi,\gamma}(s_t, a_t) &= \gradth \log \pith(a_t \given s_t) \sum_{\delay=0}^{\infty} \gamma^{\delay} \chi(\delay; s_t,a_t) .
+$$
+
+$$
+\minimize_{\phi} \sum_{n=1}^N \norm{ V_{\phi}(s_n) - \Vhat_n }^2,
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/high-dimensional-continuous-control-using-generalized-advantage-estimation.txt`（43324 字符）供引用检索。

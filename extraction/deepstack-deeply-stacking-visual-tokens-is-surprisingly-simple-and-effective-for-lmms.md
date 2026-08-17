@@ -48,6 +48,40 @@ tags: [multimodal]
 > [!quote] caption
 > Visualization of three sam- pling methods for DeepStack.
 
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
+
+$$
+\begin{split} \mathcal{L} & = \sum_{t=1}^N \log \mathcal{P}_{\theta}(x_{t+1} \mid x_{1:t}) \end{split}
+$$
+
+$$
+\mathcal{L} = \sum_{t=1}^N \log \mathcal{P}_{\theta}(x_{t+1} \mid x_{1:t}, \mathbf{X})
+$$
+
+$$
+\begin{split} \mathbf{X} &= \mathcal{M}(\mathbf{f^v}); \hspace{2mm}\mathbf{f^v} = \mathcal{F}^v(\mathbf{I}) \\ \end{split}
+$$
+
+$$
+\begin{split} \mathbf{X^{stack}} &= \{\mathbf{{X^{stack}}^{1}, {X^{stack}}^{2}, ..., {X^{stack}}^{s}} \} \\ &= \mathrm{Sampling2D}\left(\mathcal{M}(\mathcal{F}^v(\mathbf{I^{hires}}))\right) \end{split}
+$$
+
+$$
+\begin{split} &\mathbf{H}^{V^1} = \mathcal{P}^{V^1}\big ( \mathbf{X}\big ) + \mathbf{X^{stack}}^{1}\\ &\mathbf{H}^{V^2} = \mathcal{P}^{V^2}\big (\mathbf{H}^{V^1}\big ) + \mathbf{X^{stack}}^{2} \\ &\mathbf{H}^{L} = \mathcal{P}^{\mathbb{L}}\big (\mathbf{H}^{V^n}\big ) \\ \end{split}
+$$
+
+$$
+\begin{split} &\mathbf{H}^{L} = \mathcal{P}\big (\mathrm{SeqCat}[ \mathbf{X}, \mathbf{X^{stack}} ]\big ) \\ \end{split}
+$$
+
+$$
+\begin{split} \mathbf{H}^{L} & = \mathcal{P}\big (\mathcal{M}(\mathrm{DimCat}[ \mathbf{f}, \mathbf{f^{hires}} ]) \big ) \\ &\approx \mathcal{P}\big ( \mathcal{M}^{1}(\mathbf{f}) + \mathcal{M}^{2}(\mathbf{f^{hires}}) \big ) \end{split}
+$$
+
+$$
+\vspace{\baselineskip} \mathbf{H}^{L} = \tikzmarknode{x}{\highlight{red}{$\mathcal{P}^{\mathbb{L}}$}}\Bigg( \tikzmarknode{s}{\highlight{blue}{$\mathcal{P}^{V^n}\bigg( ...\Big(\mathcal{P}^{V1}\big (\mathbf{X}+ \mathbf{X^{stack}}^1\big ) + \mathbf{X^{stack}}^2 \Big) ... \bigg) + \mathbf{X^{stack}}^{n}$}} \Bigg)
+$$
+
 ## 相关论文
 
 - [[kimi-k2-5-visual-agentic-intelligence]] — KIMI K2.5: VISUAL AGENTIC INTELLIGENCE

@@ -116,19 +116,11 @@ tags: []
 > [!quote] caption
 > Attention latency of DEFT with different prompt lengths in speculative decoding.
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.26 `significant decoding speedup—1.24× with a width of w = 20, and 1.33× with a width of`
-- p.29 `Input: query Q ∈R(bq,d), Key cache list KL = (K0, ...KN−1), Value cache list V L =`
-- p.29 `Qi= GroupQueryToKV(Q, Ki, Vi, T) ∈Rbi,d ⊂Q`
-- p.30 `FO = (0)bq×d ∈R(bq,d)`
-- p.30 `Qi= KV MapQ[i] ∈R(bi,d)`
-- p.30 `oi, lsei = FlashAttention(Qi, Ki, Vi)`
-- p.31 `Qi= GroupQueryToKV(Q, Kbi, V bi, T) ∈Rbi,d ⊂Q`
-- p.32 `bitmask = CausalMask[i] ∈Rnbi,where nbi is the total number of nodes for subtree i.`
-- p.32 `SubOfst = SubInfo[i] ∈Rnbi`
-- p.32 `mask = ReconstructMask(bitmask, SubOfst) ∈R(bi,bkv)`
-- p.32 `oi, lsei = FlashAttention(Qi, Kbi, V bi, mask)`
+$$
+\begin{aligned} \textstyle \operatorname{SegAttn}(\mA_0, \mA_1, \mA_2)= \frac{ \mA_0 e^{\operatorname{LSE}(\mQ, \mK_0)} + \mA_1 e^{\operatorname{LSE}(\mQ, \mK_1)} + \mA_2 e^{\operatorname{LSE}(\mQ, \mK_2)} }{ e^{\operatorname{LSE}(\mQ, \mK_0)} + e^{\operatorname{LSE}(\mQ, \mK_1)} + e^{\operatorname{LSE}(\mQ, \mK_2)} } \,, \text{ where } e := \text{exp} \,. \end{aligned}
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference.txt`（112630 字符）供引用检索。

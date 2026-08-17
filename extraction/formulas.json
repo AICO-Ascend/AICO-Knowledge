@@ -234,5 +234,1434 @@
    "latex": "p_{\\mathrm{d}}(A)=0.5,\\qquad p_{\\mathrm{d}}(B)=0.5."
   }
  ],
- "jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting": []
+ "jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting": [
+  {
+   "env": "equation",
+   "latex": "\\mathbb{E}[\\#\\mathrm{tokens}] = \\frac{1-\\alpha^{N+1}}{1-\\alpha},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Speedup} = \\frac{1-\\alpha^{N+1}} {(1-\\alpha)(N c + 1)}."
+  },
+  {
+   "env": "equation",
+   "latex": "q_{\\mathrm{sur}}(y_{1:k}\\mid x) \\propto \\prod_{i=1}^{k} r_i(y_i\\mid x),"
+  },
+  {
+   "env": "equation",
+   "latex": "p(y_{1:k}\\mid x) = \\prod_{i=1}^{k} p(y_i \\mid x, y_{<i})."
+  },
+  {
+   "env": "equation",
+   "latex": "M_{v,u} = \\begin{cases} 0, & \\text{if } u \\in \\mathrm{Anc}(v)\\cup\\{v\\}, \\\\ -\\infty, & \\text{otherwise}, \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Attn}(Q_v,K,V) = \\mathrm{softmax} \\left( \\frac{Q_vK^\\top}{\\sqrt{d}} + M_v \\right)V."
+  },
+  {
+   "env": "equation",
+   "latex": "q(\\pi(v)\\mid x) = \\prod_{u\\in \\pi(v)} q(y_u \\mid x, h_x^{o}, \\pi_{<u}),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\mathrm{FKL}}^{(m)} = D_{\\mathrm{KL}} \\left( \\tilde{p}^{(m)} \\,\\middle\\|\\, \\tilde{q}^{(m)} \\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\mathrm{train}} = T_{\\mathrm{KD}}^2 \\frac{ \\sum_m w_m \\mathcal{L}_{\\mathrm{FKL}}^{(m)} }{ \\sum_m w_m },"
+  },
+  {
+   "env": "equation",
+   "latex": "s(\\pi(v)) = \\sum_{u\\in \\pi(v)} \\log q(y_u \\mid x, h_x^o, \\pi_{<u}),"
+  },
+  {
+   "env": "equation",
+   "latex": "A_t \\sim \\mathrm{Bernoulli}(\\alpha_t), \\qquad \\alpha_t = \\alpha\\!\\left( y_t;\\, q(\\cdot\\mid x,y_{<t}), p(\\cdot\\mid x,y_{<t}) \\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\alpha_t = \\min\\!\\left( 1,\\, \\frac{ p(y_t\\mid x,y_{<t}) }{ q(y_t\\mid x,y_{<t}) } \\right),"
+  },
+  {
+   "env": "display",
+   "latex": "c(N,L) = \\frac{T_{\\mathrm{draft}}(N,L)/N} {T_{\\mathrm{verify}}(N,L)} = \\frac{T_{\\mathrm{draft}}(N,L)} {N\\,T_{\\mathrm{verify}}(N,L)}."
+  }
+ ],
+ "kimi-k2-5-visual-agentic-intelligence": [
+  {
+   "env": "equation",
+   "latex": "\\mathrm{budget}(x) = \\text{Percentile}\\left(\\{ |y_j| \\mid r(x, y_i) = 1, i=1,\\dots, K \\}, \\rho \\right) \\,."
+  },
+  {
+   "env": "align",
+   "latex": "r_{\\mathrm{PARL}}(x, y) = \\lambda_1 \\cdot \\mspace{-26mu} \\underbrace{r_{\\text{parallel}}}_{\\text{instantiation reward}} \\mspace{-9mu} + \\mspace{18mu}\\lambda_2 \\cdot \\mspace{-32mu}\\underbrace{r_{\\text{finish}}}_{\\text{sub-agent finish rate}} + \\underbrace{r_{\\text{perf}}(x, y)}_{\\text{task-level outcome}} \\, ."
+  },
+  {
+   "env": "align",
+   "latex": "\\text{CriticalSteps} = \\sum_{t=1}^{T} \\left( S_{\\mathrm{main}}^{(t)} + \\max_i S_{\\mathrm{sub}, i}^{(t)} \\right)."
+  },
+  {
+   "env": "align",
+   "latex": "L_{\\mathrm{RL}}(\\theta) = \\mathbb{E}_{x \\sim\\mathcal{D}} \\left[ \\frac{1}{N} \\sum_{j=1}^K \\sum_{i=1}^{|y_j|} \\mathrm{Clip} \\left( \\frac{\\pi_{\\theta}(y_j^i | x, y_j^{0:i})}{\\pi_{\\mathrm{old}}(y_j^i | x, y_j^{0:i}) }, \\alpha, \\beta \\right) ({r}(x, y_j) - \\bar{r}(x))- \\tau \\left( \\log \\frac{\\pi_{\\theta}(y_j^i | x, y_j^{0:i})}{\\pi_{\\mathrm{old}}(y_j^i | x, y_j^{0:i}) } \\right)^2 \\right] \\, ."
+  },
+  {
+   "env": "align",
+   "latex": "\\tilde{r}(x,y) = \\begin{cases} r(x, y) \\cdot \\mathbb{I}\\left\\{ \\frac{1}{K} \\sum_{i=1}^K r(x, y_i) < \\lambda\\ \\mathrm{or}\\ |y_i| \\leq \\mathrm{budget(x)} \\right\\} & \\text{if } \\lfloor t/m \\rfloor \\pmod 2 = 0\\ (\\mathrm{{Phase 0}}) \\\\ r(x, y) & \\text{if } \\lfloor t/m \\rfloor \\pmod 2 = 1\\ (\\mathrm{{Phase 1}}) \\end{cases} \\, ."
+  }
+ ],
+ "scalable-training-of-mixture-of-experts-models-with-megatron-core": [],
+ "qwen3-vl-technical-report": [
+  {
+   "env": "display",
+   "latex": "\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"
+  }
+ ],
+ "deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms": [
+  {
+   "env": "equation",
+   "latex": "\\begin{split} \\mathcal{L} & = \\sum_{t=1}^N \\log \\mathcal{P}_{\\theta}(x_{t+1} \\mid x_{1:t}) \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L} = \\sum_{t=1}^N \\log \\mathcal{P}_{\\theta}(x_{t+1} \\mid x_{1:t}, \\mathbf{X})"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{split} \\mathbf{X} &= \\mathcal{M}(\\mathbf{f^v}); \\hspace{2mm}\\mathbf{f^v} = \\mathcal{F}^v(\\mathbf{I}) \\\\ \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{split} \\mathbf{X^{stack}} &= \\{\\mathbf{{X^{stack}}^{1}, {X^{stack}}^{2}, ..., {X^{stack}}^{s}} \\} \\\\ &= \\mathrm{Sampling2D}\\left(\\mathcal{M}(\\mathcal{F}^v(\\mathbf{I^{hires}}))\\right) \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{split} &\\mathbf{H}^{V^1} = \\mathcal{P}^{V^1}\\big ( \\mathbf{X}\\big ) + \\mathbf{X^{stack}}^{1}\\\\ &\\mathbf{H}^{V^2} = \\mathcal{P}^{V^2}\\big (\\mathbf{H}^{V^1}\\big ) + \\mathbf{X^{stack}}^{2} \\\\ &\\mathbf{H}^{L} = \\mathcal{P}^{\\mathbb{L}}\\big (\\mathbf{H}^{V^n}\\big ) \\\\ \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{split} &\\mathbf{H}^{L} = \\mathcal{P}\\big (\\mathrm{SeqCat}[ \\mathbf{X}, \\mathbf{X^{stack}} ]\\big ) \\\\ \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{split} \\mathbf{H}^{L} & = \\mathcal{P}\\big (\\mathcal{M}(\\mathrm{DimCat}[ \\mathbf{f}, \\mathbf{f^{hires}} ]) \\big ) \\\\ &\\approx \\mathcal{P}\\big ( \\mathcal{M}^{1}(\\mathbf{f}) + \\mathcal{M}^{2}(\\mathbf{f^{hires}}) \\big ) \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\vspace{\\baselineskip} \\mathbf{H}^{L} = \\tikzmarknode{x}{\\highlight{red}{$\\mathcal{P}^{\\mathbb{L}}$}}\\Bigg( \\tikzmarknode{s}{\\highlight{blue}{$\\mathcal{P}^{V^n}\\bigg( ...\\Big(\\mathcal{P}^{V1}\\big (\\mathbf{X}+ \\mathbf{X^{stack}}^1\\big ) + \\mathbf{X^{stack}}^2 \\Big) ... \\bigg) + \\mathbf{X^{stack}}^{n}$}} \\Bigg)"
+  }
+ ],
+ "gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning": [
+  {
+   "env": "align",
+   "latex": "\\langle \\Pi^*, \\Theta^* \\rangle_\\Phi = \\arg\\max_{\\langle \\Pi, \\Theta \\rangle_\\Phi} \\mathbb{E}_{(x, m) \\sim \\mathcal{T}} \\left[ \\mu\\big( \\Phi(x; \\langle \\Pi, \\Theta \\rangle_\\Phi),\\, m \\big) \\right]."
+  }
+ ],
+ "sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills": [
+  {
+   "env": "equation",
+   "latex": "B = \\lfloor \\left(\\frac{M_G - M_S}{L*m_{kv}}\\right) \\rfloor"
+  }
+ ],
+ "taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve": [],
+ "deepseek-v4-towards-highly-efficient-million-token-context-intelligence": [
+  {
+   "env": "equation",
+   "latex": "X_{l+1} = B_{l} X_l + C_{l} \\mathcal{F}_{l}(A_{l} X_l),"
+  },
+  {
+   "env": "equation",
+   "latex": "B_l \\in \\mathcal{M} \\coloneq \\{ M \\in \\mathbb{R}^{n \\times n} \\mid M\\mathbf{1}_n = \\mathbf{1}_n, \\; \\mathbf{1}_n^T M = \\mathbf{1}_n^T, \\; M \\geq 0 \\}."
+  },
+  {
+   "env": "equation",
+   "latex": "M^{(t)} = \\mathcal{T}_r(\\mathcal{T}_c(M^{(t-1)})),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{C}^{\\text{SprsComp}}_t = \\left\\{ C^{\\text{Comp}}_{s} ~\\Big|~ I_{t, s} \\in \\operatorname{Top-k} (I_{t, :}) \\right\\}."
+  },
+  {
+   "env": "equation",
+   "latex": "[\\mathbf{q}_{t, 1};\\mathbf{q}_{t, 2};...;\\mathbf{q}_{t, n_{h}}] = \\mathbf{q}_{t} = \\mathbf{c}_{t}^{Q} \\cdot W^{UQ},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{o}_{t,i} = \\operatorname{CoreAttn}\\left( \\texttt{query=}\\mathbf{q}_{t,i}, \\texttt{key=}\\mathcal{C}^{\\text{SprsComp}}_t, \\texttt{value=}\\mathcal{C}^{\\text{SprsComp}}_t \\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "s_{h, i, j} = \\frac{\\operatorname{Exp}(z_{h, i, j})}{\\sum_k \\operatorname{Exp}(z_{h, i, k}) + \\operatorname{Exp}(z^{\\prime}_h)},"
+  },
+  {
+   "env": "equation",
+   "latex": "M_k = a M_{k-1} + b (M_{k-1} M_{k-1}^T) M_{k-1} + c (M_{k-1} M_{k-1}^T)^2 M_{k-1}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\text{OPD}}(\\theta) = \\sum_{i=1}^{N} w_i \\cdot \\text{D}_{\\text{KL}} \\left( \\pi_{\\theta} \\parallel \\pi_{E_i} \\right)."
+  },
+  {
+   "env": "align",
+   "latex": "\\tilde{A}_l &= \\alpha_l^\\mathrm{pre} \\cdot (\\hat{X}_l W^\\mathrm{pre}_l) + S_l^\\mathrm{pre}, \\\\ \\tilde{B}_l &= \\alpha_l^\\mathrm{res} \\cdot \\operatorname{Mat}(\\hat{X}_l W^\\mathrm{res}_l) + S_l^\\mathrm{res}, \\\\ \\tilde{C}_l &= \\alpha_l^\\mathrm{post} \\cdot (\\hat{X}_l W^\\mathrm{post}_l)^T + S_l^\\mathrm{post},"
+  },
+  {
+   "env": "align",
+   "latex": "A_l &= \\sigma(\\tilde{A}_l), \\\\ C_l &= 2\\sigma(\\tilde{C}_l)."
+  },
+  {
+   "env": "align",
+   "latex": "C^{a} &= H \\cdot W^{aKV}, \\quad C^{b} = H \\cdot W^{bKV}, \\\\ Z^{a} &= H \\cdot W^{aZ}, \\quad~~ Z^{b} = H \\cdot W^{bZ},"
+  },
+  {
+   "env": "align",
+   "latex": "[S^a_{mi:m(i+1)-1};S^b_{m(i-1):mi-1}] &= \\operatorname{Softmax}_{\\text{row}}([Z^{a}_{mi:m(i+1)-1} + B^a;Z^{b}_{m(i-1):mi-1} + B^b]), \\\\ C^{\\text{Comp}}_{i} &= \\sum_{j=mi}^{m(i+1)-1} S^a_j \\odot C^{a}_{j} + \\sum_{j=m(i-1)}^{mi-1} S^b_j \\odot C^{b}_{j},"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{c}_{t}^{Q} &= \\mathbf{h}_{t} \\cdot W^{DQ}, \\\\ [\\mathbf{q}_{t, 1}^{I};\\mathbf{q}_{t, 2}^{I};...;\\mathbf{q}_{t, n_{h}^{I}}^{I}] = \\mathbf{q}_{t}^{I} &= \\mathbf{c}_{t}^{Q} \\cdot W^{IUQ},"
+  },
+  {
+   "env": "align",
+   "latex": "[w_{t, 1}^I; w_{t, 2}^I; ...; w_{t, n_{h}^{I}}^I] = \\mathbf{w}_t^I & = \\mathbf{h}_{t} \\cdot W^w, \\\\ I_{t, s} & = \\sum_{h=1}^{n_h^I} w_{t, h}^I \\cdot \\text{ReLU}\\left(\\mathbf{q}^{I}_{t, h} \\cdot K^{\\text{IComp}}_{s}\\right),"
+  },
+  {
+   "env": "align",
+   "latex": "C &= H \\cdot W^{KV}, \\\\ Z &= H \\cdot W^{Z},"
+  },
+  {
+   "env": "align",
+   "latex": "S_{m^{\\prime}i:m^{\\prime}(i+1)-1} &= \\operatorname{Softmax}_{\\text{row}}(Z_{m^{\\prime}i:m^{\\prime}(i+1)-1} + B), \\\\ C^{\\text{Comp}}_{i} &= \\sum_{j=m^{\\prime}i}^{m^{\\prime}(i+1)-1} S_j \\odot C_{j}."
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{c}_{t}^{Q} &= \\mathbf{h}_{t} \\cdot W^{DQ}, \\\\ [\\mathbf{q}_{t, 1};\\mathbf{q}_{t, 2};...;\\mathbf{q}_{t, n_{h}}] = \\mathbf{q}_{t} &= \\mathbf{c}_{t}^{Q} \\cdot W^{UQ},"
+  }
+ ],
+ "kimi-vl-technical-report": [
+  {
+   "env": "align",
+   "latex": "\\max_\\theta \\mathbb{E}_{(x, y^*)\\sim\\mathcal{D}}\\left[ \\mathbb{E}_{(y, z)\\sim\\pi_\\theta} \\left[r(x, y, y^*)\\right] - \\tau \\mathrm{KL} (\\pi_{\\theta}(x) || \\pi_{\\theta_i}(x)) \\right]\\, ,"
+  }
+ ],
+ "deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models": [
+  {
+   "env": "equation",
+   "latex": "\\footnotesize \\mathcal{J}_{PPO}(\\theta) = \\mathbb{E}{[q \\sim P(Q), o \\sim \\pi_{\\theta_{old}}(O|q)]} \\frac{1}{|o|} \\sum_{t=1}^{|o|} \\min \\left[ \\frac{\\pi_\\theta(o_{t} | q, o_{<t})}{\\pi_{\\theta_{old}}(o_{t} | q, o_{<t})} A_{t}, \\text{clip} \\left( \\frac{\\pi_\\theta(o_{t} | q, o_{<t})}{\\pi_{\\theta_{old}}(o_{t} | q, o_{<t})}, 1 - \\epsilon, 1 + \\epsilon \\right) A_{t} \\right] ,"
+  },
+  {
+   "env": "equation",
+   "latex": "r_{t} = r_\\phi(q, o_{\\le t}) - \\beta \\log\\frac{\\pi_{\\theta}(o_{t}|q, o_{<t})}{\\pi_{ref}(o_{t}|q, o_{<t})},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize \\begin{split} \\mathcal{J}_{GRPO}(\\theta) &= \\mathbb{E}{[q \\sim P(Q), \\{o_i\\}_{i=1}^G \\sim \\pi_{\\theta_{old}}(O|q)]} \\\\ & \\frac{1}{G}\\sum_{i=1}^G\\frac{1}{|o_i|} \\sum_{t=1}^{|o_i|} \\left\\{ \\min \\left[ \\frac{\\pi_\\theta(o_{i,t} | q, o_{i,<t})}{\\pi_{\\theta_{old}}(o_{i,t} | q, o_{i,<t})} \\hat{A}_{i,t}, \\text{clip} \\left( \\frac{\\pi_\\theta(o_{i,t} | q, o_{i,<t})}{\\pi_{\\theta_{old}}(o_{i,t} | q, o_{i,<t})}, 1 - \\epsilon, 1 + \\epsilon \\right) \\hat{A}_{i,t} \\right] - \\beta \\mathbb{D}_{KL}\\left[\\pi_{\\theta} || \\pi_{ref}\\right]\\right\\} , \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\small \\mathbb{D}_{KL}\\left[\\pi_{\\theta} || \\pi_{ref}\\right] = \\frac{\\pi_{ref}(o_{i,t}|q,o_{i,<t})}{\\pi_{\\theta}(o_{i,t}|q,o_{i,<t})}- \\log\\frac{\\pi_{ref}(o_{i,t}|q,o_{i,<t})}{\\pi_{\\theta}(o_{i,t}|q,o_{i,<t})} - 1,"
+  },
+  {
+   "env": "equation",
+   "latex": "\\nabla_{\\theta}\\mathcal{J}_{\\textcolor{red}{\\mathcal{A}}}(\\theta) = \\mathbb{E}[\\underbrace{(q,o) \\sim \\textcolor{red}{\\mathcal{D}}}_{Data \\ Source}]\\left( \\frac{1}{|o|} \\sum_{t=1}^{|o|} \\underbrace{GC_{{\\mathcal{A}}}(q, o, t, \\textcolor{red}{\\pi_{{rf}}})}_{Gradient \\ Coefficient} \\nabla_{\\theta}\\log \\pi_{\\theta}(o_t | q, o_{<t})\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{J}_{SFT}(\\theta)=\\mathbb{E}[q, o \\sim P_{sft}(Q, O)]\\left(\\frac{1}{|o|}\\sum_{t=1}^{|o|} \\log \\pi_\\theta(o_t | q, o_{<t})\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\nabla_{\\theta}\\mathcal{J}_{SFT} = \\mathbb{E}[q, o \\sim P_{sft}(Q, O)]\\left(\\frac{1}{|o|}\\sum_{t=1}^{|o|} \\nabla_{\\theta} \\log \\pi_\\theta(o_{t} | q, o_{<t})\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{J}_{RFT}(\\theta)= \\mathbb{E}[q \\sim P_{sft}(Q), o \\sim \\pi_{sft}(O|q)]\\left( \\frac{1}{|o|}\\sum_{t=1}^{|o|} \\mathbb{I}(o) \\log \\pi_\\theta(o_{t} | q, o_{<t})\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\nabla_{\\theta}\\mathcal{J}_{RFT}(\\theta)= \\mathbb{E}[{q \\sim P_{sft}(Q), o \\sim \\pi_{sft}(O|q)}]\\left( \\frac{1}{|o|}\\sum_{t=1}^{|o|} {\\mathbb{I}(o)} \\nabla_{\\theta}\\log \\pi_\\theta(o_{t} | q, o_{<t})\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "GC_{RFT}(q, o, t) = \\mathbb{I}(o)=\\left\\{ \\begin{aligned} 1 & & {\\rm the \\ answer \\ of \\ o \\ is \\ correct} \\\\ 0 & & {\\rm the \\ answer \\ of \\ o \\ is \\ incorrect} \\\\ \\end{aligned} \\right."
+  },
+  {
+   "env": "equation",
+   "latex": "\\nabla_{\\theta}\\mathcal{J}_{OnRFT}(\\theta)= \\mathbb{E}[{q \\sim P_{sft}(Q), o \\sim \\pi_{\\theta}(O|q)}]\\left( \\frac{1}{|o|}\\sum_{t=1}^{|o|} {\\mathbb{I}(o)} \\nabla_{\\theta}\\log \\pi_\\theta(o_{t} | q, o_{<t})\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize \\begin{split} \\mathcal{J}_{DPO}(\\theta) = \\mathbb{E}{[q \\sim P_{sft}(Q), o^+, o^- \\sim \\pi_{sft}(O|q)]} \\log \\sigma \\left( \\beta \\frac{1}{|o^+|}\\sum_{t=1}^{|o^+|} \\log \\frac{\\pi_{\\theta}(o^+_t | q, o^+_{<t})}{\\pi_{\\text{ref}}(o^+_t | q, o^+_{<t})} - \\beta \\frac{1}{|o^-|}\\sum_{t=1}^{|o^-|} \\log \\frac{\\pi_{\\theta}(o^-_{<t} | q, o^-_{<t})}{\\pi_{\\text{ref}}(o^-_{<t} | q,o^-_{<t})} \\right) \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize \\begin{split} \\nabla_{\\theta}\\mathcal{J}_{DPO}(\\theta) = \\mathbb{E}{[q \\sim P_{sft}(Q), o^+, o^- \\sim \\pi_{sft}(O|q)]} & \\left( \\frac{1}{|o^+|}\\sum_{t=1}^{|o^+|} GC_{DPO} (q,o,t) \\nabla_{\\theta}\\log\\pi_{\\theta}(o^+_t | q, o^+_{<t}) \\right. \\\\ - & \\left. \\frac{1}{|o^-|}\\sum_{t=1}^{|o^-|} GC_{DPO} (q,o,t) \\nabla_{\\theta}\\log\\pi_{\\theta}(o^-_t | q, o^-_{<t}) \\right) \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize GC_{DPO}(q,o,t) = \\sigma\\left(\\beta\\log \\frac{\\pi_{\\theta}(o^-_t | q, o^-_{<t})}{\\pi_{\\text{ref}}(o^-_t | q, o^-_{<t})} - \\beta\\log \\frac{\\pi_{\\theta}(o^+_t | q, o^+_{<t})}{\\pi_{\\text{ref}}(o^+_t | q, o^+_{<t})}\\right)"
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize \\mathcal{J}_{PPO}(\\theta) = \\mathbb{E}{[q \\sim P_{sft}(Q), o \\sim \\pi_{\\theta_{old}}(O|q)]} \\frac{1}{|o|} \\sum_{t=1}^{|o|} \\min \\left[ \\frac{\\pi_\\theta(o_{t} | q, o_{<t})}{\\pi_{\\theta_{old}}(o_{t} | q, o_{<t})} A_{t}, \\text{clip} \\left( \\frac{\\pi_\\theta(o_{t} | q, o_{<t})}{\\pi_{\\theta_{old}}(o_{t} | q, o_{<t})}, 1 - \\epsilon, 1 + \\epsilon \\right) A_{t} \\right]."
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize \\begin{split} \\nabla_{\\theta}\\mathcal{J}_{PPO}(\\theta) = \\mathbb{E}{[q \\sim P_{sft}(Q), o \\sim \\pi_{\\theta_{old}}(O|q)]} \\frac{1}{|o|} \\sum_{t=1}^{|o|} A_t \\nabla_{\\theta}\\log \\pi_\\theta(o_{t} | q, o_{<t}) \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "GC_{PPO}(q, o, t, \\pi_{\\theta_{rm}}) = A_t,"
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize \\begin{split} \\mathcal{J}_{GRPO}(\\theta) &= \\mathbb{E}{[q \\sim P_{sft}(Q), \\{o_i\\}_{i=1}^G \\sim \\pi_{\\theta_{old}}(O|q)]} \\\\ & \\frac{1}{G}\\sum_{i=1}^G\\frac{1}{|o_i|} \\sum_{t=1}^{|o_i|} \\left[\\frac{\\pi_\\theta(o_{i,t} | q, o_{i,<t})}{\\pi_{\\theta_{old}}(o_{i,t} | q, o_{i,<t})} \\hat{A}_{i,t} - \\beta (\\frac{\\pi_{ref}(o_{i,t}|q,o_{i,<t})}{\\pi_{\\theta}(o_{i,t}|q,o_{i,<t})}- \\log\\frac{\\pi_{ref}(o_{i,t}|q,o_{i,<t})}{\\pi_{\\theta}(o_{i,t}|q,o_{i,<t})} - 1)\\right]. \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize \\begin{split} \\nabla_{\\theta}\\mathcal{J}_{GRPO}(\\theta) & = \\mathbb{E}{[q \\sim P_{sft}(Q), \\{o_i\\}_{i=1}^G \\sim \\pi_{\\theta_{old}}(O|q)]} \\\\ & \\frac{1}{G}\\sum_{i=1}^G\\frac{1}{|o_i|} \\sum_{t=1}^{|o_i|} \\left[\\hat{A}_{i,t} + \\beta \\left(\\frac{\\pi_{ref}(o_{i,t}|o_{i,<t})}{\\pi_{\\theta}(o_{i,t}|o_{i,<t})} - 1\\right)\\right] \\nabla_{\\theta}\\log \\pi_\\theta(o_{i,t} | q, o_{i,<t}). \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\footnotesize GC_{GRPO}(q, o, t, \\pi_{\\theta_{rm}}) = \\hat{A}_{i,t} + \\beta \\left(\\frac{\\pi_{ref}(o_{i,t}|o_{i,<t})}{\\pi_{\\theta}(o_{i,t}|o_{i,<t})} - 1\\right),"
+  }
+ ],
+ "high-dimensional-continuous-control-using-generalized-advantage-estimation": [
+  {
+   "env": "equation",
+   "latex": "\\begin{tabular}{cc} Task & Reward \\\\ \\hline 3D biped locomotion & $v_{\\mathrm{fwd}} - 10^{-5} \\norm{u}^2 - 10^{-5} \\norm{\\fimp}^2 + 0.2$\\\\ Quadruped locomotion & $v_{\\mathrm{fwd}} - 10^{-6} \\norm{u}^2 - 10^{-3}\\norm{\\fimp}^2 + 0.05$\\\\ Biped getting up & $-(h_{\\rm head} - 1.5)^2 - 10^{-5} \\norm{u}^2$\\\\ \\end{tabular}"
+  },
+  {
+   "env": "align",
+   "latex": "\\bg = \\Ea{\\sum_{t=0}^{\\infty} \\Psi_t \\gradth \\log \\pith(a_t \\given s_t)},"
+  },
+  {
+   "env": "align",
+   "latex": "\\Vpi(s_t) &\\defeq \\Eb{\\substack{s_{t+1:\\infty},\\\\a_{t:\\infty} } }{\\sum_{\\delay=0}^{\\infty} r_{t+\\delay}} \\hspace{0.5in} \\Qpi(s_t,a_t) \\defeq \\Eb{\\substack{s_{t+1:\\infty},\\\\a_{t+1:\\infty}}}{\\sum_{\\delay=0}^{\\infty} r_{t+\\delay}} \\\\ \\Api(s_t, a_t) &\\defeq \\Qpi(s_t, a_t) - \\Vpi(s_t), \\quad \\text{(Advantage function)}."
+  },
+  {
+   "env": "align",
+   "latex": "\\Vpigam(s_t) &\\defeq \\Eb{\\substack{s_{t+1:\\infty},\\\\a_{t:\\infty} } }{\\sum_{\\delay=0}^{\\infty} \\gamma^{\\delay} r_{t+\\delay}}\\hspace{0.5in} \\Qpigam(s_t,a_t) \\defeq \\Eb{\\substack{s_{t+1:\\infty},\\\\a_{t+1:\\infty}}}{\\sum_{\\delay=0}^{\\infty} \\gamma^{\\delay} r_{t+\\delay}}\\\\ \\Apigam(s_t, a_t)&\\defeq\\Qpigam(s_t,a_t) - \\Vpigam(s_t)."
+  },
+  {
+   "env": "align",
+   "latex": "\\bgrad &\\defeq \\Eb{\\substack{s_{0:\\infty}\\\\ a_{0:\\infty}}}{ \\sum_{t=0}^{\\infty}\\Apigam(s_t,a_t) \\gradth \\log \\pith(a_t \\given s_t)}."
+  },
+  {
+   "env": "align",
+   "latex": "\\Eb{\\substack{s_{0:\\infty}\\\\ a_{0:\\infty}}}{ \\hata_t(s_{0:\\infty},a_{0:\\infty}) \\gradth \\log \\pith(a_t \\given s_t)} = \\Eb{\\substack{s_{0:\\infty}\\\\ a_{0:\\infty}}}{ \\Apigam(s_t,a_t) \\gradth \\log \\pith(a_t \\given s_t)}."
+  },
+  {
+   "env": "align",
+   "latex": "\\Eb{\\substack{s_{0:\\infty}\\\\ a_{0:\\infty}}}{ \\sum_{t=0}^{\\infty}\\hata_t(s_{0:\\infty},a_{0:\\infty}) \\gradth \\log \\pith(a_t \\given s_t)} = \\bgrad"
+  },
+  {
+   "env": "align",
+   "latex": "\\hat g = \\frac{1}{N} \\sum_{n=1}^N \\sum_{t=0}^{\\infty} \\hata_t^n \\gradth \\log \\pith(a_t^n \\given s_t^n)"
+  },
+  {
+   "env": "align",
+   "latex": "\\Eb{s_{t+1}}{\\delta^{\\Vpigam}_t} &= \\Eb{s_{t+1}}{r_t + \\gamma \\Vpigam(s_{t+1}) - \\Vpigam(s_t)} \\nonumber \\\\ &= \\Eb{s_{t+1}}{\\Qpigam(s_t, a_t) - \\Vpigam(s_t)}= \\Apigam(s_t, a_t)."
+  },
+  {
+   "env": "align",
+   "latex": "\\hata_t^{(k)} &\\defeq \\sum_{\\delay=0}^{k-1} \\gamma^{\\delay} \\dv_{t+l} = -V(s_t) + r_t + \\gamma r_{t+1} + \\dots + \\gamma^{k-1} r_{t+k-1} + \\gamma^{k} V(s_{t+k})"
+  },
+  {
+   "env": "align",
+   "latex": "\\hata_t^{(\\infty)} = \\sum_{\\delay=0}^{\\infty} \\gamma^{\\delay} \\dv_{t+l} = -V(s_t) + \\sum_{\\delay=0}^{\\infty} \\gamma^{\\delay} r_{t+\\delay},"
+  },
+  {
+   "env": "align",
+   "latex": "\\hatalam_t &\\defeq (1-\\lambda)\\lrparen*{ \\hata_t^{(1)} + \\lambda \\hata_t^{(2)} + \\lambda^2 \\hata_t^{(3)} + \\dots }\\nonumber \\\\ &= (1-\\lambda)\\lrparen*{ \\dv_t + \\lambda (\\dv_t + \\gamma \\dv_{t+1}) + \\lambda^2 (\\dv_t + \\gamma \\dv_{t+1} + \\gamma^2 \\dv_{t+2}) + \\dots }\\nonumber \\\\ &= (1-\\lambda)( \\dv_t (1 + \\lambda + \\lambda^2 + \\dots) +\\gamma \\dv_{t+1} (\\lambda + \\lambda^2 + \\lambda^3 + \\dots)\\nonumber \\\\ &\\ \\ \\ \\ \\ \\ \\ \\ \\ \\ \\ +\\gamma^2 \\dv_{t+2} (\\lambda^2 + \\lambda^3 + \\lambda^4 + \\dots) +\\dots) \\nonumber \\\\ &= (1-\\lambda)\\lrparen*{ \\dv_t \\lrparen*{\\frac{1}{1-\\lambda}} +\\gamma \\dv_{t+1} \\lrparen*{\\frac{\\lambda}{1-\\lambda}} +\\gamma^2 \\dv_{t+2} \\lrparen*{\\frac{\\lambda^2}{1-\\lambda}} +\\dots} \\nonumber \\\\ &= \\sum_{\\delay=0}^{\\infty} (\\gamma \\lambda)^{\\delay} \\dv_{t+\\delay}"
+  },
+  {
+   "env": "align",
+   "latex": "\\bgrad &\\approx \\Ea{\\sum_{t=0}^{\\infty} \\gradth \\log \\pith(a_t \\given s_t) \\hatalam_t} = \\Ea{\\sum_{t=0}^{\\infty} \\gradth \\log \\pith(a_t \\given s_t) \\sum_{\\delay=0}^{\\infty} (\\gamma \\lambda)^{\\delay}\\dv_{t+\\delay}},"
+  },
+  {
+   "env": "align",
+   "latex": "\\tilr(s,a,s') = r(s,a,s') + \\gamma \\Phi(s') - \\Phi(s),"
+  },
+  {
+   "env": "align",
+   "latex": "\\sum_{\\delay=0}^{\\infty} \\gamma^{\\delay}\\tilr(s_{t+\\delay},a_t,s_{t+\\delay+1}) &= \\sum_{\\delay=0}^{\\infty} \\gamma^{\\delay}r(s_{t+\\delay},a_{t+\\delay},s_{t+\\delay+1}) - \\Phi(s_{t})."
+  },
+  {
+   "env": "align",
+   "latex": "\\tilde{Q}^{\\pi,\\gamma}(s, a) &= \\Qpigam(s,a) - \\Phi(s)\\\\ \\tilde{V}^{\\pi,\\gamma}(s, a) &= \\Vpigam(s) - \\Phi(s)\\\\ \\tilde{A}^{\\pi,\\gamma}(s, a) &= (\\Qpigam(s,a) - \\Phi(s)) - (\\Vpigam(s) - \\Phi(s)) = \\Apigam(s,a)."
+  },
+  {
+   "env": "align",
+   "latex": "\\sum_{\\delay=0}^{\\infty} (\\gamma \\lambda)^{\\delay}\\tilr(s_{t+\\delay},a_t,s_{t+\\delay+1}) &= \\sum_{\\delay=0}^{\\infty} (\\gamma \\lambda)^{\\delay} \\dv_{t+\\delay} = \\hatalam_t."
+  },
+  {
+   "env": "align",
+   "latex": "\\resp(\\delay; s_t, a_t) = \\Ea{r_{t+\\delay} \\given s_t, a_t} - \\Ea{r_{t+\\delay} \\given s_t}."
+  },
+  {
+   "env": "align",
+   "latex": "\\gradth \\log \\pith(a_t \\given s_t) A^{\\pi,\\gamma}(s_t, a_t) &= \\gradth \\log \\pith(a_t \\given s_t) \\sum_{\\delay=0}^{\\infty} \\gamma^{\\delay} \\chi(\\delay; s_t,a_t) ."
+  },
+  {
+   "env": "align",
+   "latex": "\\minimize_{\\phi} \\sum_{n=1}^N \\norm{ V_{\\phi}(s_n) - \\Vhat_n }^2,"
+  }
+ ],
+ "kimi-k2-open-agentic-intelligence": [
+  {
+   "env": "equation",
+   "latex": "\\mathbf W_q^{h} \\gets \\gamma^{\\alpha} \\mathbf W_q^{h} \\qquad \\mathbf W_k^{h} \\gets \\gamma^{1-\\alpha} \\mathbf W_k^{h}"
+  },
+  {
+   "env": "equation",
+   "latex": "S_{\\max} = \\max_{i,j} \\bigl(q_i^{\\vphantom{\\top}}\\! \\cdot k_j\\bigr)"
+  },
+  {
+   "env": "equation",
+   "latex": "|q_i \\!\\cdot\\! k_j| \\le \\|q_i\\|\\|k_j\\| \\le \\|x_i\\|\\|x_j\\|\\|\\mathbf W_q\\|\\|\\mathbf W_k\\|,"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf W_{t-1}=\\sum_i \\sigma_i\\,u_i v_i^{\\top}"
+  },
+  {
+   "env": "equation",
+   "latex": "q_i\\cdot k_j=(x_i \\mathbf W_q)\\cdot (x_j \\mathbf W_k)."
+  },
+  {
+   "env": "align",
+   "latex": "L_{\\mathrm{RL}}(\\theta) = \\mathbb{E}_{x \\sim\\mathcal{D}}\\left[ \\frac{1}{K} \\sum_{i=1}^K \\left[ \\left( r(x, y_i) - \\bar{r}(x)- \\tau \\log \\frac{\\pi_\\theta(y_i | x)}{{\\pi}_{\\mathrm{old}}(y_i | x)} \\right)^2 \\right]\\right] \\, ,"
+  },
+  {
+   "env": "align",
+   "latex": "\\Delta\\mathbf W_t &= \\sum_j \\bar\\sigma\\,\\bar u_j \\bar v_j^{\\top}"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf W_t \\leftarrow \\sum_i \\sigma_i u_i v_i^{\\top} + \\sum_j \\bar\\sigma\\,\\bar u_j \\bar v_j^{\\top}"
+  },
+  {
+   "env": "display",
+   "latex": "\\mathbf{Q}^{h} = \\mathbf X \\mathbf W_q^{h}, \\quad \\mathbf K^{h} = \\mathbf X \\mathbf W_k^{h}, \\quad \\mathbf V^{h} = \\mathbf X \\mathbf W_v^{h}."
+  },
+  {
+   "env": "display",
+   "latex": "\\mathbf O^{h} = \\operatorname{softmax}\\left( \\frac{1}{\\sqrt{d}} \\mathbf Q^{h} \\mathbf K^{h\\top} \\right) \\mathbf V^{h}."
+  },
+  {
+   "env": "display",
+   "latex": "S_{\\max}^{h} = \\frac{1}{\\sqrt{d}} \\max_{\\mathbf X \\in B} \\max_{i,j} \\mathbf Q_i^{h} \\mathbf K_j^{h\\top}"
+  }
+ ],
+ "search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning": [
+  {
+   "env": "align",
+   "latex": "\\mathcal{J}_{GRPO}(\\theta) = \\, & \\mathbb{E}_{x \\sim \\mathcal{D}, \\{ y_i \\}_{i=1}^{G} \\sim \\pi_{\\text{old}}( \\cdot| x; \\se)} \\Bigg[ \\frac{1}{G} \\sum_{i=1}^{G} \\frac{1}{\\sum_{t=1}^{|y_i|} I(y_{i,t})} \\sum_{t=1: I(y_{i,t})=1}^{|y_i|} \\min \\Bigg( \\frac{\\pi_{\\theta}(y_{i,t} | x, y_{i,<t}; \\se)}{\\pi_{\\text{old}}(y_{i,t} | x, y_{i,<t}; \\se)} \\hat{A}_{i,t}, \\nonumber \\\\[8pt] & \\hspace{120pt} \\text{clip} \\Bigg( \\frac{\\pi_{\\theta}(y_{i,t} | x, y_{i,<t}; \\se)}{\\pi_{\\text{old}}(y_{i,t} | x, y_{i,<t}; \\se)}, 1 - \\epsilon, 1 + \\epsilon \\Bigg) \\hat{A}_{i,t} \\Bigg) - \\beta \\mathbb{D}_{KL} \\left[ \\pi_{\\theta} || \\pi_{\\text{ref}} \\right] \\Bigg],"
+  },
+  {
+   "env": "gather",
+   "latex": "\\max_{\\pi_\\theta} \\mathbb{E}_{x \\sim \\mathcal{D}, y \\sim \\pi_{\\theta}(\\cdot \\mid x; \\se)} \\left[ r_{\\phi}(x, y) \\right] - \\beta \\mathbb{D}_{\\text{KL}} \\left[ \\pi_{\\theta}(y \\mid x; \\se) \\,||\\, \\pi_{\\text{ref}}(y \\mid x; \\se) \\right],"
+  },
+  {
+   "env": "gather",
+   "latex": "\\mathcal{J}_{PPO}(\\theta) = \\mathbb{E}_{x \\sim \\mathcal{D}, y \\sim \\pi_{\\text{old}}( \\cdot| x; \\se)} \\left[ \\frac{1}{\\sum_{t=1}^{|y|} I(y_t)} \\sum_{t=1: I(y_t)=1}^{|y|} \\min \\left( \\frac{\\pi_{\\theta}(y_t | x, y_{<t}; \\se)}{\\pi_{\\text{old}}(y_t | x, y_{<t}; \\se)} A_t, \\text{clip} \\left( \\frac{\\pi_{\\theta}(y_t | x, y_{<t}; \\se)}{\\pi_{\\text{old}}(y_t | x, y_{<t}; \\se)}, 1 - \\epsilon, 1 + \\epsilon \\right) A_t \\right) \\right],"
+  },
+  {
+   "env": "gather",
+   "latex": "r_{\\phi}(x, y) = \\text{EM}(a_\\text{pred}, a_\\text{gold}),"
+  }
+ ],
+ "hyper-connections": [
+  {
+   "env": "equation",
+   "latex": "\\left|\\theta_{\\texttt{SHC}}\\right|= |\\theta_{\\mathbf{B}}| + |\\theta_{\\mathbf{A}}|= n + n \\cdot (n+1)=n \\cdot (n+2),"
+  },
+  {
+   "env": "equation",
+   "latex": "P_{\\texttt{extra}}=\\left|\\theta_{\\texttt{SHC}}\\right| \\times 2 \\times L,"
+  },
+  {
+   "env": "equation",
+   "latex": "P_{\\texttt{extra}}=\\left|\\theta_{\\texttt{DHC}}\\right| \\times 2 \\times L,"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{\\hat{h}} = \\mathcal{T}(\\texttt{Norm}(\\mathbf{h})) + \\mathbf{h}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{\\hat{h}} = \\mathcal{T}(\\mathbf{h}) + \\mathbf{h}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{HC}_{PreNorm}=\\begin{pmatrix} 0 & 1 \\\\ 1 & 1 \\\\ \\end{pmatrix}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} \\mathbf{\\hat{H}} &= \\mathcal{HC}(\\mathcal{T}, \\mathbf{H}) \\\\ &=\\mathbf{B}^\\intercal\\mathcal{T}(\\mathbf{H}^\\intercal\\mathbf{A_m})^\\intercal + \\mathbf{A_r}^\\intercal\\mathbf{H} \\\\ &=\\mathcal{T}(\\mathbf{h})^\\intercal + \\mathbf{h}^\\intercal \\\\ &=\\mathbf{\\hat{h}}^\\intercal. \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{h}' = \\mathcal{T}(\\mathbf{h})"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{\\hat{h}} = \\texttt{Norm}(\\mathbf{h} + \\mathbf{h}')"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{T} = \\mathcal{C} \\circ \\mathcal{T} \\circ \\mathcal{A},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{HC}_{PostNorm}=\\begin{pmatrix} 0 & \\frac{1}{\\sqrt{\\sigma_{\\mathbf{h}}^2 + \\sigma_{\\mathbf{h}'}^2 + 2\\sigma_{\\mathbf{h}\\mathbf{h}'}}} \\\\ 1 & \\frac{1}{\\sqrt{\\sigma_{\\mathbf{h}}^2 + \\sigma_{\\mathbf{h}'}^2 + 2\\sigma_{\\mathbf{h}\\mathbf{h}'}}} \\\\ \\end{pmatrix}=\\begin{pmatrix} 0 & \\mathbf{B} \\\\ \\mathbf{A}_m & \\mathbf{A}_r \\\\ \\end{pmatrix}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{\\hat{H}}=\\mathbf{\\hat{h}}^\\intercal."
+  },
+  {
+   "env": "equation",
+   "latex": "\\sigma_{\\mathbf{h} + \\mathbf{h}'} = \\sqrt{\\sigma_{\\mathbf{h}}^2 + \\sigma_{\\mathbf{h}'}^2 + 2\\sigma_{\\mathbf{h}\\mathbf{h}'}}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} \\mathbf{\\hat{h}} &= \\text{Norm}(\\mathbf{h}' + \\mathbf{h}) \\\\ &= \\frac{\\mathbf{h}' + \\mathbf{h} - \\mu_{\\mathbf{h}' + \\mathbf{h}}}{\\sigma_{\\mathbf{h} + \\mathbf{h}'}} \\\\ &= \\frac{1}{\\sigma_{\\mathbf{h}' + \\mathbf{h}}} (\\mathbf{h}' + \\mathbf{h}) \\\\ &= \\frac{1}{\\sqrt{\\sigma_{\\mathbf{h}}^2 + \\sigma_{\\mathbf{h}'}^2 + 2\\sigma_{\\mathbf{h}\\mathbf{h}'}}} (\\mathbf{h}' + \\mathbf{h}) \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} \\mathbf{\\hat{H}} &= \\mathbf{B}^\\intercal \\mathbf{h}'^\\intercal + \\mathbf{H}' \\\\ &= \\mathbf{B}^\\intercal \\mathbf{h}'^\\intercal + \\mathbf{A}_r \\mathbf{H} \\\\ &= \\mathbf{B}^\\intercal \\mathbf{h}'^\\intercal + \\mathbf{A}_r \\mathbf{h}^\\intercal \\\\ &= \\frac{1}{\\sqrt{\\sigma_{\\mathbf{h}}^2 + \\sigma_{\\mathbf{h}'}^2 + 2\\sigma_{\\mathbf{h}\\mathbf{h}'}}} \\mathbf{h}'^\\intercal + \\frac{1}{\\sqrt{\\sigma_{\\mathbf{h}}^2 + \\sigma_{\\mathbf{h}'}^2 + 2\\sigma_{\\mathbf{h}\\mathbf{h}'}}} \\mathbf{h}^\\intercal &= \\mathbf{\\hat{h}}^\\intercal. \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{HC}=\\begin{pmatrix} \\mathbf{0}_{1 \\times 1} & \\mathbf{1}_{1 \\times n}\\\\ \\mathbf{e}_1 & \\mathbf{e}_{n\\times n} \\end{pmatrix},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{h}_i^{k+1} = \\mathbf{h}_j^{k+1}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{h}^{k+1}=\\sum_{i=1}^{n}(\\mathcal{T}^{k\\times n+i}(\\mathbf{h}^{k}) + \\mathbf{h}^k)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{HC}^{\\{ k \\mid k-1 \\equiv 0 \\pmod{n} \\}}= \\begin{pmatrix} \\mathbf{0}_{1\\times 1} & \\mathbf{e}_1^\\intercal \\\\ \\mathbf{1}_{n\\times 1} & \\mathbf{1}_{n\\times n}, \\end{pmatrix}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{HC}^{\\{ k \\mid k-1 \\equiv i \\pmod{n}, i \\neq 0 \\}}= \\begin{pmatrix} \\mathbf{0}_{1\\times 1} & \\mathbf{e}_i^\\intercal \\\\ \\mathbf{e}_i & \\mathbf{e}_{n\\times n}, \\end{pmatrix}."
+  }
+ ],
+ "bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure": [
+  {
+   "env": "equation",
+   "latex": "W_{t,d} = tf_{t,d} \\cdot \\log({\\frac{N}{df_t}})"
+  },
+  {
+   "env": "equation",
+   "latex": "W_{t,c} = tf_{t,c} \\cdot \\log({1+\\frac{A}{tf_t}})"
+  },
+  {
+   "env": "equation",
+   "latex": "W_{t,c,i} = tf_{t,c,i} \\cdot \\log({1+\\frac{A}{tf_{t}}})"
+  }
+ ],
+ "dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning": [
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} s_i &= [\\,x_i,\\ \\text{\\texttt{<REASON>}},\\ r_i,\\ \\text{\\texttt{<ANS>}},\\ y_i\\,],\\qquad L_i = |s_i|, \\qquad L^{(x)}_i = |x_i|. \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\mathrm{cls}} = -\\frac{1}{B}\\sum_{i=1}^B \\Big( \\mathbf{z}_i[y_i] - \\log\\!\\sum_{k=1}^K e^{\\mathbf{z}_i[k]} \\Big)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\mathrm{reason}} = -\\,\\frac{1}{N}\\sum_{i=1}^{B}\\sum_{t=1}^{L_i-1} m_{i,t+1}\\, \\log\\!\\left( \\frac{\\exp\\{\\ell_{i,t}[\\,v_{i,t+1}\\,]\\}} {\\sum_{w=1}^{V}\\exp\\{\\ell_{i,t}[w]\\}} \\right), \\qquad N=\\sum_{i=1}^{B}\\sum_{t=1}^{L_i-1} m_{i,t+1}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\mathrm{total}} = \\beta\\,\\mathcal{L}_{\\mathrm{cls}} + \\alpha\\,\\mathcal{L}_{\\mathrm{reason}}, \\quad \\alpha,\\beta \\ge 0."
+  }
+ ],
+ "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space": [
+  {
+   "env": "equation",
+   "latex": "\\mathbf{q}_t = \\mathbf{W}_q \\mathbf{h}_t, \\quad \\mathbf{k}_t = \\mathbf{W}_k \\mathbf{h}_t"
+  },
+  {
+   "env": "equation",
+   "latex": "p_t = \\frac{1 - \\cos(\\mathbf{q}_{t-1}, \\mathbf{k}_t)}{2} = \\frac{1}{2} \\left( 1 - \\frac{\\mathbf{q}_{t-1}^{\\top}\\mathbf{k}_t}{\\|\\mathbf{q}_{t-1}\\|_2 \\|\\mathbf{k}_t\\|_2} \\right)"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{c}_k^{\\text{raw}} = \\frac{1}{|S_k|} \\sum_{t \\in S_k} \\mathbf{h}_t, \\quad \\mathbf{c}_k = \\mathbf{W}_{\\text{up}}\\mathbf{c}_k^{\\text{raw}}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\text{aux}} = \\frac{R}{R-1} \\left[ (R-1) \\cdot F_{\\text{global}} \\cdot G_{\\text{global}} + (1 - F_{\\text{global}}) \\cdot (1 - G_{\\text{global}}) \\right] - 1"
+  },
+  {
+   "env": "equation",
+   "latex": "\\tilde{\\mathbf{Z}} = \\mathcal{S}(\\mathbf{Z})"
+  },
+  {
+   "env": "equation",
+   "latex": "\\Psi(\\mathbf{H}, \\mathbf{Z}) = \\text{Softmax}\\left( \\frac{\\mathbf{Q}\\mathbf{K}^\\top}{\\sqrt{d_{\\text{head}}}} + \\mathbf{M} \\right) \\mathbf{V}\\mathbf{W}_O + \\mathbf{H}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L} = \\mathcal{L}_{\\text{CE}} + \\lambda \\mathcal{L}_{\\text{aux}}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{Q}' = \\text{RMSNorm}(\\mathbf{Q}), \\quad \\mathbf{K}' = \\text{RMSNorm}(\\mathbf{K})"
+  },
+  {
+   "env": "equation",
+   "latex": "\\tilde{\\mathbf{K}} = \\texttt{repeat\\_interleave}(\\mathbf{K}, \\text{segment\\_lengths}), \\quad \\tilde{\\mathbf{V}} = \\texttt{repeat\\_interleave}(\\mathbf{V}, \\text{segment\\_lengths})"
+  },
+  {
+   "env": "equation",
+   "latex": "s_{\\text{token}} = \\frac{d_{\\text{token}}}{d_{\\text{base}}}, \\quad s_{\\text{concept}} = \\frac{d_{\\text{concept}}}{d_{\\text{base}}}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\text{logits} = \\frac{1}{s_{\\text{token}}} \\cdot (\\mathbf{h}_{\\text{final}} W_{\\text{unemb}}^\\top)"
+  },
+  {
+   "env": "equation",
+   "latex": "L(N, D, R, P) = E_0 + \\frac{A_{\\text{token}}} {(N(1-P) + t_{\\text{token}})^{\\delta_1}} + \\frac{A_{\\text{concept}} \\, R^{\\gamma}} {(NP + t_{\\text{concept}})^{\\delta_2}} + \\frac{A_{\\text{data}}} {(D + t_{\\text{data}})^{\\alpha}}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\Delta_{\\text{decay}} = k \\, L_{\\text{stable}}^{\\,a} R^{\\,b} N^{\\,c}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\nabla_{\\theta} \\mathcal{L}_{\\text{total}} = \\underbrace{\\nabla_{\\theta} \\mathcal{L}_{\\text{CE}}}_{\\text{anti-compression}} + \\lambda \\underbrace{\\nabla_{\\theta} \\mathcal{L}_{\\text{aux}}}_{\\text{pro-compression}}"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{H} &= \\mathcal{E}(\\mathbf{x}) && \\text{(Encoding)} \\\\ \\mathbf{C} &= \\Phi(\\mathbf{H}) && \\text{(Segmentation \\& Pooling)} \\\\ \\mathbf{Z} &= \\mathcal{M}(\\mathbf{C}) && \\text{(Concept Reasoning)} \\\\ \\hat{\\mathbf{y}} &= \\mathcal{D}(\\Psi(\\mathbf{H}, \\mathbf{Z})) && \\text{(Decoding)}"
+  },
+  {
+   "env": "align",
+   "latex": "G_{\\text{global}} &= \\frac{1}{|\\mathcal{T}|} \\sum_{(i,t) \\in \\mathcal{T}} p_{i,t} && \\text{(expected boundary rate)} \\\\ F_{\\text{global}} &= \\frac{1}{|\\mathcal{T}|} \\sum_{(i,t) \\in \\mathcal{T}} b_{i,t} && \\text{(actual boundary rate)}"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{Q} &= \\mathbf{H}\\mathbf{W}_Q, \\quad \\text{where } \\mathbf{W}_Q \\in \\mathbb{R}^{d_{\\text{token}} \\times d_{\\text{head}}} \\\\ \\mathbf{K} &= \\tilde{\\mathbf{Z}}\\mathbf{W}_K, \\quad \\mathbf{V} = \\tilde{\\mathbf{Z}}\\mathbf{W}_V, \\quad \\text{where } \\mathbf{W}_{K,V} \\in \\mathbb{R}^{d_{\\text{concept}} \\times d_{\\text{head}}}"
+  },
+  {
+   "env": "align",
+   "latex": "\\eta_{\\mathcal{E}, \\mathcal{D}} &= \\eta^{\\text{base}}_{\\text{token}} \\cdot s_{\\text{token}}^{-1} \\\\ \\eta_{\\mathcal{M}} &= \\eta^{\\text{base}}_{\\text{concept}} \\cdot s_{\\text{concept}}^{-1}"
+  }
+ ],
+ "hybridflow-a-flexible-and-efficient-rlhf-framework": [],
+ "let-it-flow-agentic-crafting-on-rock-and-roll": [],
+ "beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl": [],
+ "areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning": [
+  {
+   "env": "equation",
+   "latex": "\\pibehav(\\cdot|s) = \\begin{cases} \\pi_{\\theta+j}(\\cdot|s) & \\text{if } t_j\\leq t\\leq t_{j+1} \\text{ and } s\\in \\mathcal{S}_t(q) \\\\ \\text{arbitrary} & \\text{otherwise} \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "J(\\theta)= \\mathbb{E}_{q\\sim\\mathcal{D}, a_t\\sim\\pi_\\theta\\left(\\cdot|q,a_{<t}\\right)} \\left[ \\sum_{t=1}^H \\gamma^{t-1}r(s_t,a_t) \\right]."
+  },
+  {
+   "env": "equation",
+   "latex": "J_\\mathrm{PPO}(\\theta)= \\mathbb{E}_{q\\sim\\mathcal{D}, a_t\\sim\\pi_{\\mathrm{old}}\\left(\\cdot|q,a_{<t}\\right)} \\left[ \\sum_{t=1}^H \\min\\left( u_t(\\theta)\\hat{A}(s_t,a_t),\\mathrm{clip}\\left(u_t(\\theta),1-\\epsilon,1+\\epsilon\\right)\\hat{A}(s_t,a_t)\\right) \\right],"
+  },
+  {
+   "env": "equation",
+   "latex": "\\lfloor (N_r-1) /B \\rfloor \\leq i + \\eta."
+  },
+  {
+   "env": "align",
+   "latex": "J(\\theta)&= \\mathbb{E}_{q\\sim\\mathcal{D}, a_t\\sim\\pibehav} \\left[ \\sum_{t=1}^H \\min( \\underset {{\\text{Importance Ratio}}} { \\boxed{ \\frac{\\pi_\\theta}{\\pibehav} } } \\hat{A}_t,\\quad \\overbrace{ \\frac{\\piprox}{\\pibehav} \\mathrm{clip}( \\underset{\\text{Trust Region Center}}{ \\boxed{ \\frac{\\pi_\\theta}{\\piprox} } } ,1-\\epsilon,1+\\epsilon )\\hat{A}_t }^\\text{Importance Ratio} ) \\right] \\\\ &= \\mathbb{E}_{q\\sim\\mathcal{D}, a_t\\sim\\pibehav} \\left[ \\sum_{t=1}^H \\frac{\\piprox}{\\pibehav} \\min\\left( u_t^\\mathrm{prox}(\\theta)\\hat{A}_t, \\mathrm{clip}\\left( u_t^\\mathrm{prox}(\\theta),1-\\epsilon,1+\\epsilon \\right)\\hat{A}_t) \\right) \\right],"
+  }
+ ],
+ "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning": [
+  {
+   "env": "equation",
+   "latex": "\\begin{split} \\footnotesize & \\mathcal{J}_{GRPO}(\\theta) = \\mathbb{E}{[q \\sim P(Q), \\{o_i\\}_{i=1}^G \\sim \\pi_{\\theta_{old}}(O|q)]} \\\\ & \\frac{1}{G}\\sum_{i=1}^G \\left( \\min \\left( \\frac{\\pi_\\theta(o_i |q)}{\\pi_{\\theta_{old}}(o_i |q)} A_i, \\text{clip} \\left( \\frac{\\pi_\\theta(o_i |q)}{\\pi_{\\theta_{old}}(o_i |q)}, 1 - \\epsilon, 1 + \\epsilon \\right) A_i \\right) - \\beta \\mathbb{D}_{KL}\\left(\\pi_{\\theta} || \\pi_{ref}\\right)\\right) , \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbb{D}_{KL}\\left(\\pi_{\\theta} || \\pi_{ref}\\right) = \\frac{\\pi_{ref}(o_i|q)}{\\pi_{\\theta}(o_i|q)}- \\log\\frac{\\pi_{ref}(o_i|q)}{\\pi_{\\theta}(o_i|q)} - 1,"
+  },
+  {
+   "env": "equation",
+   "latex": "A_i = \\frac{r_i - {\\mathrm mean(\\{r_1, r_2, \\cdots, r_G\\})}}{{\\mathrm std(\\{r_1, r_2, \\cdots, r_G\\})}}."
+  },
+  {
+   "env": "equation",
+   "latex": "Reward_\\text{rule} = Reward_\\text{acc} + Reward_\\text{format}"
+  },
+  {
+   "env": "equation",
+   "latex": "Reward_{helpful} = RM_{helpful}(Response_A, Response_B)"
+  },
+  {
+   "env": "equation",
+   "latex": "Reward_{safety} = RM_{safety}(Response)"
+  },
+  {
+   "env": "equation",
+   "latex": "Reward_{language} = \\frac{Num(Words_{target})}{Num(Words)}"
+  },
+  {
+   "env": "align",
+   "latex": "Reward &= Reward_{\\text{reasoning}} + Reward_{\\text{general}} + Reward_{\\text{language}}\\\\ \\text{where, } Reward_{\\text{reasoning}} &= Reward_{\\text{rule}}\\\\ Reward_{\\text{general}} &= Reward_{\\text{reward\\_model}} + Reward_{\\text{format}}"
+  },
+  {
+   "env": "display",
+   "latex": "\\text{pass@1} = \\frac{1}{k} \\sum_{i=1}^{k} p_i,"
+  }
+ ],
+ "conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models": [
+  {
+   "env": "equation",
+   "latex": "\\text{CKA}(K, L) = \\frac{\\text{HSIC}(K, L)}{\\sqrt{\\text{HSIC}(K, K)\\text{HSIC}(L, L)}}"
+  },
+  {
+   "env": "equation",
+   "latex": "a_j = \\frac{\\sum_{i \\in \\mathcal{I}_j} S_{i,j} \\cdot i}{\\sum_{i \\in \\mathcal{I}_j} S_{i,j}}, \\quad \\text{where } \\mathcal{I}_j = \\mathop{\\text{argtop}k}_{i} (S_{i,j})."
+  },
+  {
+   "env": "equation",
+   "latex": "z_{t,n,k} \\triangleq \\phi_{n,k}(g_{t,n}), \\quad \\mathbf{e}_{t,n,k} = \\mathbf{E}_{n,k}[z_{t,n,k}]."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{e}_t \\triangleq \\mathop{\\Vert}_{n=2}^{N} \\mathop{\\Vert}_{k=1}^{K} \\mathbf{e}_{t,n,k}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{k}_t = \\mathbf{W}_K \\mathbf{e}_t, \\quad \\mathbf{v}_t = \\mathbf{W}_V \\mathbf{e}_t"
+  },
+  {
+   "env": "equation",
+   "latex": "\\alpha_t = \\sigma\\left( \\frac{\\text{RMSNorm}(\\mathbf{h}_t)^\\top \\text{RMSNorm}(\\mathbf{k}_t)}{\\sqrt{d}} \\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{Y} = \\text{SiLU}\\left( \\text{Conv1D}( \\text{RMSNorm}(\\tilde{\\mathbf{V}}) ) \\right) + \\tilde{\\mathbf{V}},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\alpha_t^{(m)} = \\sigma\\left( \\frac{\\text{RMSNorm}(\\mathbf{h}_t^{(m)})^\\top \\text{RMSNorm}(\\mathbf{W}_K^{(m)} \\mathbf{e}_t)}{\\sqrt{d}} \\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "P_{\\mathrm{MoE}}^{(\\mathrm{sparse })} = \\rho\\, P_{\\mathrm{sparse}}, \\qquad P_{\\mathrm{Engram}} = (1-\\rho)\\, P_{\\mathrm{sparse}}."
+  }
+ ],
+ "hc-manifold-constrained-hyper-connections": [
+  {
+   "env": "equation",
+   "latex": "\\mathbf{x}_{l+1} = \\mathbf{x}_l + \\mathcal{F}(\\mathbf{x}_l, \\mathcal{W}_l),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{x}_L = \\mathbf{x}_l + \\sum_{i=l}^{L-1} \\mathcal{F}(\\mathbf{x}_i, \\mathcal{W}_i),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{x}_{l+1} = \\mathcal{H}_{l}^{\\mathrm{res}}\\mathbf{x}_l + \\mathcal{H}_{l}^{\\mathrm{post}\\, \\top}\\mathcal{F}(\\mathcal{H}_{l}^{\\mathrm{pre}}\\mathbf{x}_l, \\mathcal{W}_l),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{x}_{L} = \\left(\\prod_{i=1}^{L-l}\\mathcal{H}_{L-i}^{\\mathrm{res}}\\right)\\mathbf{x}_l + \\sum_{i=l}^{L-1}\\left(\\prod_{j=1}^{L-1-i}\\mathcal{H}_{L-j}^{\\mathrm{res}}\\right)\\mathcal{H}_{i}^{\\mathrm{post}\\, \\top}\\mathcal{F}(\\mathcal{H}_{i}^{\\mathrm{pre}}\\mathbf{x}_i, \\mathcal{W}_i),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{cases} \\tilde{\\mathbf{x}}_l = \\text{RMSNorm}(\\mathbf{x}_l) \\\\ \\hpre{l} = \\alpha_l^\\mathrm{pre} \\cdot \\tanh(\\theta^\\mathrm{pre}_l \\tilde{\\mathbf{x}}^\\top_l) + \\mathbf{b}_l^\\mathrm{pre} \\\\ \\hpost{l} = \\alpha_l^\\mathrm{post} \\cdot \\tanh(\\theta^\\mathrm{post}_l \\tilde{\\mathbf{x}}^\\top_l) + \\mathbf{b}_l^\\mathrm{post} \\\\ \\hres{l} = \\alpha_l^\\mathrm{res} \\cdot \\tanh(\\theta^\\mathrm{res}_l \\tilde{\\mathbf{x}}^\\top_l) + \\mathbf{b}_l^\\mathrm{res}, \\\\ \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{P}_{\\mathcal{M}^\\mathrm{res}}(\\hres{l}) \\coloneq \\left\\{ \\hres{l} \\in \\mathbb{R}^{n \\times n} \\mid \\hres{l}\\mathbf{1}_n = \\mathbf{1}_n, \\ \\mathbf{1}^\\top_n\\hres{l} = \\mathbf{1}^\\top_n, \\ \\hres{l} \\geq 0 \\right\\},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{cases} \\vec{\\mathbf{x}}'_l = \\text{RMSNorm}(\\vec{\\mathbf{x}}_l) \\\\ \\tlhpre{l} = \\alpha_l^\\mathrm{pre} \\cdot (\\vec{\\mathbf{x}}'_l\\phi^\\mathrm{pre}_l) + \\mathbf{b}_l^\\mathrm{pre} \\\\ \\tlhpost{l} = \\alpha_l^\\mathrm{post} \\cdot (\\vec{\\mathbf{x}}'_l\\phi^\\mathrm{post}_l) + \\mathbf{b}_l^\\mathrm{post} \\\\ \\tlhres{l} = \\alpha_l^\\mathrm{res} \\cdot \\text{mat}(\\vec{\\mathbf{x}}'_l\\phi^\\mathrm{res}_l) + \\mathbf{b}_l^\\mathrm{res}, \\\\ \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{cases} \\hpre{l} = \\sigma(\\tlhpre{l}) \\\\ \\hpost{l} = 2\\sigma(\\tlhpost{l}) \\\\ \\hres{l} = \\text{Sinkhorn-Knopp}(\\tlhres{l}), \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{M}^{(t)} = \\mathcal{T}_r\\left(\\mathcal{T}_c(\\mathbf{M}^{(t-1)})\\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "L_r^* = \\arg\\min_{L_r} \\left[ nC\\times \\left\\lceil\\frac{L}{L_r}\\right\\rceil + (n+2)C\\times L_r \\right] \\approx \\sqrt{\\frac{nL}{n+2}}."
+  }
+ ],
+ "root-mean-square-layer-normalization": [
+  {
+   "env": "equation",
+   "latex": "a_i = \\sum_{j=1}^m{w_{ij} x_j},\\quad y_i = f\\left(a_i + b_i\\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\bar{a}_i = \\frac{a_i - \\mu}{\\sigma} g_i, \\quad y_i = f\\left(\\bar{a}_i + b_i\\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mu = \\frac{1}{n}\\sum_{i=1}^{n} a_i, \\quad \\sigma = \\sqrt{\\frac{1}{n}\\sum_{i=1}^{n}(a_i - \\mu)^2}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{y} = f\\left(\\frac{\\mathbf{Wx}}{\\text{RMS}(\\mathbf{a})} \\odot \\mathbf{g} + \\mathbf{b}\\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\text{RMS}(\\alpha\\mathbf{x}) = \\alpha \\text{RMS}(\\mathbf{x}),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\small \\begin{split} \\mathbf{y}^\\prime = f\\left(\\frac{\\mathbf{W^{\\prime}x}}{\\text{RMS}(\\mathbf{a}^\\prime)} \\odot \\mathbf{g} + \\mathbf{b}\\right) = f\\left(\\frac{\\delta\\mathbf{Wx}}{\\delta\\text{RMS}(\\mathbf{a})} \\odot \\mathbf{g} + \\mathbf{b}\\right) = \\mathbf{y}. \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\small \\begin{split} \\mathbf{R}^\\prime & = \\frac{1}{{\\delta \\text{RMS}(\\mathbf{a})}} \\left(\\mathbf{I}-\\frac{\\left(\\mathbf{\\delta Wx}\\right)\\left(\\mathbf{\\delta Wx}\\right)^T}{n\\delta^2 \\text{RMS}(\\mathbf{a})^2}\\right) = \\frac{1}{\\delta}\\mathbf{R}. \\\\ \\end{split}"
+  },
+  {
+   "env": "align",
+   "latex": "\\begin{split} & \\bar{a}_i = \\frac{a_i}{\\text{RMS}(\\mathbf{a})} g_i, \\quad \\text{where}~~ \\text{RMS}(\\mathbf{a}) = \\sqrt{\\frac{1}{n} \\sum_{i=1}^{n} a_i^2}. \\end{split}"
+  },
+  {
+   "env": "align",
+   "latex": "\\small & \\frac{\\partial \\mathcal{L}}{\\partial \\mathbf{b}} = \\frac{\\partial \\mathcal{L}}{\\partial \\mathbf{v}}, \\quad \\frac{\\partial \\mathcal{L}}{\\partial \\mathbf{g}} = \\frac{\\partial \\mathcal{L}}{\\partial \\mathbf{v}} \\odot \\frac{\\mathbf{Wx}}{\\text{RMS}(\\mathbf{a})},"
+  },
+  {
+   "env": "align",
+   "latex": "\\small \\begin{split} & \\frac{\\partial \\mathcal{L}}{\\partial \\mathbf{W}} = \\sum_{i=1}^n \\left[\\mathbf{x}^T \\otimes \\left(\\text{diag}\\left(\\mathbf{g} \\odot \\frac{\\partial \\mathcal{L}}{\\partial \\mathbf{v}} \\right) \\times \\mathbf{R}\\right)\\right]_{i}, \\text{where}~~ \\mathbf{R} = \\frac{1}{{\\text{RMS}(\\mathbf{a})}} \\left(\\mathbf{I}-\\frac{\\left(\\mathbf{Wx}\\right)\\left(\\mathbf{Wx}\\right)^T}{n\\text{RMS}(\\mathbf{a})^2}\\right), \\end{split}"
+  }
+ ],
+ "gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints": [],
+ "qwen2-5-vl-technical-report": [],
+ "deepseek-v3-technical-report": [
+  {
+   "env": "equation",
+   "latex": "\\mathbf{h}_i^{\\prime k} = M_k [\\operatorname{RMSNorm}(\\mathbf{h}_i^{k-1}) ; \\operatorname{RMSNorm}(\\operatorname{Emb}(t_{i+k}))],"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{h}_{1:T-k}^{k} = \\operatorname{TRM}_k(\\mathbf{h}_{1:T-k}^{\\prime k}),"
+  },
+  {
+   "env": "equation",
+   "latex": "P_{i+k+1}^{k} = \\operatorname{OutHead}(\\mathbf{h}_{i}^{k})."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\text{MTP}}^{k} = \\operatorname{CrossEntropy}(P_{2 + k:T + 1}^{k}, t_{2 + k:T + 1}) = -\\frac{1}{T} \\sum_{i=2 + k}^{T + 1} \\log P_i^k [t_i],"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\text{MTP}} = \\frac{\\lambda}{D} \\sum_{k=1}^{D} \\mathcal{L}_{\\text{MTP}}^{k}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{split} \\mathcal{J}_{GRPO}(\\theta) &= \\mathbb{E}{[q \\sim P(Q), \\{o_i\\}_{i=1}^G \\sim \\pi_{\\theta_{old}}(O|q)]} \\\\ & \\frac{1}{G}\\sum_{i=1}^G \\left( \\min \\left( \\frac{\\pi_\\theta(o_i |q)}{\\pi_{\\theta_{old}}(o_i |q)} A_i, \\text{clip} \\left( \\frac{\\pi_\\theta(o_i |q)}{\\pi_{\\theta_{old}}(o_i |q)}, 1 - \\epsilon, 1 + \\epsilon \\right) A_i \\right) - \\beta \\mathbb{D}_{KL}\\left(\\pi_{\\theta} || \\pi_{ref}\\right)\\right) , \\end{split}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbb{D}_{KL}\\left(\\pi_{\\theta} || \\pi_{ref}\\right) = \\frac{\\pi_{ref}(o_i|q)}{\\pi_{\\theta}(o_i|q)}- \\log\\frac{\\pi_{ref}(o_i|q)}{\\pi_{\\theta}(o_i|q)} - 1,"
+  },
+  {
+   "env": "equation",
+   "latex": "A_i = \\frac{r_i - {\\operatorname{mean}(\\{r_1, r_2, \\cdots, r_G\\})}}{{\\operatorname{std}(\\{r_1, r_2, \\cdots, r_G\\})}}."
+  },
+  {
+   "env": "align",
+   "latex": "\\boxed{\\color{blue} \\mathbf{c}_{t}^{KV}} &= W^{DKV} \\mathbf{h}_{t}, \\\\ [\\mathbf{k}_{t, 1}^{C};\\mathbf{k}_{t, 2}^{C};...;\\mathbf{k}_{t, n_{h}}^{C}] = \\mathbf{k}_{t}^{C} &= W^{UK} \\mathbf{c}_{t}^{KV}, \\\\ \\boxed{\\color{blue}\\mathbf{k}_{t}^{R}} &= \\operatorname{RoPE}({W^{KR}} \\mathbf{h}_{t}), \\\\ \\mathbf{k}_{t, i} &= [\\mathbf{k}_{t, i}^{C}; \\mathbf{k}_{t}^{R}], \\\\ [\\mathbf{v}_{t, 1}^{C};\\mathbf{v}_{t, 2}^{C};...;\\mathbf{v}_{t, n_{h}}^{C}] = \\mathbf{v}_{t}^{C} &= W^{UV} \\mathbf{c}_{t}^{KV},"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{c}_{t}^{Q} &= W^{DQ} \\mathbf{h}_{t}, \\\\ [\\mathbf{q}_{t, 1}^{C};\\mathbf{q}_{t, 2}^{C};...;\\mathbf{q}_{t, n_{h}}^{C}] = \\mathbf{q}_{t}^{C} &= W^{UQ} \\mathbf{c}_{t}^{Q}, \\\\ [\\mathbf{q}_{t, 1}^{R};\\mathbf{q}_{t, 2}^{R};...;\\mathbf{q}_{t, n_{h}}^{R}] = \\mathbf{q}_{t}^{R} &= \\operatorname{RoPE}({W^{QR}} \\mathbf{c}_{t}^{Q}), \\\\ \\mathbf{q}_{t, i} &= [\\mathbf{q}_{t, i}^{C}; \\mathbf{q}_{t, i}^{R}],"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{o}_{t, i} &= \\sum_{j=1}^{t} \\operatorname{Softmax}_j(\\frac{\\mathbf{q}_{t, i}^T \\mathbf{k}_{j, i}}{\\sqrt{d_{h} + d_{h}^{R}}}) \\mathbf{v}_{j, i}^{C}, \\\\ \\mathbf{u}_{t} &= W^{O} [\\mathbf{o}_{t, 1};\\mathbf{o}_{t, 2};...;\\mathbf{o}_{t, n_{h}}],"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{h}_{t}^{\\prime} & = \\mathbf{u}_{t} + \\sum_{i=1}^{N_{s}} {\\operatorname{FFN}^{(s)}_{i}\\left( \\mathbf{u}_{t} \\right)} + \\sum_{i=1}^{N_r} {g_{i,t} \\operatorname{FFN}^{(r)}_{i}\\left( \\mathbf{u}_{t} \\right)}, \\\\ g_{i,t} & = \\frac{g^{\\prime}_{i,t}}{\\sum_{j=1}^{N_r} g^{\\prime}_{j,t}}, \\\\ g^{\\prime}_{i,t} & = \\begin{cases} s_{i,t}, & s_{i,t} \\in \\operatorname{Topk} (\\{ s_{j, t} | 1 \\leq j \\leq N_r \\}, K_{r}), \\\\ 0, & \\text{otherwise}, \\end{cases} \\\\ s_{i,t} & = \\operatorname{Sigmoid} \\left( {\\mathbf{u}_{t}}^{T} \\mathbf{e}_{i} \\right),"
+  },
+  {
+   "env": "align",
+   "latex": "g^{\\prime}_{i,t} & = \\begin{cases} s_{i,t}, & s_{i,t} + b_i \\in \\operatorname{Topk} (\\{ s_{j, t} + b_j | 1 \\leq j \\leq N_r \\}, K_{r}), \\\\ 0, & \\text{otherwise}. \\end{cases}"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal{L}_{\\mathrm{Bal}} & = \\alpha \\sum_{i=1}^{N_r}{f_i P_i}, \\\\ f_i = \\frac{N_r}{K_r T} \\sum_{t=1}^{T} \\mathds{1} & \\left( s_{i,t} \\in \\operatorname{Topk} ( \\{ s_{j, t} | 1 \\leq j \\leq N_r \\}, K_{r} ) \\right), \\\\ s^{\\prime}_{i,t} & = \\frac{s_{i,t}}{\\sum_{j=1}^{N_r} s_{j,t}}, \\\\ P_i & = \\frac{1}{T} \\sum_{t=1}^{T}{s^{\\prime}_{i,t}},"
+  },
+  {
+   "env": "align",
+   "latex": "\\texttt{<|fim\\_begin|>}f_{\\text{pre}}\\texttt{<|fim\\_hole|>}f_{\\text{suf}}\\texttt{<|fim\\_end|>}f_{\\text{middle}}\\texttt{<|eos\\_token|>} . \\nonumber"
+  }
+ ],
+ "step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding": [
+  {
+   "env": "display",
+   "latex": "\\max(FLOP_{Attn}U_{FLOP}, Byte_{KV}U_{byte}) + FLOP_{Linear}U_{FLOP}"
+  },
+  {
+   "env": "display",
+   "latex": "2 \\times N_{\\text{token}} \\times W_{\\text{FFN}}"
+  },
+  {
+   "env": "display",
+   "latex": "2 \\times B_{\\text{dense}} \\ge \\frac{\\text{FLOPs}}{\\text{Bandwidth}}"
+  },
+  {
+   "env": "display",
+   "latex": "B_{\\text{MoE}} = \\frac{B_{\\text{dense}}}{S}"
+  },
+  {
+   "env": "display",
+   "latex": "B_{\\text{MoE}} \\ge \\frac{\\text{FLOPs}}{2 \\times S \\times \\text{Bandwidth}}"
+  },
+  {
+   "env": "display",
+   "latex": "3 \\times H \\times B_{\\text{MoE}}"
+  },
+  {
+   "env": "display",
+   "latex": "\\frac{3 \\times H \\times B_{\\text{MoE}}}{\\text{Net}} \\le \\frac{16.6\\text{ms}}{L}"
+  },
+  {
+   "env": "display",
+   "latex": "\\frac{H \\times \\text{FLOPs} \\times L}{\\text{Net} \\times S \\times \\text{Bandwidth}} \\le \\frac{16.6\\text{ms} \\times 2}{3} = 11.1\\text{ms}"
+  },
+  {
+   "env": "display",
+   "latex": "S \\ge \\frac{H \\times \\text{FLOPs} \\times L}{\\text{Net} \\times \\text{Bandwidth} \\times 11.1\\text{ms}}"
+  }
+ ],
+ "sglang-efficient-execution-of-structured-language-model-programs": [
+  {
+   "env": "display",
+   "latex": "C \\geq \\sum_{e \\in \\text{edges}(T)} |e|."
+  },
+  {
+   "env": "display",
+   "latex": "C = \\sum_{e \\in \\text{edges}(T)} |e|."
+  },
+  {
+   "env": "display",
+   "latex": "\\frac{\\sum_{r\\in R}\\text{number of cached prefill tokens in $r$}}{\\sum_{r\\in R}\\text{number of prefill tokens in $r$}},"
+  }
+ ],
+ "efficiently-serving-large-multimodal-models-using-epd-disaggregation": [
+  {
+   "env": "equation",
+   "latex": "\\max_{(\\mathbf{p},\\mathbf{b},\\mathbf{s}) \\in \\mathcal{X}} f(\\mathbf{p},\\mathbf{b},\\mathbf{s}) - \\beta cost(\\mathbf{p})"
+  },
+  {
+   "env": "equation",
+   "latex": "\\max_{(\\mathbf{p}, \\mathbf{b}, \\mathbf{s}) \\in \\mathcal{X}} f(\\mathbf{p}, \\mathbf{b}, \\mathbf{s}) - \\beta \\cdot \\text{cost}(\\mathbf{p})"
+  },
+  {
+   "env": "display",
+   "latex": "v_t^e = E(i_m)"
+  },
+  {
+   "env": "display",
+   "latex": "v_t^p = \\psi_{EP}(v_t^e)"
+  },
+  {
+   "env": "display",
+   "latex": "kv_1^p, o_1^p = P(v_t, i_p)"
+  },
+  {
+   "env": "display",
+   "latex": "kv_1^d, o_1^d = \\psi_{PD}(kv_1^p, o_1^p)"
+  },
+  {
+   "env": "display",
+   "latex": "kv_{t+1}^d, o_{t+1}^d = D(kv_t^d, o_t^d)"
+  }
+ ],
+ "mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving": [],
+ "megascale-scaling-large-language-model-training-to-more-than-10000-gpus": [
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} y = x + \\text{MLP}(\\text{LN}(x + \\text{Attention}(\\text{LN}(x)))) \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} y = x + \\text{MLP}(\\text{LN}(x)) + \\text{Attention}(\\text{LN}(x)) \\end{aligned}"
+  }
+ ],
+ "zero-memory-optimizations-toward-training-trillion-parameter-models": [
+  {
+   "env": "equation",
+   "latex": "\\frac{batch \\times seq\\_length \\times n \\times h}{B_{gpu}} \\leq \\frac{24 \\times n \\times h^2}{B_{data}}"
+  }
+ ],
+ "efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm": [
+  {
+   "env": "equation",
+   "latex": "P = 12lh^2\\left(1 + \\dfrac{13}{12h}+\\dfrac{V+s}{12lh}\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "F=96Bslh^2\\left(1 + \\dfrac{s}{6h} + \\dfrac{V}{16lh}\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\text{End-to-end training time} \\approx \\dfrac{8TP}{nX}."
+  },
+  {
+   "env": "equation",
+   "latex": "[Y_1, Y_2]= [\\textrm{GeLU}(XA_1), \\textrm{GeLU}(XA_2)]. \\nonumber"
+  },
+  {
+   "env": "equation",
+   "latex": "B=\\begin{bmatrix} B_1 \\\\ B_2 \\end{bmatrix}, \\ Y = [Y_1, Y_2]. \\nonumber"
+  },
+  {
+   "env": "equation",
+   "latex": "\\left(b' / b + p - 1\\right) \\cdot \\left(t_f(b) + t_b(b)\\right)."
+  }
+ ],
+ "megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism": [
+  {
+   "env": "equation",
+   "latex": "Y = \\textrm{GeLU}(XA)"
+  },
+  {
+   "env": "equation",
+   "latex": "X = [X_1, X_2], \\ A=\\begin{bmatrix} A_1 \\\\ A_2 \\end{bmatrix}."
+  },
+  {
+   "env": "equation",
+   "latex": "[Y_1, Y_2]= [\\textrm{GeLU}(XA_1), \\textrm{GeLU}(XA_2)]"
+  },
+  {
+   "env": "equation",
+   "latex": "PPL= \\exp({-\\frac{1}{T_o}\\sum_{t}^{T} \\text{log} P(t|0:t-1))}"
+  }
+ ],
+ "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management": [
+  {
+   "env": "equation",
+   "latex": "\\mathbf{Z}_i = \\text{Attention}(\\mathbf{Q}_i, \\mathbf{K}_i, \\mathbf{V}_i) = \\text{Softmax}\\left(\\frac{\\mathbf{Q}_i \\mathbf{K}_i^\\top}{\\sqrt{d_k}}\\right) \\mathbf{V}_i,"
+  },
+  {
+   "env": "equation",
+   "latex": "P(x_{t+1} | x_1, x_2, \\cdots, x_t) = \\text{Softmax}(\\mathbf{h}_t \\mathbf{W}_{\\text{out}} + \\mathbf{b}_{\\text{out}}),"
+  },
+  {
+   "env": "equation",
+   "latex": "x_{t+1} \\sim P(x_{t+1} | x_1, x_2, \\cdots, x_t)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\text{TD}(\\mathbf{W}) = \\prod_{k=1}^n \\mathcal{T}_{(k)}[d_{k-1}, i_k, j_k, d_k],"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{Q}_i = \\mathbf{X}\\mathbf{W}_{Q_i}, \\quad \\mathbf{K}_i = \\mathbf{X}\\mathbf{W}_{K_i}, \\quad \\mathbf{V}_i = \\mathbf{X}\\mathbf{W}_{V_i},"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{Z}=\\text{Concat}(\\mathbf{Z}_1, \\mathbf{Z}_2, \\dots, \\mathbf{Z}_h)\\mathbf{W}_O,"
+  },
+  {
+   "env": "align",
+   "latex": "\\text{FFN}(\\mathbf{Z}) = \\sigma(\\mathbf{Z}\\mathbf{W}_1 + \\mathbf{b}_1)\\mathbf{W}_2 + \\mathbf{b}_2"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{q}_i^t &= \\mathbf{x}_t \\mathbf{W}_{Q_i}, \\quad \\mathbf{k}_i^t = \\mathbf{x}_t \\mathbf{W}_{K_i}, \\quad \\mathbf{v}_i^t = \\mathbf{x}_t \\mathbf{W}_{V_i},"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{K}_i^{t} &= \\text{Concat}(\\mathbf{\\hat{K}}_i^{t-1}, \\mathbf{k}_i^t ), \\ \\mathbf{V}_i^{t} = \\text{Concat}(\\mathbf{\\hat{V}}^{t-1}_i, \\mathbf{V}_i^t ),"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{z}^t_i = \\text{Softmax}\\left(\\frac{\\mathbf{q}_i^t {\\mathbf{K}_i^t}^\\top}{\\sqrt{d_k}}\\right) \\mathbf{V}_i^t,"
+  },
+  {
+   "env": "align",
+   "latex": "O\\left(L\\cdot h \\cdot t_c \\cdot t \\cdot (d_k+d_v)+ L\\cdot h \\cdot t_c\\left(\\triangle_1 + \\triangle_2\\right)\\right)"
+  },
+  {
+   "env": "align",
+   "latex": "O(L\\cdot h \\cdot t_c \\cdot (d_k+d_v) \\cdot sizeof(Float16))"
+  }
+ ],
+ "efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey": [
+  {
+   "env": "equation",
+   "latex": "\\text{Attention}(Q, K, V) = \\texttt{softmax}\\left(\\frac{QK^T}{\\sqrt{d}}\\right)V"
+  }
+ ],
+ "efficient-memory-management-for-large-language-model-serving-with-pagedattention": [
+  {
+   "env": "equation",
+   "latex": "P(x) = P(x_1) \\cdot P(x_2\\mid x_1) \\cdots P(x_n \\mid x_1, \\ldots, x_{n-1})."
+  },
+  {
+   "env": "equation",
+   "latex": "q_i = W_q x_i, \\ k_i = W_k x_i, \\ v_i = W_v x_i."
+  },
+  {
+   "env": "equation",
+   "latex": "a_{ij} = \\frac{\\exp(q_i^\\top k_j / \\sqrt{d})}{\\sum_{t=1}^{i}\\exp(q_i^\\top k_t / \\sqrt{d})}, \\ o_i = \\sum_{j=1}^{i} a_{ij} v_j."
+  },
+  {
+   "env": "equation",
+   "latex": "A_{ij} = \\frac{\\exp(q_i^\\top K_j / \\sqrt{d})}{\\sum_{t=1}^{\\lceil i/B \\rceil}\\exp(q_i^\\top K_t\\mathbf{1} / \\sqrt{d})}, \\ o_i = \\sum_{j=1}^{\\lceil i/B \\rceil} V_j A_{ij}^\\top,"
+  }
+ ],
+ "deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference": [
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} \\textstyle \\operatorname{SegAttn}(\\mA_0, \\mA_1, \\mA_2)= \\frac{ \\mA_0 e^{\\operatorname{LSE}(\\mQ, \\mK_0)} + \\mA_1 e^{\\operatorname{LSE}(\\mQ, \\mK_1)} + \\mA_2 e^{\\operatorname{LSE}(\\mQ, \\mK_2)} }{ e^{\\operatorname{LSE}(\\mQ, \\mK_0)} + e^{\\operatorname{LSE}(\\mQ, \\mK_1)} + e^{\\operatorname{LSE}(\\mQ, \\mK_2)} } \\,, \\text{ where } e := \\text{exp} \\,. \\end{aligned}"
+  }
+ ],
+ "nanoflow-towards-optimal-large-language-model-serving-throughput": [
+  {
+   "env": "align",
+   "latex": "T_{mem} = \\frac{MemSize}{MemBW}"
+  },
+  {
+   "env": "align",
+   "latex": "T_{Compute} &\\approx \\frac{2B_{Dense} \\cdot P_{Model}}{Compute}"
+  },
+  {
+   "env": "align",
+   "latex": "T_{net} \\approx 4\\cdot\\frac{N_{GPU}B_{Dense}D_{model} S_{type} L }{NetBW}"
+  },
+  {
+   "env": "align",
+   "latex": "T_R &= \\frac{T_{Mem}}{T_{Compute}} \\approx \\frac{Compute}{MemBW} \\frac{MemSize}{P_{model}} \\frac{1}{2B_{dense}}"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathrm{Throughput_{optimal}} &= \\frac{B_{Dense}}{T_{Compute}} = \\frac{Compute}{2 P_{Model}}"
+  }
+ ],
+ "gated-delta-networks-improving-mamba2-with-delta-rule": [
+  {
+   "env": "align",
+   "latex": "\\rmS_t = \\rmS_{t-1} + \\vv_t \\vk_t^\\intercal \\in \\mathbb{R}^{d_v \\times d_k}, \\qquad \\qquad \\vo_t = \\rmS_t \\vq_t \\in \\mathbb{R}^{d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\vo_t = \\sum_{i=1}^t (\\vv_i \\vk_i^\\intercal) \\vq_t = \\sum_{i=1}^t \\vv_i (\\vk_i^\\intercal \\vq_t) \\in \\mathbb{R}^{d_v}, \\qquad \\rmO = (\\rmQ \\rmK^\\intercal \\odot \\rmM) \\rmV \\in \\mathbb{R}^{L \\times d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_{[t]}^r = \\rmS_{[t]} + \\sum_{i=1}^r \\vv_{[t]}^{i} \\vk_{[t]}^{i\\intercal} \\in \\mathbb{R}^{d_v\\times d_k}, \\qquad \\vo_{[t]}^r = \\rmS_{[t]}^r\\vq_{[t]}^r = \\rmS_{[t]}\\vq_{[t]}^r + \\sum_{i=1}^r \\vv_{[t]}^{i} \\left(\\vk_{[t]}^{i\\intercal} \\vq_{[t]}^{r} \\right) \\in \\mathbb{R}^{d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_{[t+1]} = \\rmS_{[t]} + \\rmV_{[t]} \\rmK_{[t]}^\\intercal \\in \\mathbb{R}^{d_v \\times d_k}, \\qquad \\rmO_{[t]} = \\rmQ_{[t]} \\rmS_{[t]}^\\intercal + \\left(\\rmQ_{[t]}\\rmK_{[t]}^\\intercal \\odot \\rmM\\right) \\rmV_{[t]} \\in \\mathbb{R}^{C \\times d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_{[t+1]} = {\\color{blue} \\overrightarrow{\\rmS_{[t]}}} + \\rmV_{[t]}^\\intercal {\\color{blue} \\overrightarrow{\\rmK_{[t]}}} \\in \\mathbb{R}^{d_v \\times d_k} , && \\rmO_{[t]} = {\\color{blue}{\\overleftarrow{ \\rmQ_{[t]}}}} \\rmS_{[t]}^\\intercal + \\left(\\rmQ_{[t]} \\rmK_{[t]}^\\intercal \\odot {\\color{blue}\\Gamma_{[t]}}\\right)\\rmV_{[t]} \\in \\mathbb{R}^{C\\times d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "{\\color{blue}\\overleftarrow{\\vq_{[t]}^r}} &= {\\color{blue}\\gamma_{[t]}^r} \\vq_{[t]}^r && \\text{decaying each vector to the first position of chunk $t$} \\nonumber \\\\ {\\color{blue}\\overrightarrow{\\vk_{[t]}^r}} &= {\\color{blue}\\frac{\\gamma_{[t ]}^{C}}{\\gamma_{[t]}^r}} \\vk_{[t]}^r && \\text{decaying each vector to the last position of chunk $t$} \\nonumber \\\\ {\\color{blue}\\overrightarrow{\\rmS_{[t]}}} &= {\\color{blue}\\gamma_{[t]}^C}\\rmS_{[t]} && \\text{decaying the state matrix over the entire chunk $t$}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_t &= \\rmS_{t-1} - \\underbrace{\\left(\\rmS_{t-1} \\vk_t\\right)}_{\\vv_{t}^{\\text{old}}} \\vk_t^\\intercal + \\underbrace{\\left(\\beta_t \\vv_t + (1-\\beta_t)\\rmS_{t-1}\\vk_t)\\right)}_{\\vv_{t}^{\\text{new}}} \\vk_t^\\intercal = \\rmS_{t-1} \\left(\\rmI - \\beta_t \\vk_t \\vk_t^\\intercal \\right) + \\beta_t \\vv_t \\vk_t^\\intercal"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_{[t]}^r = \\rmS_{[t]} \\underbrace{\\left(\\prod_{i=1}^r \\rmI - \\beta_{[t]}^i \\vk_{[t]}^i \\vk_{[t]}^{i\\intercal} \\right)}_{:= \\rmP_{[t]}^r} + \\underbrace{\\sum_{i=1}^{r} \\left( \\beta^i_{[t]} \\vv^i_{[t]} \\vk_{[t]}^{i\\intercal}\\prod_{j=i+1}^{r} \\left(\\rmI - \\beta_{[t]}^j \\vk^j_{[t]} \\vk_{[t]}^{j\\intercal} \\right) \\right)}_{:= \\rmH_{[t]}^r}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmP_{[t]}^{r} &= \\rmI - \\sum_{i=1}^{r}\\vw_{[t]}^i\\vk_{[t]}^{i\\intercal} \\in \\mathbb{R}^{d_k \\times d_k} &&\\vw_{[t]}^r = \\beta_{[t]}^r \\left(\\vk_{[t]}^r - \\sum_{i=1}^{r-1} \\left(\\vw_{[t]}^i (\\vk_{[t]}^{i\\intercal}\\vk_{[t]}^r) \\right) \\right) \\in \\mathbb{R}^{d_k}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmH_{[t]}^{r} &= \\sum_{i=1}^{r} \\vu_{[t]}^i \\vk_{[t]}^{i\\intercal} \\in \\R^{d_v \\times d_k} && \\vu_{[t]}^r = \\beta_{[t]}^r \\left(\\vv_{[t]}^r - \\sum_{i=1}^{r-1} \\left(\\vu_{[t]}^i (\\vk_{[t]}^{i\\intercal}\\vk_{[t]}^r) \\right) \\right)\\in \\mathbb{R}^{d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmT_{[t]} = \\left[\\rmI + \\operatorname{strictLower}\\left(\\operatorname{diag}(\\beta_{[t]})\\rmK_{[t]} \\rmK_{[t]}^\\intercal\\right)\\right]^{-1}\\operatorname{diag}\\left(\\beta_{[t]}\\right) \\in \\mathbb{R}^{C \\times C} \\\\ \\rmW_{[t]}= \\rmT_{[t]} \\rmK_{[t]} \\in \\mathbb{R}^{C \\times d_k}, \\qquad \\rmU_{[t]}=\\rmT_{[t]}\\rmV_{[t]} \\in \\mathbb{R}^{C \\times d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_{[t+1]} &= \\rmS_{[t]}\\rmP_{[t]}+\\rmH_{[t]} = \\rmS_{[t]} + \\left(\\rmU_{[t]} - \\rmW_{[t]}\\rmS_{[t]}^{\\intercal}\\right)^\\intercal \\rmK_{[t]} & \\in \\mathbb{R}^{d_v \\times d_k} \\\\ \\rmO_{[t]} &= \\rmQ_{[t]} \\rmS_{[t]}^\\intercal + (\\rmQ_{[t]} \\rmK_{[t]}^{\\intercal} \\odot \\rmM) \\left(\\rmU_{[t]} - \\rmW_{[t]} \\rmS_{[t]}^\\intercal\\right) &\\in \\mathbb{R}^{C \\times d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_t = \\rmS_{t-1} \\left( {\\color{blue}{\\alpha_t}} (\\rmI - \\beta_t \\vk_t\\vk_t^\\intercal) \\right) + \\beta_t \\vv_t \\vk_t^\\intercal"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_{t+1} &= \\rmS_{t} - \\beta_t \\nabla \\mathcal{L}(\\rmS_t) = \\rmS_{t} - \\beta_t (\\rmS_t\\vk_t - \\vv_t)\\vk_t^\\intercal = \\rmS_{t}\\left(\\rmI-\\beta_t\\vk_t\\vk_t^\\intercal\\right) + \\beta_t \\vv_t\\vk_t^\\intercal"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_{[t]}^r = \\rmS_{[t]} \\underbrace{\\left(\\prod_{i=1}^r {\\color{blue}{\\alpha_{[t]}^i}}\\left(\\rmI - \\beta_{[t]}^i \\vk_{[t]}^i \\vk_{[t]}^{i\\intercal} \\right)\\right)}_{:= \\mathbf{F}_{[t]}^r} + \\underbrace{\\sum_{i=1}^{r} \\left( \\beta^i_{[t]} \\vv^i_{[t]} \\vk_{[t]}^{i\\intercal}\\prod_{j=i+1}^{r} {\\color{blue}{\\alpha_{[t]}^j}} \\left(\\rmI - \\beta_{[t]}^j \\vk^j_{[t]} \\vk_{[t]}^{j\\intercal} \\right) \\right)}_{:= \\rmG_{[t]}^r}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmG_{[t]}^r = \\sum_{i=1}^r {\\color{blue} \\frac{\\gamma_{[t]}^r}{\\gamma_{[t]}^i} } \\tilde{\\vu}_{[t]}^i \\vk_{[t]}^{i\\intercal} \\in\\mathbb{R}^{d_v \\times d_k} &&\\tilde{\\vu}_{[t]}^r = \\beta_{[t]}^r \\left(\\vv_{[t]}^r - \\sum_{i=1}^{r-1} \\left( \\tilde{\\vu}_{[t]}^i ({\\color{blue}\\frac{\\gamma_{[t]}^{r}}{\\gamma_{[t]}^i}} \\vk_{[t]}^{i\\intercal}\\vk_{[t]}^r)\\right)\\right) \\in \\mathbb{R}^{d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\widetilde{\\rmU_{[t]}} = \\left[\\rmI + \\operatorname{strictLower} \\left(\\operatorname{diag}\\left(\\beta_{[t]}\\right) ({\\color{blue}\\Gamma_{[t]} } \\odot \\rmK_{[t]} \\rmK_{[t]}^\\intercal )\\right) \\right]^{-1} \\operatorname{diag}\\left(\\beta_{[t]}\\right) \\rmV_{[t]} && \\in \\mathbb{R}^{C \\times d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_{[t+1]} &= {\\color{blue} \\overrightarrow{\\rmS_{[t]}}} + \\left({ \\widetilde{\\rmU_{[t]}}} - {\\color{blue} \\overleftarrow{\\rmW_{[t]}}} \\rmS_{[t]}^\\intercal\\right)^\\intercal {\\color{blue} \\overrightarrow{\\rmK_{[t]}}} &&\\in \\mathbb{R}^{d_v \\times d_k} \\\\ \\rmO_{[t]} &= {\\color{blue} \\overleftarrow{\\rmQ_{[t]}}} \\rmS_{[t]}^\\intercal + (\\rmQ_{[t]} \\rmK_{[t]}^{\\intercal} \\odot \\mathbf{M}) \\left({{\\widetilde{\\rmU^{}_{[t]}}}} - {\\color{blue} \\overleftarrow{\\rmW_{[t]}}}\\rmS_{[t]}^\\intercal\\right) &&\\in \\mathbb{R}^{C \\times d_v}"
+  },
+  {
+   "env": "align",
+   "latex": "\\rmS_t = \\sum_{i=1}^t {\\color{blue}\\frac{\\gamma_{t}}{\\gamma_i}} \\vu_i \\vk_i^\\intercal, \\qquad \\vu_t = \\beta_t \\left( \\vv_t - \\sum_{i=1}^{t-1} {\\color{blue} \\frac{\\gamma_{t}}{\\gamma_i}} \\vu_i \\vk_i^T \\vk_t \\right)"
+  },
+  {
+   "env": "display",
+   "latex": "\\rmS_t = {\\color{blue}\\alpha_t} \\rmS_{t-1} + \\vv_t \\vk_t^\\intercal, \\qquad \\vo_t = \\rmS_t \\vq_t"
+  }
+ ],
+ "parallel-scan-on-ascend-ai-accelerators": [
+  {
+   "env": "equation",
+   "latex": "\\texttt{scan}(\\z) = \\matA_s\\ @\\ \\matU_s + \\matL^{-}_s\\ @\\ \\matA_s\\ @ \\ \\ones_s,"
+  },
+  {
+   "env": "align",
+   "latex": "\\matC_1 &= \\matA_s\\ @\\ \\ones_s \\nonumber \\\\ \\matC_2 &= \\matA_s\\ @\\ \\matU_s \\nonumber \\\\ \\matC_2 &= \\matC_2 + \\matL_s^{-}\\ @\\ \\matC_1. \\nonumber"
+  }
+ ],
+ "kimi-k3-open-frontier-intelligence": [
+  {
+   "env": "equation",
+   "latex": "\\mathbf{S}_t = \\left(\\mathbf{I}-\\beta_t\\bm{k}_t\\bm{k}_t^{\\top}\\right) \\operatorname{Diag}(\\bm{\\alpha}_t)\\mathbf{S}_{t-1} + \\beta_t\\bm{k}_t\\bm{v}_t^{\\top}, \\qquad \\tilde{\\bm{o}}_t = \\mathbf{S}_t^{\\top}\\bm{q}_t."
+  },
+  {
+   "env": "equation",
+   "latex": "\\bm{\\gamma}_{[t]}^{i\\rightarrow j} := \\prod_{r=i}^{j}\\bm{\\alpha}_{[t]}^r, \\qquad \\bm{\\gamma}_{[t]}^r := \\bm{\\gamma}_{[t]}^{1\\rightarrow r}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\bm{y}_t = \\mathbf{W}_o\\!\\left[ \\operatorname{Sigmoid}\\!\\left(\\mathbf{W}_g\\bm{x}_t\\right) \\odot \\operatorname{RMSNorm}(\\tilde{\\bm{o}}_t) \\right]."
+  },
+  {
+   "env": "equation",
+   "latex": "\\bm{k}_{i} = \\bm{v}_{i} = \\begin{cases} \\bm{h}_1 & i = 0 \\\\ f_i(\\bm{h}_{i}) & 1 \\leq i \\leq l-1 \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "{\\alpha_{i \\to l}} = \\frac{\\phi\\left(\\bm{q}_{l}, \\bm{k}_{i}\\right)}{\\sum_{j=0}^{l-1} \\phi\\left(\\bm{q}_{l}, \\bm{k}_{j}\\right)}, \\qquad \\bm{h}_{l} = \\sum_{i=0}^{l-1} {\\alpha_{i \\to l}} \\cdot \\bm{v}_{i}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{V} = \\begin{cases} [\\bm{b}_0, \\bm{b}_1, \\ldots, \\bm{b}_{n-1}]^\\top & \\text{if } i = 1 \\text{ (first layer of block } n\\text{)} \\\\ [\\bm{b}_0, \\bm{b}_1, \\ldots, \\bm{b}_{n-1}, \\bm{b}_n^{i-1}]^\\top & \\text{if } i \\geq 2 \\text{ (subsequent layers)} \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\operatorname{SiTU\\text{-}GLU}(\\bm{x}) = \\left[\\beta_1\\tanh\\!\\left(\\frac{\\mathbf{W}_g\\bm{x}}{\\beta_1}\\right)\\odot\\operatorname{Sigmoid}(\\mathbf{W}_g\\bm{x})\\right] \\odot \\left[\\beta_2\\tanh\\!\\left(\\frac{\\mathbf{W}_u\\bm{x}}{\\beta_2}\\right)\\right],"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{T}_i = \\operatorname{argtop}_{k}\\!\\left(\\bm{s}_i+\\bm{b}\\right), \\qquad p_{i,j} = \\frac{s_{i,j}}{\\sum_{r\\in\\mathcal{T}_i}s_{i,r}}, \\quad j\\in\\mathcal{T}_i."
+  },
+  {
+   "env": "equation",
+   "latex": "\\sum_{i=1}^{m}\\mathbf{1}\\!\\left[s_{i,j}+\\widehat{b}_j^{(t+1)}>\\alpha_i^{(t)}\\right],"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\mathrm{LK}} = -\\log \\sum_{x \\in \\mathcal{V}} \\min\\!\\left(p(x), q(x)\\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} \\mathbf{M}_{[i+1]}^{t \\leftarrow 1} := \\prod_{r \\leftarrow 1}^{t}\\mathbf{M}_r \\in \\mathbb{R}^{d_k\\times d_k}, \\qquad \\mathbf{S}_{[i+1]}^{t} & =\\widetilde{\\mathbf{S}}_{[i+1]}^{t} + \\mathbf{M}_{[i+1]}^{t \\leftarrow 1}\\mathbf{S}_{[i]}^{T_i} \\\\ & = \\widetilde{\\mathbf{S}}_{[i+1]}^{t} + \\mathbf{M}_{[i+1]}^{t \\leftarrow 1}\\sum_{j=1}^{i}\\Big(\\prod_{l \\leftarrow j+1}^{i}\\mathbf{M}_{[l]}^{T_l \\leftarrow 1}\\Big)\\widetilde{\\mathbf{S}}_{[j]}^{T_j}\\in \\mathbb{R}^{d_k\\times d_v}. \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\beta\\tanh\\!\\left(\\frac{z}{\\beta}\\right) = z + O\\!\\left(\\frac{z^3}{\\beta^2}\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\left\\|\\operatorname{SiTU\\text{-}GLU}(\\bm{x})\\right\\|_{\\infty} \\leq \\beta_1\\beta_2 = 100,"
+  },
+  {
+   "env": "equation",
+   "latex": "\\max_{x_{i,j}\\in\\{0,1\\}} \\sum_{i,j} x_{i,j}s_{i,j} \\qquad \\text{s.t.}\\qquad \\sum_j x_{i,j}=k, \\qquad \\sum_i x_{i,j}=\\frac{mk}{n}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\max_{x_{i,j}\\in[0,1]}\\min_{\\alpha_i,\\beta_j}\\; \\sum_{i,j} x_{i,j}s_{i,j} - \\sum_i \\alpha_i\\Big(\\sum_j x_{i,j} - k\\Big) - \\sum_j \\beta_j\\Big(\\sum_i x_{i,j} - \\tfrac{mk}{n}\\Big)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\min_{\\alpha_i,\\beta_j}\\max_{x_{i,j}\\in[0,1]}\\; \\sum_{i,j} x_{i,j}\\big(s_{i,j} - \\alpha_i - \\beta_j\\big) + k\\sum_i \\alpha_i + \\frac{mk}{n}\\sum_j \\beta_j."
+  },
+  {
+   "env": "equation",
+   "latex": "\\min_{\\alpha_i,\\beta_j}\\; \\mathcal{L}(\\bm{\\alpha},\\bm{\\beta}) := \\sum_{i,j}\\max\\big(0,\\; s_{i,j} - \\alpha_i - \\beta_j\\big) + k\\sum_i \\alpha_i + \\frac{mk}{n}\\sum_j \\beta_j."
+  },
+  {
+   "env": "equation",
+   "latex": "\\min_{\\alpha}\\; k\\alpha + \\sum_{j}\\max\\big(0,\\; s_{i,j} - \\beta_j - \\alpha\\big)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\alpha_i^* = \\operatorname{quantile}_{1-k/n}\\big(\\bm{s}_i - \\bm{\\beta}\\big)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\beta_j^* = \\operatorname{quantile}_{1-k/n}\\big(\\bm{s}_{:,j} - \\bm{\\alpha}\\big)."
+  }
+ ],
+ "prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter": [
+  {
+   "env": "equation",
+   "latex": "\\Phi_{\\text{kv}}(l)=\\frac{S_{\\text{kv}}(l)}{T_{\\text{prefill}}(l)},"
+  },
+  {
+   "env": "equation",
+   "latex": "B_{\\text{out}} =\\frac{N}{P}\\cdot\\frac{\\mathbb{E}[S_{\\text{kv}}]}{\\mathbb{E}[T_{\\text{prefill}}]} \\approx\\frac{N}{P}\\cdot\\Phi_{\\text{kv}}(L_{\\text{avg}}),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\Theta_{\\text{\\systemnamelowercase}} = \\min\\!\\left(\\frac{N_{\\text{\\systemnamelowercase}}}{T_{\\text{prefill}}(l_{\\text{long}})},\\; \\frac{B_{\\text{out}}}{S_{\\text{kv}}(l_{\\text{long}})}\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\Theta_{\\text{pd-p}} = \\frac{N_p}{T_{\\text{prefill}}(l_{\\text{short}})}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\Theta_{\\text{pd-d}} = \\frac{N_d \\cdot \\mathit{BS}_{\\max}}{T_{\\text{decode}} \\cdot L_{\\text{out}}},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\Lambda_{\\max} = \\min\\!\\left(\\frac{\\Theta_{\\text{\\systemnamelowercase}}}{p},\\; \\frac{\\Theta_{\\text{pd-p}}}{1 - p},\\; \\Theta_{\\text{pd-d}}\\right)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\frac{\\Theta_{\\text{\\systemnamelowercase}}}{p} = \\frac{\\Theta_{\\text{pd-p}}}{1 - p}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\Theta_{\\text{\\systemnamelowercase}} + \\Theta_{\\text{pd-p}} = \\Theta_{\\text{pd-d}}."
+  }
+ ],
+ "longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification": [
+  {
+   "env": "equation",
+   "latex": "\\mathrm{LSE}_{\\mathrm{merge}} = \\log\\Bigl(\\exp\\bigl(\\mathrm{LSE}_{\\mathrm{cache}}\\bigr) \\;+\\; \\exp\\bigl(\\mathrm{LSE}_{\\mathrm{specs}}\\bigr)\\Bigr),"
+  },
+  {
+   "env": "align",
+   "latex": "o_{\\mathrm{merge}} = &o_{\\mathrm{cache}} \\cdot \\exp\\bigl(\\mathrm{LSE}_{\\mathrm{cache}} - \\mathrm{LSE}_{\\mathrm{merge}}\\bigr) \\\\+& o_{\\mathrm{specs}} \\cdot\\exp\\bigl(\\mathrm{LSE}_{\\mathrm{specs}} - \\mathrm{LSE}_{\\mathrm{merge}}\\bigr)."
+  },
+  {
+   "env": "align",
+   "latex": "o_{\\mathrm{merge}} &= \\mha\\left(q, K_{\\mathrm{merge}}, V_{\\mathrm{merge}}\\right) \\\\&= \\sm\\left( qK_{\\mathrm{merge}}^\\top/\\sqrt{d_{qk}} \\right) V_{\\mathrm{merge}}."
+  },
+  {
+   "env": "align",
+   "latex": "q K_{\\mathrm{merge}}^\\top / \\sqrt{d_{qk}} = \\texttt{concat}\\Bigl(& \\underbrace{ q \\, K_{\\mathrm{cache}}^\\top / \\sqrt{d_{qk}} }_{\\mathrm{sub-logits\\ for\\ history}} \\;, \\\\& \\underbrace{ q \\, K_{\\mathrm{specs}}^\\top / \\sqrt{d_{qk}} }_{\\mathrm{sub-logits\\ for\\ new}} \\Bigr)."
+  },
+  {
+   "env": "align",
+   "latex": "Z_{\\mathrm{cache}} \\;&=\\; q \\,K_{\\mathrm{cache}}^\\top / \\sqrt{d_{qk}} ,\\;\\\\ Z_{\\mathrm{specs}} \\;&=\\; q \\, K_{\\mathrm{specs}}^\\top / \\sqrt{d_{qk}}."
+  },
+  {
+   "env": "align",
+   "latex": "\\mathrm{LSE}_{\\mathrm{cache}} &= \\log\\left(\\sum\\nolimits_{j=1}^{N} \\exp\\left(Z_{\\mathrm{cache}}^{(j)}\\right)\\right),\\nonumber\\\\ \\; \\mathrm{LSE}_{\\mathrm{specs}} &= \\log\\left(\\sum\\nolimits_{j=1}^{M} \\exp\\left(Z_{\\mathrm{specs}}^{(j)}\\right)\\right), \\,"
+  },
+  {
+   "env": "align",
+   "latex": "o_{\\mathrm{cache}} &= \\frac{\\sum_{j=1}^{N} \\exp\\left(Z_{\\mathrm{cache}}^{(j)}\\right) V_{\\mathrm{cache}}^{(j)}}{\\exp\\left(\\mathrm{LSE}_{\\mathrm{cache}}\\right)}, \\nonumber\\\\ o_{\\mathrm{specs}} &= \\frac{\\sum_{j=1}^{M} \\exp\\left(Z_{\\mathrm{specs}}^{(j)}\\right) V_{\\mathrm{specs}}^{(j)}}{\\exp\\left(\\mathrm{LSE}_{\\mathrm{specs}}\\right)}."
+  },
+  {
+   "env": "align",
+   "latex": "N_{\\mathrm{num}} &= \\sum_{j=1}^{N} \\exp\\bigl(Z_{\\mathrm{cache}}^{(j)}\\bigr) V_{\\mathrm{cache}}^{(j)}\\nonumber\\\\ &+ \\sum_{j=1}^{M} \\exp\\bigl(Z_{\\mathrm{specs}}^{(j)}\\bigr) V_{\\mathrm{specs}}^{(j)}, \\nonumber\\\\[0.5em] D_{\\mathrm{den}} &= \\exp\\bigl(\\mathrm{LSE}_{\\mathrm{cache}}\\bigr) + \\exp\\bigl(\\mathrm{LSE}_{\\mathrm{specs}}\\bigr), \\nonumber\\\\[0.5em] o_{\\mathrm{merge}} &= \\frac{N_{\\mathrm{num}}}{D_{\\mathrm{den}}}."
+  },
+  {
+   "env": "align",
+   "latex": "o_{\\mathrm{merge}} =& o_{\\mathrm{cache}} \\cdot\\exp\\bigl(\\mathrm{LSE}_{\\mathrm{cache}} - \\mathrm{LSE}_{\\mathrm{merge}}\\bigr) \\nonumber\\\\+& o_{\\mathrm{specs}} \\cdot \\exp\\bigl(\\mathrm{LSE}_{\\mathrm{specs}} - \\mathrm{LSE}_{\\mathrm{merge}}\\bigr)."
+  },
+  {
+   "env": "display",
+   "latex": "O_{\\geq j} = \\att \\bigl(Q_{\\geq j}, \\,K_{< l-j}, \\,V_{< l-j}\\bigr)."
+  },
+  {
+   "env": "display",
+   "latex": "\\begin{aligned} \\mathrm{LSE}_{\\mathrm{merge}} &= \\log\\Bigl(\\exp\\bigl(\\mathrm{LSE}_{\\mathrm{cache}}\\bigr) + \\exp\\bigl(\\mathrm{LSE}_{\\mathrm{specs}}\\bigr)\\Bigr), \\end{aligned}"
+  },
+  {
+   "env": "display",
+   "latex": "\\begin{aligned} O_{\\mathrm{merge}} =\\; &O_{\\mathrm{cache}} \\cdot \\exp\\bigl(\\mathrm{LSE}_{\\mathrm{cache}} - \\mathrm{LSE}_{\\mathrm{merge}}\\bigr)\\\\ +\\; &O_{\\mathrm{specs}} \\cdot \\exp\\bigl(\\mathrm{LSE}_{\\mathrm{specs}} - \\mathrm{LSE}_{\\mathrm{merge}}\\bigr). \\end{aligned}"
+  }
+ ],
+ "specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences": [
+  {
+   "env": "equation",
+   "latex": "\\frac{T_{avg}^{sd}}{T_t} = \\frac{1}{\\tau(n,d)} \\left( \\frac{d \\cdot T_d}{T_t} + \\frac{T_v(n)}{T_t} \\right)"
+  }
+ ],
+ "a-survey-of-large-language-models": [
+  {
+   "env": "equation",
+   "latex": "\\text{LLM} \\big(I, \\underbrace{ f(x_1, y_1), \\dots, f(x_k, y_k)}_{\\text{demonstrations}}, f(\\underbrace{x_{k+1}}_{\\text{input}}, \\underbrace{\\vphantom{\\hat{y}_{k+1}} \\_\\_\\_}_{\\text{answer}}) \\big) \\rightarrow \\hat{y}_{k+1}."
+  },
+  {
+   "env": "equation",
+   "latex": "L(N, D) = E + \\frac{A}{N^\\alpha} + \\frac{B}{D^{\\beta}},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\Theta = \\{\\theta_i = b^{-2(i-1)/d} | i \\in \\{1, 2, \\dots , d/2 \\}\\}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\lambda_i = 2\\pi b^{2(i-1)/d}=2 \\pi / \\theta_i."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{LM}(\\mathbf{x})=\\sum_{i=1}^n \\log P(x_i|\\mathbf{x}_{<i})."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{DAE}(\\mathbf{x})= \\log P(\\Tilde{\\mathbf{x}}|\\mathbf{x}_{\\backslash \\Tilde{\\mathbf{x}}})."
+  },
+  {
+   "env": "equation",
+   "latex": "{ x_i = \\underset{x}{\\arg\\max} P(x |\\mathbf{x}_{<i}),}"
+  },
+  {
+   "env": "equation",
+   "latex": "x_i \\sim P(x|\\mathbf{x}_{<i})."
+  },
+  {
+   "env": "equation",
+   "latex": "P(x_j|\\mathbf{x}_{<i}) = \\frac{\\exp{(l_j/t)}}{\\sum_{j'} \\exp{(l_{j'}/t)}},"
+  },
+  {
+   "env": "eqnarray",
+   "latex": "L(N) &=& \\bigg(\\frac{N_c}{N}\\bigg)^{\\alpha_N}, \\text{~~~} \\alpha_N \\sim 0.076, N_c \\sim 8.8\\times 10^{13} \\\\\\nonumber L(D) &=& \\bigg(\\frac{D_c }{D}\\bigg)^{\\alpha_D}, \\text{~~~} \\alpha_D \\sim 0.095, D_c \\sim 5.4\\times 10^{13} \\\\\\nonumber L(C) &=& \\bigg(\\frac{C_c}{C}\\bigg)^{\\alpha_C}, \\text{~~~} \\alpha_C \\sim 0.050, C_c \\sim 3.1\\times 10^{8}\\nonumber"
+  },
+  {
+   "env": "eqnarray",
+   "latex": "N_{opt}(C)=G \\bigg(\\frac{C}{6}\\bigg)^a, \\text{~~~} D_{opt}(C)=G^{-1} \\bigg(\\frac{C}{6}\\bigg)^b,"
+  }
+ ]
 }

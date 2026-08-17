@@ -83,10 +83,15 @@ tags: [training]
 > [!quote] caption
 > The MFU becomes stable after addressing the stragglers and problematic code segments. Different colors represent different training trials with the same setup. executing diagnostic tests is less than 10 minutes. Moreover, the system can catch up to the training progress prior to the crash within 15 minutes from the latest checkpoints, maintain- ing over 90% effective training time rate, which is c
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.3 `y = x+MLP(LN(x+Attention(LN(x))))`
-- p.3 `y = x+MLP(LN(x))+Attention(LN(x))`
+$$
+\begin{aligned} y = x + \text{MLP}(\text{LN}(x + \text{Attention}(\text{LN}(x)))) \end{aligned}
+$$
+
+$$
+\begin{aligned} y = x + \text{MLP}(\text{LN}(x)) + \text{Attention}(\text{LN}(x)) \end{aligned}
+$$
 
 ## 相关论文
 

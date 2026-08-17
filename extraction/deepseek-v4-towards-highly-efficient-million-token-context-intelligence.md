@@ -36,12 +36,79 @@ tags: [long-context]
 > [!tip] 技术解读（多模态）
 > 【MiniMax 解读】DeepSeek-V4 细粒度 EP(Fig.5)：MoE 层拆 Dispatch/Linear-1/Linear-2/Combine 四段。Comet 仅粗粒度重叠 Dispatch↔L1、L2↔Combine；本方案把 expert 再切 wave，一波 dispatch 完即开算、下一波并行 dispatch→稳态下「当前波计算+下一波 token 传输+上一波结果回送」三路并发=连续计算-通信流水。因单层通信<计算，融合成单流水 kernel 藏住互连延迟→低带宽互连也不掉吞吐。架构核心图，与 MoE/EP 相关。
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.8 `<×< | "1 < = 1<, 1)`
-- p.8 `ized: ˆ- : = RMSNorm(vec(- :)) ∈R 1×<hc3. Then, we follow the conventional HC to generate the`
-- p.10 `B = hB· ,`
-- p.14 `B= ∇, LB(,`
+$$
+X_{l+1} = B_{l} X_l + C_{l} \mathcal{F}_{l}(A_{l} X_l),
+$$
+
+$$
+B_l \in \mathcal{M} \coloneq \{ M \in \mathbb{R}^{n \times n} \mid M\mathbf{1}_n = \mathbf{1}_n, \; \mathbf{1}_n^T M = \mathbf{1}_n^T, \; M \geq 0 \}.
+$$
+
+$$
+M^{(t)} = \mathcal{T}_r(\mathcal{T}_c(M^{(t-1)})),
+$$
+
+$$
+\mathcal{C}^{\text{SprsComp}}_t = \left\{ C^{\text{Comp}}_{s} ~\Big|~ I_{t, s} \in \operatorname{Top-k} (I_{t, :}) \right\}.
+$$
+
+$$
+[\mathbf{q}_{t, 1};\mathbf{q}_{t, 2};...;\mathbf{q}_{t, n_{h}}] = \mathbf{q}_{t} = \mathbf{c}_{t}^{Q} \cdot W^{UQ},
+$$
+
+$$
+\mathbf{o}_{t,i} = \operatorname{CoreAttn}\left( \texttt{query=}\mathbf{q}_{t,i}, \texttt{key=}\mathcal{C}^{\text{SprsComp}}_t, \texttt{value=}\mathcal{C}^{\text{SprsComp}}_t \right),
+$$
+
+$$
+s_{h, i, j} = \frac{\operatorname{Exp}(z_{h, i, j})}{\sum_k \operatorname{Exp}(z_{h, i, k}) + \operatorname{Exp}(z^{\prime}_h)},
+$$
+
+$$
+M_k = a M_{k-1} + b (M_{k-1} M_{k-1}^T) M_{k-1} + c (M_{k-1} M_{k-1}^T)^2 M_{k-1}.
+$$
+
+$$
+\mathcal{L}_{\text{OPD}}(\theta) = \sum_{i=1}^{N} w_i \cdot \text{D}_{\text{KL}} \left( \pi_{\theta} \parallel \pi_{E_i} \right).
+$$
+
+$$
+\tilde{A}_l &= \alpha_l^\mathrm{pre} \cdot (\hat{X}_l W^\mathrm{pre}_l) + S_l^\mathrm{pre}, \\ \tilde{B}_l &= \alpha_l^\mathrm{res} \cdot \operatorname{Mat}(\hat{X}_l W^\mathrm{res}_l) + S_l^\mathrm{res}, \\ \tilde{C}_l &= \alpha_l^\mathrm{post} \cdot (\hat{X}_l W^\mathrm{post}_l)^T + S_l^\mathrm{post},
+$$
+
+$$
+A_l &= \sigma(\tilde{A}_l), \\ C_l &= 2\sigma(\tilde{C}_l).
+$$
+
+$$
+C^{a} &= H \cdot W^{aKV}, \quad C^{b} = H \cdot W^{bKV}, \\ Z^{a} &= H \cdot W^{aZ}, \quad~~ Z^{b} = H \cdot W^{bZ},
+$$
+
+$$
+[S^a_{mi:m(i+1)-1};S^b_{m(i-1):mi-1}] &= \operatorname{Softmax}_{\text{row}}([Z^{a}_{mi:m(i+1)-1} + B^a;Z^{b}_{m(i-1):mi-1} + B^b]), \\ C^{\text{Comp}}_{i} &= \sum_{j=mi}^{m(i+1)-1} S^a_j \odot C^{a}_{j} + \sum_{j=m(i-1)}^{mi-1} S^b_j \odot C^{b}_{j},
+$$
+
+$$
+\mathbf{c}_{t}^{Q} &= \mathbf{h}_{t} \cdot W^{DQ}, \\ [\mathbf{q}_{t, 1}^{I};\mathbf{q}_{t, 2}^{I};...;\mathbf{q}_{t, n_{h}^{I}}^{I}] = \mathbf{q}_{t}^{I} &= \mathbf{c}_{t}^{Q} \cdot W^{IUQ},
+$$
+
+$$
+[w_{t, 1}^I; w_{t, 2}^I; ...; w_{t, n_{h}^{I}}^I] = \mathbf{w}_t^I & = \mathbf{h}_{t} \cdot W^w, \\ I_{t, s} & = \sum_{h=1}^{n_h^I} w_{t, h}^I \cdot \text{ReLU}\left(\mathbf{q}^{I}_{t, h} \cdot K^{\text{IComp}}_{s}\right),
+$$
+
+$$
+C &= H \cdot W^{KV}, \\ Z &= H \cdot W^{Z},
+$$
+
+$$
+S_{m^{\prime}i:m^{\prime}(i+1)-1} &= \operatorname{Softmax}_{\text{row}}(Z_{m^{\prime}i:m^{\prime}(i+1)-1} + B), \\ C^{\text{Comp}}_{i} &= \sum_{j=m^{\prime}i}^{m^{\prime}(i+1)-1} S_j \odot C_{j}.
+$$
+
+$$
+\mathbf{c}_{t}^{Q} &= \mathbf{h}_{t} \cdot W^{DQ}, \\ [\mathbf{q}_{t, 1};\mathbf{q}_{t, 2};...;\mathbf{q}_{t, n_{h}}] = \mathbf{q}_{t} &= \mathbf{c}_{t}^{Q} \cdot W^{UQ},
+$$
 
 ## 相关论文
 

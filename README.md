@@ -1,25 +1,30 @@
 # AICO-knowledge
 
-收集整理 AI 相关技术论文、代码仓来源、分析文章等，建成可「快速插图 + 引用」的知识库。
+收集整理 AI 相关技术论文、代码仓来源、分析文章等，建成可「快速插图 + 引用」的深度加工知识库（图/公式/全文均可被工程直接取用，Obsidian 图谱化 + RAG 友好）。
 
 ## 目录
 
 ```
 AICO-knowledge/
-├── papers/                       # 源 PDF（50 篇，命名 <slug>.pdf）
+├── papers/                       # 源 PDF（61 篇，命名 <slug>.pdf）
 ├── papers_effective.md           # ⭐ 主干净索引（论文清单 + 链接 + 本地文件状态）
 ├── papers_download_list.txt      # slug | abs_url | pdf_url
 ├── archive/                      # 原始素材（清洗前索引、Moonlight 剪藏原文）
 ├── skills/paper-extraction/      # ⭐ 可复用 skill：清洗→校验下载→深度萃取→插图引用
-│   ├── SKILL.md                  #   工作流 + 决策树 + 约定
-│   ├── extract_phase1.py         #   全量深度萃取（文本+图表+caption，merge MiniMax）
-│   └── chunk_download.py         #   arxiv 大文件分块续传
+│   ├── SKILL.md                  #   工作流 + 决策树 + 约定 + 源列表全自主同步流程
+│   ├── extract_phase1.py         #   全量深度萃取（文本+图表+公式+相关论文+MOC+manifest）
+│   ├── eprint_formulas.py        #   arxiv e-print LaTeX 源公式抽取
+│   ├── chunk_download.py         #   arxiv 分块续传下载（jobs 文件/命令行驱动）
+│   └── verify_pdfs.py            #   PDF 体检（截断/损坏/缺失/孤儿）
 └── extraction/                   # 生成的知识库
-    ├── <slug>.md                 #   每篇结构化解析（Obsidian-flavored）
-    ├── fulltext/<slug>.txt       #   全文纯文本（grep 检索）
+    ├── <slug>.md                 #   每篇结构化解析（Obsidian-flavored：摘要/图表/公式/相关论文）
+    ├── fulltext/<slug>.txt       #   全文纯文本（grep 检索 / RAG chunk 源）
     ├── assets/<slug>-pNN.png     #   图表页渲染（150 DPI）
     ├── figures_index.md          #   ⭐ 图表素材索引（精选深度解读 + 主题分类）
-    ├── minimax_captions.json     #   MiniMax 多模态架构图技术解读
+    ├── MOC.md                    #   🗺️ 主题图谱导航（wikilink 节点，Obsidian 图谱可视化）
+    ├── papers.json               #   机器可读 manifest（RAG/程序化摄取入口）
+    ├── formulas.json             #   LaTeX 源公式库（$$ 块可直接粘贴）
+    ├── minimax_captions.json     #   架构图多模态深度解读
     └── README.md                 #   知识库使用说明
 ```
 
@@ -27,15 +32,22 @@ AICO-knowledge/
 
 **写技术报告/论文总结时插图引用**：开 `extraction/figures_index.md` → 「⭐ 精选架构图」挑图 → `![[assets/...png]]` 插入 → `[论文, Fig.N, p.X, arXiv:ID]` 引用。详见 `extraction/README.md`。
 
-**新增论文/刷新**：按 `skills/paper-extraction/SKILL.md` 的 5 阶段工作流走（清洗→下载→萃取→MiniMax 解读→推送）。
+**引用公式**：单篇 MD 的「关键公式」节是 arxiv LaTeX 源抽出的 `$$` 块，直接粘贴即渲染。
+
+**图谱浏览**：Obsidian 打开本仓，`extraction/MOC.md` 是总览节点；单篇 MD 内「相关论文」交叉链接自动成网。
+
+**RAG 摄取**：读 `extraction/papers.json` manifest → 按 `fulltext/` 路径 chunk。
+
+**新增论文/刷新**：更新源头列表后按 `skills/paper-extraction/SKILL.md` 走（含「Source-list sync」全自主流程：解析→diff→解析 arxiv ID→下载→体检→萃取→解读→推送）。
 
 **其他知识库复用此 skill**：把 `skills/paper-extraction/` 拷到任意论文仓即可（脚本路径相对，clone 即用）。
 
 ## 文档
-- `skills/paper-extraction/SKILL.md` — 操作手册（5 阶段工作流 + 决策树 + 约定 + 踩坑/效率）
-- `EXPERIENCE.md` — 案例复盘（55 篇建库全过程踩坑与解法）
+- `skills/paper-extraction/SKILL.md` — 操作手册（5 阶段工作流 + 源列表同步 + 决策树 + 约定 + 踩坑/效率）
+- `EXPERIENCE.md` — 案例复盘（建库 + 增量刷新全过程踩坑与解法）
 
 ## 现状
 
-- 55 篇论文全部深度萃取（340 张图、17 张核心架构图 MiniMax 多模态深度解读）
+- 61 篇论文全部深度萃取（515 张图、22 张核心架构图多模态深度解读、LaTeX 公式库）
 - 全部 PDF 校验有效（verify_pdfs.py 报 0 截断）；chunk_download.py（256KB 块+15 重试）解决了 arxiv 大文件截断
+- 2026-08-16 增量：Kimi K3 / PrfaaS / LongSpec / SpecExtend / LLM 综述（源库 58 条 diff 出 5 新，2 条歧义待确认）

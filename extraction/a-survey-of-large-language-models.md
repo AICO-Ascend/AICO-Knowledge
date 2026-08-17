@@ -73,23 +73,51 @@ tags: []
 > [!quote] caption
 > Hallucination widely occurs in existing LLMs, even the most superior LLMs such as GPT-4 [46]. Furthermore, existing work shows that LLMs encounter difficulties in recognizing the hallucinated con- tent in text [604], even the powerful ChatGPT. Additionally, beyond language tasks, a recent study has shown that large vision-language models (LVLM) also face challenges with hallucination, i.e., genera
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.4 `where E = 1.69, A = 406.4, B = 410.7, α = 0.34 and`
-- p.4 `β = 0.28. By optimizing the loss L(N, D) under the con-`
-- p.4 `α+β , b =`
-- p.24 `GeLU(x) = 0.5x ⊗[1 + erf(x/`
-- p.24 `Swish(x) = x ⊗sigmoid(x)`
-- p.24 `SwiGLU(x1, x2) = Swish(x1) ⊗x2`
-- p.24 `GeGLU(x1, x2) = GeLU(x1) ⊗x2`
-- p.25 `Θ = {θi = b−2(i−1)/d|i ∈{1, 2, . . . , d/2}}.`
-- p.25 `λi = 2πb2(i−1)/d = 2π/θi.`
-- p.26 `LDAE(x) = log P(˜x|x\˜x).`
-- p.28 `monly, its hyper-parameters are set as follows: β1 = 0.9,`
-- p.28 `β2 = 0.95 and ϵ = 10−8. Meanwhile, the Adafactor op-`
-- p.28 `are set as: β1 = 0.9 and β2 = 1.0 −k−0.8, where k denotes`
-- p.43 `rank decomposition matrices, i.e., ∆W = A · B⊤, where`
-- p.79 `According to the formula θi = b−2(i−1)/d in Equation 4,`
+$$
+\text{LLM} \big(I, \underbrace{ f(x_1, y_1), \dots, f(x_k, y_k)}_{\text{demonstrations}}, f(\underbrace{x_{k+1}}_{\text{input}}, \underbrace{\vphantom{\hat{y}_{k+1}} \_\_\_}_{\text{answer}}) \big) \rightarrow \hat{y}_{k+1}.
+$$
+
+$$
+L(N, D) = E + \frac{A}{N^\alpha} + \frac{B}{D^{\beta}},
+$$
+
+$$
+\Theta = \{\theta_i = b^{-2(i-1)/d} | i \in \{1, 2, \dots , d/2 \}\}.
+$$
+
+$$
+\lambda_i = 2\pi b^{2(i-1)/d}=2 \pi / \theta_i.
+$$
+
+$$
+\mathcal{L}_{LM}(\mathbf{x})=\sum_{i=1}^n \log P(x_i|\mathbf{x}_{<i}).
+$$
+
+$$
+\mathcal{L}_{DAE}(\mathbf{x})= \log P(\Tilde{\mathbf{x}}|\mathbf{x}_{\backslash \Tilde{\mathbf{x}}}).
+$$
+
+$$
+{ x_i = \underset{x}{\arg\max} P(x |\mathbf{x}_{<i}),}
+$$
+
+$$
+x_i \sim P(x|\mathbf{x}_{<i}).
+$$
+
+$$
+P(x_j|\mathbf{x}_{<i}) = \frac{\exp{(l_j/t)}}{\sum_{j'} \exp{(l_{j'}/t)}},
+$$
+
+$$
+L(N) &=& \bigg(\frac{N_c}{N}\bigg)^{\alpha_N}, \text{~~~} \alpha_N \sim 0.076, N_c \sim 8.8\times 10^{13} \\\nonumber L(D) &=& \bigg(\frac{D_c }{D}\bigg)^{\alpha_D}, \text{~~~} \alpha_D \sim 0.095, D_c \sim 5.4\times 10^{13} \\\nonumber L(C) &=& \bigg(\frac{C_c}{C}\bigg)^{\alpha_C}, \text{~~~} \alpha_C \sim 0.050, C_c \sim 3.1\times 10^{8}\nonumber
+$$
+
+$$
+N_{opt}(C)=G \bigg(\frac{C}{6}\bigg)^a, \text{~~~} D_{opt}(C)=G^{-1} \bigg(\frac{C}{6}\bigg)^b,
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/a-survey-of-large-language-models.txt`（860409 字符）供引用检索。

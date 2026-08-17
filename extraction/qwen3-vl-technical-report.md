@@ -24,6 +24,12 @@ tags: [multimodal]
 ## 图表（原文 caption + 页码）
 _未检测到带 caption 的 figure_
 
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
+
+$$
+\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
 ## 相关论文
 
 - [[kimi-vl-technical-report]] — KIMI-VL TECHNICAL REPORT

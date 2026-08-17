@@ -56,23 +56,59 @@ tags: [speculative]
 > [!quote] caption
 > Each sampled block includes an anchor position and multiple future token positions. The anchor is retained as block context and excluded from the loss, while loss is applied only to future token positions within each block. allowing the causal draft head to condition on rich target-model features while keeping the target model frozen.
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.2 `MATH-500, and remaining effective on MT-Bench with τ = 5.9 and over 4× speedup. We further`
-- p.2 `up to τ = 10.7 and more than 9.5× end-to-end speedup.`
-- p.3 `α = 0.70`
-- p.3 `α = 0.75`
-- p.3 `α = 0.80`
-- p.3 `α = 0.85`
-- p.3 `α = 0.90`
-- p.3 `α = 0.95`
-- p.3 `E[#tokens] = 1 −αN+1`
-- p.5 `Attn(Qv, K, V ) = softmax`
-- p.5 `q(π(v) | x) =`
-- p.5 `vocabulary V. We define temperature-normalized distributions ˜q(m) = softmax(z(m)`
-- p.5 `˜p(m) = softmax(z(m)`
-- p.5 `s(π(v)) =`
-- p.6 `αt = α(yt; q(· | x, y<t), p(· | x, y<t)) ,`
+$$
+\mathbb{E}[\#\mathrm{tokens}] = \frac{1-\alpha^{N+1}}{1-\alpha},
+$$
+
+$$
+\mathrm{Speedup} = \frac{1-\alpha^{N+1}} {(1-\alpha)(N c + 1)}.
+$$
+
+$$
+q_{\mathrm{sur}}(y_{1:k}\mid x) \propto \prod_{i=1}^{k} r_i(y_i\mid x),
+$$
+
+$$
+p(y_{1:k}\mid x) = \prod_{i=1}^{k} p(y_i \mid x, y_{<i}).
+$$
+
+$$
+M_{v,u} = \begin{cases} 0, & \text{if } u \in \mathrm{Anc}(v)\cup\{v\}, \\ -\infty, & \text{otherwise}, \end{cases}
+$$
+
+$$
+\mathrm{Attn}(Q_v,K,V) = \mathrm{softmax} \left( \frac{Q_vK^\top}{\sqrt{d}} + M_v \right)V.
+$$
+
+$$
+q(\pi(v)\mid x) = \prod_{u\in \pi(v)} q(y_u \mid x, h_x^{o}, \pi_{<u}),
+$$
+
+$$
+\mathcal{L}_{\mathrm{FKL}}^{(m)} = D_{\mathrm{KL}} \left( \tilde{p}^{(m)} \,\middle\|\, \tilde{q}^{(m)} \right).
+$$
+
+$$
+\mathcal{L}_{\mathrm{train}} = T_{\mathrm{KD}}^2 \frac{ \sum_m w_m \mathcal{L}_{\mathrm{FKL}}^{(m)} }{ \sum_m w_m },
+$$
+
+$$
+s(\pi(v)) = \sum_{u\in \pi(v)} \log q(y_u \mid x, h_x^o, \pi_{<u}),
+$$
+
+$$
+A_t \sim \mathrm{Bernoulli}(\alpha_t), \qquad \alpha_t = \alpha\!\left( y_t;\, q(\cdot\mid x,y_{<t}), p(\cdot\mid x,y_{<t}) \right),
+$$
+
+$$
+\alpha_t = \min\!\left( 1,\, \frac{ p(y_t\mid x,y_{<t}) }{ q(y_t\mid x,y_{<t}) } \right),
+$$
+
+$$
+c(N,L) = \frac{T_{\mathrm{draft}}(N,L)/N} {T_{\mathrm{verify}}(N,L)} = \frac{T_{\mathrm{draft}}(N,L)} {N\,T_{\mathrm{verify}}(N,L)}.
+$$
 
 ## 相关论文
 

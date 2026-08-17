@@ -63,11 +63,23 @@ tags: [training]
 > [!quote] caption
 > Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel and 64-way data parallel. C. Text Samples
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.5 `Hutter, 2019) λ = 0.01. Additionally, we use global gradi-`
-- p.6 `by 128 × 8 = 1024, resulting in a padded vocabulary size`
-- p.15 `PPL = exp(−1`
+$$
+Y = \textrm{GeLU}(XA)
+$$
+
+$$
+X = [X_1, X_2], \ A=\begin{bmatrix} A_1 \\ A_2 \end{bmatrix}.
+$$
+
+$$
+[Y_1, Y_2]= [\textrm{GeLU}(XA_1), \textrm{GeLU}(XA_2)]
+$$
+
+$$
+PPL= \exp({-\frac{1}{T_o}\sum_{t}^{T} \text{log} P(t|0:t-1))}
+$$
 
 ## 相关论文
 

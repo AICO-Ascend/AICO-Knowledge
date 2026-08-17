@@ -83,9 +83,35 @@ tags: [multimodal, disaggregated-serving]
 > [!quote] caption
 > Breakdown of latency for encode and prefill stages using the InternVL2-8B model across varying numbers of images per request. Subfigures (a) and (b) show results on GPU and NPU, respectively. Light green denotes encode latency and light blue indicates prefill latency. NPUs demonstrate distinct latency characteristics compared to GPUs as input size increases. E.3. SLO Criteria
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.7 `cally, λ = 0.25 for MiniCPM-V 2.6 and λ = 0.08 for both`
+$$
+\max_{(\mathbf{p},\mathbf{b},\mathbf{s}) \in \mathcal{X}} f(\mathbf{p},\mathbf{b},\mathbf{s}) - \beta cost(\mathbf{p})
+$$
+
+$$
+\max_{(\mathbf{p}, \mathbf{b}, \mathbf{s}) \in \mathcal{X}} f(\mathbf{p}, \mathbf{b}, \mathbf{s}) - \beta \cdot \text{cost}(\mathbf{p})
+$$
+
+$$
+v_t^e = E(i_m)
+$$
+
+$$
+v_t^p = \psi_{EP}(v_t^e)
+$$
+
+$$
+kv_1^p, o_1^p = P(v_t, i_p)
+$$
+
+$$
+kv_1^d, o_1^d = \psi_{PD}(kv_1^p, o_1^p)
+$$
+
+$$
+kv_{t+1}^d, o_{t+1}^d = D(kv_t^d, o_t^d)
+$$
 
 ## 相关论文
 

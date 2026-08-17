@@ -38,14 +38,43 @@ tags: []
 > [!quote] caption
 > The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static patterns. In English, we observe strong activations on multi-token named entities (e.g., “Alexander the Great”, “the Milky Way”) and formulaic phrases (e.g., “By the way”, “Princess of Wales”). This behavior generalizes effectively across languages. In
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.3 `Formally, given an input sequence 𝑋= (𝑥1, . . . , 𝑥𝑇) and hidden states H(ℓ) ∈R𝑇×𝑑at layer ℓ,`
-- p.4 `The gated output is defined as ˜v𝑡= 𝛼𝑡· v𝑡. This design enforces semantic alignment: if the`
-- p.7 `• 𝐶= 2 × 1020 FLOPs: 𝑃tot ≈5.7B and 𝑃act = 568M. The baseline (𝜌= 1) has a total of 106 experts.`
-- p.7 `• 𝐶= 6 × 1020 FLOPs: 𝑃tot ≈9.9B and 𝑃act = 993M. The baseline (𝜌= 1) has a total of 99 experts.`
-- p.8 `regime (𝐶= 6 × 1020), validation loss improves from 1.7248 (at 𝜌= 100%) to 1.7109 near the`
-- p.16 `Val Loss = 1.768, a substantial improvement over the MoE baseline (Δ = 0.04). All structural`
+$$
+\text{CKA}(K, L) = \frac{\text{HSIC}(K, L)}{\sqrt{\text{HSIC}(K, K)\text{HSIC}(L, L)}}
+$$
+
+$$
+a_j = \frac{\sum_{i \in \mathcal{I}_j} S_{i,j} \cdot i}{\sum_{i \in \mathcal{I}_j} S_{i,j}}, \quad \text{where } \mathcal{I}_j = \mathop{\text{argtop}k}_{i} (S_{i,j}).
+$$
+
+$$
+z_{t,n,k} \triangleq \phi_{n,k}(g_{t,n}), \quad \mathbf{e}_{t,n,k} = \mathbf{E}_{n,k}[z_{t,n,k}].
+$$
+
+$$
+\mathbf{e}_t \triangleq \mathop{\Vert}_{n=2}^{N} \mathop{\Vert}_{k=1}^{K} \mathbf{e}_{t,n,k}.
+$$
+
+$$
+\mathbf{k}_t = \mathbf{W}_K \mathbf{e}_t, \quad \mathbf{v}_t = \mathbf{W}_V \mathbf{e}_t
+$$
+
+$$
+\alpha_t = \sigma\left( \frac{\text{RMSNorm}(\mathbf{h}_t)^\top \text{RMSNorm}(\mathbf{k}_t)}{\sqrt{d}} \right).
+$$
+
+$$
+\mathbf{Y} = \text{SiLU}\left( \text{Conv1D}( \text{RMSNorm}(\tilde{\mathbf{V}}) ) \right) + \tilde{\mathbf{V}},
+$$
+
+$$
+\alpha_t^{(m)} = \sigma\left( \frac{\text{RMSNorm}(\mathbf{h}_t^{(m)})^\top \text{RMSNorm}(\mathbf{W}_K^{(m)} \mathbf{e}_t)}{\sqrt{d}} \right).
+$$
+
+$$
+P_{\mathrm{MoE}}^{(\mathrm{sparse })} = \rho\, P_{\mathrm{sparse}}, \qquad P_{\mathrm{Engram}} = (1-\rho)\, P_{\mathrm{sparse}}.
+$$
 
 ## 全文文本
 全文已存 `extraction/fulltext/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models.txt`（100228 字符）供引用检索。
