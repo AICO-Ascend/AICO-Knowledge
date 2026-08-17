@@ -60,6 +60,32 @@ python3 skills/paper-extraction/extract_phase1.py  # 重跑 Phase 1（脚本已�
 ```
 MiniMax 深度解读增量加到 `extraction/minimax_captions.json`（key=图片相对路径 `assets/xxx.png` 或 `extraction/assets/xxx.png`），重跑脚本自动 merge。
 
+## 外部工程接入（其他 project 怎么用）
+
+本仓在 4 台服务器共享的 NFS（`/mnt/project/g00952465/AICO-knowledge`）上，任何工程可按**绝对路径**直接读取，无需拷贝。
+
+**统一查询入口 `kb_query.py`**（不要手 grep）：
+
+```bash
+KB=/mnt/project/g00952465/AICO-knowledge/skills/paper-extraction/kb_query.py
+python3 $KB stats                        # 库总量
+python3 $KB search speculative decoding  # 论文检索（标题+全文打分排序）
+python3 $KB fig architecture             # 按 caption 找图 → embed 路径+引用串
+python3 $KB formula softmax              # 按内容找 LaTeX 公式（$$ 块直贴）
+python3 $KB topics                       # 主题 → 论文映射
+python3 $KB info <slug>                  # 单篇全卡片（路径/图数/公式数）
+# 全部子命令支持 --json（agent/RAG 程序化消费）
+```
+
+**典型场景**：
+- 写报告插图：`kb_query.py fig <关键词>` → 拿 `![[assets/...png]]` + `[slug, Fig.N, p.X]` 引用 → arxiv 号在 `papers.json` 或 MD frontmatter。
+- 引用公式：`kb_query.py formula <关键词>` → 复制 `$$` 块。
+- RAG 摄取：读 `extraction/papers.json` manifest → 按 `fulltext` 字段 chunk；或定时 `kb_query.py search --json`。
+- Obsidian 图谱：把本仓加为 vault，`MOC.md` 为入口节点。
+
+**Agent（Claude Code 等）提示词模板**：
+> 论文知识库在 /mnt/project/g00952465/AICO-knowledge，检索用 `python3 skills/paper-extraction/kb_query.py <search|fig|formula|topics> <kw> [--json]`；图片在 extraction/assets/，引用格式 [slug, Fig.N, p.X, arXiv:ID]。
+
 ## 当前覆盖
 
 - **61 篇论文**全文 + 图表 caption 萃取（515 张图）
