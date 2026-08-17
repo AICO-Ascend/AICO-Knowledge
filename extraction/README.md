@@ -1,16 +1,20 @@
 # 论文深度解析知识库（extraction/）
 
-> 对 `papers/` 下 50 篇论文做深度解析萃取，供技术报告撰写 / 论文总结时**快速插入合适技术图片 + 引用出处**。
+> 对 `papers/` 下 61 篇论文做深度解析萃取，供技术报告撰写 / 论文总结时**快速插入合适技术图片 + 引用出处**，同时是 Obsidian 图谱化 + RAG 友好的知识底座。
 
 ## 目录结构
 
 ```
 extraction/
-├── <slug>.md              # 每篇论文的结构化解析（Obsidian-flavored：properties + 图表 embed + caption）
-├── fulltext/<slug>.txt    # 每篇全文纯文本（供关键词检索 / 引用原文片段）
+├── <slug>.md              # 每篇论文的结构化解析（Obsidian-flavored：properties + 摘要 + 图表 + 公式 + 相关论文）
+├── fulltext/<slug>.txt    # 每篇全文纯文本（关键词检索 / 引用原文片段 / RAG chunk 源）
 ├── assets/<slug>-pNN.png  # 抽取的图表页渲染图（150 DPI）
-├── figures_index.md       # ⭐ 主索引：按主题分组 + 精选深度解读，插图入口
-└── minimax_captions.json  # MiniMax 多模态对关键架构图的技术解读（图路径 → 解读）
+├── figures_index.md       # ⭐ 主索引：⭐精选深度解读 + 按主题分组 + 按论文，插图入口
+├── MOC.md                 # 🗺️ 主题图谱导航（wikilink 节点，Obsidian 图谱视图可视化）
+├── papers.json            # 机器可读 manifest（61 篇全字段，RAG/程序化摄取入口）
+├── formulas.json          # LaTeX 源公式库（48 篇 390 条，$$ 块可直接粘贴）
+├── minimax_captions.json  # 关键架构图多模态深度解读（图路径 → 解读）
+└── sync_report.md         # 最近一次源列表同步报告（新增/待确认/失败/待解读）
 ```
 
 ## 快速插图 + 引用（工作流）
@@ -19,7 +23,7 @@ extraction/
 打开 `figures_index.md` → 「按主题分类」节。主题标签：`speculative` `sparse-attention` `kv-cache` `moe` `disaggregated-serving` `training` `rl` `multimodal` `long-context` `architecture`。
 
 ### 2. 优先用深度解读图
-`figures_index.md` 顶部「⭐ 精选架构图」是 MiniMax 多模态解读过的核心方法 / 架构图，带 `[!tip] 技术解读`，最适合插技术报告做论据。
+`figures_index.md` 顶部「⭐ 精选架构图」是多模态解读过的核心方法 / 架构图，带 `[!tip] 技术解读`，最适合插技术报告做论据。
 
 ### 3. 插入图片
 在 Obsidian / 任意 Markdown 里用 embed：
@@ -32,8 +36,11 @@ extraction/
 每张图条目都带：**论文标题 + Fig.N + 页码 + 论文 wikilink `[[<slug>]]` + arxiv 链接**（见对应 `<slug>.md` 的 properties）。引用模板：
 > 「EAGLE 通过在特征层自回归并引入超前一步的 token 序列解决特征预测不确定性 [EAGLE, Fig.4, arXiv:2401.15077]」
 
-### 5. 检索原文片段
-`grep -l "关键词" extraction/fulltext/*.txt` 找到论文，再 `<slug>.md` 看摘要 + 图表，或直接读 `<slug>.txt` 全文。
+### 5. 引用公式
+单篇 MD 的「关键公式」节是 arxiv e-print LaTeX 源抽出的 `$$` 块，直接粘贴即渲染；也可 `kb_query.py formula <关键词>` 跨库检索。
+
+### 6. 检索原文片段
+`grep -l "关键词" extraction/fulltext/*.txt` 找到论文，再 `<slug>.md` 看摘要 + 图表，或直接读 `<slug>.txt` 全文。（更省事：`kb_query.py search <关键词>`）
 
 ## 单篇 MD 结构
 
@@ -45,20 +52,34 @@ paper_num / title / authors / date / arxiv / pdf / slug / tags
 > [!abstract] 摘要（原文）
 ## 元信息（日期/作者/arxiv/页数）
 ## 图表（原文 caption + 页码）
-### Figure N (p.X)  ⭐MiniMax深度解读   ← 仅深度解读的图标⭐
+### Figure N (p.X)  ⭐深度解读          ← 仅深度解读的图标⭐
 ![[assets/...png]]
 > [!quote] caption
-> [!tip] 技术解读（MiniMax 多模态）   ← 仅⭐图有
-## 全文文本 → extraction/<slug>.txt
+> [!tip] 技术解读（多模态）             ← 仅⭐图有
+## 关键公式（LaTeX 源，可直接粘贴）      ← 有 e-print 的篇目
+$$ ... $$
+## 相关论文                            ← 自动交叉链接（共享标签+标题相似度）
+- [[<slug>]] — 标题
+## 全文文本 → extraction/fulltext/<slug>.txt
 ```
 
-## 重新生成
+## 重新生成 / 刷新
+
+日常刷新**不要**手动跑单个脚本，用一键编排：
 
 ```bash
 cd /mnt/project/g00952465/AICO-knowledge
-python3 skills/paper-extraction/extract_phase1.py  # 重跑 Phase 1（脚本已移至 skills/）（文本+图表+caption，merge MiniMax 解读）
+python3 skills/paper-extraction/sync_from_source.py --push   # 全链路+推送（幂等，无新增 ~40s）
 ```
-MiniMax 深度解读增量加到 `extraction/minimax_captions.json`（key=图片相对路径 `assets/xxx.png` 或 `extraction/assets/xxx.png`），重跑脚本自动 merge。
+
+手动单跑（调试/补做时）：
+```bash
+python3 skills/paper-extraction/extract_phase1.py    # 深度萃取（merge 解读+公式+MOC+manifest，幂等）
+python3 skills/paper-extraction/eprint_formulas.py   # LaTeX 公式（失败冷却 3 天，--retry-failed 强制）
+python3 skills/paper-extraction/verify_pdfs.py       # PDF 体检（修坏档前先跑）
+```
+
+深度解读增量加到 `extraction/minimax_captions.json`（key=图片相对路径 `extraction/assets/xxx.png`），重跑 `extract_phase1.py` 自动 merge。
 
 ## 外部工程接入（其他 project 怎么用）
 
@@ -86,19 +107,19 @@ python3 $KB info <slug>                  # 单篇全卡片（路径/图数/公�
 **Agent（Claude Code 等）提示词模板**：
 > 论文知识库在 /mnt/project/g00952465/AICO-knowledge，检索用 `python3 skills/paper-extraction/kb_query.py <search|fig|formula|topics> <kw> [--json]`；图片在 extraction/assets/，引用格式 [slug, Fig.N, p.X, arXiv:ID]。
 
-## 当前覆盖
+## 当前覆盖（2026-08-17）
 
-- **61 篇论文**全文 + 图表 caption 萃取（515 张图）
+- **61 篇论文**全文 + 图表 caption 萃取（**515 张图**），`verify_pdfs.py` 报 0 截断
 - **22 张核心架构图**多模态深度解读（IndexCache / EAGLE-1/3 / Medusa / DFlash / JetSpec / Sarathi / Mooncake / SGLang / Step-3 / DeepSeek-V4 / Kimi K3 / PrfaaS / LongSpec / SpecExtend 等）
-- 主索引 `figures_index.md`：精选区 + 主题分类 + 按论文；图谱导航 `MOC.md`；manifest `papers.json`
+- **48 篇 390 条** LaTeX 源公式（e-print 提取，$$ 直贴）
+- 图谱三件套：`MOC.md` 主题导航 + 单篇「相关论文」交叉链接 + `papers.json` manifest
+- 一键同步 `sync_from_source.py` 已上线实测（源库 58 条 → 自动识别 2 条待确认：Delivery Note、Reinforcement learning）
 
-### 全部完成（2026-08-16 刷新）
-61 篇全部深度萃取（515 图、22 张架构图多模态深度解读）。`verify_pdfs.py` 报 0 截断。
-新增：`MOC.md` 主题图谱导航（wikilink 节点，Obsidian 图谱可视化）、`papers.json` 机器可读 manifest（RAG 摄取用）、`formulas.json` LaTeX 源公式库（arxiv e-print 提取，可直接粘贴）、单篇 MD 内「相关论文」交叉链接。
+## 工具脚本（skills/paper-extraction/）
 
-2026-08-16 增量：#57 Kimi K3 / #58 PrfaaS / #59 LongSpec / #60 SpecExtend / #61 A Survey of LLMs（源列表 58 条 diff 出 7 条新条目，2 条歧义待确认：Delivery Note、Reinforcement learning）。
-
-## 工具脚本
-
-- `extract_phase1.py` — 全量深度萃取（文本+图表+caption，merge MiniMax 解读）
-- `chunk_download.py` — arxiv 大文件分块续传（应对网络截断）
+- `sync_from_source.py` — ⭐ 一键同步编排（日常唯一入口）
+- `kb_query.py` — 统一查询 CLI（search/fig/formula/topics/info/stats，--json）
+- `extract_phase1.py` — 全量深度萃取（merge 解读+公式+MOC+manifest）
+- `eprint_formulas.py` — arxiv e-print LaTeX 公式抽取
+- `chunk_download.py` — arxiv 分块续传下载（应对网络截断）
+- `verify_pdfs.py` — PDF 体检（截断/损坏/缺失/孤儿）
