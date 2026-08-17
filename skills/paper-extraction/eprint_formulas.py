@@ -133,11 +133,24 @@ def main():
     slugs = index_slugs()
     fj_path = OUT / "formulas.json"
     formulas = json.loads(fj_path.read_text(encoding="utf-8")) if fj_path.exists() else {}
-    todo = [(s, a) for s, a in slugs.items()
-            if (not only or s in only) and not (s in formulas and formulas[s])]
+    # failure marker: don't hammer arxiv for recently-failed eprints on every sync
+    fail_path = CACHE / "failed.json"
+    failed = json.loads(fail_path.read_text()) if fail_path.exists() else {}
+    RETRY_AFTER = 3 * 86400  # 3 days
+    now = time.time()
+    retry_all = "--retry-failed" in args
+    todo = []
+    for s, a in slugs.items():
+        if only and s not in only:
+            continue
+        if s in formulas:          # deterministic result (incl. empty) — never redo
+            continue
+        if not retry_all and now - failed.get(a, 0) < RETRY_AFTER:
+            continue
+        todo.append((s, a))
     if limit:
         todo = todo[:limit]
-    print(f"todo: {len(todo)} papers")
+    print(f"todo: {len(todo)} papers (failed-retry suppressed: {sum(1 for a in slugs.values() if now - failed.get(a, 0) < RETRY_AFTER)})")
 
     from concurrent.futures import ThreadPoolExecutor
     import threading
@@ -147,21 +160,25 @@ def main():
         slug, aid = item
         ep = fetch_eprint(aid)
         if not ep:
-            return slug, []
+            return slug, aid, None       # download failed -> mark, retry in 3 days
         tex = read_tex_sources(ep)
         if not tex.strip():
             print(f"  {slug[:45]:47} no tex source (pdf-only)")
-            return slug, []
+            return slug, aid, []
         fs = extract_math(tex)
         print(f"  {slug[:45]:47} formulas={len(fs)}")
-        return slug, fs
+        return slug, aid, fs
 
     with ThreadPoolExecutor(max_workers=8) as ex:
-        for slug, fs in ex.map(work, todo):
+        for slug, aid, fs in ex.map(work, todo):
             with lock:
-                formulas[slug] = fs
-                fj_path.write_text(json.dumps(formulas, ensure_ascii=False, indent=1),
-                                   encoding="utf-8")
+                if fs is None:
+                    failed[aid] = now
+                    fail_path.write_text(json.dumps(failed))
+                else:
+                    formulas[slug] = fs
+                    fj_path.write_text(json.dumps(formulas, ensure_ascii=False, indent=1),
+                                       encoding="utf-8")
     print(f"=== formulas.json: {sum(1 for v in formulas.values() if v)} papers with latex formulas ===")
 
 if __name__ == "__main__":

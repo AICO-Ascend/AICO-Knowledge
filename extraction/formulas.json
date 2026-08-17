@@ -310,7 +310,6 @@
    "latex": "\\tilde{r}(x,y) = \\begin{cases} r(x, y) \\cdot \\mathbb{I}\\left\\{ \\frac{1}{K} \\sum_{i=1}^K r(x, y_i) < \\lambda\\ \\mathrm{or}\\ |y_i| \\leq \\mathrm{budget(x)} \\right\\} & \\text{if } \\lfloor t/m \\rfloor \\pmod 2 = 0\\ (\\mathrm{{Phase 0}}) \\\\ r(x, y) & \\text{if } \\lfloor t/m \\rfloor \\pmod 2 = 1\\ (\\mathrm{{Phase 1}}) \\end{cases} \\, ."
   }
  ],
- "scalable-training-of-mixture-of-experts-models-with-megatron-core": [],
  "qwen3-vl-technical-report": [
   {
    "env": "display",
@@ -861,8 +860,6 @@
   }
  ],
  "hybridflow-a-flexible-and-efficient-rlhf-framework": [],
- "let-it-flow-agentic-crafting-on-rock-and-roll": [],
- "beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl": [],
  "areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning": [
   {
    "env": "equation",

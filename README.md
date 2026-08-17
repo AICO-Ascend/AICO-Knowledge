@@ -11,7 +11,9 @@ AICO-knowledge/
 ├── papers_download_list.txt      # slug | abs_url | pdf_url
 ├── archive/                      # 原始素材（清洗前索引、Moonlight 剪藏原文）
 ├── skills/paper-extraction/      # ⭐ 可复用 skill：清洗→校验下载→深度萃取→插图引用
-│   ├── SKILL.md                  #   工作流 + 决策树 + 约定 + 源列表全自主同步流程
+│   ├── SKILL.md                  #   工作流手册（日常同步入口 + 决策树 + 约定 + 踩坑）
+│   ├── sync_from_source.py       #   ⭐ 一键同步编排（源表→diff→下载→萃取→推送）
+│   ├── kb_query.py               #   统一查询 CLI（search/fig/formula/topics，--json）
 │   ├── extract_phase1.py         #   全量深度萃取（文本+图表+公式+相关论文+MOC+manifest）
 │   ├── eprint_formulas.py        #   arxiv e-print LaTeX 源公式抽取
 │   ├── chunk_download.py         #   arxiv 分块续传下载（jobs 文件/命令行驱动）
@@ -38,7 +40,13 @@ AICO-knowledge/
 
 **RAG 摄取**：读 `extraction/papers.json` manifest → 按 `fulltext/` 路径 chunk。
 
-**新增论文/刷新**：更新源头列表后按 `skills/paper-extraction/SKILL.md` 走（含「Source-list sync」全自主流程：解析→diff→解析 arxiv ID→下载→体检→萃取→解读→推送）。
+**新增论文/刷新**：只需更新 `archive/paper_source_moonlight.md`（Moonlight 文献库导出），然后：
+
+```bash
+python3 skills/paper-extraction/sync_from_source.py --push
+```
+
+一条命令全自动：diff 源表 → 解析新论文 arxiv → 下载体检 → 更新索引 → 深度萃取（图/公式/相关论文/MOC）→ 同步报告 → 推送远端。详见 `skills/paper-extraction/SKILL.md`。
 
 **其他知识库复用此 skill**：把 `skills/paper-extraction/` 拷到任意论文仓即可（脚本路径相对，clone 即用）。
 
