@@ -255,7 +255,7 @@ def main():
 
     print("== 8. sync report ==")
     rep = ["# 🔄 源列表同步报告（sync_report.md）", "",
-           f"> 生成：sync_from_source.py ｜ 源 {len(src)} 条 ｜ 耗时 {time.time()-t0:.0f}s", ""]
+           f"> 生成：sync_from_source.py ｜ 源 {len(src)} 条 ｜ 已有 {len(existing)} 篇", ""]
     rep.append(f"## ✅ 新增入库（{len(added)}）")
     for c in added:
         rep.append(f"- **{c['title']}** — arXiv:{c['arxiv']}，{c['pages']} 页，`papers/{c['slug']}.pdf`")

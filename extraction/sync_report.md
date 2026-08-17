@@ -1,6 +1,6 @@
 # 🔄 源列表同步报告（sync_report.md）
 
-> 生成：sync_from_source.py ｜ 源 58 条 ｜ 耗时 32s
+> 生成：sync_from_source.py ｜ 源 58 条 ｜ 已有 61 篇
 
 ## ✅ 新增入库（0）
 
