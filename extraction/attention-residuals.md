@@ -146,5 +146,9 @@ $$
 \mathbf{H}_{l} = \mathbf{H}_{l-1} \mathbf{A}_{l} + f_{l-1}(\mathbf{H}_{l-1} \bm{\alpha}_{l-1})\, \bm{\beta}_{l-1}^\top,
 $$
 
+## 技术点深读（DEEP）
+
+![[deep/attention-residuals]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/attention-residuals.txt`（73664 字符）供引用检索。

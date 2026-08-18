@@ -121,5 +121,9 @@ tags: [kv-cache]
 - [[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]] — IndexCache: Accelerating Sparse Attention via Cross-Layer Index Reuse
 - [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] — Prefill-as-a-Service: KVCache of Next-Generation Models Could Go Cross-Datacenter
 
+## 技术点深读（DEEP）
+
+![[deep/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.txt`（75206 字符）供引用检索。
