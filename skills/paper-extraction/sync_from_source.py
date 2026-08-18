@@ -39,7 +39,35 @@ import fitz  # noqa: E402
 
 
 # ---------- 1. parse ----------
+# When archive/paper_source_moonlight.bib exists (clean Moonlight BibTeX export),
+# it is preferred over the legacy .md web-capture: complete titles (no "待确认"
+# truncations), and often arxiv eprint/url + abstract inline — which lets us
+# short-circuit the fragile arxiv title-search scrape. _bib_extra carries those.
+import importlib.util
+_bib_extra = {}  # lowercased title -> {"arxiv": id|None, "abstract": ""}
+
+
+def _load_bib():
+    spec = importlib.util.spec_from_file_location(
+        "parse_moonlight_bib", SKILL_DIR / "parse_moonlight_bib.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def parse_source():
+    bib_path = REPO / "archive" / "paper_source_moonlight.bib"
+    if bib_path.exists():
+        mod = _load_bib()
+        es = mod.entries(bib_path)
+        out = []
+        for e in es:
+            t = e["title"].strip()
+            _bib_extra[t.lower()] = {"arxiv": e["arxiv_id"], "abstract": e["abstract"]}
+            out.append((t, e["date"] or ""))
+        print(f"  [source] using clean BibTeX export ({len(out)} entries)")
+        return out
+    # legacy: web-capture markdown table (carries base64, column drift, truncated titles)
     txt = SRC.read_text(encoding="utf-8")
     rows = re.findall(r"\[([^\]]+)\]\(https://www\.themoonlight\.io/paper/[0-9a-f-]+\)[^\n]*?(\d{4}/\d{1,2}/\d{1,2})",
                       txt)
@@ -192,13 +220,22 @@ def main():
     if candidates:
         print("== 3. resolve arxiv IDs ==")
         for c in candidates:
-            r = resolve_arxiv(c["title"])
-            if r and r[0] not in ex_ids:
-                c["arxiv"], c["abs_title"], c["score"] = r
-                print(f"   ✓ {c['title'][:55]:57} -> {r[0]} ({r[2]:.2f})")
+            extra = _bib_extra.get(c["title"].lower())
+            if extra and extra["arxiv"] and extra["arxiv"] not in ex_ids:
+                # clean .bib source: arxiv ID + abstract known, skip fragile search
+                c["arxiv"], c["abs_title"], c["score"] = extra["arxiv"], c["title"], 1.0
+                print(f"   ✓ {c['title'][:55]:57} -> {c['arxiv']} (bib eprint)")
+            elif extra and extra["arxiv"] and extra["arxiv"] in ex_ids:
+                c["arxiv"] = None  # dup of existing
+                print(f"   = {c['title'][:55]:57} (bib dup -> skipped)")
             else:
-                c["arxiv"] = None
-                print(f"   ? {c['title'][:55]:57} (unresolved / dup -> 待确认)")
+                r = resolve_arxiv(c["title"])
+                if r and r[0] not in ex_ids:
+                    c["arxiv"], c["abs_title"], c["score"] = r
+                    print(f"   ✓ {c['title'][:55]:57} -> {r[0]} ({r[2]:.2f})")
+                else:
+                    c["arxiv"] = None
+                    print(f"   ? {c['title'][:55]:57} (unresolved / dup -> 待确认)")
 
         print("== 4-5. download + verify ==")
         for c in candidates:
@@ -207,6 +244,10 @@ def main():
                 continue
             meta = abs_page_meta(c["arxiv"])
             c.update(meta)
+            # prefer .bib abstract if abs-page scrape came back empty
+            extra = _bib_extra.get(c["title"].lower())
+            if (not c.get("abstract")) and extra and extra["abstract"]:
+                c["abstract"] = extra["abstract"]
             c["slug"] = slugify(meta["title"] or c["title"])
             dest = REPO / "papers" / f"{c['slug']}.pdf"
             ok = False

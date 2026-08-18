@@ -28,10 +28,23 @@ tags: [training]
 > [!quote] caption
 > Data parallel training with ZeRO2. dependencies that contribute to stability issues. We develop a robust training framework to automate fault localization and recovery. We design heartbeat messages encapsulating various forms of information to facilitate real-time anomaly detection and provide early warnings. We implement a suite of diagnostic tests to identify nodes causing disruptions. We optimi
 
-### Figure 2 (p.3)
+### Figure 2 (p.3) ⭐深度解读
 ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]]
 > [!quote] caption
 > Interleaved 1F1B pipeline. update the model. Instead of duplicating model states (like the optimizer states, gradients, and parameters), Zero Redun- dancy Optimizer (ZeRO) [11] shards these states across every data-parallel process. As a result, the traditional all-reduce operations that aggregate gradients are decomposed into sep- arate reduce-scatter and all-gather operations. This is because ev
+
+> [!tip] 技术解读（多模态）
+> # 1) 架构/组件/数据流描述
+
+该图为**交错式 1F1B 流水线调度图**（Interleaved 1F1B Pipeline）。纵轴为 3 个流水线阶段（stage 0/1/2），横轴为时间步。每个阶段被细分为多个**虚拟子阶段**（图中以红、蓝色块区分），相同数字（如 0、1、2…5）代表同一 micro-batch 的前向/反向传递。红色虚线标出阶段内的交错切换点。整体体现"前向-反向交替执行"的 1F1B 节奏，以及通过虚拟子阶段增加流水线深度来减少气泡（pipeline bubble）的设计。
+
+# 2) 关键技术要点
+
+**核心创新**：将每个流水线阶段再切分为多个虚拟子阶段（virtual stages / model chunks），在相同内存占用下使同一时刻处于 in-flight 的 micro-batch 数翻倍，从而**显著降低流水线气泡比例**，提升训练吞吐——这是 Megatron-LM 交错调度相较于经典 1F1B 的关键改进。
+
+# 3) 逐字转录 Caption
+
+> **Figure 2: Interleaved 1F1B pipeline.**
 
 ### Figure 3 (p.4)
 ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]]

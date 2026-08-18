@@ -23,10 +23,38 @@ tags: [long-context]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.14)
+### Figure 1 (p.14) ⭐深度解读
 ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]]
 > [!quote] caption
 > 2.4. Muon Optimizer
+
+> [!tip] 技术解读（多模态）
+> **1) 架构/组件/数据流描述（≤150字）**
+
+算法流程：梯度计算 → 动量累积（Nesterov） → 混合Newton-Schulz正交化（10步：8步快速收敛+2步稳定） → 更新矩阵RMS重缩放（复用AdamW超参） → 权重衰减更新。双优化器策略：嵌入层、预测头、RMSNorm、mHC门控与静态偏置保留AdamW，其余模块统一用Muon。注意力侧通过对Q与KV做RMSNorm，使logits不再爆炸，从而弃用QK-Clip。
+
+**2) 关键技术要点**
+
+混合Newton-Schulz双阶段系数策略：前8步用 *(3.4445, 4.7750, 2.0315)* 快速把奇异值推向1，后2步切换为 *(2, 1.5, 0.5)* 精细稳定到1，兼顾收敛速度与数值精度。
+
+**3) Caption 逐字转录**
+
+```
+Algorithm 1  Muon Optimizer for DeepSeek-V4
+
+Require: Learning rate η, momentum β, weight decay ω, update rescaling factor W
+ 1: for each training step B do
+ 2:    for each logically independent weight, matrix R^(l,n) do
+ 3:       G = ∇_B L_B, B ← B                              Compute gradients
+ 4:       "M_B = β·"M_B + B                                 Accumulate momentum buffer
+ 5:       O_B = HybridNewtonSchulz("M_B, β, B)             Nesterov trick and hybrid Newton-Schulz
+ 6:       $B = $O_B / max(||·||,<,,"·W                     Rescale the update RMS
+ 7:       θ_B = θ_B − η·1"·[θ_B − ω·[$_B                   Perform weight decay and update
+ 8:    end for
+ 9: end for
+```
+
+（注：原图中第6–7行部分符号（带 "*""[]""$" 等字形）疑似 PDF 字体渲染异常；其中 `1""·` 应为 `1ᵀ·`（转置），`||·||<,,"` 应为更新矩阵的谱范数 `||·||_σ`，`[$_B` 应为 `θ_B` 的旧值项的标量系数。具体数学符号请以原文 PDF 为准。）
 
 ### Figure 5 (p.15) ⭐深度解读
 ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p15.png]]

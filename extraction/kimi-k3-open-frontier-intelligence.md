@@ -49,10 +49,26 @@ tags: []
 > [!quote] caption
 > Gate and up branches of GLU, SwiGLU, and SiTU-GLU, together with their scalar responses, where σ denotes the sigmoid function. Both branches receive the scalar input x, and all curves share the domain x ∈[−10, 100]; the inset magnifies the near-origin region. SiTU-GLU, shown in red with β1 = 4 and β2 = 25, closely follows SwiGLU near the origin and approaches the bound |f(x)| ≤β1β2 = 100 for large
 
-### Figure 5 (p.8)
+### Figure 5 (p.8) ⭐深度解读
 ![[assets/kimi-k3-open-frontier-intelligence-p08.png]]
 > [!quote] caption
 > Illustration of Quantile Balancing with m = 8 tokens, n = 4 routed experts, and k = 1 selected expert per token. (a)
+
+> [!tip] 技术解读（多模态）
+> ## 1) 架构描述
+
+图示展示 MoE 路由的 **Quantile Balancing (QB)** 三阶段流程：
+- **(a) 不均衡路由**：8 个 token 通过 Top-1 路由到 4 个专家，产生负载 (4,3,1,0)；深色圆圈表示过载专家，浅色虚线圈表示欠训专家。
+- **(b) Quantile Balancing**：每个专家列添加偏置调整 $b_j^{(t+1)} - b_j^{(t)}$（红色虚线），置于 margin $s_{i,j} + b_j^{(t)} - \alpha_i^{(t)}$ 的第 (q+1) 大值处，使得恰好 q=2 个 margin 高于阈值；★ 标记减去列调整后的行级 Top-k 选择。
+- **(c) 均衡路由**：调整后负载变为 (2,2,2,2)，红色边表示被 QB 修改的分配。
+
+## 2) 关键技术要点
+
+**无辅助损失的负载均衡**：QB 通过单次前向传播从路由器得分分位数直接推导专家偏置 $b_j$，既调节分发又不影响混合权重 $p_{i,j}$ 与路由器梯度更新，避免了传统辅助损失在大规模专家池（如 LatentMoE 的 896 个专家）下适应性慢、易振荡的问题。
+
+## 3) 图注逐字转录
+
+**Figure 5**: Illustration of Quantile Balancing with $m=8$ tokens, $n=4$ routed experts, and $k=1$ selected expert per token. (a) Token-wise Top-$k$ routing (tokens on the left, experts on the right) produces loads (4, 3, 1, 0); darker circles indicate overheated experts, whereas faded and dashed circles indicate underutilized and dying experts, respectively. (b) Each gray bar is the margin of the currently biased score, $s_{i,j} + b_j^{(t)} - \alpha_i^{(t)}$, so the row-wise maxima reproduce the routing in (a). The dashed red line in each column is the bias adjustment $b_j^{(t)} - \widehat{b}_j^{(t+1)}$, placed at the $(q+1)$-th largest margin so that exactly $q=2$ margins exceed it. The marker ★ denotes the row-wise Top-$k$ choice after subtracting the column adjustments, i.e., the routing in (c). (c) The retained choices yield the balanced load (2, 2, 2, 2); red edges denote assignments changed by **QB**.
 
 ### Figure 6 (p.9)
 ![[assets/kimi-k3-open-frontier-intelligence-p09.png]]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""m3_caption.py — image deep-captioning via 蓝区火山AI网关 MiniMax-M3 (OpenAI-compatible).
+"""m3_caption.py — image deep-captioning via 蓝区火山AI网关 (OpenAI-compatible).
 
 Replacement for the dead MiniMax coding-plan MCP (its /v1/coding_plan/vlm path is
 MiniMax-native; the gateway only proxies OpenAI/Anthropic protocols, so the MCP
@@ -9,6 +9,11 @@ Usage:
   m3_caption.py <image.png> [prompt]            # print caption
   m3_caption.py --save <image.png> [prompt]     # also append to extraction/minimax_captions.json
                                                 # (only for images under extraction/assets/)
+  m3_caption.py --model glm-5.2 <image.png> ... # swap vision/text model (env M3_MODEL)
+
+Model is configurable (--model flag or M3_MODEL env, default MiniMax-M3) so the
+skill is portable across gateway models. MiniMax-M3 is the default vision model;
+glm-5.2 also reads images. Swap freely — the caption contract is model-agnostic.
 
 Key: env VOLC_GATEWAY_KEY, or ~/.config/aico/volc_gateway_key (chmod 600, outside repo).
 Base URL is not secret (hardcoded default, overridable via VOLC_GATEWAY_URL).
@@ -17,8 +22,10 @@ Gotchas baked in:
 - MiniMax-M3 is a reasoning model: max_tokens must leave headroom (default 8000);
   too-small budgets get eaten by reasoning_content and content comes back EMPTY.
 - timeout 300s (image+reasoning can take a while).
+- --save uses an fcntl file lock so parallel runs (4-5 images per batch) are safe —
+  no clobbered JSON.
 """
-import base64, json, os, sys, urllib.request
+import base64, fcntl, json, os, sys, urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -38,7 +45,8 @@ def get_key():
     sys.exit("no gateway key: set VOLC_GATEWAY_KEY or ~/.config/aico/volc_gateway_key")
 
 
-def caption(image_path, prompt, model="MiniMax-M3", max_tokens=8000):
+def caption(image_path, prompt, model=None, max_tokens=8000):
+    model = model or os.environ.get("M3_MODEL", "MiniMax-M3")
     img = base64.b64encode(Path(image_path).read_bytes()).decode()
     ext = Path(image_path).suffix.lstrip(".").lower() or "png"
     body = {
@@ -56,7 +64,7 @@ def caption(image_path, prompt, model="MiniMax-M3", max_tokens=8000):
     msg = r["choices"][0]["message"]
     content = msg.get("content") or ""
     if not content.strip():
-        raise RuntimeError(f"empty content (reasoning ate the budget? usage={r.get('usage')})")
+        raise RuntimeError(f"[{model}] empty content (reasoning ate the budget? usage={r.get('usage')})")
     return content.strip()
 
 
@@ -67,9 +75,17 @@ def save_caption(image_path, text):
         print("  [skip save] image not under extraction/assets/")
         return
     key = f"extraction/assets/{p.name}"
-    d = json.loads(CAPTIONS.read_text(encoding="utf-8")) if CAPTIONS.exists() else {}
-    d[key] = text
-    CAPTIONS.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    CAPTIONS.parent.mkdir(parents=True, exist_ok=True)
+    # fcntl lock → safe to run 4-5 m3_caption.py --save in parallel (no clobbered JSON)
+    with open(CAPTIONS, "a+") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        fh.seek(0)
+        raw = fh.read()
+        d = json.loads(raw) if raw.strip() else {}
+        d[key] = text
+        fh.seek(0); fh.truncate()
+        fh.write(json.dumps(d, ensure_ascii=False, indent=1))
+        fcntl.flock(fh, fcntl.LOCK_UN)
     print(f"  [saved] {key} ({len(d)} total)")
 
 
@@ -77,12 +93,17 @@ def main():
     args = sys.argv[1:]
     save = "--save" in args
     args = [a for a in args if a != "--save"]
+    model = None
+    if "--model" in args:
+        i = args.index("--model")
+        model = args[i + 1]
+        args = args[:i] + args[i + 2:]
     if not args:
         print(__doc__)
         return
     image = args[0]
     prompt = args[1] if len(args) > 1 else DEFAULT_PROMPT
-    text = caption(image, prompt)
+    text = caption(image, prompt, model=model)
     print(text)
     if save:
         save_caption(image, text)

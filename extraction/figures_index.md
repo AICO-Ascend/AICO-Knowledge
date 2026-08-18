@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 515 张图，来自 54 篇论文；其中 ⭐22 张已深度解读。
+共 515 张图，来自 54 篇论文；其中 ⭐27 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -44,6 +44,36 @@
 > [!tip] 【MiniMax 解读】SARATHI chunked-prefill：把 prompt 切成等长 prefill chunk（匹配流水级算力），在途 decode 请求 piggyback 到每个 prefill chunk 上→单次前向混合 prefill+decode token。解耦长 prefill 与 decode 延迟：每个流水级跑统一 hybrid-phase 步、消除 prefill-decode bubble、打满 GPU。更高单卡利用率+decode 吞吐+更大 batch。架构核心图。
 *caption: High-level architecture of a decoder block. sequence length of each request (i.e., the number of input tokens in the given query), and H is the model’… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
+### DeepSeek-V4: Towards Highly Efficient Million-Token Context  — Fig.1 (p.14)
+![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]]
+> [!tip] **1) 架构/组件/数据流描述（≤150字）**
+
+算法流程：梯度计算 → 动量累积（Nesterov） → 混合Newton-Schulz正交化（10步：8步快速收敛+2步稳定） → 更新矩阵RMS重缩放（复用AdamW超参） → 权重衰减更新。双优化器策略：嵌入层、预测头、RMSNorm、mHC门控与静态偏置保留AdamW，其余模块统一用Muon。注意力侧通过对Q与KV做RMSNorm，使logits不再爆炸，从而弃用QK-Clip。
+
+**2) 关键技术要点**
+
+混合Newton-Schulz双阶段系数策略：前8步用 *(3.4445, 4.7750, 2.0315)* 快速把奇异值推向1，后2步切换为 *(2, 1.5, 0.5)* 精细稳定到1，兼顾收敛速度与数值精度。
+
+**3) Caption 逐字转录**
+
+```
+Algorithm 1  Muon Optimizer for DeepSeek-V4
+
+Require: Learning rate η, momentum β, weight decay ω, update rescaling factor W
+ 1: for each training step B do
+ 2:    for each logically independent weight, matrix R^(l,n) do
+ 3:       G = ∇_B L_B, B ← B                              Compute gradients
+ 4:       "M_B = β·"M_B + B                                 Accumulate momentum buffer
+ 5:       O_B = HybridNewtonSchulz("M_B, β, B)             Nesterov trick and hybrid Newton-Schulz
+ 6:       $B = $O_B / max(||·||,<,,"·W                     Rescale the update RMS
+ 7:       θ_B = θ_B − η·1"·[θ_B − ω·[$_B                   Perform weight decay and update
+ 8:    end for
+ 9: end for
+```
+
+（注：原图中第6–7行部分符号（带 "*""[]""$" 等字形）疑似 PDF 字体渲染异常；其中 `1""·` 应为 `1ᵀ·`（转置），`||·||<,,"` 应为更新矩阵的谱范数 `||·||_σ`，`[$_B` 应为 `θ_B` 的旧值项的标量系数。具体数学符号请以原文 PDF 为准。）
+*caption: 2.4. Muon Optimizer… ｜ 论文 [[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]] ｜ arxiv 见 MD 元信息*
+
 ### DeepSeek-V4: Towards Highly Efficient Million-Token Context  — Fig.5 (p.15)
 ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p15.png]]
 > [!tip] 【MiniMax 解读】DeepSeek-V4 细粒度 EP(Fig.5)：MoE 层拆 Dispatch/Linear-1/Linear-2/Combine 四段。Comet 仅粗粒度重叠 Dispatch↔L1、L2↔Combine；本方案把 expert 再切 wave，一波 dispatch 完即开算、下一波并行 dispatch→稳态下「当前波计算+下一波 token 传输+上一波结果回送」三路并发=连续计算-通信流水。因单层通信<计算，融合成单流水 kernel 藏住互连延迟→低带宽互连也不掉吞吐。架构核心图，与 MoE/EP 相关。
@@ -59,15 +89,68 @@
 > [!tip] 【MiniMax 解读】Step-3 attention 设计对比(Fig.5)：Decode 计算 vs 内存访问(8K→32K ctx)，对比 DSv3 MLA / Qwen3-MoE GQA / Step-3 MFA，叠 H800/910B/A800/H20 roofline。DSv3 MLA 算术强度512=H800 compute-bound；Qwen3 GQA 强度32=H20 memory-bound；Step-3 MFA 强度128≈910B(175)/A800(156) ridge 点→计算仅 DSv3 1/4、访存仅 Qwen3 1/3，跨硬件都省。⭐直击 910B roofline，与昇腾相关。
 *caption: Step-3 and Pangu Pro MoE have very different trends of decoding cost and training cost.… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
+### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.7 (p.12)
+![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p12.png]]
+> [!tip] ## 1) 主要架构/组件/数据流描述
+
+图示展示了 **AFD（Attention-FFN 分离）架构** 的通信拓扑与多阶段流水线：
+- **Attention 实例**（下方）和 **FFN 实例**（上方）通过 **Direct RDMA** 直连，每侧各包含多块 GPU（G）。
+- 数据流沿时间轴分为 **Layer0 / Layer1** 两个阶段，三个样本 **D1, D2, D3** 依次经 Attn→A→F（fp8）送至 FFN，FFN 计算后经 **F→A（bf16）** 回传残差，再进入下一层 Attn。
+- 三条独立通道并行：**Attn** 计算、**A→F（fp8）前向广播**、**F→A（bf16）反向回传**，互不抢占带宽。
+
+## 2) 关键技术要点
+
+**混合精度通信 + 多阶段流水线重叠**：Attention→FFN 方向采用 **FP8 量化**以节省带宽，FFN→Attention 方向保留 **BF16** 以保护残差精度；通过让 **A→F 与 F→A 两条独立路径并发**（不抢带宽），结合各阶段近似的计算耗时，使通信完全被计算掩盖，实现 **低延迟下的高吞吐** 流水（同一层可连续接收 D1', D2', D3'）。
+
+## 3) 图 caption 逐字转录
+
+**Figure 7: Communication topology and the multi-stages pipeline of the AFD architecture.**
+*caption: Communication topology and the multi-stages pipeline of the AFD architecture.… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
+
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.1 (p.2)
 ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p02.png]]
 > [!tip] 【MiniMax 解读】SGLang 系统架构(Fig.1)：Python 嵌入式前端+高性能 runtime，流式 interpreter 提交原语(extend/gen/fork)异步执行并保留依赖。RadixAttention 用 LRU 基数树缓存 KV，跨请求共享前缀自动复用中间注意力态。Frontiers&Dependencies 跟踪就绪原语+数据依赖→批独立操作、重叠执行藏延迟。DSL+radix-cache+依赖调度统一，比 vLLM/Guidance/LMQL 快至 6.4x。架构核心图。
 *caption: System architecture: An interpreter executes language primitives with optimized runtime.… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
+### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.1 (p.2)
+![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]]
+> [!tip] # 论文核心架构图分析
+
+## 1) 主要架构/组件/数据流描述
+
+该图为 **Mooncake 架构图**，展示了一种以 KVCache 为中心的 LLM 服务解耦架构：
+
+- **组件**：左侧为输入请求队列；中间区域包含多个 GPU 实例节点，分为 **prefill（预填充）节点**（上半部，含 KVCache 池 "3.450678"）和 **decoding（解码）节点**（下半部，含 KVCache 池）；中央为全局调度器（Conductor），负责调度决策。
+- **数据流**：请求首先被路由到 prefill 节点；prefill 计算产生的 KVCache（图中上方柱状图表示）通过高速互联被流式传输到对应的 decoding 节点；decoding 节点加载 KVCache 后进行连续批处理生成输出（右侧生成的文本序列 "!\"#$%..."）。箭头与乘号 ⊗ 标示预填充与解码节点间的 KVCache 流转与匹配关系。
+
+## 2) 关键技术要点
+
+**基于 KVCache 的预填充-解码解耦（Disaggregation）：** 预填充（compute-bound）与解码（memory-bound）两种异构负载被分离到不同实例，KVCache 作为"一等公民"在实例间显式流转，全局 Conductor 综合考虑 TTFT/TBT SLO、KVCache 命中率、DRAM 容量与网络拥塞进行实例配对与调度优化，从而实现吞吐与时延的联合优化。
+
+## 3) 图注逐字转录
+
+> **Figure 1: Mooncake Architecture.**
+*caption: Mooncake Architecture. remote location will prolong the TTFT, and a large batch size will lead to a larger TBT. Thus, the utilization of both these th… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
+
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.2 (p.4)
 ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p04.png]]
 > [!tip] 【MiniMax 解读】Mooncake 解耦式 KVCache 服务架构：prefill（compute-bound，注意力二次复杂度）与 decode（memory-bound，自回归批处理）分到独立节点池。核心是 disaggregated KVCache 层，池化 CPU/DRAM/SSD/RDMA 资源→跨节点 cache 复用、减冗余计算；调度器做 early rejection + SLO 准入(TTFT/TBT)+负载均衡。把计算阶段与 KVCache 存储解耦→弹性扩展、严 SLO 下更高吞吐。架构核心图。
 *caption: Normalized throughput and latency of prefill and decoding stages with different sequence lengths or batch sizes for the dummy LLaMA2-70B model. the co… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
+
+### MegaScale: Scaling Large Language Model Training to More Tha — Fig.2 (p.3)
+![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]]
+> [!tip] # 1) 架构/组件/数据流描述
+
+该图为**交错式 1F1B 流水线调度图**（Interleaved 1F1B Pipeline）。纵轴为 3 个流水线阶段（stage 0/1/2），横轴为时间步。每个阶段被细分为多个**虚拟子阶段**（图中以红、蓝色块区分），相同数字（如 0、1、2…5）代表同一 micro-batch 的前向/反向传递。红色虚线标出阶段内的交错切换点。整体体现"前向-反向交替执行"的 1F1B 节奏，以及通过虚拟子阶段增加流水线深度来减少气泡（pipeline bubble）的设计。
+
+# 2) 关键技术要点
+
+**核心创新**：将每个流水线阶段再切分为多个虚拟子阶段（virtual stages / model chunks），在相同内存占用下使同一时刻处于 in-flight 的 micro-batch 数翻倍，从而**显著降低流水线气泡比例**，提升训练吞吐——这是 Megatron-LM 交错调度相较于经典 1F1B 的关键改进。
+
+# 3) 逐字转录 Caption
+
+> **Figure 2: Interleaved 1F1B pipeline.**
+*caption: Interleaved 1F1B pipeline. update the model. Instead of duplicating model states (like the optimizer states, gradients, and parameters), Zero Redun- d… ｜ 论文 [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.1 (p.1)
 ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p01.png]]
@@ -103,6 +186,24 @@
 ![[assets/kimi-k3-open-frontier-intelligence-p05.png]]
 > [!tip] 下界衰减与 chunkwise KDA 计算：(a) Kimi Linear 用无界 negative-Softplus 映射 g=−e^A·Softplus(z)，K3 改为 g=g_min·Sigmoid(e^A·z) 把 log-decay 下界到 g_min=−5；(b) 有界范围使所有 causal tile（含对角 tile）都能用稠密 Tensor Core 矩阵乘，消掉逐位置对的 diagonal 路径。g_min=−5 时 16-token tile 累计 log-decay∈(−80,0)，rescale 因子 <e^80 仍在 BF16 动态范围内——分块线性注意力在 Tensor Core/NPU 上高效落地的关键参数化技巧。
 *caption: Lower-bounded decay and its effect on chunkwise KDA computation. (a) Kimi Linear uses an unbounded negative-Softplus mapping, whereas Kimi K3 bounds t… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
+
+### Kimi K3: Open Frontier Intelligence — Fig.5 (p.8)
+![[assets/kimi-k3-open-frontier-intelligence-p08.png]]
+> [!tip] ## 1) 架构描述
+
+图示展示 MoE 路由的 **Quantile Balancing (QB)** 三阶段流程：
+- **(a) 不均衡路由**：8 个 token 通过 Top-1 路由到 4 个专家，产生负载 (4,3,1,0)；深色圆圈表示过载专家，浅色虚线圈表示欠训专家。
+- **(b) Quantile Balancing**：每个专家列添加偏置调整 $b_j^{(t+1)} - b_j^{(t)}$（红色虚线），置于 margin $s_{i,j} + b_j^{(t)} - \alpha_i^{(t)}$ 的第 (q+1) 大值处，使得恰好 q=2 个 margin 高于阈值；★ 标记减去列调整后的行级 Top-k 选择。
+- **(c) 均衡路由**：调整后负载变为 (2,2,2,2)，红色边表示被 QB 修改的分配。
+
+## 2) 关键技术要点
+
+**无辅助损失的负载均衡**：QB 通过单次前向传播从路由器得分分位数直接推导专家偏置 $b_j$，既调节分发又不影响混合权重 $p_{i,j}$ 与路由器梯度更新，避免了传统辅助损失在大规模专家池（如 LatentMoE 的 896 个专家）下适应性慢、易振荡的问题。
+
+## 3) 图注逐字转录
+
+**Figure 5**: Illustration of Quantile Balancing with $m=8$ tokens, $n=4$ routed experts, and $k=1$ selected expert per token. (a) Token-wise Top-$k$ routing (tokens on the left, experts on the right) produces loads (4, 3, 1, 0); darker circles indicate overheated experts, whereas faded and dashed circles indicate underutilized and dying experts, respectively. (b) Each gray bar is the margin of the currently biased score, $s_{i,j} + b_j^{(t)} - \alpha_i^{(t)}$, so the row-wise maxima reproduce the routing in (a). The dashed red line in each column is the bias adjustment $b_j^{(t)} - \widehat{b}_j^{(t+1)}$, placed at the $(q+1)$-th largest margin so that exactly $q=2$ margins exceed it. The marker ★ denotes the row-wise Top-$k$ choice after subtracting the column adjustments, i.e., the routing in (c). (c) The retained choices yield the balanced load (2, 2, 2, 2); red edges denote assignments changed by **QB**.
+*caption: Illustration of Quantile Balancing with m = 8 tokens, n = 4 routed experts, and k = 1 selected expert per token. (a)… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Prefill-as-a-Service: KVCache of Next-Generation Models Coul — Fig.3 (p.6)
 ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p06.png]]
@@ -224,7 +325,7 @@
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p13.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.10 (p.13): Left: Impact of varying the number of encoding workers in the EPD method. The no…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p13.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.11 (p.13): SLO attainment (↑) for end-to-end inference across multiple models and image cou…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p16.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.12 (p.16): Breakdown of latency for encode and prefill stages using the InternVL2-8B model …  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
-- ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.1 (p.2): Mooncake Architecture. remote location will prolong the TTFT, and a large batch …  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
+- ⭐ ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.1 (p.2): Mooncake Architecture. remote location will prolong the TTFT, and a large batch …  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ⭐ ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p04.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.2 (p.4): Normalized throughput and latency of prefill and decoding stages with different …  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p05.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.3 (p.5): The KVCache pool in CPU memory. Each block is attached with a hash value determi…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p06.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.4 (p.6): Workflow of inference instances. ( ) For prefill instances, the load and store …  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
@@ -244,7 +345,7 @@
 - ⭐ ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p03.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.2 (p.3): Side-by-side comparison of inference loops. (a) Standard DSA runs the lightning …  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 - ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p08.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.3 (p.8): Relative speedup of IndexCache over the DSA baseline across three inference sett…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 - ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p16.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.4 (p.16): Pairwise top-k index overlap ratio between all layer pairs of the 30B DSA model.…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
-- ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.1 (p.2): Mooncake Architecture. remote location will prolong the TTFT, and a large batch …  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
+- ⭐ ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.1 (p.2): Mooncake Architecture. remote location will prolong the TTFT, and a large batch …  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ⭐ ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p04.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.2 (p.4): Normalized throughput and latency of prefill and decoding stages with different …  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p05.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.3 (p.5): The KVCache pool in CPU memory. Each block is attached with a hash value determi…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p06.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.4 (p.6): Workflow of inference instances. ( ) For prefill instances, the load and store …  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
@@ -265,7 +366,7 @@
 
 ### long-context (8)
 
-- ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]] — **DeepSeek-V4: Towards Highly Efficient Million-Toke** Fig.1 (p.14): 2.4. Muon Optimizer…  `[[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]]`
+- ⭐ ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]] — **DeepSeek-V4: Towards Highly Efficient Million-Toke** Fig.1 (p.14): 2.4. Muon Optimizer…  `[[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]]`
 - ⭐ ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p15.png]] — **DeepSeek-V4: Towards Highly Efficient Million-Toke** Fig.5 (p.15): This forms a fine-grained pipeline among experts, keeping both computation and c…  `[[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]]`
 - ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p01.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.1 (p.1): The SoTA SD method, EAGLE, has a training context length of 2048, which is signi…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
 - ⭐ ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p04.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.2 (p.4): Illustration of the memory-efficient draft model, the Anchor-Offset Indices, and…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
@@ -547,7 +648,7 @@
 - ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p04.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.5 (p.4): Performance as a function of uptraining pro- portion for T5 XXL models with MQA …  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
 - ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p04.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.6 (p.4): Time per sample for GQA-XXL as a function of the number of GQA groups with input…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
 - ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p02.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.1 (p.2): Data parallel training with ZeRO2. dependencies that contribute to stability iss…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
-- ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.2 (p.3): Interleaved 1F1B pipeline. update the model. Instead of duplicating model states…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
+- ⭐ ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.2 (p.3): Interleaved 1F1B pipeline. update the model. Instead of duplicating model states…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
 - ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.3 (p.4): Overlapping communication in tensor parallelism (TP) and sequence parallelism (S…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
 - ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.4 (p.4): The cool-down phase can be viewed as the inverse of the warm-up phase, allowing …  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
 - ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p06.png]] — **MegaScale: Scaling Large Language Model Training t** Fig.5 (p.6): Robust training workflow. interval and help recover the transmission more quickl…  `[[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]`
@@ -1029,7 +1130,7 @@
 
 ### #20 DeepSeek-V4: Towards Highly Efficient Million-Token Context 
 
-- Fig.1 (p.14) ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]]
+- ⭐ Fig.1 (p.14) ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]]
   - 2.4. Muon Optimizer
 - ⭐ Fig.5 (p.15) ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p15.png]]
   - This forms a fine-grained pipeline among experts, keeping both computation and communication continuous throughout the wave. The wave-based scheduling speeds up the 15
@@ -1363,7 +1464,7 @@
   - The compute and memory access of different atten- tion designs during decoding, including DSv3’s MLA, Qwen3
 - Fig.6 (p.11) ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p11.png]]
   - Module disaggregation in AFD architecture. FFN can be deployed in TP-only, EP-only, or a hybrid TP+EP way, depending on hardware and model architecture. start to be concerned about other issues like e
-- Fig.7 (p.12) ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p12.png]]
+- ⭐ Fig.7 (p.12) ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p12.png]]
   - Communication topology and the multi-stages pipeline of the AFD architecture.
 - Fig.8 (p.13) ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p13.png]]
   - StepMesh communication workflow tailored for AFD.
@@ -1430,7 +1531,7 @@
 
 ### #45 Mooncake: A KVCache-centric Disaggregated Architecture for L
 
-- Fig.1 (p.2) ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]]
+- ⭐ Fig.1 (p.2) ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]]
   - Mooncake Architecture. remote location will prolong the TTFT, and a large batch size will lead to a larger TBT. Thus, the utilization of both these throughput-oriented optimizations may lead to violat
 - ⭐ Fig.2 (p.4) ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p04.png]]
   - Normalized throughput and latency of prefill and decoding stages with different sequence lengths or batch sizes for the dummy LLaMA2-70B model. the computational complexity of attention networks scale
@@ -1461,7 +1562,7 @@
 
 - Fig.1 (p.2) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p02.png]]
   - Data parallel training with ZeRO2. dependencies that contribute to stability issues. We develop a robust training framework to automate fault localization and recovery. We design heartbeat messages en
-- Fig.2 (p.3) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]]
+- ⭐ Fig.2 (p.3) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]]
   - Interleaved 1F1B pipeline. update the model. Instead of duplicating model states (like the optimizer states, gradients, and parameters), Zero Redun- dancy Optimizer (ZeRO) [11] shards these states acr
 - Fig.3 (p.4) ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]]
   - Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB). with a large receptive field created by stacking layers of such windowed atten
@@ -1696,7 +1797,7 @@
   - Lower-bounded decay and its effect on chunkwise KDA computation. (a) Kimi Linear uses an unbounded negative-Softplus mapping, whereas Kimi K3 bounds the log-decay with a scaled sigmoid; the curves sho
 - Fig.4 (p.7) ![[assets/kimi-k3-open-frontier-intelligence-p07.png]]
   - Gate and up branches of GLU, SwiGLU, and SiTU-GLU, together with their scalar responses, where σ denotes the sigmoid function. Both branches receive the scalar input x, and all curves share the domain
-- Fig.5 (p.8) ![[assets/kimi-k3-open-frontier-intelligence-p08.png]]
+- ⭐ Fig.5 (p.8) ![[assets/kimi-k3-open-frontier-intelligence-p08.png]]
   - Illustration of Quantile Balancing with m = 8 tokens, n = 4 routed experts, and k = 1 selected expert per token. (a)
 - Fig.6 (p.9) ![[assets/kimi-k3-open-frontier-intelligence-p09.png]]
   - Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lower gradient norms with fewer spikes, indicating mor

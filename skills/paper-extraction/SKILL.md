@@ -11,10 +11,14 @@ Proven on `AICO-knowledge` (61 papers). Portable: scripts derive repo root from 
 
 ## ⭐ 日常同步（唯一入口）
 
-用户更新了 `archive/paper_source_moonlight.md`（Moonlight 文献库导出）后：
+**输入**（用户唯一要维护的文件，二选一，`.bib` 优先）：
+
+- **首选 `archive/paper_source_moonlight.bib`** — Moonlight「文献库」→ 右上设置每页 100 行 → 全选 → 导出 → **BibTeX**。结构化、标题完整、常带 arxiv eprint/url + abstract，解析 100% 确定性（无乱码/无截断/无需标题搜索）。
+- 回退 `archive/paper_source_moonlight.md` — 旧网页剪藏，带 base64/列错位/标题截断（会产生「⚠️ 待确认」行），仅在无 .bib 时用。
 
 ```bash
 cd /mnt/project/g00952465/AICO-knowledge
+python3 skills/paper-extraction/parse_moonlight_bib.py     # 可选 dry-run：看 .bib 解析出几条
 python3 skills/paper-extraction/sync_from_source.py --push
 ```
 
@@ -22,10 +26,37 @@ python3 skills/paper-extraction/sync_from_source.py --push
 
 **幂等**：随时重跑安全；无新增时 ~30s 完成。
 
+## 🔁 可移植性 / 换模型 / 一次搞定
+
+**这个 skill 的「调教」分两层**：(1) 脚本（`sync_from_source.py`/`extract_phase1.py`/`eprint_formulas.py`/`kb_query.py`/`m3_caption.py`/`chunk_download.py`/`verify_pdfs.py`）—— 100% 确定性 Python，模型无关，换任何主模型都不变；(2) agent 推理（读 SKILL.md 的 pitfall、挑架构图、解析待确认）—— 跟模型强弱相关。**让能力可复制的本质 = 把判断尽量搬进脚本，让 agent 按清单执行而非临场推理。** 已落地的几手：
+
+- **BibTeX 源**（上节）消除了最模型依赖的两步：Phase-0 垃圾清理 + arxiv 标题搜索（标题截断→待确认的根因）。弱模型只需 `--push`，不再做判断。
+- **`m3_caption.py --model <m>` / `M3_MODEL` env**：视觉/文本模型可一行替换，默认 `MiniMax-M3`（多模态解读），换 `glm-5.2` 等同样吃图。换模型不换脚本。
+- **小上下文模型友好**：永远走 `kb_query.py` 取用，**不要整库载入 MD**（glm-5.2 有 1M 上下文能整库 hold，换小窗模型必须用 `kb_query search|fig|formula` 按需取）。
+- **一次搞掉的兜底 = 自检先行**：每次开干前跑这三条，全绿才继续，避免中途因环境问题返工——
+
+  ```bash
+  # ① 网关连通（glm-5.2 文本 + MiniMax-M3 文本各 say ok）
+  # ② kb_query stats  ③ git clean
+  python3 - <<'PY'
+  import json,os,urllib.request
+  U=os.environ["VOLC_GATEWAY_URL"];K=os.environ["VOLC_GATEWAY_KEY"]
+  def t(m,mt=200):
+      b={"model":m,"messages":[{"role":"user","content":"say ok"}],"max_tokens":mt}
+      r=urllib.request.Request(U,data=json.dumps(b).encode(),headers={"Authorization":f"Bearer {K}","Content-Type":"application/json"})
+      print(m,"->",json.load(urllib.request.urlopen(r,timeout=120))["choices"][0]["message"]["content"][:20])
+  t("glm-5.2");t("MiniMax-M3",4000)
+  PY
+  python3 skills/paper-extraction/kb_query.py stats | head -5
+  git status --short   # 应为空
+  ```
+
+- **Moonlight 抓取自动化**（诚实评估）：用户在 Moonlight「文献库」点「导出→BibTeX」是 1 分钟操作，落到 `archive/*.bib` 后即全自动。Playwright 全自动抓取**不推荐**：需 Moonlight 登录态 + 翻页（每页 100 全选逐页）+ 可能 Cloudflare 挑战，凭证入仓/易碎/UI 变动即崩。真要「定时自主」只能做到 **cron 定时提醒导出**（`CronCreate` 每天提醒），实际抓取仍需登录态人工点一下——这是该站点的天然边界，不是脚本能突破的。
+
 ### 同步后的 agent 收尾（脚本不做，由 Claude session 做）
 
 读 `extraction/sync_report.md`：
-1. **⚠️ 待确认**：arxiv 解析失败的条目——web 搜索人工解析（找到 arxiv ID 就手动加行进 `papers_effective.md` + 下载 + 重跑本脚本；确认非论文就如实报告用户）。**绝不猜来源**。
+1. **⚠️ 待确认**：arxiv 解析失败的条目——web 搜索人工解析（找到 arxiv ID 就手动加行进 `papers_effective.md` + 下载 + 重跑本脚本；确认非论文就如实报告用户）。**绝不猜来源**。改用 `.bib` 源后这一类（标题截断碎片）基本不再产生。
 2. **🖼️ 架构图深度解读**：对新增论文，挑 caption 含 overview/architecture/framework/illustration 的图，用 `m3_caption.py --save <png>`（蓝区火山网关 MiniMax-M3，自动追加 `extraction/minimax_captions.json`）或 Claude `Read` PNG 手写解读 → 重跑 `extract_phase1.py` 合并 → 再次 `--push`。
 3. 若 `--push` 未带：手动 commit + push（pull --rebase 先行）。
 
