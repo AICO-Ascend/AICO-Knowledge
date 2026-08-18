@@ -53,3 +53,37 @@
 图源: [论文标题] arXiv:XXXX.XXXXX / [博客URL]
 ```
 无论定制 SVG 还是原论文图，均需标注。
+
+---
+
+## 🔄 2026-08-17 回灌：v4 deck 精确裁剪图 + 实际页位
+
+> 来源：另一 project `InferArch/uniinfer_low_latency_gxli_qwen36` 的
+> `task-qwen36-35B-A3B/01_总结与汇报/TECH_DEEPDIVE_REFERENCES_20260817.md`（汇报 deck v4 配套深读材料）。
+> 该 deck 植入时从原论文 PDF 精确裁剪了 6 张图（仓内整页渲染 `extraction/assets/` 不便直接植入 deck，故裁剪版另存）。
+
+### 6 张精确裁剪图（已回灌 `extraction/assets_cropped/`）
+
+| 裁剪图 | 源论文 / arXiv | 原图定位 | deck 技术点 |
+|---|---|---|---|
+| `gated-delta-networks-...__block-design.png` | Gated Delta Networks · [2412.06464] | Fig.1 GDN block（q/k 路径+α/β门控） | §1 线性注意力 recurrent state |
+| `deepseek-v3-technical-report__mtp.png` | DeepSeek-V3 · [2412.19437] | Fig.3 MTP 链式结构 | §3 投机解码 / accept-fold（deck P19） |
+| `sarathi-...__roofline.png` | Sarathi-Serve · [2403.02310] | Fig.5 算术强度 roofline | §2 decode memory-bound 证据 |
+| `sarathi-...__genstall.png` | Sarathi-Serve · [2403.02310] | Fig.7 generation stall 时间线 | §5 stall-free 调度 |
+| `efficient-memory-management-...__block-table.png` | PagedAttention(vLLM) · [2309.06180] | Fig.6 块表 | §4 前缀缓存 / host-offload（旧标 P18） |
+| `parallel-scan-on-ascend-...__910b-aicore.png` | Parallel Scan on Ascend · [2505.15112] | Fig.3.1 910B AI Core | §6 硬件约束（deck P16/17 NPUGraph） |
+
+### v4 deck 实际页位（对位旧 P7/P10 标签）
+
+旧 deck（v1, 08-03）页码映射已过期。v4 deck（08-17）可验证的页位（TECH_DEEPDIVE 正文显式标注）：
+- **P16/17** — 全链路 NPUGraph（~3000 kernel 单图，§6）
+- **P19** — accept-fold / 免回滚（§1 GDN state snapshot + §3 MTP verify）
+
+> ⚠️ 其余 §2/§3/§4/§5/§7 的精确 v4 页位在 TECH_DEEPDIVE 正文未显式标注——如需完整页位表，去上述另一 project 的
+> `TECH_DEEPDIVE_REFERENCES_20260817.md` 或 v4 deck 源文件对位，**不要从旧 P7/P10 标签推断**。
+
+### 边界（仓不能完全替代核读，下次植入前仍需人工）
+
+- **页图不全**：DSV3 仓内整页只抽了 p12/15/48，MTP 图在 p10——本次裁剪图已补；后续他论文若 deck 需要特定页，用 `fitz` 从 `papers/<slug>.pdf` 现裁即可。
+- **公式有损**：GDN gated delta rule 在 fulltext txt 里断行错位——精确公式见上方 §1 块（已核），或走 e-print LaTeX（`eprint_formulas.py`）。
+- **2 张存疑 ID 仍存疑**：Gated DeltaNet-2、POD-Attention（见上方「⚠️ 存疑」表）——本次 deck 植入已绕开，未引用。
