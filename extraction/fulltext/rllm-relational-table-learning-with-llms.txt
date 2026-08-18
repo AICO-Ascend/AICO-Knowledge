@@ -1,0 +1,694 @@
+rLLM: Relational Table Learning with LLMs
+Weichen Li1, Xiaotong Huang1, Jianwu Zheng1, Zheng Wang1, Chaokun Wang2, Li Pan1, Jianhua Li1
+1 Shanghai Jiao Tong University, China
+2 Tsinghua University, China
+{wzheng,panli,lijh888}@sjtu.edu.cn,chaokun@tsinghua.edu.cn
+2010
+2013
+2016
+2019
+2022
+2025
+Year
+0
+20
+40
+60
+80
+100
+120
+Data Volume in Zettabyte
+Trend in Global Data Volume by Data Type (2010-2025)
+Source: The rLLM (relationLLM) project
+Video
+Image
+Audio
+Text
+Structured data
+2010
+2015
+2020
+2025
+Year
+0
+2000
+4000
+6000
+Cost in trillion dollar
+Structured data
+Text
+Image
+Video
+The token cost of 
+multimodal data 
+is relatively low, 
+despite its large volume.
+The token cost of 
+language-type data is 
+high, despite its 
+small volume.
+Trend in LLM Token Costs by Data Type (2010-2025)
+Source: The rLLM (relationLLM) project
+Figure 1: Trends in global data volume and in LLM token costs by data type
+Abstract
+We introduce rLLM (relationLLM), a PyTorch library designed
+for Relational Table Learning (RTL) with Large Language Models
+(LLMs). The core idea is to decompose state-of-the-art Graph Neural
+Networks, LLMs, and Table Neural Networks into standardized
+modules, to enable the fast construction of novel RTL-type models
+in a simple "combine, align, and co-train" manner. To illustrate
+the usage of rLLM, we introduce a simple RTL method named
+BRIDGE. Additionally, we present three novel relational tabular
+datasets (TML1M, TLF2K, and TACM12K) by enhancing classic
+datasets. We hope rLLM can serve as a useful and easy-to-use
+development framework for RTL-related tasks. Our code is available
+at: https://github.com/rllm-project/rllm.
+CCS Concepts
+• Information systems →Data mining; • Mathematics of
+computing →Graph theory; • Computing methodologies →
+Machine learning.
+Keywords
+Relational Table Learning; Large Language Models, Graph Convo-
+lutional Networks; Data Mining
+1
+Introduction
+Large language models (LLMs), like ChatGPT [1], are driving a new
+wave of artificial intelligence advancements, garnering widespread
+attention. These models are great at at understanding and generat-
+ing text by leveraging technologies such as web-scale unsupervised
+pretraining [2], instruction fine-tuning [3], and value alignment [4].
+Their strong performance across various tasks suggests they could
+be key to achieving Artificial General Intelligence [5].
+However, applying LLMs to real-world big data is extremely
+costly. Figure 1 illustrates the growth trends of various types of
+data alongside the corresponding expenses1. The costs associated
+with LLMs are unsustainable. For example, by 2025, the total cost
+of LLMs is anticipated to reach nearly $5,000 trillion, which is 214
+times the 2023 GDP of the United States ($27.37 trillion). Another
+notable observation is that processing text and structured data will
+incur most of these expenses, despite these two types of data being
+smaller in volume compared to multimedia data.
+As relational databases host around 73% of the world data [6],
+recent years have seen a significant shift towards Relational Table
+Learning (RTL) [7] [8] [9] 2. In this paper, we introduce the rLLM
+(relationLLM) project, which aims to provide a platform for rapidly
+developing RTL-typle methods with LLMs. As shown in Figure 2,
+it performs two key functions: 1) decomposing state-of-the-art
+Graph Neural Networks (GNNs), LLMs, and Table Neural Networks
+(TNNs) into standardized modules, and 2) enabling the construction
+of novel models in a “combine, align, and co-train” manner using
+these decomposed modules.
+To illustrate the application of rLLM, we present a simple illus-
+trate RTL method named BRIDGE. The core idea is to streamline
+the workflow of RDL [9] through two key simplifications: (1) con-
+sidering only a single relational table connected to the target table,
+and (2) preprocessing all other tables into dense embeddings. Specif-
+ically, BRIDGE employs TNNs to process the target table data and
+leverages the foreign-key links in the selected relational table to es-
+tablish relationships among table samples, which are subsequently
+1See Appendix 1 for details.
+2Although “tabular” is also commonly used to describe “row-format data samples in
+relational databases”, our experience during development has indicated that under-
+graduate/graduate students, engineers, and business clients generally prefer the term
+“table” over “tabular”. This preference might be due to their more vocal nature. To
+facilitate public understanding, this paper uses the term “table”.
+arXiv:2407.20157v2  [cs.AI]  12 Nov 2025
+
+Data Loader 
+Graph Builder 
+Data Engine
+Table Marker
+Models
+…
+…
+Combine
+Align
+…
+Co-Train
+LLMs
+Enhancement
+Prediction
+GNNs
+GraphConv
+TNNs
+TableConv
+Modules
+GraphTransform
+TableTransform
+Figure 2: The architecture of rLLM
+analyzed using GNNs. This design efficiently captures inter-table
+dependencies with minimal architectural complexity.
+Furthermore, as RTL is an emerging field with a notable lack
+of datasets, we further introduce a novel data collection (named
+SJTUTables) which includes three novel relational table datasets:
+TML1M, TLF2K, and TACM12K. Each dataset is obtained by
+enhancing existing classical datasets, and is accompanied by a stan-
+dard classification task. In other words, three datasets are well-
+organized and easy-to-use, making them very suitable for deigning
+novel RTL-type methods. Future researchers are highly encouraged
+to use these datasets to define and develop additional tasks.
+The structure of this paper is as follows: Section 2 details the
+framework of our rLLM system. Section 3 introduces the simple
+RTL algorithm BRIDGE, designed based on our project. Section 4
+presents the methods currently supported by rLLM and describes
+the three new datasets. Section 5 provides a brief experimental
+comparison, and Section 6 concludes with a summary and directions
+for future research.
+2
+System Overview
+As shown in Figure 2, rLLM consists of three main layers: Data
+Engine Layer, Module Layer, and Model Layer.
+2.1
+Data Engine Layer
+This layer designs the fundamental data structures for graph and
+table data and defining the processing workflows for relational table
+data. As shown in Figure 3, the overall architecture decouples data
+loading and storage, which are handled by the Dataset subclass and
+BaseGraph/BaseTable subclasses, respectively. This design philoso-
+phy is driven by the pursuit of flexibility and scalability, enabling
+efficient and flexible handling and storage of different graph and
+table data.
+Specifically, within the Dataset subclasses, we can implement
+various data loading classes tailored to the characteristics of dif-
+ferent datasets. These subclasses focus on efficiently data loading
+and preprocessing, ultimately storing the processed data in data
+structures inherited from BaseGraph and BaseTable. Additionally,
+they are both optimized for the storage and processing of graph
+data (such as homogeneous and heterogeneous graphs) and table
+Cora, IMDB, Titanic...
+Dataset
+Dataset (Pytorch)
+ABC (Python)
+GraphData
+BaseGraph
+TableData
+BaseTable
+…
+Figure 3: Base data structure in rLLM. Arrows indicate inher-
+itance relationships and parentheses indicate containment
+relationships.
+data, respectively. Overall, this design meets the familiar storage
+and processing requirements of relational table data consist of table
+data and foreign key relationships.
+2.2
+Module Layer
+This layer decomposes the operations of GNNs, LLMs, and TNNs
+into standard submodules.
+2.2.1
+GNN Modules. This part mainly includes the GraphTrans-
+form and GraphConv modules. The GraphTransform module pro-
+vides preprocessing methods for graph data, such as normalization
+and self-loop operations. Additionally, this module supports com-
+bining various graph preprocessing methods, allowing users to
+perform complex graph preprocessing operations to meet the re-
+quirements of subsequent algorithms.
+The GraphConv module implements popular graph convolution
+layers, including homogeneous and heterogeneous graph convo-
+lutions. The core functionality of this module involves different
+message-passing functions between nodes for various graph con-
+volution operations, addressing the requirements of diverse graph
+types and algorithms. In practical applications, stacking and inter-
+acting multiple graph convolution layers allows for the modeling
+of complex graph data information.
+2.2.2
+LLM Modules. This part mainly includes the Predictor and
+Enhancer modules. The Predictor module allows users to leverage
+LLMs for data annotation. It is crucial because much real-world
+data lacks labels, and manual annotation is expensive and prone to
+errors. Users can use existing prompts or design their own to enable
+LLMs to perform preliminary annotations. These annotations can
+serve as final label predictions or as labeled data for further training
+of other machine learning models.
+The Enhancer module allows users to employ LLMs for data aug-
+mentation. In many real-world scenarios, data may be insufficient
+or of low quality. For example, understanding the full context of a
+research paper based solely on its title can be challenging. Users
+can use various prompts to generate detailed textual explanations
+for data samples with the LLM. These explanations can be used
+directly to enhance the data or be transformed into other feature
+formats to improve performance in downstream tasks.
+2.2.3
+TNN Modules. This part mainly includes the TableTransform
+and TableConv modules. The TableTransform module maps sam-
+ple features to higher-dimensional vector spaces. It is necessary
+because table data samples (i.e., rows) consist of multiple feature
+
+…
+Graph Encoder
+Relational Tabular-data
+Table Encoder
+Output
+…
+Non-tabular features 
+(i.e., graph structure and other features)
+Tabular
+features 
+…
+Tabular
+embeddings 
+Figure 4: The architecture of BRIDGE
+columns, which can vary greatly in nature. Due to the diverse types
+of features and the often limited information provided by tables
+with fewer columns, it is crucial to map or transform some columns
+into higher-dimensional feature spaces to enhance the sample in-
+formation. The TableConv module facilitates multi-layer interactive
+learning among feature columns to extract latent information. Since
+the contribution of each column to downstream tasks varies (e.g.,
+blood sugar levels in a diabetes dataset significantly impact diabetes
+prediction), this module usually employs various attention mech-
+anisms to automatically learn and extract complex relationships
+from features. In reality, stacking and interacting multiple layers of
+this module generally provide sufficient capacity for comprehensive
+learning from table data.
+2.3
+Model Layer
+By combining modules from the second layer, this layer provides
+three main strategies for rapidly developing RTL-type models:
+Combine, Align, and Co-Train.
+• Combine refers to jointly using modules from different
+parts. For example, [10] and [11] use LLMs for preliminary
+label annotation, and then the annotated results are fed into
+a GCN [12] model for graph node classification. Within the
+rLLM framework, we can utilize the Predictor module from
+the LLM part to complete the annotation task and then use
+the GCN module from the GNN part for the following classi-
+fication task.
+• Align involves aligning the input and output feature spaces
+for different modules. For instance, ConGraT [13] generates
+node embeddings using a language model and a GNN sep-
+arately, followed by aligning these embeddings within the
+final embedding space. Within the rLLM framework, we can
+first use the Enhancer module from the LLM part to generate
+embeddings (and potentially perform enhancement simul-
+taneously), then generate node embeddings with the GNN
+module, and finally align the two types of embeddings.
+• Co-Train denotes the collaborative training of different
+modules. For example, BRIDGE (Section 3) integrates TNNs
+and GNNs to leverage internal and inter-table information.
+Within the rLLM, we can invoke modules from both GNNs
+and TNNs, combine them as needed, and perform co-training
+to enhance the performance of multi-table joint learning
+tasks.
+Moreover, these three strategies can be employed independently
+or in combination, allowing for the rapid development of various
+RTL-type models.
+3
+An Illustration Method - BRIDGE
+In this section, we introduce a straightforward method named the
+Basic RelatIonal table-Data LearninG FramEwork (BRIDGE) to
+illustrate how to quickly construct RTL-type methods using rLLM.
+The core idea of BRIDGE is to simplify the workflow of RDL [9]
+through two key simplifications: (1) only a single relational table
+connected to the target table is considered, and (2) all other tables,
+except for the target and selected relational table, are preprocessed
+into dense embeddings. The details are as follows.
+Specifically, in real-world applications of relational databases,
+data is usually stored in multiple (two-dimensional) tables con-
+nected by foreign keys. This means relational table data includes ta-
+ble features (i.e., each sample is a row in a table with many columns)
+and non-table features (such as the graph structure formed by for-
+eign key relationships). Therefore, we need to handle both the table
+data and their interrelationships.
+Firstly, for the target table data, we need to use table neural
+networks to model and learn from the data. This is due to the
+heterogeneity of table data, where each column’s feature type and
+meaning can vary significantly. As shown in Figure 4, we use a Table
+Encoder to model the table features. As mentioned in Section 2.2.3,
+we can construct different Table Encoders using the TableTransform
+and TableConv modules from the TNN part in rLLM, to obtain the
+table embeddings.
+Secondly, for the selected relational table, which encodes foreign-
+key relationships, we construct associations among samples and
+model them with a Graph Encoder. As described in Section 2.2.1,
+we can use the GraphTransform and GraphConv modules from the
+GNN part in rLLM, to construct various Graph Encoders, ultimately
+producing graph embeddings. Additionally, target table embeddings
+from the TNN, along with preprocessed embeddings of other tables,
+are also input to the Graph Encoder for joint modeling.
+Finally, we integrate the outcomes from the table encoder and the
+graph encoder, allowing the BRIDGE framework to concurrently
+
+model multi-table data and their interconnections. The training
+objective of the entire model can be either supervised (e.g., using a
+cross-entropy loss function based on labeled data) or unsupervised
+(e.g., designing an unsupervised loss function based on data recon-
+struction principles from table data or foreign key relationships).
+4
+Methods and Datasets
+4.1
+Included methods.
+We have already included some common methods, which can be
+categorized into two types.
+(1) GNN-type Methods:
+• Homogeneous Methods: GCN [12], GAT [14], RECT [15],
+TAPE [16], and OGC [17].
+• HeterogeneousMethods: HAN [18] and HGT [19].
+(2) TNN-type Methods:
+• Single-Table Learning: TabTransformer [20], TabNet [21],
+and FT-Transformer [22].
+• Relational Table Learning: BRIDGE.
+4.2
+Included Datasets
+In addition to the common graph data and single-table data, we
+further introduce a novel data collection (named SJTUTables)
+which includes three novel relational table datasets by enhancing
+existing classical ones. As summarized in Table 1, each dataset has
+a default classification task with a balanced and fixed train/val/test
+split setting. Specifically, we provide 20 labeled samples for each
+class in these datasets, with two additional sets of 500 validation
+samples and 1000 test samples. The complete details are as follows.
+• Table-MovieLens1M (TML1M) is a relational table dataset
+enhanced from the classical MovieLens1M dataset3, compris-
+ing three tables: users, movies and ratings. We have enriched
+the movie table with more comprehensive features and de-
+fined a new task for classifying user age ranges.
+• Table-LastFm2K (TLF2K) is a relational table dataset en-
+hanced from the classical LastFm2k dataset4, containing
+three tables: artists, user_artists and user_friends. We have
+enriched the artists table with more detailed features and
+streamlined the tags for each artist, defining a new task for
+music genre classification of artists.
+• Table-ACM12K (TACM12K) is a relational table dataset
+enhanced from the ACM heterogeneous graph dataset5. It
+includes four tables: papers, authors, citations and writings.
+The paper features include year, title, and abstract, while
+author features include name and affiliation. In addition, we
+also make some completion when some features of papers
+are lost. The task is to predict the conference of papers.
+Compared to other datasets. The RelBench dataset [9], recently
+scraped from websites like Amazon and Stack Overflow, includes
+commercially practical applications such as user lifetime value
+prediction and user forum activity prediction. However, this practi-
+cality also introduces some additional challenges such as imbalance,
+3https://grouplens.org/datasets/movielens/1m/
+4https://grouplens.org/datasets/hetrec-2011/
+5https://github.com/Jhy1993/HAN/tree/master/data/acm
+high noise levels, complex tasks, and large data volumes. In con-
+trast, SJTUTables are enhancements of classic datasets, offering
+simplicity and reliable data quality. In addition, its datasets focus
+on the most classic classification tasks in the machine learning field,
+providing fixed, balanced splits to facilitate standardized evaluation.
+Therefore, we strongly recommend designing standard RTL meth-
+ods based on SJTUTables before conducting further commercial
+application evaluations on the RelBench dataset.
+5
+Evaluation
+5.1
+Experimental Setup
+To demonstrate our system and the proposed BRIDGE algorithm,
+we conducted comparative experiments on the TML1M dataset.
+In the BRIDGE algorithm, we used TabTransformer as the table
+encoder and GCN as the graph encoder. To ensure fairness, we
+standardized training batches, dropout rates, and other parameters
+for each method and conducted multiple experiments to get the
+average results.
+5.2
+Comparative Methods
+We utilized the following baselines built into rLLM6:
+• TabTransformer: A deep tabular data modeling architecture
+for supervised and semi-supervised learning. This model is
+based on a self-attention Transformer architecture.
+• TabNet: A model for Attentive Interpretable Tabular Learn-
+ing, which uses neural networks to build a structure akin to
+decision trees for analyzing tabular data.
+• FT-Transformer: A simple Transformer adaptation for the
+tabular data domain. The model’s Feature Tokenizer compo-
+nent converts all features (categorical and numerical) into
+tokens and adds a [CLS] token.
+5.3
+Results and Analysis
+The experimental results indicate that traditional single-tabular
+TNNs can only learn knowledge from the single target table, failing
+to effectively utilize the information provided by multiple tables and
+the relationships between them. Consequently, their performance
+is relatively poor. In contrast, the BRIDGE algorithm effectively
+extracts valuable information from both the various tables and the
+relationships between them by combining a table encoder and a
+graph encoder, leading to a notable improvement in performance.
+6
+Conclusion
+We presented rLLM framework for relational table learning with
+LLMs. We are actively working to further integrate more advanced
+methods and also plan to optimize relevant data structures to im-
+prove system efficiency. All researchers and software engineers are
+welcomed to collaborate with us in extending its scope.
+References
+[1] Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan,
+Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda
+Askell, et al. Language models are few-shot learners. Advances in neural infor-
+mation processing systems, 33:1877–1901, 2020.
+6Due to the inability of the GNNs to directly process tabular data, GNN-type methods
+are not compared in this experiment.
+
+Table 1: Summary of the datasets.
+Dataset
+Tables [#row/#col]
+Relation Tables
+Label
+Classes
+#Train/#Val/#Test
+TML1M
+users [6,040/5]
+movies [3,883/11]
+ratings [1,000,209/4]
+ratings: user-movie
+Age range of user
+7
+[140/500/1000]
+TLF2K
+artists [9,047/10]
+user_artists [80,009/3]
+user_friends [12,717/3]
+user_artists: user-artist
+user_friends: user-user
+Genre of artist
+11
+[220/500/1000]
+TACM12K
+papers [12,499/5]
+authors [17,431/3]
+citations [30,789/2]
+writings [37,055/2]
+citations: paper-paper
+writings: paper-author
+Conference of paper
+14
+[280/500/1000]
+Table 2: Classification accuracy.
+Methods\Datasets
+TML1M
+TLF2K
+TACM12K
+Random
+0.144±0.01
+0.091±0.03
+0.075±0.0
+TabTransformer
+0.347±0.02
+0.1370±0.08
+0.091±0.01
+TabNet
+0.259±0.08
+0.1346±0.03
+0.135±0.01
+FT-Transformer
+0.352±0.02
+0.1319±0.01
+0.099±0.01
+BRIDGE
+0.362±0.03
+0.422±0.03
+0.256±0.01
+[2] Wayne Xin Zhao, Kun Zhou, Junyi Li, Tianyi Tang, Xiaolei Wang, Yupeng Hou,
+Yingqian Min, Beichen Zhang, Junjie Zhang, Zican Dong, et al. A survey of large
+language models. arXiv preprint arXiv:2303.18223, 2023.
+[3] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Fei Xia, Ed Chi,
+Quoc V Le, Denny Zhou, et al. Chain-of-thought prompting elicits reasoning
+in large language models. Advances in neural information processing systems,
+35:24824–24837, 2022.
+[4] Yotam Wolf, Noam Wies, Oshri Avnery, Yoav Levine, and Amnon Shashua. Fun-
+damental limitations of alignment in large language models. arXiv preprint
+arXiv:2304.11082, 2023.
+[5] Sébastien Bubeck, Varun Chandrasekaran, Ronen Eldan, Johannes Gehrke, Eric
+Horvitz, Ece Kamar, Peter Lee, Yin Tat Lee, Yuanzhi Li, Scott Lundberg, et al.
+Sparks of artificial general intelligence: Early experiments with gpt-4. arXiv
+preprint arXiv:2303.12712, 2023.
+[6] DB-Engines. Ranking scores per category in percent, July 2024.
+[7] Sašo Džeroski. Relational data mining. Springer, 2010.
+[8] Lukáš Zahradník, Jan Neumann, and Gustav Šír. A deep learning blueprint
+for relational databases. In NeurIPS 2023 Second Table Representation Learning
+Workshop, 2023.
+[9] Matthias Fey, Weihua Hu, Kexin Huang, Jan Eric Lenssen, Rishabh Ranjan,
+Joshua Robinson, Rex Ying, Jiaxuan You, and Jure Leskovec. Relational deep
+learning: Graph representation learning on relational databases. arXiv preprint
+arXiv:2312.04615, 2023.
+[10] Bryan Perozzi, Bahare Fatemi, Dustin Zelle, Anton Tsitsulin, Mehran Kazemi,
+Rami Al-Rfou, and Jonathan Halcrow. Let your graph do the talking: Encoding
+structured data for llms. arXiv preprint arXiv:2402.05862, 2024.
+[11] Zhikai Chen, Haitao Mao, Hongzhi Wen, Haoyu Han, Wei Jin, Haiyang Zhang,
+Hui Liu, and Jiliang Tang. Label-free node classification on graphs with large
+language models (llms). arXiv preprint arXiv:2310.04668, 2023.
+[12] Thomas N Kipf and Max Welling. Semi-supervised classification with graph
+convolutional networks. arXiv preprint arXiv:1609.02907, 2016.
+[13] William Brannon, Suyash Fulay, Hang Jiang, Wonjune Kang, Brandon Roy, Jad
+Kabbara, and Deb Roy. Congrat: Self-supervised contrastive pretraining for joint
+graph and text embeddings. arXiv preprint arXiv:2305.14321, 2023.
+[14] Petar Veličković, Guillem Cucurull, Arantxa Casanova, Adriana Romero,
+Pietro Lio, and Yoshua Bengio.
+Graph attention networks.
+arXiv preprint
+arXiv:1710.10903, 2017.
+[15] Zheng Wang, Xiaojun Ye, Chaokun Wang, Jian Cui, and S Yu Philip. Network
+embedding with completely-imbalanced labels. IEEE Transactions on Knowledge
+and Data Engineering, 33(11):3634–3647, 2020.
+[16] Xiaoxin He, Xavier Bresson, Thomas Laurent, Adam Perold, Yann LeCun, and
+Bryan Hooi. Harnessing explanations: Llm-to-lm interpreter for enhanced text-
+attributed graph representation learning. arXiv preprint arXiv:2305.19523, 2023.
+[17] Zheng Wang, Hongming Ding, Li Pan, Jianhua Li, Zhiguo Gong, and Philip S Yu.
+From cluster assumption to graph convolution: Graph-based semi-supervised
+learning revisited. arXiv preprint arXiv:2309.13599, 2023.
+[18] Xiao Wang, Houye Ji, Chuan Shi, Bai Wang, Yanfang Ye, Peng Cui, and Philip S
+Yu. Heterogeneous graph attention network. In The world wide web conference,
+pages 2022–2032, 2019.
+[19] Ziniu Hu, Yuxiao Dong, Kuansan Wang, and Yizhou Sun. Heterogeneous graph
+transformer. In Proceedings of the web conference 2020, pages 2704–2710, 2020.
+[20] Xin Huang, Ashish Khetan, Milan Cvitkovic, and Zohar Karnin.
+Tabtrans-
+former: Tabular data modeling using contextual embeddings. arXiv preprint
+arXiv:2012.06678, 2020.
+[21] Sercan Ö Arik and Tomas Pfister. Tabnet: Attentive interpretable tabular learning.
+In Proceedings of the AAAI conference on artificial intelligence, volume 35, pages
+6679–6687, 2021.
+[22] Yury Gorishniy, Ivan Rubachev, Valentin Khrulkov, and Artem Babenko. Re-
+visiting deep learning models for tabular data. Advances in Neural Information
+Processing Systems, 34:18932–18943, 2021.
+[23] Statista. Worldwide data created from 2010 to 2024 (in zettabytes)., 2021. Accessed
+on July 28, 2024.
+[24] Aakanksha Chopra and Suman Madan. Big data: a trouble or a real solution?
+International Journal of Computer Science Issues (IJCSI), 12(2):221, 2015.
+[25] Planning Guide. Getting started with big data. Intel IT Center, 2013.
+[26] Reginald D Smith. Distinct word length frequencies: distributions and symbol
+entropies. arXiv preprint arXiv:1207.2334, 2012.
+[27] AI Open. What are tokens and how to count them, 2023.
+[28] Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xi-
+aohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg
+Heigold, Sylvain Gelly, et al. An image is worth 16x16 words: Transformers for
+image recognition at scale. arXiv preprint arXiv:2010.11929, 2020.
+[29] AI Open. Pricing: Simple and flexible. only pay for what you use., 2024. Accessed
+on July 28, 2024.
+[30] Machel Reid, Nikolay Savinov, Denis Teplyashin, Dmitry Lepikhin, Timothy
+Lillicrap, Jean-baptiste Alayrac, Radu Soricut, Angeliki Lazaridou, Orhan Firat,
+Julian Schrittwieser, et al. Gemini 1.5: Unlocking multimodal understanding
+across millions of tokens of context. arXiv preprint arXiv:2403.05530, 2024.
+A
+Appendix
+A.1
+Details of Figure 1
+Global Data Trend Estimation. We calculated the total data
+distribution based on statistics and projections from Statista [23],
+which estimate that the global data volume will reach a staggering
+181ZB by 2025. Additionally, using reports from Chopra [24] and
+IBM [25], we roughly estimated the proportion of each modality and
+calculated their corresponding data volumes based on the projected
+global data total.
+LLM Cost Trend Estimation. To calculate the LLM cost, we first
+determined the number of tokens that different modalities of data
+could be converted into. First, for pure text data, we assumed the
+
+text to be in UTF-8 encoded plain English, where each character oc-
+cupies one byte. According to relevant studies [26], English words
+are approximately 6-11 characters. Using this ratio, we calculated
+the number of words corresponding to the text data and then used
+OpenAI’s empirical formula [27] to estimate the number of tokens.
+Second, for multimodal data, such as images and videos, we applied
+different methodologies. For images, we used 256px by 256px RGB
+images and employed tokenization techniques similar to those used
+in Vision Transformer [28], in conjunction with OpenAI’s pricing
+strategy for estimation[29]. For videos, we referred to Google’s
+Gemini 1.5 technical report [30], analyzing token calculation strate-
+gies demonstrated in the AlphaGo documentary. This approach
+involved randomly sampling one frame per second from the video
+and calculating the number of tokens in the same way as for images.
+Last, after determining the number of tokens for each modality,
+we calculated the associated costs. We assume that these data are
+uniformly given to GPT-3.5 Turbo[4] for analysis, the overhead re-
+quired to output the token is ignored, and finally, the approximate
+analysis cost is obtained.
+A.2
+Datasets
+We introduce a novel data collection (named SJTUTables) which
+includes three novel relational table datasets by enhancing existing
+classical ones. Each dataset has a default single-label classification
+task with a balanced and fixed train/val/test split setting. Specifi-
+cally, we provide 20 labeled samples for each class in these datasets,
+with two additional sets of 500 validation samples and 1000 test
+samples. The complete details are as follows.
+A.2.1
+TML1M. Derived from the classical MovieLens 1M dataset7,
+the TML1M dataset consists of three relational tables.
+• users table: Inherited from the MovieLens 1M dataset, it
+includes UserID, Gender, Age, Occupation and Zip-code in-
+formation of users. In sum, the row number is 6,040 and the
+column number is 5.
+• movies table: Enhanced by scraping the MovieLens web-
+site to gather additional metadata for each movie, including
+MovieID, Title, Year, Genre, Director, Cast, Runtime, Lan-
+guages, Certificate, Plot and Url. This enhancement provides
+more comprehensive and detailed textual information of
+movies. In sum, the row number is 3,883 and the column
+number is 11.
+• ratings table: Contains UserID, MovieID, Rating, and Times-
+tamp of ratings. In sum, the row number is 1,000,209 and the
+column number is 4.
+The default task for this dataset is to predict the user’s age range
+in the User table.
+A.2.2
+TLF2K. Derived from the classical LastFM 2K dataset8, the
+TLF2K dataset consists of three relational tables.
+• artists table: Enhanced by scraping Last.FM, its column
+includes artistID, type, name, born, yearsActive, location,
+genre, tag_list, biography and url. Every artist is classified
+into one of 11 genres. Specifically, ChatGPT was used to
+7https://grouplens.org/datasets/movielens/1m/
+8https://grouplens.org/datasets/hetrec-2011/
+assign a single label to each artist based on their tag list, in-
+cluding confidence scores, with manual intervention for low-
+confidence labels. As such, original tags, by default, should
+not be used for this classification task. In sum, the row num-
+ber is 9,047 and the column number is 10.
+• user_friends table: Contains 12,717 bi-directional edge re-
+lationships, representing friendships among 1,892 users. In
+sum, the row number is 12,717 and the column number is 2.
+The columns are userID an friendID.
+• user_ artists table: Represents listening relationships be-
+tween users and artists. In sum, the row number is 80,009 and
+the column number is 3. The columns are userID, artistID
+and weight, where weight represents listening count.
+The default task for this dataset is to predict the music genre of
+artists.
+A.2.3
+TACM12K. Derived from the classical ACM heterogeneous
+graph dataset9, TACM12K contains four tables:
+• papers table: Manually labeled the year information for
+venues and added year attributes via the ’PvsV’ matrix. Cor-
+rected errors in the original ’PvsC’ markings, reclassified
+STOC as COLT in ’VvsC’, and recalculated the ’PvsV * VvsC’
+matrix to add conference attributes to papers. In addition,
+we also provide the title and abstract information as two
+columns. In sum, the row number is 12,499 and the column
+number is 5, and the columns are paper_id, year, conference,
+title and abstract.
+• authors table: Extracted from the file, it includes original
+author IDs and names, with firm information added based
+on ’AvsF’. In sum, the row number is 17,431 and the column
+number is 3, and the columns are author_id, name and firm.
+• citations table: Derived from the original ’PvsP’ matrix. In
+sum, the row number is 30,789 and the column number is
+2, and the columns are paper_id and paper_id_cited, where
+the former column cites the latter.
+• writings table: Derived from the original ’PvsA’ matrix. In
+sum, the row number is 37,055 and the column number is 2,
+and the columns are paper_id and author_id.
+The default task for this dataset is to predict the conference of
+papers.
+9https://github.com/Jhy1993/HAN/tree/master/data/acm

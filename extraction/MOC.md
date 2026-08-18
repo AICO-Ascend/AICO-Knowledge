@@ -17,12 +17,14 @@
 - [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation (2026/1/4)
 - [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] — Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving (2026/1/4)
 
-## kv-cache (4)
+## kv-cache (6)
 
 - [[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]] — IndexCache: Accelerating Sparse Attention via Cross-Layer Index Reuse (2026/3/12)
 - [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] — Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving (2026/1/4)
 - [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] — A Survey on Large Language Model Acceleration based on KV Cache Management (2026/1/4)
 - [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] — Prefill-as-a-Service: KVCache of Next-Generation Models Could Go Cross-Datacenter (2026/4/16)
+- [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] — KV Cache Optimization Strategies for Scalable and Efficient LLM Inference (2026/3/20)
+- [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] — CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion (2024/5/26)
 
 ## long-context (2)
 
@@ -42,7 +44,7 @@
 - [[qwen2-5-vl-technical-report]] — Qwen2.5-VL Technical Report (2026/1/5)
 - [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation (2026/1/4)
 
-## rl (6)
+## rl (7)
 
 - [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] — GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING (2026/1/1)
 - [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] — GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEMENT LEARNING (2025/4/27)
@@ -50,6 +52,7 @@
 - [[hybridflow-a-flexible-and-efficient-rlhf-framework]] — HybridFlow: A Flexible and Efficient RLHF Framework (2026/1/17)
 - [[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]] — AREAL: A Large-Scale Asynchronous Reinforcement Learning System for Language Reasoning (2026/1/17)
 - [[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]] — DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning (2026/1/17)
+- [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] — Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning (2026/7/8)
 
 ## sparse-attention (1)
 
@@ -68,7 +71,7 @@
 - [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] — LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification (2025/2/24)
 - [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] — SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences (2025/5/27)
 
-## training (10)
+## training (11)
 
 - [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] — EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test (2025/3/3)
 - [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] — From ATOP to ZCube: Automated Topology Optimization Pipeline and A Highly Cost-Effective Network Topology for Large Model Training (2025/8/27)
@@ -80,6 +83,7 @@
 - [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] — Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM (2026/1/4)
 - [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] — Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism (2026/1/4)
 - [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] — Efficient Training of Large Language Models on Distributed Infrastructures: A Survey (2026/1/4)
+- [[muon-is-scalable-for-llm-training]] — Muon is Scalable for LLM Training (2025/2/24)
 
 ## 全部论文（按编号）
 
@@ -144,6 +148,15 @@
 - #59 [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] — LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification
 - #60 [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] — SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences
 - #61 [[a-survey-of-large-language-models]] — A Survey of Large Language Models
+- #62 [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] — KV Cache Optimization Strategies for Scalable and Efficient LLM Inference
+- #63 [[kimi-linear-an-expressive-efficient-attention-architecture]] — Kimi Linear: An Expressive, Efficient Attention Architecture
+- #64 [[muon-is-scalable-for-llm-training]] — Muon is Scalable for LLM Training
+- #65 [[attention-residuals]] — Attention Residuals
+- #66 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] — Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperPod
+- #67 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] — CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion
+- #68 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] — CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA Kernel Generation
+- #69 [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] — Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning
+- #70 [[rllm-relational-table-learning-with-llms]] — rLLM: Relational Table Learning with LLMs
 
 ## 跨论文关系与演进
 

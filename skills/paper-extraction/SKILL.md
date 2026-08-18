@@ -67,7 +67,7 @@ python3 skills/paper-extraction/sync_from_source.py --push
 ├── papers/                      # source PDFs (named <slug>.pdf)
 ├── papers_effective.md          # ⭐ master clean index (source of truth)
 ├── papers_download_list.txt     # slug | abs_url | pdf_url
-├── archive/                     # raw provenance (paper_source_moonlight.md = 用户唯一要维护的文件)
+├── archive/                     # raw provenance (paper_source_moonlight.bib = 用户唯一要维护的文件，BibTeX 导出)
 ├── skills/paper-extraction/     # THIS skill + scripts
 │   ├── SKILL.md                 #   本文件
 │   ├── sync_from_source.py      #   ⭐ 一键同步编排（日常入口）
@@ -79,6 +79,8 @@ python3 skills/paper-extraction/sync_from_source.py --push
 │   └── m3_caption.py            #   火山网关 MiniMax-M3 图深度解读（--save 直写 captions.json）
 └── extraction/                  # generated knowledge base
     ├── <slug>.md                # per-paper structured (Obsidian-flavored)
+    ├── deep/<slug>.md           # ⭐ 全要素深读笔记（技术点/表格/跨论文关系，独立维护，extract 重跑不丢）
+    ├── moc_relations.md         # ⭐ MOC 跨论文关系谱系（独立维护，MOC 嵌入 ![[moc_relations]]）
     ├── fulltext/<slug>.txt      # full text for grep / RAG chunk 源
     ├── assets/<slug>-pNN.png    # figure-page renders (150 DPI)
     ├── figures_index.md         # ⭐ figure library
@@ -89,6 +91,8 @@ python3 skills/paper-extraction/sync_from_source.py --push
     ├── sync_report.md           # 最近一次同步报告（待确认/失败/待解读）
     └── README.md                # 使用说明 + 外部工程接入
 ```
+
+> **持久化铁律**：`extract_phase1.py` 每次全量重生成所有 `<slug>.md` 与 `MOC.md`——任何手写进这两处正文的内容会被下次重跑抹掉。深读产出**必须落独立文件**：技术点/表格/跨论文关系 → `extraction/deep/<slug>.md`（extract 检测后嵌入 `![[deep/<slug>]]`）；MOC 谱系 → `extraction/moc_relations.md`（嵌入 `![[moc_relations]]`）；图解读 → `minimax_captions.json`（extract 直读）。详见 `DEEP_LEARNING_PROTOCOL.md`。
 
 ## 查询（任何工程）
 
@@ -129,11 +133,11 @@ After download: update index local-file column + counts; append `papers_download
 
 **Run `verify_pdfs.py` first** on any repair task — 0-page `%PDF` files are *truncated downloads*, not "missing". Don't re-extract broken PDFs; download-fix first.
 
-**Don't parallel-`curl` arxiv PDFs** — rate-limit truncation (~13/50 came back 0-page). Use `chunk_download.py` for everything; sequential-looking but avoids rework. e-print (LaTeX 源) 可以 8 线程（有 deadline+重试+冷却兜底）。
-
-**arxiv large files (>3MB)**: per-connection ~1MB ceiling on this network. 256KB chunks + 15 retries is the only reliable path (verified up to 12.3MB). If it still stalls → mark `✗ 网络`, user drops PDF in `papers/`.
+**arxiv PDF 下载慢是常态（本环境 ~17 KB/s）**——不是被墙（HTTP 206 正常返回），是 arxiv 对本环境限速/网络质量差。`chunk_download.py` 已加：① 已下好的文件跳过（幂等重跑）；② 每文件 300s 总 deadline（防 dribble 挂死）；③ 每块 60s timeout × 4 重试。大文件（>3MB 技术报告）单篇可能 5-8 分钟；中断会留 0 字节/部分损坏文件，重跑自动重下。若 `chunk_dl` 仍卡，**并行 curl 兜底**：`curl -sL --max-time 1500 --retry 5 -A "Mozilla/5.0 Chrome/120" https://arxiv.org/pdf/<aid> -o papers/<slug>.pdf &`（4 篇并行，墙钟取最慢一篇）。e-print（LaTeX 源）可以 8 线程。
 
 **arxiv API returns empty XML** — scrape abs-page HTML instead.
+
+**arxiv title-search URL**：用 `https://arxiv.org/search/?query=<title>&searchtype=title`（裸参数）。旧版 `&abstracts=hide&size=10` 现在返回 **HTTP 400**（arxiv 改了，2026-08 验证）。且结果页标题带 `<span class="search-hit">` 标签，jaccard 前必须 `re.sub(r"<[^>]+>","",t)` 去标签，否则分数被压低（SGLang 0.62<0.8 → 误判未解析）。阈值 `>=0.8` 自动接受，截断碎片（"Delivery Note"）解析不到→留待确认（绝不猜来源）。
 
 **Don't capture binary PDFs in bash `$(curl ...)`** — null bytes stripped → corrupt. Use `curl -o` / urllib.
 
@@ -150,6 +154,12 @@ After download: update index local-file column + counts; append `papers_download
 **`pkill -f <script>` 会匹配自身命令行自杀（exit 144）**——用 `pgrep -f 'name[.]py'` 括号技巧，且同条命令里别再出现脚本的纯文本名。
 
 **urlopen timeout 是 per-socket-op**——dribble 连接能挂死永远；eprint/PDF 下载都要包**总 deadline**（180s）。
+
+**`eprint_formulas.py` 是 `sync_from_source.py` 的慢瓶颈**——step 7 给每篇新论文下载 arxiv LaTeX e-print tarball（多 MB × ~17KB/s）。8 篇新论文轻易 >9 分钟，会把整个 sync 拖到 bash timeout，**连 step 6（index 更新）都跑不到**，留下一份旧的 sync_report.md（"0 added"假象）。解法：当 sync 卡死看 log 无 "== 6. update index ==" 时，把 index 更新与 extract 从 sync 解耦——直接调 `abs_page_meta`+append rows+`extract_phase1`（无网络秒级），eprint 单独 `nohup python3 .../eprint_formulas.py > /tmp/eprint.log 2>&1 &` 后台跑，下次 extract 自动并入 formulas.json。
+
+**管道缓冲吞日志**——`python ... | tee log | grep` 时下游管道让 python stdout 全缓冲，`log` 文件空、看不到进度，误以为进程没动。诊断网络/下载问题时直接 `python ... > log 2>&1`（无下游管道）或前台跑不带 grep。
+
+**Bash 工具里 `&` 后台是陷阱**——`python ... &` 后跟 `echo`，Bash 工具见 echo 完即返回 exit 0，python 被 detach，输出进缓冲日志看不到、`wait` 也等不到。要真后台：用工具的 `run_in_background:true`，或 `nohup ... > /tmp/x.log 2>&1 &` + 显式 `disown` + `pgrep -f` 轮询。
 
 **Efficiency levers**:
 - 深度解读：4-5 张图并行/批处理（`m3_caption.py` 走火山网关 M3，或 Claude Read PNG）。

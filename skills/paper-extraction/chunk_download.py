@@ -18,19 +18,28 @@ def total_size(url):
         with urllib.request.urlopen(req, timeout=30) as r:
             return int(r.headers.get("Content-Length",0) or 0)
 
-def chunk_dl(url, dest, chunk=262144, max_retries=15):
+def chunk_dl(url, dest, chunk=262144, max_retries=4, deadline_s=300):
+    # skip if already downloaded + valid (idempotent re-runs of sync)
+    try:
+        if fitz.open(dest).page_count > 1:
+            return True, 0
+    except Exception:
+        pass
     total=total_size(url)
     if not total:
         print("  no content-length"); return False, 0
+    t0=time.time()
     with open(dest,"wb") as f:
         pos=0
         while pos<total:
+            if time.time()-t0 > deadline_s:
+                print(f"  file deadline {deadline_s}s exceeded at {pos}/{total}"); return False, pos
             end=min(pos+chunk-1, total-1)
             done=False
             for attempt in range(max_retries):
                 req=urllib.request.Request(url, headers={"User-Agent":UA,"Range":f"bytes={pos}-{end}"})
                 try:
-                    with urllib.request.urlopen(req, timeout=90) as r:
+                    with urllib.request.urlopen(req, timeout=60) as r:
                         data=r.read()
                         if data:
                             f.write(data); f.flush()

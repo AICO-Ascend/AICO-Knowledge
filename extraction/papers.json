@@ -939,5 +939,139 @@
   "md": "extraction/a-survey-of-large-language-models.md",
   "fulltext": "extraction/fulltext/a-survey-of-large-language-models.txt",
   "fulltext_chars": 860409
+ },
+ {
+  "num": 62,
+  "title": "KV Cache Optimization Strategies for Scalable and Efficient LLM Inference",
+  "slug": "kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference",
+  "date": "2026/3/20",
+  "arxiv": "https://arxiv.org/abs/2603.20397",
+  "pdf_url": "https://arxiv.org/pdf/2603.20397",
+  "tags": [
+   "kv-cache"
+  ],
+  "pages": 24,
+  "figs": 14,
+  "md": "extraction/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference.md",
+  "fulltext": "extraction/fulltext/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference.txt",
+  "fulltext_chars": 91318
+ },
+ {
+  "num": 63,
+  "title": "Kimi Linear: An Expressive, Efficient Attention Architecture",
+  "slug": "kimi-linear-an-expressive-efficient-attention-architecture",
+  "date": "2025/10/30",
+  "arxiv": "https://arxiv.org/abs/2510.26692",
+  "pdf_url": "https://arxiv.org/pdf/2510.26692",
+  "tags": [],
+  "pages": 28,
+  "figs": 7,
+  "md": "extraction/kimi-linear-an-expressive-efficient-attention-architecture.md",
+  "fulltext": "extraction/fulltext/kimi-linear-an-expressive-efficient-attention-architecture.txt",
+  "fulltext_chars": 94726
+ },
+ {
+  "num": 64,
+  "title": "Muon is Scalable for LLM Training",
+  "slug": "muon-is-scalable-for-llm-training",
+  "date": "2025/2/24",
+  "arxiv": "https://arxiv.org/abs/2502.16982",
+  "pdf_url": "https://arxiv.org/pdf/2502.16982",
+  "tags": [
+   "training"
+  ],
+  "pages": 19,
+  "figs": 10,
+  "md": "extraction/muon-is-scalable-for-llm-training.md",
+  "fulltext": "extraction/fulltext/muon-is-scalable-for-llm-training.txt",
+  "fulltext_chars": 55936
+ },
+ {
+  "num": 65,
+  "title": "Attention Residuals",
+  "slug": "attention-residuals",
+  "date": "2026/3/16",
+  "arxiv": "https://arxiv.org/abs/2603.15031",
+  "pdf_url": "https://arxiv.org/pdf/2603.15031",
+  "tags": [],
+  "pages": 21,
+  "figs": 9,
+  "md": "extraction/attention-residuals.md",
+  "fulltext": "extraction/fulltext/attention-residuals.txt",
+  "fulltext_chars": 73664
+ },
+ {
+  "num": 66,
+  "title": "Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperPod",
+  "slug": "huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod",
+  "date": "2025/8/4",
+  "arxiv": "https://arxiv.org/abs/2508.02520",
+  "pdf_url": "https://arxiv.org/pdf/2508.02520",
+  "tags": [],
+  "pages": 32,
+  "figs": 6,
+  "md": "extraction/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.md",
+  "fulltext": "extraction/fulltext/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.txt",
+  "fulltext_chars": 94761
+ },
+ {
+  "num": 67,
+  "title": "CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion",
+  "slug": "cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion",
+  "date": "2024/5/26",
+  "arxiv": "https://arxiv.org/abs/2405.16444",
+  "pdf_url": "https://arxiv.org/pdf/2405.16444",
+  "tags": [
+   "kv-cache"
+  ],
+  "pages": 16,
+  "figs": 17,
+  "md": "extraction/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.md",
+  "fulltext": "extraction/fulltext/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.txt",
+  "fulltext_chars": 75206
+ },
+ {
+  "num": 68,
+  "title": "CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA Kernel Generation",
+  "slug": "cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation",
+  "date": "2026/2/27",
+  "arxiv": "https://arxiv.org/abs/2602.24286",
+  "pdf_url": "https://arxiv.org/pdf/2602.24286",
+  "tags": [],
+  "pages": 32,
+  "figs": 0,
+  "md": "extraction/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.md",
+  "fulltext": "extraction/fulltext/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.txt",
+  "fulltext_chars": 74680
+ },
+ {
+  "num": 69,
+  "title": "Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning",
+  "slug": "single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning",
+  "date": "2026/7/8",
+  "arxiv": "https://arxiv.org/abs/2607.07508",
+  "pdf_url": "https://arxiv.org/pdf/2607.07508",
+  "tags": [
+   "rl"
+  ],
+  "pages": 14,
+  "figs": 6,
+  "md": "extraction/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning.md",
+  "fulltext": "extraction/fulltext/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning.txt",
+  "fulltext_chars": 45212
+ },
+ {
+  "num": 70,
+  "title": "rLLM: Relational Table Learning with LLMs",
+  "slug": "rllm-relational-table-learning-with-llms",
+  "date": "2024/7/29",
+  "arxiv": "https://arxiv.org/abs/2407.20157",
+  "pdf_url": "https://arxiv.org/pdf/2407.20157",
+  "tags": [],
+  "pages": 6,
+  "figs": 4,
+  "md": "extraction/rllm-relational-table-learning-with-llms.md",
+  "fulltext": "extraction/fulltext/rllm-relational-table-learning-with-llms.txt",
+  "fulltext_chars": 31984
  }
 ]

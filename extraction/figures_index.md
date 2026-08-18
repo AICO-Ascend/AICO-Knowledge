@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 515 张图，来自 54 篇论文；其中 ⭐38 张已深度解读。
+共 588 张图，来自 62 篇论文；其中 ⭐38 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -952,7 +952,7 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.12 (p.16): End-to-end experiments of Mooncake and vLLM on simulated data.…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p17.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.13 (p.17): Request TTFT and TBT distributions of Mooncake and vLLM under real workloads…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 
-### kv-cache (22)
+### kv-cache (53)
 
 - ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p01.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.1 (p.1): Benchmark comparison between GLM-5 and GLM-5 + IndexCache. IndexCache removes 50…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 - ⭐ ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p03.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.2 (p.3): Side-by-side comparison of inference loops. (a) Standard DSA runs the lightning …  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
@@ -976,6 +976,37 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 - ⭐ ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p06.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.3 (p.6): Deployment topology of the PrfaaS-PD architecture.…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
 - ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p07.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.4 (p.7): Hybrid prefix cache pool. Linear states and full-attention KVCache are managed b…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
 - ![[assets/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-p11.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.5 (p.11): Illustration of the grid search process for the two optimization variables. (a) …  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p02.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.1 (p.2): Autoregressive generation, at each step the new token (orange) attends to all pr…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p03.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.2 (p.3): Data-flow of the KV cache within a single transformer layer. Input token xt fans…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p03.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.3 (p.3): KV cache memory as a function of context length for three LLaMA-2 model variants…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p04.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.4 (p.4): Causal self-attention weight matrix for “The apple tastes sweet.” visualised wit…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p05.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.5 (p.5): Taxonomy of KV cache optimization techniques surveyed in this paper, organized i…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p06.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.6 (p.6): Upper plots illustrate symbolic plots of an attention map deploying different KV…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p07.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.7 (p.7): The graph shows the simplified workflow of SnapKV, where the orange area represe…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p09.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.8 (p.9): Definition of per-token and per-channel quantization. X ∈Rlprompt×d is the key/v…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p09.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.9 (p.9): Palu’s low-rank projection method for KV-cache reduction. A weight matrix W of l…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p11.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.10 (p.11): vLLM system overview [22]. 11…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p12.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.11 (p.12): Operation flow of the prefetching module of InfiniGen. [23]. A layer-wise KV cac…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p15.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.12 (p.15): Standard linear attention (top) vs. loglinear attention (bottom). The input cons…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p17.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.13 (p.17): During Pre-filling, ShadowKV offloads the value cache to the CPU while maintaini…  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p17.png]] — **KV Cache Optimization Strategies for Scalable and ** Fig.14 (p.17): System overview of TailorKV. Offline identification categorizes the layers into …  `[[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p02.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.1 (p.2): Contrasting full KV recompute, prefix caching, full KV reuse, and CacheBlend’s s…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p04.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.2 (p.4): Generation quality improves as more text chunks are retrieved. and fetch top-k r…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p04.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.3 (p.4): An illustrative example of an LLM input with two text chunks prepended to a quer…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p05.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.4 (p.5): Contrasting the attention matrices of (a) full KV recompute and (b) full KV reus…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p06.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.5 (p.6): Illustrated contrast between (a) full KV recompute and (b) selective KV recomput…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p06.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.6 (p.6): Attention deviation reduces as we recompute the KV of more tokens on each layer.…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.7 (p.7): Distribution of KV deviation of different tokens on one layer. 5 vs. 6 12 vs. 13…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.8 (p.7): Rank correlation of the KV deviation per token be- tween two consecutive layers.…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.9 (p.7): CacheBlend selects the HKVD (high KV deviation) tokens of one layer by computing…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p08.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.10 (p.8): (a) Smartly picking the recompute ratio will not incur an extra delay. (b) Smart…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p09.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.11 (p.9): CacheBlend system (green stared) in light of LLM context augmented generation fo…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p10.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.12 (p.10): CacheBlend reduces TTFT by 2.2-3.3× compared to full KV recompute with negligibl…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p10.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.13 (p.10): Generation quality of CacheBlend with Yi-34B vs MapReduce and MapRerank. 7…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p11.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.14 (p.11): CacheBlend achieves lower TTFT with higher throughput in RAG scenarios compared …  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p11.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.15 (p.11): CacheBlend outperforms baseline with varying chunk numbers, chunk lengths, and b…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p08.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.16 (p.8): This means that even if the storage device is a fast device (ex. CPU RAM), the d…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
+- ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p12.png]] — **CacheBlend: Fast Large Language Model Serving for ** Fig.17 (p.12): CacheBlend’s outperforms baselines when using RAM and slower disks…  `[[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]]`
 
 ### long-context (8)
 
@@ -1034,7 +1065,7 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p13.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.11 (p.13): SLO attainment (↑) for end-to-end inference across multiple models and image cou…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 - ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p16.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.12 (p.16): Breakdown of latency for encode and prefill stages using the InternVL2-8B model …  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 
-### rl (89)
+### rl (95)
 
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
@@ -1125,6 +1156,12 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 - ![[assets/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-p37.png]] — **DeepSeek-R1: Incentivizing Reasoning Capability in** Fig.7 (p.37): As can be seen, without the LC reward, language consistency gradually deteriorat…  `[[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]]`
 - ![[assets/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-p48.png]] — **DeepSeek-R1: Incentivizing Reasoning Capability in** Fig.13 (p.48): We have categorized potential content safety challenges faced by language models…  `[[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]]`
 - ![[assets/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-p53.png]] — **DeepSeek-R1: Incentivizing Reasoning Capability in** Fig.14 (p.53): For DeepSeek-V3 and DeepSeek-R1, we evaluated safety scores for models with and …  `[[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]]`
+- ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p01.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.1 (p.1): The performance of SAO on reasoning and coding benchmarks. The four reasoning be…  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
+- ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p03.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.2 (p.3): Overview of SAO with single rollout design. The numbers denote the generation or…  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
+- ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p06.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.3 (p.6): Performance comparison between SAO and GRPO (w/ DIS) during training. It can be …  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
+- ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p07.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.4 (p.7): Training dynamics of asynchronous single-rollout RL. (a) Explained Variance for …  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
+- ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p09.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.5 (p.9): Online learning simulation under changing writing-style preferences. 5…  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
+- ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p13.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.6 (p.13): Training reward for token-level SAO training and step-level variants, where toke…  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
 
 ### sparse-attention (4)
 
@@ -1214,7 +1251,7 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 - ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p06.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.5 (p.6): Speedup comparison of standard speculative decoding and SpecExtend across varyin…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
 - ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p07.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.6 (p.7): Decoding speed (left) and average ac- cepted length (right) of the DeepSeek-R1-D…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
 
-### training (90)
+### training (100)
 
 - ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p01.png]] — **EAGLE-3: Scaling up Inference Acceleration of Larg** Fig.1 (p.1): Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target …  `[[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]`
 - ⭐ ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]] — **EAGLE-3: Scaling up Inference Acceleration of Larg** Fig.2 (p.2): Speedup ratios of different methods at temperature=0. For the standard speculati…  `[[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]`
@@ -1306,6 +1343,16 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 - ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.6 (p.7): Validation set perplexity. All language models are trained for 300k iterations. …  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p08.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.7 (p.8): Training loss for BERT model using the original architec- ture (a) and the rearr…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p12.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.8 (p.12): Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ![[assets/muon-is-scalable-for-llm-training-p01.png]] — **Muon is Scalable for LLM Training** Fig.1 (p.1): Scaling up with Muon. (a) Scaling law experiments comparing Muon and Adam. Muon …  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p04.png]] — **Muon is Scalable for LLM Training** Fig.2 (p.4): Validation loss curves for AdamW (green), Muon without weight decay (red), and M…  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p07.png]] — **Muon is Scalable for LLM Training** Fig.3 (p.7): Fitted scaling law curves for Muon and AdamW optimizers.…  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p10.png]] — **Muon is Scalable for LLM Training** Fig.4 (p.10): SVD entropy of weight matrices across different training iterations. We categori…  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p15.png]] — **Muon is Scalable for LLM Training** Fig.5 (p.15): Optimization Landscapes for Scaling Law Hyper-parameters Across FLOPs Budgets…  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p15.png]] — **Muon is Scalable for LLM Training** Fig.6 (p.15): D…  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p17.png]] — **Muon is Scalable for LLM Training** Fig.7 (p.17): Training dynamics comparison between Moonlight and Moonlight-A…  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p09.png]] — **Muon is Scalable for LLM Training** Fig.8 (p.9): 6.…  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p18.png]] — **Muon is Scalable for LLM Training** Fig.9 (p.18): Distribution of singular values for each weight matrix in the attention layers. …  `[[muon-is-scalable-for-llm-training]]`
+- ![[assets/muon-is-scalable-for-llm-training-p19.png]] — **Muon is Scalable for LLM Training** Fig.10 (p.19): Distribution of singular values for each weight matrix in the feed-forward netwo…  `[[muon-is-scalable-for-llm-training]]`
 
 ## 按论文
 
@@ -2500,3 +2547,173 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
   - In this paradigm, there are typically three components: task planner, plan executor, and environment36. Specifically, task planner, which is played by LLMs, aims to generate the whole plan to solve a 
 - Fig.17 (p.59) ![[assets/a-survey-of-large-language-models-p59.png]]
   - Hallucination widely occurs in existing LLMs, even the most superior LLMs such as GPT-4 [46]. Furthermore, existing work shows that LLMs encounter difficulties in recognizing the hallucinated con- ten
+
+### #62 KV Cache Optimization Strategies for Scalable and Efficient 
+
+- Fig.1 (p.2) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p02.png]]
+  - Autoregressive generation, at each step the new token (orange) attends to all prior tokens (cyan). Without caching, keys and values for every past token would be recomputed from scratch at each step. 
+- Fig.2 (p.3) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p03.png]]
+  - Data-flow of the KV cache within a single transformer layer. Input token xt fans into three projections; Kt and Vt are appended to their respective caches (teal); Qt attends over the full caches to pr
+- Fig.3 (p.3) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p03.png]]
+  - KV cache memory as a function of context length for three LLaMA-2 model variants under fp16 precision.
+- Fig.4 (p.4) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p04.png]]
+  - Causal self-attention weight matrix for “The apple tastes sweet.” visualised with the Viridis colormap (dark purple = low, yellow = high). Gray cells are causally masked future tokens. Each row sums t
+- Fig.5 (p.5) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p05.png]]
+  - Taxonomy of KV cache optimization techniques surveyed in this paper, organized into five major categories.
+- Fig.6 (p.6) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p06.png]]
+  - Upper plots illustrate symbolic plots of an attention map deploying different KV cache policies in LLM generation. Lower right: contrasts their accuracy-memory trade-off. Left: the overview of H2O fra
+- Fig.7 (p.7) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p07.png]]
+  - The graph shows the simplified workflow of SnapKV, where the orange area represents the cluster of features per head selected by SnapKV. These features are then used to form new Key-Value pairs concat
+- Fig.8 (p.9) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p09.png]]
+  - Definition of per-token and per-channel quantization. X ∈Rlprompt×d is the key/value cache, where lprompt is the number of tokens and d is the number of channels. zX is the zero-point, and sX is the s
+- Fig.9 (p.9) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p09.png]]
+  - Palu’s low-rank projection method for KV-cache reduction. A weight matrix W of linear projection is decomposed into two low-rank matrices. Input X is down-projected to a latent representation H, which
+- Fig.10 (p.11) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p11.png]]
+  - vLLM system overview [22]. 11
+- Fig.11 (p.12) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p12.png]]
+  - Operation flow of the prefetching module of InfiniGen. [23]. A layer-wise KV cache management strategy is proposed in LayerKV [24]. The core concept is to split KV cache by layers, keeping only a subs
+- Fig.12 (p.15) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p15.png]]
+  - Standard linear attention (top) vs. loglinear attention (bottom). The input consists of query, key, and value vectors [30]. at nearby keys and averages their value; while Linear Attention is alike glo
+- Fig.13 (p.17) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p17.png]]
+  - During Pre-filling, ShadowKV offloads the value cache to the CPU while maintaining a low-rank key cache, landmarks, and outliers on the GPU. During decoding, it employs landmarks for sparse attention.
+- Fig.14 (p.17) ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p17.png]]
+  - System overview of TailorKV. Offline identification categorizes the layers into quantization-friendly and sparsity-friendly. For quantization-friendly layers, we employ aggressive static quantization.
+
+### #63 Kimi Linear: An Expressive, Efficient Attention Architecture
+
+- Fig.1 (p.1) ![[assets/kimi-linear-an-expressive-efficient-attention-architecture-p01.png]]
+  - (a) Performance vs. acceleration. With strict fair comparisons with 1.4T training tokens, on MMLU-Pro (4k context length, red stars), Kimi Linear leads performance (51.0) at similar speed. On RULER (1
+- Fig.2 (p.5) ![[assets/kimi-linear-an-expressive-efficient-attention-architecture-p05.png]]
+  - Execution time of kernels for vary- ing input lengths, with a uniform batch size of 1 and 16 heads.
+- Fig.3 (p.5) ![[assets/kimi-linear-an-expressive-efficient-attention-architecture-p05.png]]
+  - Neural Parameterization
+- Fig.4 (p.7) ![[assets/kimi-linear-an-expressive-efficient-attention-architecture-p07.png]]
+  - Results on synthetic tasks: palindrome, multi query associative recall, and the state tracking.
+- Fig.5 (p.9) ![[assets/kimi-linear-an-expressive-efficient-attention-architecture-p09.png]]
+  - The fitted scaling law curves for MLA and Kimi Linear. balanced positional bias across layers, which improves robustness and extrapolation at long ranges, leading to stronger long-context performance.
+- Fig.6 (p.12) ![[assets/kimi-linear-an-expressive-efficient-attention-architecture-p12.png]]
+  - The training and test accuracy curves for Kimi Linear@1.4T and MLA@1.4T during Math RL training. Kimi Linear consistently outperforms the full attention baseline by a sizable margin during the whole R
+- Fig.7 (p.13) ![[assets/kimi-linear-an-expressive-efficient-attention-architecture-p13.png]]
+  - (a) The prefilling time of MLA (full attention), hybrid GDN-H and our Kimi Linear. (b) The time per output token (TPOT) for MLA, GDN-H and Kimi Linear during decoding. (We use batch size = 1 here for 
+
+### #64 Muon is Scalable for LLM Training
+
+- Fig.1 (p.1) ![[assets/muon-is-scalable-for-llm-training-p01.png]]
+  - Scaling up with Muon. (a) Scaling law experiments comparing Muon and Adam. Muon is ∼2× more computational efficient than Adam with compute optimal training. (b) The MMLU performance of our Moonlight m
+- Fig.2 (p.4) ![[assets/muon-is-scalable-for-llm-training-p04.png]]
+  - Validation loss curves for AdamW (green), Muon without weight decay (red), and Muon with weight decay (blue).
+- Fig.3 (p.7) ![[assets/muon-is-scalable-for-llm-training-p07.png]]
+  - Fitted scaling law curves for Muon and AdamW optimizers.
+- Fig.4 (p.10) ![[assets/muon-is-scalable-for-llm-training-p10.png]]
+  - SVD entropy of weight matrices across different training iterations. We categorize the weight matrices into 6 different groups: 1) AttnQO denotes the weight matrices related to the query and output pr
+- Fig.5 (p.15) ![[assets/muon-is-scalable-for-llm-training-p15.png]]
+  - Optimization Landscapes for Scaling Law Hyper-parameters Across FLOPs Budgets
+- Fig.6 (p.15) ![[assets/muon-is-scalable-for-llm-training-p15.png]]
+  - D
+- Fig.7 (p.17) ![[assets/muon-is-scalable-for-llm-training-p17.png]]
+  - Training dynamics comparison between Moonlight and Moonlight-A
+- Fig.8 (p.9) ![[assets/muon-is-scalable-for-llm-training-p09.png]]
+  - 6.
+- Fig.9 (p.18) ![[assets/muon-is-scalable-for-llm-training-p18.png]]
+  - Distribution of singular values for each weight matrix in the attention layers. We use WC to denote the weight matrices at each layer that compress the hidden states to the shared latent spaces for ke
+- Fig.10 (p.19) ![[assets/muon-is-scalable-for-llm-training-p19.png]]
+  - Distribution of singular values for each weight matrix in the feed-forward network (FFN) layers. We use WI, WV and WO to denote the weight matrices involved in the FFN layer with SwiGLU activation fun
+
+### #65 Attention Residuals
+
+- Fig.1 (p.1) ![[assets/attention-residuals-p01.png]]
+  - Overview of Attention Residuals. (a) Standard Residuals: standard residual connections with uniform additive accumulation. (b) Full AttnRes: each layer selectively aggregates all previous layer output
+- Fig.2 (p.5) ![[assets/attention-residuals-p05.png]]
+  - PyTorch-style pseudo code for Block Attention Residuals. block_attn_res computes softmax attention over block representations using a learned pseudo-query wl; forward is a single-layer pass that maint
+- Fig.3 (p.6) ![[assets/attention-residuals-p06.png]]
+  - Cache-based pipeline communication example with 4 physical ranks and 2 virtual stages per rank, where hatched boxes denote end of AttnRes blocks. Numbers indicate micro-batch indices. Each rank caches
+- Fig.4 (p.9) ![[assets/attention-residuals-p09.png]]
+  - Scaling law curves for Attention Residuals. Both Full and Block AttnRes consistently outperform the baseline across all scales. Block AttnRes closely tracks Full AttnRes, recovering most of the gain a
+- Fig.5 (p.10) ![[assets/attention-residuals-p10.png]]
+  - Training dynamics of Baseline and Block AttnRes. (a) Validation loss during training. (b) Each transformer block’s output magnitude at the end of training. (c) Each transformer block’s gradient magnit
+- Fig.6 (p.11) ![[assets/attention-residuals-p11.png]]
+  - Effect of block size on validation loss (16-layer model). • Language understanding and reasoning: MMLU [13], MMLU-Pro Hard [55], GPQA-Diamond [41], BBH [48], ARC-Challenge [6], HellaSwag [65], and Tri
+- Fig.7 (p.12) ![[assets/attention-residuals-p12.png]]
+  - Architecture sweep under fixed compute (≈6.5 × 1019 FLOPs, ≈2.3 × 108 active parameters). Each cell reports validation loss for a (dmodel/Lb, H/Lb) configuration, where Lb = L/2 is the number of Trans
+- Fig.8 (p.13) ![[assets/attention-residuals-p13.png]]
+  - Depth-wise attention weight distributions for a 16-head model with full (top) and block (bottom) Attention Residuals, averaged over tokens. The model has 16 attention and 16 MLP layers. Each row shows
+- Fig.9 (p.15) ![[assets/attention-residuals-p15.png]]
+  - Depth mixing matrices M for four residual variants (L=4; Block AttnRes uses block size S=2). Highway is shown with scalar gates for clarity. AttnRes panels show unnormalized ϕ scores; background color
+
+### #66 Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP
+
+- Fig.2 (p.23) ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p23.png]]
+  - FlowServe selects the appropriate DistFlow [10] backend based on the network fabric. For MLA models like DeepSeek and Kimi K2, both interconnects satisfy TTFT and TPOT SLAs.
+- Fig.4 (p.8) ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p08.png]]
+  - Step 1: The sender’s serving engine invokes XCCL’s send, passing the source buffer in the app data area (e.g., KV cache), an eventID (e.g., number of sends), the receiver NPU’s ID, and the number of A
+- Fig.8 (p.12) ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p12.png]]
+  - Trade-off between MTE and DMA. To improve communication efficiency, we employ NPU-Direct Unified Remote Memory Access (URMA), a technique on Ascend NPUs similar to IBGDA on GPUs [15]. NPU-Direct URMA 
+- Fig.10 (p.12) ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p12.png]]
+  - This redesign centers on three key components: • First, we introduce the Data Parallel (DP) group abstraction, inspired by SGLang [24].
+- Fig.12 (p.16) ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p16.png]]
+  - Step 1: Collecting Expert Load Distribution. First, we collect data on expert loads across NPUs. We define expert load as the total number of tokens routed to each expert within a given time interval.
+- Fig.17 (p.22) ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p22.png]]
+  - 1. A request first arrives at a randomly selected Job Executor (JE), which assigns it to a prefill
+
+### #67 CacheBlend: Fast Large Language Model Serving for RAG with C
+
+- Fig.1 (p.2) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p02.png]]
+  - Contrasting full KV recompute, prefix caching, full KV reuse, and CacheBlend’s selective KV recompute. full KV recompute (Figure 1(a)). Despite many optimizations, the delay and computation of prefill
+- Fig.2 (p.4) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p04.png]]
+  - Generation quality improves as more text chunks are retrieved. and fetch top-k relevant chunks from the database, based on the least L2 distance between the embeddings of the query and the chunk respe
+- Fig.3 (p.4) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p04.png]]
+  - An illustrative example of an LLM input with two text chunks prepended to a query. Full KV recompute (b), with- out reusing KV cache, is slow but gives the correct answer. Full KV reuse (c), however, 
+- Fig.4 (p.5) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p05.png]]
+  - Contrasting the attention matrices of (a) full KV recompute and (b) full KV reuse. The yellow boxes highlight the cross-attention. The right-hand side plots show the resulting forward attention matric
+- Fig.5 (p.6) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p06.png]]
+  - Illustrated contrast between (a) full KV recompute and (b) selective KV recompute on one layer. 0 10 20 30 40 50
+- Fig.6 (p.6) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p06.png]]
+  - Attention deviation reduces as we recompute the KV of more tokens on each layer. Importantly, the biggest drop in attention deviation results from recomputing the KV of the tokens with the highest KV 
+- Fig.7 (p.7) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]
+  - Distribution of KV deviation of different tokens on one layer. 5 vs. 6 12 vs. 13 21 vs. 22 31 vs. 32
+- Fig.8 (p.7) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]
+  - Rank correlation of the KV deviation per token be- tween two consecutive layers. expensive and defeats the purpose of selective KV recom- pute. Instead, we observe that the HKVD tokens on different la
+- Fig.9 (p.7) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]
+  - CacheBlend selects the HKVD (high KV deviation) tokens of one layer by computing KV deviation of only the HKVD tokens selected from the previous layer and selecting the tokens among them with high KV 
+- Fig.10 (p.8) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p08.png]]
+  - (a) Smartly picking the recompute ratio will not incur an extra delay. (b) Smartly picking storage device(s) to store KVs saves cost while not increasing delay. recompute of one layer, the KV-loading 
+- Fig.11 (p.9) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p09.png]]
+  - CacheBlend system (green stared) in light of LLM context augmented generation for a single request. CacheBlend uses text provided by the retriever, interacts with the storage device(s), and provides K
+- Fig.12 (p.10) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p10.png]]
+  - CacheBlend reduces TTFT by 2.2-3.3× compared to full KV recompute with negligible quality drop across four datasets and three models.
+- Fig.13 (p.10) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p10.png]]
+  - Generation quality of CacheBlend with Yi-34B vs MapReduce and MapRerank. 7
+- Fig.14 (p.11) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p11.png]]
+  - CacheBlend achieves lower TTFT with higher throughput in RAG scenarios compared with baselines of similar quality. 3 6 9 12 (a) Number of chunks
+- Fig.15 (p.11) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p11.png]]
+  - CacheBlend outperforms baseline with varying chunk numbers, chunk lengths, and batch sizes. • SAMSum [25]: This dataset comprises multiple pairs of dialogues and summaries, and requires the LLM to out
+- Fig.16 (p.8) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p08.png]]
+  - This means that even if the storage device is a fast device (ex. CPU RAM), the delay will be lower-bounded by the minimal recomputation to guarantee quality.
+- Fig.17 (p.12) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p12.png]]
+  - CacheBlend’s outperforms baselines when using RAM and slower disks
+
+### #69 Single-Rollout Asynchronous Optimization for Agentic Reinfor
+
+- Fig.1 (p.1) ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p01.png]]
+  - The performance of SAO on reasoning and coding benchmarks. The four reasoning benchmarks are evaluated in a reasoning-with-Python-tool setting, where the baseline is the Qwen3- 30B-A3B SFT model; SWE-
+- Fig.2 (p.3) ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p03.png]]
+  - Overview of SAO with single rollout design. The numbers denote the generation order of trajectories. For SAO, each trajectory becomes available for training immediately upon completion.
+- Fig.3 (p.6) ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p06.png]]
+  - Performance comparison between SAO and GRPO (w/ DIS) during training. It can be observed that SAO almost consistently outperforms the optimized GRPO during the training process on different benchmarks
+- Fig.4 (p.7) ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p07.png]]
+  - Training dynamics of asynchronous single-rollout RL. (a) Explained Variance for SAO and a single-critic-update baseline. (b) Critic gradient norm during value training under full-parameter optimizatio
+- Fig.5 (p.9) ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p09.png]]
+  - Online learning simulation under changing writing-style preferences. 5
+- Fig.6 (p.13) ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p13.png]]
+  - Training reward for token-level SAO training and step-level variants, where token-level shows better training rewards.
+
+### #70 rLLM: Relational Table Learning with LLMs
+
+- Fig.1 (p.1) ![[assets/rllm-relational-table-learning-with-llms-p01.png]]
+  - Trends in global data volume and in LLM token costs by data type
+- Fig.2 (p.2) ![[assets/rllm-relational-table-learning-with-llms-p02.png]]
+  - The architecture of rLLM analyzed using GNNs. This design efficiently captures inter-table dependencies with minimal architectural complexity.
+- Fig.3 (p.2) ![[assets/rllm-relational-table-learning-with-llms-p02.png]]
+  - Base data structure in rLLM. Arrows indicate inher- itance relationships and parentheses indicate containment relationships. data, respectively. Overall, this design meets the familiar storage and pro
+- Fig.4 (p.3) ![[assets/rllm-relational-table-learning-with-llms-p03.png]]
+  - The architecture of BRIDGE columns, which can vary greatly in nature. Due to the diverse types of features and the often limited information provided by tables with fewer columns, it is crucial to map

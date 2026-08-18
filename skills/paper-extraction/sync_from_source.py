@@ -109,9 +109,14 @@ def fetch(url, timeout=60):
 
 
 def resolve_arxiv(title):
-    """arxiv title search -> (arxiv_id, abs_title, score) or None."""
-    q = urllib.parse.quote(f'"{title}"')
-    url = f"https://arxiv.org/search/?query={q}&searchtype=title&abstracts=hide&size=10"
+    """arxiv title search -> (arxiv_id, abs_title, score) or None.
+
+    NOTE: arxiv.org now rejects the old `&abstracts=hide&size=10` params with
+    HTTP 400 — use the bare `?query=...&searchtype=title` form (verified 2026-08).
+    Search-hit <span> tags must be stripped before jaccard or they tank the score.
+    """
+    q = urllib.parse.quote(title)
+    url = f"https://arxiv.org/search/?query={q}&searchtype=title"
     try:
         h = fetch(url, timeout=45).decode("utf-8", "replace")
     except Exception:
@@ -121,7 +126,7 @@ def resolve_arxiv(title):
     want = norm_tokens(title)
     best, bs, bid = None, 0.0, None
     for t, i in zip(items, ids):
-        t = html.unescape(re.sub(r"\s+", " ", t)).strip()
+        t = html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", t))).strip()
         sc = jaccard(want, norm_tokens(t))
         if sc > bs:
             best, bs, bid = t, sc, i
