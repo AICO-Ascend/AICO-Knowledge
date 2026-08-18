@@ -1,9 +1,10 @@
-# Beyond Ten Turns — 技术点深读（DEEP 2026-08-18）
+# Beyond Ten Turns — 技术点深读（DEEP 2026-08-18, rewrite）
 > 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
 > 论文：Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with Large-Scale Asynchronous RL · arXiv:2508.07976v4 (26 Oct 2025)
 > 作者：Jiaxuan Gao, Wei Fu, Minyang Xie, Shusheng Xu, Chuyi He, Zhiyu Mei, Banghua Zhu, Yi Wu · IIIS Tsinghua + Ant Group + UW
 > 开源：https://github.com/inclusionAI/ASearcher（模型、训练数据、代码全开源）
-> 注：repo 内 PDF 正文页 2–21 文本未抽取（仅 page 1 + 附录可用），全文以 arXiv HTML v4 为准。
+> 数据源声明：repo 内 PDF 正文页 2–21 文本未抽取（fulltext 仅有 page 1 = abstract + Figure 1 verbatim caption）。下文精确数字（Table 2/3/4/5、训练配置、合成数据规模等）取自 arXiv HTML v4 全文（上一轮深读所据），与 page 1 verbatim 信息自洽（abstract 已确认 51.1 xBench / 58.7 GAIA；Figure 1 caption 已确认 +15.0/+2.4/+15.6、>10 turns、>40k tokens）。论文未给的字段（如 GRPO 组大小 G、turn-limit ablation 曲线）标 not-available，未臆造。
+> M3 caption 注：p01 的 M3 caption（minimax_captions.json）将 Figure 1 误识为 "DEPA / Stage 1 vs Stage 2 / Avg@4"，且 caption 自述 "text is heavily overlapping/garbled ... a clean verbatim transcription is not possible"。该 M3 描述与 Figure 1 实际内容不符，判为不可靠；Figure 1 解读一律以 fulltext page 1 的 verbatim caption 为准（见下）。
 
 ## 核心问题
 
@@ -18,7 +19,7 @@ ASearcher 攻击的是**开源搜索智能体无法达到 expert-level Search In
 
 ## 关键创新点
 
-1. **全异步 agentic RL 训练（built on AReaL），把 turn limit 从 ≤10 放宽到 128（QwQ）/ 32（7B/14B）。** 机制（§3.3.2 + Fig.7）：异步在两个层面 — (a) **Asynchronous Trajectory Rollouts**：各 trajectory 独立并行向 LLM engine 与 tool server 发请求，互不等待；(b) **Decoupled Rollout and Training**：rollout 与 model update 完全解耦，一条 training step 只要 buffer 凑够 batch 即启动，**长 trajectory 不阻塞 generation、可跨越多个 policy version**（Fig.7 中 trajectory 7 慢时，training 直接走 trajectory 9，达到 near-full GPU utilization）。vs one-step-off RL（batch 内仍需等最慢 trajectory，Fig.7 左侧 GPU idle 大）。效果：训练中 agent 出现 **tool calls > 100、output tokens > 400k**（§1, Fig.1）；QwQ 训练动态（§4.3, Fig.6）峰值 ~40 calls @ 200 step、极值 70 calls、单 trajectory >150k tokens。ASearcher-Web-QwQ 总训练成本 ~16k H800 GPU hours（§4.1）。
+1. **全异步 agentic RL 训练（built on AReaL [7]），把 turn limit 从 ≤10 放宽到 128（QwQ）/ 32（7B/14B）。** 机制（§3.3.2 + Fig.7）：异步在两个层面 — (a) **Asynchronous Trajectory Rollouts**：各 trajectory 独立并行向 LLM engine 与 tool server 发请求，互不等待；(b) **Decoupled Rollout and Training**：rollout 与 model update 完全解耦，一条 training step 只要 buffer 凑够 batch 即启动，**长 trajectory 不阻塞 generation、可跨越多个 policy version**（Fig.7 中 trajectory 7 慢时，training 直接走 trajectory 9，达到 near-full GPU utilization）。vs one-step-off RL（batch 内仍需等最慢 trajectory，Fig.7 左侧 GPU idle 大）。效果（§1 + Fig.1 verbatim caption）：RL 训练后 ASearcher-Web-QwQ 在 GAIA/xBench/Frames 上分别 **+15.0 / +2.4 / +15.6**（Figure 1 Left，verbatim caption 原文 "obtains +15.0, +2.4, and +15.6 improvements on GAIA, xBench, and Frames"），并学到 **tool calls exceeding 10 turns、output tokens exceeding 40k during training**（Figure 1 Middle/Right，verbatim caption 原文）。QwQ 训练动态（§4.3, Fig.6）峰值 ~40 calls @ 200 step、极值 70 calls、单 trajectory >150k tokens。ASearcher-Web-QwQ 总训练成本 ~16k H800 GPU hours（§4.1）。〔Figure 1 M3 caption 不可靠，已弃用，见文件头注。〕
 
 2. **可规模化 QA 合成 Agent（§3.2.2, Fig.4/Fig.5）。** 机制：从 seed QA 出发，迭代式地在两种 action 间选择 — **Injection**（选问题中一个 entity，从 Wikipedia 取一条 related fact 注入问题，增加 complexity）+ **Fuzzing**（把精确信息模糊化，如 "Catskill Mountain Railroad"→"a historic mountain railway"，"1934"→"early 1930s"，增加 uncertainty）。每次修改后跑 3 步 verification：(i) **Basic Quality**（LLM 检 clarity + QA 是否 grounded in supporting facts）；(ii) **Difficulty Measurement**（QwQ-32B 无工具直接答，用作难度标尺）；(iii) **Answer Uniqueness**（检查 fuzz 后是否产生 alternative valid answers）。最后**滤掉 LRM 无工具即可答对的题**。效果（§3.2.2）：14,107 seed → 合成 pool 共 134k 高质量样本（平均 6.3 injections + 3.2 fuzzes per seed）→ 选最多 3 个 variation/seed → **最终 25,624 entries**（平均 4.27 injections + 2.10 fuzzes），其中"require external tools for resolution"即 25.6k。开源数据侧（§3.2.1）：HotpotQA + 2WikiMultiHopQA 共 304k → 用已训模型每题生成 16 responses 后过滤（全错/≥50% 准确/≤1 turn 即可解的都丢）→ 留 **16k challenging samples**；另加 WebWalkerQA 小子集训练真实网页定位能力。两份训练集（7B/14B 与 QwQ）各 35k。
 
@@ -26,7 +27,7 @@ ASearcher 攻击的是**开源搜索智能体无法达到 expert-level Search In
 
 4. **两阶段 curriculum RL（§4.1）。** Stage 1：混合难度数据（含少量 tool call 即可解的简单题）。Stage 2：**仅保留需要 ≥5 tool calls 才能解的题**，进一步激活 long-horizon 能力。产出 v1/v2 两个 checkpoint。Keyword analysis（§4.4, Fig.11）佐证：reflection 关键词（"alternatively"/"however"/"wait"）训练中持续上升；external-reference 关键词（"doc"/"mention"）在 stage 2（step 200 后）显著上升——agent 学会**refer to external information**。
 
-5. **MDP + GRPO 训练配方（§3.4）。** MDP `(S,A,T,R)`，action 含可被 tag 提取的 tool call（如 `<search>...</search>`）。用 GRPO（Eq.1，组内 G 条 trajectory 的 token-level PPO clip，advantage `Â_i` 基于组内相对 reward）——继承 DeepSeek-R1/DeepSeekMath GRPO 路线（弃 GAE + value model）。**Dynamic Filtering**：移除组内 reward 全相同（zero advantage）的 query（含已高准确率题与标错答案题）。**Reward**：base LLM = format reward × F1（乘法组合）；LRM = LLM-as-Judge（Qwen2.5-72B-Instruct），**省略 format reward**（LRM 自身能保持格式）。sparse reward，trajectory 完成才结算。
+5. **MDP + GRPO 训练配方（§3.4）。** MDP `(S,A,T,R)`，action 含可被 tag 提取的 tool call（如 `<search>...</search>`）。用 GRPO（Eq.1，组内 G 条 trajectory 的 token-level PPO clip，advantage `Â_i` 基于组内相对 reward；G 的具体值论文未给，not-available）——继承 DeepSeek-R1/DeepSeekMath GRPO 路线（弃 GAE + value model）。**Dynamic Filtering**：移除组内 reward 全相同（zero advantage）的 query（含已高准确率题与标错答案题）。**Reward**：base LLM = format reward × F1（乘法组合）；LRM = LLM-as-Judge（Qwen2.5-72B-Instruct），**省略 format reward**（LRM 自身能保持格式）。sparse reward，trajectory 完成才结算。
 
 6. **端到端效果（§4.2, Table 4/5, Fig.8）。** ASearcher-Web-QwQ-v2 在 GAIA/xBench-DeepSearch/Frames 上 Avg@4 = 58.7/51.1/74.5，Pass@4 = 74.7/75.0/85.5——**开源 32B agent SOTA**（次强 SimpleDS-QwQ 47.6/35.8/67.0；Search-o1(QwQ) 48.1/40.3/63.6；Search-R1-32B 仅 28.6/19.5/44.1）。RL 训练带来绝对增益 +15.0（GAIA）/ +22.4（xBench）/ +14.6（Frames）Avg@4，Pass@4 在 xBench +24.0（Fig.8）。零样本外挂 DeepSeek-V3 做 summarizer → 60.3/56.4/76.6；再叠 K=16 test-time search（用 DeepSeek-V3 聚合）→ 71.8/75.0/83.4，**逼近 Kimi-Researcher（69.0/78.8/26.9）/ OpenAI DeepResearch（67.0）/ OpenAI-o3（70.5/66.7/84.0）/ Claude-4-Sonnet（68.3/64.6/80.7）**（Table 5）。
 
@@ -103,8 +104,8 @@ ASearcher 攻击的是**开源搜索智能体无法达到 expert-level Search In
 | Turn limit | 32 | 128 |
 | Batch size | 128 | 64 |
 | 训练数据规模 | 35k | 35k |
-| 总 GPU hours | — | ~16k H800 |
-| RL 算法 | GRPO（Eq.1，token-level PPO clip + 组内 advantage） | 同 |
+| 总 GPU hours | not-available | ~16k H800 |
+| RL 算法 | GRPO（Eq.1，token-level PPO clip + 组内 advantage；组大小 G = not-available） | 同 |
 | Reward | format × F1 | LLM-as-Judge（无 format reward） |
 | 过滤 | Dynamic Filtering（zero-advantage query 移除） | 同 |
 | Curriculum | — | 两阶段：stage1 混合难度 / stage2 仅 ≥5 tool calls 题 |
@@ -130,12 +131,12 @@ ASearcher 攻击的是**开源搜索智能体无法达到 expert-level Search In
 
 ## 局限与边界
 
-- **未做算法层 async 修正。** ASearcher 复用 AREAL 的系统层 async（rollout/train decouple），但 RL 算法仍是标准 GRPO（Eq.1，group-wise advantage，single π_old）。当 trajectory 跨多 policy version 时（AREAL §4.2 / SAO 都指出问题），group-wise advantage 在 staleness 下理论上失效——ASearcher 用 LLM-as-Judge 软 reward + dynamic filtering 工程性缓解，但未如 SAO 那样做 decoupled importance sampling 的理论修正。是否在更大 staleness 下仍稳定，论文未给消融。
+- **未做算法层 async 修正。** ASearcher 复用 AREAL 的系统层 async（rollout/train decouple），但 RL 算法仍是标准 GRPO（Eq.1，group-wise advantage，single π_old）。当 trajectory 跨多 policy version 时（AREAL §4.2 / SAO 都指出问题），group-wise advantage 在 staleness 下理论上失效——ASearcher 用 LLM-as-Judge 软 reward + dynamic filtering 工程性缓解，但未如 SAO 那样做 decoupled importance sampling 的理论修正。是否在更大 staleness 下仍稳定，论文未给消融（not-available）。
 - **单模型仍落后商业 deep research。** ASearcher-Web-QwQ-v2 单模型 GAIA 58.7 / xBench 51.1 / Frames 74.5 / HLE-500 21.5，全面落后 Kimi-Researcher（69.0/78.8/26.9）、o3（70.5/66.7/84.0/20.2）、Claude-4-Sonnet（68.3/64.6/80.7/20.3）、OpenAI DeepResearch（67.0）。追平需外挂 DeepSeek-V3 summarizer + K=16 test-time search——后者本质是 inference-time 算力换分，非模型本身能力。
-- **7B 学不会 webpage browsing（§4.3）。** 7B 在 zero RL 训练 setting 下 capacity 不足以稳定学会 summarize lengthy webpages，14B 在训练后期才习得。说明 end-to-end RL web summarization 存在 scale 门槛，7B 以下不可用——论文未给 7B 的补救方案（如蒸馏 summarizer）。
+- **7B 学不会 webpage browsing（§4.3）。** 7B 在 zero RL 训练 setting 下 capacity 不足以稳定学会 summarize lengthy webpages，14B 在训练后期才习得。说明 end-to-end RL web summarization 存在 scale 门槛，7B 以下不可用——论文未给 7B 的补救方案（如蒸馏 summarizer，not-available）。
 - **数据合成仍依赖 seed 质量 + 强 LRM。** 合成 pipeline 从 14,107 seed 出发，依赖 Wikipedia 取 related fact + QwQ-32B 做 difficulty measurement；seed 偏向（HotpotQA/2WikiMultiHopQA 风格）会限制合成题分布。3 步 verification 也依赖 LLM 判断，error 可累积。25.6k 最终合成集相对 R1 类工作规模仍偏小。
-- **turn limit 128 是工程设定非理论上界。** 论文给出"tool calls > 100、tokens > 400k"是训练时极值（不是推理评估默认配置），并未系统消融 turn limit ∈ {32, 64, 128, 256} 的边际收益曲线；Fig.6 (Left) 只在推理时给 minimum-turn scaling 的 accuracy 增益，未给训练 turn limit 的 ablation。
-- **LLM-as-Judge reward 的偏差未充分讨论。** LRM 训练用 Qwen2.5-72B-Instruct 作 judge，judge 自身的 bias / 与被评模型同源（都属 Qwen 系）可能高估；论文未做 judge 与 policy 解耦的稳健性检验。
+- **turn limit 128 是工程设定非理论上界。** 论文给出"tool calls > 100、tokens > 400k"是训练时极值（不是推理评估默认配置），并未系统消融 turn limit ∈ {32, 64, 128, 256} 的边际收益曲线（not-available）；Fig.6 (Left) 只在推理时给 minimum-turn scaling 的 accuracy 增益，未给训练 turn limit 的 ablation。
+- **LLM-as-Judge reward 的偏差未充分讨论。** LRM 训练用 Qwen2.5-72B-Instruct 作 judge，judge 自身的 bias / 与被评模型同源（都属 Qwen 系）可能高估；论文未做 judge 与 policy 解耦的稳健性检验（not-available）。
 - **未触及 multi-modal search / 长文档理解。** GAIA 含图像/PDF 任务，ASearcher 仅做 text-only 103 题 validation subset（§4.1）；对多模态 GAIA 任务未评估。
-- **local→web 泛化仅在 Wikipedia 2018 vs real web 上验证。** ASearcher-Local-14B zero-shot web 表现好（F1 60.0 / LasJ 65.6），但未测试 local→web 在 distribution shift 更大（如非英文、时效性强）的查询上是否仍泛化。
-- **GRPO 群体采样未给 G 的大小与样本效率分析。** Eq.1 中 G 条 trajectory 的具体值、与样本效率/收敛速度的关系未讨论（继承 R1 默认，未消融）。
+- **local→web 泛化仅在 Wikipedia 2018 vs real web 上验证。** ASearcher-Local-14B zero-shot web 表现好（F1 60.0 / LasJ 65.6），但未测试 local→web 在 distribution shift 更大（如非英文、时效性强）的查询上是否仍泛化（not-available）。
+- **GRPO 群体采样未给 G 的大小与样本效率分析。** Eq.1 中 G 条 trajectory 的具体值、与样本效率/收敛速度的关系未讨论（继承 R1 默认，未消融，not-available）。

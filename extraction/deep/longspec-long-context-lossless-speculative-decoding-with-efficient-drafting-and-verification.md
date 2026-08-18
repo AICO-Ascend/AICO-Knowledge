@@ -1,9 +1,9 @@
-# LongSpec — 技术点深读（DEEP 2026-08-18）
-> 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
+# LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification — 技术点深读（DEEP 2026-08-18）
+> 独立文件，extract_phase1 重跑不丢。全要素深读：全文/图/表/公式交织分析，图解读自 minimax_captions.json（共 5 张 M3 caption：Figure 1 p.1、Figure 2 p.4、Figure 3 p.7、Figure 5 p.8、Figure 6 p.9；Figure 4 无独立 M3 caption，数字见 §3.2 / Table 2）。
 > 论文：LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification · arXiv:2502.17421（v4, 2026-04-08）
 
 ## 核心问题
-随着 LLM 上下文窗口扩展至百万 token 级（DeepSeek-V3 / Qwen3-235B / Gemini 2.5 / GPT-4.1 等），标准自回归解码在长上下文场景下的高延迟成为瓶颈（§1）。**Speculative Decoding（SD）** 作为无损加速手段（相对量化、稀疏注意力、级联等有损方案），其 SoTA 方法（如 EAGLE）的训练上下文仅 2048 token（Figure 1），无法直接迁移到长序列场景。论文将这一困境归因为三条「涌现性」挑战（§1， enumerated）：
+随着 LLM 上下文窗口扩展至百万 token 级（DeepSeek-V3 / Qwen3-235B / Llama 4 Scout / Grok 3 / Claude 3.7 Sonnet / GPT-4.1 / Gemini 2.5 Pro，跨越 100k–10M token），标准自回归解码在长上下文场景下的高延迟成为瓶颈（§1）。**Figure 1（p.1，M3：对数 y 轴条形图，2k→10M，七家前沿 LLM 各为一条彩色柱，2k 处一条红色虚线参考线）** 直观刻画了训练-推理错配：现代 LLM 上下文动辄 100k–10M，而 SoTA SD 方法 EAGLE 训练上下文仅 **2,048 token**（红色虚线），根本够不到长上下文场景。**Speculative Decoding（SD）** 作为无损加速手段（相对量化、稀疏注意力、级联等有损方案），其 SoTA 方法（如 EAGLE）的训练上下文仅 2048 token（Figure 1），无法直接迁移到长序列场景。论文将这一困境归因为三条「涌现性」挑战（§1， enumerated）：
 
 1. **Architecture（架构）**：EAGLE 类自回归 draft 模型需维护自己的 KV cache，该 cache 随上下文长度线性增长，在长上下文下成为 prohibitive 的显存瓶颈。
 2. **Training（训练）**：短序列训练数据充足、长序列数据稀缺，导致大位置索引训练不足；常规长上下文做法是延伸 RoPE base，但 SD draft 模型必须与 target 模型共享同一（已为长上下文 scaled 好的）RoPE base，故外推方案不可用（§1 脚注 1 解释：draft 需复用 target 的中间特征如 hidden states / KV cache）。
@@ -13,12 +13,12 @@
 
 ## 关键创新点
 
-1. **Memory-Efficient Draft Architecture（常数显存 draft 模型）** — §3.1, Figure 2(a)
-   - 机制：draft 模型仅由 **一个 transformer block** 组成，内含两段：(a) **sliding-window self-attention**（窗口 512）捕捉局部上下文，self-attn 的 KV cache 不超过窗口大小，故显存与上下文长度无关；(b) **cross-attention** 直接读 target 模型 last-layer 的 K/V（受 GliDe 启发），从 target KV cache 中 gather 长程信息——因 target KV cache 无论是否做 SD 都必须存储，cross-attn 不引入额外长上下文存储开销。
+1. **Memory-Efficient Draft Architecture（常数显存 draft 模型）** — §3.1, Figure 2(a)（p.4，M3：(a) 子图描绘滑窗 self-attn + 无 KV cache 的 cross-attn 直接读 target last-layer K/V）
+   - 机制：draft 模型仅由 **一个 transformer block** 组成，内含两段：(a) **sliding-window self-attention**（窗口 512）捕捉局部上下文，self-attn 的 KV cache 不超过窗口大小，故显存与上下文长度无关；(b) **cross-attention** 直接读 target 模型 last-layer 的 K/V（受 GliDe 启发），从 target KV cache 中 gather 长程信息——因 target KV cache 无论是否做 SD 都必须存储，cross-attn 不引入额外长上下文存储开销。M3 解读把这点概括为「draft KV 占用变常数」。
    - 进一步：与 target 共享 Embedding Layer 与 LM Head 权重，对大词表模型（LLaMA-3 vocab=128,256；Qwen-2.5 vocab=152,064）显著降显存。
-   - 效果：draft 模型显存 **常数级**（constant memory），独立于上下文长度；§4.5 显示 draft forward 时间随 prefill 0–32k 仅从 8.91ms → 9.25ms（Table 5）。
+   - 效果：draft 模型显存 **常数级**（constant memory），独立于上下文长度；§4.5 / Table 5 显示 draft forward 时间随 prefill 0–32k 仅从 8.91ms → 9.25ms。
 
-2. **Anchor-Offset Indices（锚点-偏移位置索引）** — §3.2, Figure 2(b), Algorithm 1
+2. **Anchor-Offset Indices（锚点-偏移位置索引）** — §3.2, Figure 2(b)（p.4，M3：(b) 子图对比 vanilla indexing 与 Anchor-Offset Indices，展示 [0,1,2,3,8192,8193,…] 模式）, Algorithm 1
    - 背景：vanilla 位置索引为连续整数 [0,1,2,...]，小索引出现频率远高于大索引（An et al. 2025），大索引训练不足，造成训练-推理分布失配；而 RoPE base 被固定不可外推。
    - 机制：保留前 4 个位置 [0,1,2,3] 作为 **attention sink** tokens（依据 Xiao et al. 2024 的 attention sink 现象——长文本下注意力集中于前 4 个与最近 token），其后所有 token 赋予以 **随机 offset** 起始的连续大索引，如 [0,1,2,3,8192,8193,...]。offset 取值：Vicuna/LongChat-7B 为 [0, 15k)，其余三个模型（更长 max context）为 [0, 30k)（§4.1）。
    - 双重满足：(1) 短上下文训练数据即可覆盖大位置索引；(2) 因 attention sink 效应，target 模型对这种索引仍是 in-distribution——实验中 target 模型采用该索引仅增 loss ≈ **0.001**（§3.2）。
@@ -29,13 +29,13 @@
    - 机制：训练时随机选取 j ∈ [1, γ)，对 query 与 key-value 做错位切片——O≥j = attn(Q≥j, K<l−j, V<l−j)，即丢前 j 个 query、丢后 j 个 KV，等价模拟推理时可见性约束 1 ≤ |t′−t| < γ，且全程可走 Flash Attention。
    - 效果：acceptance length 较无此训练提升 **14.7%**，增益集中在最后几个 speculated token（§3.2）。
 
-4. **Hybrid Tree Attention（混合树注意力）** — §3.3, Figure 2(c), Appendix C
+4. **Hybrid Tree Attention（混合树注意力）** — §3.3, Figure 2(c)（p.4，M3：(c) 子图描绘前缀走 FlashAttention、tree 走 Triton mask attention 的分治聚合）, Appendix C
    - 关键观察：(1) tree attention 中，queries 与主序列已缓存 KV `{Kcache, Vcache}` 之间**无需 mask**；(2) 只有 queries 与当前 speculative tokens 的 `{Kspecs, Vspecs}` 需要 mask，且 spec token 数量通常很小。
    - 机制：divide-and-aggregate。把 KV 分两组：cache 部分用 **Flash Attention** kernel（快，无 mask）；spec 部分用自研 **Triton `fused_mask_attn`**（沿 FA2 设计哲学分块加载、blockwise masking，灵活）。两路输出 {Ocache, Ospecs} 及各自 log-sum-exp {LSEcache, LSEspecs}，再以 **log-sum-exp trick** 合并：
      - LSE_merge = log(exp(LSE_cache) + exp(LSE_specs))
      - O_merge = O_cache·exp(LSE_cache − LSE_merge) + O_specs·exp(LSE_specs − LSE_merge)
    - 正确性证明见 Appendix C Proposition C.1（将 Q 拆解为行级 q，证明每行 o 满足要求即整矩阵 O 满足）。
-   - 效果：target 模型 attention 层延迟 49.92ms（HF）→ **12.54ms**（hybrid），约 **75%** 降幅（Figure 5, §4.3）；verify 步骤时间差异极小，说明增益确来自 attention 优化本身。
+   - 效果：target 模型 attention 层延迟 49.92ms（HF）→ **12.54ms**（hybrid），约 **75%** 降幅（Figure 5（p.8），M3：水平堆叠条形图，EAGLE bar 总 ~75ms 黄色 target attention 占 ~49.9ms 主导，Hybrid bar 总 ~25ms 黄色部分压缩到 ~12.5ms，draft/FFN/verify 三段基本不变，§4.3）；verify 步骤时间差异极小，说明增益确来自 attention 优化本身。
 
 5. **训练流程编排** — §4.1
    - 三阶段：先在 SlimPajama-6B 上以 Anchor-Offset Indices 预训练 → 在 Prolong-64k 子集上获得长文本能力 → 自建长上下文 SFT 数据微调。后两阶段改回 vanilla 索引（因数据足够长）。三阶段均用 Flash Noisy Training，开销可忽略。
@@ -107,10 +107,11 @@
 
 ## 与同类对比
 
-- **vs EAGLE（SoTA 短上下文 SD）**：EAGLE 训练上下文仅 2048（Figure 1），draft KV cache 线性增长；tree attention 仅能跑 PyTorch eager，不能用 Flash Attention——Table 4 中 V-7B EAGLE 约 26–40 tok/s，而 LongSpec 约 100 tok/s，**EAGLE 速度甚至低于 Vanilla FA**。LongSpec 的常数显存 + Anchor-Offset + Hybrid Tree Attention 三件套逐条对应 EAGLE 的三个短板。
-- **vs MagicDec / TriForce / QuantSpec（长上下文 SD）**：这一系用「target + 稀疏 KV」做 draft，避免训练独立 draft 模型，但 draft 过重。Table 1 显示 MagicDec 在低 batch 下多数据集 speedup < 1×（V-7B 0.80×–1.05×，L-8B 0.68×–0.83×），γ≥3 时甚至负加速约 0.7×。LongSpec 用单 transformer block draft，在低 batch 场景全面领先。
+- **vs EAGLE（SoTA 短上下文 SD）**：EAGLE 训练上下文仅 2048（**Figure 1（p.1，M3：对数 y 轴，2k 红色虚线远低于现代 LLM 百万级柱）**），draft KV cache 线性增长；tree attention 仅能跑 PyTorch eager，不能用 Flash Attention——Table 4 中 V-7B EAGLE 约 26–40 tok/s，而 LongSpec 约 100 tok/s，**EAGLE 速度甚至低于 Vanilla FA**。LongSpec 的常数显存 + Anchor-Offset + Hybrid Tree Attention 三件套逐条对应 EAGLE 的三个短板。
+- **vs MagicDec / TriForce / QuantSpec（长上下文 SD）**：这一系用「target + 稀疏 KV」做 draft，避免训练独立 draft 模型，但 draft 过重。Table 1 显示 MagicDec 在低 batch 下多数据集 speedup < 1×（V-7B 0.80×–1.05×，L-8B 0.68×–0.83×），γ≥3 时甚至负加速约 0.7×。**Figure 3（p.7，M3：5 面板分组条形图，Vicuna-7B/13B、LongChat-7B/13B、LLaMA-3.1-8B 各一面板，每数据集 G/Q/M/L/R 双柱对比 MagicDec（浅蓝）vs LongSpec（深蓝））** 在 T=1 下逐模型×数据集视觉化呈现这一差距——如 V-7B/LCC 50 vs 119 tok/s、LC-7B/LCC 51 vs 124 tok/s，LongSpec 一致 2–2.5× 领先，跨 backbone 与数据集稳定。LongSpec 用单 transformer block draft，在低 batch 场景全面领先。
 - **vs PLD（n-gram 检索式 SD，vLLM 内置）**：PLD 在检索少时负加速（如 V-7B/QMSum 0.89×，L-8B/RepoBench-P 0.85×）；LongSpec 在所有数据集上稳定正加速。
 - **vs Token Recycling（SoTA 检索式）**：TR τ≈2.7–3.0 高于 EAGLE，但仍一致低于 LongSpec（Table 4）。
+- **batch scaling（vs MagicDec / Vanilla）**：**Figure 6（p.9，M3：折线图，batch size 1/2/4/8 横轴、tok/s 纵轴，Vanilla 蓝 / MagicDec 橙 / LongSpec 绿三条曲线）** 显示三者均随 batch 上升，但 LongSpec 斜率最陡，batch=8 达 ~561 tok/s vs MagicDec ~310 / Vanilla ~287，LongSpec 高吞吐场景优势随 batch 增大而扩大；不过 §4.5 亦承认大 batch 下相对 MagicDec 优势从低 batch 的 ~2×+ 收窄至 batch=8 的 ~1.8×。
 - **vs 量化/级联/稀疏注意力**：这些是有损方案，LongSpec 严格无损（§1）。
 
 ## 跨论文关系（→ MOC 谱系）

@@ -23,20 +23,56 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 5 (p.12)
+### Figure 5 (p.12) ⭐深度解读
 ![[assets/deepseek-v3-technical-report-p12.png]]
 > [!quote] caption
 > It employs a bidirectional pipeline scheduling, which feeds micro-batches from both ends of the pipeline simultaneously and a significant portion of communications can be fully overlapped. This overlap also ensures that, as the model further scales up, as long as we maintain a constant computation-to-communication ratio, we can still employ fine-grained experts across nodes while achieving a near-
 
-### Figure 6 (p.15)
+> [!tip] 技术解读（多模态）
+> ## Figure 4 Description
+
+The diagram is a **two-row timeline** (time →) showing how forward and backward pipeline chunks are interleaved at the sub-operator level:
+
+- **Computation row** (top): sequences of ATTN and MLP operators. Each forward/backward chunk is split into *Forward* (F), *Backward-for-input* (B), and *Backward-for-weights* (W) sub-pieces — boundaries between adjacent forward and backward chunks are *not* aligned.
+- **Communication row** (bottom): DISPATCH (pre-MLP all-to-all), COMBINE (post-MLP all-to-all), and a central PP (pipeline-parallel) block.
+
+**Key takeaway:** By mis-aligning the chunk boundaries and rearranging sub-operators, DualPipe hides the all-to-all and PP communication entirely behind on-streaming GPU SMs executing computation — eliminating the 1:1 compute-to-communicate bottleneck of cross-node MoE training.
+
+## Caption (verbatim)
+
+**Figure 4** | Overlapping strategy for a pair of individual forward and backward chunks (the boundaries of the transformer blocks are not aligned). Orange denotes forward, green denotes "backward for input", blue denotes "backward for weights", purple denotes PP communication, and red denotes barriers. Both all-to-all and PP communication can be fully hidden.
+
+### Figure 6 (p.15) ⭐深度解读
 ![[assets/deepseek-v3-technical-report-p15.png]]
 > [!quote] caption
 > Firstly, in order to accelerate model training, the majority of core computation kernels, i.e., GEMM operations, are implemented in FP8 precision. These GEMM operations accept FP8 tensors as inputs and produce outputs in BF16 or FP32. As depicted in Figure 6, all three GEMMs associated with the Linear operator, namely Fprop (forward pass), Dgrad (activation backward pass), and Wgrad (weight backwa
 
-### Figure 10 (p.48)
+> [!tip] 技术解读（多模态）
+> **Figure Description (architecture/components/data flow + key takeaway):**
+
+The diagram depicts a mixed-precision training framework for a `Linear` operator, split into a forward pass and two backward passes. In the **forward (Fprop)**, a BF16 `Input` is cast to FP8 and multiplied with FP8 `Weight`; the matrix product accumulates in FP32, producing a BF16 `Output`. In the **activation backward (Dgrad)**, the BF16 `Output Gradient` is cast to FP8 and combined with the FP8 weight, accumulating to FP32 and yielding a BF16 `Input Gradient`. In the **weight backward (Wgrad)**, the cached FP8 forward input and FP8 output gradient are multiplied with FP32 accumulation, producing an FP32 `Weight Gradient` consumed by an BF16 `Optimizer States` block that updates an FP32 `Master Weight`, which is then re-quantized to FP8 for the next step. **Key takeaway:** compute-heavy GEMMs (Fprop, Dgrad, Wgrad) run in FP8 with FP32 accumulation, while inputs/outputs, optimizer states, and master weights stay in higher precision to preserve numerical stability.
+
+**Caption (verbatim):**
+
+Figure 6 | The overall mixed precision framework with FP8 data format. For clarification, only the `Linear` operator is illustrated.
+
+### Figure 10 (p.48) ⭐深度解读
 ![[assets/deepseek-v3-technical-report-p48.png]]
 > [!quote] caption
 > 48
+
+> [!tip] 技术解读（多模态）
+> **No figure is visible on this page.**
+
+The provided image (page 48) contains only text from an academic paper — specifically, the tail of a paragraph about MoE model divergence, a section heading ("C. Expert Specialization Patterns of the 16B Aux-Loss-Based and Aux-Loss-Free Models"), and an introductory paragraph that *references* Figure 10, but the figure itself is not rendered on this page.
+
+**What the text tells us about the referenced figure (Figure 10):**
+- It compares two 16B-parameter MoE models: an auxiliary-loss-based baseline vs. an auxiliary-loss-free variant.
+- It plots **expert load** (per-layer) measured on the Pile test set.
+- Data flow conceptually: Pile test tokens → MoE layers → router assigns tokens to experts → expert-activation counts aggregated per layer → visualized.
+- **Key takeaway:** Removing the auxiliary load-balancing loss yields *greater expert specialization* (more skewed / concentrated expert usage) across all layers.
+
+If you can share the image of Figure 10 itself, I can describe its specific architecture (e.g., layer-by-layer heatmap, bar chart, distribution plot) and transcribe its actual caption verbatim.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -23,10 +23,21 @@ tags: [speculative, long-context]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.1)
+### Figure 1 (p.1) ⭐深度解读
 ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p01.png]]
 > [!quote] caption
 > The SoTA SD method, EAGLE, has a training context length of 2048, which is significantly shorter than the context lengths of modern LLMs. 2023), and their ability to handle extensive con- texts is becoming crucial for emerging applications such as LLM agents and long reasoning tasks (Tan et al., 2025; Guo et al., 2025), which now oper- ate over context windows extending to millions of tokens (Team
+
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description (≤120 words)
+
+**Figure 1** is a **bar chart** with a logarithmic y-axis (context length, 2k → 10M tokens) comparing the supported context windows of seven frontier LLMs — DeepSeek-V3, Qwen3-235B-A22B, Llama 4 Scout, Grok 3, Claude 3.7 Sonnet, GPT-4.1, and Gemini 2.5 Pro — each rendered as a colored bar topped with the model's logo. A horizontal red dashed reference line marks **2k tokens**, denoting EAGLE's training context length.
+
+**Key technical takeaway:** The chart exposes a stark training–inference mismatch: although modern LLMs operate over 100k–10M-token contexts, the SoTA speculative decoding method EAGLE was trained on only **2,048 tokens**, rendering it ill-suited for long-context speculative decoding and motivating the proposed LONGSPEC framework.
+
+## Caption (verbatim)
+
+> **Figure 1:** The SoTA SD method, EAGLE, has a training context length of 2048, which is significantly shorter than the context lengths of modern LLMs.
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p04.png]]
@@ -36,25 +47,65 @@ tags: [speculative, long-context]
 > [!tip] 技术解读（多模态）
 > LongSpec 三件套：(a) 内存高效 draft 模型——滑窗自注意力（定长窗口捕捉局部）+ 无 KV cache 的 cross-attention（直接读 target 模型 last-layer K/V 收长程信息），draft KV 占用变常数；(b) Anchor-Offset Indices——保留前 4 个位置作 attention sink，其余 token 从随机大 offset 连续编号，短上下文训练即可覆盖大位置索引、且 target 模型不 OOD（loss 仅 +0.001），弥合训练-推理位置错配；(c) Hybrid Tree Attention——前缀走 FlashAttention（快）+ tree 走 Triton mask attention（灵活），兼得两者。
 
-### Figure 3 (p.7)
+### Figure 3 (p.7) ⭐深度解读
 ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p07.png]]
 > [!quote] caption
 > Decoding speed (tokens/s) across different models and settings. All results are computed at T = 1. The letters G, Q, M, L, and R on the horizontal axis represent the datasets GovReport, QMSum, Multi-News, LCC, and
 
-### Figure 4 (p.8)
+> [!tip] 技术解读（多模态）
+> ## Figure 3 Description
+
+**Layout/Components:** A horizontal array of five grouped bar charts, each panel dedicated to one LLM (Vicuna-7B, Vicuna-13B, LongChat-7B, LongChat-13B, LLaMA-3.1-8B). Each panel plots decoding speed (Tokens/s, 0–120 y-axis) against five long-context datasets on the x-axis: GovReport (G), QMSum (Q), Multi-News (M), LCC (L), RepoBench-P (R). Per dataset, two paired bars compare **MagicDec** (light blue) vs **LongSpec** (dark blue), with numeric values annotated above each bar.
+
+**Key Technical Takeaway:** LongSpec consistently outperforms MagicDec by roughly 2–2.5× across every model/dataset combination (e.g., Vicuna-7B on LCC: 50 vs 119 tokens/s; LongChat-7B on LCC: 51 vs 124 tokens/s), demonstrating that the proposed speculative decoding approach yields robust throughput gains independent of backbone model and dataset choice.
+
+## Caption (Verbatim)
+
+**Figure 3:** Decoding speed (tokens/s) across different models and settings. All results are computed at $T = 1$. The letters G, Q, M, L, and R on the horizontal axis represent the datasets GovReport, QMSum, Multi-News, LCC, and RepoBench-P respectively.
+
+### Figure 4 (p.8) ⭐深度解读
 ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]]
 > [!quote] caption
 > Training loss curves on long-context data.
 
-### Figure 5 (p.8)
+> [!tip] 技术解读（多模态）
+> **Figure 5 – Architecture / Components / Data Flow:**
+
+A horizontal stacked bar chart comparing per-loop latency (ms) of two speculative-decoding implementations — "EAGLE" vs. "Hybrid" — broken into four sequential stages: draft-model forward (red hatched), target-model attention (yellow), target-model FFN (green hatched), and verification (blue outline). The EAGLE bar totals ~75 ms, with target attention dominating (~49.9 ms); the Hybrid bar totals ~25 ms, with target attention compressed to ~12.5 ms, while draft, FFN, and verification stages remain roughly equal.
+
+**Key takeaway:** Hybrid Tree Attention cuts the target-model attention latency by ~75% (49.92 → 12.54 ms), which is where almost all the end-to-end speedup originates, since the other three pipeline stages are unchanged.
+
+**Caption verbatim:**
+"Figure 5: Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latency reduction is observed in the target model's attention layer (the yellow part) using our approach."
+
+### Figure 5 (p.8) ⭐深度解读
 ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]]
 > [!quote] caption
 > Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latency reduction is observed in the target model’s at- tention layer (the yellow part) using our approach.
 
-### Figure 6 (p.9)
+> [!tip] 技术解读（多模态）
+> **Figure 5 – Architecture / Components / Data Flow:**
+
+A horizontal stacked bar chart comparing per-loop latency (ms) of two speculative-decoding implementations — "EAGLE" vs. "Hybrid" — broken into four sequential stages: draft-model forward (red hatched), target-model attention (yellow), target-model FFN (green hatched), and verification (blue outline). The EAGLE bar totals ~75 ms, with target attention dominating (~49.9 ms); the Hybrid bar totals ~25 ms, with target attention compressed to ~12.5 ms, while draft, FFN, and verification stages remain roughly equal.
+
+**Key takeaway:** Hybrid Tree Attention cuts the target-model attention latency by ~75% (49.92 → 12.54 ms), which is where almost all the end-to-end speedup originates, since the other three pipeline stages are unchanged.
+
+**Caption verbatim:**
+"Figure 5: Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latency reduction is observed in the target model's attention layer (the yellow part) using our approach."
+
+### Figure 6 (p.9) ⭐深度解读
 ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p09.png]]
 > [!quote] caption
 > Throughput comparison of Vanilla, MagicDec, and LONGSPEC. not suitable for such long-output scenarios because the initial inference stage of the long reasoning task is not the same as the traditional long-context task. In long reasoning tasks, where the prefix is relatively short, the draft model in MagicDec will completely degrade into the target model, failing to achieve acceleration.
+
+> [!tip] 技术解读（多模态）
+> **Figure Description**
+
+The figure is a line chart comparing throughput (tokens/s) across batch sizes 1, 2, 4, and 8 for three methods: Vanilla (blue), MagicDec (orange), and LongSpec (green). All three curves rise with batch size, but LongSpec scales much more steeply, reaching ~561 tokens/s at batch size 8, versus MagicDec (~310) and Vanilla (~287). Vanilla and MagicDec track closely at small batches; MagicDec pulls slightly ahead at batch 4–8.
+
+**Key technical takeaway:** LongSpec's advantage over Vanilla and MagicDec grows with batch size, demonstrating superior scalability for high-throughput inference scenarios.
+
+**Caption (verbatim):** Figure 6: Throughput comparison of Vanilla, MagicDec, and LONGSPEC.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

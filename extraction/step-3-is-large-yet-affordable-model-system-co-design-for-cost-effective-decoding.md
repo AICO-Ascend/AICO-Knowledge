@@ -23,20 +23,70 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.1)
+### Figure 1 (p.1) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p01.png]]
 > [!quote] caption
 > The Pareto frontier of recent models regarding acti- vated parameters and decoding costs. The darker area is GQA models’ Pareto frontier. Note: Step-3 also has the highest attention effective rank [7], the same as DSv3 and doubling some other models like Qwen3 MoE 235B and Kimi K2. expensive per token (because of low MFU) compared with training and prefill. 2) For reasoning models, longer thinking
 
-### Figure 2 (p.6)
+> [!tip] 技术解读（多模态）
+> # Figure 1 Description
+
+**Architecture/Components/Data Flow:**
+Figure 1 is a 2D scatter plot presenting a Pareto frontier analysis of recent LLMs. The **x-axis** shows theoretical decoding cost (USD) at 8K context (range: 0.05–0.10), while the **y-axis** shows activated parameters (range: ~10–50B). Each point represents a model — Step-3 (highlighted as a red star at ~0.055 USD, ~38B params), Pangu Pro, Qwen3 MoE, Llama 4 Maverick, Kimi K2, DSv3, Qwen3 32B, ERNIE4.5, and MM M1. A shaded gray region denotes the GQA-based Pareto frontier. Dashed lines connect competing models. Step-3 sits leftmost, indicating the lowest decoding cost at comparable activated-parameter scale.
+
+**Key Technical Takeaway (≤120 words):**
+Step-3 achieves the lowest theoretical decoding cost among recent LLMs at 8K context despite activating ~38B parameters (more than DeepSeek-V3 and Qwen3 MoE 235B). This cost advantage stems from hardware-aware model-system co-design: Multi-Matrix Factorization Attention (MFA) cuts KV-cache size and computation while preserving attention expressiveness, and Attention-FFN Disaggregation (AFD) decouples attention/FFN into specialized subsystems. The result is a new Pareto frontier — Step-3 also matches DSv3 in attention effective rank, doubling Qwen3 MoE 235B and Kimi K2.
+
+**Caption (verbatim):**
+Figure 1: The Pareto frontier of recent models regarding activated parameters and decoding costs. The darker area is GQA models' Pareto frontier. Note: Step-3 also has the highest attention effective rank [7], the same as DSv3 and doubling some other models like Qwen3 MoE 235B and Kimi K2.
+
+### Figure 2 (p.6) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p06.png]]
 > [!quote] caption
 > With all the results shown, we make the following observations:
 
-### Figure 3 (p.6)
+> [!tip] 技术解读（多模态）
+> **Note:** This page contains two tables (Table 4 and Table 5) plus discussion text — there is no diagram/figure on this page. I'll treat Table 4 as the main visual.
+
+## Description of Table 4 (Accelerator Specifications)
+
+**Layout:** A 5-row × 6-column grid comparing four accelerators (NVIDIA H800, H20, A800, Ascend 910B) across: hourly price, BF16/FP16 FLOPs, FP8 FLOPs, memory bandwidth, and compute-to-bandwidth (roofline) ratio.
+
+**Key data flow / insight:**
+- **H800**: $2/hr, 9.89×10¹⁴ BF16 FLOPs, 3.35×10¹² B/s → ratio **591** (heavily compute-bound, FP8-capable)
+- **H20**: $0.8/hr, 1.48×10¹⁴ FLOPs, 4.00×10¹² B/s → ratio **74** (memory-bound, cheap but slow)
+- **A800**: $0.75/hr, 3.12×10¹⁴ FLOPs, ratio **156** (no FP8)
+- **Ascend 910B**: $0.67*/hr, 2.80×10¹⁴ FLOPs, ratio **175**
+
+**Key technical takeaway:** The H800's roofline ratio (~591) is ~4× higher than the A800/910B, meaning attention layers (which dominate decoding cost at 8K+ context) suffer a multi-fold slowdown on weaker hardware — driving Observation 4 ("hardware friendliness") and motivating the cost analysis in Table 5.
+
+## Verbatim Caption (Table 4)
+
+> **Table 4:** Comparison of accelerator specifications. *We do not have publicly available 910B pricing. We estimate its price proportionally based on its FLOPs and A800's. As far as we know, there are multiple versions of 910B. We show the weakest and (presumably) most affordable one that we know.
+
+### Figure 3 (p.6) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p06.png]]
 > [!quote] caption
 > Second, the time spent on each layer will be largely unbal- anced – when running with long context, the full GQA layers consume much more time than the linear attention layers. This may not be a problem for single-node inference deployment, 6
+
+> [!tip] 技术解读（多模态）
+> **Note:** This page contains two tables (Table 4 and Table 5) plus discussion text — there is no diagram/figure on this page. I'll treat Table 4 as the main visual.
+
+## Description of Table 4 (Accelerator Specifications)
+
+**Layout:** A 5-row × 6-column grid comparing four accelerators (NVIDIA H800, H20, A800, Ascend 910B) across: hourly price, BF16/FP16 FLOPs, FP8 FLOPs, memory bandwidth, and compute-to-bandwidth (roofline) ratio.
+
+**Key data flow / insight:**
+- **H800**: $2/hr, 9.89×10¹⁴ BF16 FLOPs, 3.35×10¹² B/s → ratio **591** (heavily compute-bound, FP8-capable)
+- **H20**: $0.8/hr, 1.48×10¹⁴ FLOPs, 4.00×10¹² B/s → ratio **74** (memory-bound, cheap but slow)
+- **A800**: $0.75/hr, 3.12×10¹⁴ FLOPs, ratio **156** (no FP8)
+- **Ascend 910B**: $0.67*/hr, 2.80×10¹⁴ FLOPs, ratio **175**
+
+**Key technical takeaway:** The H800's roofline ratio (~591) is ~4× higher than the A800/910B, meaning attention layers (which dominate decoding cost at 8K+ context) suffer a multi-fold slowdown on weaker hardware — driving Observation 4 ("hardware friendliness") and motivating the cost analysis in Table 5.
+
+## Verbatim Caption (Table 4)
+
+> **Table 4:** Comparison of accelerator specifications. *We do not have publicly available 910B pricing. We estimate its price proportionally based on its FLOPs and A800's. As far as we know, there are multiple versions of 910B. We show the weakest and (presumably) most affordable one that we know.
 
 ### Figure 4 (p.8) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p08.png]]
@@ -54,10 +104,29 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【MiniMax 解读】Step-3 attention 设计对比(Fig.5)：Decode 计算 vs 内存访问(8K→32K ctx)，对比 DSv3 MLA / Qwen3-MoE GQA / Step-3 MFA，叠 H800/910B/A800/H20 roofline。DSv3 MLA 算术强度512=H800 compute-bound；Qwen3 GQA 强度32=H20 memory-bound；Step-3 MFA 强度128≈910B(175)/A800(156) ridge 点→计算仅 DSv3 1/4、访存仅 Qwen3 1/3，跨硬件都省。⭐直击 910B roofline，与昇腾相关。
 
-### Figure 6 (p.11)
+### Figure 6 (p.11) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p11.png]]
 > [!quote] caption
 > Module disaggregation in AFD architecture. FFN can be deployed in TP-only, EP-only, or a hybrid TP+EP way, depending on hardware and model architecture. start to be concerned about other issues like expert imbalance, stability, etc.
+
+> [!tip] 技术解读（多模态）
+> ## Figure 6 Description
+
+**Architecture & Components:**
+The diagram shows AFD's two physically separable instances separated by a dashed line:
+
+- **Attention Instance** (left): A residual block with Norm → Attn → Norm, processing the hidden state and outputting to the next layer.
+- **FFN Instance** (right): A MoE pipeline of Norm → Router → Expert Compute → Expert Combine, with an auxiliary Topk-score branch feeding the combiner.
+
+**Data Flow:**
+Attention output flows rightward into FFN via **TP gather / EP scatter (fp8)**. The Router produces an expert distribution; experts compute, and results return leftward via **TP scatter / EP gather (bf16)** before a residual add (⊕) and forwarding back to the attention pipeline.
+
+**Key Takeaway:**
+AFD's flexibility allows FFN to be deployed as TP-only, EP-only, or hybrid TP+EP, letting system designers tune parallelism to hardware constraints and model topology independently from the attention servers.
+
+## Caption (verbatim)
+
+> Figure 6: Module disaggregation in AFD architecture. FFN can be deployed in TP-only, EP-only, or a hybrid TP+EP way, depending on hardware and model architecture.
 
 ### Figure 7 (p.12) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p12.png]]
@@ -80,15 +149,45 @@ tags: []
 
 **Figure 7: Communication topology and the multi-stages pipeline of the AFD architecture.**
 
-### Figure 8 (p.13)
+### Figure 8 (p.13) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p13.png]]
 > [!quote] caption
 > StepMesh communication workflow tailored for AFD.
 
-### Figure 9 (p.13)
+> [!tip] 技术解读（多模态）
+> **Main Figure Description (Figure 8):**
+
+The figure depicts the StepMesh communication workflow tailored for AFD, showing two symmetric GPU sides (left/right) exchanging data. Each side contains:
+- A core computation block labeled "1"## with three sub-stages: Prev Layer (=#"–!!#-:!;), Current Layer (=#"/#%7!:), and Next Layer (3+*$!:)
+- A data transformation pipeline (¼'#$&(6 → ¼#$& → -+".'$(&)) feeding into the next layer
+- **Activation Tensors** (green) and **Token Tensors** (green) attached as named memory regions
+- A bottom tensor-allocation bus (234%!1,!) registered via unique tensor keys
+
+Arrows show: Prev Layer activations → slice into token tensors → register/slice → send via token tensors → receive on remote side → feed into Current Layer computation.
+
+**Key Technical Takeaway:** StepMesh registers tensors by unique keys and enables direct in-place slicing from contiguous GPU memory, eliminating the concatenation/copying overhead required for distributed inference.
+
+**Caption (verbatim):** Figure 8: StepMesh communication workflow tailored for AFD.
+
+### Figure 9 (p.13) ⭐深度解读
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p13.png]]
 > [!quote] caption
 > StepMesh framework for multiple accelerators. AF-
+
+> [!tip] 技术解读（多模态）
+> **Main Figure Description (Figure 8):**
+
+The figure depicts the StepMesh communication workflow tailored for AFD, showing two symmetric GPU sides (left/right) exchanging data. Each side contains:
+- A core computation block labeled "1"## with three sub-stages: Prev Layer (=#"–!!#-:!;), Current Layer (=#"/#%7!:), and Next Layer (3+*$!:)
+- A data transformation pipeline (¼'#$&(6 → ¼#$& → -+".'$(&)) feeding into the next layer
+- **Activation Tensors** (green) and **Token Tensors** (green) attached as named memory regions
+- A bottom tensor-allocation bus (234%!1,!) registered via unique tensor keys
+
+Arrows show: Prev Layer activations → slice into token tensors → register/slice → send via token tensors → receive on remote side → feed into Current Layer computation.
+
+**Key Technical Takeaway:** StepMesh registers tensors by unique keys and enables direct in-place slicing from contiguous GPU memory, eliminating the concatenation/copying overhead required for distributed inference.
+
+**Caption (verbatim):** Figure 8: StepMesh communication workflow tailored for AFD.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

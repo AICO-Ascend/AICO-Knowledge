@@ -1,43 +1,45 @@
-# EAGLE-3 — 技术点深读（DEEP 2026-08-18）
+# EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test — 技术点深读（DEEP 2026-08-18）
 > 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
-> 论文：EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test · arXiv:2503.01840
+> 论文：EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test · arXiv:2503.01840v3 (23 Apr 2025)
+> 作者：Yuhui Li (PKU), Fangyun Wei (MSRA), Chao Zhang (PKU), Hongyang Zhang (Waterloo/Vector)
+> 图表上下文来源：extraction/minimax_captions.json（6 张 figure 的 M3 caption，本文禁直读 PNG）
 
 ## 核心问题
 
 LLM 社区的主流趋势是 **scaling up 训练数据**以提升模型智能（LLaMA 1/2/3 的 7B(8B) 训练数据从 1T → 2T → 15T tokens，§1），而推理成本几乎不变。EAGLE-3 的出发点是把这一思路移植到 speculative sampling 的 draft model 上——通过扩大 draft model 训练数据来提升接受率与加速比。
 
-然而作者观察到关键反常现象（§1, Figure 1）：**对 EAGLE-1/2 的 draft model 增加训练数据，加速比几乎不涨**（Figure 1 中 EAGLE-2 的 speedup 曲线随数据规模 1×→8× 基本走平，accept length 同样走平）。这是 EAGLE 系列继续提升的"scaling 天花板"。
+然而作者观察到关键反常现象（§1, Figure 1（p.1））：**对 EAGLE-1/2 的 draft model 增加训练数据，加速比几乎不涨**。M3 解读 Figure 1：EAGLE-2 的 speedup 曲线随数据规模 1×→8× 基本走平于 ~3.2–3.3，accept length 也平台化于 ~4.1；EAGLE-3 则单调上升（speedup ~3.7→4.4，accept length ~5.2→6.1）。M3 据此点出 EAGLE-2 的 feature-prediction 设计是数据红利的"饱和盖"。这是 EAGLE 系列继续提升的"scaling 天花板"。
 
-根因分析（§1, Figure 3 上部）：EAGLE 在 **feature 层做自回归**——draft model 预测 next feature ˆf，再经 target model 的 LM head 得到 token 分布。其损失含两项：feature prediction loss `l_fea` + token prediction loss `l_token`。`l_fea` 让 draft model 仅在 Step 1 训练即可获得多步预测能力（好处），但 token prediction 才是终极目标，**feature prediction 实际上是额外约束**，压制了 draft model 的表达能力，使其无法从数据扩张中受益。
+根因分析（§1, Figure 3 上部（p.3））：EAGLE 在 **feature 层做自回归**——draft model 预测 next feature ˆf，再经 target model 的 LM head 得到 token 分布。其损失含两项：feature prediction loss `l_fea` + token prediction loss `l_token`。`l_fea` 让 draft model 仅在 Step 1 训练即可获得多步预测能力（好处），但 token prediction 才是终极目标，**feature prediction 实际上是额外约束**，压制了 draft model 的表达能力，使其无法从数据扩张中受益。
 
-直接移除 `l_fea`（Figure 3 中部）会暴露新问题：Step 1 输出的 ˆa_{t+1} 偏离 ground-truth f_{t+1}，使 Step 2 的输入序列 `f_1,…,f_t,ˆa_{t+1}` 落在训练分布之外，导致 **1-α（第二个 draft token 的接受率）骤降**（Figure 4）。这就是 train/inference context mismatch——训练时输入是 ground-truth feature，推理时输入是 draft model 自身的估计。
+直接移除 `l_fea`（Figure 3 中部）会暴露新问题（M3 解读 Figure 3：此时 draft model 直接输出 unconstrained vector â，再过 LM head 出 token）：Step 1 输出的 ˆa_{t+1} 偏离 ground-truth f_{t+1}，使 Step 2 的输入序列 `f_1,…,f_t,ˆa_{t+1}` 落在训练分布之外，导致 **1-α（第二个 draft token 的接受率）骤降**（Figure 4）。这就是 train/inference context mismatch——训练时输入是 ground-truth feature，推理时输入是 draft model 自身的估计。
 
 进一步约束（§1, §3.2）：EAGLE/Medusa 复用 target model 的 **top-layer feature**（LM head 前的 feature）。当 LM head 权重矩阵满秩时，top-layer feature 与 next-token logits 一一对应，因此它**本质只能承载 next-token 信息**——仅凭 top-layer feature 去预测 next-next token 信息量先天不足。要突破此瓶颈必须改用中间层 feature，但只有先移除 `l_fea`（不再要求 draft output 拟合 top-layer feature）才能解放对 feature 层级的选择。
 
 ## 关键创新点
 
-1. **Training-time test（核心训练技术，§1, §3.2, Figure 3 底部）**。
-   把推理时的多步生成过程**纳入训练**：训练时即执行 "test step"——draft model 生成 `a` 后，把 `a` 反馈回 draft model 自身作为下一步输入继续训练。这使训练分布与推理分布对齐（推理时 Step 2+ 的输入也是 draft model 自己的输出 `a`），消除 train/inference mismatch。机制上：Step 1 用 ground-truth feature `g_1,…,g_t` 作输入；Step 2+ 用 `g_1,…,g_t, a_{t+1},…,a_{t+j}` 作输入，其中 `a` 是 draft model 前一步的输出。效果（Figure 4）：随数据规模 1×→8×，0-α 与 1-α 都显著上升，且 1-α 不再塌陷——数据规模红利被打开。
+1. **Training-time test（核心训练技术，§1, §3.2, Figure 3 底部（p.3）+ M3 要点）**。
+   把推理时的多步生成过程**纳入训练**：训练时即执行 "test step"——draft model 生成 `a` 后，把 `a` 反馈回 draft model 自身作为下一步输入继续训练。M3 解读 Figure 3 强调存在一条"红色虚线 feedback loop"把 Step 1 的输出 â 喂回 Step 2，实现 end-to-end 多步监督。这使训练分布与推理分布对齐（推理时 Step 2+ 的输入也是 draft model 自己的输出 `a`），消除 train/inference mismatch。机制上：Step 1 用 ground-truth feature `g_1,…,g_t` 作输入；Step 2+ 用 `g_1,…,g_t, a_{t+1},…,a_{t+j}` 作输入，其中 `a` 是 draft model 前一步的输出。效果（Figure 4（p.4））：随数据规模 1×→8×，0-α 与 1-α 都显著上升，且 1-α 不再塌陷——数据规模红利被打开。
 
 2. **移除 feature prediction 约束 + 直接 token 预测（§1, §3）**。
-   去掉 `l_fea`，只保留 token prediction loss `l_token`；draft model 输出 `a`（unconstrained vector）经 LM head 直接得 token 分布。这给了 draft model input 完全自由（不再要求 ˆa≈top-layer f），是 training-time test 能 work 的前提，也是 multi-layer feature fusion 能 work 的前提（不再被 top-layer 唯一性锁定）。Ablation（Table 2）：在 EAGLE-2 基础上仅 +remove fea con，MT-bench 3.16x→3.82x（+0.66x），GSM8K 3.39x→3.77x。
+   去掉 `l_fea`，只保留 token prediction loss `l_token`；draft model 输出 `a`（unconstrained vector）经 LM head 直接得 token 分布。这给了 draft model input 完全自由（不再要求 ˆa≈top-layer f），是 training-time test 能 work 的前提，也是 multi-layer feature fusion 能 work 的前提（不再被 top-layer 唯一性锁定）。Ablation（Table 2）：在 EAGLE-2 基础上仅 +remove fea con，MT-bench 3.16x→3.82x（+0.66x），GSM8K 3.39x→3.77x（+0.38x）。
 
-3. **Multi-layer feature fusion（§1, §3.1, Figure 5）**。
-   从 target model 同时取 **low / middle / high-level feature** l, m, h（分别对应不同 decoder layer 的输出），各 k 维（k = hidden size），concat 成 3k 维向量，过一个 FC 层压回 k 维得到 fused feature `g`。`g` 整合了不同层级的语义信息。这是 EAGLE-3 在 inference pipeline 上的关键改造成果——只移除 `l_fea` 而仍用 top-layer feature，增益有限；multi-layer fusion 才把信息瓶颈真正打开。Ablation（Table 2）：在 +remove fea con 之上再 +fused features，MT-bench 3.82x→4.40x（再 +0.58x），GSM8K 3.77x→4.48x。
+3. **Multi-layer feature fusion（§1, §3.1, Figure 5（p.4）+ M3 要点）**。
+   从 target model 同时取 **low / middle / high-level feature** l, m, h（分别对应不同 decoder layer 的输出），各 k 维（k = hidden size），concat 成 3k 维向量，过一个 FC 层压回 k 维得到 fused feature `g`。M3 解读 Figure 5 指出：target-model 的 l_how/m_how/h_how、l_can/m_can/h_can 通过 FC 投影进统一 k 维 g，token embedding e 与 g 一并喂入每个 draft layer，实现 feature-level autoregression + context-aware dynamic tree（而非 EAGLE-2 的 static structure）。`g` 整合了不同层级的语义信息。只移除 `l_fea` 而仍用 top-layer feature，增益有限；multi-layer fusion 才把信息瓶颈真正打开。Ablation（Table 2）：在 +remove fea con 之上再 +fused features，MT-bench 3.82x→4.40x（再 +0.58x），GSM8K 3.77x→4.48x（再 +0.71x）。
 
-4. **Inference pipeline 三步式 draft（§3.1, Figure 5）**。
+4. **Inference pipeline 三步式 draft（§3.1, Figure 5（p.4）+ M3 要点）**。
    以 prefix "How can" 生成 draft "I do it …" 为例：
    - Prefill/上一次 verification 时 target model 前向，记录 l/m/h，融合得 `g_how, g_can`。
-   - Step 1：输入 `g_how, g_can` + sampled token "I" 的 embedding `e_I`（沿用 EAGLE-1 思路：把上一时间步的采样结果 token embedding 喂入 draft model，以补偿 token 层采样的不确定性），过 FC + 单层 decoder → 输出 `a_I`，过 LM head 采样得 draft token "do"。
-   - Step 2：无法获得 target model 的 `g_I`（"I" 尚未验证），用 draft model 的 `a_I` 替代 `g_I`，与 `e_do` concat 作为输入 → 输出 `a_do` → "it"。
-   - Step 3+ 同理：用 `a_do` 替代 `g_do`。
+   - Step ①（M3 标注）：输入 `g_how, g_can` + sampled token "I" 的 embedding `e_I`（沿用 EAGLE-1 思路：把上一时间步的采样结果 token embedding 喂入 draft model，以补偿 token 层采样的不确定性），过 FC + 单层 decoder → 输出 `a_I`，过 LM head 采样得 draft token "do"。
+   - Step ②：无法获得 target model 的 `g_I`（"I" 尚未验证），用 draft model 的 `a_I` 替代 `g_I`，与 `e_do` concat 作为输入 → 输出 `a_do` → "it"。
+   - Step ③（M3 标注）：仅过 LM Head 对 features 展开多个并行子节点（can/I/do/it），完成 tree expansion。
    即 ground-truth fused feature `g` 与 draft 自身输出 `a` 在序列中交替出现，这正是 training-time test 所对齐的输入分布。
 
-5. **Draft model 仅一层 Transformer decoder + 自注意力 mask 调整（§3.2, Figure 6）**。
-   Draft model 核心是单层 Transformer decoder。除 self-attention 外无其他组件与 context 交互，故训练/测试时只需改 self-attention。原始训练数据（如 "How can I"）是顺序依赖，attention mask 为标准下三角；其输出 "are/we/do" 与 "how/can/I" 成树状依赖，喂入 Step 2 时 mask 改为 **diagonal**（除以原始训练数据为 key 的位置外）。用矩阵乘法在这些位置会造成计算浪费，故改用 **vector dot product** 只算对应位置的 attention score。注意：HASS 也做了类似 mask 修改以在训练中模拟测试过程，但论文强调这是**非 EAGLE-3 主要贡献**，二者动机/方法/结果完全不同（见对比节）。
+5. **Draft model 仅一层 Transformer decoder + 自注意力 mask 调整（§3.2, Figure 6（p.5））**。
+   Draft model 核心是单层 Transformer decoder。除 self-attention 外无其他组件与 context 交互，故训练/测试时只需改 self-attention。原始训练数据（如 "How can I"）是顺序依赖，attention mask 为标准下三角；其输出 "are/we/do" 与 "how/can/I" 成树状依赖，喂入 Step 2 时 mask 改为 **diagonal**（除以原始训练数据为 key 的位置外）。用矩阵乘法在这些位置会造成计算浪费，故改用 **vector dot product** 只算对应位置的 attention score。M3 在 p.5 未能渲染 Figure 6 本体（仅见正文对 Figure 6 的两处文字引用），此处解读依正文 §3.2。注意：HASS 也做了类似 mask 修改以在训练中模拟测试过程，但论文强调这是**非 EAGLE-3 主要贡献**，二者动机/方法/结果完全不同（见对比节）。
 
-6. **发现 inference acceleration 的 scaling law（§1, §4.1, Figure 1）**。
-   在新架构下，**增加 draft model 训练数据 → speedup 比例成比例上升**，曲线单调上升——这是前作从未观察到的现象。Figure 1：LLaMA-Instruct 3.1 8B 上 MT-bench，数据规模 1×→2×→4×→8×，EAGLE-2 speedup 与 accept length 曲线基本水平，EAGLE-3 曲线持续上升（speedup 3.2x→4.4x 区间，accept length 4.0→6.0 区间）。论文用 ~8× 训练数据训练 EAGLE-3，并明确预期更大数据规模会进一步提升 speedup。
+6. **发现 inference acceleration 的 scaling law（§1, §4.1, Figure 1（p.1）+ M3 要点）**。
+   在新架构下，**增加 draft model 训练数据 → speedup 比例成比例上升**，曲线单调上升——这是前作从未观察到的现象。M3 解读 Figure 1：EAGLE-2 speedup 平台于 ~3.2–3.3、accept length 平台于 ~4.1；EAGLE-3 speedup 从 ~3.7 升至 ~4.4、accept length 从 ~5.2 升至 ~6.1，斜率显著。论文用 ~8× 训练数据训练 EAGLE-3，并明确预期更大数据规模会进一步提升 speedup。
 
 7. **兼容 EAGLE-2 的 dynamic draft tree（§1, §2.2）**。
    EAGLE-3 直接采纳 EAGLE-2 的 context-aware dynamic draft tree（基于 confidence 的 expansion + reranking，保证连通树）。EAGLE-3 的改进集中在 draft model **训练侧与输入特征构造**，与 EAGLE-2 的 tree-shape 优化正交、可叠加。Appendix A：EAGLE-3 因接受率更高，把 draft tree 深度从 EAGLE-2 的 6 提升到 **8**，节点总数保持不变。
@@ -84,7 +86,7 @@ LLM 社区的主流趋势是 **scaling up 训练数据**以提升模型智能（
 | DSL 8B | EAGLE-2 | 2.69x / 3.41 | 3.01x / 3.82 | 3.16x / 4.05 | 2.64x / 3.29 | 2.35x / 3.13 | 2.77x / 3.54 |
 | DSL 8B | **EAGLE-3** | **3.20x / 4.49** | **3.77x / 5.28** | **4.38x / 6.10** | **3.16x / 4.30** | **3.08x / 4.27** | **3.52x / 4.89** |
 
-峰值：V13B HumanEval T=0 达 **6.47x / τ=7.54**（论文 abstract 与 §4.1 所称 6.5x 上限即此处）。
+峰值：V13B HumanEval T=0 达 **6.47x / τ=7.54**（论文 abstract 与 §4.1 所称 6.5x 上限即此处）。Figure 2（p.2，M3 柱状图解读）确认 EAGLE-3 在四个目标模型上分别达 5.6x / 4.4x / 4.1x / 5.0x，全面最优，与 Table 1 数字一致。
 
 ### Table 2 — Ablation（LLaMA-Instruct 3.1 8B）
 "remove fea con"=移除 feature prediction 约束；"fused features"=low/mid/high feature fusion 替代 top-layer feature
@@ -95,7 +97,7 @@ LLM 社区的主流趋势是 **scaling up 训练数据**以提升模型智能（
 | + remove fea con | 3.82x / 5.37 | 3.77x / 5.22 |
 | + fused features (EAGLE-3) | **4.40x / 6.13** | **4.48x / 6.23** |
 
-两项改进各自有效且可叠加：remove fea con 贡献 +0.66x speedup / +1.32 τ（MT-bench），fused features 在其上再贡献 +0.58x / +0.76 τ。
+两项改进各自有效且可叠加：remove fea con 贡献 +0.66x speedup / +1.32 τ（MT-bench），fused features 在其上再贡献 +0.58x / +0.76 τ。两项改进对应 Figure 3 中部与底部的两次范式跃迁（M3 解读）。
 
 ### Table 3 — SGLang v0.4.4 吞吐量提升（H100, LLaMA-Instruct 3.1 8B, MT-Bench，无 tree 结构，chain length=3；baseline=SGLang w/o spec=1.00x）
 
@@ -125,18 +127,18 @@ EAGLE-3 vs EAGLE-2 在 SGLang bs=1 上吞吐比 ≈ 1.53x，与 latency speedup 
 
 EAGLE 的吞吐峰值在 batch=24，EAGLE-3 的峰值推迟到 batch=56——EAGLE-3 的有效 batch 窗口更宽，在更大 batch 下仍维持正收益。
 
-### Figure 1（结构化）— Scaling law（LLaMA-Instruct 3.1 8B, MT-bench）
+### Figure 1（结构化，p.1，M3 解读）— Scaling law（LLaMA-Instruct 3.1 8B, MT-bench）
 
 | 数据规模 (×ShareGPT) | EAGLE-2 Speedup | EAGLE-3 Speedup | EAGLE-2 AcceptLen | EAGLE-3 AcceptLen |
 |---|---|---|---|---|
-| 1 | ~3.2x | ~3.4x | ~4.0 | ~4.2 |
-| 2 | ~3.3x | ~3.7x | ~4.1 | ~4.5 |
-| 4 | ~3.4x | ~4.0x | ~4.2 | ~5.0 |
-| 8 | ~3.5x | ~4.4x | ~4.3 | ~5.7 |
+| 1 | ~3.2x | ~3.7x | ~4.1 | ~5.2 |
+| 2 | ~3.2x | ~3.9x | ~4.1 | ~5.5 |
+| 4 | ~3.3x | ~4.1x | ~4.1 | ~5.8 |
+| 8 | ~3.3x | ~4.4x | ~4.1 | ~6.1 |
 
-EAGLE-2 曲线近水平（~3.2→~3.5），EAGLE-3 曲线单调上升（~3.4→~4.4）；accept length 上 EAGLE-3 从 ~4.2 升至 ~5.7，斜率显著。
+M3 解读要点：EAGLE-2 双曲线近水平（speedup 平台 ~3.2–3.3，accept length 平台 ~4.1）；EAGLE-3 双曲线单调上升（speedup ~3.7→4.4，accept length ~5.2→6.1）。M3 据此判定 EAGLE-2 的 feature-prediction 设计导致数据饱和，EAGLE-3 的 direct token prediction + multi-layer fusion 解锁了 monotonic scaling。
 
-### Figure 4（结构化）— 接受率 vs 数据规模（LLaMA-Instruct 3.1 8B, MT-bench）
+### Figure 4（结构化，p.4）— 接受率 vs 数据规模（LLaMA-Instruct 3.1 8B, MT-bench）
 
 | 数据规模 | EAGLE 0-α | EAGLE w/o fea pred 0-α | EAGLE-3 0-α | EAGLE 1-α | EAGLE w/o fea pred 1-α | EAGLE-3 1-α |
 |---|---|---|---|---|---|---|
@@ -147,25 +149,25 @@ EAGLE-2 曲线近水平（~3.2→~3.5），EAGLE-3 曲线单调上升（~3.4→~
 
 核心证据：(a) 仅 remove fea pred（中段）时 0-α 上升但 1-α 在 1× 处塌到 ~0.25，验证 train/inference mismatch；(b) training-time test（EAGLE-3）下 1-α 与 0-α 接近且随数据同步上升——mismatch 被消除。
 
-### Figure 7（结构化）— 接受率 vs 估计特征数 n（LLaMA-Instruct 3.1 8B, MT-bench）
+### Figure 7（结构化，p.8，M3 解读）— 接受率 vs 估计特征数 n（LLaMA-Instruct 3.1 8B, MT-bench）
 
 | n (输入中估计 feature 数) | EAGLE 接受率 | EAGLE-3 接受率 |
 |---|---|---|
-| 0 | ~0.80 | ~0.80 |
-| 1 | ~0.74 | ~0.78 |
-| 2 | ~0.70 | ~0.77 |
-| 3 | ~0.65 | ~0.76 |
-| 4 | ~0.60 | ~0.75 |
-| 5 | ~0.55 | ~0.74 |
-| 6 | ~0.50 | ~0.73 |
-| 7 | ~0.48 | ~0.72 |
+| 0 | ~0.71 | ~0.79 |
+| 1 | ~0.69 | ~0.79 |
+| 2 | ~0.66 | ~0.78 |
+| 3 | ~0.62 | ~0.78 |
+| 4 | ~0.58 | ~0.77 |
+| 5 | ~0.55 | ~0.77 |
+| 6 | ~0.52 | ~0.76 |
+| 7 | ~0.53 (微回升) | ~0.76 |
 
-EAGLE 随 n 单调下降显著（error accumulation），EAGLE-3 几乎持平——这是 training-time test 直接消解 error accumulation 的最直观证据。
+M3 解读要点：EAGLE 从 ~0.71 单调衰减至 ~0.52（6-α），7-α 处轻微回升；EAGLE-3 全程持平于 ~0.76–0.79。M3 据此判定 multi-layer fusion + 移除 feature-prediction 约束使 EAGLE-3 能支撑长 speculative chain（长链是 4.40x MT-bench speedup 的前提）。
 
 ## 与同类对比
 
-- **vs EAGLE-1（[[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]]）**：EAGLE-1 的特征级自回归 + `l_fea` 是 EAGLE-3 的直接改造对象。EAGLE-1 用 top-layer feature + feature prediction loss；EAGLE-3 移除 `l_fea`、改 multi-layer fusion、加 training-time test。V13B T=0 MT-bench：EAGLE 3.07x → EAGLE-3 5.58x（+2.51x）。EAGLE-3 沿用 EAGLE-1 的"喂入上一时间步 token embedding 以补偿采样不确定性"设计（§3.1）。
-- **vs EAGLE-2（[[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]]）**：EAGLE-2 改 tree **结构**（dynamic tree），EAGLE-3 改 draft model **训练与输入特征**。两者正交且可叠加——EAGLE-3 直接采纳 EAGLE-2 的 dynamic tree。V13B T=0 Mean：EAGLE-2 4.22x → EAGLE-3 5.51x（+1.29x，约 +30%）；L33 70B T=0 Mean：2.85x → 4.12x（+45%）。论文 abstract 概括为"约 1.4x over EAGLE-2"。
+- **vs EAGLE-1（[[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]]）**：EAGLE-1 的特征级自回归 + `l_fea` 是 EAGLE-3 的直接改造对象。EAGLE-1 用 top-layer feature + feature prediction loss；EAGLE-3 移除 `l_fea`、改 multi-layer fusion、加 training-time test。V13B T=0 MT-bench：EAGLE 3.07x → EAGLE-3 5.58x（+2.51x）。EAGLE-3 沿用 EAGLE-1 的"喂入上一时间步 token embedding 以补偿采样不确定性"设计（§3.1）。Figure 3（p.3，M3）完整对照了 EAGLE / EAGLE-without-fea-pred / EAGLE-3 三种范式。
+- **vs EAGLE-2（[[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]]）**：EAGLE-2 改 tree **结构**（dynamic tree），EAGLE-3 改 draft model **训练与输入特征**。两者正交且可叠加——EAGLE-3 直接采纳 EAGLE-2 的 dynamic tree。V13B T=0 Mean：EAGLE-2 4.22x → EAGLE-3 5.51x（+1.29x，约 +30%）；L33 70B T=0 Mean：2.85x → 4.12x（+45%）。论文 abstract 概括为"约 1.4x over EAGLE-2"。Figure 2（p.2，M3 柱状图）直观呈现此差距。
 - **vs HASS**：最易混淆的对比对象。HASS 也修改 self-attention mask 在训练中模拟测试过程，但 (a) 动机不同：HASS 缓解 EAGLE feature prediction 不准的 **error accumulation**，EAGLE-3 移除约束提升 **表达能力**；(b) 方法不同：HASS 仍保留 `l_fea`、输入必须是 top-layer feature，EAGLE-3 移除 `l_fea`、输入自由、改 multi-layer fusion；(c) 结果不同：EAGLE-3 显著优于 HASS（Figure 2 中 V13B 5.6x vs HASS ~3.1x）。EAGLE-3 明确指出"mask 修改不是 EAGLE-3 的主要关注点"（§3.2）。
 - **vs Medusa（[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]）**：Medusa 用 multiple decoding heads 并行预测多 token、static tree，且在 non-greedy 下放松接受条件（不保证无损）。EAGLE-3 用单层 decoder + dynamic tree + 严格接受条件（lossless），V13B T=0 Mean 5.51x vs Medusa 2.12x。
 - **vs Hydra**：Medusa 的 sequentially-dependent heads 升级版，仍 static tree。EAGLE-3 V13B T=0 5.51x vs Hydra 2.80x。
@@ -178,22 +180,24 @@ EAGLE 随 n 单调下降显著（error accumulation），EAGLE-3 几乎持平—
 
 EAGLE-3 位于 **speculative feature-prediction 分支**的 **training-time scaling step**：
 
-- **[[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]]**（EAGLE-1，前身）：EAGLE-3 直接 build upon 并改造其核心设计。EAGLE-1 的 feature-level AR + `l_fea` + top-layer feature reuse 是 EAGLE-3 的"被改造对象"。EAGLE-3 沿用 EAGLE-1 的 token-embedding-as-input 设计（补偿采样不确定性，§3.1），但替换其 feature prediction 范式。Figure 3 完整对照了 EAGLE / EAGLE-3 / EAGLE-without-fea-pred 三种范式。
+- **[[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]]**（EAGLE-1，前身）：EAGLE-3 直接 build upon 并改造其核心设计。EAGLE-1 的 feature-level AR + `l_fea` + top-layer feature reuse 是 EAGLE-3 的"被改造对象"。EAGLE-3 沿用 EAGLE-1 的 token-embedding-as-input 设计（补偿采样不确定性，§3.1），但替换其 feature prediction 范式。Figure 3（p.3，M3）完整对照了 EAGLE / EAGLE-3 / EAGLE-without-fea-pred 三种范式。
 - **[[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]]**（EAGLE-2，前代）：EAGLE-3 采纳 EAGLE-2 的 dynamic draft tree（expansion + reranking + confidence-based pruning），改进集中在 draft model 训练侧与输入特征构造。两者改进维度正交，EAGLE-3 把 draft tree 深度从 EAGLE-2 的 6 提升到 8（Appendix A）。谱系：EAGLE-1 feature AR → EAGLE-2 dynamic tree → **EAGLE-3 training-time scaling**。
 - **[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]**（Medusa，多头前身）：Medusa 的 multi-head static tree + top-layer feature reuse 思路被 EAGLE 系列吸收并改造。EAGLE-3 进一步放弃 top-layer feature 限制，证明 multi-layer fusion 优于单层 top-layer。
 - **[[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]]**（DeFT，tree-attention kernel）：EAGLE-3 沿用 tree attention 验证（继承自 EAGLE-1/2），draft tree 深度增至 8 后 tree-attention 计算开销上升，DeFT 类高效 tree-attention kernel 可作为 EAGLE-3 verification stage 的 drop-in 加速器。
+- **[[sglang-efficient-execution-of-structured-language-model-programs]]**（SGLang，生产级推理框架）：EAGLE-3 已被 SGLang 团队集成评估（§4.3, Table 3/4），在 H100 bs=1 上达 373.25 tokens/s，bs=64 仍 1.38x 吞吐提升。EAGLE-3 是 SGLang 生态的 spec-decoding 后端之一。
+- **[[efficient-memory-management-for-large-language-model-serving-with-pagedattention]]**（vLLM/PagedAttention）：EAGLE-3 在 vLLM 上评估大 batch 吞吐（§4.4, Table 5），EAGLE-3 把正收益窗口从 EAGLE 的 batch≤24 推到 batch≤56。
 
 谱系定位：speculative decoding → tree-structured draft → feature-level autoregression (EAGLE-1) → context-aware dynamic tree (EAGLE-2) → **training-time scaling + multi-layer fusion (EAGLE-3, 本文)**。
 
 ## 局限与边界
 
-1. **Scaling law 仅在 ≤8× 数据范围内验证（§1, Figure 1）**。论文观察到 1×→8× 数据的 speedup 单调上升，但 8× 之后曲线是否饱和、何时饱和未给出。作者仅"预期更大数据规模会进一步提升"，未提供外推的理论依据或上界分析。UltraChat-200K（~464K entries）已是当前可用的较大开源对话数据，再扩大数据规模受限于数据获取。
+1. **Scaling law 仅在 ≤8× 数据范围内验证（§1, Figure 1（p.1））**。论文观察到 1×→8× 数据的 speedup 单调上升（M3 解读 EAGLE-3 ~3.7→4.4），但 8× 之后曲线是否饱和、何时饱和未给出。作者仅"预期更大数据规模会进一步提升"，未提供外推的理论依据或上界分析。UltraChat-200K（~464K entries）已是当前可用的较大开源对话数据，再扩大数据规模受限于数据获取。
 
 2. **未在 405B / 671B 超大模型上测试（§4）**。明确说明 "Due to the GPU constraint, we are unable to test EAGLE-3 on the 405B and 671B models"。最大测试模型为 LLaMA-Instruct 3.3 70B 与 DeepSeek-R1-Distill-LLaMA 8B。EAGLE-3 在超大模型上的 scaling 行为（draft model 容量是否足够、multi-layer fusion 的层选择策略是否仍有效）未验证。
 
 3. **QA / 摘要任务的相对短板未解决（§4.1, Table 1）**。EAGLE-3 在 CNN/DM 上 speedup 最低（V13B T=0：5.01x vs HumanEval 6.47x）。这继承自 EAGLE 系列的固有短板——draft model 用 SFT 数据训练，世界知识/摘要依赖 pretraining 知识。EAGLE-3 的 training-time test 与 multi-layer fusion 提升 draft model 表达力，但无法补足 draft model 训练数据本身的知识缺口。DSL 8B 上 GSM8K 反超其他任务（5.01x）是因为额外用了 OpenThoughts-114k-math 训练——这反证了"任务特定数据有效但通用知识仍是瓶颈"。
 
-4. **Multi-layer feature fusion 的层选择未给出原则（§3.1）**。论文说取 low/mid/high 三层特征 l/m/h，但**如何选择具体哪三层**、为何三层而非更多/更少、不同 target model 的最优层选择是否一致，均未讨论。FC 层把 3k→k 的融合是简单线性投影，未探索更复杂的融合机制（如 gated/attention-based fusion）。这是工程化的可优化空间，但也是泛化到新模型族时的不确定性来源。
+4. **Multi-layer feature fusion 的层选择未给出原则（§3.1, Figure 5（p.4））**。论文说取 low/mid/high 三层特征 l/m/h，但**如何选择具体哪三层**、为何三层而非更多/更少、不同 target model 的最优层选择是否一致，均未讨论。FC 层把 3k→k 的融合是简单线性投影（M3 解读 Figure 5 确认为 FC projection），未探索更复杂的融合机制（如 gated/attention-based fusion）。这是工程化的可优化空间，但也是泛化到新模型族时的不确定性来源。
 
 5. **Draft tree 深度 8 的设定缺乏自适应（Appendix A）**。EAGLE-3 因接受率提升把深度从 6 增到 8，但仍为**手工设定的全局常量**，未随上下文/任务自适应。不同任务（HumanEval vs CNN/DM）的最佳深度可能不同，论文未做深度敏感性分析。
 
@@ -204,3 +208,5 @@ EAGLE-3 位于 **speculative feature-prediction 分支**的 **training-time scal
 8. **Lossless 性质继承自严格接受条件，依赖实现正确性**。EAGLE-3 不改 target model 权重、用严格 speculative sampling 接受条件（§4 Metrics），理论上 lossless。但 training-time test 引入的多步训练 + diagonal mask + vector dot-product attention 是新的实现面，工程 bug 会破坏分布等价性——属实现风险而非理论局限。
 
 9. **与 HASS 的边界划分依赖叙述而非消融（§3.2）**。EAGLE-3 强调自身与 HASS 的 mask 修改"动机/方法/结果不同"，但未在 ablation 中隔离"mask 修改"本身的贡献。Table 2 的 ablation 只拆 remove fea con 与 fused features 两项，未拆 mask 修改——故 mask 修改的边际贡献无法从论文数据中量化。
+
+10. **Figure 6 缺失 M3 视觉验证（p.5）**。M3 caption 在 p.5 未能渲染 Figure 6 本体（仅见正文文字引用），本文对 Figure 6（attention mask 三阶段：native training step + 两轮 simulated training step）的解读完全依正文 §3.2 文字，未经图像二次校验。

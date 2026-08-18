@@ -23,40 +23,126 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.1)
+### Figure 1 (p.1) ⭐深度解读
 ![[assets/root-mean-square-layer-normalization-p01.png]]
 > [!quote] caption
 > One major feature of LayerNorm that is widely regarded as contributions to the stabilization is its re-centering invariance property: the summed inputs after LayerNorm remain intact when the inputs or weight matrix is shifted by some amount of noise. We argue that this mean normalization does not reduce the variance of hidden states or model gradients, and hypothesize that it has little impact on 
 
-### Figure 2 (p.6)
+> [!tip] 技术解读（多模态）
+> # Description
+
+**No figure is visible on the provided page.** The image shows only the first page (title page) of the paper "Root Mean Square Layer Normalization" (Zhang & Sennrich, NeurIPS 2019, arXiv:1910.07467v1), containing the title, authors (Biao Zhang¹, Rico Sennrich²·¹), affiliations (University of Edinburgh; University of Zurich), abstract, and the opening paragraphs of Section 1 (Introduction). No diagram, plot, or figure is rendered in the supplied image.
+
+The only in-text reference to a figure in this page is:
+> "…the efficiency gain from faster and more stable training (in terms of number of training steps) is counter-balanced by an increased computational cost per training step, which diminishes the net efficiency, as shown in **Figure 1**."
+
+# Caption Transcription
+
+There is **no figure caption to transcribe**, as no figure appears on this page. The caption for Figure 1 is not present in the provided excerpt.
+
+### Figure 2 (p.6) ⭐深度解读
 ![[assets/root-mean-square-layer-normalization-p06.png]]
 > [!quote] caption
 > SacreBLEU score on newstest2013 for the RNNSearch. Models are implemented accord- ing to Nematus [25] in Tensorﬂow.
 
-### Figure 3 (p.7)
+> [!tip] 技术解读（多模态）
+> **Figure Description:**
+
+Figure 2 is a line plot comparing validation BLEU score convergence across five RNNSearch model variants over training. The x-axis shows training steps (×30k, ranging 0–50) and the y-axis shows Valid BLEU score (0–25). Five curves are plotted:
+- **Baseline** (blue) — no normalization, slowest to converge
+- **L2-Norm** (red) — slowest startup, lowest final score
+- **LayerNorm** (orange) — rapid convergence, high plateau
+- **RMSNorm** (green) — best final BLEU
+- **pRMSNorm** (purple) — comparable to RMSNorm, slightly slower
+
+Companion Table 2 reports final test BLEU on Test14/Test17 plus wall-clock time per 1k steps (Baseline 399s, LayerNorm 665s, RMSNorm 501s, pRMSNorm 493s — a ~25% speedup over LayerNorm).
+
+**Key Technical Takeaway:** RMSNorm matches LayerNorm's re-scaling invariance while reducing compute by ~25% over LayerNorm in TensorFlow, making it an effective drop-in replacement that accelerates RNN convergence by ~50% without sacrificing translation quality.
+
+**Caption (verbatim):** Figure 2: SacreBLEU score on newstest2013 for the RNNSearch. Models are implemented according to Nematus [25] in Tensorflow.
+
+### Figure 3 (p.7) ⭐深度解读
 ![[assets/root-mean-square-layer-normalization-p07.png]]
 > [!quote] caption
 > SacreBLEU score on new- stest2013 (devset) for the RNNSearch with pRMSNorm. We use Tensorﬂow-version Ne- matus, and change p by a step size of 10%.
 
-### Figure 4 (p.7)
+> [!tip] 技术解读（多模态）
+> **Figure 3 Description (architecture/components/data flow):**
+A single-line plot where the x-axis is the hyperparameter *p* (%) swept from ~20 to 100 in 10% steps, and the y-axis is the **Valid SacreBLEU score** (range ~22–25) on newstest2013. The blue curve (RNNSearch + pRMSNorm, Tensorflow Nematus) remains nearly flat around 24 BLEU with small dips, showing how the single scalar hyperparameter *p* flows into pRMSNorm and is evaluated end-to-end on a translation task.
+
+**Key technical takeaway (≤120 words):**
+pRMSNorm's SacreBLEU on the RNNSearch devset is largely insensitive to *p* across the entire 20–100% sweep, with all points landing within roughly ±1 BLEU of ~24. This indicates that practitioners do not need to carefully tune *p* to obtain strong translation quality; pRMSNorm delivers stable performance across a wide range of values, making it a drop-in alternative to LayerNorm/RMSNorm without sensitive hyperparameter selection.
+
+**Caption (verbatim):**
+*"Figure 3: SacreBLEU score on newstest2013 (devset) for the RNNSearch with pRMSNorm. We use Tensorflow-version Nematus, and change p by a step size of 10%."*
+
+### Figure 4 (p.7) ⭐深度解读
 ![[assets/root-mean-square-layer-normalization-p07.png]]
 > [!quote] caption
 > SacreBLEU score curve of Layer-
 
-### Figure 5 (p.8)
+> [!tip] 技术解读（多模态）
+> **Figure 3 Description (architecture/components/data flow):**
+A single-line plot where the x-axis is the hyperparameter *p* (%) swept from ~20 to 100 in 10% steps, and the y-axis is the **Valid SacreBLEU score** (range ~22–25) on newstest2013. The blue curve (RNNSearch + pRMSNorm, Tensorflow Nematus) remains nearly flat around 24 BLEU with small dips, showing how the single scalar hyperparameter *p* flows into pRMSNorm and is evaluated end-to-end on a translation task.
+
+**Key technical takeaway (≤120 words):**
+pRMSNorm's SacreBLEU on the RNNSearch devset is largely insensitive to *p* across the entire 20–100% sweep, with all points landing within roughly ±1 BLEU of ~24. This indicates that practitioners do not need to carefully tune *p* to obtain strong translation quality; pRMSNorm delivers stable performance across a wide range of values, making it a drop-in alternative to LayerNorm/RMSNorm without sensitive hyperparameter selection.
+
+**Caption (verbatim):**
+*"Figure 3: SacreBLEU score on newstest2013 (devset) for the RNNSearch with pRMSNorm. We use Tensorflow-version Nematus, and change p by a step size of 10%."*
+
+### Figure 5 (p.8) ⭐深度解读
 ![[assets/root-mean-square-layer-normalization-p08.png]]
 > [!quote] caption
 > Error rate on validation set for the attentive reader model.
 
-### Figure 6 (p.8)
+> [!tip] 技术解读（多模态）
+> # Main Figure Description (Figure 5)
+
+**Components:** Six normalization methods compared — Baseline, BatchNorm-Everywhere, BatchNorm-LSTM, LayerNorm, RMSNorm, and pRMSNorm — evaluated on an attentive reader model.
+
+**Data flow:** Plot of *valid error rate* (y-axis, 0.4–1.0) vs. *training steps in thousands* (x-axis, 0–300k). Curves descend from ~1.0 and converge; BatchNorm-LSTM drops sharply by ~25k steps, LayerNorm/RMSNorm/pRMSNorm settle near 0.45 by ~50k steps, while Baseline converges slowest to ~0.48.
+
+**Key takeaway:** RMSNorm matches LayerNorm's final accuracy but converges substantially faster, achieving comparable error rates with roughly 15% lower wall-clock time, demonstrating that reparameterized RMSNorm offers an attractive speed–performance trade-off.
+
+---
+
+**Caption (verbatim):**
+Figure 5: Error rate on validation set for the attentive reader model.
+
+### Figure 6 (p.8) ⭐深度解读
 ![[assets/root-mean-square-layer-normalization-p08.png]]
 > [!quote] caption
 > Recall@K values on validation set for the order-embedding models. worse than RMSNorm. Although in Figure 5 the performance of RMSNorm and LayerNorm is comparable, RMSNorm is around 15% faster than LayerNorm as shown in Table 6.3
 
-### Figure 7 (p.13)
+> [!tip] 技术解读（多模态）
+> # Main Figure Description (Figure 5)
+
+**Components:** Six normalization methods compared — Baseline, BatchNorm-Everywhere, BatchNorm-LSTM, LayerNorm, RMSNorm, and pRMSNorm — evaluated on an attentive reader model.
+
+**Data flow:** Plot of *valid error rate* (y-axis, 0.4–1.0) vs. *training steps in thousands* (x-axis, 0–300k). Curves descend from ~1.0 and converge; BatchNorm-LSTM drops sharply by ~25k steps, LayerNorm/RMSNorm/pRMSNorm settle near 0.45 by ~50k steps, while Baseline converges slowest to ~0.48.
+
+**Key takeaway:** RMSNorm matches LayerNorm's final accuracy but converges substantially faster, achieving comparable error rates with roughly 15% lower wall-clock time, demonstrating that reparameterized RMSNorm offers an attractive speed–performance trade-off.
+
+---
+
+**Caption (verbatim):**
+Figure 5: Error rate on validation set for the attentive reader model.
+
+### Figure 7 (p.13) ⭐深度解读
 ![[assets/root-mean-square-layer-normalization-p13.png]]
 > [!quote] caption
 > SacreBLEU score curve over train- ing steps on newstest2013 (devset) for the RNNSearch. Models are trained with Nema- tus in Theano.
+
+> [!tip] 技术解读（多模态）
+> **Figure 7 Description:**
+
+The figure is a line chart comparing five normalization methods' training dynamics for RNNSearch on WMT14 En-De. Five curves are plotted: Baseline (blue), LayerNorm (orange), RMSNorm (green), pRMSNorm (red), and WeightNorm (purple). The y-axis is "Valid BLEU score" (≈5–25), and the x-axis is "Training steps (×30k)" from 0 to 50. All methods start near 5–10 BLEU and rise sharply within the first ~10 steps before plateauing in the 21–23 range.
+
+**Key Takeaway:** WeightNorm converges noticeably slower and converges to a lower final BLEU than LayerNorm, RMSNorm, and pRMSNorm, demonstrating that the proposed reparameterized RMS-based variants match LayerNorm's translation quality while (as argued earlier) being more efficient. (96 words)
+
+**Caption (verbatim):**
+Figure 7: SacreBLEU score curve over training steps on newstest2013 (devset) for the RNNSearch. Models are trained with *Nematatus* in Theano.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

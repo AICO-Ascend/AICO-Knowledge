@@ -23,10 +23,27 @@ tags: [multimodal]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.3)
+### Figure 1 (p.3) ⭐深度解读
 ![[assets/qwen2-5-vl-technical-report-p03.png]]
 > [!quote] caption
 > The Qwen2.5-VL framework demonstrates the integration of a vision encoder and a language model decoder to process multimodal inputs, including images and videos. The vision encoder is designed to handle inputs at their native resolution and supports dynamic FPS sampling. Images of varying sizes and video frames with different FPS rates are dynamically mapped to token sequences of varying lengths. 
+
+> [!tip] 技术解读（多模态）
+> ## Figure Description
+
+**Inputs (bottom):** Images (Picture 1: 9204×1092, Picture 2: 28×224, Picture 3: 700×1260) and videos (Video 1: 392×644, sampled at dynamic FPS 0.5–10) enter at **native resolution**, bypassing resize.
+
+**Vision Encoder:** A redesigned ViT first applies a **Conv3D (2×14×14)** over window-partitioned video frames. The transformer stack runs one **Full Attention** block followed by **M Window Attention** blocks, each sandwiched by **RMSNorm** and an **FFN with SwiGLU**. MRoPE injects spatial + absolute-temporal position IDs.
+
+**Tokenization:** Variable token counts emerge (Picture 1: 11,427; Picture 2: 8; Picture 3: 1,125; Video 1: 644/1,288/2,576 depending on FPS).
+
+**Decoder:** Visual tokens + text tokens ("and videos here.", "Picture 1 is an image from a blog") feed the **Qwen2.5 LM Decoder**, which produces autoregressive text output.
+
+### Key Technical Takeaway (≤120 words)
+Qwen2.5-VL's core innovation is **native-resolution vision encoding combined with Multimodal RoPE (MRoPE) aligned to absolute time**. By avoiding image resizing, preserving aspect ratios, and pairing spatial 2D-RoPE with a temporal axis, the model handles arbitrary image sizes and variable-FPS videos as token sequences of differing lengths. A redesigned ViT (SwiGLU FFN, RMSNorm, window attention with one full-attention block) balances compute efficiency against global context. The MLP-based vision-language merger compresses long feature sequences before the LLM. This design enables precise temporal grounding (pace of events, moment localization) while scaling efficiently across multimodal inputs.
+
+### Caption (verbatim)
+"Figure 1: The Qwen2.5-VL framework demonstrates the integration of a vision encoder and a language model decoder to process multimodal inputs, including images and videos. The vision encoder is designed to handle inputs at their native resolution and supports dynamic FPS sampling. Images of varying sizes and video frames with different FPS rates are dynamically mapped to token sequences of varying lengths. Notably, MRoPE aligns time IDs with absolute time along the temporal dimension, enabling the model to better comprehend temporal dynamics, such as the pace of events and precise moment localization. The processed visual data is subsequently fed into the Qwen2.5 LM Decoder. We have re-engineered the vision transformer (ViT) architecture, incorporating advanced components such as FFN with SwiGLU activation, RMSNorm for normalization, and window-based attention mechanisms to enhance performance and efficiency."
 
 ## 相关论文
 

@@ -23,10 +23,34 @@ tags: [speculative]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.4)
+### Figure 1 (p.4) ⭐深度解读
 ![[assets/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-p04.png]]
 > [!quote] caption
 > Recall from Equation 1 that the per-token latency of speculative decoding is 𝐿= (𝑇draft + 𝑇verify)/𝜏. Autoregressive drafters achieve high 𝜏but pay 𝑇draft ∝𝛾; parallel drafters collapse 𝑇draft to a single pass but sacrifice 𝜏because each position is predicted independently. Meanwhile, fixed-length verification wastes 𝑇verify on low-confidence suffix tokens that are almost certain to be rejected. D
+
+> [!tip] 技术解读（多模态）
+> # Figure Description
+
+I should note that **Figure 1 itself is not visible** in the image you provided — only the surrounding page text is shown. However, based on the text on this page, I can reconstruct what Figure 1 (the DSpark overview) depicts:
+
+## Architecture / Components / Data Flow (inferred)
+
+**Per-token latency model (from Eq. 1):**
+$$L = (T_{\text{draft}} + T_{\text{verify}})/\tau$$
+
+DSpark addresses two bottlenecks with two complementary components:
+
+1. **Semi-autoregressive generation (Sec. 3.1)** — A parallel backbone handles bulk draft computation (keeping $T_{\text{draft}}$ nearly independent of block size $\gamma$), followed by a lightweight sequential block that injects dependency among draft tokens, raising acceptance probability $\tau$ cheaply.
+
+2. **Confidence-scheduled verification (Sec. 3.2)** — A confidence head estimates per-position acceptance probabilities; a hardware-aware scheduler prunes low-confidence suffix tokens, cutting redundant $T_{\text{verify}}$ cost.
+
+**Data flow:** Target model hidden states → DFlash-style context projection → draft model → confidence head → scheduler → trimmed verification set.
+
+## Key Takeaway
+DSpark decouples *draft latency* (parallel backbone) from *draft quality* (sequential dependency injection) and prunes verification by confidence — jointly attacking the $T_{\text{draft}} \propto \gamma$ and wasted-$T_{\text{verify}}$ inefficiencies of speculative decoding.
+
+## Caption (verbatim)
+The caption for Figure 1 is **not present** on this page — the text only says *"The overview of DSpark is shown in Figure 1."* A fuller caption would appear on the page containing the figure itself, which is not included in the image you shared. If you can provide the page with the actual figure, I can transcribe the caption verbatim.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -23,15 +23,72 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.4)
+### Figure 1 (p.4) ⭐深度解读
 ![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p04.png]]
 > [!quote] caption
 > 3.1
 
-### Figure 9 (p.7)
+> [!tip] 技术解读（多模态）
+> # Note on Figure Availability
+
+The image provided shows **page 4 of the paper containing only text** (sections 2.2 and 3.1 with equations). **Figure 1 itself is not visible** in the supplied image — it is only referenced ("The overall architecture is illustrated in Figure 1"). Without seeing the actual figure, I cannot transcribe its caption verbatim. Below I reconstruct the architecture from the in-text description and equations (Eqs. 1–4):
+
+## Architecture Description (from §3.1)
+
+**Four-stage data flow:**
+1. **Encoding (H = E(X))** — extracts fine-grained token representations from input X.
+2. **Dynamic Segmentation (C = S(H))** — detects semantic boundaries and pools tokens into variable-length concept chunks.
+3. **Concept-Level Reasoning (Z = M(C))** — performs deep computation on the compressed concept sequence.
+4. **Token-Level Decoding (Y = D(H, Z))** — reconstructs token predictions by attending to both original token states H and reasoned concepts Z.
+
+**Key takeaway:** DCLM is a *decoder-only* adaptation of H-Net's hierarchical concept reasoning — boundaries are learned end-to-end (no fixed sentence priors), and token decoding is conditioned jointly on raw token encodings **and** compressed concept representations, enabling adaptive compute allocation in standard autoregressive LLMs.
+
+## Verbatim Transcription
+
+**Caption:** *Not visible in the provided image.*
+
+**Equations from §3.1 (verbatim):**
+| Equation | Label | Number |
+|---|---|---|
+| H = E(X) | (Encoding) | (1) |
+| C = S(H) | (Segmentation & Pooling) | (2) |
+| Z = M(C) | (Concept Reasoning) | (3) |
+| Y = D(H, Z) | (Decoding) | (4) |
+
+If you can share the page containing Figure 1, I can provide the actual caption transcription.
+
+### Figure 9 (p.7) ⭐深度解读
 ![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p07.png]]
 > [!quote] caption
 > 4.3
+
+> [!tip] 技术解读（多模态）
+> # Description
+
+**Note:** This page contains no rendered figure—it is a text-heavy section (Sections 3.6, 4, 4.1–4.3) that *references* "Figure 2" (attention mask illustration) and "Figure 9" (speedup plot, not shown). The figure-equivalent content here is the conceptual data flow described in text:
+
+## Architecture / Components / Data Flow (as described)
+
+1. **Inputs:** Tokens t₁…t_L (queries) and concept features c₁…c_M (keys/values), with variable-length mapping where each concept c_j spans a segment of tokens.
+2. **Problem:** Ragged attention mask—direct Flex Attention is inefficient due to dynamic mask generation and irregular memory access.
+3. **Solution — Concept Replication:** Replicate each concept feature c_j to fill its segment length, producing K̃ = repeat(c, segment_lengths) and Ṽ = repeat(c, segment_lengths). This aligns KV length with query length L.
+4. **Compute:** Run FlashAttention's **VarLen** kernel (causal-style self-attention) on the replicated KV, since K/V are locally constant within each segment.
+5. **Training loss:** L = L_CE + L_a (cross-entropy + load-balancing, Eq. 15), with RMSNorm on Q and K (Eq. 16).
+
+## Key Technical Takeaway
+Concept replication converts irregular concept-token cross-attention into a uniform-length VarLen self-attention problem, yielding **1.26×–1.73× speedup** over Flex Attention by trading a small memory cost for highly optimized CUDA kernels.
+
+## Caption (verbatim from the page)
+
+No figure caption is present on this page. The page's opening line reads:
+
+> "**3.6 Training Objective** — The total loss combines next-token prediction with adaptive compression:
+> 
+> L = L_CE + L_a       (15)
+> 
+> where L_CE is cross-entropy on output tokens and L_a is the load-balancing loss."
+
+The only in-line figure references are: *"Figure 2"* (ragged-boundary attention mask) and *"Figure 9"* (plotted speedup T_FA = T_8 ).
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

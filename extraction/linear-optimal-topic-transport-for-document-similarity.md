@@ -23,15 +23,33 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.7)
+### Figure 1 (p.7) ⭐深度解读
 ![[assets/linear-optimal-topic-transport-for-document-similarity-p07.png]]
 > [!quote] caption
 > k-NN classification performance across datasets affects mean test error in the CLASSIC dataset. 531
 
-### Figure 2 (p.8)
+> [!tip] 技术解读（多模态）
+> **Figure description (≤120 words):**
+
+The figure is a **grouped bar chart** comparing 10 document representation/classification methods across six benchmark text datasets (ohsumed, twitter, amazon, reuters, bbcsport, classic). The y-axis shows Mean Test Error (%) [0–60]; each dataset has 10 colored bars labeled with numeric values above them. Methods compared include classical baselines (nBoW, SIF, Cosine), optimal-transport–based methods (RWMD, HOTT×2, WMD-T20), and the authors' proposed variants (LOTT, LOTT-5, LOTT-10). **Data flow:** error values → per-dataset grouping → method-level color encoding → numeric labels above bars. **Key takeaway:** LOTT-5 and LOTT-10 consistently match or outperform all baselines, most dramatically on ohsumed (cutting error from ~58% to ~46%) and classic, demonstrating the robustness of LOTT's parametrizable topic geometry over fixed optimal-transport methods.
+
+**Caption (verbatim):**
+
+*Figure 1: k-NN classification performance across datasets*
+
+### Figure 2 (p.8) ⭐深度解读
 ![[assets/linear-optimal-topic-transport-for-document-similarity-p08.png]]
 > [!quote] caption
 > t-SNE on CLASSIC
+
+> [!tip] 技术解读（多模态）
+> **Figure Description (≤120 words):**
+
+Figure 2 presents a 2×2 grid of t-SNE scatter plots visualizing document embeddings on the CLASSIC dataset across four methods: **LOTT** (top-left), **SBERT** (top-right), **HOTT** (bottom-left), and **nBoW** (bottom-right). Each plot maps four classes—**CACM** (magenta), **MED** (light purple), **CRAN** (light blue), **CISI** (orange)—as colored point clouds. The data flow: raw CLASSIC documents → method-specific encoder (LOTT/HOTT/SBERT/nBoW) → high-dimensional embeddings → t-SNE dimensionality reduction → 2D projection. **Key takeaway:** LOTT produces distinct, homogeneous clusters with strong intra-class consistency and clear inter-class separation, matching HOTT's quality while surpassing the diffuse, poorly-separated nBoW baseline—visually confirming its competitive embedding quality alongside the reported 182× speedup over HOTT.
+
+**Caption (verbatim):**
+
+Figure 2: t-SNE on CLASSIC
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

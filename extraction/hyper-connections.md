@@ -51,7 +51,23 @@ Annotations mark a "×1.8" convergence-speedup gap at ~0.027 / 0.028 loss. Light
 > Hyper-connections (HC) with an expansion rate of n = 2. (a) Residual connections. (b) Hyper-connections: β1, β2, α0,0, α0,1, α1,0, α1,1, α2,1, and α2,2 are learnable scalars or scalars predicted by the network , depending on the specific HC version. These connections enable lateral information exchange and vertical integration of features across depths. The Transformer with HC is shown in Fig. 17.
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】Hyper-Connections 架构(Fig.2)：(a) 传统残差连接=层输出与单隐层 h 求和；(b) HC n=2 把输入复制成两个隐向量 h1/h2，层输出经可学习标量(β,α)路由回→加权连接矩阵灵活跨深+宽组合特征。解耦成 (c) depth-connections（层输出与 h1 加权和）+ (d) width-connections（h1/h2 横向混合）。核心：用可学习、输入依赖的路由替固定恒等 skip，让网络自主调制 skip 强度→缓解固定 Pre/Post-Norm 残差的表征塌缩+梯度消失。架构核心图。
+> # Figure 2 Description
+
+**Architecture/Components:** Figure 2 compares four connection schemes at expansion rate n=2:
+- **(a) Residual connections:** A single layer adds its output to the input h (baseline).
+- **(b) Hyper-connections (HC):** Input h is split into n=2 hidden vectors (h₁, h₂). Learnable scalars (α for layer-to-hidden weights; β for hidden-to-hidden weights) route information from the layer output back into the hidden vectors, plus lateral links between h₁ and h₂.
+- **(c) Depth-connections:** Vertical-only path—a weighted sum between layer output and h₁ via scalar α.
+- **(d) Width-connections:** Lateral-only path—information exchange between h₁ and h₂ via β scalars.
+
+**Data flow:** Hidden vectors → layer (attention/FFN) → weighted α aggregation → update hidden vectors → β lateral mixing → next layer.
+
+**Key technical takeaway:** HC generalizes residual connections by making connection strengths learnable (α, β scalars), enabling both flexible vertical feature integration (depth) and lateral hidden-vector exchange (width); n=1 collapses back to residual behavior, so n>1 is essential for performance gains.
+
+---
+
+## Caption (verbatim)
+
+Figure 2: **Hyper-connections (HC) with an expansion rate of** n = 2. (a) Residual connections. (b) Hyper-connections: β₁, β₂, α₀,₀, α₀,₁, α₁,₀, α₁,₁, α₂,₁, and α₂,₂ are learnable scalars or scalars predicted by the network , depending on the specific HC version. These connections enable lateral information exchange and vertical integration of features across depths. The Transformer with HC is shown in Fig. 17. They can be decoupled into depth-connections and width-connections. (c) Depth-connections perform a weighted sum between the layer output and the hidden vector h₁. (d) Width-connections allow information exchange between the hidden vectors h₁ and h₂.
 
 ### Figure 3 (p.2) ⭐深度解读
 ![[assets/hyper-connections-p02.png]]
@@ -59,7 +75,23 @@ Annotations mark a "×1.8" convergence-speedup gap at ~0.027 / 0.028 loss. Light
 > Cosine similarity be- tween the input of the current and the previous layers for the OLMo-1B models (Groeneveld et al., 2024). The curve represents the median of similarity, while the shaded area indicates the range be- tween the 5th and 95th percentiles.
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】Hyper-Connections 架构(Fig.2)：(a) 传统残差连接=层输出与单隐层 h 求和；(b) HC n=2 把输入复制成两个隐向量 h1/h2，层输出经可学习标量(β,α)路由回→加权连接矩阵灵活跨深+宽组合特征。解耦成 (c) depth-connections（层输出与 h1 加权和）+ (d) width-connections（h1/h2 横向混合）。核心：用可学习、输入依赖的路由替固定恒等 skip，让网络自主调制 skip 强度→缓解固定 Pre/Post-Norm 残差的表征塌缩+梯度消失。架构核心图。
+> # Figure 2 Description
+
+**Architecture/Components:** Figure 2 compares four connection schemes at expansion rate n=2:
+- **(a) Residual connections:** A single layer adds its output to the input h (baseline).
+- **(b) Hyper-connections (HC):** Input h is split into n=2 hidden vectors (h₁, h₂). Learnable scalars (α for layer-to-hidden weights; β for hidden-to-hidden weights) route information from the layer output back into the hidden vectors, plus lateral links between h₁ and h₂.
+- **(c) Depth-connections:** Vertical-only path—a weighted sum between layer output and h₁ via scalar α.
+- **(d) Width-connections:** Lateral-only path—information exchange between h₁ and h₂ via β scalars.
+
+**Data flow:** Hidden vectors → layer (attention/FFN) → weighted α aggregation → update hidden vectors → β lateral mixing → next layer.
+
+**Key technical takeaway:** HC generalizes residual connections by making connection strengths learnable (α, β scalars), enabling both flexible vertical feature integration (depth) and lateral hidden-vector exchange (width); n=1 collapses back to residual behavior, so n>1 is essential for performance gains.
+
+---
+
+## Caption (verbatim)
+
+Figure 2: **Hyper-connections (HC) with an expansion rate of** n = 2. (a) Residual connections. (b) Hyper-connections: β₁, β₂, α₀,₀, α₀,₁, α₁,₀, α₁,₁, α₂,₁, and α₂,₂ are learnable scalars or scalars predicted by the network , depending on the specific HC version. These connections enable lateral information exchange and vertical integration of features across depths. The Transformer with HC is shown in Fig. 17. They can be decoupled into depth-connections and width-connections. (c) Depth-connections perform a weighted sum between the layer output and the hidden vector h₁. (d) Width-connections allow information exchange between the hidden vectors h₁ and h₂.
 
 ### Figure 4 (p.5) ⭐深度解读
 ![[assets/hyper-connections-p05.png]]
@@ -86,75 +118,251 @@ Figure 4 illustrates two hyper-connection topologies with expansion rate n = 2, 
 **Caption (verbatim):**
 > Figure 4: Sequential and parallel arrangements of hyper-connections with n = 2.
 
-### Figure 5 (p.6)
+### Figure 5 (p.6) ⭐深度解读
 ![[assets/hyper-connections-p06.png]]
 > [!quote] caption
 > Comparison of training loss curves for different expansion rate. The left subfigure includes models with dynamic hyper-connections (DHC) at various expansion rates, while the right subfigure shows the effect of omitting the tanh function. Both subfigures illustrate how increasing the expansion rate leads to improved training loss performance over 500B tokens. Results are smoothed using an exponent
 
-### Figure 6 (p.8)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+**Figure 5** consists of two side-by-side line plots comparing training loss curves across 100–500B tokens for the OLMo-1B model.
+
+- **Left subplot**: Compares the baseline OLMo-1B against DHC variants at expansion rates ×1, ×2, ×4, ×8 (with tanh).
+- **Right subplot**: Compares the baseline against the same DHC variants but **without the tanh activation**.
+- **Axes**: x = tokens (billions); y = training loss (~2.40–2.60), smoothed via EMA (coefficient 0.99).
+- **Data flow**: Each curve represents a separate model run, with loss decreasing monotonically as training progresses; higher expansion rates yield lower final loss.
+
+**Key takeaway**: Increasing the DHC expansion rate consistently lowers training loss, and removing the tanh function yields the best results (OLMo-1B-DHC×8 W/O tanh reaches 2.777 V2 Eval loss, bolded in Table 1), indicating the tanh activation may be unnecessary or even detrimental at high expansion rates.
+
+## Caption (verbatim)
+
+> **Figure 5:** Comparison of training loss curves for different expansion rate. The left subfigure includes models with dynamic hyper-connections (DHC) at various expansion rates, while the right subfigure shows the effect of omitting the tanh function. Both subfigures illustrate how increasing the expansion rate leads to improved training loss performance over 500B tokens. Results are smoothed using an exponential moving average with a coefficient of 0.99.
+
+### Figure 6 (p.8) ⭐深度解读
 ![[assets/hyper-connections-p08.png]]
 > [!quote] caption
 > (1) and (2) Training loss (0.99 EMA smoothed) and C4-en validation loss for OLMo-7B and OLMo-7B-DHC×4 models. (3) and (4) Accuracy curves on hellaswag and sciq, demonstrating the superior performance of the OLMo-7B-DHC×4 model.
 
-### Figure 7 (p.9)
+> [!tip] 技术解读（多模态）
+> **Figure 6 Description:**
+
+**Architecture/Components/Data Flow:** Figure 6 is a 1×4 panel of line plots tracking two models—OLMo-7B (red) and OLMo-7B-DHC×4 (blue)—across training from 100B to ~500B tokens. Panels (1)–(2) plot loss on the y-axis: (1) Training Loss (0.99 EMA smoothed, range ~2.2–2.4) and (2) C4-en validation Loss (~2.5–2.7). Panels (3)–(4) plot downstream accuracy: (3) HellaSwag Acc. (~55–70%) and (4) SciQ Acc. (~82–92%). Shaded bands indicate variance/uncertainty across runs.
+
+**Key Technical Takeaway:** OLMo-7B-DHC×4 (Dynamic Hyper-Connections ×4) consistently outperforms the OLMo-7B baseline on all four metrics throughout training—achieving lower loss curves and higher downstream accuracy—and crucially eliminates the loss spikes seen in the baseline, yielding more stable optimization.
+
+**Caption (verbatim):**
+"Figure 6: (1) and (2) Training loss (0.99 EMA smoothed) and C4-en validation loss for `OLMo-7B` and `OLMo-7B-DHC×4` models. (3) and (4) Accuracy curves on `hellaswag` and `sciq`, demonstrating the superior performance of the `OLMo-7B-DHC×4` model."
+
+### Figure 7 (p.9) ⭐深度解读
 ![[assets/hyper-connections-p09.png]]
 > [!quote] caption
 > Visualization of connection matrices for hyper-connections and various related baseline methods. The attention layers, which have odd ids, are marked with green tick marks.
 
-### Figure 8 (p.14)
+> [!tip] 技术解读（多模态）
+> **Main figure (Figure 7) description:**
+
+Figure 7 is a panel of five triangular heatmaps (32×32) visualizing learned inter-layer connection weights, with a shared color scale ranging from −1.0 (blue) to +1.0 (red). The five panels compare: (1) Hyper-Connection, (2) Post-Norm, (3) Pre-Norm, (4) Pre-Norm PTB, and (5) Two-hop Residual. Rows represent destination layers (0–32) and columns represent source layers; attention layers (odd ids) are marked with green tick marks on the axes. The x-axes are labeled with values 0–32 in increments of 4.
+
+**Key technical takeaway:**
+Hyper-connections learn a much richer, sparser, and more selective routing pattern (mostly white/near-zero with a few strong red and blue entries, including PTB-style shortcut signals), whereas Pre-Norm, Pre-Norm PTB, and Two-hop Residual show uniform, dense near-1.0 lower-triangular patterns — indicating that standard residual variants propagate information uniformly, while DHC dynamically routes layer outputs.
+
+**Caption (verbatim):**
+"Figure 7: Visualization of connection matrices for hyper-connections and various related baseline methods. The attention layers, which have odd ids, are marked with green tick marks."
+
+### Figure 8 (p.14) ⭐深度解读
 ![[assets/hyper-connections-p14.png]]
 > [!quote] caption
 > Comparison between transformers with hyper-connections and that with residual connec- tions. 14
 
-### Figure 9 (p.17)
+> [!tip] 技术解读（多模态）
+> ## Description
+
+The figure contrasts two architectures side-by-side:
+
+**Left (Residual Connections):** A standard Transformer stack alternating **Attention** and **FFN** blocks, each followed by a fixed additive skip (`+`) that propagates a single hidden state `h⁰ → … → hᴸ` straight through the network.
+
+**Right (Hyper-Connections):** The input `h⁰` is **repeated** into multiple parallel streams (here `h¹₁, h¹₂`). Each layer introduces a small sub-network of **learnable coefficients**:
+- **αᵢ,ᵣ,ᶜ weights** (blue/orange) gate how each input stream mixes into every stream fed into Attention/FFN,
+- **β weights** (green) scale each output stream after the sub-layer.
+
+The streams are then re-combined via additive nodes, yielding two outputs `hᴸ₁, hᴸ₂` that are summed into the final `hᴸ`.
+
+**Key technical takeaway:** Hyper-Connections replace the rigid identity skip with a **learnable, multi-stream mixing matrix** (α inputs + β outputs), giving the model a flexible routing knob on top of the standard residual path — a strict generalization of residual connections, not a replacement of the sub-layers themselves.
+
+## Caption (verbatim)
+
+**Figure 8:** Comparison between transformers with hyper-connections and that with residual connections.
+
+### Figure 9 (p.17) ⭐深度解读
 ![[assets/hyper-connections-p17.png]]
 > [!quote] caption
 > Loss curves in V3 validation sets and accuracy curves on downstream tasks for OLMoE-1B7B and OLMoE-1B7B-DHC×4 models. 17
 
-### Figure 10 (p.18)
+> [!tip] 技术解读（多模态）
+> **Description:**
+The figure is a 7-row × 4-column grid of line plots comparing two MoE (Mixture-of-Experts) models — `OLMoE-1B-7B` (red) vs `OLMoE-1B-7B-DHC×4` (blue) — trained over ~500B tokens (x-axis). The top three rows plot **validation loss** across 12 V3 datasets (training loss, C4 en, Dolma subsets: books/cc/pes2o/reddit/stack/wiki, ICE, m2d2-s2orc, Pile, WikiText-103). The bottom four rows plot **downstream accuracy** on 16 benchmarks spanning MMLU variants, HellaSwag, SciQ, ARC-Easy/Challenge, PIQA, WinoGrande, OpenBookQA, BoolQ, COPA, CommonsenseQA, and SocialIQA. **Key takeaway:** Across nearly every panel, the DHC×4 variant sits below (loss) or above (accuracy) the baseline, indicating the routing/expert-activation modification yields consistent gains in both pretraining loss and zero-shot task accuracy, with the gap visible from ~100B tokens onward.
+
+**Caption (verbatim):**
+Figure 9: Loss curves in V3 validation sets and accuracy curves on downstream tasks for `OLMoE-1B7B` and `OLMoE-1B7B-DHC×4` models.
+
+### Figure 10 (p.18) ⭐深度解读
 ![[assets/hyper-connections-p18.png]]
 > [!quote] caption
 > Loss curves in V3 validation set and accuracy curves on downstream tasks for OLMo-7B and OLMo-7B-DHC×4 models. 18
 
-### Figure 11 (p.20)
+> [!tip] 技术解读（多模态）
+> **Description (≤120 words):**
+
+The figure is a 6×3 grid of line plots comparing two 7B-scale language models — `OLMo-7B` (red) and `OLMo-7B-DHCx4` (blue) — across training tokens (100B–500B, x-axis). The top four rows display validation loss curves on eleven pretraining datasets (c4, dolma books/cc/pes2o/reddit/stack/wiki, ice, m2d2-s2orc, pile, wikitext-103); the bottom two rows show accuracy on seven downstream benchmarks (HellaSwag, SciQ, COPA, OpenbookQA, PIQA, WinoGrande, ARC-Easy). In every panel the blue DHCx4 curve sits below the red baseline on loss plots and above it on accuracy plots.
+
+**Key takeaway:** The DHC×4 enhancement yields consistent, monotonic improvements over the baseline OLMo-7B across all 18 evaluation domains throughout training, confirming its scalability to 7B parameters.
+
+**Caption (verbatim):**
+Figure 10: Loss curves in V3 validation set and accuracy curves on downstream tasks for `OLMo-7B` and `OLMo-7B-DHC×4` models.
+
+### Figure 11 (p.20) ⭐深度解读
 ![[assets/hyper-connections-p20.png]]
 > [!quote] caption
 > Training loss curves of ViT/16-Large and ViT/16-Large-DHC×2, smoothed using an
 
-### Figure 12 (p.21)
+> [!tip] 技术解读（多模态）
+> **Figure Description**
+
+The main figure is a line plot titled "Training Loss" comparing two model variants over training. **Components:**
+- **X-axis:** Steps (30,000 → 90,000)
+- **Y-axis:** Loss (0.2 → 1.8), smoothed via EMA (decay = 0.999)
+- **Curves:** Red = ViT/16-Large (baseline); Blue = ViT/16-Large-DHC×2 (augmented with Dynamic Hyper-Connections, expansion factor 2)
+
+Both curves descend smoothly from ~1.8 to ~0.25, with the DHC variant tracking slightly below the baseline throughout. The gap is widest in the mid-training region (50k–70k steps) and narrows toward the end.
+
+**Key Technical Takeaway:** Hyper-Connections provide a small but consistent loss reduction over the baseline; however, the advantage shrinks late in training, indicating diminishing returns as the model converges on repeated dataset passes.
+
+**Caption (verbatim):**
+"Figure 11: Training loss curves of ViT/16-Large and ViT/16-Large-DHC×2, smoothed using an Exponential Moving Average (EMA) with a decay rate of 0.999. The gain from Hyper-Connections decreases as training progresses, likely due to pass over the same dataset across many epochs, resulting in diminishing returns from the additional capacity provided by Hyper-Connections."
+
+### Figure 12 (p.21) ⭐深度解读
 ![[assets/hyper-connections-p21.png]]
 > [!quote] caption
 > Distribution of weights of last DHC in ViT-Base/16-DHC×2 model. F MORE VISUALIZATION AND ANALYSIS
 
-### Figure 13 (p.22)
+> [!tip] 技术解读（多模态）
+> **Description of the main figure:**
+
+The figure is a grid of frequency histograms (7 rows × 3 columns) visualizing the distribution of learned weights in the last Dynamic Hyper-Connection (DHC) layer of a ViT-Base/16-DHC×2 model. The three columns correspond to three ImageNet classes rendered in distinct colors: "33:loggerhead turtle" (blue), "998:capitulum" (green), and "779:school bus" (orange). The rows display histograms for seven distinct weight parameters of the DHC module — β₁, β₂, α_{1,0}, α_{1,1}, α_{1,2}, α_{2,0}, and α_{2,1} — with frequency on the y-axis and parameter value on the x-axis. The β weights cluster near their endpoints (~0.95 and ~1.20), while α weights span continuous ranges, and the "school bus" class shows a sharp, narrow concentration at the lower bound, indicating strong class-specific specialization of connection weights.
+
+**Caption verbatim:**
+
+Figure 12: Distribution of weights of last DHC in ViT-Base/16-DHC×2 model.
+
+### Figure 13 (p.22) ⭐深度解读
 ![[assets/hyper-connections-p22.png]]
 > [!quote] caption
 > Visualization of unfolded connection matrix.
 
-### Figure 14 (p.23)
+> [!tip] 技术解读（多模态）
+> **Description (≤120 words):**
+
+The figure comprises two rows of five triangular heatmaps (Figure 13a and 13b), each row showing unfolded connection matrices **C⁽⁰⁾, C⁽¹⁾, C⁽²⁾, C⁽³⁾, C⁽⁴⁾** for the four hyper-hiddens plus the input hidden state. Rows represent target tokens (0–32) and columns represent source tokens (0–32), with color encoding connection strength from −1.0 (blue) to +1.0 (red). (a) corresponds to the **DHC model** and (b) to the **SHC model**. Vertical green tick marks flag attention layers (odd-indexed). The lower-triangular structure reflects causal token dependencies; visible vertical stripes indicate long-range skip connections across layers.
+
+**Key takeaway:** SHC reproduces DHC's connection patterns exactly but exhibits more PTB-like blocks (e.g., layers 13–18), enabling token-independent parallelization.
+
+**Caption (verbatim):**
+
+Figure 13: **Visualization of unfolded connection matrix.** Matrices from left to right are **C⁽⁰⁾**(Connections for {**h₀ʲ**}ⱼ₌₀^{L+1}), **C⁽ⁱ⁾** (Connections for {**hᵢʲ**}ⱼ₌₀^{L+1}) for *i* ∈ {1, 2, 3, 4}. The attention layers, which have odd ids, are marked with green tick marks. (a) Connection matrix for DHC model. (b) Connection matrix for SHC model.
+
+### Figure 14 (p.23) ⭐深度解读
 ![[assets/hyper-connections-p23.png]]
 > [!quote] caption
 > Comparison of unfolded connection matrices for OLMo-1B-DHC×1, OLMo-1B-DHC×2 and OLMo-1B-DHC×4 model.
 
-### Figure 15 (p.31)
+> [!tip] 技术解读（多模态）
+> **Figure Description:**
+
+The figure presents three triangular heatmaps (a, b, c) visualizing unfolded inter-layer connection matrices for OLMo-1B variants with different DHC (Dynamic Hybrid Connection) scaling factors (×1, ×2, ×4). Both axes index layers 0–32; cell color encodes connection weight from −1.00 (blue) to +1.00 (red). The lower-triangular structure reflects how earlier layers can route signals forward to later layers. Panel (a) shows a sparse pattern with an arrow highlighting a "wasted" layer 17 that has no outgoing connections, while panels (b) and (c) exhibit denser, more uniform triangular connectivity.
+
+**Key technical takeaway:** HC×1 fails because the matrix lacks the Λ-shaped pattern and drops a layer (here, layer 17) entirely, causing gradient vanishing akin to post-norm transformers; scaling to ×2 or ×4 restores the full triangular connectivity needed for stable training.
+
+**Caption (verbatim):**
+Figure 14: Comparison of unfolded connection matrices for OLMo-1B-DHC×1, OLMo-1B-DHC×2 and OLMo-1B-DHC×4 model.
+
+### Figure 15 (p.31) ⭐深度解读
 ![[assets/hyper-connections-p31.png]]
 > [!quote] caption
 > Training loss curves of related works, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99. 31
 
-### Figure 16 (p.32)
+> [!tip] 技术解读（多模态）
+> **Figure 15 — Description:**
+
+The figure is a line chart titled "Training Loss" comparing five OLMo-1B architectural variants: baseline OLMo-1B (red), OLMo-1B-ResiDual (blue), OLMo-1B-Altupx2 (green), OLMo-1B-DHCx2 (purple), and OLMo-1B-DHCx2 W/O tanh (orange). The x-axis tracks training progress in Tokens (Billions), spanning ~0–500B, while the y-axis shows Loss from ~2.4 to 2.9. All curves descend monotonically from ~2.88 toward ~2.4, exhibiting visible loss spikes (notably ~100B and ~250B tokens) characteristic of training instabilities. Curves are smoothed via EMA (decay 0.99).
+
+**Key takeaway:** Despite architectural differences, all variants converge to comparable loss (~2.4), with DHCx2 variants achieving marginally lower final loss than baseline and Altupx2, suggesting architectural modifications preserve—and slightly improve—optimization behavior.
+
+**Caption verbatim:**
+
+Figure 15: Training loss curves of related works, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99.
+
+### Figure 16 (p.32) ⭐深度解读
 ![[assets/hyper-connections-p32.png]]
 > [!quote] caption
 > Training loss curves of DHC with tanh over 500 billion tokens, smoothed using
 
-### Figure 17 (p.32)
+> [!tip] 技术解读（多模态）
+> **Figure Description (≤120 words):**
+
+Two line plots showing training loss curves. **Components:** Each plot compares five model variants — OLMo-1B (baseline, red), OLMo-1B-DHCx1, x2, x4, and x8 — distinguished by color (blue, green, purple, orange). **Data flow:** Loss values (y-axis, ~2.35–2.60) are plotted against training tokens (x-axis, 0–1000B), smoothed via EMA (decay=0.99). Figure 16 uses DHC with tanh; Figure 17 uses DHC without tanh. Both plots show characteristic downward-concave decay with loss spikes around 250B and 350B tokens (marked by red vertical indicators).
+
+**Key Technical Takeaway:** Higher DHC scaling factors (x4, x8) consistently achieve lower training loss than the OLMo-1B baseline, with the x4 variant reaching the lowest loss in both configurations — demonstrating that DHC improves optimization efficiency regardless of tanh inclusion, though the no-tanh variant (Fig. 17) shows slightly steeper separation between scaling factors.
+
+---
+
+**Caption (verbatim):**
+
+> Figure 16: Training loss curves of DHC with `tanh` over 500 billion tokens, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99.
+
+> Figure 17: Training loss curves of DHC without `tanh` over 500 billion tokens, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99.
+
+### Figure 17 (p.32) ⭐深度解读
 ![[assets/hyper-connections-p32.png]]
 > [!quote] caption
 > Training loss curves of DHC without tanh over 500 billion tokens, smoothed using
 
-### Figure 18 (p.33)
+> [!tip] 技术解读（多模态）
+> **Figure Description (≤120 words):**
+
+Two line plots showing training loss curves. **Components:** Each plot compares five model variants — OLMo-1B (baseline, red), OLMo-1B-DHCx1, x2, x4, and x8 — distinguished by color (blue, green, purple, orange). **Data flow:** Loss values (y-axis, ~2.35–2.60) are plotted against training tokens (x-axis, 0–1000B), smoothed via EMA (decay=0.99). Figure 16 uses DHC with tanh; Figure 17 uses DHC without tanh. Both plots show characteristic downward-concave decay with loss spikes around 250B and 350B tokens (marked by red vertical indicators).
+
+**Key Technical Takeaway:** Higher DHC scaling factors (x4, x8) consistently achieve lower training loss than the OLMo-1B baseline, with the x4 variant reaching the lowest loss in both configurations — demonstrating that DHC improves optimization efficiency regardless of tanh inclusion, though the no-tanh variant (Fig. 17) shows slightly steeper separation between scaling factors.
+
+---
+
+**Caption (verbatim):**
+
+> Figure 16: Training loss curves of DHC with `tanh` over 500 billion tokens, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99.
+
+> Figure 17: Training loss curves of DHC without `tanh` over 500 billion tokens, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99.
+
+### Figure 18 (p.33) ⭐深度解读
 ![[assets/hyper-connections-p33.png]]
 > [!quote] caption
 > Training loss curves comparied with parallel transformer blocks (PTB), smoothed using
+
+> [!tip] 技术解读（多模态）
+> **Description (Figure 18 – Training Loss curves):**
+
+The plot is a line graph titled **"Training Loss"** comparing four 1B-parameter model variants during pretraining. The **x-axis** shows training progress in tokens (billions, 0–500), and the **y-axis** shows the smoothed loss (≈2.4–2.9). Four curves are plotted:
+
+- **OLMo-1B** (red) — baseline
+- **OLMo-1B-PTB** (blue) — Parallel Transformer Blocks baseline
+- **OLMo-1B-DHCx4 W/O tanh** (green) — ablation
+- **OLMo-1B-DHCx4** (purple) — proposed DHC variant
+
+All curves descend monotonically with characteristic loss spikes (likely learning-rate warmup/decay steps), and DHCx4 consistently sits below the other variants after ~100B tokens.
+
+**Key takeaway:** DHCx4 yields a lower training loss than both the vanilla OLMo-1B and the Parallel Transformer Blocks baseline, indicating better optimization efficiency without auxiliary compute overhead.
+
+**Caption (verbatim):**
+"Figure 18: Training loss curves compared with parallel transformer blocks (PTB), smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99."
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

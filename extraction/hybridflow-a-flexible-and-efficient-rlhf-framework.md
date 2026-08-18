@@ -23,85 +23,305 @@ tags: [rl]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.3)
+### Figure 1 (p.3) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]]
 > [!quote] caption
 > Dataflow graph of 3 RLHF algorithms [19, 43, 55].
 
-### Figure 2 (p.3)
+> [!tip] 技术解读（多模态）
+> **Figure 2 — HybridFlow's Programming Model**
+
+**Architecture/components:** Two stacked paradigms. (a) *Existing RLHF* uses a pure *multi-controller* model: every GPU worker independently runs actor/critic/reward code with nested loops (`for prompts`, `while True`), tightly coupling computation and data dependencies. (b) *HybridFlow* adds a *single-controller* layer above separate multi-controller workers. The top-level controller issues remote calls (`actor.gen(prompts)`, `actor.train(responses)`) to individual model workers, each of which internally uses `def_actor.gen` / `def_comp_value` / `def_comp_reward` multi-controller functions. Inactive workers are shown in grey.
+
+**Data flow:** Controller → remote call → per-model workers (Actor, Critic, Reward) → return values.
+
+**Key takeaway:** Decoupling inter-node orchestration (single-controller) from intra-node distributed computation (multi-controller) eliminates train↔gen transition overhead and enables flexible model placement, yielding 1.53×–20.57× throughput gains.
+
+**Caption (verbatim):**
+"Figure 2. Programming model used in RLHF systems. (a) Existing RLHF systems adopt the multi-controller paradigm. (b) HybridFlow utilizes a hybrid programming model: the single-controller coordinates models; each model uses multi-controller paradigm in distributed computation. Inactive node in grey represents operation not executed at this time."
+
+### Figure 2 (p.3) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]]
 > [!quote] caption
 > Programming model used in RLHF systems. (a)
 
-### Figure 3 (p.4)
+> [!tip] 技术解读（多模态）
+> **Figure 2 — HybridFlow's Programming Model**
+
+**Architecture/components:** Two stacked paradigms. (a) *Existing RLHF* uses a pure *multi-controller* model: every GPU worker independently runs actor/critic/reward code with nested loops (`for prompts`, `while True`), tightly coupling computation and data dependencies. (b) *HybridFlow* adds a *single-controller* layer above separate multi-controller workers. The top-level controller issues remote calls (`actor.gen(prompts)`, `actor.train(responses)`) to individual model workers, each of which internally uses `def_actor.gen` / `def_comp_value` / `def_comp_reward` multi-controller functions. Inactive workers are shown in grey.
+
+**Data flow:** Controller → remote call → per-model workers (Actor, Critic, Reward) → return values.
+
+**Key takeaway:** Decoupling inter-node orchestration (single-controller) from intra-node distributed computation (multi-controller) eliminates train↔gen transition overhead and enables flexible model placement, yielding 1.53×–20.57× throughput gains.
+
+**Caption (verbatim):**
+"Figure 2. Programming model used in RLHF systems. (a) Existing RLHF systems adopt the multi-controller paradigm. (b) HybridFlow utilizes a hybrid programming model: the single-controller coordinates models; each model uses multi-controller paradigm in distributed computation. Inactive node in grey represents operation not executed at this time."
+
+### Figure 3 (p.4) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p04.png]]
 > [!quote] caption
 > Dataflow execution given a model placement plan.
 
-### Figure 4 (p.6)
+> [!tip] 技术解读（多模态）
+> ## Description of Figure 3
+
+**Architecture/Components:**
+- **Left — Dataflow Graph (D):** Four nodes — `Gen` (actor generation), `Ref` (reference model), `RM` (reward model), `Value` — feeding into `Actor Training` and `Critic Training`.
+- **Middle — Placement Plan:** Maps Actor→Machine A (GPUs 0–1), Critic→Machine B (GPUs 2–3), Ref+RM→Machine C (GPUs 4–5, colocated).
+- **Right — Execution Pattern:** Three machines show how models run concurrently across devices; colocated Ref/RM on Machine C share GPU memory.
+
+**Key Technical Takeaway:** Strategic, workload-aware placement is essential in RLHF — models with no data dependency (Actor vs. Critic) are placed on *different* device sets to enable **concurrent execution**, while dependent models (Ref/RM) are *colocated* to share GPU memory via time-sharing, trading off potential OOM risk against parallelism.
+
+## Caption (verbatim)
+
+Figure 3. Dataflow execution given a model placement plan. Blocks with numbers represent GPUs. In dashed boxes, the models are placed on different sets of devices and can be concurrently computed. Reference model (blue) and reward model (green) are colocated on the same set of GPUs and executed sequentially.
+
+### Figure 4 (p.6) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]]
 > [!quote] caption
 > Architecture of HybridFlow. 3D-HybridEngine and Auto-Mapping algorithm. The hybrid programming model includes a set of hierarchical APIs to enable flexible expression of the RLHF dataflow and effi- cient computation of models in the dataflow (§4). The 3D-
 
-### Figure 5 (p.6)
+> [!tip] 技术解读（多模态）
+> # Main Figure: HybridFlow Architecture (Figure 4)
+
+## Description
+The figure depicts a **layered architecture** of HybridFlow from bottom to top:
+
+- **Physical Devices** (base) — underlying GPU/HW
+- **Resource Pool (§4)** — virtualized device abstraction
+- **Auto Mapping (§6)** — splits into Model Placement + Device Allocation, which maps models to GPUs according to given cluster configurations
+- **ParallelWorker (§4)** — the orchestration layer containing Transfer Protocol (§4), LLM Training Engine, 3D-HybridEngine (§5), and LLM Generation Engine
+- **User Input** (top) — RLHF dataflow graph, Model Config, Device Config
+
+**Data flow:** user inputs (dataflow + model/device configs) → Auto Mapping places models onto the Resource Pool → ParallelWorker dispatches training/generation via the 3D-HybridEngine, coordinating transfers between stages.
+
+## Key Technical Takeaway
+The 3D-HybridEngine lets the same actor model toggle between **training and generation** with different 3D-parallel configurations while maintaining **zero memory redundancy** and minimal communication overhead across stages — the core innovation enabling efficient RLHF pipelines.
+
+## Verbatim Caption
+**Figure 4. Architecture of HybridFlow.**
+
+### Figure 5 (p.6) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]]
 > [!quote] caption
 > An illustration of hierarchical APIs. (a) Model with 3D parallel configuration, resource allocation, and 3DParallelWorker initialization. (b) Asynchronous data re- sharding between two models with collect and distribute functions in 3D_PROTO. devices, it facilitates distributed model weight initialization and establishes 3D parallel groups for each model. A parallel group includes a set of GPUs to
 
-### Figure 6 (p.7)
+> [!tip] 技术解读（多模态）
+> # Main Figure: HybridFlow Architecture (Figure 4)
+
+## Description
+The figure depicts a **layered architecture** of HybridFlow from bottom to top:
+
+- **Physical Devices** (base) — underlying GPU/HW
+- **Resource Pool (§4)** — virtualized device abstraction
+- **Auto Mapping (§6)** — splits into Model Placement + Device Allocation, which maps models to GPUs according to given cluster configurations
+- **ParallelWorker (§4)** — the orchestration layer containing Transfer Protocol (§4), LLM Training Engine, 3D-HybridEngine (§5), and LLM Generation Engine
+- **User Input** (top) — RLHF dataflow graph, Model Config, Device Config
+
+**Data flow:** user inputs (dataflow + model/device configs) → Auto Mapping places models onto the Resource Pool → ParallelWorker dispatches training/generation via the 3D-HybridEngine, coordinating transfers between stages.
+
+## Key Technical Takeaway
+The 3D-HybridEngine lets the same actor model toggle between **training and generation** with different 3D-parallel configurations while maintaining **zero memory redundancy** and minimal communication overhead across stages — the core innovation enabling efficient RLHF pipelines.
+
+## Verbatim Caption
+**Figure 4. Architecture of HybridFlow.**
+
+### Figure 6 (p.7) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p07.png]]
 > [!quote] caption
 > Implementation of PPO [55], ReMax [43], and Safe- RLHF [19]. Users can adapt to different RLHF algorithms by simply adding or deleting a few lines of code. our programming model, HybridFlow is flexible in support- ing diverse distributed execution patterns without any code change of the RLHF algorithm (Figure 6).
 
-### Figure 7 (p.8)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+**Architecture/Components:** Figure 6 shows a single Python script implementing multiple RLHF algorithms (PPO, ReMax, Safe-RLHF) as three sequential stages on a single controller:
+1. **Stage 1 – Generate responses:** `actor.generate_sequences(prompts)` with sampling toggle (`do_sample=False`).
+2. **Stage 2 – Prepare experience:** Calls to `critic.compute_values`, `reference.compute_log_prob`, `reward.compute_reward`, and optional `cost.compute_cost` + `compute_advantages`.
+3. **Stage 3 – Actor & critic training:** `critic.update_critic` followed by `actor.compute_loss` (with optional `pretrain_loss`) and `actor.update_actor`.
+
+**Data flow:** Prompts → actor outputs (sequences) → critic/reference/reward/cost computations → advantages → loss/backprop updates, all dispatched across distributed GPUs via the `@register` transfer protocols.
+
+**Key Technical Takeaway:** HybridFlow's modular, hybrid programming model lets researchers port between RLHF variants by merely **adding or removing a handful of code lines** — e.g., just 5 added lines converts SPU into Safe-RLHF, and deleting the critic block yields ReMax — decoupling algorithm logic from distributed execution.
+
+## Caption (Verbatim)
+
+**Figure 6.** Implementation of SPU [55], ReMax [43], and Safe-RLHF [19]. Users can adapt to different RLHF algorithms by simply adding or deleting a few lines of code.
+
+### Figure 7 (p.8) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]]
 > [!quote] caption
 > 3D-HybridEngine workflow in one RLHF iteration. 4 GPUs are used for actor training and generation. 1-2-2 (𝑝-𝑡-𝑑) parallel groups are used in training and 1-1-2-2 (𝑝𝑔- 𝑡𝑔-𝑑𝑔-𝑑) parallel groups are used in generation. 5 3D-HybridEngine
 
-### Figure 8 (p.8)
+> [!tip] 技术解读（多模态）
+> **Main Figure (Figure 8) — Model Weights Resharding**
+
+The figure compares two strategies for resharding actor-model weights across 2 machines × 4 GPUs between RLHF training and generation stages. Subfigure (a) "HybridFlow-V" applies the *same* parallel grouping to both phases: each GPU performs an all-gather of the **complete** weight set, then discards unused partitions — producing redundant (grey) weight copies that occupy memory. Subfigure (b) "HybridFlow" uses *different* optimized groupings per phase and restricts all-gather operations to within **Micro-DP groups only**, so each GPU retains only the partitions it actually needs, with no redundancy. Color-coded legend distinguishes GPU rank, model weight partitions, DP/TP groups, and all-gather scopes.
+
+**Key takeaway:** Constraining all-gather to the intersection of training- and generation-time micro-DP groups eliminates redundant weight replication, freeing memory for higher throughput RLHF.
+
+**Caption (verbatim):** Figure 8. Model weights resharding. 2 machines each with 4 GPUs are used for actor training and generation.
+
+### Figure 8 (p.8) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]]
 > [!quote] caption
 > Model weights resharding. 2 machines each with 4 GPUs are used for actor training and generation. model parameters updated in iteration 𝑖(step 1○in Figure 7), for generation within each micro DP group. Then, the batch of prompts are loaded to each model replica (step 2○), which generates responses (Generation stage of RLHF). Following this, 3D-HybridEngine performs an all-gather operation on the g
 
-### Figure 9 (p.11)
+> [!tip] 技术解读（多模态）
+> **Main Figure (Figure 8) — Model Weights Resharding**
+
+The figure compares two strategies for resharding actor-model weights across 2 machines × 4 GPUs between RLHF training and generation stages. Subfigure (a) "HybridFlow-V" applies the *same* parallel grouping to both phases: each GPU performs an all-gather of the **complete** weight set, then discards unused partitions — producing redundant (grey) weight copies that occupy memory. Subfigure (b) "HybridFlow" uses *different* optimized groupings per phase and restricts all-gather operations to within **Micro-DP groups only**, so each GPU retains only the partitions it actually needs, with no redundancy. Color-coded legend distinguishes GPU rank, model weight partitions, DP/TP groups, and all-gather scopes.
+
+**Key takeaway:** Constraining all-gather to the intersection of training- and generation-time micro-DP groups eliminates redundant weight replication, freeing memory for higher throughput RLHF.
+
+**Caption (verbatim):** Figure 8. Model weights resharding. 2 machines each with 4 GPUs are used for actor training and generation.
+
+### Figure 9 (p.11) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]
 > [!quote] caption
 > PPO throughput. Numbers in parentheses are HybridFlow speedups compared with baselines. 8 16 32 64 128 # of GPUs 0 1 2 3
 
-### Figure 10 (p.11)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+**Architecture/Components**: The figure consists of three rows of grouped bar charts (Figures 9, 10, 11), each containing four subfigures corresponding to Llama model sizes: 7B, 13B, 34B, and 70B. Each subfigure plots **throughput (tokens/s)** on the y-axis against the **number of GPUs** (8/16/32/64/128, varying by model size) on the x-axis. Four systems are compared via colored bars: NeMo-Aligner (blue), DS-Chat (orange), OpenRLHF (red), and HybridFlow (green).
+
+**Data Flow**: The rows correspond to three RLHF algorithms — PPO (top), ReMax (middle), and Safe-RLHF (bottom) — illustrating end-to-end RLHF training throughput scaling.
+
+**Key Technical Takeaway**: HybridFlow consistently and substantially outperforms all baselines across every model size and algorithm, achieving **1.5×–19.8× speedups**, with the largest gains at 70B scale where competing systems fail to scale efficiently.
+
+## Verbatim Captions
+
+**Figure 9.** PPO throughput. Numbers in parentheses are HybridFlow speedups compared with baselines.
+
+**Figure 10.** ReMax throughput. Numbers in parentheses are HybridFlow speedups compared with baselines
+
+**Figure 11.** Safe-RLHF throughput. Numbers in the parentheses are HybridFlow speedups compared with the baselines
+
+### Figure 10 (p.11) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]
 > [!quote] caption
 > ReMax throughput. Numbers in parentheses are HybridFlow speedups compared with baselines 8 16 32 64 128 # of GPUs 0 1 2 3
 
-### Figure 11 (p.11)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+**Architecture/Components**: The figure consists of three rows of grouped bar charts (Figures 9, 10, 11), each containing four subfigures corresponding to Llama model sizes: 7B, 13B, 34B, and 70B. Each subfigure plots **throughput (tokens/s)** on the y-axis against the **number of GPUs** (8/16/32/64/128, varying by model size) on the x-axis. Four systems are compared via colored bars: NeMo-Aligner (blue), DS-Chat (orange), OpenRLHF (red), and HybridFlow (green).
+
+**Data Flow**: The rows correspond to three RLHF algorithms — PPO (top), ReMax (middle), and Safe-RLHF (bottom) — illustrating end-to-end RLHF training throughput scaling.
+
+**Key Technical Takeaway**: HybridFlow consistently and substantially outperforms all baselines across every model size and algorithm, achieving **1.5×–19.8× speedups**, with the largest gains at 70B scale where competing systems fail to scale efficiently.
+
+## Verbatim Captions
+
+**Figure 9.** PPO throughput. Numbers in parentheses are HybridFlow speedups compared with baselines.
+
+**Figure 10.** ReMax throughput. Numbers in parentheses are HybridFlow speedups compared with baselines
+
+**Figure 11.** Safe-RLHF throughput. Numbers in the parentheses are HybridFlow speedups compared with the baselines
+
+### Figure 11 (p.11) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]
 > [!quote] caption
 > Safe-RLHF throughput. Numbers in the parentheses are HybridFlow speedups compared with the baselines reward models. Each model is a Llama [73] model with sizes ranging from 7B to 70B. Safe-RLHF has an additional cost model whose architecture and size are the same as the re- ward model and ReMax eliminates the critic model. We use mixed precision for actor and critic training, i.e., BF16 for model 
 
-### Figure 12 (p.12)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+**Architecture/Components**: The figure consists of three rows of grouped bar charts (Figures 9, 10, 11), each containing four subfigures corresponding to Llama model sizes: 7B, 13B, 34B, and 70B. Each subfigure plots **throughput (tokens/s)** on the y-axis against the **number of GPUs** (8/16/32/64/128, varying by model size) on the x-axis. Four systems are compared via colored bars: NeMo-Aligner (blue), DS-Chat (orange), OpenRLHF (red), and HybridFlow (green).
+
+**Data Flow**: The rows correspond to three RLHF algorithms — PPO (top), ReMax (middle), and Safe-RLHF (bottom) — illustrating end-to-end RLHF training throughput scaling.
+
+**Key Technical Takeaway**: HybridFlow consistently and substantially outperforms all baselines across every model size and algorithm, achieving **1.5×–19.8× speedups**, with the largest gains at 70B scale where competing systems fail to scale efficiently.
+
+## Verbatim Captions
+
+**Figure 9.** PPO throughput. Numbers in parentheses are HybridFlow speedups compared with baselines.
+
+**Figure 10.** ReMax throughput. Numbers in parentheses are HybridFlow speedups compared with baselines
+
+**Figure 11.** Safe-RLHF throughput. Numbers in the parentheses are HybridFlow speedups compared with the baselines
+
+### Figure 12 (p.12) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]]
 > [!quote] caption
 > Throughput of HybridFlow under different placements 32 64 96 128 # of GPUs
 
-### Figure 13 (p.12)
+> [!tip] 技术解读（多模态）
+> **Main Figure (Figure 12):**
+
+**Architecture/Components:** Two grouped bar charts comparing throughput (tokens/s) of four model-placement strategies — *Colocate*, *Split*, *Standalone*, and *HybridFlow* — across varying GPU counts. Subplot (a) evaluates a **13B model** on 16, 24, 32, 64, 96, and 128 GPUs; subplot (b) evaluates a **34B model** on 32, 48, 64, 96, and 128 GPUs.
+
+**Data Flow:** Independent placement policies are run on identical hardware/model settings; per-GPU batch size shrinks as cluster size grows, exposing each strategy's scaling behavior under fixed global batch size.
+
+**Key Technical Takeaway:** The optimal placement strategy is **cluster-size dependent** — *Colocate* dominates on small clusters (≤64 GPUs), *Split* wins for balanced 34B models at 96–128 GPUs, while *Standalone* excels for 13B at 128 GPUs. HybridFlow's adaptive placement (Algorithm 1) consistently matches or beats all fixed strategies, demonstrating that dynamic, model-aware resource allocation is essential for efficient large-scale RLHF training.
+
+**Caption (verbatim):**
+> *Figure 12.* Throughput of HybridFlow under different placements
+
+### Figure 13 (p.12) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]]
 > [!quote] caption
 > Placement comparison under 13B actor and reference policy & 70B critic and reward model.
 
-### Figure 14 (p.13)
+> [!tip] 技术解读（多模态）
+> **Main Figure (Figure 12):**
+
+**Architecture/Components:** Two grouped bar charts comparing throughput (tokens/s) of four model-placement strategies — *Colocate*, *Split*, *Standalone*, and *HybridFlow* — across varying GPU counts. Subplot (a) evaluates a **13B model** on 16, 24, 32, 64, 96, and 128 GPUs; subplot (b) evaluates a **34B model** on 32, 48, 64, 96, and 128 GPUs.
+
+**Data Flow:** Independent placement policies are run on identical hardware/model settings; per-GPU batch size shrinks as cluster size grows, exposing each strategy's scaling behavior under fixed global batch size.
+
+**Key Technical Takeaway:** The optimal placement strategy is **cluster-size dependent** — *Colocate* dominates on small clusters (≤64 GPUs), *Split* wins for balanced 34B models at 96–128 GPUs, while *Standalone* excels for 13B at 128 GPUs. HybridFlow's adaptive placement (Algorithm 1) consistently matches or beats all fixed strategies, demonstrating that dynamic, model-aware resource allocation is essential for efficient large-scale RLHF training.
+
+**Caption (verbatim):**
+> *Figure 12.* Throughput of HybridFlow under different placements
+
+### Figure 14 (p.13) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]
 > [!quote] caption
 > Transition time between actor training and generation.
 
-### Figure 15 (p.13)
+> [!tip] 技术解读（多模态）
+> **Main Figure Description (Figure 14):**
+
+The figure consists of four grouped bar charts comparing transition time (seconds) across model scales (7B, 13B, 34B, 70B) versus GPU counts (8–128). Each subplot benchmarks four systems: **OpenRLHF** (red), **DS-Chat** (blue), **HybridFlow-V** (orange hatched), and **HybridFlow** (green hatched). The component axis isolates weight resharding overhead between actor training and generation phases, with all methods running identical generation workloads. HybridFlow's bars stay flat and low across GPU counts, while OpenRLHF and DS-Chat climb steeply with both scale and cluster size — a divergence most pronounced in the 70B chart.
+
+**Key Takeaway:** HybridFlow's parallel grouping for generation eliminates per-layer all-gather overhead, capping transition time at ~5s even for 128 GPUs / 70B — a >89% reduction versus OpenRLHF's baselines.
+
+**Caption (verbatim):**
+
+**Figure 14.** Transition time between actor training and generation.
+
+### Figure 15 (p.13) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]
 > [!quote] caption
 > Time breakdown on different generation parallel sizes of the actor model on 16 GPUs. various model scales, which is the time to reshard model weights from training to generation, under the same settings in §8.2. OpenRLHF’s transition time includes weight syn- chronization time between two copies of the actor model on different devices. HybridFlow reduces the transition time by 55.2% (11.7s) on ave
 
-### Figure 16 (p.13)
+> [!tip] 技术解读（多模态）
+> **Main Figure Description (Figure 14):**
+
+The figure consists of four grouped bar charts comparing transition time (seconds) across model scales (7B, 13B, 34B, 70B) versus GPU counts (8–128). Each subplot benchmarks four systems: **OpenRLHF** (red), **DS-Chat** (blue), **HybridFlow-V** (orange hatched), and **HybridFlow** (green hatched). The component axis isolates weight resharding overhead between actor training and generation phases, with all methods running identical generation workloads. HybridFlow's bars stay flat and low across GPU counts, while OpenRLHF and DS-Chat climb steeply with both scale and cluster size — a divergence most pronounced in the 70B chart.
+
+**Key Takeaway:** HybridFlow's parallel grouping for generation eliminates per-layer all-gather overhead, capping transition time at ~5s even for 128 GPUs / 70B — a >89% reduction versus OpenRLHF's baselines.
+
+**Caption (verbatim):**
+
+**Figure 14.** Transition time between actor training and generation.
+
+### Figure 16 (p.13) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]
 > [!quote] caption
 > Runtime of device mapping algorithm. The model size and # of GPUs are simultaneously scaled.
+
+> [!tip] 技术解读（多模态）
+> **Main Figure Description (Figure 14):**
+
+The figure consists of four grouped bar charts comparing transition time (seconds) across model scales (7B, 13B, 34B, 70B) versus GPU counts (8–128). Each subplot benchmarks four systems: **OpenRLHF** (red), **DS-Chat** (blue), **HybridFlow-V** (orange hatched), and **HybridFlow** (green hatched). The component axis isolates weight resharding overhead between actor training and generation phases, with all methods running identical generation workloads. HybridFlow's bars stay flat and low across GPU counts, while OpenRLHF and DS-Chat climb steeply with both scale and cluster size — a divergence most pronounced in the 70B chart.
+
+**Key Takeaway:** HybridFlow's parallel grouping for generation eliminates per-layer all-gather overhead, capping transition time at ~5s even for 128 GPUs / 70B — a >89% reduction versus OpenRLHF's baselines.
+
+**Caption (verbatim):**
+
+**Figure 14.** Transition time between actor training and generation.
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

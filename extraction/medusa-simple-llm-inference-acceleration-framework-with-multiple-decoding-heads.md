@@ -64,105 +64,428 @@ The figure is a two-panel bar-chart benchmark, not an architecture diagram. **Pa
 
 *Figure 3.* Left: Speed comparison of baseline, M*EDUSA*-1 and M*EDUSA*-2 on Vicuna-7B/13B. M*EDUSA*-1 achieves more than 2× wall-time speedup compared to the baseline implementation while M*EDUSA*-2 further improves the speedup by a significant margin. Right: Detailed speedup performance of Vicuna-7B with M*EDUSA*-2 on 8 categories from MT-Bench.
 
-### Figure 4 (p.8)
+### Figure 4 (p.8) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p08.png]]
 > [!quote] caption
 > Effectiveness of numbers of candidate tokens for decoding introduced by trees (default number of candidate token for decoding is 1 when using KV cache). Left: The acceleration rate for randomly sampled dense tree settings (blue dots) and optimized sparse tree settings (red stars). Right: The speed (tokens/s) for both settings. The trend lines indicate that while the acceleration rate remains relat
 
-### Figure 5 (p.5)
+> [!tip] 技术解读（多模态）
+> **Main Figure Description (Figure 4):**
+
+Figure 4 is a two-panel scatter plot evaluating tree-attention configurations for Medusa's speculative decoding.
+- **Panel (a)** — Acceleration Rate (y-axis, 1.0–3.5) vs. Number of Candidate Tokens (x-axis, 0–250). Blue dots represent randomly sampled dense trees; red stars mark optimized sparse trees; a baseline "w/o Medusa" point sits at acc. rate = 1.
+- **Panel (b)** — Decoding speed in tokens/s (y-axis, 60–120) vs. same candidate-token count, using identical color coding.
+- **Flow:** candidate-token count → tradeoff between acceptance rate (quality) and throughput (latency).
+
+**Key takeaway:** Sparse trees (red stars) sustain ~3.2–3.5× acceleration across token counts, while dense trees cluster lower (~2.5–3.0×). Although the acceptance rate stays stable, throughput drops sharply beyond ~150 tokens because per-step compute grows, creating a clear accuracy-vs-latency trade-off.
+
+**Caption (verbatim):**
+*Figure 4.* Effectiveness of numbers of candidate tokens for decoding introduced by trees (default number of candidate token for decoding is 1 when using KV cache). Left: The acceleration rate for randomly sampled dense tree settings (blue dots) and optimized sparse tree settings (red stars). Right: The speed (tokens/s) for both settings. The trend lines indicate that while the acceleration rate remains relatively stable for sparse trees, there is a notable decrease in speed as the candidate tokens increases.
+
+### Figure 5 (p.5) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p05.png]]
 > [!quote] caption
 > 5
 
-### Figure 6 (p.15)
+> [!tip] 技术解读（多模态）
+> # Page Description
+
+**Note:** This page (page 5 of the MEDUSA paper) contains **no figure/diagram** — it is a text-only page covering training strategies (Differential learning rates, Heads warmup), the selection of number of heads, and the Typical Acceptance extension. The text references "Figure 5" for speedup/quality results, but that figure is not present on this page.
+
+## What the page covers (architecture-relevant content)
+
+- **Training recipe components:** differential learning rates between backbone and M EDUSA heads; two-stage warmup (heads-only then joint).
+- **Head count:** empirically, five heads suffice; fewer may be used after tree-attention pruning.
+- **Typical Acceptance criterion** (the new extension): replaces rejection sampling in speculative decoding with an entropy-gated threshold:
+$$p_{\text{original}}(x_{n+k}\mid x_1,\ldots,x_{n+k-1}) > \min\!\Big(\epsilon,\;\delta\exp\!\big(-H(p_{\text{original}}(\cdot\mid x_1,\ldots,x_{n+k-1}))\big)\Big)$$
+- **Decoding logic:** evaluate candidate prefixes; accept the *longest* accepted prefix; fall back to greedy/unconditional decode when no prefix passes.
+
+## Key technical takeaway (≤120 words)
+
+MEDUSA augments a frozen LLM with multiple lightweight decoding heads that predict several future tokens in parallel. Speculative-style verification accepts the longest consistent prefix each step, avoiding the overhead of rejection sampling. Typical Acceptance adapts to temperature: at T=0 it reduces to greedy (max speedup); higher T raises the entropy-aware threshold, accepting longer drafts without distribution-matching overhead. Combined with differential LR + heads-warmup + tree-attention pruning of redundant heads, training preserves backbone capability while delivering inference speedup.
+
+## Verbatim transcription
+
+> However, in real-world scenarios, sampling from language models is often employed to generate diverse responses, and the temperature parameter is used merely to modulate the "creativity" of the response. Therefore, higher temperatures should result in more opportunities for the original model to accept the draft model's output. We ascertain that it is typically unnecessary to match the distribution of the original model. Thus, we propose employing a *typical acceptance* scheme to select plausible candidates rather than using rejection sampling. This approach draws inspiration from truncation sampling studies (Hewitt et al., 2022) (refer to Appendix A for an in-depth explanation). Our objective is to choose candidates that are *typical*, meaning they are not exceedingly improbable to be produced by the original model. We use the prediction probability from the *original model* as a natural gauge for this and establish a threshold based on the prediction distribution to determine acceptance. Specifically, given $x_1, x_2, \cdots, x_n$ as context, when evaluating the candidate sequence $(x_{n+1}, x_{n+2}, \cdots, x_{n+K+1})$ (composed by top predictions of the original language model head and M EDUSA heads), we consider the condition
+>
+> $$p_{\text{original}}(x_{n+k}\mid x_1, x_2, \cdots, x_{n+k-1}) > \min\big(\epsilon, \delta\exp\big(-H(p_{\text{original}}(\cdot\mid x_1, x_2, \cdots, x_{n+k-1}))\big)\big),$$
+>
+> where $H(\cdot)$ denotes the entropy function, and $\epsilon, \delta$ are the hard threshold and the entropy-dependent threshold respectively. This criterion is adapted from Hewitt et al. (2022) and rests on two observations: (1) tokens with relatively high probability are meaningful, and (2) when the distribution's entropy is high, various continuations may be deemed reasonable. During decoding, every candidate is evaluated using this criterion, and a *prefix* of the candidate is accepted if it satisfies the condition. To guarantee the generation of at least one token at each step, we apply *greedy decoding* for the first token and *unconditionally* accept it while employing typical acceptance for subsequent tokens. The final prediction for the current step is determined by the *longest accepted prefix* among all candidates.
+>
+> Examining this scheme leads to several insights. Firstly, when the temperature is set to 0, it reverts to greedy decoding, as only the most probable token possesses non-zero probability. As the temperature surpasses 0, the outcome of greedy decoding will consistently be accepted with appropriate $\epsilon, \delta$, since those tokens have the maximum probability, yielding maximal speedup. Likewise, in general scenarios, an increased temperature will correspondingly result in longer accepted sequences, as corroborated by our experimental findings.
+>
+> Empirically, we verify that typical acceptance can achieve a better speedup while maintaining a similar generation quality as shown in Figure 5.
+
+---
+
+**Header (verbatim):** MEDUSA: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads
+
+**Page number:** 5
+
+### Figure 6 (p.15) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p15.png]]
 > [!quote] caption
 > Visualization of a sparse tree setting for MEDUSA-2 Vicuna-7B. The tree has 64 nodes representing candidate tokens and a depth of 4 which indicates 4 MEDUSA heads involved in calculation. Each node indicates a token from a top-k prediction of a MEDUSA head, and the edges show the connections between them. The red lines highlight the path that correctly predicts the future tokens. et al., 2022), op
 
-### Figure 7 (p.15)
+> [!tip] 技术解读（多模态）
+> **Main Figure Description (Figure 6 – Sparse Tree Visualization):**
+
+**Architecture/Components:** A hierarchical tree with 64 nodes rooted at `<sos>`, branching over 4 levels (depth = 4 Medusa heads). Each non-leaf node fans out into its top-k candidate token predictions (shown as light-blue token nodes connected by grey edges), forming parallel candidate continuations.
+
+**Data Flow:** At each depth, a Medusa head proposes top-k next-token candidates; nodes accumulate into multi-token candidate sequences, which are then verified in parallel against the target model. The red-highlighted path marks the branch whose predicted tokens match the ground-truth continuation.
+
+**Key Technical Takeaway:** Medusa-2 verifies an exponentially expanding candidate space (k⁴ candidates with 4 heads) in a single verification pass, so accuracy hinges on whether any predicted path aligns with the true trajectory — making tree sparsity and acceptance rate the dominant performance levers.
+
+**Caption (verbatim):**
+*Figure 6. Visualization of a sparse tree setting for M EDUSA-2 Vicuna-7B. The tree has 64 nodes representing candidate tokens and a depth of 4 which indicates 4 M EDUSA heads involved in calculation. Each node indicates a token from a top-k prediction of a M EDUSA head, and the edges show the connections between them. The red lines highlight the path that correctly predicts the future tokens.*
+
+### Figure 7 (p.15) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p15.png]]
 > [!quote] caption
 > Inference speed of various models using speculative decoding on MT-Bench. Baseline model speeds are presented by grey dotted lines for comparison. γ denotes the draft token number. E. Additional Results for All Models
 
-### Figure 8 (p.16)
+> [!tip] 技术解读（多模态）
+> **Main Figure Description (Figure 6 – Sparse Tree Visualization):**
+
+**Architecture/Components:** A hierarchical tree with 64 nodes rooted at `<sos>`, branching over 4 levels (depth = 4 Medusa heads). Each non-leaf node fans out into its top-k candidate token predictions (shown as light-blue token nodes connected by grey edges), forming parallel candidate continuations.
+
+**Data Flow:** At each depth, a Medusa head proposes top-k next-token candidates; nodes accumulate into multi-token candidate sequences, which are then verified in parallel against the target model. The red-highlighted path marks the branch whose predicted tokens match the ground-truth continuation.
+
+**Key Technical Takeaway:** Medusa-2 verifies an exponentially expanding candidate space (k⁴ candidates with 4 heads) in a single verification pass, so accuracy hinges on whether any predicted path aligns with the true trajectory — making tree sparsity and acceptance rate the dominant performance levers.
+
+**Caption (verbatim):**
+*Figure 6. Visualization of a sparse tree setting for M EDUSA-2 Vicuna-7B. The tree has 64 nodes representing candidate tokens and a depth of 4 which indicates 4 M EDUSA heads involved in calculation. Each node indicates a token from a top-k prediction of a M EDUSA head, and the edges show the connections between them. The red lines highlight the path that correctly predicts the future tokens.*
+
+### Figure 8 (p.16) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p16.png]]
 > [!quote] caption
 > Speedup of various models with MEDUSA-2. MEDUSA-2 shows significant speed improvement over all the models, while models trained with self-distillation (Zephyr-7B, Vicuna-13/33B) have weaker speedup due to the trade-off between preserving quality and boosting speed.
 
-### Figure 9 (p.18)
+> [!tip] 技术解读（多模态）
+> **Figure description (≤120 words):**
+
+The main figure is a grouped bar chart titled "Speedup on different model sizes" comparing inference throughput (tokens/second) across four LLMs. For each model (Vicuna-7B, Zephyr-7B, Vicuna-13B, Vicuna-33B), two bars are shown: the blue bar represents baseline throughput ("w/o Medusa") and the orange bar represents throughput with "Medusa-2." The y-axis ranges 0–120 tokens/sec. Annotated speedup multipliers above the orange bars indicate 2.83x (Vicuna-7B), 2.66x (Zephyr-7B), 2.83x (Vicuna-13B), and 2.35x (Vicuna-33B).
+
+**Key takeaway:** Medusa-2 yields 2.35×–2.83× wall-clock speedups across model scales, with the largest absolute gains on Vicuna-7B (~45 → ~107 tokens/s); self-distilled models (Zephyr, Vicuna-33B) show comparatively lower acceleration due to a quality–speed trade-off.
+
+**Caption (verbatim):**
+
+*Figure 8. Speedup of various models with Medusa-2. Medusa-2 shows significant speed improvement over all the models, while models trained with self-distillation (Zephyr-7B, Vicuna-13/33B) have weaker speedup due to the trade-off between preserving quality and boosting speed.*
+
+### Figure 9 (p.18) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p18.png]]
 > [!quote] caption
 > The figure shows the relationship between FLOP/s and Operational Intensity for all benchmarked datapoints of Llama-7B operators on A100-80GB-PCIe. The dashed lines represent the HBM bandwidth limit (1,935GB/s) and the peak performance limit (312 TFLOP/s) (NVIDIA). ‘qkv mlp’ stands for the linear layers projecting hidden features to query/key/value features. ‘up/gate/down’ stands for the linear lay
 
-### Figure 10 (p.18)
+> [!tip] 技术解读（多模态）
+> ## Description
+
+The page presents **two roofline plots** analyzing LLM operator efficiency on an A100-80GB-PCIe GPU: **Figure 9** for Llama-7B and **Figure 10** for Llama-13B. Each plot maps **Performance (FLOP/s)** against **Operational Intensity (FLOP/Byte)** on log-log axes, benchmarking six operator classes — `qkv mlp`, `up/gate/down`, and `qk/pv` — in both **prefill (`init`)** and **decoding (`ar`)** phases. Two reference ceilings are overlaid: the **HBM bandwidth limit (1,935 GB/s, blue dashed)** and the **peak compute limit (312 TFLOP/s, red dashed)**, with a green vertical line marking their crossover (the "ridge point").
+
+**Key takeaway:** Attention operators (`qk/pv`) during prefill are memory-bound and sit on the sloped roofline, but annotations show their operational intensity — and thus throughput — can be pushed rightward (toward compute-bound) by **increasing batch size or sequence length**, making batching the dominant lever for prefill attention efficiency.
+
+## Caption (verbatim)
+
+*Figure 9.* The figure shows the relationship between FLOP/s and Operational Intensity for all benchmarked datapoints of Llama-7B operators on A100-80GB-PCIe. The dashed lines represent the HBM bandwidth limit (1.935GB/s) and the peak performance limit (312 TFLOP/s) (NVIDIA). 'qkv mlp' stands for the linear layers projecting hidden features to query/key/value features. 'up/gate/down' stands for the linear layers following the attention block. 'qk/pv' stands for the two steps of attention matrix multiplications. 'ar' stands for the decoding (autoregressive) and 'init' stands for the prefill phase.
+
+*Figure 10.* Llama-13B operators on A100-80GB-PCIe.
+
+### Figure 10 (p.18) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p18.png]]
 > [!quote] caption
 > Llama-13B operators on A100-80GB-PCIe. 18
 
-### Figure 11 (p.19)
+> [!tip] 技术解读（多模态）
+> ## Description
+
+The page presents **two roofline plots** analyzing LLM operator efficiency on an A100-80GB-PCIe GPU: **Figure 9** for Llama-7B and **Figure 10** for Llama-13B. Each plot maps **Performance (FLOP/s)** against **Operational Intensity (FLOP/Byte)** on log-log axes, benchmarking six operator classes — `qkv mlp`, `up/gate/down`, and `qk/pv` — in both **prefill (`init`)** and **decoding (`ar`)** phases. Two reference ceilings are overlaid: the **HBM bandwidth limit (1,935 GB/s, blue dashed)** and the **peak compute limit (312 TFLOP/s, red dashed)**, with a green vertical line marking their crossover (the "ridge point").
+
+**Key takeaway:** Attention operators (`qk/pv`) during prefill are memory-bound and sit on the sloped roofline, but annotations show their operational intensity — and thus throughput — can be pushed rightward (toward compute-bound) by **increasing batch size or sequence length**, making batching the dominant lever for prefill attention efficiency.
+
+## Caption (verbatim)
+
+*Figure 9.* The figure shows the relationship between FLOP/s and Operational Intensity for all benchmarked datapoints of Llama-7B operators on A100-80GB-PCIe. The dashed lines represent the HBM bandwidth limit (1.935GB/s) and the peak performance limit (312 TFLOP/s) (NVIDIA). 'qkv mlp' stands for the linear layers projecting hidden features to query/key/value features. 'up/gate/down' stands for the linear layers following the attention block. 'qk/pv' stands for the two steps of attention matrix multiplications. 'ar' stands for the decoding (autoregressive) and 'init' stands for the prefill phase.
+
+*Figure 10.* Llama-13B operators on A100-80GB-PCIe.
+
+### Figure 11 (p.19) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p19.png]]
 > [!quote] caption
 > Llama-33B operators on A100-80GB-PCIe. 1 10 100 1k 10k
 
-### Figure 12 (p.19)
+> [!tip] 技术解读（多模态）
+> **Figure Description**
+
+The page contains two **roofline model** plots that characterize GPU operator performance for Llama inference:
+
+- **Axes (both plots):** x = Operational Intensity (FLOP/Byte, log, 1 → 10k); y = Performance (FLOP/s, log, ~10G → 100T).
+- **Reference lines:** Blue dashed = peak memory bandwidth; red dashed = peak compute (TFLOP/s); green vertical = ridge point (crossover).
+- **Plot 1 (Llama 33B, A100 80GB PCIe, Fig. 11):** bandwidth 1,935 GB/s, compute 312 TFLOP/s.
+- **Plot 2 (Llama 7B, A40, Fig. 12):** bandwidth 696 GB/s, compute 149.7 TFLOP/s.
+- **Six operator classes** (×): qkv mlp, up/gate/down, qk/pv — each shown for `init` (prompt/prefill) and `ar` (autoregressive decode) phases.
+
+**Key Takeaway (≈75 words)**
+Attention operators (`qk/pv ar`, brown ×) sit on the memory-bandwidth diagonal — they are **bandwidth-bound**, especially during autoregressive decoding where intensity ≈ 1 FLOP/Byte. In contrast, `up/gate/down` (green/red ×) cluster along the horizontal compute ceiling, confirming they are **compute-bound**. Across both GPUs, the ridge point (~200–250 FLOP/Byte) shows that large linear projections efficiently utilize TFLOPS, while attention kernels remain the principal bottleneck for decoding throughput.
+
+**Captions (verbatim)**
+> *Figure 11.* Llama-33B operators on A100-80GB-PCIe.
+>
+> *Figure 12.* Llama-7B operators on A40.
+
+### Figure 12 (p.19) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p19.png]]
 > [!quote] caption
 > Llama-7B operators on A40. 19
 
-### Figure 13 (p.20)
+> [!tip] 技术解读（多模态）
+> **Figure Description**
+
+The page contains two **roofline model** plots that characterize GPU operator performance for Llama inference:
+
+- **Axes (both plots):** x = Operational Intensity (FLOP/Byte, log, 1 → 10k); y = Performance (FLOP/s, log, ~10G → 100T).
+- **Reference lines:** Blue dashed = peak memory bandwidth; red dashed = peak compute (TFLOP/s); green vertical = ridge point (crossover).
+- **Plot 1 (Llama 33B, A100 80GB PCIe, Fig. 11):** bandwidth 1,935 GB/s, compute 312 TFLOP/s.
+- **Plot 2 (Llama 7B, A40, Fig. 12):** bandwidth 696 GB/s, compute 149.7 TFLOP/s.
+- **Six operator classes** (×): qkv mlp, up/gate/down, qk/pv — each shown for `init` (prompt/prefill) and `ar` (autoregressive decode) phases.
+
+**Key Takeaway (≈75 words)**
+Attention operators (`qk/pv ar`, brown ×) sit on the memory-bandwidth diagonal — they are **bandwidth-bound**, especially during autoregressive decoding where intensity ≈ 1 FLOP/Byte. In contrast, `up/gate/down` (green/red ×) cluster along the horizontal compute ceiling, confirming they are **compute-bound**. Across both GPUs, the ridge point (~200–250 FLOP/Byte) shows that large linear projections efficiently utilize TFLOPS, while attention kernels remain the principal bottleneck for decoding throughput.
+
+**Captions (verbatim)**
+> *Figure 11.* Llama-33B operators on A100-80GB-PCIe.
+>
+> *Figure 12.* Llama-7B operators on A40.
+
+### Figure 13 (p.20) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p20.png]]
 > [!quote] caption
 > Llama-13B operators on A40. 1 10 100 1k 10k
 
-### Figure 14 (p.20)
+> [!tip] 技术解读（多模态）
+> **Description of the main figure (both panels):**
+
+The image presents two roofline model plots characterizing operator performance on an NVIDIA A40 GPU for the Llama-13B (top, Figure 13) and Llama-33B (bottom, Figure 14) models.
+
+**Architecture / components / data flow:**
+- **Axes:** X = Operational Intensity (FLOP/Byte, log scale 1–10k); Y = Performance (FLOP/s, log scale 10G–100T+).
+- **Ridge ceilings:** A blue dashed line (memory-bound slope, 696 GB/s peak bandwidth) and a red horizontal dashed line (compute-bound peak, 149.7 TFLOP/s). Their intersection is marked by a vertical green dashed line (ridge point ≈ 200 FLOP/Byte).
+- **Operators plotted (× markers):** qkv mlp (init/ar), up/gate/down (init/ar), and qk/pv (init/ar), distinguishing prefill ("init") vs. autoregressive ("ar") phases.
+
+**Key technical takeaway (≤120 words):**
+
+The rooflines reveal a sharp asymmetry between prefill and decode: prefill-phase operators (qkv mlp init, up/gate/down init, qk/pv init) cluster at high operational intensity (≥200 FLOP/Byte) and sit on the compute-bound ceiling near 149.7 TFLOP/s, fully utilizing tensor cores. In contrast, decode-phase operators—particularly `qk/pv ar` and `qkv mlp ar`—fall far to the left (≈1–30 FLOP/Byte), making them severely memory-bandwidth-bound (achieving only ~50G–20T FLOP/s, i.e., a fraction of peak). The 33B model shows identical operator trends but slightly lower absolute performance due to larger weights/activations. This confirms that LLM inference acceleration must focus on **memory-bandwidth optimizations for decode**, not compute.
+
+### Figure 14 (p.20) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p20.png]]
 > [!quote] caption
 > Llama-33B operators on A40. 20
 
-### Figure 15 (p.21)
+> [!tip] 技术解读（多模态）
+> **Description of the main figure (both panels):**
+
+The image presents two roofline model plots characterizing operator performance on an NVIDIA A40 GPU for the Llama-13B (top, Figure 13) and Llama-33B (bottom, Figure 14) models.
+
+**Architecture / components / data flow:**
+- **Axes:** X = Operational Intensity (FLOP/Byte, log scale 1–10k); Y = Performance (FLOP/s, log scale 10G–100T+).
+- **Ridge ceilings:** A blue dashed line (memory-bound slope, 696 GB/s peak bandwidth) and a red horizontal dashed line (compute-bound peak, 149.7 TFLOP/s). Their intersection is marked by a vertical green dashed line (ridge point ≈ 200 FLOP/Byte).
+- **Operators plotted (× markers):** qkv mlp (init/ar), up/gate/down (init/ar), and qk/pv (init/ar), distinguishing prefill ("init") vs. autoregressive ("ar") phases.
+
+**Key technical takeaway (≤120 words):**
+
+The rooflines reveal a sharp asymmetry between prefill and decode: prefill-phase operators (qkv mlp init, up/gate/down init, qk/pv init) cluster at high operational intensity (≥200 FLOP/Byte) and sit on the compute-bound ceiling near 149.7 TFLOP/s, fully utilizing tensor cores. In contrast, decode-phase operators—particularly `qk/pv ar` and `qkv mlp ar`—fall far to the left (≈1–30 FLOP/Byte), making them severely memory-bandwidth-bound (achieving only ~50G–20T FLOP/s, i.e., a fraction of peak). The 33B model shows identical operator trends but slightly lower absolute performance due to larger weights/activations. This confirms that LLM inference acceleration must focus on **memory-bandwidth optimizations for decode**, not compute.
+
+### Figure 15 (p.21) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p21.png]]
 > [!quote] caption
 > Llama-7B operators on A6000. 1 10 100 1k 10k
 
-### Figure 16 (p.21)
+> [!tip] 技术解读（多模态）
+> **Description (≤120 words):**
+
+The page contains two **roofline model plots** characterizing LLM operator performance on an NVIDIA A6000 GPU (from the MEDUSA paper).
+
+**Components:**
+- **Axes:** X = Operational Intensity (FLOP/Byte, log 1→10k); Y = Performance (FLOP/s, log 10G→100T)
+- **Hardware ceilings:** blue dashed line = 768 GB/s memory bandwidth; red dashed line = 181 TFLOP/s peak compute; green dashed vertical = ridge point (~270 FLOP/Byte)
+- **Operator markers (×):** qkv mlp, up/gate/down, and qk/pv projections, each measured in **init** (prefill) and **ar** (autoregressive decode) regimes
+- **Data flow:** identical layout for Llama-7B (Fig. 15) and Llama-13B (Fig. 16)
+
+**Key takeaway:** Attention projections (`qk/pv`) sit furthest left and lowest — memory-bandwidth bound during decode (AR), while MLP `up/gate/down` operators sit near the ridge point, making attention the dominant optimization target for inference acceleration.
+
+**Captions (verbatim):**
+
+*Figure 15. Llama-7B operators on A6000.*
+
+*Figure 16. Llama-13B operators on A6000.*
+
+### Figure 16 (p.21) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p21.png]]
 > [!quote] caption
 > Llama-13B operators on A6000. 21
 
-### Figure 17 (p.22)
+> [!tip] 技术解读（多模态）
+> **Description (≤120 words):**
+
+The page contains two **roofline model plots** characterizing LLM operator performance on an NVIDIA A6000 GPU (from the MEDUSA paper).
+
+**Components:**
+- **Axes:** X = Operational Intensity (FLOP/Byte, log 1→10k); Y = Performance (FLOP/s, log 10G→100T)
+- **Hardware ceilings:** blue dashed line = 768 GB/s memory bandwidth; red dashed line = 181 TFLOP/s peak compute; green dashed vertical = ridge point (~270 FLOP/Byte)
+- **Operator markers (×):** qkv mlp, up/gate/down, and qk/pv projections, each measured in **init** (prefill) and **ar** (autoregressive decode) regimes
+- **Data flow:** identical layout for Llama-7B (Fig. 15) and Llama-13B (Fig. 16)
+
+**Key takeaway:** Attention projections (`qk/pv`) sit furthest left and lowest — memory-bandwidth bound during decode (AR), while MLP `up/gate/down` operators sit near the ridge point, making attention the dominant optimization target for inference acceleration.
+
+**Captions (verbatim):**
+
+*Figure 15. Llama-7B operators on A6000.*
+
+*Figure 16. Llama-13B operators on A6000.*
+
+### Figure 17 (p.22) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p22.png]]
 > [!quote] caption
 > Llama-33B operators on A6000. 22
 
-### Figure 18 (p.23)
+> [!tip] 技术解读（多模态）
+> **Figure Description (Roofline Model, Llama 33B on A6000)**
+
+The plot is a roofline diagram with **Operational Intensity (FLOP/Byte)** on a log x-axis (1–10k) and **Performance (FLOP/s)** on a log y-axis (10G–100T+). Two hardware ceilings bound the achievable region: a blue dashed line at **768 GB/s** (memory bandwidth, the sloped left side) and a red dashed line at **181 TFLOP/s** (compute peak, the horizontal right side). A green vertical dashed line marks the **ridge point** (~235 FLOP/Byte), where the roof transitions from memory-bound to compute-bound. Six operator categories are plotted as × markers: qkv mlp init/ar, up/gate/down init/ar, and qk/pv init/ar (init = prefill, ar = autoregressive decode).
+
+**Key Takeaway:** Autoregressive attention operators (qk/pv ar) sit deep in the memory-bound region at very low intensity (~1–3 FLOP/Byte), while MLP and prefill attention operators lie on the compute-bound plateau near 181 TFLOP/s — confirming that **decode-time attention is bandwidth-limited**, the primary bottleneck Medusa-style multi-head decoding aims to amortize.
+
+**Caption (verbatim):** *Figure 17. Llama-33B operators on A6000.*
+
+### Figure 18 (p.23) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p23.png]]
 > [!quote] caption
 > FLOP/s vs. Operational Intensity of attention matrix multiplication with batch size 16. 23
 
-### Figure 19 (p.24)
+> [!tip] 技术解读（多模态）
+> **Figure description:**
+
+The main figure is a scatter plot (titled "Llama 33B, A100 80GB PCIe") displaying the roofline-style relationship between **Operational Intensity (FLOP/Byte)** on the x-axis (log scale, 1 → 10k) and **Performance (FLOP/s)** on the y-axis (log scale, 10G → ~300T). Two reference lines bound the achievable region: a blue dashed diagonal at 1.935 GB/s (memory-bandwidth roof) and a red dashed horizontal at 312 TFLOP/s (compute roof), with a green dashed vertical crossover marker.
+
+Data series include the baseline qk/pv (grey dots, clustered near 1 FLOP/Byte) and qk/pv Medusa runs with 16, 32, 48, 64, 80, 96, and 112 candidate tokens. As the candidate count grows, clusters shift rightward and upward along the memory-bandwidth roof, reaching roughly 100–1000 FLOP/Byte and approaching the 312 TFLOP/s compute ceiling.
+
+**Key takeaway:** Adding Medusa candidates raises attention's operational intensity, pulling the workload off the memory-bound slope and toward compute-bound territory—yielding up to ~44× FLOP/s and ~41× intensity gains.
+
+**Caption (verbatim):**
+*Figure 18.* FLOP/s vs. Operational Intensity of attention matrix multiplication with batch size 16.
+
+### Figure 19 (p.24) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p24.png]]
 > [!quote] caption
 > FLOP/s vs. Operational Intensity of attention matrix multiplication with sequence length 1024. 1 10 100 1k 10k
 
-### Figure 20 (p.24)
+> [!tip] 技术解读（多模态）
+> ## Description
+
+The page contains **two roofline-style scatter plots** (Figures 19 and 20) profiling Llama 33B inference on an A100 80GB PCIe GPU. Each plot has:
+
+- **X-axis:** Operational Intensity (FLOP/Byte), log scale 1 → 10k
+- **Y-axis:** Performance (FLOP/s), log scale 10G → ~100T
+- **Reference lines:** Blue dashed = 1,935 GB/s memory-bandwidth ceiling; Red dashed = 312 TFLOP/s compute ceiling; Green dashed vertical line = ridge point
+- **Data series:** Scatter points for autoregressive ("ar") vs. Medusa speculative variants with varying candidate counts (16, 32, 48, 64, 80, 96, 112)
+
+**Fig. 19** profiles `qk/pv` attention matrix multiplications; **Fig. 20** profiles `up/gate/down` linear layers.
+
+**Key takeaway (≤120 words):** Both plots demonstrate that **Medusa's speculative verification shifts kernels from the memory-bandwidth-bound region toward (and beyond) the compute-bound ridge point**. As the number of accepted candidates grows (16 → 112), operational intensity increases because more FLOPs are performed per byte of weights/KV loaded. For attention (Fig. 19), the kernels remain below the ridge — still partly bandwidth-limited. For linear MLP layers (Fig. 20), higher candidate counts push performance up to the 312 TFLOP/s compute ceiling, fully saturating the A100's tensor cores. This justifies Medusa's inference speedup: extra candidate generation is "free" compute that amortizes fixed memory-loading costs.
+
+## Caption Transcriptions (verbatim)
+
+**Figure 19:** *Figure 19. FLOP/s vs. Operational Intensity of attention matrix multiplication with sequence length 1024.*
+
+**Figure 20:** *Figure 20. FLOP/s vs. Operational Intensity of Linear layers.*
+
+### Figure 20 (p.24) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p24.png]]
 > [!quote] caption
 > FLOP/s vs. Operational Intensity of Linear layers. 24
 
-### Figure 21 (p.26)
+> [!tip] 技术解读（多模态）
+> ## Description
+
+The page contains **two roofline-style scatter plots** (Figures 19 and 20) profiling Llama 33B inference on an A100 80GB PCIe GPU. Each plot has:
+
+- **X-axis:** Operational Intensity (FLOP/Byte), log scale 1 → 10k
+- **Y-axis:** Performance (FLOP/s), log scale 10G → ~100T
+- **Reference lines:** Blue dashed = 1,935 GB/s memory-bandwidth ceiling; Red dashed = 312 TFLOP/s compute ceiling; Green dashed vertical line = ridge point
+- **Data series:** Scatter points for autoregressive ("ar") vs. Medusa speculative variants with varying candidate counts (16, 32, 48, 64, 80, 96, 112)
+
+**Fig. 19** profiles `qk/pv` attention matrix multiplications; **Fig. 20** profiles `up/gate/down` linear layers.
+
+**Key takeaway (≤120 words):** Both plots demonstrate that **Medusa's speculative verification shifts kernels from the memory-bandwidth-bound region toward (and beyond) the compute-bound ridge point**. As the number of accepted candidates grows (16 → 112), operational intensity increases because more FLOPs are performed per byte of weights/KV loaded. For attention (Fig. 19), the kernels remain below the ridge — still partly bandwidth-limited. For linear MLP layers (Fig. 20), higher candidate counts push performance up to the 312 TFLOP/s compute ceiling, fully saturating the A100's tensor cores. This justifies Medusa's inference speedup: extra candidate generation is "free" compute that amortizes fixed memory-loading costs.
+
+## Caption Transcriptions (verbatim)
+
+**Figure 19:** *Figure 19. FLOP/s vs. Operational Intensity of attention matrix multiplication with sequence length 1024.*
+
+**Figure 20:** *Figure 20. FLOP/s vs. Operational Intensity of Linear layers.*
+
+### Figure 21 (p.26) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p26.png]]
 > [!quote] caption
 > Simulated acceleration rate, speedup, and normalized latency ablation using different numbers of candidate tokens under the setting of batch size 1 and sequence length 1024 for Llama-7B on an A100 80GB PCIe. 26
 
-### Figure 22 (p.27)
+> [!tip] 技术解读（多模态）
+> **Figure Description:**
+
+The figure is a combined plot analyzing MEDUSA's performance on Llama-7B (batch size 1, sequence length 1024, A100 80GB PCIe) as the number of candidate tokens varies (1, 16, 32, 48, 64, 80, 96, 112). 
+
+**Components:**
+- **Blue dashed line (Simulated Acc. Rate):** Rises monotonically from ~1.0× to ~3.4× as candidate tokens increase.
+- **Green dashed line (Simulated Speedup):** Rises sharply to ~2.95× at 48 tokens, then plateaus/dips slightly (~2.8×) at higher counts.
+- **Stacked bars (normalized latency):** Decompose per-step latency into `qk/pv ar` (attention, dark purple), `qkv linear ar` (medium purple), and `up/gate/down ar` (light pink, MLP). Total latency stays near 1.0, but the attention (qk/pv) share grows with more candidate tokens.
+
+**Key Technical Takeaway:** Speedup gains saturate around 48–64 candidate tokens because attention recomputation overhead (qk/pv) scales with candidate count, offsetting acceptance-rate benefits — indicating an optimal operating point exists beyond which extra candidates hurt real-world latency. (115 words)
+
+**Caption (verbatim):**
+*"Figure 21. Simulated acceleration rate, speedup, and normalized latency ablation using different numbers of candidate tokens under the setting of batch size 1 and sequence length 1024 for Llama-7B on an A100 80GB PCIe."*
+
+### Figure 22 (p.27) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p27.png]]
 > [!quote] caption
 > Simulated speedup with sequence length 1024 for Llama-7B. 1 16 32 48 64 80 96 112
 
-### Figure 23 (p.27)
+> [!tip] 技术解读（多模态）
+> ## Description
+
+Two line plots evaluate MEDUSA's speculative-decoding speedup on Llama-7B.
+
+**Components:** x-axis = Number of Candidate Tokens (1 → 112); y-axis = Speedup (%) normalized to 1× at one candidate; star-marked dashed curves, one color per setting.
+
+**Data flow:** Fig 22 fixes sequence length at 1024 and sweeps batch sizes 1–64; Fig 23 fixes batch size at 4 and sweeps sequence lengths 128–8192.
+
+**Key takeaway:** Speedup peaks near 32 candidates and is largest for small batches and short contexts, then collapses as batch size or sequence length grows — extra speculative candidates only help when verification cost stays low.
+
+## Captions (verbatim)
+
+*Figure 22.* Simulated speedup with sequence length 1024 for Llama-7B.
+
+*Figure 23.* Simulated speedup with batch size 4 for Llama-7B.
+
+### Figure 23 (p.27) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p27.png]]
 > [!quote] caption
 > Simulated speedup with batch size 4 for Llama-7B. 27
+
+> [!tip] 技术解读（多模态）
+> ## Description
+
+Two line plots evaluate MEDUSA's speculative-decoding speedup on Llama-7B.
+
+**Components:** x-axis = Number of Candidate Tokens (1 → 112); y-axis = Speedup (%) normalized to 1× at one candidate; star-marked dashed curves, one color per setting.
+
+**Data flow:** Fig 22 fixes sequence length at 1024 and sweeps batch sizes 1–64; Fig 23 fixes batch size at 4 and sweeps sequence lengths 128–8192.
+
+**Key takeaway:** Speedup peaks near 32 candidates and is largest for small batches and short contexts, then collapses as batch size or sequence length grows — extra speculative candidates only help when verification cost stays low.
+
+## Captions (verbatim)
+
+*Figure 22.* Simulated speedup with sequence length 1024 for Llama-7B.
+
+*Figure 23.* Simulated speedup with batch size 4 for Llama-7B.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

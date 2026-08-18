@@ -1,25 +1,25 @@
-# RMSNorm — 技术点深读（DEEP 2026-08-18）
+# Root Mean Square Layer Normalization — 技术点深读（DEEP 2026-08-18）
 > 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
 > 论文：Root Mean Square Layer Normalization · arXiv:1910.07467 (NeurIPS 2019, Zhang & Sennrich)
 
 ## 核心问题
-LayerNorm (Ba et al. 2016, [3]) 通过同时执行 **re-centering**（去均值 μ）与 **re-scaling**（除以标准差 σ）来稳定深层网络训练，但二者带来的计算开销随网络加深而显著放大，甚至抵消收敛加速带来的净收益（§1, Figure 1：在 GRU-RNNSearch 上 10k 步后 LayerNorm 把 loss 从 7.0 降到 5.4，但相同**时间**下只能降到 5.9——每步变贵了）。核心追问：**LayerNorm 成功的根源究竟是 re-centering 还是 re-scaling？** 作者假设 re-centering 是可有可无的，re-scaling 不变性才是稳定激活与加速收敛的关键，据此提出 RMSNorm——仅用均方根统计量归一化，舍弃均值统计。
+LayerNorm (Ba et al. 2016, [3]) 通过同时执行 **re-centering**（去均值 μ）与 **re-scaling**（除以标准差 σ）来稳定深层网络训练，但二者带来的计算开销随网络加深而显著放大，甚至抵消收敛加速带来的净收益。作者在 §1 用一个 GRU-RNNSearch 的对照实验（Figure 1, p.2）直观刻画了这一"加速被吞掉"的现象：以训练步数计，LayerNorm 把 loss 从 7.0 降到 5.4；但以训练**时间**计，相同 wall-clock 下只能降到 5.9——每步变贵了。M3 对 p.1 的解读亦指出该页正文即引入 Figure 1 作为"computational overhead diminishes net efficiency"的论据，确立全文的核心动机。核心追问随之而来：**LayerNorm 成功的根源究竟是 re-centering 还是 re-scaling？** 作者假设 re-centering 是可有可无的，re-scaling 不变性才是稳定激活与加速收敛的关键，据此提出 RMSNorm——仅用均方根统计量归一化，舍弃均值统计。
 
-## 关键创新点 (numbered, each 机制/效果, cite §)
+## 关键创新点
 
 1. **RMSNorm：去掉 μ，只用 RMS 归一化（§4, Eq. 4）。** 给定神经元加权和 aᵢ = Σⱼ wᵢⱼxⱼ，LayerNorm 计算 āᵢ = (aᵢ − μ)/σ · gᵢ（μ、σ 均在层内 n 个神经元上估计，Eq. 2-3）；RMSNorm 直接令
    āᵢ = aᵢ / RMS(a) · gᵢ，  RMS(a) = √( (1/n) Σᵢ aᵢ² )  (Eq. 4)
-   即"只除 RMS、不减均值、再乘可学习 gain g、加 bias b"。当 μ=0 时 RMSNorm 与 LayerNorm 完全等价。直观上 RMSNorm 把 summed inputs 强制约束到 √n 缩放的单位球面上，使输出分布对输入/权重尺度不变。**作者明确指出**：欧氏 norm（L2-Norm，仅差 √n 因子）在层归一化中不奏效（§4），假设"按输入向量大小 √n 缩放球面"对跨不同维度向量的鲁棒性是必要的——这也是 RMSNorm 区别于 WeightNorm [22] 的关键。
+   即"只除 RMS、不减均值、再乘可学习 gain g、加 bias b"。当 μ=0 时 RMSNorm 与 LayerNorm 完全等价。直观上 RMSNorm 把 summed inputs 强制约束到 √n 缩放的单位球面上，使输出分布对输入/权重尺度不变。**作者明确指出**：欧氏 norm（L2-Norm，仅差 √n 因子）在层归一化中不奏效（§4，并由 Figure 2 p.6 的 L2-Norm 曲线佐证——M3 解读 L2-Norm "slowest startup, lowest final score"），假设"按输入向量大小 √n 缩放球面"对跨不同维度向量的鲁棒性是必要的——这也是 RMSNorm 区别于 WeightNorm [22] 的关键。
 
-2. **理论：保留 re-scaling 不变性，放弃 re-centering（§4.1, Table 1）。** 由 RMS 的线性性质 RMS(αx) = α·RMS(x)（Eq. 6），权重整体缩放 W′=δW 时 y′ = f( δWx / (δRMS(a)) ⊙ g + b ) = y（Eq. 7），输入缩放 x′=δx 同理。但若缩放只作用于**单个权重向量**，则破坏 RMS 的线性性，不变性不成立；RMSNorm 对所有 re-centering 操作均**不**不变。Table 1 系统对比：BatchNorm/WeightNorm/LayerNorm/RMSNorm/pRMSNorm 在"权重矩阵/权重向量/数据集/单样本"四个对象上的 re-scaling/re-centering 不变性。
+2. **理论：保留 re-scaling 不变性，放弃 re-centering（§4.1, Table 1）。** 由 RMS 的线性性质 RMS(αx) = α·RMS(x)（Eq. 6），权重整体缩放 W′=δW 时 y′ = f( δWx / (δRMS(a)) ⊙ g + b ) = y（Eq. 7），输入缩放 x′=δx 同理。但若缩放只作用于**单个权重向量**，则破坏 RMS 的线性性，不变性不成立；RMSNorm 对所有 re-centering 操作均**不**不变。Table 1 系统对比 BatchNorm/WeightNorm/LayerNorm/RMSNorm/pRMSNorm 在"权重矩阵/权重向量/数据集/单样本"四个对象上的 re-scaling/re-centering 不变性。
 
 3. **梯度分析：隐式学习率自适应器（§4.2, Eq. 8-10）。** 反传得 ∂L/∂b、∂L/∂g 对输入和 W 的缩放**均不变**（∂L/∂g 因 Eq. 6 的线性性，且 g 的梯度正比于归一化后而非原始 summed inputs，稳定 g 的量级）。权重梯度更复杂（Eq. 9）：含矩阵项 R = (1/RMS(a))·( I − (Wx)(Wx)ᵀ / (n·RMS(a)²) )。当输入或权重缩放 δ 时 R′ = R/δ（Eq. 10），代回得 ∂L/∂W **对输入缩放不变**，但对权重缩放保持**负相关**——这一负相关充当"隐式学习率适配器"，动态压住大权重范数、改善收敛。
 
-4. **pRMSNorm：在子集上估计 RMS（§5）。** 假设同层神经元 iid，则 RMS 可只用前 p% 元素估计，k=⌈n·p⌉。由于线性性 Eq. 6 仍成立，pRMSNorm 继承 RMSNorm 全部不变性（Table 1）。理论上是 RMS 的有偏估计，小 m 下梯度易爆炸；实践中 p=6.25% 仍能满意收敛。pRMSNorm 把"减少计算量"推到极致。
+4. **pRMSNorm：在子集上估计 RMS（§5, Figure 3 p.7）。** 假设同层神经元 iid，则 RMS 可只用前 p% 元素估计，k=⌈n·p⌉。由于线性性 Eq. 6 仍成立，pRMSNorm 继承 RMSNorm 全部不变性（Table 1）。理论上是 RMS 的有偏估计，小 m 下梯度易爆炸；实践中 p=6.25% 仍能满意收敛。Figure 3（p.7）的 M3 解读直接佐证了这一点：p 在 20–100% 区间以 10% 步长扫描，dev BLEU 几乎平直（~24，±1 BLEU），"practitioners do not need to carefully tune p"——这正是把"减少计算量"推到极致而几乎不付精度代价的实证依据。
 
-5. **实证：质量与 LayerNorm 相当、7%~64% 加速（§6）。** 覆盖 RNNSearch (GRU)、Transformer、 attentive reader (CNN/DailyMail)、order-embedding (COCO)、ConvPool-CNN-C (CIFAR-10)；框架覆盖 TensorFlow/PyTorch/Theano。RMSNorm 在所有任务上与 LayerNorm 质量相当或更优，且在 RNN（LayerNorm 在 TF 中比 Baseline 慢约 67%）上提速尤为显著。pRMSNorm 理论更快但有时因 tensor slicing 实现不佳反而略慢。
+5. **实证：质量与 LayerNorm 相当、7%~64% 加速（§6, Figure 2 p.6 / Figure 5 p.8 / Figure 7 p.13）。** 覆盖 RNNSearch (GRU)、Transformer、attentive reader (CNN/DailyMail)、order-embedding (COCO)、ConvPool-CNN-C (CIFAR-10)；框架覆盖 TensorFlow/PyTorch/Theano。Figure 2（p.6）的 M3 解读概括为 "RMSNorm matches LayerNorm's re-scaling invariance while reducing compute by ~25% over LayerNorm in TensorFlow"，并显示 RMSNorm 曲线取得 best final BLEU，pRMSNorm 与之相当、略慢。Figure 5（p.8）在 attentive reader 上：M3 解读显示 BatchNorm-LSTM 在 ~25k 步前快速下降，LayerNorm/RMSNorm/pRMSNorm 在 ~50k 步收敛至 ~0.45，Baseline 最慢收敛至 ~0.48，"RMSNorm matches LayerNorm's final accuracy but converges substantially faster"。Figure 7（p.13 附录）M3 解读：WeightNorm 曲线 "converges noticeably slower and converges to a lower final BLEU than LayerNorm, RMSNorm, and pRMSNorm"，定量印证 WeightNorm 收敛慢、Test14/17=21.7/23.5 低于 (p)RMSNorm。RNN 上 LayerNorm 在 TF 中比 Baseline 慢约 67%，RMSNorm 提速尤为显著；pRMSNorm 理论更快但有时因 tensor slicing 实现不佳反而略慢。
 
-6. **鲁棒性：异常初始化下比 LayerNorm 更稳（§6.1, Figure 4）。** 把权重初始化中心移到 0.2 时，LayerNorm 极不稳定，RMSNorm 更鲁棒（二者均逊于原初始化）。Table 5 显示 RMSNorm 虽不显式归一化均值，实际均值比 Baseline 更稳定、std 也被稳定——支撑"re-centering 非必要"假设。
+6. **鲁棒性：异常初始化下比 LayerNorm 更稳（§6.1, Figure 4, Table 5）。** 把权重初始化中心移到 0.2 时（Figure 4, p.7），LayerNorm 极不稳定，RMSNorm 更鲁棒（二者均逊于原初始化）。Table 5 进一步支撑"re-centering 非必要"假设：RMSNorm 虽不显式归一化均值，实际均值（M@ALL=-0.73）比 Baseline（-1.60）更稳定、std（S@ALL=1.50）也被稳定到与 LayerNorm（1.51）同水平——即不归一化 μ 也能间接压住 μ 与 σ 的漂移。
 
 7. **定位：LayerNorm 的 drop-in 替换件（§7）。** 计算简化带来的效率增益与低精度运算、GPU kernel fusion 正交，可叠加。作者明确 RMSNorm 是"对 LayerNorm 计算的简化"，而非新的归一化范式。
 
@@ -35,7 +35,7 @@ LayerNorm (Ba et al. 2016, [3]) 通过同时执行 **re-centering**（去均值 
 | RMSNorm | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ |
 | pRMSNorm | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ |
 
-**Table 2 — RNNSearch (TensorFlow Nematus), WMT14 En-De（§6.1）。** Time = 每 1k 训练步秒数，p=6.25%。
+**Table 2 — RNNSearch (TensorFlow Nematus), WMT14 En-De（§6.1）。** Time = 每 1k 训练步秒数，p=6.25%。对应 Figure 2（p.6）收敛曲线。
 
 | Model | Test14 BLEU | Test17 BLEU | Time |
 |---|---|---|---|
@@ -75,7 +75,7 @@ LayerNorm (Ba et al. 2016, [3]) 通过同时执行 **re-centering**（去均值 
 | LayerNorm | -0.43 | -0.48 | -0.50 | -0.50 | -0.51 | 1.19 | 1.51 | 1.51 | 1.51 | 1.51 |
 | RMSNorm | -0.40 | -0.60 | -0.69 | -0.74 | -0.73 | 1.27 | 1.51 | 1.50 | 1.49 | 1.50 |
 
-**Table 6 — Attentive Reader (CNN/DailyMail, Theano)（§6.2）。** Time = 每 0.1k 步秒数。注：BatchNorm 用 cuDNN 实现，时间不可直接对比。
+**Table 6 — Attentive Reader (CNN/DailyMail, Theano)（§6.2）。** Time = 每 0.1k 步秒数。对应 Figure 5（p.8）。注：BatchNorm 用 cuDNN 实现，时间不可直接对比。
 
 | Model | Time |
 |---|---|
@@ -116,10 +116,10 @@ LayerNorm (Ba et al. 2016, [3]) 通过同时执行 **re-centering**（去均值 
 | pRMSNorm | 10.37% | 30±0.4s (**23.1%**) |
 
 ## 与同类对比
-- **vs LayerNorm [3]**：唯一区别是去掉 μ（re-centering）。质量相当或 RMSNorm 略优；RNN 上 LayerNorm 在 TF 中比 Baseline 慢 ~67%，RMSNorm 提速 7~64%。§6.4 CIFAR-10 上 LayerNorm 反而比 Baseline 测试误差高 1.53%（过拟合），RMSNorm 优于 Baseline 0.013%。
-- **vs BatchNorm [12]**：BatchNorm 跨样本估计统计量，对变长序列（RNN）不友好；RMSNorm/LayerNorm 都从同层内估计，样本独立。CIFAR-10 上 BatchNorm 仍最优（8.25%），RMSNorm 8.83%。
-- **vs WeightNorm [22]**：WeightNorm 重参数化权重向量、解耦长度与方向；RMSNorm 归一化激活。WeightNorm 收敛更慢、Test14/17=21.7/23.5 低于 (p)RMSNorm（§A.1, Figure 7）。作者明确 L2-Norm（与 RMS 仅差 √n）不适用于层归一化（§4）。
-- **vs L2-Norm**：Table 2 中 L2-Norm 仅 20.7/22.0，反而逊于 Baseline——印证"按 √n 缩放球面"是必要的。
+- **vs LayerNorm [3]**：唯一区别是去掉 μ（re-centering）。质量相当或 RMSNorm 略优；RNN 上 LayerNorm 在 TF 中比 Baseline 慢 ~67%，RMSNorm 提速 7~64%。Figure 2（p.6）M3 解读直接给出 RMSNorm 取得 "best final BLEU"。§6.4 CIFAR-10 上 LayerNorm 反而比 Baseline 测试误差高 1.53%（过拟合），RMSNorm 优于 Baseline 0.013%。
+- **vs BatchNorm [12]**：BatchNorm 跨样本估计统计量，对变长序列（RNN）不友好；RMSNorm/LayerNorm 都从同层内估计，样本独立。CIFAR-10 上 BatchNorm 仍最优（8.25%），RMSNorm 8.83%。Figure 5（p.8）M3 解读亦指出 BatchNorm-LSTM 早期下降快但 LayerNorm/RMSNorm 达到更低 final error。
+- **vs WeightNorm [22]**：WeightNorm 重参数化权重向量、解耦长度与方向；RMSNorm 归一化激活。WeightNorm 收敛更慢、Test14/17=21.7/23.5 低于 (p)RMSNorm（§A.1, Figure 7 p.13）。M3 对 Figure 7 的解读确认 WeightNorm "converges noticeably slower and to a lower final BLEU"。作者明确 L2-Norm（与 RMS 仅差 √n）不适用于层归一化（§4）。
+- **vs L2-Norm**：Table 2 中 L2-Norm 仅 20.7/22.0，反而逊于 Baseline——Figure 2（p.6）M3 解读 L2-Norm "slowest startup, lowest final score"，印证"按 √n 缩放球面"是必要的。
 - **vs 无归一化初始化方案 [36]**（Fixup 类）：[36] 仅适用于残差网络且需改全部初始化层、不易迁移到 RNN；RMSNorm 是 LayerNorm 的 drop-in 替换，普适。
 - **Tensor slicing 实现**：pRMSNorm 理论更快，但 TF/PyTorch/Theano 的切片操作实现不优，有时反而略慢于 RMSNorm（§6.1）。
 
@@ -132,8 +132,8 @@ LayerNorm (Ba et al. 2016, [3]) 通过同时执行 **re-centering**（去均值 
 - **Transformer 适配**：§6.1 Table 4 是早期证明 RMSNorm 可替换 Transformer 中 LayerNorm（baseline 无归一化直接训练失败）的实验之一，相对 LayerNorm 提速 6.9~9.3%。
 
 ## 局限与边界
-- **不不变于 re-centering**（Table 1）：对权重/输入的平移噪声无保护。§6.1 Figure 4 的"中心=0.2"实验显示 RMSNorm 仍比 LayerNorm 鲁棒，但二者均逊于正常初始化——re-centering 在极端初始化下并非全无价值，只是"非根本"。
-- **pRMSNorm 的精度-效率权衡**：小 p（小 m）下梯度易爆炸（§5）；CIFAR-10 上 pRMSNorm 测试误差比 RMSNorm 高 1.54%（Table 10）；切片实现不优时反而更慢（§6.1）。
+- **不不变于 re-centering**（Table 1）：对权重/输入的平移噪声无保护。§6.1 Figure 4（p.7）的"中心=0.2"实验显示 RMSNorm 仍比 LayerNorm 鲁棒，但二者均逊于正常初始化——re-centering 在极端初始化下并非全无价值，只是"非根本"。
+- **pRMSNorm 的精度-效率权衡**：小 p（小 m）下梯度易爆炸（§5）；CIFAR-10 上 pRMSNorm 测试误差比 RMSNorm 高 1.54%（Table 10）；切片实现不优时反而更慢（§6.1）。但 Figure 3（p.7）M3 解读显示在 RNNSearch 上 p 对 BLEU 几乎不敏感——精度风险是任务/架构相关的。
 - **CIFAR-10 上 LayerNorm 反效果**：Table 10 中 LayerNorm 测试误差 10.49% 劣于 Baseline 8.96%——作者承认"层归一化在图像处理上不如 BatchNorm/WeightNorm"（§6.4），RMSNorm 同样继承这一边界，仅相对 LayerNorm 改善了泛化。
 - **效率增益依赖实现**：7~64% 的提速区间随框架/硬件/架构/其他组件相对成本而变（§7）；Transformer 上仅 7~9% 因序列化归一化操作少，RNN 上最显著。
 - **理论解释留白**：作者自陈（§7）"未来想对 RMSNorm 成功背后的原因做更多分析"——本文给了不变性 + 梯度的形式化分析，但未给出"为何 re-scaling 足够而 re-centering 不必要"的更深层机制证明（仅在 §6.1 Table 5 给经验佐证）。

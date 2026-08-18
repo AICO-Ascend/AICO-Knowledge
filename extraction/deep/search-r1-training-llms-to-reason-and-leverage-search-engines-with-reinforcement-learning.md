@@ -41,14 +41,14 @@
 - **机制/观察**：(1) GRPO 收敛更快——因 PPO 依赖 critic value function 需 warm-up；(2) PPO 训练更稳——GRPO 在长 step 后出现 reward collapse，PPO 全程稳定；(3) 两者 final reward 可比。作者据此把 PPO 设为默认（§4.3 "Unless stated otherwise, PPO is used as the default RL method"）。
 - **数据**（Table 3，Qwen2.5-7b-base）：PPO Avg 0.431 vs GRPO 0.350；但 instruct 上 GRPO 反超（0.396 vs 0.385）——结论是"comparable"，选 PPO 主因是稳定性而非最终分。Figure 5 跨 4 个 LLM（3b/7b × base/it）复现同一规律：GRPO 早期上行陡、后期塌；PPO 平缓持续。
 
-### 6. Base vs Instruct：RL 抹平起点差距（§5.2，Figure 4）
+### 6. Base vs Instruct：RL 抹平起点差距（§5.2，Figure 2(b) p.9 + Figure 4）
 
-instruct 模型收敛快、起点高，但 base 模型经 RL 后 final reward 与 instruct 几乎一致（§5.2 "RL can effectively bridge the gap over time"）。含义：在 reasoning+search 场景，post-training 的价值主要在加速早期；对算力受限但能跑长 RL 的场景，base 模型是可行起点。这也支撑 Search-R1 把 R1-Zero-style RL 从"纯推理"推广到"搜索增强推理"的论断（§4.4 observation 3）。
+instruct 模型收敛快、起点高，但 base 模型经 RL 后 final reward 与 instruct 几乎一致（§5.2 "RL can effectively bridge the gap over time"）。**Figure 2(b)（p.9，M3 解读）**的双曲线直观印证：instruct（橙）起点更高、前 100 step 上升更陡；base（蓝）爬升缓但收敛至与 instruct 相近的 ~0.40 reward 平台——M3 标注的 takeaway 正是 "instruct starts higher and rises faster; base climbs more slowly but converges to similar reward (~0.40)"。含义：在 reasoning+search 场景，post-training 的价值主要在加速早期；对算力受限但能跑长 RL 的场景，base 模型是可行起点。这也支撑 Search-R1 把 R1-Zero-style RL 从"纯推理"推广到"搜索增强推理"的论断（§4.4 observation 3）。
 
 ### 7. 其他工程性发现
 
-- **# retrieved passages（top-k）**（Appendix G，Table 7，7b-base/PPO）：k=3 最优（Avg 0.431），k=5 早期收敛最快但后期不稳、k=1 召回不足。归因：k=5 引入噪声 passage（low precision，引 Jin et al. 2024）不仅损推理还"discouraging the model from leveraging retrieved content when it learns the additional context is often unhelpful"——即 RL 会学到"忽略检索"的退化策略。
-- **Group size（GRPO）**（Appendix H，Table 8，7b-base）：size=5 收敛最快但易塌；**size=1（退化为 REINFORCE）最稳且泛化最好**（Avg 0.410 vs size=5 的 0.350）——揭示 GRPO 中"learning speed vs stability"的 trade-off。
+- **# retrieved passages（top-k）**（Appendix G，Table 7，Figure 6 p.19，7b-base/PPO）：k=3 最优（Avg 0.431），k=5 早期收敛最快但后期不稳、k=1 召回不足。归因：k=5 引入噪声 passage（low precision，引 Jin et al. 2024）不仅损推理还"discouraging the model from leveraging retrieved content when it learns the additional context is often unhelpful"——即 RL 会学到"忽略检索"的退化策略。**Figure 6（p.19，M3 解读）**的三条 reward 曲线（topk=1/3/5）几乎重合、均在 ~step 200 后 plateau 于 0.45–0.5——M3 takeaway 明确指出 "top-k is not the dominant driver of PPO convergence"，与 Table 7 中三档差异（0.375/0.431/0.400）"窄幅但 k=3 略胜"的结论互证：训练动力学层面 top-k 影响微弱，但最终泛化精度层面 k=3 的精度-噪声平衡最优。
+- **Group size（GRPO）**（Appendix H，Table 8，Figure 7 p.19，7b-base）：size=5 收敛最快但易塌；**size=1（退化为 REINFORCE）最稳且泛化最好**（Avg 0.410 vs size=5 的 0.350）——揭示 GRPO 中"learning speed vs stability"的 trade-off。**Figure 7（p.19，M3 解读）**的 group-size 动力学曲线与 Figure 5 的 PPO-vs-GRPO 规律同源：更大 group（size=5）早期上行更陡但后期塌方更剧烈，size=1 走势最平稳——直观说明"group-relative advantage 的方差缩减"在 search-augmented rollout 下反而放大了不稳定性，退化为 REINFORCE 的 baseline 减法更鲁棒。
 - **规模效应**（Appendix C，Table 5，14b）：Search-R1-base 14b Avg 0.479，全面碾压各基线；"increasing model size leads to consistent performance gains"。"Larger models are better on learning how to do search"（§4.4 observation 4）——7B 相对 RAG 的 gap 显著大于 3B。
 
 ## 表格（原文结构化）

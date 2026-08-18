@@ -1,17 +1,18 @@
 # A Survey of Large Language Models — 技术点深读（DEEP 2026-08-18）
 
 > Source: `extraction/fulltext/a-survey-of-large-language-models.txt` (arXiv:2303.18223v19, 18 Mar 2026)。Zhao, Zhou, Li, Tang, Wang, Hou, Min, Zhang 等（中国人民大学高瓴人工智能学院 / Université de Montréal / JRDC）。GitHub: github.com/RUCAIBox/LLMSurvey；中文书: lmbook-zh.github.io。**survey 类锚点论文**——非单一机制，而是 LLM 全栈 taxonomy。本仓库 LLM-background 谱系的根索引。
+<!-- 深读产物，独立于 extract_phase1 自动生成的 MD/MOC；深读内容须落 deep/<slug>.md，勿回写 phase1 MD 体 -->
 
 ## 核心问题
 
-本文攻击的不是单一技术点，而是一个**认知/导航性问题**：LLM 在 2023 ChatGPT 发布后论文量从 0.40 篇/天暴涨到 8.58 篇/天（§1, Fig.1），技术栈横跨数据、架构、训练、对齐、提示、评测六大轴，但缺乏一篇在"模型规模 >10B"边界上、把 pre-training → adaptation → utilization → evaluation 四阶段串成统一脉络的综述（§1）。已有 PLM survey（[36–39]）止于 BERT/GPT-2 量级，未触及 emergent abilities；已有 LLM 专题 survey（[32, 48–54]）只覆盖某一侧面。
+本文攻击的不是单一技术点，而是一个**认知/导航性问题**：LLM 在 2023 ChatGPT 发布后论文量从 0.40 篇/天暴涨到 8.58 篇/天（§1, Figure 1（p.3, M3 报告该页只含正文与三处脚注、图本体另置）），技术栈横跨数据、架构、训练、对齐、提示、评测六大轴，但缺乏一篇在"模型规模 >10B"边界上、把 pre-training → adaptation → utilization → evaluation 四阶段串成统一脉络的综述（§1）。已有 PLM survey（[36–39]）止于 BERT/GPT-2 量级，未触及 emergent abilities；已有 LLM 专题 survey（[32, 48–54]）只覆盖某一侧面。Figure 2（p.3, M3 同样报告图未渲染）给出语言模型四代演化（statistical → neural → pre-training → LLM）的导航骨架，构成全文四阶段 taxonomy 的历史前奏。
 
 判据性区分（§1, "three major differences between LLMs and PLMs"）：
 1. **Emergent abilities**——LLM 表现出小 PLM 没有的涌现能力（ICL / 指令跟随 / CoT 推理），是性能跃迁的根因。
 2. **Prompting interface 取代 fine-tuning**——访问 LLM 的主要方式是 prompt/API，而非梯度更新；用户必须学会"如何让 LLM 跟随"。
 3. **研究与工程的边界消融**——训练 LLM 需大规模数据处理 + 分布式并行的工程经验，研究者必须懂工程。
 
-由此本文的产出是**四阶段 taxonomy + 资源清单 + GPT 系列技术演进史**作为对上述导航性问题的系统性应答，并附模型卡（Tab.1 / Tab.5）、优化设置（Tab.8）、能力-数据集对照（Tab.14）等结构化总表。
+由此本文的产出是**四阶段 taxonomy + 资源清单 + GPT 系列技术演进史**作为对上述导航性问题的系统性应答，并附模型卡（Tab.1 / Tab.5）、优化设置（Tab.8）、能力-数据集对照（Tab.14）等结构化总表。Figure 3（p.99 update log 引述，M3 报告该页仅含更新历史与参考文献起点）即"LLM 全景家族树"图，是上述四阶段资源清单的视觉化索引，随版本增量更新（"revise Figure 3 and Table 1"）。
 
 ## 关键创新点
 
@@ -19,45 +20,58 @@
 
 ### 1. 四阶段主轴 taxonomy：Pre-training / Adaptation / Utilization / Evaluation（§4–§7）
 - **机制**：按"模型生命周期"切分——§4 pre-training（数据→架构→训练）把能力注入；§5 adaptation（instruction tuning → alignment tuning → efficient tuning → quantization）把能力对齐/解锁；§6 utilization（prompting → ICL → CoT → planning）把能力用出来；§7 capacity evaluation（basic → advanced → benchmarks）把能力测出来。
-- **效果**：将散乱数百篇文献归口到四条正交轴，每条轴再二/三级细分（如 §4.2 架构下分 mainstream arch / detailed config / pre-training task），共 14 张结构化表覆盖 ~100 个模型 + ~50 个数据集。该四阶段切分被后续 LLM 综述广泛沿用。
+- **效果**：将散乱数百篇文献归口到四条正交轴，每条轴再二/三级细分（如 §4.2 架构下分 mainstream arch / detailed config / pre-training task），共 14 张结构化表覆盖 ~100 个模型 + ~50 个数据集。该四阶段切分被后续 LLM 综述广泛沿用。Figure 3 的 LLM 家族树正是该 taxonomy 顶层"模型层"的视觉锚点。
 
 ### 2. Scaling law 双型对照 + emergent abilities 的张力论述（§2.1）
 - **机制**：并列 KM scaling law（Kaplan/OpenAI [30]，`L(N)=L(Nc/N)^αN`，αN≈0.076，倾向"model size 优先"）与 Chinchilla scaling law（Hoffmann/DeepMind [34]，`L(N,D)=E+A/N^α+B/D^β`，α=0.34, β=0.28，导出 `Nopt∝C^a, Dopt∝C^b` 且 a≈b，主张"model/data 等比"）。二者在 compute 分配上结论相反。
 - **emergent abilities 三典型**（§2.1）：ICL（GPT-3 175B 显现，GPT-1/2 不行）、instruction following（LaMDA-PT 68B 临界，PaLM 62B 临界）、step-by-step reasoning/CoT（PaLM/LaMDA >60B 起、>100B 优势显著）。
 - **张力**（§2.1 "How Emergent Abilities Relate to Scaling Laws"）：scaling law 是连续可预测的（diminishing returns），emergent abilities 是不可预测的相变式跃迁；并引述 [70, 71] 争点——emergence 可能部分源于不连续评测指标，改用连续指标后"sharpness 消失"。本文不裁决，而是用婴儿语言发育类比解释"连续成长 vs 阶段性跃迁"可共存。
 
-### 3. 架构 taxonomy：三类主流 + MoE 扩展 + emergent architectures（§4.2.1）
-- **三类主流**：encoder-decoder（T5/BART，LLM 中少见，如 Flan-T5）、causal decoder（GPT 系，主导，OPT/BLOOM/Gopher）、prefix decoder（双向编码 prefix + 单向生成，GLM-130B/U-PaLM，可由 causal decoder 转换而来加速收敛 [29]）。
+### 3. GPT 系列技术演进史（§2.2）
+- **机制**：以 Figure 4（p.7, M3 报告该页只含正文：早期探索→GPT-1→GPT-2→Capacity Leap 四小节，图本体另置）为骨架，把 GPT-1（无监督 pre-training + 下游 fine-tuning 双阶段范式）→ GPT-2（zero-shot，去 task-specific 参数）→ GPT-3（few-shot ICL，175B 触发 emergent abilities）→ InstructGPT（RLHF 对齐，Figure 12 workflow）→ GPT-4（多模态 + predictable scaling）串成一条"范式迁移"主线：从 fine-tune 到 prompt，从 capability 到 alignment。
+- **效果**：把 GPT 系列每代的"关键能力跃迁 + 关键技术变更"成对归档，成为后续四阶段 taxonomy 的历史序章。
+
+### 4. 架构 taxonomy：三类主流 + MoE 扩展 + emergent architectures（§4.2.1, Figure 9）
+- **三类主流**（Figure 9（p.22, M3 报告该页只含 §4.2.1 正文，图本体另置；正文明确按 attention masking 区分三类））：encoder-decoder（T5/BART，LLM 中少见，如 Flan-T5）、causal decoder（GPT 系，主导，OPT/BLOOM/Gopher，单向 attention mask）、prefix decoder（双向编码 prefix + 单向生成，GLM-130B/U-PaLM，可由 causal decoder 转换而来加速收敛 [29]）。M3 据正文提炼的 takeaway：三类架构的本质差别在 **attention masking 策略**，对 pre-training 效率、ICL 能力与下游性能有级联影响。
 - **MoE 扩展**：sparsely activated，参数量↑计算量不变（Switch Transformer [25]/GLaM [112]），但路由不稳、需高精度张量/小范围初始化 [25]；指出 GPT-4 疑为 MoE 但未官方确认。
 - **Emergent architectures**（§4.2.1 末）：SSM 谱系——Mamba（selective state update [272]）、RWKV（time-mixing + channel-mixing + token shift [273]）、RetNet（multi-scale retention [271]）、Hyena [269]。自承"performance still lags behind Transformer"。
 
-### 4. 详细配置四件套：Normalization / Position Embedding / Activation / Attention（§4.2.2）
+### 5. 详细配置四件套：Normalization / Position Embedding / Activation / Attention（§4.2.2）
 - **Normalization**：LayerNorm [275] → RMSNorm [276]（去均值只保留 RMS，提速）→ DeepNorm [277]（残差缩放 α，支撑千层）。Position：post-LN（vanilla，不稳）/ pre-LN（主流，稳但略劣）/ sandwich-LN（pre-LN + 额外 LN，GLM-130B 发现在 >100B 时不稳甚至崩溃）。
 - **Position embedding**：absolute（sinusoidal/learned）→ relative（T5 bias，可外推）→ **RoPE**（旋转矩阵，相对位置由绝对旋转复合得出，长程衰减，PaLM/LLaMA 采）→ ALiBi（无参 distance penalty，BLOOM 采，外推强）。
 - **Activation**：ReLU → GeLU → GLU 变体（SwiGLU/GeGLU，PaLM/LaMDA/LLaMA 采，性能更好但 FFN 参数 +50% [291]）。
 - **Attention**：full → sparse（GPT-3 factorized）→ multi-query（PaLM/StarCoder）→ **GQA**（LLaMA 2 [99]，MQA 与 MHA 折中）→ FlashAttention [302]（IO-aware fused kernel，已入 PyTorch/DeepSpeed/Megatron，v2 再 2× 加速）→ PagedAttention [304]（OS paging 思想解决 KV cache 碎片，vLLM）。
 - **总体建议**（§4.2.2 末）：pre RMSNorm + SwiGLU/GeGLU + RoPE/ALiBi，embedding 后不加 LN。
 
-### 5. 训练三件套：优化设置 + 3D parallelism + mixed precision（§4.3）
+### 6. Pre-training 数据：sources + preprocessing + scheduling（§4.1, Figure 7 / Figure 8）
+- **数据源**（§4.1.1）：webpages/books/conversation（general），multilingual/scientific/code（specialized）。
+- **预处理流水线** Figure 7（p.18, M3 报告该页只含正文：filtering/selection、de-duplication、privacy reduction 三步，图本体另置）：去重（MinHash/LSH）、隐私清洗（PII regex）、质量过滤（classifier-based）。
+- **数据调度** Figure 8（p.20, M3 解读：横轴 Stage 1→…→Stage n 的离散阶段，每阶段四色柱表示四类数据源的 **data mixture** 比例，外层 brace 表示 **data curriculum** 即跨阶段次序；早期 Source 1（webpages）主导，后期 Source 3/4（code/science）权重上升）。机制：把"哪些源采"（mixture）与"何时强调"（curriculum）两个耦合维度联合调度。实证：LLaMA 异质混合 ~80% webpages / 6.5% GitHub+StackExchange code / 4.5% books / 2.5% arXiv 优于同质混合；DoReMi 用小 proxy 模型优化 mixture；去掉高异质源（webpages）性能下降远大于去掉低异质源（学术语料）。该图把 §4.1.3 的"source diversity / mixture ratio / curriculum scheduling"三策略视觉化为一图。
+
+### 7. LLaMA 衍生生态图（§3, Figure 5）
+- **机制**：Figure 5（p.12, M3 解读：以 **LLaMA** 为根（top-center）的辐射式演化树，三类边——红虚线=continue pre-training、绿实线=model inheritance、蓝实线=data inheritance；节点按微调方式着色：黄=parameter-efficient、绿=full-parameter）。含 Chinese-LLaMA、Alpaca（→BELLE/BiLLa/Ziya/Koala/Baize）、Vicuna→Yulan-Chat 子树，以及虚框 Multimodal 簇（LLaVA/MiniGPT-4/OpenFlamingo/PandaGPT/VisionLLM/InstructBLIP）；域图标标注 Math/Finance/Medicine/Law/Bilingualism/Education。
+- **效果**：实证 LLaMA 的统治性源于一套**可复用的 adaptation recipe**——小代价 extension（continue pre-training）+ model/data inheritance，使领域/多语/多模态特化无需从零训练。该图是 §3 LLM 生态与 §5.3 PEFT 的视觉总账，开源图源（GitHub）支持增量 PR 更新。
+
+### 8. 训练三件套：优化设置 + 3D parallelism + mixed precision（§4.3）
 - **优化设置**（§4.3.1, Tab.8）：batch 动态增长（GPT-3 32K→3.2M tokens，PaLM 1M→4M）；lr warm-up 0.1–0.5% 后 cosine decay 至 10%（GPT-3 6e-5，LLaMA 1.5e-4）；Adam/AdamW（β1=0.9, β2=0.95, ε=1e-8）或 Adafactor（省显存，PaLM/T5）；grad clip 1.0、weight decay 0.1；loss spike 处理——PaLM/OPT 从早期 checkpoint 重启跳过坏数据 [56,90]，GLM 缩 embedding 梯度 [93]。
 - **3D parallelism**（§4.3.2）：data parallel（复制参数切数据）+ pipeline parallel（GPipe [321]/PipeDream [322]，切层跨 GPU，microbatch 填 bubble）+ tensor parallel（Megatron-LM [75]，切参数矩阵，`Y=[XA1,XA2]`）。BLOOM 实证 8-way DP × 4-way TP × 12-way PP = 384 A100。
 - **Mixed precision**（§4.3.2）：FP32 → FP16（A100 FP16 算力 2× FP32，但精度损失）→ BF16（更多指数位，BLOOM 实证优于 FP16）。
 - **内存优化**：ZeRO / FSDP / activation recomputation [77,329] 已入 DeepSpeed/PyTorch/Megatron。**predictable scaling**（GPT-4 [46]）用小 proxy 模型预测大模型性能、早侦异常。
 
-### 6. Adaptation 双轨：Instruction tuning（解锁能力）+ Alignment tuning（对齐价值）（§5）
-- **Instruction tuning**（§5.1）：四类 instance 构造法——formatting NLP task datasets（加 task description，[28,66,67]）、formatting chat data、formatting synthetic instances（Self-Instruct [147]，LLM 自生成）、alignment-oriented formats。关键发现：去除 task description 导致性能剧降 [67]，证明 instruction 是泛化的关键因子。
-- **Alignment tuning / RLHF**（§5.2）：三准则 helpful/honest/harmless（HHH，[66,366]）；三类反馈采集——ranking-based（Elo [116]）、question-based（WebGPT [81]）、rule-based（Sparrow [116]，GPT-4 用 zero-shot classifier 作 rule-based reward [46]）。RLHF 三组件（§5.2.3）：pre-trained LM + reward model + RL 算法（PPO [128]）。指出 **alignment tax**——对齐会损害 ICL 等通用能力 [366]。
-- **Efficient tuning + quantization**（§5.3）：PEFT（LoRA/alpaca-lora）+ 量化（4-bit/8-bit）面向资源受限场景。
+### 9. Adaptation 双轨：Instruction tuning（解锁能力）+ Alignment tuning（对齐价值）（§5）
+- **Instruction tuning**（§5.1, Figure 11）：四类 instance 构造法——formatting NLP task datasets（加 task description，[28,66,67]）、formatting chat data、formatting synthetic instances（Self-Instruct [147]，LLM 自生成，仅需 175 seed instances）、alignment-oriented formats。关键发现：去除 task description 导致性能剧降 [67]，证明 instruction 是泛化的关键因子。
+- **Alignment tuning / RLHF**（§5.2, Figure 12）：三准则 helpful/honest/harmless（HHH，[66,366]）；三类反馈采集——ranking-based（Elo [116]）、question-based（WebGPT [81]）、rule-based（Sparrow [116]，GPT-4 用 zero-shot classifier 作 rule-based reward [46]）。RLHF 三组件（§5.2.3）：pre-trained LM + reward model + RL 算法（PPO [128]）。指出 **alignment tax**——对齐会损害 ICL 等通用能力 [366]。
+- **Efficient tuning + quantization**（§5.3, Figure 13）：PEFT 四法图 Figure 13（p.43, M3 解读：原权重冻结（灰），仅小可训练模块（彩）更新）。(1) **Adapter Tuning**——bottleneck 模块（down→nonlinearity→up）串行插入每个 sub-layer 后或并行；(2) **Prefix Tuning**——每层 K/V 前加可训练 prefix 向量（layer-wise）；(3) **Prompt Tuning**——仅在 input embedding 层加可训练 soft prompt（input-level）；(4) **LoRA**——低秩分解 ΔW=AB（rank k≪min(m,n)）旁挂 dense 权重。M3 takeaway：四法本质是在不同架构粒度（sub-layer / layer-wise / input-only / weight-level）注入极小可训练参数，以小幅精度换存储——一个 backbone 可挂多个任务专属小模块。+ 量化（4-bit/8-bit）面向资源受限场景。
 
-### 7. Utilization 四级递进：Prompting → ICL → CoT → Planning（§6, Tab.11）
+### 10. Utilization 四级递进：Prompting → ICL → CoT → Planning（§6, Tab.11, Figure 14 / Figure 15 / Figure 16）
 - **Prompting**（§6.1）：四要素（task description / input data / contextual info / prompt style）+ 四原则（clear goal / decompose sub-tasks / few-shot demos / model-friendly format）。
-- **ICL**（§6.2）：形式化 `LLM(I, f(x1,y1),...,f(xk,yk), f(xk+1)) → ŷk+1`（式 11）；demonstration design 三维——selection（k-NN [420] / dense retriever EPR [421] / LLM 自选 [489]）、format（Auto-CoT [427]、APE [423]）、order（recency bias，[481]）。与 instruction tuning 互补：后者需梯度更新，ICL 仅 prompt；instruction tuning 可增强 zero-shot ICL [69]。
-- **CoT**（§6.3）："Let's think step by step"激发中间推理；self-consistency [429]（多路采样投票）、Selection-Inference [428]、DIVERSE [430]。
-- **Planning**（§6.4, Tab.11）：least-to-most [432] / DECOMP [433]（text-based 分解）；PAL [436] / HuggingGPT [437]（code-based）；ReAct [442]（reason+act 协同）；Reflexion [443]（self-reflection 动态记忆）；Tree of Thoughts [444]（树搜索 + 投票）；RAP [440]（LLM 作 world model + MCTS）。
+- **ICL**（§6.2, Figure 14）：形式化 `LLM(I, f(x1,y1),...,f(xk,yk), f(xk+1)) → ŷk+1`（式 11）；demonstration design 三维——selection（k-NN [420] / dense retriever EPR [421] / LLM 自选 [489]）、format（Auto-CoT [427]、APE [423]）、order（recency bias，[481]）。与 instruction tuning 互补：后者需梯度更新，ICL 仅 prompt；instruction tuning 可增强 zero-shot ICL [69]。
+- **CoT**（§6.3, Figure 15）："Let's think step by step"激发中间推理；self-consistency [429]（多路采样投票）、Selection-Inference [428]、DIVERSE [430]。
+- **Planning**（§6.4, Tab.11, Figure 16）：Figure 16（p.54, M3 解读：闭环三核心组件——**Task Planner (LLM)**（黄）生成并 refine Plan、**Plan Executor**（蓝）执行 Action 调用 Tool、**Environment**（粉）返回 Feedback；辅助 **Memory**（黄虚线）长程任务存取 plan、**Tool**（蓝虚线）支持 code/API；Sources 分 Internal(LLM)/External(Human/World/Others)）。机制：planning 把推理与执行解耦，LLM-as-planner 用环境反馈迭代 refine 而非直接行动，支持复杂多步任务分解。代表方法：least-to-most [432] / DECOMP [433]（text-based 分解）；PAL [436] / HuggingGPT [437]（code-based）；ReAct [442]（reason+act 协同）；Reflexion [443]（self-reflection 动态记忆）；Tree of Thoughts [444]（树搜索 + 投票）；RAP [440]（LLM 作 world model + MCTS）。
 
-### 8. Capacity evaluation 双层：Basic + Advanced + Benchmarks（§7, Tab.14）
+### 11. Capacity evaluation 双层：Basic + Advanced + Benchmarks（§7, Tab.14, Figure 17）
 - **Basic**（§7.1）：language generation（LM/conditional gen/code synthesis, pass@k [105,223]）、knowledge utilization（closed-book QA / open-book QA / knowledge completion）、complex reasoning（knowledge reasoning / symbolic reasoning / mathematical reasoning, GSM8k [198]/MATH [362]）。
-- **Advanced**（§7.2）：human alignment（TruthfulQA [558]/CrowS-Pairs [605]）、interaction with external environment（VirtualHome/ALFRED/BEHAVIOR/Minecraft Voyager [699]/GITM [698]）、tool manipulation（search/calculator/code executor/model interface）。
+- **Advanced**（§7.2, Figure 17）：human alignment（TruthfulQA [558]/CrowS-Pairs [605]）、interaction with external environment（VirtualHome/ALFRED/BEHAVIOR/Minecraft Voyager [699]/GITM [698]）、tool manipulation（search/calculator/code executor/model interface）。**幻觉分类** Figure 17（p.59, M3 解读：双面板 chatbot 对话对比。(a) **Intrinsic hallucination**——prompt "Bob's wife is Amy. Bob's daughter is Cindy. Who is Cindy to Amy?"，LLM 答 "Cindy is Amy's daughter-in-law"（红，与给定事实冲突）；(b) **Extrinsic hallucination**——prompt "Explain RLHF for LLMs"，模型把 RLHF 错解为 "Rights, Limitations, Harms, and Freedoms"（红），却正确展开 LLMs=Large Language Models（黑））。机制：幻觉分内在（与 prompt/context 事实矛盾）与外在（捏造不可核实世界知识）；一个模型可在同一答案内正确与错误内容混出。该图为 §7.2 alignment 评测与 §8 hallucination mitigation 的可视化前置。
 - **Benchmarks**（§7.3.1）：MMLU [362]（多任务知识）、BIG-bench [70]（204 任务）/ BBH [363]、HELM [522]（16 场景 × 7 指标）、人类考试（AGIEval [710]/C-Eval [713]/Xiezhi [714]）。GPT-4 MMLU 5-shot 86.4%。
 - **Evaluation approaches**（§7.3.2）：benchmark-based / human-based / model-based（LLM-as-judge [152,633,634]，但有 order bias 与 self-preference bias [634,648,649]）。三类被评模型：base / fine-tuned / specialized。
 
@@ -106,6 +120,22 @@
 | Precision | BF16 | BLOOM/PaLM/MT-NLG/Gopher | 优于 FP16（更多指数位） |
 | Batch size | 动态增长 4M tokens | GPT-3 32K→3.2M, PaLM 1M→4M | 稳定训练 + 吞吐 |
 
+### 表 D — M3 可见图与正文对照（10 张 captioned 页 → 5 张可见图）
+
+| Figure | 页 | 节 | M3 要点 | 状态 |
+|---|---|---|---|---|
+| Fig.1 | p.3 | §1 | arXiv 提交趋势（0.40→8.58/天） | 图未渲染，仅正文+脚注 |
+| Fig.2 | p.3 | §1 | 语言模型四代演化 | 图未渲染，仅正文 |
+| Fig.3 | p.99 | §3 | LLM 全景家族树（增量更新） | 图未渲染，仅更新日志 |
+| Fig.4 | p.7 | §2.2 | GPT 系列技术演化 | 图未渲染，仅正文（早期探索→GPT-1/2→Capacity Leap） |
+| Fig.5 | p.12 | §3 | LLaMA 辐射式演化树（三类边 + 多模态簇） | 可见，M3 详述 |
+| Fig.7 | p.18 | §4.1 | 预处理流水线（filter/dedup/privacy） | 图未渲染，仅正文 |
+| Fig.8 | p.20 | §4.1 | data scheduling（mixture + curriculum 双维） | 可见，M3 详述 |
+| Fig.9 | p.22 | §4.2.1 | 三类架构（按 attention masking 区分） | 图未渲染，正文给出 masking takeaway |
+| Fig.13 | p.43 | §5.3 | 四法 PEFT（Adapter/Prefix/Prompt/LoRA） | 可见，M3 详述 |
+| Fig.16 | p.54 | §6.4 | planning 闭环（Planner↔Executor↔Environment + Memory/Tool） | 可见，M3 详述 |
+| Fig.17 | p.59 | §7.2 | intrinsic vs extrinsic hallucination 双面板 | 可见，M3 详述 |
+
 ## 与同类对比
 
 - **vs [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]（仓库内分布式训练 survey）**：本 survey 在 §4.3 仅做训练技术的入门级综述（3D parallelism + BF16 + ZeRO 一页纸），后者是分布式训练轴的深度展开（拓扑/通信/调度/容错全维）。本 survey 是四阶段总览，后者是 §4.3 的纵深特化。二者互补：本 survey 提供四阶段坐标，后者提供训练轴纵深。
@@ -148,7 +178,7 @@
 - **RLHF 简化为 PPO 路线**：§5.2 主要讲 InstructGPT 的 PPO [128] 三阶段，对 DPO [388]、SLiC、RRHF 等简化算法仅在 §5.2.4 / future direction 一笔带过（"develop simplified optimization algorithms for alignment [388,391]"），而 DPO 谱系在 2023 H2 后已成为主流替代。
 - **emergent abilities 争论未裁决**：§2.1 引述 [70,71] 的"emergence 是不连续指标假象"争点但未给出本文立场；[72] 的连续指标修复方案仅一句带过。这是 2023–2025 持续争议的开放问题，本 survey 止于"more fundamental research is still in need"。
 - **inference efficiency 轴单薄**：§4.2.2 attention 节对 FlashAttention/PagedAttention 各一段，但 speculative decoding、continuous batching、prefix caching、disaggregated serving 等 2023 H2 起的 inference 工程主流方向基本未覆盖（这些恰是仓库内 [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] 与多篇 serving 论文的领地）。
-- **agentic / tool use 仍处早期**：§6.4 planning 与 §7.2.3 tool manipulation 的代表方法（ReAct/Reflexion/ToT/HuggingGPT）是 2022–2023 初的工作；2024 后的 function calling 标准化、MCP 协议、长程 agentic RL（仓库内 [[kimi-k2-open-agentic-intelligence]] / [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]]）未被纳入。
-- **评测轴的 data contamination 议题仅作 future direction**：§10 提"data contamination has become a severe issue [740]"但未展开去污染方法与污染检测协议，而这是 2024 后 LLM 评测可信度的核心争议。
-- **多模态覆盖薄**：尽管 §1 提及 GPT-4 多模态、§9 applications 有多模态一节，但 §4–§7 的技术 taxonomy 几乎纯文本 LLM；vision-language 的架构融合（projector / cross-attention / early fusion）未纳入 taxonomy。
+- **agentic / tool use 仍处早期**：§6.4 planning（Figure 16）与 §7.2.3 tool manipulation 的代表方法（ReAct/Reflexion/ToT/HuggingGPT）是 2022–2023 初的工作；2024 后的 function calling 标准化、MCP 协议、长程 agentic RL（仓库内 [[kimi-k2-open-agentic-intelligence]] / [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]]）未被纳入。
+- **评测轴的 data contamination 议题仅作 future direction**：§10 提"data contamination has become a severe issue [740]"但未展开去污染方法与污染检测协议，而这是 2024 后 LLM 评测可信度的核心争议。Figure 17 仅作幻觉类型示例，未提供幻觉量化基准。
+- **多模态覆盖薄**：尽管 §1 提及 GPT-4 多模态、§9 applications 有多模态一节，Figure 5 亦圈出 LLaVA/MiniGPT-4 等多模态 LLaMA 衍生簇，但 §4–§7 的技术 taxonomy 几乎纯文本 LLM；vision-language 的架构融合（projector / cross-attention / early fusion）未纳入 taxonomy。
 - **定义边界（>10B）的任意性**：§2.1 脚注 4 自承"no formal consensus on the minimum parameter scale"，取 >10B 是"slightly loose definition"——这导致 T5(11B)/T0(11B) 这类实质是 PLM 的模型被纳入，而 Phi-2(2.7B)/Gemma-2(2B) 等小而强模型被排除，与 2024 后"小模型也涌现"的趋势冲突。

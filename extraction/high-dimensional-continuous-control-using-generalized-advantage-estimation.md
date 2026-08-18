@@ -23,25 +23,80 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.8)
+### Figure 1 (p.8) ⭐深度解读
 ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p08.png]]
 > [!quote] caption
 > 6.2.1 ARCHITECTURE
 
-### Figure 2 (p.10)
+> [!tip] 技术解读（多模态）
+> **Note:** The image provided shows only the **text page (page 8)** of an ICLR 2016 paper (Section 6: Policy Optimization Algorithm & Experimental Setup). No figure is visible on this page — the figure referenced as "Figure 1" (robot models mentioned in §6.2) does not appear in the supplied image. Therefore, no caption can be transcribed.
+
+**What the text tells us about Figure 1 (inferred from context):**
+- **Content:** Robot models for three 3D locomotion tasks
+- **Components (referenced):**
+  1. **Biped** — for bipedal locomotion
+  2. **Quadruped** — for quadrupedal locomotion
+  3. **Biped** (dynamically standing up from supine position)
+- **Data/role in paper:** Illustrates the MuJoCo simulation environments used to evaluate the TRPO-based policy-gradient variant
+
+**Key technical takeaway (from §6.1–6.2.1):** The policy update θ_{i+1} is computed using advantage estimates derived from the *old* value function V_{ϕ_i} (not the updated V_{ϕ_{i+1}}), avoiding bias — a critical detail also discussed by Schulman et al. (2015).
+
+If you can share the page containing Figure 1 itself, I'd be happy to give a precise architectural description and verbatim caption.
+
+### Figure 2 (p.10) ⭐深度解读
 ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p10.png]]
 > [!quote] caption
 > Left: learning curves for cart-pole task, using generalized advantage estimation with varying values of λ at γ = 0.99. The fastest policy improvement is obtain by intermediate values of λ in the range [0.92, 0.98]. Right: performance after 20 iterations of policy optimization, as γ and λ are varied. White means higher reward. The best results are obtained at intermediate values of both. 0 100 200 
 
-### Figure 3 (p.10)
+> [!tip] 技术解读（多模态）
+> **Description:** The page presents two figures from an ICLR 2016 paper on generalized advantage estimation (GAE). **Figure 2 (top)** compares cart-pole performance: the left panel plots cost vs. policy iterations for varying λ (0–1) at γ=0.99, while the right panel is a heatmap of final performance across a γ×λ grid (white = higher reward). **Figure 3 (bottom)** shows learning curves for 3D bipedal locomotion (left, 9 runs, varying γ∈[0.96,1] and λ∈[0.96,1]) and 3D quadrupedal locomotion (right, 5 runs, comparing γ=0.995 with no value fn, λ=1, and λ=0.96). All plots share axes of cost (vertical) vs. number of policy iterations (horizontal).
+
+**Key takeaway:** Intermediate λ values (≈0.92–0.99) consistently outperform extreme settings, empirically validating the bias–variance sweet spot in GAE across tasks.
+
+**Caption (verbatim):**
+
+*Figure 2:* Left: learning curves for cart-pole task, using generalized advantage estimation with varying values of λ at γ = 0.99. The fastest policy improvement is obtain by intermediate values of λ in the range [0.92, 0.98]. Right: performance after 20 iterations of policy optimization, as γ and λ are varied. White means higher reward. The best results are obtained at intermediate values of both.
+
+*Figure 3:* Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algorithm. Right: learning curves for 3D quadrupedal locomotion, averaged across five runs.
+
+### Figure 3 (p.10) ⭐深度解读
 ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p10.png]]
 > [!quote] caption
 > Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algo- rithm. Right: learning curves for 3D quadrupedal locomotion, averaged across ﬁve runs.
 
-### Figure 4 (p.11)
+> [!tip] 技术解读（多模态）
+> **Description:** The page presents two figures from an ICLR 2016 paper on generalized advantage estimation (GAE). **Figure 2 (top)** compares cart-pole performance: the left panel plots cost vs. policy iterations for varying λ (0–1) at γ=0.99, while the right panel is a heatmap of final performance across a γ×λ grid (white = higher reward). **Figure 3 (bottom)** shows learning curves for 3D bipedal locomotion (left, 9 runs, varying γ∈[0.96,1] and λ∈[0.96,1]) and 3D quadrupedal locomotion (right, 5 runs, comparing γ=0.995 with no value fn, λ=1, and λ=0.96). All plots share axes of cost (vertical) vs. number of policy iterations (horizontal).
+
+**Key takeaway:** Intermediate λ values (≈0.92–0.99) consistently outperform extreme settings, empirically validating the bias–variance sweet spot in GAE across tasks.
+
+**Caption (verbatim):**
+
+*Figure 2:* Left: learning curves for cart-pole task, using generalized advantage estimation with varying values of λ at γ = 0.99. The fastest policy improvement is obtain by intermediate values of λ in the range [0.92, 0.98]. Right: performance after 20 iterations of policy optimization, as γ and λ are varied. White means higher reward. The best results are obtained at intermediate values of both.
+
+*Figure 3:* Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algorithm. Right: learning curves for 3D quadrupedal locomotion, averaged across five runs.
+
+### Figure 4 (p.11) ⭐深度解读
 ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p11.png]]
 > [!quote] caption
 > (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up. 7 DISCUSSION
+
+> [!tip] 技术解读（多模态）
+> ## Figure Description
+
+The main figure (Figure 4) contains two side-by-side panels evaluating the 3D Standing Up task for simulated robotic locomotion:
+
+**Left panel — Learning curve:** A 2D plot of *cost* (y-axis, 0.0–2.5) versus *number of policy iterations* (x-axis, 0–500). Three configurations are compared:
+- γ=0.99, No value fn (green) — plateaus highest at ~1.0
+- γ=0.99, λ=1 (orange) — converges to ~0.5
+- γ=0.99, λ=0.96 (yellow) — achieves lowest cost (~0.4), with error bars
+
+**Right panel — Trajectory clips:** Six sequential 3D humanoid poses (labeled 1–6) depicting the simulated robot transitioning from a supine position (1) through intermediate pushing/rising poses (2–5) to a fully upright standing posture (6).
+
+**Key technical takeaway:** Introducing a learned value-function baseline with λ=0.96 yields substantially faster and lower asymptotic cost than omitting the value function entirely, demonstrating that variance reduction via the generalized advantage estimator is critical for high-dimensional locomotion control.
+
+## Verbatim Caption
+
+**Figure 4:** (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

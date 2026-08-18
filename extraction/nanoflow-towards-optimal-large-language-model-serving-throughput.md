@@ -31,55 +31,161 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【MiniMax 解读】NanoFlow Transformer 流水(Fig.1)：算子分三类——compute-bound（W_O/K/V/up/down/gate 密集投影，跨请求共享权重、大 batch 摊权重载入）、memory-bound（prefill/decode attention，载每请求 KV、小 batch 避压 KV）、network-bound（AllGather/AllReduce，NVLink 同步）。device-stream 级算子融合：沿关键路径重排+协调度，单设备内只跨 CUDA stream 注入 micro-batch 状态→串行依赖转并行，吞吐 1.91x、达理论峰 68.5%。异构 batch 是关键。架构核心图。
 
-### Figure 2 (p.5)
+### Figure 2 (p.5) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p05.png]]
 > [!quote] caption
 > Comparison of network time and compute time. The closer to yellow, the more compute-bound the workload is, whereas the closer to blue indicates the workload is more network-bound. LMSYS-Chat Splitwise
 
-### Figure 3 (p.5)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+**Figure 2** is a 2D heatmap comparing the ratio of network time to compute time across LLM inference configurations. The **y-axis** lists six large models (LLaMA-3 8B, Mistral 8x7B, LLaMA-2 70B, LLaMA-3 70B, Qwen2 72B, LLaMA-3 405B), while the **x-axis** lists thirteen GPU accelerators (V100, A100 40/80GB, H100, H200, B100, B200, MI250/300/325X, Gaudi2/3, Ada6000 PCIe) plus a "Compute Bound" reference column. Each cell holds a numeric ratio (0.119–2.609), with color encoding dominance: **yellow → compute-bound**, **blue → network-bound**.
+
+**Key takeaway:** Workloads shift dramatically toward network-bound (ratio > 1) on PCIe-attached accelerators like Ada6000, while older/lower-bandwidth GPUs remain firmly compute-bound. This guides hardware selection: high-bandwidth interconnects (NVLink, Infinity Fabric) keep large-model inference compute-dominated, whereas slow interconnects expose communication as the bottleneck.
+
+## Caption (Verbatim)
+
+> Figure 2: Comparison of network time and compute time. The closer to yellow, the more compute-bound the workload is, whereas the closer to blue indicates the workload is more network-bound.
+
+### Figure 3 (p.5) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p05.png]]
 > [!quote] caption
 > Comparison of compute time and memory time.
 
-### Figure 4 (p.8)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+**Figure 2** is a 2D heatmap comparing the ratio of network time to compute time across LLM inference configurations. The **y-axis** lists six large models (LLaMA-3 8B, Mistral 8x7B, LLaMA-2 70B, LLaMA-3 70B, Qwen2 72B, LLaMA-3 405B), while the **x-axis** lists thirteen GPU accelerators (V100, A100 40/80GB, H100, H200, B100, B200, MI250/300/325X, Gaudi2/3, Ada6000 PCIe) plus a "Compute Bound" reference column. Each cell holds a numeric ratio (0.119–2.609), with color encoding dominance: **yellow → compute-bound**, **blue → network-bound**.
+
+**Key takeaway:** Workloads shift dramatically toward network-bound (ratio > 1) on PCIe-attached accelerators like Ada6000, while older/lower-bandwidth GPUs remain firmly compute-bound. This guides hardware selection: high-bandwidth interconnects (NVLink, Infinity Fabric) keep large-model inference compute-dominated, whereas slow interconnects expose communication as the bottleneck.
+
+## Caption (Verbatim)
+
+> Figure 2: Comparison of network time and compute time. The closer to yellow, the more compute-bound the workload is, whereas the closer to blue indicates the workload is more network-bound.
+
+### Figure 4 (p.8) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p08.png]]
 > [!quote] caption
 > Execution pipeline of existing systems. The green, yellow, and blue operations correspond to memory-, compute-, and network-bound operations. Operations in the previous and next layer are denoted by dotted borders. "WASTED" shows the stages in the pipeline where the most constrained resource, compute, is underutilized. Small operations (i.e. layernorm, activation, etc.) are omitted for simplicity.
 
-### Figure 5 (p.8)
+> [!tip] 技术解读（多模态）
+> **Main Figure (Figure 4) — Description**
+
+Figure 4 illustrates the per-layer execution pipeline of existing LLM serving systems, ordered left-to-right within a single Layer: **KQV** projection (compute-bound, yellow) → **DecAttn** (memory-bound, green; "Prefill Attention") → **PF** → **Attn.AG** (network-bound, blue) → **O** projection → **O.AG** (network-bound) → the large **UGD** (Up, Gate, Down) feed-forward block (compute-bound, yellow) → **UGD.AR** (network-bound, blue) → next layer's KQV (dotted border). Small ops (layernorm, activations) are omitted.
+
+**Key technical takeaway:** The repeated "WASTED" segments between major kernels reveal that compute hardware sits idle while waiting on memory- or network-bound stages, exposing a structural inefficiency in how current pipelines overlap heterogeneous operations.
+
+**Caption (verbatim):**
+
+"Figure 4: Execution pipeline of existing systems. The green, yellow, and blue operations correspond to memory-, compute-, and network-bound operations. Operations in the previous and next layer are denoted by dotted borders. \"WASTED\" shows the stages in the pipeline where the most constrained resource, compute, is underutilized. Small operations (i.e. layernorm, activation, etc.) are omitted for simplicity."
+
+### Figure 5 (p.8) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p08.png]]
 > [!quote] caption
 > Interference characteristics between GEMM and GEMV kernels. The points on the x-axis correspond unique GEMM-GEMV implementation pairs. The y-axis denotes the GEMM and GEMV kernels’ normalized performance P. ferent implementations of overlapping kernels exponentially expand the profiling space, resulting in millions of possible configurations. This immense complexity makes exhaustive exploration in
 
-### Figure 6 (p.11)
+> [!tip] 技术解读（多模态）
+> **Main Figure (Figure 4) — Description**
+
+Figure 4 illustrates the per-layer execution pipeline of existing LLM serving systems, ordered left-to-right within a single Layer: **KQV** projection (compute-bound, yellow) → **DecAttn** (memory-bound, green; "Prefill Attention") → **PF** → **Attn.AG** (network-bound, blue) → **O** projection → **O.AG** (network-bound) → the large **UGD** (Up, Gate, Down) feed-forward block (compute-bound, yellow) → **UGD.AR** (network-bound, blue) → next layer's KQV (dotted border). Small ops (layernorm, activations) are omitted.
+
+**Key technical takeaway:** The repeated "WASTED" segments between major kernels reveal that compute hardware sits idle while waiting on memory- or network-bound stages, exposing a structural inefficiency in how current pipelines overlap heterogeneous operations.
+
+**Caption (verbatim):**
+
+"Figure 4: Execution pipeline of existing systems. The green, yellow, and blue operations correspond to memory-, compute-, and network-bound operations. Operations in the previous and next layer are denoted by dotted borders. \"WASTED\" shows the stages in the pipeline where the most constrained resource, compute, is underutilized. Small operations (i.e. layernorm, activation, etc.) are omitted for simplicity."
+
+### Figure 6 (p.11) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p11.png]]
 > [!quote] caption
 > Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow. The solid background and shaded background represents input batch 0-768 and 768-2048, respectively. R stands for resource utilization. By overlapping the compute-, memory-, and network-intensive operations, NanoFlow increases compute utilization and improves the serving throughput. data size of the offload is balanced across i
 
-### Figure 7 (p.11)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+The main figure (Figure 6) depicts an execution pipeline for a LLaMA-2 70B transformer layer, automatically scheduled by NanoFlow. Operations are arranged left-to-right along a timeline marked "Layer," including:
+
+- **Attention blocks**: DecAttn1–4 (decoding attention), KQV1–4 (query/key/value projections), PF1 (prefill), Attn.AG1–2, O.AG1, O.AR1–2
+- **FFN blocks**: O1–O3 (linear projections), Up,Gate,Down (UGD) 1–2, UGD.AR1–3
+- **Inter-stage steps**: Prefill Attention and AG-to-AR Transform
+
+Two batches are processed concurrently: solid-background cells represent input batch 0–768 (prefill), while shaded cells represent batch 768–2048 (decoding), denoted with resource-utilization values (R = 0.1–0.9). NanoFlow interleaves compute-bound (KQV, attention), memory-bound (UGD), and network-bound (UGD.AR/Attn.AG) operations so that heterogeneous resources remain busy.
+
+**Key takeaway**: Overlapping compute-, memory-, and network-intensive kernels across batches lets NanoFlow raise GPU utilization toward the optimal throughput ceiling.
+
+## Caption (verbatim)
+
+Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow. The solid background and shaded background represents input batch 0-768 and 768-2048, respectively. R stands for resource utilization. By overlapping the compute-, memory-, and network-intensive operations, NanoFlow increases compute utilization and improves the serving throughput.
+
+### Figure 7 (p.11) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p11.png]]
 > [!quote] caption
 > Offline throughput comparison. NanoFlow outper- forms all baselines for all the workload settings. TP stands for the number of GPUs used with tensor parallelism. • How do the various techniques proposed in NanoFlow contribute to the end-to-end throughput? (§6.4) • What is the compute, memory and network resource usage pattern of NanoFlow? (§6.5) • How does NanoFlow improve performance when ap- pli
 
-### Figure 8 (p.13)
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+The main figure (Figure 6) depicts an execution pipeline for a LLaMA-2 70B transformer layer, automatically scheduled by NanoFlow. Operations are arranged left-to-right along a timeline marked "Layer," including:
+
+- **Attention blocks**: DecAttn1–4 (decoding attention), KQV1–4 (query/key/value projections), PF1 (prefill), Attn.AG1–2, O.AG1, O.AR1–2
+- **FFN blocks**: O1–O3 (linear projections), Up,Gate,Down (UGD) 1–2, UGD.AR1–3
+- **Inter-stage steps**: Prefill Attention and AG-to-AR Transform
+
+Two batches are processed concurrently: solid-background cells represent input batch 0–768 (prefill), while shaded cells represent batch 768–2048 (decoding), denoted with resource-utilization values (R = 0.1–0.9). NanoFlow interleaves compute-bound (KQV, attention), memory-bound (UGD), and network-bound (UGD.AR/Attn.AG) operations so that heterogeneous resources remain busy.
+
+**Key takeaway**: Overlapping compute-, memory-, and network-intensive kernels across batches lets NanoFlow raise GPU utilization toward the optimal throughput ceiling.
+
+## Caption (verbatim)
+
+Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow. The solid background and shaded background represents input batch 0-768 and 768-2048, respectively. R stands for resource utilization. By overlapping the compute-, memory-, and network-intensive operations, NanoFlow increases compute utilization and improves the serving throughput.
+
+### Figure 8 (p.13) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
 > [!quote] caption
 > Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints.
 
-### Figure 9 (p.13)
+> [!tip] 技术解读（多模态）
+> **Description:** Figure 8 is a latency-comparison plot with three side-by-side sub-panels—(a) Splitwise, (b) LMSYS-Chat-1M, and (c) ShareGPT—each plotting **request rate (req/s)** on the x-axis against **normalized latency in ms/token** on the y-axis. Four serving systems are overlaid: vLLM, DeepSpeed-FastGen, TensorRT-LLM, and NanoFlow (the authors' system, shown in red). A red dashed horizontal line marks the ~200 ms/token SLO threshold. The baselines' latency curves rise steeply and cross the SLO line at low request rates (≈6–17 req/s), while NanoFlow stays flat under the SLO threshold up to 17–32 req/s before escalating.
+
+**Key technical takeaway:** NanoFlow sustains a 200 ms/token latency budget under request loads 2–4× higher than vLLM/DeepSpeed-FastGen across all three real-world traces, demonstrating superior SLO-conforming throughput.
+
+**Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
+
+### Figure 9 (p.13) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
 > [!quote] caption
 > Ablation study results for NanoFlow. Nano-batching and overlapping improves NanoFlow’s performance.
 
-### Figure 10 (p.13)
+> [!tip] 技术解读（多模态）
+> **Description:** Figure 8 is a latency-comparison plot with three side-by-side sub-panels—(a) Splitwise, (b) LMSYS-Chat-1M, and (c) ShareGPT—each plotting **request rate (req/s)** on the x-axis against **normalized latency in ms/token** on the y-axis. Four serving systems are overlaid: vLLM, DeepSpeed-FastGen, TensorRT-LLM, and NanoFlow (the authors' system, shown in red). A red dashed horizontal line marks the ~200 ms/token SLO threshold. The baselines' latency curves rise steeply and cross the SLO line at low request rates (≈6–17 req/s), while NanoFlow stays flat under the SLO threshold up to 17–32 req/s before escalating.
+
+**Key technical takeaway:** NanoFlow sustains a 200 ms/token latency budget under request loads 2–4× higher than vLLM/DeepSpeed-FastGen across all three real-world traces, demonstrating superior SLO-conforming throughput.
+
+**Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
+
+### Figure 10 (p.13) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
 > [!quote] caption
 > While the non-overlapping baseline sequentially executes operations, which mostly uses only one resource at a given time, the NanoFlow instance can concurrently utilize multiple resources and achieves 68.5% average compute utilization. Due to kernel interfer- ence, NanoFlow provides lower than optimal compute usage.
 
-### Figure 11 (p.13)
+> [!tip] 技术解读（多模态）
+> **Description:** Figure 8 is a latency-comparison plot with three side-by-side sub-panels—(a) Splitwise, (b) LMSYS-Chat-1M, and (c) ShareGPT—each plotting **request rate (req/s)** on the x-axis against **normalized latency in ms/token** on the y-axis. Four serving systems are overlaid: vLLM, DeepSpeed-FastGen, TensorRT-LLM, and NanoFlow (the authors' system, shown in red). A red dashed horizontal line marks the ~200 ms/token SLO threshold. The baselines' latency curves rise steeply and cross the SLO line at low request rates (≈6–17 req/s), while NanoFlow stays flat under the SLO threshold up to 17–32 req/s before escalating.
+
+**Key technical takeaway:** NanoFlow sustains a 200 ms/token latency budget under request loads 2–4× higher than vLLM/DeepSpeed-FastGen across all three real-world traces, demonstrating superior SLO-conforming throughput.
+
+**Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
+
+### Figure 11 (p.13) ⭐深度解读
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
 > [!quote] caption
 > We find that
+
+> [!tip] 技术解读（多模态）
+> **Description:** Figure 8 is a latency-comparison plot with three side-by-side sub-panels—(a) Splitwise, (b) LMSYS-Chat-1M, and (c) ShareGPT—each plotting **request rate (req/s)** on the x-axis against **normalized latency in ms/token** on the y-axis. Four serving systems are overlaid: vLLM, DeepSpeed-FastGen, TensorRT-LLM, and NanoFlow (the authors' system, shown in red). A red dashed horizontal line marks the ~200 ms/token SLO threshold. The baselines' latency curves rise steeply and cross the SLO line at low request rates (≈6–17 req/s), while NanoFlow stays flat under the SLO threshold up to 17–32 req/s before escalating.
+
+**Key technical takeaway:** NanoFlow sustains a 200 ms/token latency budget under request loads 2–4× higher than vLLM/DeepSpeed-FastGen across all three real-world traces, demonstrating superior SLO-conforming throughput.
+
+**Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

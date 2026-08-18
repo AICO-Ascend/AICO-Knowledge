@@ -23,10 +23,31 @@ tags: [speculative, training]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.1)
+### Figure 1 (p.1) ⭐深度解读
 ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p01.png]]
 > [!quote] caption
 > Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target model, with the x-axis representing the data scale relative to ShareGPT.
+
+> [!tip] 技术解读（多模态）
+> ## Figure Description
+
+The figure (Figure 1) contains **two vertically stacked line plots** comparing **EAGLE-2 (red)** and **EAGLE-3 (blue)** across increasing data scales (x-axis: 1, 2, 4, 8 × ShareGPT).
+
+**Top plot — Speedup:**
+- Y-axis: Speedup ratio (~3.2–4.4)
+- EAGLE-2: flat ≈ 3.2–3.3 (plateaus)
+- EAGLE-3: rises from ~3.7 → ~4.4
+
+**Bottom plot — Accept Length:**
+- Y-axis: Accept length (~4.0–6.1)
+- EAGLE-2: flat ≈ 4.1
+- EAGLE-3: rises from ~5.2 → ~6.1
+
+**Key takeaway:** EAGLE-2's feature-prediction design caps its benefit from extra training data (saturation), whereas EAGLE-3's shift to direct token prediction with multi-layer feature fusion unlocks a **monotonically increasing scaling curve** in both speedup and acceptance — enabling draft models to genuinely benefit from larger training corpora.
+
+## Caption (verbatim)
+
+> Figure 1: Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target model, with the x-axis representing the data scale relative to ShareGPT. The new architectural designs in EAGLE-3 enable an increasing scaling curve, which was never observed in the previous works.
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]]
@@ -36,10 +57,26 @@ tags: [speculative, training]
 > [!tip] 技术解读（多模态）
 > 【MiniMax 解读】EAGLE-3 加速比柱状图（temp=0）：在 Vicuna-13B/LLaMA-3.1-8B/3.3-70B/DeepSeek-R1-LLaMA-8B 上对比 Vanilla/SpecDec/Medusa/HASS/EAGLE/EAGLE-2/EAGLE-3，EAGLE-3 分别达 5.6x/4.4x/4.1x/5.0x，全面最优。适合做「EAGLE-3 性能优势」论据。
 
-### Figure 3 (p.3)
+### Figure 3 (p.3) ⭐深度解读
 ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p03.png]]
 > [!quote] caption
 > Illustration of training-time test (the bottom part) and its comparison with other draft methods (the upper and middle parts). f denotes the feature, t denotes the token, and a represents the unconstrained vectors.
+
+> [!tip] 技术解读（多模态）
+> # Figure 3 Description
+
+**Architecture & Data Flow:**
+Figure 3 compares three draft-model architectures vertically:
+
+1. **EAGLE (top):** Predicts next-layer features (f_{t+1}≈f_{t+1}, loss l_fea) plus tokens (t̂_{t+2}≈t_{t+2}, loss l_token) during both training and test.
+2. **EAGLE + fea removal (middle):** Removes feature-prediction loss; draft model directly outputs unconstrained vectors â_t_{t+1}, then an LM head produces tokens.
+3. **EAGLE-3 (bottom):** Merges training and test into a unified pipeline that simulates multi-step generation. Step 1 takes (f_1…f_t), predicts â_t_{t+1} and t̂_{t+2}. A "training-time test" loop (red dashed arrow) feeds back to Step 2, which predicts t̂_{t+3}, enabling end-to-end multi-step supervision.
+
+**Key Takeaway:** EAGLE-3's training-time test architecture removes the feature-prediction constraint, allowing direct token prediction and richer use of multi-level target features for greater flexibility.
+
+# Caption (Verbatim)
+
+**Figure 3:** Illustration of **training-time test** (the bottom part) and its comparison with other draft methods (the upper and middle parts). *f* denotes the feature, *t* denotes the token, and *α* represents the unconstrained vectors. We use the hat to denote the predictions from models. All the methods shown in the figure use the token sequence from the previous time step, but for simplicity, this is not depicted in the figure. The input to EAGLE-3 is not actually *f*, but it is not shown in this figure. We will provide a detailed explanation in the following section.
 
 ### Figure 4 (p.2) ⭐深度解读
 ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]]
@@ -49,20 +86,55 @@ tags: [speculative, training]
 > [!tip] 技术解读（多模态）
 > 【MiniMax 解读】EAGLE-3 加速比柱状图（temp=0）：在 Vicuna-13B/LLaMA-3.1-8B/3.3-70B/DeepSeek-R1-LLaMA-8B 上对比 Vanilla/SpecDec/Medusa/HASS/EAGLE/EAGLE-2/EAGLE-3，EAGLE-3 分别达 5.6x/4.4x/4.1x/5.0x，全面最优。适合做「EAGLE-3 性能优势」论据。
 
-### Figure 5 (p.4)
+### Figure 5 (p.4) ⭐深度解读
 ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p04.png]]
 > [!quote] caption
 > Diagram of the EAGLE-3 inference pipeline, illustrating the three steps of the draft model. l, m, and h represent the low, middle, and high-level features of the target model, respectively. e denotes the embedding. 3 EAGLE-3
 
-### Figure 6 (p.5)
+> [!tip] 技术解读（多模态）
+> **Figure Description (≤120 words):**
+
+Figure 5 depicts the EAGLE-3 inference pipeline, contrasting the frozen Target Model (left, producing a single "|" token) with the three-step Draft Model (right). **Step ①** uses an FC layer + Decoder Layer + LM Head on concatenated low/mid/high features (g) and embeddings (e) of context tokens "can", "I" to draft "do". **Step ②** similarly drafts "it" while re-emitting the fused features g and embeddings for the growing prefix. **Step ③** applies only an LM Head to the features to expand the tree with multiple parallel children ("can"/"I"/"do"/"it"). Arrows route target-model features (l_how, m_how, h_how, l_can, m_can, h_can) into the draft.
+
+**Key Technical Takeaway:**
+EAGLE-3 injects low/middle/high-level features (l, m, h) and token embeddings (e) directly into every draft layer via an FC projection into a unified k-dim feature g, enabling feature-level autoregression with a context-aware dynamic tree instead of EAGLE-2's static structure.
+
+**Verbatim Caption:**
+Figure 5: Diagram of the EAGLE-3 inference pipeline, illustrating the three steps of the draft model. *l*, *m*, and *h* represent the low, middle, and high-level features of the target model, respectively. *e* denotes the embedding.
+
+### Figure 6 (p.5) ⭐深度解读
 ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p05.png]]
 > [!quote] caption
 > All attention masks are diagonal, except when the original training data is used as the key. Using matrix multiplication in this case would result in significant computational waste, so we can use vector dot products to calculate the attention score only for the corresponding positions. HASS (Zhang et al., 2024) and EAGLE-3 both make similar modifications to the attention mecha- nism to simulate t
 
-### Figure 7 (p.8)
+> [!tip] 技术解读（多模态）
+> I don't see an actual figure or figure caption displayed on this page. The page contains only body text from the paper, which references **Figure 6** in several places:
+
+1. *"the attention mask needs to be adjusted accordingly, as shown in the top-right corner of Figure 6"*
+2. *"As shown in Figure 6, the original training data is a sequence of length 3, 'How can I'"*
+
+These textual mentions suggest Figure 6 likely illustrates:
+- The draft model architecture (Transformer decoder layer with FC reduction, single-layer decoder producing output *a*)
+- Attention mask patterns — specifically a standard lower-triangular matrix vs. an adjusted mask reflecting tree-like contextual relationships among sampled tokens like "are"/"we"/"do" relative to prefix tokens "how"/"can"/"I"
+- A data flow where target-model features (g_how, g_can, g_I) are concatenated with embeddings (e_I, e_do), dimensionality-reduced via FC to *k*, and fed into the decoder
+
+However, **I cannot transcribe a caption verbatim because no caption is visible on this page** — only the prose references to Figure 6. If you can share the page where Figure 6 itself appears (with its caption), I'd be happy to transcribe it exactly.
+
+### Figure 7 (p.8) ⭐深度解读
 ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p08.png]]
 > [!quote] caption
 > Acceptance rate of EAGLE and EAGLE-3 on MT-bench, with the target model being LLaMA-
+
+> [!tip] 技术解读（多模态）
+> **Figure 7 Description**
+
+The figure is a 2-series line chart plotting **Accept rate** (y-axis, 0.50–0.80) against the estimated-feature count **n-α** (x-axis, from 0-α through 7-α). Two methods are compared on MT-bench with LLaMA-Instruct 3.1 8B as the target model: **EAGLE** (red, square markers) and **EAGLE-3** (blue, circular markers). EAGLE-3 remains flat near ~0.79 across all n, while EAGLE degrades monotonically from ~0.71 at 0-α down to ~0.52 at 6-α before a slight uptick at 7-α.
+
+**Key takeaway (≤120 words):**
+EAGLE-3 maintains a near-constant ~79% acceptance rate even as the number of chained estimated features grows, whereas the original EAGLE collapses from 71% → 52%. This indicates EAGLE-3's mixed low/middle/high-level feature fusion and removed feature-prediction constraint enable robust long speculative chains, a prerequisite for the larger speedups (4.40× on MT-bench) reported elsewhere in the paper.
+
+**Caption (verbatim):**
+"Figure 7: Acceptance rate of EAGLE and EAGLE-3 on MT-bench, with the target model being LLaMA-Instruct 3.1 8B. Hereby, n-α refers to the acceptance rate when the input contains n estimated features, under the condition that the previous estimated tokens are all accepted by the target model."
 
 ## 相关论文
 

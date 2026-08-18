@@ -1,46 +1,45 @@
-# Qwen2.5-VL — 技术点深读（DEEP 2026-08-18）
+# Qwen2.5-VL — 技术点深读（DEEP 重写 2026-08-18）
 > 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
 > 论文：Qwen2.5-VL Technical Report · arXiv:2502.13923v1 [cs.CV], 19 Feb 2025 · Qwen Team, Alibaba Group
+> 图表上下文来源：extraction/minimax_captions.json（M3 vision caption），未直接 Read PNG。
 
 ## 核心问题
 
-Qwen2.5-VL 要解决的是当下 LVLM/LVLMs 在"夹心饼干中段"困境（§1）：能力广而不精，具体四大瓶颈（§1）：
-1. **计算复杂度高** — 原生分辨率输入导致 ViT 注意力随 patch 数二次增长；
-2. **上下文受限** — 长视频/长文档难以端到端处理；
-3. **细粒度视觉感知差** — 物体定位、文档解析、点定位精度不足；
-4. **序列长度变化下性能不稳定** — 不同图像尺寸/FPS 下表现不一致。
+Qwen2.5-VL 要解决的是当下 LVLMs 在"夹心饼干中段"困境（§1）：能力广而不精。作者把瓶颈具体归纳为四点（§1）：(1) **计算复杂度高**——原生分辨率输入导致 ViT 自注意力随 patch 数二次增长；(2) **上下文受限**——长视频/长文档难以端到端处理；(3) **细粒度视觉感知差**——物体定位、文档解析、点定位精度不足；(4) **序列长度变化下性能不稳定**——不同图像尺寸/FPS 下表现不一致。
 
-同时作者希望把 VLM 从"被动理解"推进为"主动 agent"——能在手机/电脑上执行操作（§1, §3.3.5）。其旗舰 72B 目标对标 GPT-4o 与 Claude 3.5 Sonnet（Abstract; §3.1），并提供 7B/3B 覆盖边缘到高性能场景。
+Figure 1（M3 caption）正面刻画了这个问题的根源与解法的整体形貌：图像（如 Picture 1: 9204×1092、Picture 2: 28×224、Picture 3: 700×1260）与视频（Video 1: 392×644，dynamic FPS 0.5–10）以**原生分辨率**进入 Vision Encoder，被"动态映射为不同长度的 token 序列"（M3 列出的 token 数：Picture 1 = 11,427、Picture 2 = 8、Picture 3 = 1,125；Video 1 随 FPS 取 644 / 1,288 / 2,576）。正是这种"长度可变"的输入形态，使得二次复杂度、长上下文、序列长度稳定性成为同一个症结——也使得"window attention + 动态 FPS + MRoPE 绝对时间"成为一体的解。
+
+同时作者希望把 VLM 从"被动理解"推进为"主动 agent"——能在手机/电脑上执行操作（§1, §3.3.5）。旗舰 72B 对标 GPT-4o 与 Claude 3.5 Sonnet（Abstract; §3.1），并提供 7B/3B 覆盖边缘到高性能场景。
 
 ## 关键创新点
 
-1. **ViT 中引入 Window Attention（仅 4 层全注意力）**（§2.1, §2.1.1）
-   - 机制：32 层 ViT 中，仅第 {7,15,23,31} 层（Table 1 中 Full Attention Block Indexes）使用全自注意力，其余层用窗口注意力，窗口上限 112×112 像素（对应 8×8 patches，patch stride=14）；小于 112×112 的区域不 padding，保留原分辨率。
-   - 效果：计算代价随 patch 数**线性**而非二次增长，使原生分辨率 ViT 在训练/推理上可行。ViT 与 LLM 设计对齐——采用 RMSNorm + SwiGLU 激活（§2.1.1），从零训练 ViT（DataComp + 内部数据初始化，§2.2.2）。
+1. **ViT 中引入 Window Attention（仅 4 层全注意力）**（§2.1, §2.1.1；对照 Figure 1 + M3）
+   - 机制：32 层 ViT 中，仅第 {7,15,23,31} 层（Table 1 Full Attention Block Indexes）使用全自注意力，其余层用窗口注意力，窗口上限 112×112 像素（对应 8×8 patches，patch stride=14）；小于 112×112 的区域不 padding，保留原分辨率。M3 caption 对 Figure 1 的解读即点出 ViT 是"one Full Attention block followed by M Window Attention blocks, each sandwiched by RMSNorm and an FFN with SwiGLU"。
+   - 效果：计算代价随 patch 数**线性**而非二次增长（§2.1.1 原文 "scales linearly with the number of patches rather than quadratically"），使原生分辨率 ViT 在训练/推理上可行——这正是核心问题(1)的直接回应。ViT 与 LLM 设计对齐（RMSNorm + SwiGLU，§2.1.1），从零训练 ViT（DataComp + 内部数据初始化，§2.2.2）。
 
-2. **动态 FPS 采样 + 绝对时间编码（MRoPE aligned to absolute time）**（§2.1.2, §2.1.3）
-   - 机制：沿用 Qwen2-VL 的 MRoPE（位置嵌入分解为 temporal/height/width 三分量）。文本输入三分量同 ID（等价 1D RoPE）；图像 temporal ID 恒定、height/width 按空间位置赋值；视频 temporal ID 每帧递增。
-   - 关键升级：Qwen2-VL 的 temporal ID 绑定**帧序号**，忽略内容速度与绝对时间。Qwen2.5-VL 把 temporal 分量**对齐到绝对时间戳**，使模型通过 temporal ID 之间的**间隔**直接学到时间节奏（tempo），跨不同 FPS 采样率保持一致的时间对齐——**无需额外计算开销**，也无需 textual timestamp 或额外 grounding head。
-   - 视频输入：两连续帧打包为一组（3D patch 分割），显著降低送入 LLM 的 token 数（§2.1.1）。
+2. **动态 FPS 采样 + MRoPE 对齐绝对时间**（§2.1.2, §2.1.3；对照 Figure 1 + M3）
+   - 机制：沿用 Qwen2-VL 的 MRoPE（位置嵌入分解为 temporal/height/width 三分量）。文本三分量同 ID（等价 1D RoPE）；图像 temporal ID 恒定、height/width 按空间位置赋值；视频 temporal ID 每帧递增。
+   - 关键升级：Qwen2-VL 的 temporal ID 绑定**帧序号**，忽略内容速度与绝对时间；Qwen2.5-VL 把 temporal 分量**对齐到绝对时间戳**，使模型通过 temporal ID 之间的**间隔**直接学到时间节奏（tempo），跨不同 FPS 采样率保持一致的时间对齐——**无额外计算开销**，也无需 textual timestamp 或额外 grounding head。Figure 1 的 M3 caption 直接佐证："MRoPE aligns time IDs with absolute time along the temporal dimension, enabling the model to better comprehend temporal dynamics, such as the pace of events and precise moment localization"。
+   - 视频输入：两连续帧打包为一组做 3D patch 分割（M3 caption 标注为 "Conv3D (2×14×14)"），显著降低送入 LLM 的 token 数（§2.1.1）——这与 Figure 1 中 Video 1 在不同 FPS 下产生 644/1,288/2,576 三种 token 长度相对应。
 
 3. **原生动态分辨率（空间）+ 绝对坐标训练**（§2.1.2, §2.2.1 "Grounding Data"）
-   - 机制：图像 H/W resize 为 28 的倍数后送 ViT，patch stride=14 → 28×28 对应 2×2 patches；vision-language merger 把**4 个空间相邻 patch 特征**分组拼接，经 2 层 MLP 投影到 LLM embedding 维度（§2.1, Table 1: In Channel=1280, Out Channel=2048/3584/8192）。既压缩序列又支持动态可变长度。
+   - 机制：图像 H/W resize 为 28 的倍数后送 ViT，patch stride=14 → 28×28 对应 2×2 patches；vision-language merger 把**4 个空间相邻 patch 特征**分组拼接，经 2 层 MLP 投影到 LLM embedding 维度（§2.1; Table 1: In Channel=1280, Out Channel=2048/3584/8192）。M3 caption 称此为 "MLP-based vision-language merger compresses long feature sequences before the LLM"，既压缩序列又支持动态可变长度——直接回应核心问题(2)(4)。
    - 不做坐标归一化：bounding box/point 直接用图像**实际像素尺寸**表示，模型内化 scale 信息；支持 XML/JSON/自定义格式，含 copy-paste 增强、Grounding DINO + SAM 合成；开放词表检测扩到 >10,000 类别，并合成不存在的类别做负样本（§2.2.1）。
 
-4. **预训练语料从 1.2T → 4.1T tokens，三阶段渐进训练**（§1, §2.2.1, §2.2.2; Table 2）
+4. **预训练语料 1.2T → 4.1T tokens，三阶段渐进训练**（§1, §2.2.1, §2.2.2; Table 2）
    - 阶段1（Visual Pre-Training, 1.5T tokens, seq 8192）：仅训 ViT，数据=image caption + visual knowledge + OCR；
    - 阶段2（Multimodal Pre-Training, 2T tokens, seq 8192）：全参数解冻，加 interleaved data、VQA、video、grounding、agent、纯文本；
-   - 阶段3（Long-Context Pre-Training, 0.6T tokens, seq 32768）：引入长视频/长 agent/长文档，序列长度翻 4 倍以增强长程推理。
+   - 阶段3（Long-Context Pre-Training, 0.6T tokens, seq 32768）：引入长视频/长 agent/长文档，序列长度翻 4 倍以增强长程推理——直接回应核心问题(2)。
    - 负载均衡：因 ViT 已用 window attention 降算力，重点动态打包 LLM 输入序列使各 GPU 算力一致（§2.2.2）。
 
 5. **文档 Omni-Parsing：统一 HTML 格式（QwenVL HTML Format）**（§2.2.1）
    - 机制：把表格/图表/公式/图片 OCR/图片 caption/乐谱/化学公式等元素统一编入 HTML，`data-bbox="x1 y1 x2 y2"` 同时携带布局坐标与内容描述，按阅读顺序排列。一个通用模型取代以往"布局分析+文本抽取+图表解释+插图处理"多模型流水线。
-   - 乐谱用 ABC notation、化学式用 SMILES 格式（见 §2.2.1 代码块）；表格真实样本 600 万、图表合成 100 万（matplotlib/seaborn/plotly）。
+   - 乐谱用 ABC notation、化学式用 SMILES 格式（§2.2.1 代码块）；表格真实样本 600 万、图表合成 100 万（matplotlib/seaborn/plotly）。
 
 6. **SFT 数据过滤双阶段流水线 + Rejection Sampling 强化推理**（§2.3.2, §2.3.3）
    - Stage 1：Qwen2-VL-Instag（源自 Qwen2-VL-72B）做层级分类——8 主域（如 Coding/Planning）细分为 30 子类（如 Code_Debugging/Generation/Translation/Understanding）。
    - Stage 2：rule-based + model-based 过滤；reward model 基于 Qwen2.5-VL 系列在多维度（query 复杂度/相关性，answer 正确性/完整性/清晰度/相关性/helpfulness，视觉信息利用）打分。
-   - Rejection Sampling：用中间版 Qwen2.5-VL 对带 ground-truth 的数学/代码/VQA 数据生成 CoT，仅保留答案匹配样本；剔除 code-switching/过长/重复；并专门用 rule + model 校验中间推理步是否真正整合视觉信息（§2.3.3）。
+   - Rejection Sampling：用中间版 Qwen2.5-VL 对带 ground-truth 的数学/代码/VQA 数据生成 CoT，仅保留答案匹配样本；剔除 code-switching/过长/重复；并专门用 rule + model 校验中间推理步是否真正整合视觉信息（§2.3.3 自承"optimal modality alignment remains an ongoing challenge"）。
 
 7. **Post-training：SFT + DPO 双阶段，ViT 全程冻结**（§2.3, §2.3.4）
    - SFT：~2M 条，纯文本 50% / 多模态 50%（中英为主+多语），ChatML 格式，单/多轮、单/多图；含 General VQA、rejection sampling、Doc/OCR、Grounding、Video、Agent 子集。
@@ -73,7 +72,7 @@ Qwen2.5-VL 要解决的是当下 LVLM/LVLMs 在"夹心饼干中段"困境（§1�
 | Vocab Size | 151646 | 151646 | 151646 |
 | # Trained Tokens | 4.1T | 4.1T | 4.1T |
 
-> 备注：三尺寸 ViT 完全同构（1280/32L/16H/窗口112），差异仅在 LLM 规模与 merger 输出维度对齐 LLM hidden。72B 用 80 层、8 KV heads；7B 仅 28 层、4 KV heads。
+> 备注：三尺寸 ViT 完全同构（1280/32L/16H/窗口112），差异仅在 LLM 规模与 merger 输出维度对齐 LLM hidden。72B 用 80 层、8 KV heads；7B 仅 28 层、4 KV heads。该 ViT 配置即为 Figure 1 中"redesigned ViT"的具体参数化。
 
 ### Table 2 — 三阶段预训练数据组成（§2.2.2）
 | Stage | Data | Tokens | Seq Len | 训练模块 |
@@ -113,7 +112,7 @@ Qwen2.5-VL 要解决的是当下 LVLM/LVLMs 在"夹心饼干中段"困境（§1�
 | VCR En-Hard-EM | 41.7 | 28.1 | 73.2 | — | **79.8** | 80.5 | 37.5 |
 | OCRBench_v2 en/zh | 45.2/39.6 | 51.9/43.1 | 46.5/32.2 | 49.8/52.1 | **61.5/63.7** | 56.3/57.2 | 54.3/52.1 |
 
-> 72B 在 OCRBench_v2 较 Gemini 1.5-Pro 英/中分别 +9.6 / +20.6 个百分点（§3.3.2 原文）。
+> 72B 在 OCRBench_v2 较 Gemini 1.5-Pro 英/中分别 +9.6 / +20.6 个百分点（§3.3.2 原文）。CharXiv RQ 仅 49.7（低于 Claude 60.2），印证 window attention 局部性对复杂图表推理的潜在代价——见局限1。
 
 ### Table 6 / 7 — Grounding & Counting（§3.3.3）
 | Benchmark | Gemini 1.5 Pro | Grounding DINO | Molmo 72B | InternVL2.5-78B | **72B** | 7B | 3B |
@@ -142,6 +141,8 @@ Qwen2.5-VL 要解决的是当下 LVLM/LVLMs 在"夹心饼干中段"困境（§1�
 | TempCompass Avg | 67.1 | 73.8 | **74.8** | 71.7 | 64.4 |
 | Charades-STA mIoU | — | 35.7 | **50.9** | 43.6 | 38.8 |
 
+> LVBench 47.3 / MLVU 74.6 / Charades-STA mIoU 50.9 三项显著领先 GPT-4o，正是 MRoPE 绝对时间对齐（创新点2，Figure 1）在长视频/时间定位上的收益兑现。
+
 ### Table 9 — GUI Agent（§3.3.5）
 | Benchmark | GPT-4o | Gemini 2.0 | Claude | Aguvis-72B | Qwen2-VL-72B | **Qwen2.5-VL-72B** |
 |---|---|---|---|---|---|---|
@@ -166,30 +167,31 @@ Qwen2.5-VL 要解决的是当下 LVLM/LVLMs 在"夹心饼干中段"困境（§1�
 | MultiPL-E | 68.2 | 73.5 | 69.2 | 75.1 | **79.5** |
 | IFEval | 83.6 | 86.0 | 77.6 | 84.1 | **86.3** |
 
-> 多模态训练未牺牲纯文本能力——LiveBench/MultiPL-E/IFEval 均超过 Qwen2.5-72B 基座。
+> 多模态训练未牺牲纯文本能力——LiveBench/MultiPL-E/IFEval 均超过 Qwen2.5-72B 基座；但 MMLU-redux 85.9 < 86.8、MATH 83.0 微低于 83.1，提示多模态注入对个别纯文本项有轻微回落（见局限8）。
 
 ## 与同类对比
 
-- **vs GPT-4o / Claude 3.5 Sonnet**（§3.1, §3.3.2）：72B 在 MMMU 70.2 vs GPT-4o 69.1/Claude 68.3；MathVista 74.8 > 两者；OCR/文档（OCRBench 885、CC-OCR 79.8、OCRBench_v2 61.5/63.7）显著领先。视频上 LVBench 47.3 vs GPT-4o 30.8、MLVU 74.6 vs 64.6、Charades-STA mIoU 50.9 vs 35.7。但部分项仍落后：MMMU-Pro 51.1 < GPT-4o 51.9/Claude 51.5；Video-MME w/ sub 79.1 < Gemini 81.3；LongVideoBench 60.7 < GPT-4o 66.7；OSWorld 8.83 < Claude 14.90。
+- **vs GPT-4o / Claude 3.5 Sonnet**（§3.1, §3.3.2）：72B 在 MMMU 70.2 vs GPT-4o 69.1/Claude 68.3；MathVista 74.8 > 两者；OCR/文档（OCRBench 885、CC-OCR 79.8、OCRBench_v2 61.5/63.7）显著领先。视频上 LVBench 47.3 vs GPT-4o 30.8、MLVU 74.6 vs 64.6、Charades-STA mIoU 50.9 vs 35.7——后三项正是 Figure 1 所示 MRoPE 绝对时间对齐 + 动态 FPS 的直接收益。但部分项仍落后：MMMU-Pro 51.1 < GPT-4o 51.9/Claude 51.5；Video-MME w/ sub 79.1 < Gemini 81.3；LongVideoBench 60.7 < GPT-4o 66.7；OSWorld 8.83 < Claude 14.90。
 - **vs InternVL2.5-78B**（开源同档）：在文档、grounding、video 多项超越；但 ODinW 43.1 < Grounding DINO 55.0；PointGrounding 67.5 < Molmo 69.2；Refcoco 系列略低于 InternVL2.5（如 val 92.7 vs 93.7）。
-- **vs Qwen2-VL-72B**（自身前代）：ScreenSpot Pro 43.6 vs 1.6（巨幅提升，§3.3.5）；Android Control Low EM 93.7 vs 59.2；预训练语料 1.2T→4.1T；MRoPE 从帧序号升级到绝对时间。
-- **架构同侪**：与 InternVL2.5、LLaVA-OneVision 同属 ViT+projector+LLM 范式，但 Qwen2.5-VL 的差异点是 (a) window attention 仅 4 层全注意力、(b) MRoPE 绝对时间对齐、(c) 绝对坐标训练、(d) 统一 HTML omni-parsing。
+- **vs Qwen2-VL-72B**（自身前代）：ScreenSpot Pro 43.6 vs 1.6（巨幅提升，§3.3.5）；Android Control Low EM 93.7 vs 59.2；预训练语料 1.2T→4.1T；MRoPE 从帧序号升级到绝对时间（Figure 1 的核心演进）。
+- **架构同侪**：与 InternVL2.5、LLaVA-OneVision 同属 ViT+projector+LLM 范式，但 Qwen2.5-VL 的差异点是 (a) window attention 仅 4 层全注意力、(b) MRoPE 绝对时间对齐、(c) 绝对坐标训练、(d) 统一 HTML omni-parsing——这四点在 Figure 1 的 M3 caption 中被概括为 "native-resolution vision encoding combined with MRoPE aligned to absolute time"。
 
 ## 跨论文关系（→ MOC 谱系）
 
 - → [[qwen3-vl-technical-report]]：直接后继。Qwen2.5-VL 的 MRoPE 绝对时间、window attention ViT、绝对坐标 grounding、HTML omni-parsing、统一 agent action space 是 Qwen3-VL 的基线；后续者在此上演进。
+- → [[qwen2-vl-technical-report]]（前代，本报告多次对照）：MRoPE、原生动态分辨率的提出者，Qwen2.5-VL 把其 temporal ID 从帧序号升级到绝对时间，语料 1.2T→4.1T，ScreenSpot Pro 1.6→43.6。
 - → [[kimi-vl-technical-report]]：同为国产旗舰 VLM，对照 Kimi-VL 的架构选择（如 MoE / 不同 vision encoder 策略）与 Qwen2.5-VL 的"原生动态分辨率 + window attention"路线异同。
 - → [[kimi-k2-5-visual-agentic-intelligence]]：Qwen2.5-VL 把 agent 能力（mobile/web/desktop 共享 function call、ScreenSpot Pro 43.6）作为一等公民，与 K2.5 visual agentic intelligence 形成视觉 agent 谱系对照——前者重 grounding+action、后者重 agentic reasoning。
-- → [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]]：Qwen2.5-VL 用 4-patch 合并 + MLP merger 压缩视觉 token，DeepStack 则主张"深堆叠"视觉 token；两者代表视觉 token 表示的两条路线，可互为消融对照。
-- → [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]：Qwen2.5-VL 通过 window attention + 动态打包平衡训练算力，但服务端长序列多模态推理仍是瓶颈；EPD disaggregation 这类服务侧方法可与之互补——前者优化模型结构，后者优化部署。
+- → [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]]：Qwen2.5-VL 用 4-patch 合并 + MLP merger 压缩视觉 token（Figure 1 merger），DeepStack 则主张"深堆叠"视觉 token；两者代表视觉 token 表示的两条路线，可互为消融对照。
+- → [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]：Qwen2.5-VL 通过 window attention + 动态打包平衡训练算力，但服务端长序列多模态推理仍是瓶颈（Figure 1 中 Video 1 在高 FPS 下达 2,576 tokens 仅单样本）；EPD disaggregation 这类服务侧方法可与之互补——前者优化模型结构，后者优化部署。
 
 ## 局限与边界
 
-1. **Window Attention 的局部性**（§2.1.1）：仅 4 层全注意力，跨全局视觉信息的长程依赖可能不足，对需要全图聚合的任务（如复杂图表推理）是潜在瓶颈——CharXiv RQ 仅 49.7（低于 Claude 60.2）可为一例（Table 5）。
+1. **Window Attention 的局部性**（§2.1.1；对照 Figure 1 ViT 结构）：仅 4 层全注意力，跨全局视觉信息的长程依赖可能不足，对需要全图聚合的任务（如复杂图表推理）是潜在瓶颈——CharXiv RQ 仅 49.7（低于 Claude 60.2，Table 5）可为一例。
 2. **Video 评测硬上限**（§3.3.4）：所有视频评测限制 ≤768 帧 / ≤24,576 video tokens，更长视频（小时级以上）的真实表现未在 benchmark 内验证；LongVideoBench 60.7 落后 GPT-4o 66.7 也提示长视频理解仍有差距。
 3. **Agent 在线表现仍弱于 Claude**（Table 9）：OSWorld 8.83 < Claude 14.90；AndroidWorld 35% 虽领先但绝对值仍低，动态真实环境鲁棒性有限。
 4. **数学/科学顶尖项未达闭源 SoTA**（Table 3,4）：MMMU-Pro 51.1 < Claude 51.5；GPQA 49.0 < Llama-3.1-405B 51.1；MATH 83.0 略低于 Qwen2.5-72B 基座 83.1（多模态训练对纯数学有微弱代价）。
 5. **Point grounding 不及专用模型**（Table 6）：PointGrounding 67.5 < Molmo-72B 69.2；ODinW 43.1 远低于 Grounding DINO 55.0——通用模型与专用检测器差距未完全闭合。
-6. **MRoPE 绝对时间的依赖**（§2.1.3）：时间节奏学习依赖 temporal ID 间隔，对 timestamp 标注质量敏感；论文未给出在 FPS 极端稀疏或非均匀采样下的鲁棒性分析。
+6. **MRoPE 绝对时间的依赖**（§2.1.3；Figure 1）：时间节奏学习依赖 temporal ID 间隔，对 timestamp 标注质量敏感；论文未给出在 FPS 极端稀疏或非均匀采样下的鲁棒性分析。
 7. **数据合成依赖**（§2.2.1, §2.3.3）：grounding/document/agent 数据大量来自 Grounding DINO/SAM/内部合成引擎，存在合成偏差与 teacher 模型能力上限的传导风险；CoT rejection sampling 仍面临"中间步是否真正整合视觉信息"的未解难题（§2.3.3 末段自承）。
-8. **纯文本与多模态的权衡**（Table 4）：MMLU-redux 85.9 < Qwen2.5-72B 86.8、GPQA 49.0 持平，多模态注入对个别纯文本项有轻微回落，未完全做到"无损"。
+8. **纯文本与多模态的权衡**（Table 4）：MMLU-redux 85.9 < Qwen2.5-72B 86.8、MATH 83.0 < 83.1、GPQA 49.0 持平，多模态注入对个别纯文本项有轻微回落，未完全做到"无损"。

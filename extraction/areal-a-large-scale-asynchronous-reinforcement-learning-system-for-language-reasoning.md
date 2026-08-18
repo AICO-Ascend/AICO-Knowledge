@@ -23,35 +23,96 @@ tags: [rl]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.4)
+### Figure 1 (p.4) ⭐深度解读
 ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p04.png]]
 > [!quote] caption
 > Execution timeline of a synchronous (left) and a one-step overlap (right) RL system showing underutilized inference devices. … Rollout Controller Reward Service
 
-### Figure 2 (p.4)
+> [!tip] 技术解读（多模态）
+> **Figure 2 — AREAL Architecture**
+
+**Components & Data Flow:** Two decoupled GPU clusters. The *Generation* side hosts multiple Interruptible Rollout Workers (GPU) that send prompts (green) and trajectories (blue) through a Rollout Coordinator to a Replay Buffer. A Reward Service (CPU) returns rewards via the coordinator. The Replay Buffer sends aggregated batches through a Replay Buffer to Trainer Workers (GPU, Training cluster), which feed a Parameter Service. The Parameter Service emits interrupt signals (red) and parameter save/load updates (purple) back to the rollout workers, closing the async loop.
+
+**Key takeaway (≤120 words):** AREAL fully decouples generation and training across separate GPU clusters coordinated via a Replay Buffer and Parameter Service. Rollout workers are *interruptible*: upon receiving new weights they discard stale KV state and continue decoding—enabling continuous, weight-updated trajectory generation without waiting for synchronized training steps. This eliminates the GPU underutilization and memory-IO bottleneck of synchronous RL.
+
+**Caption (verbatim):**
+*"Figure 2: The AREAL architecture featuring asynchronous generation and training components."*
+
+### Figure 2 (p.4) ⭐深度解读
 ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p04.png]]
 > [!quote] caption
 > The AREAL architecture featuring asynchronous generation and training components.
 
-### Figure 3 (p.4)
+> [!tip] 技术解读（多模态）
+> **Figure 2 — AREAL Architecture**
+
+**Components & Data Flow:** Two decoupled GPU clusters. The *Generation* side hosts multiple Interruptible Rollout Workers (GPU) that send prompts (green) and trajectories (blue) through a Rollout Coordinator to a Replay Buffer. A Reward Service (CPU) returns rewards via the coordinator. The Replay Buffer sends aggregated batches through a Replay Buffer to Trainer Workers (GPU, Training cluster), which feed a Parameter Service. The Parameter Service emits interrupt signals (red) and parameter save/load updates (purple) back to the rollout workers, closing the async loop.
+
+**Key takeaway (≤120 words):** AREAL fully decouples generation and training across separate GPU clusters coordinated via a Replay Buffer and Parameter Service. Rollout workers are *interruptible*: upon receiving new weights they discard stale KV state and continue decoding—enabling continuous, weight-updated trajectory generation without waiting for synchronized training steps. This eliminates the GPU underutilization and memory-IO bottleneck of synchronous RL.
+
+**Caption (verbatim):**
+*"Figure 2: The AREAL architecture featuring asynchronous generation and training components."*
+
+### Figure 3 (p.4) ⭐深度解读
 ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p04.png]]
 > [!quote] caption
 > Illustration of generation management in AREAL. Vertical lines show the ready time for the next step training. Blue crosses show the interrupted requests when new parameters arrive. 4
 
-### Figure 4 (p.8)
+> [!tip] 技术解读（多模态）
+> **Figure 2 — AREAL Architecture**
+
+**Components & Data Flow:** Two decoupled GPU clusters. The *Generation* side hosts multiple Interruptible Rollout Workers (GPU) that send prompts (green) and trajectories (blue) through a Rollout Coordinator to a Replay Buffer. A Reward Service (CPU) returns rewards via the coordinator. The Replay Buffer sends aggregated batches through a Replay Buffer to Trainer Workers (GPU, Training cluster), which feed a Parameter Service. The Parameter Service emits interrupt signals (red) and parameter save/load updates (purple) back to the rollout workers, closing the async loop.
+
+**Key takeaway (≤120 words):** AREAL fully decouples generation and training across separate GPU clusters coordinated via a Replay Buffer and Parameter Service. Rollout workers are *interruptible*: upon receiving new weights they discard stale KV state and continue decoding—enabling continuous, weight-updated trajectory generation without waiting for synchronized training steps. This eliminates the GPU underutilization and memory-IO bottleneck of synchronous RL.
+
+**Caption (verbatim):**
+*"Figure 2: The AREAL architecture featuring asynchronous generation and training components."*
+
+### Figure 4 (p.8) ⭐深度解读
 ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p08.png]]
 > [!quote] caption
 > The strong scaling trend. Dotted lines indicate ideal linear scaling. verl consistently encounters OOM with 32k context length and the 32B model so the data points are missing. 8
 
-### Figure 5 (p.9)
+> [!tip] 技术解读（多模态）
+> **Description of Figure 4 (Strong Scaling Trend):**
+
+The figure is a 2×3 grid of line plots comparing training throughput across model size and context length. Rows distinguish context length (ctx=16384 top, ctx=32768 bottom); columns distinguish model size (1.5B, 7B, 32B left-to-right). The y-axis shows throughput in tokens/second; the x-axis shows the number of GPUs (ranging 32–512 depending on model size). Three series are plotted: AReaL (blue solid), verl (orange dashed), and ideal linear scaling (black dotted).
+
+**Key Takeaway:** AReaL tracks the ideal linear scaling line closely across all six configurations, while verl falls progressively further below it as the number of GPUs grows — confirming AReaL's superior multi-node scaling efficiency for RL training.
+
+**Caption (verbatim):**
+
+Figure 4: The strong scaling trend. Dotted lines indicate ideal linear scaling. verl consistently encounters OOM with 32k context length and the 32B model so the data points are missing.
+
+### Figure 5 (p.9) ⭐深度解读
 ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p09.png]]
 > [!quote] caption
 > Ablation studies of the decoupled PPO objective and staleness control with a 1.5B model on math reasoning tasks. Both algorithmic choices are essential. With a moderate staleness value and the decoupled objective, training progress can be accelerated by over 2× while maintaining final evaluation performance.
 
-### Figure 6 (p.10)
+> [!tip] 技术解读（多模态）
+> ## Figure 5 Description
+
+**Components/Data flow:** Figure 5 is a three-panel ablation study on a 1.5B model for math reasoning. Panel (a) plots training-reward learning curves under naive PPO across MaxStaleness values {0, 1, 2, 4, 8, 16, ∞}; panel (b) reproduces the same experiment with the decoupled PPO objective (eq. 5), where curves cluster tightly near the oracle (η=0). Panel (c) is a horizontal bar chart of effective training throughput (k tokens/s) vs. MaxStaleness, rising monotonically from 128.7 (η=0) to 396.8 (η=∞).
+
+**Key technical takeaway:** The decoupled PPO objective stabilizes training against stale data, enabling moderate staleness (η ≤ 8) to more than triple throughput (≈3.1×) with negligible loss in final accuracy, whereas naive PPO collapses as staleness grows.
+
+## Caption (verbatim)
+
+**Figure 5:** Ablation studies of the decoupled PPO objective and staleness control with a 1.5B model on math reasoning tasks. Both algorithmic choices are essential. With a moderate staleness value and the decoupled objective, training progress can be accelerated by over 2× while maintaining final evaluation performance.
+
+### Figure 6 (p.10) ⭐深度解读
 ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p10.png]]
 > [!quote] caption
 > Ablation studies on system optimizations. experimental setup, we configured 32 micro-batches for the standard setting and established a token budget of 32,768 per micro-batch for the dynamic batching approach. As demonstrated in Figure 6a, dynamic batching yields an average of 30% throughput improvements across various model sizes.
+
+> [!tip] 技术解读（多模态）
+> **Figure description (≤120 words):**
+
+Figure 6 presents two ablation bar charts rather than an architecture diagram. **Left (6a) — Dynamic vs. Normal Batching:** Compares throughput (TFLOPs/GPU) across model scales (1B/1 node, 7B/2 nodes, 32B/8 nodes). Dynamic batching consistently outperforms normal batching: 427.4 vs 404.4 (1B), 454.7 vs 303.1 (7B), and 387.7 vs 283.0 (32B), with the largest gap (~50%) at 7B. **Right (6b) — Interruptible Generation:** Compares average throughput (tokens/s) at 1.5B and 7B on 4 nodes. Interruptible generation yields 231k vs 207k (1.5B) and 130k vs 111k (7B). **Key takeaway:** Both optimizations are validated quantitatively—dynamic micro-batch allocation delivers ~30% throughput gains, and interruptible generation adds 12–17%, confirming their inclusion in the AREAL system design.
+
+**Caption (verbatim):**
+
+Figure 6: Ablation studies on system optimizations.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

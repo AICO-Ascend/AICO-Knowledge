@@ -1,2 +1,7 @@
 .cache/
 __pycache__/
+
+# transient bulk-captioning / deep-reread orchestration artifacts (regenerable)
+extraction/bulk_caption.log
+extraction/bulk_caption_failures.txt
+extraction/deep_reread_queue.json

@@ -23,15 +23,47 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.2)
+### Figure 1 (p.2) ⭐深度解读
 ![[assets/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-p02.png]]
 > [!quote] caption
 > SuperGLUE per-task scores for four backbones. DHRD (train-time reasoning) consistently beats the pooled-classifier baseline and rivals teacher model Gemini 2.5 Flash, with the largest gains on CB/COPA/RTE. ‘Avg’ is the macro-average, tabulated results can be found in Table 1. improvements are attributable to alignment of input–rationale–label triplets rather than to generic LM regularization; inte
 
-### Figure 2 (p.3)
+> [!tip] 技术解读（多模态）
+> ## Figure Description (≤120 words)
+
+The figure presents **four radar (spider) charts**, one per decoder-only backbone (Llama-3.1-8B, Qwen-3-8B, Llama-3.2-3B, Qwen-3-4B), comparing three methods across eight SuperGLUE tasks (BoolQ, CB, COPA, MultiRC, RTE, WiC, WSC, Avg):
+
+- **DHRD** (solid red) — train-time reasoning
+- **Gemini 2.5 Flash** (dotted purple) — CoT zero-shot teacher
+- **Baseline** (dashed blue) — pooled classifier
+
+DHRD's polygon consistently encloses the baseline's and closely tracks or exceeds Gemini's, with the largest gaps on CB, COPA, and RTE. Architecture-wise, DHRD augments a shared causal transformer with two heads (reasoning LM head at train time, pooled classifier head at test time), enabling one forward pass to serve both objectives without CoT decoding at inference.
+
+**Key takeaway:** Teacher-rationale supervision *at training only* transfers CoT-quality gains to a CoT-free classifier, preserving baseline latency.
+
+## Caption (verbatim)
+
+**Figure 1:** SuperGLUE per-task scores for four backbones. DHRD (train-time reasoning) consistently beats the pooled-classifier baseline and rivals teacher model *Gemini 2.5 Flash*, with the largest gains on CB/COPA/RTE. 'Avg' is the macro-average, tabulated results can be found in Table 1.
+
+### Figure 2 (p.3) ⭐深度解读
 ![[assets/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-p03.png]]
 > [!quote] caption
 > Dual-head fine-tuning on a shared decoder. The classification head pools hidden states over the input span (blue) to produce K class logits. The train-only reasoning head applies a causal LM loss over the full sequence, covering both classification input tokens (blue) and teacher rationale tokens (orange). During training, inputs concatenate task text with teacher rationales. At inference, only th
+
+> [!tip] 技术解读（多模态）
+> ## Description of Figure 2
+
+**Architecture & Components:** A decoder-only language model serves as a shared backbone, producing hidden embedding tokens (ℝ^(L×D)). Two heads branch off this shared representation:
+- **Classification Head:** A Pooler aggregates hidden states over the input span (blue tokens), followed by a 2-layer MLP that outputs K class logits (ℝ^K). This head is used at inference.
+- **Reasoning Head (training-only):** Reuses the base model's LM head to compute next-token distributions over the full sequence, producing reasoning logits (ℝ^(L×V)).
+
+**Data Flow:** During training, inputs concatenate the classification sequence (blue) with teacher-generated rationale tokens (orange). The reasoning head applies causal LM loss across both segments, while the classification head operates only on the blue span. At inference, rationales are discarded and only the classification path is used.
+
+**Key Technical Takeaway:** This design distills teacher rationales into the shared decoder's representations during training, transferring reasoning knowledge without adding any inference-time latency — the LM head and rationales are dropped entirely at test time.
+
+## Caption (verbatim)
+
+**Figure 2:** Dual-head fine-tuning on a shared decoder. The *classification head* pools hidden states over the input span (blue) to produce *K* class logits. The train-only *reasoning head* applies a causal LM loss over the full sequence, covering both classification input tokens (blue) and teacher rationale tokens (orange). During training, inputs concatenate task text with teacher rationales. At inference, only the classification head is used.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

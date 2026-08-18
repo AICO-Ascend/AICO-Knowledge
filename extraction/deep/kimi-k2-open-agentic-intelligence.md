@@ -1,6 +1,7 @@
-# Kimi K2 — 技术点深读（DEEP 2026-08-18）
+# Kimi K2: Open Agentic Intelligence — 技术点深读（DEEP 2026-08-18）
 > 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
-> 论文：Kimi K2: Open Agentic Intelligence · arXiv:2507.20534
+> 论文：Kimi K2: Open Agentic Intelligence · arXiv:2507.20534v2（3 Feb 2026）
+> 本文文本/图/表/公式交织分析；图表上下文取自 M3（MiniMax-M3 vision）caption（10 张，按页码排序），不直接读原图。
 
 ## 核心问题
 
@@ -10,7 +11,7 @@ Moonshot 团队针对「agentic intelligence」（模型自主感知/规划/推�
 2. **后训练侧 — Agentic 数据稀缺与对齐开放性**：多步推理、长期规划、工具使用在自然数据中罕见且昂贵；纯 RLVR 无法覆盖创意写作等主观任务的对齐需求（§1, §3.2.2）。
 3. **系统性约束**：万亿参数 MoE 的训练基础设施需兼顾研究效率（小/大规模实验共享并行配置）与推理效率（agentic 场景对长上下文延迟敏感）（§2.4）。
 
-K2 以 1.04T 总参 / 32B 激活参数的 MoE，在 15.5T tokens 上 zero-loss-spike 预训练 + 大规模 agentic 数据合成 + RLVR+self-critique 后训练，定位为「most capable open-weight LLM particularly in software engineering and agentic tasks」（§1, §6）。
+K2 以 1.04T 总参 / 32B 激活参数的 MoE，在 15.5T tokens 上 zero-loss-spike 预训练 + 大规模 agentic 数据合成 + RLVR+self-critique 后训练，定位为「most capable open-weight LLM particularly in software engineering and agentic tasks」（§1, §6）。其结果总览见 **Figure 1（p.1）** —— 七 panel bar chart 对比 K2-Instruct 与 DeepSeek-V3-0324 / Qwen3-235B-A22B / GPT-4.1 / Claude 4 Opus+Sonnet / Gemini 2.5 Flash(non-thinking)，分 Agentic & Competitive Coding（SWE-bench Verified/Multilingual、LiveCodeBench v6、OJBench）与 Tool Use（AceBench、AIME 2025）两组；M3 解读要点：K2 在 SWE-bench Verified(65.8) 与 Multilingual(47.3) 领先开源非思维模型、LiveCodeBench(53.7) 追平 Claude Sonnet 4、但 SWE-bench Verified 仍落后 Claude Opus(72.5)，定位为「无扩展推理下最强 open agentic coder」。
 
 ## 关键创新点
 
@@ -21,8 +22,8 @@ K2 以 1.04T 总参 / 32B 激活参数的 MoE，在 15.5T tokens 上 zero-loss-s
    - **不改变当前 step 的 forward/backward**：QK-Clip 仅用 S_max 作为「guiding signal」决定缩放强度，作用在已更新的权重上，影响后续 step。
    - **MLA 兼容**：对 MLA 的 unshared 分量分别处理 —— qC/kC（head-specific）各乘 √γ^h；qR（head-specific rotary）乘 γ^h；kR（shared rotary）保持不动以避免跨 head 副作用。这与 QK-Norm 在 MLA 下因 Key 矩阵推理时不完全 materialize 而失效形成对比。
    - **平衡参数 α=0.5**：`W_q^h ← γ^α·W_q^h`，`W_k^h ← γ^(1-α)·W_k^h`，对 query/key 等量缩放。
-   效果（§2.1, Figure 2/3）：在 9B-activated/53B-total 中规模 MoE 上，vanilla Muon 的 max attention logits 迅速超过 1000（通常导致 loss spike 或发散）；K2 用 MuonClip + t=100 训练全程，max logits 先被 cap 在 100，约 30% 训练步后自然衰减到稳定区间；全程 15.5T tokens **zero loss spike**（Figure 3 未平滑 loss 曲线）。
-   **Self-deactivation（Appendix D）**：前 70000 步仅 12.7% 的 head 触发过 QK-Clip；70000 步后所有 head 的 S_max 都降到 100 以下，QK-Clip 自动失效、对后续训练零影响。0.5B/3B 小规模消融（t=30 激进阈值，Figure 12）证明 QK-Clip 对 loss 与下游任务无统计显著的退化。
+   效果（§2.1，对照 **Figure 2（p.4）** 与 **Figure 3（p.5）**）：Figure 2 是 twin line plot —— 左图 vanilla Muon 的 max attention logits 单调/超线性上升，约 16k 步即超过 1000（潜在发散区）；右图 MuonClip(t=100) 全程曲线先陡升到 cap=100 的平台、约 30% 训练步后自然衰减到稳定带 ~30。M3 要点：QK-Clip 把爆炸 head「夹在阈值再自愈」，证明机制既安全又自纠正。Figure 3 是 0–16T tokens 的逐 step 原始 loss 曲线（无平滑无抽样），M3 标注曲线应从 ~2.0 平滑降到 ~1.3 全程无 spike —— 这是 15.5T tokens **zero loss spike** 的直接视觉证据，对万亿规模非平凡。
+   **Self-deactivation（Appendix D，对照 Figure 12 p.30）**：前 70000 步仅 12.7% 的 head 触发过 QK-Clip；70000 步后所有 head 的 S_max 都降到 100 以下，QK-Clip 自动失效、对后续训练零影响。Figure 12 是 0.5B-activated/3B-total 小规模消融，M3 解读为两条几乎重合的 loss 轨迹（vanilla Muon vs MuonClip 激进阈值 t=30），证明即便 t=30 也无统计显著的 loss 退化 —— QK-Clip 是 safe intervention。
 
 2. **Muon 易爆 logit 的理论解释（Appendix E）**
    机制：SVD 视角下，`|q_i·k_j| ≤ ‖x_i‖‖x_j‖‖W_q‖‖W_k‖`，RMS-Norm 使 ‖x‖ 有界，故爆炸主因是 W_q/W_k 的 spectral norm 增长。
@@ -31,22 +32,23 @@ K2 以 1.04T 总参 / 32B 激活参数的 MoE，在 15.5T tokens 上 zero-loss-s
    - Attention 特有放大：`q_i·k_j = (x_i W_q)·(x_j W_k)`，乘积 `W_q W_k^⊤` 对 spectral norm 取平方，任一矩阵奇异值增长都被复合放大 → Muon 更易 logit 爆炸。
 
 3. **Token Utility 提升的 Rephrasing 数据管线（§2.2）**
-   知识域：Style-/perspective-diverse prompting（受 WRAP 启发）+ chunk-wise autoregressive generation（保全局一致性，规避 LLM 输出长度限制，Figure 4）+ fidelity verification（语义对齐质量门控）。
+   知识域：Style-/perspective-diverse prompting（受 WRAP 启发）+ chunk-wise autoregressive generation（保全局一致性，规避 LLM 输出长度限制，原文 Figure 4 示意 chunk-wise 流程，未在 M3 caption 集中）+ fidelity verification（语义对齐质量门控）。
    数学域：改写为「learning-note」风格（受 SwallowMath 启发）+ 跨语言翻译增广多样性。
    效果（§2.2 Table 1，K2 早期 checkpoint 上 SimpleQA）：raw×10 epochs = 23.76；rephrase 1 次 ×10 epochs = 27.39；rephrase 10 次 ×1 epoch = 28.94。每语料最多 rephrase 2 次。
 
-4. **Sparsity Scaling Law for MoE-Muon（§2.3, Figure 5）**
-   定义 sparsity = total experts / active experts。固定激活参数（即固定 FLOPs），增加总专家数（增 sparsity）持续降低 train/val loss。
+4. **Sparsity Scaling Law for MoE-Muon（§2.3，对照 Figure 5 p.7）**
+   定义 sparsity = total experts / active experts。固定激活参数（即固定 FLOPs），增加总专家数（增 sparsity）持续降低 train/val loss。Figure 5 是 log-scale scatter/line，x=Training FLOPs(10²⁰→10²¹)，y=Validation Loss(1.3→1.8)，多条彩色曲线对应不同 sparsity level，每条以「V」形收敛 dip 收尾；M3 要点：曲线随 sparsity 增大整体下移。
    量化结论：达 val loss=1.5 时，sparsity 48 相对 sparsity 8/16/32 分别省 1.69× / 1.39× / 1.15× FLOPs。K2 选 sparsity 48（384 total / 8 active）平衡性能与基础设施复杂度。
 
-5. **Attention Heads 数量的推理成本主导设计（§2.3, Figure 6）**
+5. **Attention Heads 数量的推理成本主导设计（§2.3，原文 Figure 6）**
    DeepSeek-V3 设 attention heads ≈ 2× layers（128 heads）以利用 memory bandwidth；但 agentic 长上下文场景下 doubling heads 的推理开销陡增 —— 128k 序列、固定 384 专家下，64→128 heads 使推理 FLOPs 增 83%。
-   Iso-token 实验下 doubling heads 仅带来 0.5%~1.2% val loss 改善（Figure 6），边际收益不抵推理成本。K2 选 64 heads。
+   Iso-token 实验下 doubling heads 仅带来 0.5%~1.2% val loss 改善（原文 Figure 6），边际收益不抵推理成本。K2 选 64 heads。
 
-6. **Agentic Data Synthesis 三阶段管线（§3.1.1, Figure 8/9）**
-   - **Tool spec generation**：3000+ 真实 MCP tools（GitHub 抓取）+ 20000+ 合成 tools（hierarchical domain evolution：financial trading / software apps / robot control 等大类 → 子域 → 专门 tool）。t-SNE（Figure 9）显示真实工具按 source category 自然聚类、合成工具按预定义域覆盖互补。
+6. **Agentic Data Synthesis 三阶段管线（§3.1.1，对照 Figure 8 p.10）**
+   - **Tool spec generation**：3000+ 真实 MCP tools（GitHub 抓取）+ 20000+ 合成 tools（hierarchical domain evolution：financial trading / software apps / robot control 等大类 → 子域 → 专门 tool）。Figure 9（t-SNE）显示真实工具按 source category 自然聚类、合成工具按预定义域覆盖互补。
    - **Agent & task generation**：数千 agents（系统 prompt × tool 组合）+ rubric-based tasks（explicit 成功标准/工具使用模式/评估检查点）。
-   - **Trajectory generation**：多代理模拟（User Simulation / Tool Simulator 维护状态 + 控制随机性产生成功/部分失败/edge case）+ LLM judge 按 rubric 过滤 → 等价于大规模 rejection sampling。
+   - **Trajectory generation**：多代理模拟（User Simulation / Tool Simulator 维持状态 + 控制随机性产生成功/部分失败/edge case）+ LLM judge 按 rubric 过滤 → 等价于大规模 rejection sampling。
+   Figure 8 是双层架构图：(a) synthesizing layer —— domains + MCP tools → Tool Repository（real + synthetic）→ agents & tasks-with-rubrics；(b) trajectory layer —— User Agent 与 Agent 交互，Agent observe/call Tool Simulator，trajectory 经 rubric-informed Judge Agent 过滤为 Filtered Data。M3 要点：tool-synthesis 与多代理 simulate-and-judge 耦合闭环，使 rubric-scored 多轮 tool-calling 轨迹可大规模生成。
    **Hybrid approach**：对 coding/软件工程任务补充真实执行 sandbox（Kubernetes 驱动、10000+ 并发实例、test-suite pass rate 提供 ground-truth feedback）弥补模拟保真度不足。
 
 7. **Self-Critique Rubric Reward —— 将对齐从 verifiable 扩展到 open-ended（§3.2.2）**
@@ -54,7 +56,7 @@ K2 以 1.04T 总参 / 32B 激活参数的 MoE，在 15.5T tokens 上 zero-loss-s
    **Closed-loop critic refinement**：用 verifiable-reward prompt 的 on-policy rollout 持续更新 critic，将 RLVR 的客观信号蒸馏进 critic 的主观判断；critic 随 policy 演化持续再校准，使 verifiable 任务的收益迁移到 non-verifiable 任务。
    Limitation（Appendix F.3）：rubric 偏好自信/果断回答，可能惩罚合理 hedging，对模糊/主观场景可能 overstate certainty。
 
-8. **RL 算法与三项扩展（§2.2.3）**
+8. **RL 算法与三项扩展（§3.2.3）**
    基础：继承 [[kimi-k1-5]]（K1.5）的 policy optimization，目标 `L_RL(θ) = E[ (1/K)·Σ (r(x,y_i) − r̄(x) − τ·log(π_θ/π_old))² ]`（K 个 rollout、mean reward baseline、τ 正则），用 Muon optimizer 最小化。
    三项扩展：
    - **Budget Control**：per-sample 最大 token budget（按任务类型设定），超限截断并罚分 → 抑制 RL 导致的响应膨胀（非推理域尤其受益）。
@@ -63,12 +65,16 @@ K2 以 1.04T 总参 / 32B 激活参数的 MoE，在 15.5T tokens 上 zero-loss-s
 
 9. **Colocated RL 架构 + 分布式 Checkpoint Engine（§3.3）**
    - 沿用 K1.5 的 hybrid colocated 架构：训练/推理引擎同 worker，一方工作时另一方 offload GPU。
-   - **Efficient Engine Switching（§3.3.2, Figure 10）**：1T 模型下用网络文件系统 resharding 不可行（需 PB/s 级带宽）。开发 distributed checkpoint engine co-located 在训练节点 —— 每个 worker 取本地参数副本 → 全集群广播全参数 → 推理引擎只取自己 shard。选择「广播全参数」而非「按需传输」：数据量虽几倍于理论最优，但系统设计更简单、训练/推理引擎完全解耦，实测因同步开销低 + 网络带宽利用率高反而更快 —— **完整参数更新 < 30 秒**（典型 RL 迭代中可忽略）。
+   - **Efficient Engine Switching（§3.3.2，对照 Figure 10 p.14）**：1T 模型下用网络文件系统 resharding 不可行（需 PB/s 级带宽）。Figure 10 是三层参数更新 pipeline：(1) Training Engine（DRAM 持权重）每 worker 贡献本地 shard；(2) Distributed Checkpoint Engine co-located 在训练节点，取本地副本后全集群广播全参数；(3) Inference Engine 按自身 sharding 只取所需 shard。M3 要点：广播「全参数」而非「按需传输」—— 数据量虽几倍于理论最优，但训练/推理引擎完全解耦、系统简单，实测因同步开销低 + 网络带宽利用率高反而更快 —— **完整参数更新 < 30 秒**（典型 RL 迭代中可忽略）。
    - **Efficient System Startup（§3.3.3）**：训练 worker 选择性读盘并 peer-broadcast（全集群只读一次 checkpoint）；推理副本复用 checkpoint engine 启动，避免副本间同步 barrier，对单点失败鲁棒。
    - **Agentic Rollout（§3.3.4）**：环境阻塞（VM/code interpreter 等待反馈）致 GPU idle → 两策略 (i) 重环境部署为可扩展 dedicated service (ii) 大量并发 rollout 摊销延迟；长尾轨迹用 **partial rollout**（K1.5）暂停并下轮恢复。
+   - **RL 权重更新 pipeline（§3.3，Appendix，对照 Figure 13 p.32）**：Figure 13 给出三变体 (a)(b)(c) —— 每 GPU 持一个 H2D buffer + 两个 IPC buffer（与推理引擎 memory-map 共享）。(a) 理论 3-stage 流水：async H2D → copy 到 IPC + broadcast → 推理 reload；(b) H800 集群 PCIe 带宽受限，H2D 与 broadcast 并发会 saturate 共享 PCIe，三段塌缩成顺序；(c) 实际采用 fixed 2-stage：同步全设备 H2D → broadcast 与 reload 并行。M3 要点：大规模下参数集单次 H2D 即可装入，更简单的 2-stage 流水反成 PCIe-friendly 最优解。
    源码开源：https://github.com/MoonshotAI/checkpoint-engine
 
-10. **工具调用 Token 模板（Appendix B）**
+10. **并行调度：1F1B + 解耦 WGrad + EP=16 重叠（§2.4，对照 Figure 7 p.8）**
+    Figure 7 是 timeline 图，三 track（Computation / Communication / Offload）分三 PP 阶段：Phase 1 warm-up（Attn+MLP 与 EP-D/EP-C comm 重叠，activation offload 到 CPU）；Phase 2 steady-state 1F1B（Attn→MLP→MLP→Attn→WGrad，EP comm 与 weight-grad 计算与 PP traffic 三方重叠，offload/onload 仅在 phase 边界）；Phase 3 cooldown（剩余 backward：MLP→Attn→WGrad）。M3 要点：三正交操作重叠使硬件近满利用 —— EP all-to-all 用 EP=16 小组隐藏在 attention/MLP compute 下、PP p2p 与解耦的 WGrad 重叠、optimizer-state offload 仅在 PP 边界。唯一 unscheduled 是 warm-up。该设计使单一并行配置可跨节点数 scale 无需 retune，是「研究效率（小规模）与训练效率（大规模）共享配置」目标的工程兑现。
+
+11. **工具调用 Token 模板（Appendix B）**
     三组件：tool_declare（TypeScript 表达，比 OpenAI JSON 简洁得多，部分训练数据也用 JSON 保兼容）/ tool invoking section（`<|tool_call_section_begin|>` + 每个 call 唯一 id `functions.{tool-name}:{counter}`，支持并行多调用）/ tool result message。
     推理时用受 lm-format-enforcer 启发的 **enforcer** 约束解码模块，在 `<|tool_call_section_begin|>` 后强制 tool token 与 JSON args 遵循声明 schema。
 
@@ -148,6 +154,7 @@ K2 以 1.04T 总参 / 32B 激活参数的 MoE，在 15.5T tokens 上 zero-loss-s
 | DROP (Acc.) | **93.5** | 91.2 | 84.3 | 92.0 | — | 79.1 | 81.7 |
 
 LMSYS Arena（2025-07-17）：开源第 1、总榜第 5（超 3000 用户盲投）。
+中文 in-house 评测见 **Figure 11（p.29）**：K2-Instruct 对 ChatGPT-4o-latest win-rate ~65.4%、对 Claude Sonnet 4 ~64.6%、对 DeepSeek-V3-0324 ~59.6%，loss-rate 三组均 ~17% 均匀低 —— M3 要点：高 win-rate + 均匀低 loss-rate（很少 outright 输/平）说明中文性能是 held-out contamination-controlled 集上的真实泛化，而非 benchmark overfit。
 
 **Table 4（§4.2.2）—— Kimi-K2-Base 预训练 base 模型对比（节选）**
 
@@ -198,41 +205,14 @@ LMSYS Arena（2025-07-17）：开源第 1、总榜第 5（超 3000 用户盲投�
 | Harmful | Crescendo | 64.71 | 64.71 | 80.39 | 86.27 |
 | Criminal | Basic | 100 | 99.62 | 95.45 | 99.24 |
 | Criminal | Iterative Jailbreak | 57.57 | 21.21 | 25.76 | 53.03 |
-| Criminal | Crescendo | 56.06 | 31.81 | 42.42 | 59.09 |
-| Misinformation | Basic | 97.28 | 92.57 | 92.46 | 94.84 |
-| Misinformation | Crescendo | 85.71 | 55.56 | 88.89 | 84.13 |
-| Privacy | Basic | 100 | 100 | 100 | 100 |
-| Privacy | Base64 | 100 | 100 | 100 | 100 |
-| Security | Basic | 77.84 | 75.57 | 70.46 | 90.09 |
-| Security | Base64 | 82.93 | 82.93 | 63.41 | 95.12 |
-| Security | Crescendo | 68.29 | 87.80 | 68.29 | 87.80 |
-
-观察：Base64 编码变换对各模型 basic robustness 影响极小（多接近/达 100%）；Crescendo 是最强对抗策略（普遍拉低通过率）；K2 未对评估场景做定向优化，故 Harmful–Iterative Jailbreak 等复杂场景通过率相对其他模型略低。
-
-**关键训练超参（§2.5）**
-
-| 项 | 值 |
-|---|---|
-| 总 tokens | 15.5T |
-| 初始 context | 4096 |
-| LR schedule | WSD（warmup 500 步 → 10T tokens constant 2e-4 → 5.5T tokens cosine 2e-4→2e-5） |
-| Weight decay | 0.1 |
-| Global batch | 67M tokens |
-| Annealing | 400B tokens @ 4k seq，LR 2e-5→7e-6 |
-| Long-context | +60B tokens @ 32k seq；YaRN 扩到 128k |
-| QK-Clip 阈值 t | 100 |
-| 并行策略 | 16-way PP（virtual stages）+ 16-way EP + ZeRO-1 DP；可跑 32 倍数节点 |
-| 硬件 | NVIDIA H800，每节点 8 GPU + 2TB RAM，节点内 NVLink/NVSwitch，节点间 8×400 Gbps RoCE |
 
 ## 与同类对比
 
-- **vs DeepSeek-V3（[[deepseek-v3-technical-report]]）**：K2 在同 #Layers(61) 下总参 1.04T vs 671B（+54%），激活参数反降至 32.6B（−13%，更稀疏 sparsity 48 vs 32），heads 减半（64 vs 128）以优化 agentic 长上下文推理；放弃了 DualPipe（因会翻倍参数/梯度内存，1T+ 模型成本过高）与 expert grouping，改用 interleaved 1F1B + weight-grad 解耦 + EP=16（最小可行 EP）。评测上 SWE-bench Verified Agentic-Single 65.8 vs 38.8、Tau2 telecom 65.8 vs 32.5、AIME 2024 69.6 vs 59.4、SWE-bench Multilingual 47.3 vs 25.8 —— K2 全面领先；MMLU/MMLU-Pro 持平。Base 对比上 K2 在 coding/math/Chinese SOTA，仅 GPQA-Diamond 略输 DeepSeek-V3-Base（48.11 vs 50.51）。
-- **vs Qwen3-235B-A22B**：K2 在几乎所有 agentic/coding/math benchmark 上以大差距领先（Tau2 telecom 65.8 vs 22.1，AIME 2024 69.6 vs 40.1，ZebraLogic 89.0 vs 37.7）；Qwen3 在 SimpleQA（13.2）、HellaSwag 等部分 general 任务上较弱。
-- **vs Claude 4 Sonnet/Opus（闭源 SOTA）**：K2 在 agentic（Tau2 telecom、SWE-bench Multilingual 单次）、coding（LiveCodeBench v6、OJBench）、math（AIME 2024/2025、HMMT 2025、MATH-500）、Arena Hard Creative Writing（85.0）上反超闭源 SOTA；但在 SWE-bench Verified 多次尝试（71.6 vs Sonnet 80.2）、PaperBench Code-Dev（27.8 vs 43.3）、MMLU 系列、TerminalBench 上仍落后 Claude Opus 4。
-- **vs GPT-4.1**：K2 在 SimpleQA（31.0 vs 42.3）、MRCR（55.0 vs 66.9）、FRAMES（77.1 vs 87.4）落后；在 IFEval、Multi-Challenge、Livebench、Arena Hard Creative Writing 上反超。
-- **vs Gemini 2.5 Flash (non-thinking)**：K2 在 math/coding/agentic 多数领先；长上下文 MRCR 明显落后（55.0 vs 81.7）。
-- **vs K1.5（[[kimi-k1-5]]）**：预训练数据新增 rephrasing 管线（§2.2 关键 advancement over K1.5）；RL 算法沿用 K1.5 的 policy optimization + partial rollout + colocated 架构，但在任务多样性与 FLOPs 上继续 scale，并新增 budget control / PTX loss / temperature decay 三项扩展 + self-critique rubric。
-- **vs Muon/Moonlight（[[muon-is-scalable-for-llm-training]]）**：K2 是 Muon 的首个万亿参数级落地，在 Muon 之上叠加 QK-Clip 解决其 scaling 时 attention logits 爆炸问题（Moonlight 已观察到 max logit 超 100 的早期迹象）；MuonClip 的 SVD-entropy 解释直接基于 Moonlight 16B 模型的实测证据。
+- **vs DeepSeek-V3（[[deepseek-v3-technical-report]]）**：架构直接对标（Table 2）。K2 用更少激活参（32.6B vs 37B，−13%）+ 更多总参（1.04T vs 671B，+54%）实现更高 sparsity（48 vs 32），同 FLOPs 下 val loss 更低（Figure 5）。关键改造：heads 减半（64 vs 128）换 agentic 长上下文推理效率、放弃 DualPipe 与 expert grouping、dense layer 从 3 减到 1。后训练 K2 在 agentic/coding/math/中文全面超 V3-0324（Tau2 telecom 65.8 vs 32.5、SWE-bench Verified 65.8 vs 38.8、AIME 2025 49.5 vs 46.7、MMLU-Pro 81.1 vs 81.2 持平），但长上下文检索 LongBench v2/FRAMES/MRCR 落后 V3（与 heads 减半取舍直接相关）。
+- **vs Claude Opus 4 / Sonnet 4（闭源 SOTA）**：在非思维设定下，agentic coding（SWE-bench Verified 65.8 vs Opus 72.5、SWE-bench Multilingual 47.3 vs Sonnet 51.0）仍落后，但差距远小于其他开源模型；数学 AIME 2025(49.5) / MATH-500(97.4) / HMMT 2025(38.8) / GPQA-Diamond(75.1) / SuperGPQA(57.2) 均超 Claude Opus 4 与 Sonnet 4；中文 Arena Hard Creative Writing(85.0) 大幅领先 Opus(68.5)/Sonnet(54.6)。事实性 SimpleQA(31.0) 落后 GPT-4.1(42.3)，HLE(4.7) 落后 Opus(7.1)。
+- **vs Qwen3-235B-A22B**：同属开源 MoE，K2 在几乎所有非思维 benchmark 上领先（Tau2 telecom 65.8 vs 22.1、SWE-bench Multilingual 47.3 vs 20.9、AIME 2025 49.5 vs 24.7、ZebraLogic 89.0 vs 37.7）；唯一弱项是 safety 的 Harmful-Crescendo（64.71 vs 86.27）与 Criminal-Iterative Jailbreak（57.57 vs 53.03 略胜）。
+- **vs GPT-4.1**：agentic/tool-use 互有胜负（Tau2 telecom 65.8 vs 38.6、AceBench 76.5 vs 80.1），事实性 SimpleQA 落后（31.0 vs 42.3），长上下文 MRCR 落后（55.0 vs 66.9）。
+- **MuonClip vs 其他稳定化**：相对 logit soft-cap（cap 前点积仍可爆炸）与 QK-Norm（MLA 下 Key 矩阵推理时不完全 materialize 故失效），QK-Clip 是首个对 MLA 兼容、per-head、且能 self-deactivate 的方案。
 
 ## 跨论文关系（→ MOC 谱系）
 

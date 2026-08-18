@@ -23,10 +23,19 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.7)
+### Figure 1 (p.7) ⭐深度解读
 ![[assets/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-p07.png]]
 > [!quote] caption
 > Computation time (wall time) in seconds of each topic model on the Trump dataset. Increasing sizes of vocabularies were regulated through selection of documents ranging from 1000 documents until 43000 documents with steps of 2000. Left: computational results with CTM. Right: computational results without CTM as it inﬂates the y-axis making differentiation between other topic models difﬁcult to vis
+
+> [!tip] 技术解读（多模态）
+> **Figure Description (≤120 words):**
+
+The figure presents two side-by-side line plots comparing wall-time (seconds) of nine topic models on the Trump dataset as a function of vocabulary size (~2,500 to ~17,500 words). Models include BERTopic variants (Doc2Vec, MiniLM, MPNET, USE), Top2Vec variants (Doc2Vec, MPNET), plus CTM-MPNET, LDA, and NMF. The **left** plot includes all models; CTM-MPNET dominates the chart, scaling steeply to ~1,500 s, flattening the visibility of other curves near zero. The **right** plot excludes CTM-MPNET, rescaling the y-axis to 0–100 s, revealing that BERTopic-MPNET and Top2Vec-MPNET scale worst (~100 s), while LDA stays fastest (~35 s). **Key takeaway:** Classical models (LDA, NMF) scale most efficiently with vocabulary, whereas neural embedding–based models—especially CTM-MPNET—exhibit super-linear growth.
+
+**Caption (verbatim):**
+
+Figure 1: Computation time (wall time) in seconds of each topic model on the Trump dataset. Increasing sizes of vocabularies were regulated through selection of documents ranging from 1000 documents until 43000 documents with steps of 2000. **Left**: computational results with CTM. **Right**: computational results without CTM as it inflates the y-axis making differentiation between other topic models difficult to visualize.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
