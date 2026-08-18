@@ -2,7 +2,7 @@
 > 全要素深读笔记，独立文件，extract_phase1 重跑不丢。
 > 论文：Efficiently Serving Large Multimodal Models Using EPD Disaggregation · arXiv:2501.05460v4 (28 Jun 2025)
 > 作者：Gursimran Singh, Xinglu Wang, Yifan Hu, Timothy Yu, Linzi Xing, Wei Jiang, Zhefeng Wang, Xiaolong Bai, Yi Li, Ying Xiong, Yong Zhang, Zhenan Fan — Huawei Technologies Canada × Simon Fraser Univ. × Huawei Cloud。ICML 2025 (PMLR 267)。代码开源 https://github.com/vbdi/epdserve。
-> 9 张图 M3 caption 已织入分析（Figures 1–6, 9, 11, 12）。
+> 9 张图 M3 caption 已织入分析（Figures 1–6, 9, 11, 12）；7 条核心公式（EPD pipeline 5 式 + Eq.1 优化器）以 formulas.json LaTeX 为权威源，`$$` 直引未改写，已与 M3 图解双源校验。
 
 ## 核心问题
 
@@ -17,19 +17,22 @@ SLO 指标体系：**TTFT**（首 token 时延，主要由 E+P 决定）、**TPO
 
 ## 关键创新点
 
-1. **EPD 三阶段解耦：把 encode 从 prefill 中拆出来（§3.1, Figure 3 p.3）**——本文最根本创新。Figure 3 的 M3 解读揭示三池拓扑：E GPUs（黄）持 Encoding Queue + Encoding Stage → EP Bridge Queue → P GPUs（橙）持 Prefill Queue + Prefill Stage → PD Bridge Queue → D GPUs（绿）持 Decode Queue + Decode Stage，数据左→右流动，每池 data-parallel 自带 bridge queue 缓冲跨池迁移。pipeline 形式化：
-   - Encoding: `v_t^e = E(i_m)`，MME 把多模态输入转 high-dimensional embedding；
-   - **EP-migration**: `v_t^p = ψ_EP(v_t^e)`，vision tokens 跨实例迁移到 prefill 节点；
-   - Prefill: `kv_1^p, o_1^p = P(v_t, i_p)`，产生初始 KV cache 与首 token；
-   - **PD-migration**: `kv_1^d, o_1^d = ψ_PD(kv_1^p, o_1^p)`，KV cache + token 迁移到 decode 节点；
-   - Decode: `kv_{t+1}^d, o_{t+1}^d = D(kv_t^d, o_t^d)`，自回归生成。
+1. **EPD 三阶段解耦：把 encode 从 prefill 中拆出来（§3.1, Figure 3 p.3）**——本文最根本创新。Figure 3 的 M3 解读揭示三池拓扑：E GPUs（黄）持 Encoding Queue + Encoding Stage → EP Bridge Queue → P GPUs（橙）持 Prefill Queue + Prefill Stage → PD Bridge Queue → D GPUs（绿）持 Decode Queue + Decode Stage，数据左→右流动，每池 data-parallel 自带 bridge queue 缓冲跨池迁移。EPD pipeline 形式化（§3.1，公式为 formulas.json 权威 LaTeX，逐字直引，未改写）：
+   - Encoding: $$v_t^e = E(i_m)$$ — MME 把多模态输入 $i_m$ 转 high-dimensional embedding $v_t^e$；
+   - **EP-migration**: $$v_t^p = \psi_{EP}(v_t^e)$$ — vision tokens 跨实例迁移到 prefill 节点；
+   - Prefill: $$kv_1^p, o_1^p = P(v_t, i_p)$$ — 融合文本 prompt $i_p$，产生初始 KV cache 与首 token；
+   - **PD-migration**: $$kv_1^d, o_1^d = \psi_{PD}(kv_1^p, o_1^p)$$ — KV cache + 首 token 迁移到 decode 节点；
+   - Decode: $$kv_{t+1}^d, o_{t+1}^d = D(kv_t^d, o_t^d)$$ — 自回归生成下一 token 并更新 cache。
+   五式与 Figure 3（p.3）三池拓扑互证：$\psi_{EP}$ 对应 EP Bridge Queue（E→P）、$\psi_{PD}$ 对应 PD Bridge Queue（P→D）——LaTeX↔M3 图双源一致。
    每个阶段独立实例，**实例间 data-parallel (DP)**；实例内 worker 跑 **tensor-parallel (TP) 与/或 pipeline-parallel (PP)**；E worker 只装 MME weights + MM cache，P worker 装 LLM weights + MM cache + KV cache，D worker 装 LLM weights + KV cache（§3.2, Figure 4 p.4）。Figure 4 的 M3 解读进一步显示每个 instance 自带 Scheduler + Block Manager，中央 Scheduler/Load Balancer 分发请求，**Monitoring & Dynamic Role Switching 模块**监督 bridge queue 并触发实例迁移（图中标注 "Migrate 1 D instance to P"），并行化标签（TP/PP、IRP、DP）置于 instance 下方——这正是 §3.2.4 动态切换的图形化表达。**关键内存收益**：E worker 不需 LLM weights 与 KV cache，仅 weight 部分实测省 ~95%/96.2%/78.3%（MiniCPM-V 2.6 / InternVL2-8B / InternVL2-26B），加 KV cache 后实测 **15× lower peak memory**（§4.3）。
 
 2. **异步 token transfer + MMBlockManager（§3.2.1）**——解决 EP-migration 引入的额外传输延迟。机制：encode 完成后 tokens 存入 E worker 的 MM cache，E worker 立即可服务新请求；asynchronous event loop 监听完成事件并经 **NVLink / InfiniBand** 直接异步推送到 P worker 的 MM cache；确认后清空 E 端 cache 块释放内存。**MMBlockManager** 按请求需求预分配 cache 块，迁移后 reassign 或 de-allocate。两阶段（E 与 P）都维护 MM cache 以使 transfer overlap 于计算。该机制对应 Figure 4（p.4）中各 instance 间的 "Async Transfer" 高带宽链路与 EP/PD Bridge Queue 缓冲——M3 解读强调 bridge queue 把 cache 迁移与计算解耦，是 role 实时重配的前提。
 
 3. **Intra-Request Parallelism (IRP)（§3.2.2）**——本文 TTFT 优化的核心机制。把**单个请求的多张高分辨率图像的 patch 集合**在多个 E worker 间按 data-parallel 方式分片；因 patch 编码彼此独立，可并发处理并异步传输；全部 patch-level tokens 到达 P 阶段后**对齐、project、merge** 成完整 multimodal tokens。这等价于把"请求间并行"扩展到"请求内并行"。IRP **不需要通信**（patch 间无依赖），优于 TP，故在 encode 阶段论文用 `p^IRP` 替代 `p^TP`（§D）。效果（§4.4 Table 4）：禁用 IRP 后 TTFT 在 2/4/6/8 images/request 下分别劣化 1.6×/2.4×/2.9×/2.5×——且图像越多收益越大。Figure 6（p.7）的 TTFT box plot 给出 IRP 的视觉证据：M3 解读显示 EPD 的蓝色 box 在三个模型子图中均明显低于 DistServe 绿色 box，且 gap 随 #I/R 增长而扩大——EPD 把 mean TTFT 降 71.9%/32.8%/44.9%（MiniCPM-V 2.6 / InternVL2-8B / InternVL2-26B vs DistServe），是唯一在 16 img/req 仍维持 sub-second 首 token 的系统。
 
-4. **黑盒资源分配优化器（§3.2.3, §D）**——形式化为 `max_{(p,b,s)∈X} f(p,b,s) − β·cost(p)`（Eq. 1/2），其中 `p`（并行配置：每实例 TP/PP，encode 阶段 `p^TP = p^IRP`）、`b`（每实例 max batch size）、`s`（调度策略：assignment 如 Round-Robin / Least-Loaded First；ordering 如 FCFS / SJF / SLO-aware）均为可变长度向量（实例数本身也待定）。`f(·)` 取 goodput，由扩展自 DistServe 的 simulator 评估，用 **Bayesian optimization** 求解。cost = `c·Σ(p^TP_i × p^PP_i)`，可用约束（如总 GPU 数 = 8 或 ≤ 16）缩减搜索空间。效果（§4.4 Table 5）：禁用优化器随机采 10 配置的期望，goodput 降 2.2×、TTFT 劣化 2.1×。该优化器在 Figure 10（§A.3）被验证能自动选出 5E2P 配置作为 offline E2E throughput 最优——证明黑盒搜索比人工配比更稳。
+4. **黑盒资源分配优化器（§3.2.3, §D）**——形式化为 Eq.1（公式为 formulas.json 权威 LaTeX，逐字直引）：
+   $$\max_{(\mathbf{p},\mathbf{b},\mathbf{s}) \in \mathcal{X}} f(\mathbf{p},\mathbf{b},\mathbf{s}) - \beta cost(\mathbf{p})$$
+   其中 `p`（并行配置：每实例 TP/PP，encode 阶段 `p^TP = p^IRP`）、`b`（每实例 max batch size）、`s`（调度策略：assignment 如 Round-Robin / Least-Loaded First；ordering 如 FCFS / SJF / SLO-aware）均为可变长度向量（实例数本身也待定）。`f(·)` 取 goodput，由扩展自 DistServe 的 simulator 评估，用 **Bayesian optimization** 求解。cost = `c·Σ(p^TP_i × p^PP_i)`，可用约束（如总 GPU 数 = 8 或 ≤ 16）缩减搜索空间。效果（§4.4 Table 5）：禁用优化器随机采 10 配置的期望，goodput 降 2.2×、TTFT 劣化 2.1×。该优化器在 Figure 10（§A.3）被验证能自动选出 5E2P 配置作为 offline E2E throughput 最优——证明黑盒搜索比人工配比更稳。
 
 5. **Dynamic Role Switching（§3.2.4）**——应对 online workload 变化。监控全系统队列统计，把空闲阶段实例迁移到瓶颈阶段。**三步**：(a) **Offload**——源阶段 S 实例停止接新请求并把队列任务再分给同阶段兄弟；(b) **Migration**——按目标阶段 T 重配（如涉及 E 阶段需切换 LLM↔MME 模型与 KV↔MM cache；P↔D 可复用 LLM 与 KV cache，开销小）；(c) **Onload**——迁移后实例恢复处理 T 阶段任务。**单次迁移 < 0.7s**；P↔D 显著更快。该机制在 Figure 4（p.4）由 "Monitoring & Dynamic Role Switching" 模块图形化体现（M3 标注 "Migrate 1 D instance to P"），即监控 bridge queue 拥堵后触发实例重配。实验（§4.4 Table 6，前 10 请求 50 输出 tokens、后 90 请求 500 tokens，3 r/s，单 4K 图）：开 role switching 从 5E1P2D 自适应重配到 2E1P5D，端到端延迟 28.01s vs 61.10s（2.2×）、TPOT 0.05 vs 0.12（2.4×）；关 switching 卡在初始配置无法适配解码需求。
 

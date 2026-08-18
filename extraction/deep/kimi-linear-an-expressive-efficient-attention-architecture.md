@@ -12,12 +12,48 @@ Kimi Linear 给出的解：KDA（Kimi Delta Attention）= Gated DeltaNet [111] +
 ## 关键创新点
 
 ### 1. KDA = Gated DeltaNet + Channel-wise 细粒度门控（§3, §6.1, Table 7）
-- **机制**：GDN [111] 与 Mamba2 [16] 用**粗粒度 head-wise scalar forget gate** αt∈[0,1]（每头一个遗忘率）；KDA 改为 **diagonalized channel-wise gate Diag(αt)∈R^{dk×dk}**（每特征维度独立遗忘率，类比 GLA [114]）。递推式见 Eq.(1)：St = (I − βt·ktk_t^T)·Diag(αt)·St-1 + βt·ktv_t^T。Table 7 把 KDA 与 LA/RetNet/Mamba2/GLA/Comba/RWKV7/GDN 同列于 TTT [90] 框架下的 objective + update rule，KDA 的 objective βt/2·||S̃^Tkt − vt||² 即 decayed state 上的 SGD。
+- **机制**：GDN [111] 与 Mamba2 [16] 用**粗粒度 head-wise scalar forget gate** αt∈[0,1]（每头一个遗忘率）；KDA 改为 **diagonalized channel-wise gate Diag(αt)∈R^{dk×dk}**（每特征维度独立遗忘率，类比 GLA [114]）。KDA 的核心递推（formulas.json [0]，即 Eq.(1)，authoritative）：
+
+$$
+\mathbf{S}_t = \left(\mathbf{I}-\beta_t\bm{k}_{t}\bm{k}_{t}^{\top}\right)\operatorname{Diag}\left(\bm{\alpha}_t \right)\mathbf{S}_{t-1} + \beta_t\bm{k}_{t}\bm{v}_{t}^{\top}\in\mathbb{R}^{d_k\times d_v}; \qquad \bm{o}_t = \mathbf{S}^\top_t \bm{q}_t\in\mathbb{R}^{d_v}
+$$
+
+一句话机制：先对历史 state 做 channel-wise multiplicative decay Diag(αt)，再用 Householder 风格 delta 项 (I−βt·ktk_t^T) 做 rank-1 状态刷新，最后累加新外积 ktv_t^T。Table 7 把 KDA 与 LA/RetNet/Mamba2/GLA/Comba/RWKV7/GDN 同列于 TTT [90] 框架下的 objective + update rule，KDA 的 objective 即 decayed state 上的 SGD：
+
+$$
+\mathcal{L}_t(\mathbf{S}) = \tfrac{1}{2}\|\mathbf{S}^\top\bm{k}_t - \bm{v}_t\|^2
+$$
+
+（formulas.json [19]）。注意 GLA [114] 与 Mamba2 [16] 的 forget gate 是 scalar αt（Diag(αt) 在它们处退化为 head-wise），KDA 把 αt 提到对角矩阵并保留每维独立——这是相对 GDN update rule 的唯一结构差异（Table 7 两行对照）。参数化见 Eq.(14)（formulas.json [14]）：q,k 经 ShortConv+Swish+L2Norm，αt=f(W↑_α W↓_α x_t)∈[0,1]^{dk}，βt=Sigmoid(W_β x_t)，dk=dv=128。
 - **效果**：细粒度门控 → 更有效利用有限 RNN 记忆 + 等价于"relax RoPE 正交约束的可学习 multiplicative positional encoding"（§6.1）。Figure 4（p.7, M3）的 Palindrome / MQAR / Stack 三合成任务：KDA 在 256→2048 序列上保持近 100% peak accuracy，GDN 在 2048 处明显下滑，Mamba2（仅 multiplicative decay 无 delta rule）在 Palindrome/Stack 上 >512 token 完全崩溃（0%）；收敛速度 KDA ≈5K steps 即饱和，GDN 慢，Mamba2 不收敛——直接验证"channel-wise 细门控 + delta rule"对长序列 retrieval/state-tracking 的关键作用。
 
 ### 2. DPLR 变体 + 定制 chunkwise-parallel 算法（§3.1-3.2, §6.2, Listing 1, Figure 2）
-- **机制**：KDA 限定 DPLR 转移矩阵的特化变体（§6.2）：原 DPLR 形式 St = (D − a_t·b_t^T)·St-1 + k_t·v_t^T，KDA 通过 **binding a=b=k**（即 a_t=βt·kt, b_t=kt⊙αt, D=Diag(αt)）将 DPLR 退化为可 factor-out 的 fine-grained multiplicative decay + Householder 风格 delta 更新。配合 WY representation（Comba [40]）/ UT transform（§3.1 Eq.3-9）推导出 chunkwise 算法：inter-block recurrent + intra-block parallel。Appendix B Proposition 1/2 给出 P_r[t]/H_r[t] 的归纳法证明。
-- **效果**：对比 Listing 8a (DPLR) vs Listing 8b (KDA) 伪代码：① 删掉 1/Γ 的 secondary chunking 两步（DPLR line 13-16 → KDA line 14-15）；② 进一步去掉 inter-chunk/output 阶段约 3 个 matmul（DPLR line 25-27,31-32 → KDA line 26,29）。**KDA kernel 相对 DPLR 提速约 2×**（§3.2, §6.2）。Figure 2（p.5, M3）实测：batch=1, 16 heads, 2K→64K 输入下 DPLR 时间近似指数增长（64K 处 ~48ms），KDA 在 2K-32K 近乎平坦（~0-8ms）、64K 仅 ~30ms，差距随序列拉长而扩大。
+- **机制**：一般 DPLR 转移矩阵形如 St = A_t·St-1 + ktv_t^T（formulas.json [7]）：
+
+$$
+\mathbf{S}_{t}=\mathbf{A}_t\mathbf{S}_{t-1} + \bm{k}_t\bm{v}_t^\top,\quad\bm{o}_{t}=\mathbf{S}_t^\top\bm{q}_t.
+$$
+
+KDA 限定其特化变体（§6.2）：通过 **binding a=b=k**（即 a_t=βt·kt, b_t=kt⊙αt, A_t=(I−βt·ktk_t^T)·Diag(αt)）将 DPLR 退化为可 factor-out 的 fine-grained multiplicative decay Diag(αt) + Householder 风格 delta 更新，整条生成轨迹等价展开为（formulas.json [15]）：
+
+$$
+\bm{o}_t = \sum_{i=1}^t \left( \bm{q}_t^{\top} \left(\prod_{j=i+1}^t\mathbf{A}_j\left(\mathbf{I}-\beta_j\bm{k}_j\bm{k}_j^\top\right) \right)\bm{k}_j\right) \bm{v}_j
+$$
+
+该展开（Eq.(5), formulas.json [5] 的 score 形式 s_{t,i}=q_t^T(∏R_j)k_i）正是 KDA 把 α/β 状态信息全部折进转移矩阵后的直接表达。配合 WY representation（Comba [40]）/ UT transform（§3.1 Eq.3-9）推导出 chunkwise 算法：inter-block recurrent + intra-block parallel。块间递推（formulas.json [2]，Eq.(8)，authoritative）：
+
+$$
+\mathbf{S}_{[t+1]} = \operatorname{Diag}(\boldsymbol{\gamma}_{[t]}^C) \mathbf{S}_{[t]} + \left(\bm{\Gamma}_{[t]}^{i\rightarrow C} \odot \mathbf{K}_{[t]}\right)^\top \left(\mathbf{U}_{[t]} - \mathbf{W}_{[t]} \mathbf{S}_{[t]}\right) \in \mathbb{R}^{d_k\times d_v}
+$$
+
+块内并行输出（formulas.json [3]，Eq.(9)）分 inter-chunk / intra-chunk / "pseudo"-value 三项：
+
+$$
+\mathbf{O}_{[t]} = \underbrace{\left({\bm{\Gamma}}_{[t]}^{1\rightarrow C} \odot\mathbf{Q}_{[t]}\right) \mathbf{S}_{[t]}}_\text{inter chunk} + \underbrace{\operatorname{Tril}\left(\left({\bm{\Gamma}}_{[t]}^{1\rightarrow C} \odot \mathbf{Q}_{[t]} \right) \left(\frac{\mathbf{K}_{[t]}}{{\bm{\Gamma}}_{[t]}^{1\rightarrow C}} \right)^\top \right)}_\text{intra chunk} \underbrace{\left(\mathbf{U}_{[t]} - \mathbf{W}_{[t]} \mathbf{S}_{[t]}\right)}_{\text{``pseudo''-value term}}
+$$
+
+（Eq.(13), formulas.json [13] 给出 M/W/U 的闭式：M=(I+StrictTril(Diag(β)·(Γ⊙K)(K/Γ)^T))^{−1}·Diag(β)，W=M(Γ⊙K)，U=MV）。Appendix B Proposition 1/2 给出 P_r[t]/H_r[t] 的归纳法证明。
+- **效果**：对比 Listing 8a (DPLR) vs Listing 8b (KDA) 伪代码：① 删掉 1/Γ 的 secondary chunking 两步（DPLR line 13-16 → KDA line 14-15）；② 进一步去掉 inter-chunk/output 阶段约 3 个 matmul（DPLR line 25-27,31-32 → KDA line 26,29）。**KDA kernel 相对 DPLR 提速约 2×**（§3.2, §6.2）。Figure 2（p.5, M3）实测：batch=1, 16 heads, 2K→64K 输入下 DPLR 时间近似指数增长（64K 处 ~48ms），KDA 在 2K-32K 近乎平坦（~0-8ms）、64K 仅 ~30ms，差距随序列拉长而扩大。LaTeX↔M3 双源校验：M3 caption 明确"KDA eliminates the second-level chunk matmuls of DPLR (Equation 9) by binding decay variables a, b into k, dropping four chunk matmuls to two"，与 Eq.(9) ([3]) 的三项分解式与 Listing 8a/b 的去 secondary chunking 一致。
 
 ### 3. 3:1 KDA : Full MLA 混合架构 + NoPE（§4, §5.2, §6.1, Figure 3, Table 1）
 - **机制**：每 3 层 KDA 夹 1 层 Full MLA（layer-wise inter-layer hybrid，非 head-wise），全程均匀重复（Figure 3 架构图 p.5, M3：KDA 块含 Linear-Conv-L2/Swish 的 q/k/v 投影、低秩 α/β 门控、head-wise RMSNorm + 低秩 Sigmoid output gate、MoE 通道混合）。MLA 层用 **NoPE**（不用 RoPE），把位置编码/recency bias 全部委托给 KDA 承担——KDA 因此成为主 position-aware 算子。Neural parameterization：q,k,v 走 ShortConv+Swish，q/k 加 L2Norm 保 eigenvalue stability；αt 经低秩 W↑_α W↓_α 投影 + decay function f(·)；dk=dv=128。
@@ -34,7 +70,19 @@ Kimi Linear 给出的解：KDA（Kimi Delta Attention）= Gated DeltaNet [111] +
 - **RL**（Figure 6 p.12, M3）：Math RL 训练曲线 KDA@1.4T vs MLA@1.4T，(a) train accuracy 全程领先且 gap 扩大；(b) MATH500 test 70-94 区间 Kimi Linear 全程在上；(c) AIME 2025（10-25 区间）gap 最大，Kimi Linear ~22% vs MLA ~19%。证明线性化注意力对 reasoning-intensive 长序列生成的优化动力学更好。
 
 ### 6. 效率：KV cache −75%，1M 解码 6.3×（§5.6, Figure 1, Figure 7）
-- **机制**：KDA 维持 fixed-size state（dk×dv=128×128 per head），prefill 走 FLOP-intensive chunk kernel（Eq.9），autoregressive 生成切到 recurrent kernel（Eq.2）。Hybrid 模型 I/O-bound 解码理论加速比上限 = 3:1。
+- **机制**：KDA 维持 fixed-size state（dk×dv=128×128 per head），prefill 走 FLOP-intensive chunk kernel（Eq.(9)），autoregressive 生成切到 recurrent kernel（Eq.(8)）。Hybrid 模型 I/O-bound 解码理论加速比上限 = 3:1。复杂度对照：full softmax attention 为 O(T²·d_h)（formulas.json [6]）：
+
+$$
+\mathrm{FLOPs}_{\text{Attn}}(T; d_h) = 2 T^2 d_h
+$$
+
+而 KDA chunkwise 算法为线性（formulas.json [16]）：
+
+$$
+\mathrm{FLOPs}_{\text{KDA}}(T; C, d_h) = 6 T d_h^2 + 3 T C d_h + T C^2
+$$
+
+—相对 T² 的全注意力，长序列下渐近优势决定 1M 上下文的吞吐数量级提升。
 - **效果**：Figure 1（p.1, M3）(a) Performance vs Acceleration 散点——RULER 128k 上 Kimi Linear 84.3 处 Pareto 最优，加速 3.98×；MMLU-Pro 4k 上 Kimi Linear 51.0 在相近速度下领先 MLA 47.2。(b) TPOT vs Decoding Length：MLA/GDN-H 曲线陡升，Kimi Linear 近乎平坦，标注 **4.8× @ 256K / 5.7× @ 128K / 6.3× @ 1M**（1.84ms vs MLA 11.48ms）。Figure 7（p.13, M3）单 batch 下 prefill latency 2.6×@512K / 2.9×@1M，TPOT 1.8×@512K / 2.2×@1M；KDA 与 GDN-H prefill 曲线几乎重合（细粒度门控不引入额外 latency）。
 - **5.7T 大版本**（Appendix D, Table 8/9）：Kimi-Linear-Instruct @5.7T 在 RULER@1M 达 **94.8**，RULER@128k 95.4，AIME 2025 58.6，MATH500 94.6，全面碾压 Moonlight-Instruct。
 

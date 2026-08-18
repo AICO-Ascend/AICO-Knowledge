@@ -1,8 +1,9 @@
-# Kimi K3: Open Frontier Intelligence — 技术点深读（DEEP 2026-08-18）
+# Kimi K3: Open Frontier Intelligence — 技术点深读（DEEP 2026-08-18，公式重跑）
 
 > 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
 > 论文：Kimi K3: Open Frontier Intelligence (Kimi Team 技术报告) · arXiv:2607.24653v2 (7 Aug 2026)
 > 图表上下文一律来自 minimax_captions.json 的 M3 文本 caption（text-only 模型禁直读 PNG）。
+> **公式权威源 = extraction/formulas.json 的 LaTeX**：以下 `$$` 包裹的公式逐字引自 formulas.json，cite 对应原文 Eq. 编号；formulas.json 未收录但原文存在的公式（如 MOPD Eq.15）按原文 .txt 形式给出并标注"原文 Eq.15"。LaTeX↔M3 双源校验在每条涉及图/公式的创新点内显式给出。
 
 ## 核心问题
 
@@ -13,70 +14,162 @@
 ## 关键创新点
 
 ### 1. Hybrid Attention：3 KDA + 1 Gated MLA 的 3:1 block 结构（§2.1, Figure 2 p.3）
-- **机制**：每个 block = 3 层 Kimi Delta Attention（线性、固定大小 recurrent state）+ 1 层 Gated MLA（全局 softmax，NoPE），block 末再补一层 Gated MLA 保证最终层是全局注意力。M3 对 Fig.2 的解读强调"token / channel / layer 三维信息流"的统一：KDA 负责序列维 mixing、Stable LatentMoE 负责通道维、AttnRes 负责深度维。MLA 用 DeepSeek-V2 的 latent KV 压缩（缓存低维 `c_t` 而非每头 K/V），K3 进一步加 **input-dependent full-rank output gate** `y_t = W_o[Sigmoid(W_g x_t) ⊙ ̃o_t]`（Eq.7）。MLA 全部用 NoPE，位置信息由 KDA 的递推门控/衰减隐式编码——**外推到 1M 上下文无需任何 RoPE rescaling / YaRN 调参**（§3.4）。
-- **效果**：长上下文 token mixing 成本大幅下降、KV cache 固定、位置编码外推免调；full-rank gate 让每 token 可通道级调制全局注意力读取。
+- **机制**：每个 block = 3 层 Kimi Delta Attention（线性、固定大小 recurrent state）+ 1 层 Gated MLA（全局 softmax，NoPE），block 末再补一层 Gated MLA 保证最终层是全局注意力。KDA 的核心递推为原文 **Eq.1**（formulas.json [0]，权威 LaTeX）：
 
-### 2. KDA 的 Lower-bounded decay + Full-rank output gate（§2.1.1, Eq.1-6, Figure 3 p.5）
-- **机制**：KDA = delta-rule recurrence + channel-wise forget gate（继承 [[kimi-linear-an-expressive-efficient-attention-architecture]]）。K3 改两处：(a) **log-decay 下界有界化**——Kimi Linear 用无界 `g = -e^A Softplus(z) ∈ (-∞,0)`，K3 改为 `g = g_min·Sigmoid(e^A z) ∈ (g_min, 0)`，`g_min = -5` 固定，使每步保留率 `α > e^-5 ≈ 6.7e-3`，16-token tile 累计 log-decay ∈ (−80,0)，倒数 rescale 因子 < e^80 仍在 BF16 动态范围内（Eq.5）。(b) **输出 gate 改 full-rank**：原低秩 → `y_t = W_o[Sigmoid(W_g x_t) ⊙ RMSNorm(̃o_t)]`（Eq.6），数据相关 full-rank 门控。
-- **效果（对照 Fig.3 p.5）**：M3 解读 Fig.3 (a) 显示 K3 的 scaled-sigmoid 曲线把 log-decay 下界钳到 g_min=−5（A=0 时曲线穿过原点、下界水平渐近 −5），而 Kimi Linear 的 negative-Softplus 无下界；(b) 显示 Kimi Linear 的对角 tile 须走 position-pair diagonal 路径、K3 因有界范围所有 causal tile（含对角）都能走稠密 Tensor Core matmul。即消掉了 Kimi Linear 的 position-pair diagonal 瓶颈，训练/推理 kernel 统一高效；full-rank gate 提升表达力。与有界递推门控的先前工作（HGRN2、Griffin、RWKV-7）思路相近。
+$$
+\mathbf{S}_t = \left(\mathbf{I}-\beta_t\bm{k}_t\bm{k}_t^{\top}\right) \operatorname{Diag}(\bm{\alpha}_t)\mathbf{S}_{t-1} + \beta_t\bm{k}_t\bm{v}_t^{\top}, \qquad \tilde{\bm{o}}_t = \mathbf{S}_t^{\top}\bm{q}_t.
+$$
+
+  其中 $\mathbf{M}_t := (\mathbf{I}-\beta_t\bm{k}_t\bm{k}_t^{\top})\operatorname{Diag}(\bm{\alpha}_t)$ 是 token-dependent 转移矩阵——delta rule 先把入段 state 经 $\mathbf{M}_t$ 投影、再加当前写 $\beta_t\bm{k}_t\bm{v}_t^{\top}$（§5.1.2 显式点明这一点是 KCP 必须分解转移矩阵的根本原因）。M3 对 Fig.2 的解读强调"token / channel / layer 三维信息流"的统一：KDA 负责序列维 mixing、Stable LatentMoE 负责通道维、AttnRes 负责深度维。MLA 用 DeepSeek-V2 的 latent KV 压缩（缓存低维 `c_t` 而非每头 K/V），K3 进一步加 **input-dependent full-rank output gate**（见创新点 2 的 Eq.7）。MLA 全部用 NoPE，位置信息由 KDA 的递推门控/衰减隐式编码——**外推到 1M 上下文无需任何 RoPE rescaling / YaRN 调参**（§2.1.2 / §3.4）。
+- **效果**：长上下文 token mixing 成本大幅下降、KV cache 固定、位置编码外推免调；full-rank gate 让每 token 可通道级调制全局注意力读取。
+- **LaTeX↔M3 双源校验**：formulas.json [0] 的 $\mathbf{S}_t$ 递推与 M3 对 Fig.2（p.3）"KDA 负责序列维 mixing + 固定大小 recurrent state"一致；Eq.1 的 $\operatorname{Diag}(\bm{\alpha}_t)$ 即 M3 caption 所述"跨层选择性信息检索"在序列维的对偶——channel-wise forget gate。
+
+### 2. KDA 的 Lower-bounded decay + Full-rank output gate（§2.1.1, Eq.5-6, Figure 3 p.5）
+- **机制**：KDA = delta-rule recurrence + channel-wise forget gate（继承 [[kimi-linear-an-expressive-efficient-attention-architecture]]）。K3 改两处：
+  - **(a) log-decay 下界有界化（Eq.5）**——Kimi Linear 用无界 $g = -e^A \operatorname{Softplus}(z) \in (-\infty,0)$，K3 改为 $g = g_{\min}\cdot\operatorname{Sigmoid}(e^A z) \in (g_{\min},0)$，$g_{\min}=-5$ 固定，使每步保留率 $\bm{\alpha}_t = \exp(g_t) \in (e^{-5},1)$，每元素 $> e^{-5}\approx 6.7\times10^{-3}$，16-token tile 累计 log-decay $\in(-80,0)$，倒数 rescale 因子 $<e^{80}$ 仍在 BF16 动态范围内（§2.1.1）。累积衰减记号见 formulas.json [1]：
+
+$$
+\bm{\gamma}_{[t]}^{i\rightarrow j} := \prod_{r=i}^{j}\bm{\alpha}_{[t]}^r, \qquad \bm{\gamma}_{[t]}^r := \bm{\gamma}_{[t]}^{1\rightarrow r}.
+$$
+
+  - **(b) 输出 gate 改 full-rank（Eq.6，formulas.json [2]，权威 LaTeX）**：
+
+$$
+\bm{y}_t = \mathbf{W}_o\!\left[ \operatorname{Sigmoid}\!\left(\mathbf{W}_g\bm{x}_t\right) \odot \operatorname{RMSNorm}(\tilde{\bm{o}}_t) \right].
+$$
+
+  原低秩 → 数据相关 full-rank 门控；同一形式也用于 Gated MLA 层（原文 Eq.7，区别仅 MLA 输出不接 RMSNorm，因 MLA 已自带归一）。$\mathbf{W}_g$ full rank，匹配 KDA 新参数化，使每 token 可通道级调制全局注意力读取（§2.1.2）。
+- **效果（对照 Fig.3 p.5）**：M3 解读 Fig.3 (a) 显示 K3 的 scaled-sigmoid 曲线把 log-decay 下界钳到 $g_{\min}=-5$（A=0 时曲线穿过原点、下界水平渐近 −5），而 Kimi Linear 的 negative-Softplus 无下界；(b) 显示 Kimi Linear 的对角 tile 须走 position-pair diagonal 路径、K3 因有界范围所有 causal tile（含对角）都能走稠密 Tensor Core matmul，消掉了 Kimi Linear 的 position-pair diagonal 瓶颈，训练/推理 kernel 统一高效。与有界递推门控的先前工作（HGRN2、Griffin、RWKV-7）思路相近。
+- **LaTeX↔M3 双源校验**：formulas.json [1] 的累积衰减 $\bm{\gamma}$ 与 M3 对 Fig.3(b) 的"$g_{\min}=-5$ 时 16-token tile 累计 log-decay∈(−80,0)"在数量上一致（$16\times(-5)=-80$）；formulas.json [2] 的 $\operatorname{RMSNorm}(\tilde{\bm{o}}_t)$ 与 M3 caption 无矛盾。
 
 ### 3. Attention Residuals (AttnRes)：跨层选择性信息检索（§2.2, Figure 2 p.3, Eq.8-10）
-- **机制**：把"Transformer 用 attention 取代 RNN 时序累积"的方法论搬到**深度维度**——每个 layer l 用可学习 pseudo-query `q_l = w_l`，对 embedding（i=0）+ 前序各层输出 `f_i(h_i)` 做 softmax 注意力（`ϕ(q,k)=exp(q^T RMSNorm(k))`，RMSNorm 防大层输出压制权重），加权求和得 `h_l`（Eq.8-9）。为控内存/通信开销，分 L 层为 N 块（K3 取 **N=8、每块 12 层**、含 embedding 共 9 块），块内求和成单一表示 `b_n`，跨块做 full AttnRes；块内用 online-softmax 合并 partial sum（Eq.10）。M3 对 Fig.2 的标注明确：pseudo-query `w` 生成跨 block 的注意力权重 `α`，选择性检索 embedding + 前序 block 输出。
-- **效果**：突破标准残差把所有历史压缩进单一 `h_l` 的 RNN 式瓶颈；深度信息流可选择性检索；O(L²d) 算力可负担（L<100），Block 形式把内存/通信从 O(Ld) 降到 O(Nd)。
+- **机制**：把"Transformer 用 attention 取代 RNN 时序累积"的方法论搬到**深度维度**——每个 layer $l$ 用可学习 pseudo-query $\bm{q}_l=\bm{w}_l$，对 embedding（$i=0$）+ 前序各层输出 $f_i(\bm{h}_i)$ 做 softmax 注意力，加权求和得 $\bm{h}_l$。keys/values 与 attention 权重见 formulas.json [3]、[4]（原文 Eq.8、Eq.9，权威 LaTeX）：
 
-### 4. Stable LatentMoE：896 路由专家 / 16 激活 + 三件套稳定化（§2.3, Eq.11-14, Figure 4 p.7, Figure 5 p.8）
-- **机制**：LatentMoE 思路——shared 专家保留 full-width 通路，routed 专家在紧凑 latent 空间（K3 取 latent dim 3584 = 0.5× hidden）操作，使 896 路由专家 / 16 激活 / sparsity 56 在通信上可承受。极端稀疏放大两个失败模式（routed 支路四连矩阵乘的病态条件 + 近 10³ 专家的负载均衡失控），用三件套应对：
+$$
+\bm{k}_{i} = \bm{v}_{i} = \begin{cases} \bm{h}_1 & i = 0 \\ f_i(\bm{h}_{i}) & 1 \leq i \leq l-1 \end{cases}
+$$
+
+$$
+{\alpha_{i \to l}} = \frac{\phi\left(\bm{q}_{l}, \bm{k}_{i}\right)}{\sum_{j=0}^{l-1} \phi\left(\bm{q}_{l}, \bm{k}_{j}\right)}, \qquad \bm{h}_{l} = \sum_{i=0}^{l-1} {\alpha_{i \to l}} \cdot \bm{v}_{i}.
+$$
+
+  其中 $\phi(\bm{q},\bm{k})=\exp(\bm{q}^{\top}\operatorname{RMSNorm}(\bm{k}))$，RMSNorm 防大层输出压制权重。为控内存/通信开销，分 $L$ 层为 $N$ 块（K3 取 **N=8、每块 12 层**、含 embedding 共 9 块），块内求和成单一表示 $\bm{b}_n$，跨块做 full AttnRes；块内用 online-softmax 合并 partial sum。Block AttnRes 的 value 矩阵构造见 formulas.json [5]（原文 Eq.10，权威 LaTeX）：
+
+$$
+\mathbf{V} = \begin{cases} [\bm{b}_0, \bm{b}_1, \ldots, \bm{b}_{n-1}]^\top & \text{if } i = 1 \text{ (first layer of block } n\text{)} \\ [\bm{b}_0, \bm{b}_1, \ldots, \bm{b}_{n-1}, \bm{b}_n^{i-1}]^\top & \text{if } i \geq 2 \text{ (subsequent layers)} \end{cases}
+$$
+
+  M3 对 Fig.2 的标注明确：pseudo-query $\bm{w}$ 生成跨 block 的注意力权重 $\bm{\alpha}$，选择性检索 embedding + 前序 block 输出。
+- **效果**：突破标准残差把所有历史压缩进单一 $\bm{h}_l$ 的 RNN 式瓶颈；深度信息流可选择性检索；$O(L^2 d)$ 算力可负担（$L<100$），Block 形式把内存/通信从 $O(Ld)$ 降到 $O(Nd)$。
+- **LaTeX↔M3 双源校验**：formulas.json [4] 的 $\bm{h}_l=\sum_i \alpha_{i\to l}\bm{v}_i$ 与 M3 对 Fig.2"用可学习 pseudo-query w 对 embedding 及前序各 block 输出算注意力权重 α"逐字对应；formulas.json [5] 的分情形 $V$ 构造与 §2.2 的"块内求和成 $\bm{b}_n$、首层用前 $n$ 块、后续层补本块 partial"叙述一致。
+
+### 4. Stable LatentMoE：896 路由专家 / 16 激活 + 三件套稳定化（§2.3, Eq.12-14, Figure 4 p.7, Figure 5 p.8）
+- **机制**：LatentMoE 思路——shared 专家保留 full-width 通路，routed 专家在紧凑 latent 空间（K3 取 latent dim 3584 = 0.5× hidden）操作，使 896 路由专家 / 16 激活 / sparsity 56 在通信上可承受。极端稀疏放大两个失败模式（routed 支路四连矩阵乘的病态条件 + 近 $10^3$ 专家的负载均衡失控），用三件套应对：
   - **Normalized LatentMoE**（§2.3.1）：expert 聚合后、up-projection 前插 RMSNorm，降低 routed 支路对 scale 的敏感度，同时降验证损失。
-  - **SiTU-GLU**（§2.3.2，Eq.12）：对 SwiGLU 的 gate 与 up 两支分别套 smooth cap `β·tanh(x/β)`（`β1=4, β2=25`），原点附近一阶等价 SwiGLU、大值有界 `|f|≤β1·β2=100`，保 SwiGLU 局部响应同时控溢出，优于 hard clamp（梯度在饱和边界外仍非零）。附录 B 给局部展开与极限恢复 SwiGLU。M3 对 Fig.4（p.7）的解读：右图标量响应曲线 x∈[−10,100]，SiTU-GLU（红）原点附近紧贴 SwiGLU、大正值饱和到 |f|≤100，而 SwiGLU/GLU 无界增长——直观说明 SiTU-GLU 在保局部行为同时消除低精度溢出风险。
-  - **Quantile Balancing (QB)**（§2.3.3，Eq.13-14）：auxiliary-loss-free 路由——`s_i = Sigmoid(W_r x_i)`，`T_i = argtopk(s_i + b)`，混合权重 `p_{i,j}=s_{i,j}/Σ_{r∈T_i} s_{i,r}`（bias 不进权重、不改梯度）。原 sign 更新 `b_{j}^{t+1}=b_j^t + γ·sign(ℓ̄−ℓ_j^t)` 在 896 专家下慢且振荡；QB 从单次前向算：取 `Top-(k+1)` 的第 (k+1) 大为 cutoff `α_i^(t)`，再令 `b̂_j^{t+1} = -quantile_{1−k/n}(s_{:,j} − α^(t))` 后 mean-center，使每专家恰好收到目标负载 `q=mk/n`。M3 对 Fig.5（p.8）的解读：m=8/n=4/k=1 示例，(a) 不均衡负载 (4,3,1,0) → (b) 每列在 margin 第 (q+1) 大处置 bias 调整线（恰好 q=2 个 margin 超阈值，★ 标减去列调整后的行级 Top-k）→ (c) 均衡负载 (2,2,2,2)，红边为 QB 改动的分配。附录 C 给从 bipartite b-matching LP 对偶推出的**精确坐标极小化解**（Eq.20-26），证明 QB 即 SignSGD 一步到对偶极小值的闭式跳；附录 D 给**直方图分位估计**：每专家维护 `r_{i,j}=α_i−s_{i,j}` 的 binned 直方图，单次 all-reduce 汇总 nB 计数即恢复全局分位（B=1000 时误差 ≤几×10⁻³，通信 <1% 原始 margins 交换成本，与 token 分片无关）。推理时 bias 冻结。
-- **效果**：896 专家下稳定训练、负载完美均衡、无需手调 γ；稳定化使 2.8T 规模下 routed 支路不爆。
+  - **SiTU-GLU**（§2.3.2，原文 Eq.12，formulas.json [6]，权威 LaTeX）——对 SwiGLU 的 gate 与 up 两支分别套 smooth cap $\beta\tanh(x/\beta)$（$\beta_1=4,\beta_2=25$）：
+
+$$
+\operatorname{SiTU\text{-}GLU}(\bm{x}) = \left[\beta_1\tanh\!\left(\frac{\mathbf{W}_g\bm{x}}{\beta_1}\right)\odot\operatorname{Sigmoid}(\mathbf{W}_g\bm{x})\right] \odot \left[\beta_2\tanh\!\left(\frac{\mathbf{W}_u\bm{x}}{\beta_2}\right)\right].
+$$
+
+  附录 B 给局部展开（formulas.json [11]，$\beta\tanh(z/\beta)=z+O(z^3/\beta^2)$）与有界性（formulas.json [12]，权威 LaTeX）：
+
+$$
+\left\|\operatorname{SiTU\text{-}GLU}(\bm{x})\right\|_{\infty} \leq \beta_1\beta_2 = 100,
+$$
+
+  即原点附近一阶等价 SwiGLU、大值有界 $|f|\leq\beta_1\beta_2=100$，保 SwiGLU 局部响应同时控溢出，优于 hard clamp（梯度在饱和边界外仍非零）。M3 对 Fig.4（p.7）的解读：右图标量响应曲线 $x\in[-10,100]$，SiTU-GLU（红，$\beta_1=4,\beta_2=25$）原点附近紧贴 SwiGLU、大正值饱和到 $|f|\leq100$，而 SwiGLU/GLU 无界增长。
+  - **Quantile Balancing (QB)**（§2.3.3，原文 Eq.13，formulas.json [7]，权威 LaTeX）——auxiliary-loss-free 路由：$\bm{s}_i=\operatorname{Sigmoid}(\mathbf{W}_r\bm{x}_i)$，混合权重 $p_{i,j}$ 把 bias 排除在外（不进权重、不改梯度）：
+
+$$
+\mathcal{T}_i = \operatorname{argtop}_{k}\!\left(\bm{s}_i+\bm{b}\right), \qquad p_{i,j} = \frac{s_{i,j}}{\sum_{r\in\mathcal{T}_i}s_{i,r}}, \quad j\in\mathcal{T}_i.
+$$
+
+  原 sign 更新 $b_j^{t+1}=b_j^t+\gamma\cdot\operatorname{sign}(\bar\ell-\ell_j^t)$ 在 896 专家下慢且振荡；QB 从单次前向算。固定 cutoff $\alpha_i^{(t)}$ 下，候选 bias $\widehat{b}_j^{(t+1)}$ 使 expert $j$ 收到的 token 数（formulas.json [8]，原文 Eq.14 第一式）：
+
+$$
+\sum_{i=1}^{m}\mathbf{1}\!\left[s_{i,j}+\widehat{b}_j^{(t+1)}>\alpha_i^{(t)}\right],
+$$
+
+  设其等于目标 $q=mk/n$ 即得 QB 闭式更新 $b_j^*$（formulas.json [19]，权威 LaTeX）：
+
+$$
+\beta_j^* = \operatorname{quantile}_{1-k/n}\big(\bm{s}_{:,j} - \bm{\alpha}\big),
+$$
+
+  再 mean-center 去公共偏移（原文 Eq.14 第二行），推理时 bias 冻结。M3 对 Fig.5（p.8）的解读：$m=8/n=4/k=1$ 示例，(a) 不均衡负载 $(4,3,1,0)$ → (b) 每列在 margin 第 $(q+1)$ 大处置 bias 调整线（恰好 $q=2$ 个 margin 超阈值，★ 标减去列调整后的行级 Top-k）→ (c) 均衡负载 $(2,2,2,2)$，红边为 QB 改动的分配。附录 C 给从 bipartite b-matching LP 对偶推出的精确坐标极小化解（formulas.json [13] 原始 0/1 规划、[14]-[16] LP 松弛与对偶、[17] 行级简化、[18] token 侧闭式 $\alpha_i^*=\operatorname{quantile}_{1-k/n}(\bm{s}_i-\bm{\beta})$），证明 QB 即 SignSGD 一步到对偶极小值的闭式跳；附录 D 给直方图分位估计：每专家维护 $r_{i,j}=\alpha_i-s_{i,j}$ 的 binned 直方图，单次 all-reduce 汇总 $nB$ 计数即恢复全局分位（$B=1000$ 时误差 ≤几×$10^{-3}$，通信 <1% 原始 margins 交换成本，与 token 分片无关）。
+- **效果**：896 专家下稳定训练、负载完美均衡、无需手调 $\gamma$；稳定化使 2.8T 规模下 routed 支路不爆。
+- **LaTeX↔M3 双源校验**：formulas.json [12] 的 $\|\cdot\|_\infty\leq\beta_1\beta_2=100$ 与 M3 对 Fig.4"saturates to bounded value $|f(x)|\leq\beta_1\beta_2=100$"逐字一致；formulas.json [7] 的 $\mathcal{T}_i=\operatorname{argtop}_k(\bm{s}_i+\bm{b})$ 与 M3 对 Fig.5"row-wise Top-k choice after subtracting column adjustments"对齐；formulas.json [19] 的 $\operatorname{quantile}_{1-k/n}$ 与原文 Eq.14 及 M3"placed at the $(q+1)$-th largest margin so that exactly $q=2$ margins exceed it"在 $q=mk/n=2$ 上一致。
 
 ### 5. 原生多模态 + 从头训练 MoonViT-V2（§2.4, Figure 6 p.9）
 - **机制**：单一共享 backbone 从训练伊始即联合优化 text+image+video（next-token prediction 统一目标），无事后 modality alignment 阶段。MoonViT-V2 = 27 层 ViT / ~0.4B 参数 / RMSNorm / 去所有 bias，**从头用 next-token prediction 训练**（非 SigLIP 对比预训练初始化）。理由：SigLIP-init 的 MoonViT-3D 联合优化时梯度范数持续偏高且频 spike，从头训的 V2 全程稳定；且 next-token 让表示直接由 LM 目标塑形而非对比损失的全局语义。视觉通路：图片/视频共享参数、intra-frame 空间 + inter-frame 时间 factorized attention + temporal pooling；pixel-shuffle 2×2 下采样使视觉 token 减 4×，支持 3584×3584 像素输入在 1M 上下文内可承担。
-- **效果（对照 Fig.6 p.9）**：M3 解读 Fig.6 双图：(a) 全训练轨迹 7k–30k 步，MoonViT-3D (SigLIP init, 蓝) 梯度范数频繁 spike 至 ~0.7；(b) 14k–16k 放大窗口，MoonViT-V2 (from scratch, 红) 全程低位平稳。MoonViT-V2 在视觉评测上匹配 SigLIP-init 基线 → 证明对比预训练对大规模多模态 LM 并非必要初始化；vision-in-the-loop agentic 行为（写代码→截图/视频→迭代精修）有架构根基。
+- **效果（对照 Fig.6 p.9）**：M3 解读 Fig.6 双图：(a) 全训练轨迹 7k–30k 步，MoonViT-3D (SigLIP init, 蓝) 梯度范数频繁 spike 至 ~0.7；(b) 14k–16k 放大窗口，MoonViT-V2 (from scratch, 红/橙) 全程低位平稳。MoonViT-V2 在视觉评测上匹配 SigLIP-init 基线 → 证明对比预训练对大规模多模态 LM 并非必要初始化。
+- **LaTeX↔M3 双源校验**：本节无核心公式（纯经验/架构），M3 caption 是唯一图源；§2.4 文本"matches the SigLIP-initialized baseline across vision evaluations"与 M3 Fig.6"lower gradient norms with fewer spikes, indicating more stable optimization"互证。
 
 ### 6. Per-Head Muon 优化器（§2.5）
 - **机制**：继承 [[kimi-k2-open-agentic-intelligence]] 用 Muon（[[muon-is-scalable-for-llm-training]]）做矩阵参数优化器；对 Q/K/V 投影进一步做 per-head 变体——沿 head 维切分 momentum 矩阵、每头块独立 Newton–Schulz 正交化。直觉：全矩阵正交化把所有头当耦合块，大梯度/动量头主导共享更新方向、小头欠正交化；per-head 等价化各头更新尺度。
 - **效果**：跨头学习动力学更均衡、大规模稳定性提升；per-head 块更瘦，Newton–Schulz 迭代比全矩阵更省。
+- **LaTeX↔M3 双源校验**：本节无公式收录；纯文本机制描述，无图。
 
-### 7. Multi-effort RL + 多教师 on-policy 蒸馏（§4.1, Figure 8 p.13, Eq.15）
+### 7. Multi-effort RL + 多教师 on-policy 蒸馏（§4.1, Figure 8 p.13, 原文 Eq.15）
 - **机制**：三段式 post-training——SFT 冷启 → 分域×分力度 RL 专家 → MOPD 合并。RL 跨三大域（general / general agents / coding agents），每域 × 三 effort {low, high, max} = **9 个专家**。关键算法：
-  - **Partial rollout**（§4.1.2）：每迭代 N prompt × K 完成，维持 N×K 活跃轨迹；一旦 λ∈(0,1) 比例完成即触发策略优化，不等 straggler；暂停的 rollout 入队下迭代恢复（靠沙箱基础设施）。单条长程轨迹天然跨多迭代 → 引入 data staleness，靠 per-token 正则把策略更新限局部邻域容忍极 off-policy。
-  - **Reasoning Effort RL**：每问题估初始 token 预算 `b_0(x)`（冷启模型估），超 `τ·b_0(x)` 的轨迹 reward 改为 −1；按 `τ` 阶段课程——先训 max-budget（大 τ 但封顶），再退火到 high/low。
-  - **Agentic GRM**：非可验证任务用 tournament 二元比较的 generative reward；judge 强制四步协议（读产出→生成 rubric→按 rubric 打分→记 scorepad）；并用 `σ·ℓ_0` verbosity 控制反 reward hacking 到冗长。
-  - **MOPD**（§4.1.3，Eq.15）：对域 d、effort e，由对应 9 专家 `π_teacher^(d,e)` 给 per-token OPD reward `r_opd = clip(sg(log π_teacher/π_θ), −R_max, R_max)`，dense reward 无缝集成进 partial rollout RL 框架。top-k distillation 未见明显优势。
+  - **Partial rollout**（§4.1.2）：每迭代 $N$ prompt × $K$ 完成，维持 $N\times K$ 活跃轨迹；一旦 $\lambda\in(0,1)$ 比例完成即触发策略优化，不等 straggler；暂停的 rollout 入队下迭代恢复（靠沙箱基础设施）。单条长程轨迹天然跨多迭代 → 引入 data staleness，靠 per-token 正则把策略更新限局部邻域容忍极 off-policy。
+  - **Reasoning Effort RL**：每问题估初始 token 预算 $b_0(x)$（冷启模型估），超 $\tau\cdot b_0(x)$ 的轨迹 reward 改为 −1；按 $\tau$ 阶段课程——先训 max-budget（大 $\tau$ 但封顶），再退火到 high/low。
+  - **Agentic GRM**：非可验证任务用 tournament 二元比较的 generative reward；judge 强制四步协议（读产出→生成 rubric→按 rubric 打分→记 scorepad）；并用 $\sigma\cdot\ell_0$ verbosity 控制反 reward hacking 到冗长。
+  - **MOPD**（§4.1.3，原文 Eq.15，formulas.json 未收录、按原文 .txt 给出）：对域 $d$、effort $e$，由对应 9 专家 $\pi_{\text{teacher}}^{(d,e)}$ 给 per-token OPD reward $r_{\text{opd}}^d(y_t\mid e,x,y_{<t})=\operatorname{clip}(\operatorname{sg}(\log \pi_{\text{teacher}}^{(d,e)}(y_t\mid x,y_{<t})/\pi_\theta(y_t\mid e,x,y_{<t})),-R_{\max},R_{\max})$，dense reward 无缝集成进 partial rollout RL 框架；top-k distillation 未见明显优势。
 - **效果（对照 Fig.8 p.13）**：M3 解读 Fig.8 的 2×4 双轴面板（8 域：Coding Experience / General Tool Use / Web Development / Agentic Search / Professional Workflows / Office Deliverables / Agentic Chart Understanding / Agentic Visual Puzzles），蓝实线=Score(%)、红虚线=Avg. assistant steps，共享 x 轴 RL FLOPs。结论：RL FLOPs ↑ → tool-call steps ↑ → 各能力综合 ↑，即 scaling RL FLOPs 同时驱动"想得更久（步数↑）"与"能力综合↑"。
+- **LaTeX↔M3 双源校验**：MOPD Eq.15 公式来自原文 .txt（formulas.json 未收录，故不渲染 $$、仅按原文形式引用以避免凭训练知识补全）；Fig.8 的 M3 解读与 §4.1"scaling RL FLOPs → tool-call steps scale up"叙述一致。
 
-### 8. 部署感知 post-training：MXFP4 QAT + EAGLE-3 draft（§4.1.4, Eq.16）
-- **机制**：MoE 专家权重 MXFP4、激活 MXFP8，非专家组件（attention 投影、latent MoE 投影、shared 专家、router）保高精度；**QAT 贯穿 SFT+RL**，rollout 与训练同量化方案消除 train-inference mismatch。MTP 层 fine-tune 成 EAGLE-3 风格 draft model（target frozen，仅更新 draft 层 + feature-fusion 投影）；draft 输入融合 AttnRes 第 1/4/末块的低/中/高层特征，`W_E3` 初始化 `[0 0 I]` 使初始等价高层特征；**直接优化 LK loss** `L_LK = −log Σ_x min(p(x),q(x))`（Eq.16，acceptance rate 负对数，温度=1，无辅助 CE 项），因 KL surrogate 不保证最大化 capacity-limited draft 的接受率。
+### 8. 部署感知 post-training：MXFP4 QAT + EAGLE-3 draft（§4.1.4, 原文 Eq.16）
+- **机制**：MoE 专家权重 MXFP4、激活 MXFP8，非专家组件（attention 投影、latent MoE 投影、shared 专家、router）保高精度；**QAT 贯穿 SFT+RL**，rollout 与训练同量化方案消除 train-inference mismatch。MTP 层 fine-tune 成 EAGLE-3 风格 draft model（target frozen，仅更新 draft 层 + feature-fusion 投影 $\mathbf{W}_{E3}$，初始化 $[\,0\;0\;\mathbf{I}\,]$ 使初始等价高层特征）；draft 输入融合 AttnRes 第 1/4/末块的低/中/高层特征；**直接优化 LK loss**（原文 Eq.16，formulas.json [9]，权威 LaTeX）：
+
+$$
+\mathcal{L}_{\mathrm{LK}} = -\log \sum_{x \in \mathcal{V}} \min\!\left(p(x), q(x)\right),
+$$
+
+  即 acceptance rate 负对数（$p,q$ 温度=1，无辅助 CE 项），因 KL surrogate 不保证最大化 capacity-limited draft 的接受率。
 - **效果**：部署内存/成本降 + 无损 speculative decoding；draft 在 QAT 配置下训练。
+- **LaTeX↔M3 双源校验**：formulas.json [9] 的 $\mathcal{L}_{\mathrm{LK}}=-\log\sum_x\min(p,q)$ 与原文 Eq.16 及 §4.1.4"negative logarithm of the acceptance rate itself"逐字一致；本创新无专属图。
 
 ### 9. 任务合成与白盒 RL 环境（§4.2, Figure 9 p.15, Figure 10 p.17）
 - **机制**：(i) **Unified White-Box RL Env** 把 agent harness 拆成可配置可组合模块（tool 接口、system prompt、context 管理、skills、memory、subagents），靠配置实例化 Kimi Code / Claude Code / Codex / OpenClaw / Hermes 等主流 harness，防过拟合单一 harness。(ii) **Knowledge-Graph-Guided Task Synthesis**（§4.2.2，Fig.9）：自演化分层 DAG 知识图，agent 递归扩展节点（web 搜索→查重→加边），按层级采样节点→派生关键词→检索真实材料→合成任务。M3 对 Fig.9（p.15）的解读：左侧径向层级知识图（中心根→CS/AI/Biomedicine/Coding/Humanities/Math/Physics/Chemistry 等一级域→外环细粒度概念），右侧垂直 pipeline（Keyword Set 如 RoPE/GPU kernel → Material Retrieval 检索学术文章/博客/代码库 → Task Synthesis 选 Coding/Knowledge/Vision 类型）。图层级同时暴露 granularity（哪层采样）与 coverage（哪些兄弟分支组合）两个可控旋钮。(iii) **Verifiable agentic problems**：多步信息检索、专业工作流（投行/数据/法律）、多步可验证视觉推理（sandbox 内 Python 解释器，模型迭代写代码 crop/zoom/transform 验证）。(iv) **Kernel optimization tasks**（§4.2.4）：CUDA/Triton/CuTe DSL/Gluon/ThunderKittens/TileLang，BF16/FP8/FP4；reward = 正确性（超阈值零分）+ 性能（match expert 0.5，近 roofline 趋 1）；hacking 检测（CUDA graph replay、输入缓存、精度降低）。(v) **Personal assistant tasks**（§4.2.5）：Gmail/Notion/Slack/Canvas 的 mock 实现，跨多模拟日、数十互依事件、单 rollout 至数千工具调用百万 token。(vi) **AET (Autonomous Execution Tasks)**（§4.2.6）：给目标/约束/验证接口，无参考轨迹，agent 自主分解/选工具/规划/纠错/终止；reward 基于独立 verifier 对终态评估；black-box 系统复制（Fig.10 Camera Repair）、量化因子发现、税务审计；公私 verifier 配对防 hacking。(vii) **Web development tasks**（§4.2.7）：容器化沙箱、多 scaffold rollout、deterministic + model judge 双 reward。
 - **效果（对照 Fig.10 p.17）**：M3 解读 Fig.10 Camera Repair Management System 复制任务的 completion curve（x=normalized tool-call progress%、y=completion%）。Kimi K3（1.000）约在 60% tool progress 处陡升饱和到 100%；Opus 4.8（0.918）缓升至 ~92%；GPT-5.5（0.893）早期激进后 plateau ~89%；Kimi K2.6（0.560）平坦收于 ~56%。K3 是唯一完全完成隐藏 3D-camera 修复系统复制的模型。
+- **LaTeX↔M3 双源校验**：本节无核心公式；Fig.9/Fig.10 全图理解走 M3 caption，与 §4.2 文本叙述（知识图层级采样、AET verifier 终态评估）一致。
 
-### 10. KDA 算法-系统协同设计（§5.1, Eq.17）
-- **机制**：(a) **FlashKDA**（§5.1.1）：CUTLASS-based chunkwise kernel，把 token-parallel stage 与 head-parallel recurrence 解耦独立调度，重叠 intra-chunk 计算与 cross-chunk state 传播，优于 Triton reference；服务于训练 + 推理 prefill。(b) **Intra-device Context Parallelism**：pure TP 下长 prefill 单 rank 仅持少头 → SM 闲置；观察到 segment 状态转移可独立算后精确复合，自动 SM-level CP planner 把序列切到单 rank 各 SM 上并行算 segment 转移再合并，无跨设备通信。(c) **KDA Context Parallelism (KCP)**（§5.1.2，Eq.17）：KDA 的 delta-rule 使 local segment 效果依赖入段 state（不能像普通线性注意力 S=0 直接求和）；KCP 把每段效果分解为 `M_{t←1}[i+1]`（作用于入段 state 的累积转移）+ `eS_t[i+1]`（从零起 local 生成 state），二者皆可仅用 local token 算 → 各 rank 一次 all-gather 交换固定大小片段 → prefix scan 复合（结合律）恢复入段 state。**线性算力扩展 + 固定大小通信**，区别于 softmax attention 的 KV 块交换（size 随序列长增长）。
+### 10. KDA 算法-系统协同设计（§5.1, 原文 Eq.17 = formulas.json [10]）
+- **机制**：(a) **FlashKDA**（§5.1.1）：CUTLASS-based chunkwise kernel，把 token-parallel stage 与 head-parallel recurrence 解耦独立调度，重叠 intra-chunk 计算与 cross-chunk state 传播，优于 Triton reference；服务于训练 + 推理 prefill；auto-dispatch 为 flash-linear-attention 后端。(b) **Intra-device Context Parallelism**：pure TP 下长 prefill 单 rank 仅持少头 → SM 闲置；观察到 segment 状态转移可独立算后精确复合，自动 SM-level CP planner 把序列切到单 rank 各 SM 上并行算 segment 转移再合并，无跨设备通信。(c) **KDA Context Parallelism (KCP)**（§5.1.2，原文 Eq.17，formulas.json [10]，权威 LaTeX）：KDA 的 delta-rule（见创新点 1 的 $\mathbf{M}_t$）使 local segment 效果依赖入段 state（不能像普通线性注意力 $\mathbf{S}=0$ 直接求和）；KCP 把每段效果分解为累积转移 $\mathbf{M}_{[i+1]}^{t\leftarrow 1}$（作用于入段 state）+ local 生成 state $\widetilde{\mathbf{S}}_{[i+1]}^t$，二者皆可仅用 local token 算，各 rank 一次 all-gather 交换固定大小片段 → prefix scan 复合（结合律）恢复入段 state：
+
+$$
+\begin{aligned} \mathbf{M}_{[i+1]}^{t \leftarrow 1} := \prod_{r \leftarrow 1}^{t}\mathbf{M}_r \in \mathbb{R}^{d_k\times d_k}, \qquad \mathbf{S}_{[i+1]}^{t} & =\widetilde{\mathbf{S}}_{[i+1]}^{t} + \mathbf{M}_{[i+1]}^{t \leftarrow 1}\mathbf{S}_{[i]}^{T_i} \\ & = \widetilde{\mathbf{S}}_{[i+1]}^{t} + \mathbf{M}_{[i+1]}^{t \leftarrow 1}\sum_{j=1}^{i}\Big(\prod_{l \leftarrow j+1}^{i}\mathbf{M}_{[l]}^{T_l \leftarrow 1}\Big)\widetilde{\mathbf{S}}_{[j]}^{T_j}\in \mathbb{R}^{d_k\times d_v}. \end{aligned}
+$$
+
+  **线性算力扩展 + 固定大小通信**，区别于 softmax attention 的 KV 块交换（size 随序列长增长）。
+- **效果**：长上下文 KDA 训练/推理通信成本恒定、可线性扩展到 1M。
+- **LaTeX↔M3 双源校验**：formulas.json [10] 的 $\mathbf{S}_{[i+1]}^t=\widetilde{\mathbf{S}}+\mathbf{M}\mathbf{S}_{[i]}^{T_i}$ 与 §5.1.2 文本"decomposes the effect of each segment into a cumulative transition acting on the incoming state and a state generated locally from zero"逐字对应；$\mathbf{M}_r$ 即创新点 1 formulas.json [0] 的 $(\mathbf{I}-\beta_t\bm{k}_t\bm{k}_t^\top)\operatorname{Diag}(\bm{\alpha}_t)$，两公式互证。
 
 ### 11. 3T-class 预训练基础设施（§5.2, Figure 11 p.19）
-- **MoonEP**（§5.2.1，附录 E 证明）：perfectly balanced expert-parallel scheme，每 rank 恰收 `S×K` token。证明 **每 rank 至多 E/R 个 redundant expert 即可保证均衡方案存在且该界 essentially tight**（`⌈E(R−1)/R²⌉ ≈ E/R`）。在线 planning kernel 近最优且零开销（ILP 离线求参考解），forward prefetch、backward 本地 reduce buffer；**zero-copy 通信**（planner 预算每 token 目的地，直接送至远程 expert-grouped 位置，无中间拷贝；最坏失衡下 DeepEP 需 `S×K×R` buffer，MoonEP 仅固定 `S×K`）；**static shapes 去 per-layer host-device sync**（每 rank 恒收 S×K → 计算形状静态已知 → 去 host-side kernel launch stall）；**workload-aware expert-GEMM scheduling**（per-expert token count 仍偏斜 → 自适应调度参数 + offline autotune 校准硬件系数；shared experts 派到独立 stream 重叠）。
+- **MoonEP**（§5.2.1，附录 E 证明）：perfectly balanced expert-parallel scheme，每 rank 恰收 $S\times K$ token。证明 **每 rank 至多 $E/R$ 个 redundant expert 即可保证均衡方案存在且该界 essentially tight**（$\lceil E(R-1)/R^2\rceil \approx E/R$）。在线 planning kernel 近最优且零开销（ILP 离线求参考解），forward prefetch、backward 本地 reduce buffer；**zero-copy 通信**（planner 预算每 token 目的地，直接送至远程 expert-grouped 位置，无中间拷贝；最坏失衡下 DeepEP 需 $S\times K\times R$ buffer，MoonEP 仅固定 $S\times K$）；**static shapes 去 per-layer host-device sync**（每 rank 恒收 $S\times K$ → 计算形状静态已知 → 去 host-side kernel launch stall）；**workload-aware expert-GEMM scheduling**（per-expert token count 仍偏斜 → 自适应调度参数 + offline autotune 校准硬件系数；shared experts 派到独立 stream 重叠）。
 - **Memory-efficient training**（§5.2.2）：统一 activation manager（recompute/quant/offload/remote-offload 皆 tensor 粒度可组合存储策略，函数粒度 recompute 支跨层；block-wise FP8 + offload）；memory-efficient MoE（参考 SonicMoE 把 permuted probs 的梯度改写为仅依赖 `act_output + d_output`，省前向输出依赖 + group GEMM 前向只存 dispatch 输入、反向重算 dispatch 并与 group-GEMM 反向重叠）；Block AttnRes 优化（块表示生成一次驻 GPU、整 AttnRes 包 checkpointing、cache-based pipeline 仅传新块达到理论下界）；跨 PP rank 激活均衡（1F1B warmup 致 PP 高 rank 激活少 → Mooncake Transfer Engine 远程 offload 到其它 PP rank）；Pipeline ZeRO-2 梯度分片+CPU offload（shard 存 CPU，double grad buffer 留 GPU，DP reduce 后累积进 CPU shard）；**P2P Muon 正交化**（不去 all-gather 全参数 buffer，每 rank 仅 P2P 拉本 rank 拥有的 shard，消除全参数 buffer + 减少 memory/通信，模型 chunk 粒度流水隐藏通信）。
 - **Multimodal encoder 优化**（§5.2.3）：动态 CP 切大图/长视频 patch 到多设备 gather-KV + sub-CP group 负载均衡；ViT 计算塞进 PP bubbles（首微批次同步前置、余下进 bubble、backward 类似）——继承 K2.5 DEP 思路进一步分解 ViT，几乎消除视觉编码器有效开销。
 - **对照 Fig.11 p.19**：M3 解读为 PP 三阶段（PP0/PP1/PP2）执行时间线，蓝=forward、深红=backward、橙=EP dispatch/recompute、阴影=shared-expert stages（SE1/SE2）、虚线=remote offload/onload。箭头示 PP0→PP2 的 remote offload：ViT 激活在 PP0 早期下推、PP2 晚期才 onload 消费；all-to-all EP dispatch/combine 与 NCCL 集合通信被塞进 forward/backward kernel 内部避免串行化。
+- **LaTeX↔M3 双源校验**：MoonEP 的 $E/R$ 上界为定理文字（附录 E），不渲染 $$；Fig.11 全图理解走 M3，与 §5.2.1"static shapes""zero-copy"叙述对齐。
 
 ### 12. 1M Agentic RL 基础设施 + AgentENV microVM 沙箱（§5.3）
 - **机制**：(a) **Co-located RL**（§5.3.1）：每 1M-上下文 RL 实验压在几百 GPU 内 + partial rollout 降尾延迟。**External KV cache pool**：1M 多步 rollout 的 prefix KV miss 极贵，partial rollout 每迭代初大量未完长 prefill 同时到、speculative decoding 加速周转致 prefix-block churn → 触发抢占降命中率。解法：write-back 设计——active decode 块留 GPU KV，可复用 idle prefix 仅在被驱逐时写回 CPU DRAM 外部池，下次复用前 prefetch 回；KDA state 与对应 MLA KV 块同生命周期 offload/prefetch；训练迭代后把训练状态（权重+优化器）offload 到 NVMe 腾 DRAM 给池。**Rollout auto-throttling**：基于 active/queued 请求数 + KV cache 利用率动态控并发，早期高利用、后期降并发防抢占。**Gradient-buffer reuse**：非策略模型（如 reference model）权重存 CPU、用时 materialize 到策略模型的 FP32 gradient buffer（real gradient 算时才覆写，安全复用），ZeRO-2 下每 GPU 仅留两 VPP chunk 的 grad buffer，stream 参考权重 chunk by chunk + 另一槽 prefetch。
 - **AgentENV**（§5.3.2）：与合作伙伴开发的 microVM 沙箱，Firecracker 隔离（容器级曾出 kernel panic/deadlock）。三目标：(i) 高保真隔离（agent 可挂盘/跑容器/起 VM）；(ii) 灵活生命周期——增量 checkpoint/resume（仅存脏页，**checkpoint 133ms / resume 49ms**），Pause-Resume（等待模型推理时暂停沙箱零耗 CPU/mem，占沙箱寿命 98%）、Fork（同状态 fork 出新沙箱做无副作用 reward judging）、Snapshot 定期快照错误恢复；(iii) 高密度高效——OverlayBD 图像 + 自研 ublk 驱动 + 存储层共享 + P2P 传输，亚秒级大规模启动；copy-on-write 内存 + page-cache 优化，**memory overcommit 比 6.5×**。整个训练+评测期共创建 **51,219,741 沙箱跨 1,505,678 镜像**。
+- **LaTeX↔M3 双源校验**：本节无公式；AgentENV 的 133ms/49ms/6.5×/51M 数字来自 §5.3.2 原文，无图对应（Fig.11 仅 PP 时间线）。
 
 ### 13. 推理与服务：KDA-aware 混合前缀缓存 + 专用 kernel + fleet 调度（§5.4, Figure 12 p.23）
 - **KDA-aware prefix cache**（§5.4.1）：KDA recurrent state（固定大小、每序列一份）与 MLA KV cache（随序列长分页）size/lifetime 不同但必须同边界恢复才有用 → 统一到同 paged pool（同 byte size 共享分配/引用计数/eviction；页内各 head 连续存储为最小跨节点传输单元；prefill/decode 解耦不同 TP 度时传输路径 re-layout 零 GPU 重排）。**解耦粒度**：MLA prefix hashing 走 512-token hash block，物理块仍 6144-token；KDA checkpoint 仅存于（稀疏子集的）hash 边界——只有 lookup 能引用的位置。两阶段 lookup（Fig.12）：MLA 阶段物理块链式 hash 匹配 + 缺块时回退到块内 hash 端点；KDA 阶段要求候选边界在每个 KDA cache group 有 checkpoint（每 group 独立 recurrent state）。hit = 同时满足两阶段的最长边界（必为 512 倍数、不必为 6144 倍数）。一致性：共享 free list + 跨 group pin hit 块防互驱；私有拷贝在 forward 前立即上 GPU、当步新分配/注册块排除出匹配；checkpoint 任 group 驱逐则原子失效兄弟 group。
-  - **对照 Fig.12 p.23**：M3 解读为两层缓存对齐图。上层 MLA KV 把 6144-token 物理块分成 12 个 512-token hash block（5 蓝=已缓存、7 浅灰=空）；下层 KDA ckpt 在每个 hash 边界放标记（○=无 checkpoint、●灰=已持久化、●橙=hit at B=2560）。下行箭头描述恢复流：restore KDA checkpoint at B；copy-on-write partial MLA block；从 token B resume prefill，[0,B) 零重算。即块粒度缓存会错过的 chunk 边界，靠 KDA snapshot + partial MLA block copy-on-write 实现零重算续传。
+  - **对照 Fig.12 p.23**：M3 解读为两层缓存对齐图。上层 MLA KV 把 6144-token 物理块分成 12 个 512-token hash block（5 蓝=已缓存、7 浅灰=空）；下层 KDA ckpt 在每个 hash 边界放标记（○=无 checkpoint、●灰=已持久化、●橙=hit at B=2560）。下行箭头描述恢复流：restore KDA checkpoint at B；copy-on-write partial MLA block；从 token B resume prefill，$[0,B)$ 零重算。即块粒度缓存会错过的 chunk 边界，靠 KDA snapshot + partial MLA block copy-on-write 实现零重算续传。
 - **专用 kernel**（§5.4.2）：KDA 解码——MTP speculative decoding 下拒答子集 token 时 state 已前推无法简单回滚；缓存每 draft 位置的 state snapshot 会乘大 batch state traffic；解法：**只缓存 draft token 的 projected input**（远小于 state），on-chip 重建接受 token 的 state，写回 verified + bonus token 的 state（concurrent ReplaySSM 同思路）；短卷积/归一化/门控/递推/输出归一化全融进单 kernel，验证延迟亚线性增长。Block AttnRes——prefill 用 sequence parallelism 把 TP all-reduce 拆 reduce-scatter + all-gather，intra-block kernel 插中间只在单 rank 物化块表示；decode 在 side stream 跑 inter-block kernel 与主 stream 重叠，intra-block 与 RMSNorm 融进前序 TP all-reduce。Stable LatentMoE——latent down-proj 与 router 融单 GEMM、latent 权重矩阵分片且输出 all-gather 融进 GEMM epilogue（multimem store）、通信与 shared-expert 计算重叠；routed 专家小 batch 下用 token-centric **WarpDecode**（每 warp 负责一输出 neuron 直接 stream 权重），warp 内再细分 lane team 各处理不相交专家子集 + warp-wide reduction，权重离线 permute 降运行时 dequant 开销。
 - **Fleet 调度**（§5.4.3）：**Cache-aware affinity scheduling**——典型 coding 输入 400K 前缀 + 4K prefill，hit 避免重 prefill 数量级成本差，故每 session 路由到持其前缀缓存的集群；consistent hashing pin 每 session 到主+预指派备两集群，主失败备接管重 prefill（分担到多集群非集中）；**Budget-based admission control**——请求成本跨 3 数量级（2K→1M），按请求类分资源预算，bursty 长上下文不至拖垮短请求 SLO/TTFT。
+- **LaTeX↔M3 双源校验**：本节无公式收录；512/6144/B=2560 等数字与 M3 对 Fig.12 的 caption 逐字一致，图公式双源吻合。
 
 ### 14. XTML chat template（§F, Figure 16 p.46）
 - **机制**：XML-like 但用三个保留 special token `[open]/[sep]/[close]` + `[end_of_msg]` 替代尖括号——每结构边界是显式 special token，消除边界 tokenize 歧义、简化 constrained decoding。消息分 input messages（system/user/assistant/tool）与 option messages（global：tool-declare + thinking-effort 放所有 input 之前；one-shot：tool_choice/response_format 放之后以保 KV cache 不被 per-request 改动失效；input option：会话中动态加载 tool 用，不重建前文）。assistant body 分 think/response/tools 三 channel（灵感 OpenAI Harmony）。tool call 带 tool+index 属性，结果按 call 顺序回传、参数有类型（string 原始文本、其它 JSON 紧凑序列化；纯 JSON fallback 块仅输入侧、训练时 loss mask）。reasoning effort 以自然语言 global option message 注入（非改 prefix 或暴露 token 预算），pre-trained 模型已能跟从 → 新选项可零/微训练引入（"low alignment tax"）。
 - **对照 Fig.16 p.46**：M3 解读三面板。(a) Context layout：global option（tool-declare、think-effort）在 input messages 之前，one-shot option（tool-choice、response-format）在之后，故 per-request option 不动历史 KV cache；动态加载 tool 作 input option 中段注入（虚线）；prefix 发 `[open]think[sep]` 与 `[open]response[sep]`。(b) Assistant message：XML-like 信封 `[open]message role="assistant"[sep]...` 含 think/response/tools 三子通道，`[end_of_msg]` 闭合。(c) Tools channel：并行 tool call 用 `[open]call tool="..." index="N"[sep]` 包裹，typed `[open]argument key type ... [close]argument[sep]`，按 index 回配结果。
+- **LaTeX↔M3 双源校验**：本节无公式；template 结构走 M3 Fig.16 caption，与 §F 文本三通道/option 分层叙述一致。
 
 ## 表格（原文结构化）
 
@@ -219,7 +312,7 @@
 - **vs [[kimi-linear-an-expressive-efficient-attention-architecture]]（Kimi Linear）**：Kimi Linear 是 KDA 的提出者，3:1 KDA:MLA 混合的来源。K3 把 Kimi Linear 的架构思路**首次推到 2.8T 生产规模**，并改 decay 参数化（下界有界）、output gate（full-rank）、加 AttnRes + Stable LatentMoE 配套，落地 1M 上下文 + agentic RL。
 - **vs [[muon-is-scalable-for-llm-training]]（Muon）**：K3 直接用 Muon，并细化为 per-head 变体（Q/K/V 投影沿 head 维切分独立正交化）；分布式上用 P2P 取代 all-gather 全参数 buffer——是对 Muon scalability 工作的工程延续。
 - **vs [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]（GEPA，prompt evolution vs RL）**：K3 走的是大尺度 RL + MOPD 路线（9 专家 × 3 effort），主张"scaling RL FLOPs → 工具调用步数 ↑ → 能力综合 ↑"（Fig.8）；与 GEPA"prompt evolution 可超 RL"的论点形成方法学张力，但 K3 也在 task synthesis / GRM 用了 prompt/LLM-judge 协议（rubric 四步、knowledge-graph-guided synthesis）——RL 与 prompt evolution 在工程中常互补。
-- **vs [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]（EAGLE-3）**：K3 把预训练 MTP 层直接 fine-tune 成 EAGLE-3 draft 模型，并直接优化 LK loss（非 KL surrogate），是 EAGLE-3 范式在 2.8T MoE + hybrid attention 上的落地；同时用 AttnRes 第 1/4/末块特征作 draft 融合输入。
+- **vs [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]（EAGLE-3）**：K3 把预训练 MTP 层直接 fine-tune 成 EAGLE-3 draft 模型，并直接优化 LK loss（formulas.json [9] / 原文 Eq.16，非 KL surrogate），是 EAGLE-3 范式在 2.8T MoE + hybrid attention 上的落地；同时用 AttnRes 第 1/4/末块特征作 draft 融合输入。
 - **vs 闭源 frontier（Claude Fable 5 / GPT-5.6 Sol / Opus 4.8 / GPT-5.5）**：整体仅次于 Fable 5 与 GPT-5.6 Sol，在 SWE-Marathon（42.0，超 Fable 5 7 分）、ProgramBench（77.8 第一）、BrowseComp（91.2 第一）、Swarm Bench（76.3）/Deep Research Bench（in-house 90.0 第一）、WebDev Arena（1,678 第一开源登顶）等多个套件领先；但 HLE/CritPt（研究级推理）、Elo 类知识工作（GDPval-AA v2/AA-Briefcase）、OSWorld 2.0/SaaS-Bench、Agent Behavior Bench 仍落后 Fable 5。注意 Fable 5 全程带 fallback、GPT-5.6 Sol 带 cyberguards，对照非完全"裸"模型对等。
 
 ## 跨论文关系（→ MOC 谱系）
@@ -241,11 +334,11 @@
 - **整体仍落后最强闭源**：作者明确 K3 整体仍 trail Claude Fable 5 与 GPT-5.6 Sol。研究级推理短板明显——HLE-Full（43.5/56.0）显著落后 Fable 5（53.3/63.0）与 GPT-5.6 Sol（44.5/58.0），CritPt（23.4）落后三者。Elo 类知识工作（GDPval-AA v2、AA-Briefcase）、computer-use（OSWorld 2.0、SaaS-Bench）、Agent Behavior Bench、MIRA Bench、24/7 ClawBench 2.0、Agentic Vision Bench、KWV Bench 均非领先。
 - **Fable 5 评测带 fallback、GPT-5.6 Sol 带 cyberguards**（Fig.1 注、Table 2 注）——对照并非"裸"模型，K3 是无 fallback 对照，比较不完全对等（K3 在某些套件领先部分源于此）。
 - **cyber 能力是 lower bound**：作者自述评估为能力下限，conditioned on 当前模型版本与评测覆盖；end-to-end exploit completion 是瓶颈，hardened target 多数 expert-solvable 任务未解；UK AISI+CAISI 独立评估显示 K3 在 41 任务上 0 个 arbitrary code execution——距离 frontier cyber-capable 模型仍有差距。
-- **架构经验值**：3:1 KDA:MLA 比例、N=8/12-layer AttnRes 块划分、`g_min=−5`、`β1=4/β2=25`、latent dim 0.5× hidden 均为经验/ablation 选定，未给大规模敏感性系统分析；最优随规模/任务可能漂移。
+- **架构经验值**：3:1 KDA:MLA 比例、N=8/12-layer AttnRes 块划分、$g_{\min}=-5$、$\beta_1=4/\beta_2=25$、latent dim 0.5× hidden 均为经验/ablation 选定，未给大规模敏感性系统分析；最优随规模/任务可能漂移。
 - **KDA 线性注意力的 finite-state 容量理论上限未根除**：靠周期性全局 MLA 层 + AttnRes 缓解，但纯线性层在极长 in-context retrieval 上理论受限（继承 Kimi Linear 的边界）。
 - **从头训 MoonViT-V2 匹配 SigLIP-init**：作者称"对比预训练对大规模多模态 LM 并非必要初始化"——但仅在 K3 规模/配方下验证，小规模或不同 LM 目标下是否成立未论。
 - **基础设施强耦合定制**：FlashKDA、MoonEP、AgentENV、KDA-aware 前缀缓存等均为高度定制 kernel/系统，复现门槛高（虽部分开源 MoonEP/AgentENV/MiniTriton/nano-kpu/FlashKDA）；2.8T 训练的 ROI 与可复现性对一般团队不现实。
 - **scaling efficiency 2.5× 的可比性**：曲线拟合在 OOD 验证集上比较 K2 vs K3（Fig.7），但 K3 的数据配方、训练课程也同步精炼，2.5× 是"架构+数据+训练 recipe 合力"，非纯架构贡献可分离归因。
-- **9 专家 × 3 effort 的 MOPD 合并**：top-k distillation 未见明显优势被采纳为 dense per-token OPD reward；但 9 专家训练成本高、effort 课程 `τ` 退火靠 human-in-the-loop 指导，自动化程度有限。
+- **9 专家 × 3 effort 的 MOPD 合并**：top-k distillation 未见明显优势被采纳为 dense per-token OPD reward；但 9 专家训练成本高、effort 课程 $\tau$ 退火靠 human-in-the-loop 指导，自动化程度有限。
 - **长上下文"真正"能力依赖合成数据**：1M 上下文自然长文档/视频稀缺，靠排列拼接多模态文档与子任务合成训练 attention 机制——合成任务的分布与真实长程任务分布的 gap 未量化。
 - **scaling-law study 选 cosine 而非 WSD**：作者观察到二者最优超参差异大，独立 search 后 cosine 优；但该结论在 K3 的模型族/数据上成立，WSD 在其它工作报告的优势是否源于超参错配未跨族验证。

@@ -9,11 +9,19 @@ Speculative Decoding (SD) 的端到端加速由两个因子联合决定（§2.1,
 
 $$\mathrm{Speedup} = \frac{1-\alpha^{N+1}}{(1-\alpha)(Nc+1)}$$
 
+它源自每步期望接受 token 数（Eq. 1）：
+
+$$\mathbb{E}[\#\mathrm{tokens}] = \frac{1-\alpha^{N+1}}{1-\alpha}$$
+
 其中 α=平均接受率，N=draft token 数，c=单步 draft head 与 target model 单步耗时之比。该公式暴露一个 **scaling ceiling**：增大 draft budget N 只有在「α 保持高」且「累积 drafting overhead Nc 保持小」时才能换得更高吞吐；任一条件崩塌，收益即被抵消。**Figure 2（p.3, M3 要点）** 用两面板直观印证：左面板 c=0.05（typical SD）随 draft length γ 增长很快饱和，α 从 0.70→0.95 也只能把 256-budget 的 speedup 推到 ~6×；右面板 c=0.0005（ultra low-cost）下同 α 序列单调放大到 ~20×。M3 解读点出"加速随 γ 单调增长、破解 c/α 鱼与熊掌"——即把 c 压低 + 把 α 抬高是 unlock 长 draft scaling 的两个独立必要条件。
 
 既有 head-based SD 陷入 **causality–efficiency dilemma**（§1, §2.2）：
 - **Autoregressive drafters（EAGLE 系列）**：生成 path-conditioned 候选，tree-SD 接受率 α 高；但 draft cost 随 tree depth 增长（每深一层多一次 draft 前向），c 项膨胀 → 难以扩 N。
-- **Bidirectional block-diffusion drafters（DFlash）**：一次前向并行出 N 个 token，c 极低（§Appendix G, Table 12: L=1024 时 N=256 c≈0.054%，约 1/N 衰减）；但各位置分布 r_i(·|x) 是 **branch-agnostic marginals**，不以上游 ancestor token 为条件，组合出的树分支"单 token 各自合理、合在一起互相不一致"（§2.2 Eq. 3 的 surrogate q_sur），浪费 budget、压低 α → 难以把低 c 转化为高 speedup。
+- **Bidirectional block-diffusion drafters（DFlash）**：一次前向并行出 N 个 token，c 极低（§Appendix G, Table 12: L=1024 时 N=256 c≈0.054%，约 1/N 衰减）；但各位置分布 r_i(·|x) 是 **branch-agnostic marginals**，不以上游 ancestor token 为条件，组合出的树分支"单 token 各自合理、合在一起互相不一致"（§2.2 Eq. 3 的 surrogate q_sur）：
+
+$$q_{\mathrm{sur}}(y_{1:k}\mid x) \propto \prod_{i=1}^{k} r_i(y_i\mid x)$$
+
+浪费 budget、压低 α → 难以把低 c 转化为高 speedup。
 
 JetSpec 要回答的核心问题：**能否在一次前向（低 c）并行 drafting 的同时，保持 branch-wise causal conditioning（高 α），从而把更大 draft budget 真正转化为更长 accepted prefix？**（§2.2 "Can We Enable Both?"）Figure 2（p.3）的右面板正是该问题成立的物理依据：在 c≈0.05% 的 ultra-low-cost 区，唯一瓶颈回到 α，而 JetSpec 的目标就是把 α 在大 budget 下稳住。
 
@@ -28,7 +36,13 @@ prefix tokens 对所有树节点可见。该掩码使所有树节点可在一次
 
 $$q(\pi(v)\mid x) = \prod_{u\in\pi(v)} q(y_u \mid x, h_x^o, \pi_{<u})$$
 
-它镜像 target model 的自回归因子分解（Eq. 4），但每个 draft node 以**本路径上具体 ancestor token** 为条件。
+它镜像 target model 的自回归因子分解（Eq. 4）：
+
+$$p(y_{1:k}\mid x) = \prod_{i=1}^{k} p(y_i \mid x, y_{<i})$$
+
+但每个 draft node 以**本路径上具体 ancestor token** 为条件。被掩码的注意力（Eq. 6）为：
+
+$$\mathrm{Attn}(Q_v,K,V) = \mathrm{softmax} \left( \frac{Q_vK^\top}{\sqrt{d}} + M_v \right)V$$
 
 **Figure 3（p.4, M3 解读）** 给出三阶段设计：(1) 从 frozen target model Layer M 抽 hidden state，经 Feature Fusion 模块输出统一 fused feature；(2) Causal-parallel draft head M_q（Layers 1…m）以 fused feature + anchor + draft slots 为输入，在 **tree-causal attention mask** 约束下，单次前向产出整棵候选树（root → 各分支节点携带 score 如 s=-0.87/-1.39/-2.48/-4.05 等）；(3) frozen target model M_p 用同一 tree mask 验证，产出 step i+1 的 verified tokens。M3 强调该 mask"preserve correct autoregressive conditioning across sibling branches, enabling higher acceptance than branch-agnostic per-position drafting"。效果：既保留并行预测的低 c，又使 draft 分布与 M_p 自回归分布对齐 → tree acceptance 随 budget 扩展而良好 scale。
 
@@ -43,12 +57,28 @@ Algorithm 1（§Appendix B）：维护按 Score 排序的优先队列，反复�
 - **数据**：target-aligned 序列，可来自训练语料（MTP 风格）或 target model 重新生成（on-policy）。每序列采多个 anchor，每个 anchor 构造长度 N 的训练 block，block 内首 token 留作 anchor（不参与 loss），其余 N-1 位并行预测。
 - **训练 mask（Figure 5, p.18, M3 解读）**：2D attention 矩阵，列区分"verified prefix（x₀–x₃）"与多个"sampled blocks"，每 block 含 anchor aᵢ + 5 个未来位 aᵢ,₁…aᵢ,₅。黄色 ✓ = 允许 attention，dark = 禁止。规则：(a) 所有 query 位全可见 verified prefix；(b) 每 block 内严格下三角——query 只见本 block anchor 及更早位；(c) 无跨 block attention、无未来位 attention。M3 要点：该 mask "enables parallel prediction of all masked tokens across multiple blocks while preserving autoregressive causality within each block"。
 - **block 监督（Figure 6, p.19, M3 解读）**：3 行（Block 1/2/3）× 6 位。anchor（白框，"no loss"）+ 5 个 future 位（橙框，"loss"）。M3 要点：anchor 把 context 与训练目标解耦——排除其 loss 后，模型学习"conditioned on preserved anchor, predict future positions"，避免标准 causal masking 的 leakage。
-- **损失（Eq. 8, 9）**：温度归一化 forward KL。关键 ablate（§3.4.1 Table 4）：SFT 与 forward-KL 在 4 个 math 基准上差 ~3% 以内；**reverse-KL 相对 forward-KL 掉 36–46%**（GSM8K 6.11→3.29, MATH-500 8.46→5.25）。原因：reverse-KL mode-seeking 把概率过度集中到高置信 mode，而 tree drafting 恰恰需要保留**多支合理 continuation 的软标签**；forward-KL 覆盖 target 概率质量，更适配预算化树展开。
+- **损失（Eq. 8, 9）**：温度归一化 forward KL。每个 active draft position m 上最小化
+
+$$\mathcal{L}_{\mathrm{FKL}}^{(m)} = D_{\mathrm{KL}} \left( \tilde{p}^{(m)} \,\middle\|\, \tilde{q}^{(m)} \right)$$
+
+最终目标在所有 active position 上归一化：
+
+$$\mathcal{L}_{\mathrm{train}} = T_{\mathrm{KD}}^2 \frac{ \sum_m w_m \mathcal{L}_{\mathrm{FKL}}^{(m)} }{ \sum_m w_m }$$
+
+关键 ablate（§3.4.1 Table 4）：SFT 与 forward-KL 在 4 个 math 基准上差 ~3% 以内；**reverse-KL 相对 forward-KL 掉 36–46%**（GSM8K 6.11→3.29, MATH-500 8.46→5.25）。原因：reverse-KL mode-seeking 把概率过度集中到高置信 mode，而 tree drafting 恰恰需要保留**多支合理 continuation 的软标签**；forward-KL 覆盖 target 概率质量，更适配预算化树展开。
 - **Draft head 配置（Qwen3-8B, §Appendix D）**：从 target layers {1,9,17,25,33}（共 36 层）抽 hidden state，沿 channel 拼成 5d 后经 bias-free linear + RMSNorm 投回 d=4096。Draft head 本体：5 层 Qwen3-style decoder，32 attn heads，8 KV heads，head dim 128，MLP 12288。每层把投影后的 target feature 作为 contextual K/V 注入并与 draft-token hidden state 拼接。Target model 全程冻结。
 - **数据量**：780K examples from Nemotron Post-Training Dataset V2（coding+math 全量 + STEM/chat 随机）+ 20K CodeAlpaca，8×H100 训练，LR=3×10^-4（Table 3 grid：5e-5→1e-3，3e-4 峰值 8.30×，6e-4/1e-3 在峰值 2% 内）。
 
 ### 4. 验证：tree attention + 标准 SD 接受规则（§2.4, Eq. 11-12）
-Target model M_p 用 tree attention 并行验证所有节点。对候选分支 π(v)=y_{1:k}，按自回归 Eq. 4 分解。每 draft token y_t 接受决策 A_t~Bernoulli(α_t)（Eq. 11），非贪心下用拒绝采样 α_t=min(1, p/q)（Eq. 12），拒绝时采样 correction token（**lossless**）。贪心下：draft token 匹配 target 同上下文 next-token 预测即接受。接受前缀长 a=max{r≤k : A_t=1 ∀t≤r}。
+Target model M_p 用 tree attention 并行验证所有节点。对候选分支 π(v)=y_{1:k}，按自回归 Eq. 4 分解。每 draft token y_t 接受决策（Eq. 11）：
+
+$$A_t \sim \mathrm{Bernoulli}(\alpha_t), \qquad \alpha_t = \alpha\!\left( y_t;\, q(\cdot\mid x,y_{<t}), p(\cdot\mid x,y_{<t}) \right)$$
+
+非贪心下用拒绝采样（Eq. 12）：
+
+$$\alpha_t = \min\!\left( 1,\, \frac{ p(y_t\mid x,y_{<t}) }{ q(y_t\mid x,y_{<t}) } \right)$$
+
+拒绝时采样 correction token（**lossless**）。贪心下：draft token 匹配 target 同上下文 next-token 预测即接受。接受前缀长 a=max{r≤k : A_t=1 ∀t≤r}。
 
 ### 5. 系统集成：vLLM + 自研 SM90 paged tree-attention kernel（§3.3, §Appendix E）
 - 集成进 vLLM：proposer 产 top-k token + log-prob，按累积 log-prob 构造 budget 限定的树，树存 token id / parent idx / depth。
@@ -104,6 +134,10 @@ accum_logp 8.15×/τ9.81（默认）；entropy-only 4.76×/τ5.52（−42%）；
 batch 1：budget 16→128 给 224.0→553.3 TPS（1.75×→4.33×）。batch 16：budget 256 反降 2.80×（vs 128 的 3.10×）。**budget 需随 load 动调**。
 
 ### Table 12 — 经验 per-token drafting cost c=T_draft/(N·T_verify)（%, H200 NVL, DFlash-style head, Qwen3-8B target）
+按 §Appendix G 定义，per-draft-token cost coefficient（即 Eq. 2 中的 c）：
+
+$$c(N,L) = \frac{T_{\mathrm{draft}}(N,L)/N} {T_{\mathrm{verify}}(N,L)} = \frac{T_{\mathrm{draft}}(N,L)} {N\,T_{\mathrm{verify}}(N,L)}$$
+
 L=1024: N=2 c=6.72%，N=16 c=0.845%，N=256 c=0.054%（≈1/N 衰减，对应 Figure 2 p.3 ultra-low-cost 区）。L≤2048、N≥16 时 c<1%。支撑主 scaling 论证：大 N 把 c 压到 0.05% 量级，此时只有 α 是瓶颈 → 正是 causal tree drafting 要解决的。
 
 ## 与同类对比

@@ -1,7 +1,8 @@
-# MEDUSA: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads — 技术点深读（DEEP 2026-08-18）
+# MEDUSA: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads — 技术点深读（DEEP 2026-08-18，公式重跑）
 
 > 独立文件，extract_phase1 重跑不丢（见 [[extract-phase1-overwrite-gotcha]]）。
 > 论文：Cai et al., MEDUSA · arXiv:2401.10774v3 (ICML 2024)。
+> 公式权威源 = extraction/formulas.json LaTeX，下文 `$$` 块为逐字引用，LaTeX↔M3 双源校验。
 
 ## 核心问题
 
@@ -12,8 +13,12 @@ LLM 自回归解码是 **memory-bandwidth-bound**：每步把全模型参数从 
 ## 关键创新点
 
 ### 1. MEDUSA heads：在 last hidden state 上挂 K 个单层并行解码头（§2.1.1）
-- **机制**：主干 LLM 原样不动，在最后隐状态 `h_t` 上接 K 个轻量头，第 k 头预测 `(t+k+1)` 位置的 token（原 LM head 仍预测 t+1）。每个头仅一层 FFN + 残差，公式 `p^(k)_t = softmax(W_2^(k) · (SiLU(W_1^(k)·h_t) + h_t))`，`W_2 ∈ R^{d×V}, W_1 ∈ R^{d×d}`；`W_2` 用原 LM head 同值初始化、`W_1` 零初始化，使初始预测对齐主干。
-- **效果 + 图**：**Figure 1（p.2）** M3 解读：主干 Embedding→Transformer Layers→LM Head 之外，从 Last Hidden 引出 Medusa Head 1/2/3，各头分别给出 top-k（如头1→"is,',the"；头2→"difficult,is,'"；头3→"not,difficult,a"）与 LM head 的"It,I,As"组合成候选树，校验后接受最长合法前缀"It is difficult"。架构核心是把 draft 能力**塞回主干同一 forward**，无需独立模型、无需分布式多模型协调。
+- **机制**：主干 LLM 原样不动，在最后隐状态 `h_t` 上接 K 个轻量头，第 k 头预测 `(t+k+1)` 位置的 token（原 LM head 仍预测 t+1）。每个头仅一层 FFN + 残差，定义（formulas.json [0]，逐字）：
+$$
+p_t^{(k)} = \text{softmax}\left(W_2^{(k)} \cdot \left(\text{SiLU}(W_1^{(k)} \cdot h_t)+h_t\right)\right),\\ \text{where } W_2^{(k)}\in\mathbb{R}^{d\times V}, W_1^{(k)}\in\mathbb{R}^{d\times d}.
+$$
+  `W_2` 用原 LM head 同值初始化、`W_1` 零初始化，使初始预测对齐主干；SiLU 沿用 Llama。机制一句话：单层残差 FFN 把 hidden state 映射到词表分布，作并行多步预测头。
+- **效果 + 图**：**Figure 1（p.2）** M3 解读：主干 Embedding→Transformer Layers→LM Head 之外，从 Last Hidden 引出 Medusa Head 1/2/3，各头分别给出 top-k（如头1→"is,',the"；头2→"difficult,is,'"；头3→"not,difficult,a"）与 LM head 的"It,I,As"组合成候选树，校验后接受最长合法前缀"It is difficult"。LaTeX↔M3 双源校验：公式 [0] 的 W_2∈R^{d×V}（V=词表）正对应 M3 所述"each head forecasts a future position"的并行解码头结构，主干 last hidden `h_t` 同时供 LM head 与 K 个 Medusa head 分支。架构核心是把 draft 能力**塞回主干同一 forward**，无需独立模型、无需分布式多模型协调。
 - **数字**：单层设计 + 主干冻结使其可在单卡 consumer GPU 上训练，QLoRA 量化主干下 Vicuna-7B MEDUSA-1 仅 **5 小时**（单 A100 PCIe，60k ShareGPT 样本，§2.2.1）。
 
 ### 2. Tree-based attention：树形掩码一次 forward 校验多候选（§2.1.2）
@@ -22,22 +27,42 @@ LLM 自回归解码是 **memory-bandwidth-bound**：每步把全模型参数从 
 - **效果**：候选校验几乎零额外 forward，是加速的关键之一。
 
 ### 3. MEDUSA-1 vs MEDUSA-2 两级训练配方（§2.2）
-- **MEDUSA-1（冻结主干）**：损失 `L_MEDUSA-1 = Σ_{k=1}^K -λ_k log p^(k)_t(y_{t+k+1})`，`λ_k = 0.8^k`。可配 4-bit 量化主干（QLoRA），参数高效、无损（主干输出分布不变）。
-- **MEDUSA-2（联合训练）**：损失 `L_MEDUSA-2 = L_LM + λ_0 L_MEDUSA-1`（实验中 Vicuna-7B/13B 设 `λ_0=0.2`，自蒸馏的 33B/Zephyr 设 `λ_0=0.01`），需三策略防主干退化：①combined loss（加 LM 项约束）；②differential learning rates（MEDUSA heads LR = 4× backbone LR）；③heads warmup（两阶段：先 MEDUSA-1 训头，再联合；也可用 sine schedule 逐步抬升 λ_0）。
+- **MEDUSA-1（冻结主干）**损失（formulas.json [1]，逐字）：
+$$
+\mathcal{L}_{\text{\ours-1}} = \sum_{k=1}^K -\lambda_k\log p_t^{(k)}(y_{t+k+1}).
+$$
+  机制：各头交叉熵加权和，`λ_k = 0.8^k`（k 越大预测越不确定、权重越小）。可配 4-bit 量化主干（QLoRA），参数高效、无损（主干输出分布不变）。
+- **MEDUSA-2（联合训练）**损失（formulas.json [2]，逐字）：
+$$
+\mathcal{L}_{\text{\ours-2}} = \mathcal{L}_{\text{LM}} + \lambda_0\mathcal{L}_{\text{\ours-1}}.
+$$
+  机制：在 MEDUSA-1 损失上加 LM 项 `L_LM = -log p^(0)_t(y_{t+1})` 约束主干 next-token 能力，权重 λ_0（实验中 Vicuna-7B/13B 设 `λ_0=0.2`，自蒸馏的 33B/Zephyr 设 `λ_0=0.01`）。需三策略防主干退化：①combined loss（加 LM 项，即上式）；②differential learning rates（MEDUSA heads LR = 4× backbone LR）；③heads warmup（两阶段：先 MEDUSA-1 训头，再联合；也可用 sine schedule 逐步抬升 λ_0）。
 - **效果 + 图**：**Figure 3a（p.7）** M3 解读：Vicuna-7B MEDUSA-1=**2.18×**、MEDUSA-2=**2.83×**；Vicuna-13B MEDUSA-1=**2.33×**、MEDUSA-2=**2.83×**。**Figure 3b（p.7）** 按类别拆解 Vicuna-7B MEDUSA-2：Coding 3.29×、Extraction 3.62×——结构化/确定性强的任务收益最大；Humanities/Reasoning 2.58×。Table 3（§3.3 末）按"技术叠加→speedup"汇总：仅 MEDUSA-1 heads 无 tree attention ≈1.5× → +tree attention ≈1.9× → +optimized tree ≈2.2× → MEDUSA-2 ≈2.8×。
 - **两阶段训练必要性**：Table 2（§3.3.3）证明直接联合训练（Direct Fine-tuning）质量从 6.17 跌到 5.925，而 MEDUSA-2 两阶段保持 6.18 + 2.83× speedup。
 
 ### 4. Typical Acceptance：以熵阈替代拒绝采样（§2.3.1）
-- **机制**：拒绝采样保证与原模型同分布但**不能再提升加速率**——draft=original 时若贪心可全接受，而独立采样反而引入拒绝开销。MEDUSA 借鉴 truncation sampling（Hewitt 2022），用阈值 `p_original(x_{n+k}|…) > min(ε, δ·exp(-H(p_original(·|…))))` 接受"typical"候选：硬阈 ε + 熵自适应阈 δ·e^{-H}（高熵分布允许更多合理续写）。首 token 无条件贪心接受以保每步至少产 1 token，后续用上式。
+- **机制**：拒绝采样保证与原模型同分布但**不能再提升加速率**——draft=original 时若贪心可全接受，而独立采样反而引入拒绝开销。MEDUSA 借鉴 truncation sampling（Hewitt 2022），用如下典型接受判据（formulas.json [3]，逐字）接受"typical"候选：
+$$
+p_{\text{original}}(x_{n+k}|x_1, x_2, \cdots, x_{n+k-1}) > \\\min\rbr{\epsilon, \delta\exp\rbr{-H(p_{\text{original}}(\cdot|x_1, x_2, \cdots, x_{n+k-1}))}},
+$$
+  机制一句话：候选 token 在原模型条件概率须超过硬阈 ε 与熵自适应阈 δ·e^{-H} 的较小者——高熵分布允许更多合理续写。首 token 无条件贪心接受以保每步至少产 1 token，后续 token 用上式，最终取最长被接受前缀。
 - **图**：**Figure 5（p.8）** M3 解读：固定温度 0.7，画 greedy（星）、random sampling（点）与 typical sampling 曲线（ε 从 0.01 到 0.25 步长 0.01，α=√ε）。随 ε ↑，质量 ↑、加速率 ↓；typical sampling 在大 ε 下与 random sampling 质量相当且加速率更高。
-- **退化边界**：温度=0 退化为 greedy（最大加速）；温度>0 时 greedy 输出恒被接受（概率最大）。
+- **退化边界**：温度=0 退化为 greedy（最大加速）；温度>0 时 greedy 输出恒被接受（概率最大）。LaTeX↔M3 双源校验：M3 caption 同样给出 `p_original(x_{n+k}|…) > min(ε, δ·exp(-H(...)))` 且指出 H 为熵函数、ε/δ 为硬阈/熵阈，与 formulas.json [3] 完全一致。
 
 ### 5. Self-distillation：无训练数据场景的数据生成（§2.3.2）
-- **机制**：对 RLHF 模型或私有数据模型，用模型自身在 seed prompts（ShareGPT/UltraChat）上生成训练集；Zephyr 可 self-talk 单 prompt 生成多轮。MEDUSA-2 联合训练时若仅用自蒸馏数据会降质，故对主干用 KL 蒸馏损失 `L_LM-distill = KL(p^(0)_original,t || p^(0)_t)` 替代 ground-truth label；用 LoRA（关 adapter 即得原模型）免去双模型显存。提示：自蒸馏时**不要量化**，否则教师是量化模型、质量降。
+- **机制**：对 RLHF 模型或私有数据模型，用模型自身在 seed prompts（ShareGPT/UltraChat）上生成训练集；Zephyr 可 self-talk 单 prompt 生成多轮。MEDUSA-2 联合训练时若仅用自蒸馏数据会降质，故对主干用 KL 蒸馏损失替代 ground-truth label（formulas.json [4]，逐字）：
+$$
+\mathcal{L}_{\text{LM-distill}} = KL(p_{\text{original},t}^{(0)}||p_t^{(0)}),
+$$
+  机制：用原模型（关 adapter 即得）的预测分布作软标签蒸馏主干，避免双模型显存。提示：自蒸馏时**不要量化**，否则教师是量化模型、质量降。
 - **效果 + 图**：**Table 1（p.7）** 汇总 MEDUSA-2 在四模型上的 acc. rate/overhead/quality（MT-Bench GPT-4 评分，差值）：Vicuna-7B 6.18(+0.01)、Zephyr-7B 7.25(-0.07)、Vicuna-13B 6.43(-0.14)、Vicuna-33B 7.18(+0.05)；speedup 2.35–2.83×。**Figure 8（p.16）** M3 解读：四模型 MEDUSA-2 speedup 分别 2.83/2.66/2.83/2.35×，自蒸馏模型（Zephyr、Vicuna-33B）因 quality-speed trade-off 偏低。Vicuna-33B acc rate 反而较低，作者归因为"hidden 训练数据与自蒸馏 seed 不匹配"。
 
 ### 6. Optimized sparse tree construction：贪心选高准确率节点（§2.3.3）
-- **机制**：在 calibration set 上测各头 top-i 的准确率 `a^(i)_k`（定义为 top-i 减 top-(i-1) 的边际准确率），独立假设下候选路径准确率 `Π_j a^(i_j)_j`；候选树节点边际贡献即其准确率，故贪心地把"连到当前树且准确率最高"的节点逐个加入，直到达预算节点数，构造期望接受长度最大化的稀疏树。
+- **机制**：在 calibration set 上测各头 top-i 的准确率 `a^(i)_k`（定义为 top-i 减 top-(i-1) 的边际准确率），独立假设下候选路径准确率为 `Π_j a^(i_j)_j`；候选树节点边际贡献即其准确率。期望接受长度（formulas.json [5]，逐字）：
+$$
+\sum_{\sbr{i_1, i_2, \cdots, i_k}\in I}\prod_{j=1}^k a_j^{(i_j)}.
+$$
+  机制一句话：对所有候选组合求和、每组合路径准确率连乘，即期望接受长度；贪心地把"连到当前树且准确率最高"的节点逐个加入，直到达预算节点数，构造期望接受长度最大化的稀疏树。
 - **图**：**Figure 6（p.15）** M3 解读：Vicuna-7B MEDUSA-2 的 64 节点稀疏树，深度 4（4 头参与），左偏（算法偏好高概率节点），红色路径标出命中的 ground-truth 分支。**Figure 4a/b（p.8）** M3 解读：稀疏树（红星）在不同候选数下 acc rate 稳定在 3.2–3.5×，dense 随机树（蓝点）聚在 2.5–3.0×；sparse tree 64 节点优于 dense 256 节点。**Figure 4b** speed 在 >150 候选后显著下降——compute-bound overhead 主导（linear layer + self-attention 矩阵乘开销随候选数线性/二次增长）。
 
 ### 7. 硬件层验证：MEDUSA 把算子从带宽受限推向 compute-bound（Appendix G）
@@ -111,14 +136,14 @@ LLM 自回归解码是 **memory-bandwidth-bound**：每步把全模型参数从 
 - **Block Diffusion 分支对照**：BD3-LM/block-diffusion [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] 把并行性放块内扩散、KV 复用历史块，与 MEDUSA draft-then-verify 树路径互补；LongSpec [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] / SpecExtend [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] / JetSpec [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] 走长上下文/并行树起草路线。
 - **正交于 SGLang** [[sglang-efficient-execution-of-structured-language-model-programs]]：MEDUSA 是单模型解码加速，SGLang 是多调用间 KV 复用——可叠加（SGLang runtime 可托管 MEDUSA 头）。
 - **基础设施谱系**：MEDUSA 直接受益于 PagedAttention [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] / vLLM（作者致谢 Zhuohan Li）的 KV 内存管理；与 GQA [[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]/MQA 的 KV 压缩正交可叠加。
-- MOC 谱系定位：MEDUSA 是 [[moc_relations]] L130 行明确收录的"多头并行预测 + tree attention 一次校验多候选，无需 draft 模型"锚点，位于"speculative decoding 多头分支"根基位置。
+- MOC 谱系定位：MEDUSA 是 [[moc_relations]] 明确收录的"多头并行预测 + tree attention 一次校验多候选，无需 draft 模型"锚点，位于"speculative decoding 多头分支"根基位置。
 
 ## 局限与边界
 
-- **batch=1 场景为主**：作者明确实验聚焦本地部署 batch=1（§1/§4），大 batch 下内存带宽瓶颈减弱、加速收益下降。Appendix G 给出定量边界：**Figure 22** 显示 batch>32 后 speedup 下降甚至转负（linear 层转入 compute-bound，无空间摊销）；**Figure 23** 显示 seq_len 增加抬高 attention 开销、整体下降。讨论节提到 TensorRT/Huggingface TGI 已跟随实现大 batch 扩展（not-available 论文未给大 batch 实测数字）。
+- **batch=1 场景为主**：作者明确实验聚焦本地部署 batch=1（§1/§4），大 batch 下内存带宽瓶颈减弱、加速收益下降。Appendix G 给出定量边界：**Figure 22** 显示 batch>32 后 speedup 下降甚至转负（linear 层转入 compute-bound，无空间摊销）；**Figure 23** 显示 seq_len 增加抬高 attention 开销、整体下降。讨论节提到 TensorRT/Huggingface TGI 已跟随实现大 batch 扩展（论文未给大 batch 实测数字）。
 - **typical acceptance 引入轻微分布偏差**：温度>0 时多接受候选，质量近似而非严格无损（Figure 5 显示大 ε 下质量接近 random sampling 但仍有 -0.07~-0.14 的 MT-Bench 差值，Table 1）；MEDUSA-1 因主干冻结严格无损，MEDUSA-2 接近无损。
 - **MEDUSA-2 联合训练主干退化风险**：Table 2 直接联合训练（Direct Fine-tuning）质量 6.17→5.925，必须靠 combined loss + differential LR + heads warmup 三策略缓解，复杂度高于 MEDUSA-1。
 - **头数与树规模权衡**：§2.2.3 经验取 5 头足够，配 §2.3.3 优化树后 3–4 头可能即够；但 **Figure 4b** 显示候选数 >150 后 speed 显著下降，**Figure 21** 显示 speedup 在 ~48–64 候选处饱和——树太大会被 compute-bound 反噬。
-- **稀疏树假设独立**：§2.3.3 候选路径准确率按 `Π a^(i_j)_j` 独立假设估算，实际头间存在相关性，估计有偏（论文未给敏感性分析）。
+- **稀疏树假设独立**：§2.3.3 候选路径准确率按 `Π a^(i_j)_j` 独立假设估算（对应 formulas.json [5] 的连乘项），实际头间存在相关性，估计有偏（论文未给敏感性分析）。
 - **自蒸馏质量下降**：Vicuna-33B acc rate 3.01 低于 7B/13B 的 3.47/3.51（Table 1），作者归因 hidden 训练数据与 seed 不匹配；自蒸馏需 LoRA 不量化，否则教师为量化模型质量降。
 - **draft 路径命中是稀疏事件**：**Figure 6** M3 解读指出 64 节点 k^4 候选空间单次验证，性能强依赖是否有路径命中 ground truth——acceptance rate 是主导杠杆，高熵/创意任务收益低（Humanities/Reasoning 仅 2.58×）。

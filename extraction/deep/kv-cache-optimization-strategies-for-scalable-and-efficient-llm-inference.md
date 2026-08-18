@@ -1,15 +1,34 @@
-# KV Cache Optimization Strategies for Scalable and Efficient LLM Inference — 技术点深读（DEEP 2026-08-18）
+# KV Cache Optimization Strategies for Scalable and Efficient LLM Inference — 技术点深读（DEEP 2026-08-18，公式重跑）
 
 > 独立文件：本 deep note 与 extract_phase1 生成的论文 MD body 分离，按 MEMORY 铁律独立维护，不受 extract 重写覆盖影响。
-> Source: `extraction/fulltext/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference.txt` (arXiv:2603.20397v1, 20 Mar 2026). Yichun Xu, Navjot K. Khaira, Tejinder Singh (Dell Technologies). Survey — five-direction taxonomy paper mapping 36 representative methods to 7 deployment scenarios. Sister survey to [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] (PolyU/HKUST 三级 taxonomy paper); 本文偏 inference scalability & practitioner-facing deployment mapping，姊妹篇偏 academic taxonomy + 12 mechanism-level tables。
+> Source: `extraction/fulltext/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference.txt` (arXiv:2603.20397v1, 20 Mar 2026). Yichun Xu, Navjot K. Khaira, Tejinder Singh (Dell Technologies). Survey — five-direction taxonomy paper mapping 36 representative methods to 7 deployment scenarios. Sister survey to [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] (PolyU/HKUST 三级 taxonomy paper)；本文偏 inference scalability & practitioner-facing deployment mapping，姊妹篇偏 academic taxonomy + 12 mechanism-level tables。
+> **公式权威源**：以下所有 `$$` 公式引自 `extraction/formulas.json`（LaTeX 原文，完全正确，不凭训练知识重写/补全）；与 M3 caption 对架构图的解读逐式做 LaTeX↔M3 双源校验。
 
 ## 核心问题
 
-本文攻击的是一个 **部署侧的实践性问题**。开篇 Figure 1（p.2，M3 解读：两步自回归生成 "The apple tastes sweet." → "."，橙色 query 对全部 cyan 历史 token 做因果 attention，callout 标出 KV Cache 存历史 K/V 避免每步重算）即点明：KV cache 把每步 per-token 成本从 O(n²) 降到 O(n)，代价是 **内存随上下文线性增长**。Figure 2（p.3，M3 解读：单 transformer 层内 x_t 经 W_K/W_Q/W_V 三投影，K_t/V_t 被 append 进各自 per-layer cache K_c=[K_1,…,K_t]、V_c=[V_1,…,V_t]，Q_t 对全 cache 做 `softmax(Q_t K_c^T/√d_k)V_c`）量化了这个线性代价：cache size O(T) per head per layer（式 1–2：`KVper token = 2 × H × D × B × L`，`KVcache size = KVper token × ContextLength`，§2.2）。
+本文攻击的是一个 **部署侧的实践性问题**。开篇 Figure 1（p.2，M3 解读：两步自回归生成 "The apple tastes sweet." → "."，橙色 query 对全部 cyan 历史 token 做因果 attention，callout 标出 KV Cache 存历史 K/V 避免每步重算）即点明：KV cache 把每步 per-token 成本从 O(n²) 降到 O(n)，代价是 **内存随上下文线性增长**。
 
-当上下文窗口从数千 token 扩到百万级（§1, §3 引言引 GPT-5 [7] / Llama 4 [8]），线性增长对 GPU 显存容量、显存带宽、推理吞吐同时形成 critical bottleneck。Figure 3（p.3，verbar caption 在 fulltext，无 M3 caption）给出量化：7B 模型（0.50 MB/token, 32L×32H）在 128K 上下文下 KV cache ≈64 GB，已超 A100 80GB 上限；13B（0.78 MB/token）更早触顶；70B-GQA（0.31 MB/token, 80L×8H）因 GQA head 共享而 per-token 更省，但绝对量仍大。这张图把"为什么 KV cache 是 first-order 部署难题"用三条曲线 + 两条 GPU VRAM 虚线（RTX 4090 24GB / A100 80GB）一刀切清。
+Figure 2（p.3，M3 解读：单 transformer 层内 x_t 经 W_K/W_Q/W_V 三投影，K_t/V_t 被 append 进各自 per-layer cache K_c=[K_1,…,K_t]、V_c=[V_1,…,V_t]，Q_t 对全 cache 做 scaled dot-product attention）量化了这个线性代价。M3 caption 直接给出了该层的输出公式：
 
-进一步，§2.3 的 Figure 4（p.4，M3 解读：4×4 因果 attention 权重矩阵，Viridis 配色，"sweet" query 把 65% 注意力集中到 "apple"（0.65），"The" 仅 0.05，低权重 KV 标为 eviction candidate）用一句话的 toy example 奠定了全文 eviction 路线的经验前提：**KV entries 的贡献高度非均匀**——这是 H2O/SnapKV 等用 attention score 做 eviction 信号的合法性来源。
+$$o_t = \mathrm{softmax}\!\left(\tfrac{Q_t \mathbf{K}_c^{\top}}{\sqrt{d_k}}\right)\mathbf{V}_c.$$
+
+> **LaTeX↔M3 双源校验**：M3 对 Figure 2 的图解公式与 formulas.json [3] 的通用 softmax 形式 `α_{ij} = softmax(Q_i·K_j^T/√d_k)`（Eq.4）一致——前者是 single-query 对全 cache 的实例化，后者是逐元素 (i,j) 形式；分子分母结构、√d_k 缩放、softmax 归一化三要素双源吻合，cache 规模 O(T) per head per layer 同向。cache 规模的量化来自 §2.2 Eq.1–Eq.2（formulas.json [0][1]）：
+
+$$KV_{per\ token} = 2 \times H\times D \times B \times L$$
+
+$$KV_{cache\ size} = KV_{per\ token} \times \mathrm{Context Length}$$
+
+其中 H=head 数、D=每 head 维度、B=每元素字节数（fp16 时 B=2，fp32 时 B=4）、L=transformer 层数（§2.2）。当上下文窗口从数千 token 扩到百万级（§1, §3 引言引 GPT-5 [7] / Llama 4 [8]），线性增长对 GPU 显存容量、显存带宽、推理吞吐同时形成 critical bottleneck。Figure 3（p.3，verbar caption 在 fulltext，无 M3 caption）给出量化：7B 模型（0.50 MB/token, 32L×32H）在 128K 上下文下 KV cache ≈64 GB，已超 A100 80GB 上限；13B（0.78 MB/token）更早触顶；70B-GQA（0.31 MB/token, 80L×8H）因 GQA head 共享而 per-token 更省，但绝对量仍大。这张图把"为什么 KV cache 是 first-order 部署难题"用三条曲线 + 两条 GPU VRAM 虚线（RTX 4090 24GB / A100 80GB）一刀切清。
+
+进一步，§2.3 的 Figure 4（p.4，M3 解读：4×4 因果 attention 权重矩阵，Viridis 配色，"sweet" query 把 65% 注意力集中到 "apple"（0.65），"The" 仅 0.05，低权重 KV 标为 eviction candidate）用一句话的 toy example 奠定了全文 eviction 路线的经验前提：**KV entries 的贡献高度非均匀**——这是 H2O/SnapKV 等用 attention score 做 eviction 信号的合法性来源。该 toy example 的数值就是 Eq.3–Eq.5（formulas.json [2][3][4]）的实例：
+
+$$\mathrm{Score}\left( Q_i, K_j\right) = \frac{Q_i \cdot K_j^{T}}{\sqrt{d_k}}$$
+
+$$\alpha_{ij} = \mathrm{softmax}\!\left( \frac{Q_i \cdot K_j^{T}}{\sqrt{d_k}} \right)$$
+
+$$\mathrm{output}_i = \sum_{j} \alpha_{ij} V_j$$
+
+> **LaTeX↔M3 双源校验**：Figure 4 的 4×4 权重矩阵每行和为 1（post-softmax）正是 Eq.4 `α_{ij}=softmax(·)` 行归一化的可视化；"sweet"→"apple" 0.65 即 Eq.3 `Score(Q_i,K_j)=Q_i·K_j^T/√d_k` 经 softmax 后的高权重项；最终 token 输出由 Eq.5 `output_i=Σα_{ij}V_j` 加权聚合。formulas.json [2][3][4] 与 M3 对 Figure 4 的数值解读逐项对齐。
 
 不同于单篇方法论文"只攻一处"或既有 survey "broad but shallow"（§1 自述），本文提供 **middle-ground perspective**：(1) 把 KV cache 优化系统性归入 **五大方向**（Cache Eviction / Cache Compression / Hybrid Memory / New Attention Mechanism / Combination Methods, §2.4 Figure 5 p.5, Tab.1）；(2) 再把每方向方法 **映射到 7 个实际部署场景**（§5.1–5.8），给从业者"在该约束下选哪一类"的可执行答案。核心结论（§6）：**没有任何单一技术 dominate 所有 setting**——最优策略取决于 context length / hardware constraints / workload characteristics，未来方向是 **adaptive, multi-stage optimization pipelines**。
 
@@ -30,11 +49,45 @@
    - 效果：Tab.6 量化数字——KIVI 2.6× peak memory / 2.35–3.47× throughput / <2% accuracy drop（单 KV head 模型可能需 4-bit）；KVQuant 3.7–6.9× memory / <0.1 perplexity degradation @3-bit / ~1.7× speedup；MiniCache 41% memory reduction / ~5× throughput（仅合并两层，更高压缩受限）；PALU ~50% KV 压缩 / 1.89×（RoPE）–2.91×（with quant）。明确 KVQuant 的 Pre-RoPE 量化是 KIVI 之外的独立创新——pre-RoPE 保持结构完整性（§3.2）。
 
 4. **Hybrid Memory 七系统的硬件感知谱系（§3.3, Tab.4）——从 paging 到 near-storage 计算**
-   - 机制：PagedAttention [22]（OS virtual memory 启发，KV block + block table + copy-on-write，并行采样共享 prompt block。Figure 10 p.11 M3 解读：vLLM 系统——中心 Scheduler 调度 N 个并行 Worker，每 Worker 持 Cache Engine + Model Shard on GPU；Scheduler 接 KV Cache Manager，维护 Block tables（类 OS page table）+ CPU/GPU Block Allocator 双分配器，decouple 集中调度与分散 cache 管理，支持非连续 block 级 KV 存储）→ InfiniGen [23]（Partial Q = `X(layer)·M·W_Q^(layer+1)`，M 为离线 SVD 学的低秩变换，预测下一层所需 KV，CPU→GPU 预取与计算重叠。Figure 11 p.12 M3 解读：三阶段流水——Offline Skewing 预计算 attention weight skewness profile；Prefill 期 GPU 跑 Partial Weight Index Generation 标记重要 token id；Decoding 期 GPU 跑 KV selector → Attention → FFN，CPU 并行发 Prefetching，selected token id（橙）CPU→GPU、selected K/V（蓝）喂下一层 selector，实现"决定哪些 token 重要"与"只取这些 token"解耦）→ LayerKV [24]（层粒度 offload，选最小 GPU 层数使 `offload time ≤ prefill time`，如 8 层留 1/3/5/7 在 GPU 而 0/2/4/6 offload，CPU 传回 layer 0 时 GPU 在算 layer 1；SLO-aware TPOT scheduler）→ INF2 [25]（Computational Storage Devices with FPGA/ASIC，attention-near-storage，PCIe private switch，KV 存 SSD+CSD，GPU 并行做 MLP，新 KV 批量回写）→ KVPR [26]（partial KV 重算与传输重叠，profiling 决定 row-wise（latency）/ column-wise（throughput）调度，使小部分 KV 重算时间 = 其余 KV 传输时间）→ Oneiros [27]（parameter remapping：解码期把 inactive model 参数 offload 出 GPU 腾出 KV 空间，逐层均匀分布 remapped layer 隐藏传输，KV 压力消退则 reverse remapping）→ CLO [28]（query 相邻步高相似度→复用上一轮 KV；低相似度则 InfiniGen 式 prefetch；GDRCopy zero-copy engine；critical head 永驻 GPU 防 latency spike）。
+   - 机制：PagedAttention [22]（OS virtual memory 启发，KV block + block table + copy-on-write，并行采样共享 prompt block。Figure 10 p.11 M3 解读：vLLM 系统——中心 Scheduler 调度 N 个并行 Worker，每 Worker 持 Cache Engine + Model Shard on GPU；Scheduler 接 KV Cache Manager，维护 Block tables（类 OS page table）+ CPU/GPU Block Allocator 双分配器，decouple 集中调度与分散 cache 管理，支持非连续 block 级 KV 存储）→ InfiniGen [23]（Partial Q 预测下一层所需 KV，CPU→GPU 预取与计算重叠，预测公式见 Eq.6 / formulas.json [5]）：
+
+$$\tilde Q^{(\text{layer}+1)} = X^{(\text{layer})} \cdot M \cdot W_Q^{(\text{layer}+1)}$$
+
+其中 M 为离线 SVD 学的低秩变换矩阵。Figure 11 p.12 M3 解读：三阶段流水——Offline Skewing 预计算 attention weight skewness profile；Prefill 期 GPU 跑 Partial Weight Index Generation 标记重要 token id；Decoding 期 GPU 跑 KV selector → Attention → FFN，CPU 并行发 Prefetching，selected token id（橙）CPU→GPU、selected K/V（蓝）喂下一层 selector，实现"决定哪些 token 重要"与"只取这些 token"解耦。
+
+> **LaTeX↔M3 双源校验**：Eq.6 的 Partial Q 公式 `Q̃^(layer+1)=X^(layer)·M·W_Q^(layer+1)` 与 M3 对 Figure 11 的解读"Partial Weight Index Generation 在 Prefill 期由当前层输入 + 下一层 W_Q 预测"一致；M3 未给公式但描述的 "X(layer) → M (low-rank, SVD offline) → W_Q(layer+1) → 预测下一层所需 KV" 因果链与 formulas.json [5] 严格对应，M 即公式中的低秩变换。
+
+→ LayerKV [24]（层粒度 offload，选最小 GPU 层数使 `offload time ≤ prefill time`，如 8 层留 1/3/5/7 在 GPU 而 0/2/4/6 offload，CPU 传回 layer 0 时 GPU 在算 layer 1；SLO-aware TPOT scheduler）→ INF2 [25]（Computational Storage Devices with FPGA/ASIC，attention-near-storage，PCIe private switch，KV 存 SSD+CSD，GPU 并行做 MLP，新 KV 批量回写）→ KVPR [26]（partial KV 重算与传输重叠，profiling 决定 row-wise（latency）/ column-wise（throughput）调度，使小部分 KV 重算时间 = 其余 KV 传输时间）→ Oneiros [27]（parameter remapping：解码期把 inactive model 参数 offload 出 GPU 腾出 KV 空间，逐层均匀分布 remapped layer 隐藏传输，KV 压力消退则 reverse remapping）→ CLO [28]（query 相邻步高相似度→复用上一轮 KV；低相似度则 InfiniGen 式 prefetch；GDRCopy zero-copy engine；critical head 永驻 GPU 防 latency spike）。
    - 效果：Tab.6——PagedAttention offload based + 2–4× throughput + lossless（kernel overhead / block table 管理）；InfiniGen 1.63–32.9× speedup + 需 >15% Relative KV Cache Size + 需额外 GPU 存 partial weight；LayerKV up to 69× TTFT 改善 + lossless（高负载解码 throughput 略降）；INF2 3.46× throughput / KV I/O 降低 >80% + lossless（需 CSD 硬件）；KVPR 35.8% lower latency / 46.2% higher throughput vs DeepSpeed+HF Accelerate；Oneiros 44.8–82.5% TBT 降 / 20.7–99.3% TTFT 降 / 6.6–86.7% throughput 提升 vs vLLM（需高 CPU–GPU 带宽 450–900 GB/s）；CLO 9.3–66.6% throughput 提升 vs RetroInfer/InfiniGen + ≤0.42% drop（PCIe 4.0 依赖）。
 
 5. **New Attention 的复杂度阶梯（§3.4, Tab.5）——O(N²) → O(N log N) → O(N)**
-   - 机制：Softmax O(T²)/O(T)/O(T)（式 3–5，scaled dot-product，§2.3）→ Linear (Transformers-are-RNNs [29]，kernel feature map `φ(·)` 把 `softmax(q·k)` 近似为 `φ(q)·φ(k)`，递归累积 `S_i = Σφ(K_j)V_j^T`、`Z_i = Σφ(K_j)`，O(N)/O(1)/O(1)) → Log-Linear [30]（Fenwick tree 桶，每桶 summary matrix `S_t^(ℓ)`，older token 渐入 coarser bucket，至多 log₂(t) 桶活跃，O(N log N)/O(log N)/O(log N)。Figure 12 p.15 M3 解读：上图 Linear Attention 是扁平顺序 block 链，输出严格 left-to-right 无层级聚合；下图 Log-Linear 是树形层级聚合，⊕ 节点局部 pool 邻近 KV 再逐级向上归并，使远距 token 间路径长从 O(n) 降到 O(log n)，保线性效率同时提升表征力）→ Local Linear Attention [31]（attention 类比为 regression：softmax=local constant（看邻近 key 平均 value）、linear=global linear regression（拟合全局直线）、LLA=local linear regression（每 query 局部拟合小线性模型），O(N²)/~O(N)/O(N)，适应 non-stationary/time-varying 分布）→ KIMI Linear [32]（Kimi Delta Attention KDA，forget gate α + update rate β 双门控，`S_t = (I − β_t k_t k_t^T)·Diag(α_t)·S_{t−1} + β_t k_t v_t^T`，(I − β_t k_t k_t^T) 防过拟合旧关联、β_t k_t v_t^T 存新 KV 对；与 full attention 3:1 hybrid ratio，chunk 化处理增并行）。
+   - 机制：Softmax O(T²)/O(T)/O(T)（Eq.3–Eq.5，scaled dot-product，§2.3）→ Linear (Transformers-are-RNNs [29]，kernel feature map `φ(·)` 把 `softmax(q·k)` 近似为 `φ(q)·φ(k)`，递归累积，O(N)/O(1)/O(1))。线性注意力的完整定义见 formulas.json [6]–[9]（§3.4 Eq.7–Eq.9 等价组）：
+
+$$V_i' = \frac{\phi(Q_i)^T \sum_{j=1}^{i} \phi(K_j) V_j^T} {\phi(Q_i)^T \sum_{j=1}^{i} \phi(K_j)}$$
+
+$$V_i' = \frac{\phi(Q_i)^T S_i}{\phi(Q_i)^T Z_i}$$
+
+$$S_i = \sum_{j=1}^{i} \phi(K_j) V_j^T$$
+
+$$Z_i = \sum_{j=1}^{i} \phi(K_j)$$
+
+其中 `φ(·)` 是 feature map（elementwise，把 `similarity(q,k)=softmax(q^T k)` 近似为 `similarity(q,k)≈φ(q)·φ(k)`），S_i 与 Z_i 可增量累积，从而把 attention 重排为线性时间/常数空间的递归。
+
+→ Log-Linear [30]（Fenwick tree 桶，每桶 summary matrix `S_t^(ℓ)`，older token 渐入 coarser bucket，至多 log₂(t) 桶活跃，O(N log N)/O(log N)/O(log N)。其输出聚合公式见 formulas.json [10]（§3.4 Eq.10）：
+
+$$o_t = \sum_{\ell=0}^{L-1} \lambda_t^{(\ell)} q_t^T \left(\sum_{s \in B_t^{(\ell)}} v_s k_s^T \right) = \sum_{\ell=0}^{L-1} \lambda_t^{(\ell)} q_t^T S_t^{(\ell)}$$
+
+其中 `B_t^(ℓ)` 是桶 ℓ 的 token 集合、`λ_t^(ℓ)` 是桶权重、`S_t^(ℓ)=Σ_{s∈B} v_s k_s^T` 是桶级 summary matrix。Figure 12 p.15 M3 解读：上图 Linear Attention 是扁平顺序 block 链，输出严格 left-to-right 无层级聚合；下图 Log-Linear 是树形层级聚合，⊕ 节点局部 pool 邻近 KV 再逐级向上归并，使远距 token 间路径长从 O(n) 降到 O(log n)，保线性效率同时提升表征力。
+
+> **LaTeX↔M3 双源校验**：Eq.10 的 `Σ_{ℓ=0}^{L-1} λ^(ℓ) q^T S^(ℓ)` 树形多桶聚合与 M3 对 Figure 12 下图"⊕ 节点局部 pool 邻近 KV 再逐级向上归并"的层级树结构一致——公式中的桶 ℓ 对应 M3 图中的层级聚合层，S_t^(ℓ) 对应 ⊕ merge 节点产出的 summary；log₂(t) 活跃桶 ↔ M3 "logarithmic-depth reduction"。双源吻合。
+
+→ Local Linear Attention [31]（attention 类比为 regression：softmax=local constant（看邻近 key 平均 value）、linear=global linear regression（拟合全局直线）、LLA=local linear regression（每 query 局部拟合小线性模型），O(N²)/~O(N)/O(N)，适应 non-stationary/time-varying 分布）→ KIMI Linear [32]（Kimi Delta Attention KDA，forget gate α + update rate β 双门控，状态更新与输出公式见 formulas.json [11][12]（§3.4 Eq.11–Eq.12）：
+
+$$S_t = (I - \beta_t k_t k_t^T)\,\mathrm{Diag}(\alpha_t)S_{t-1} + \beta_t k_t v_t^T \in \mathbb{R}^{d_k \times d_v}$$
+
+$$o_t = S_t^T q_t \in \mathbb{R}^{d_v}$$
+
+其中 `Diag(α_t)` 是 forget gate 对角矩阵（α 接近 1 保留旧记忆、接近 0 快速遗忘），`(I − β_t k_t k_t^T)` 防过拟合旧关联、`β_t k_t v_t^T` 存新 KV 对；与 full attention 3:1 hybrid ratio，chunk 化处理增并行）。
    - 效果：Tab.6——LinearAttention O(1) memory + up to 4000× 长序列提速（feature map kernel 敏感，复杂任务弱）；Log-Linear O(log T) memory + 3× speedup（性能介于 linear 与 full attention 间）；LLA outperforms softmax & linear on associative/regression 任务（trades speedups for accuracy）；KIMI up to 75% KV reduction + up to 6× throughput @1M context（§5.1 实为 6.3×），作者称 outperforms full attention，但需 retrain + kernel 依赖。关键结论：linear 类方法需 full retrain，accuracy-critical reasoning 仍落后 full attention，是"未来 transformer 继任者"方向而非 drop-in 优化（§6）。
 
 6. **Combination Methods 的四框架（§3.5）——sparsity × quantization × offload**

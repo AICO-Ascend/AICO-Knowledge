@@ -1,63 +1,76 @@
-# Gated DeltaNet — 全要素深读（DEEP 2026-08-18, rewritten）
+# Gated DeltaNet — 全要素深读（DEEP 2026-08-18, 公式重跑版）
 > 独立文件，extract_phase1 重跑不丢。文本/图/表/公式一体化分析。
 > 论文：Gated Delta Networks: Improving Mamba2 with Delta Rule · arXiv:2412.06464v3 (2025-03-06, ICLR 2025)
 > 作者：Songlin Yang (MIT CSAIL) / Jan Kautz, Ali Hatamizadeh (NVIDIA)。代码 https://github.com/NVlabs/GatedDeltaNet
+> **公式权威源**：extraction/formulas.json（PDF 把公式当图片抽空，.txt 不可信，以下 `$$` 块均逐字引自 formulas.json LaTeX，cite Eq.）。图源走 M3 caption（禁直读 PNG）。
 
 ## 核心问题
 
-Linear Transformers（含 Mamba2、GLA 等）以矩阵态 linear RNN 形式把 softmax attention 改为线性 kernel，显著降低推理显存并支持并行训练，但在 **in-context retrieval 与 long-context 任务上仍弱于 Transformer**（§1）。其根因在 §1 指出：linear attention 本质是 outer-product key-value 联想记忆（tensor product representation, Smolensky 1990），可正交存储的 KV 对数受 head dimension 上界约束，序列长度一旦超过 d 即出现"memory collision"，破坏精确检索（Schlag et al. 2021）。
+Linear Transformers（含 Mamba2、GLA 等）以矩阵态 linear RNN 形式把 softmax attention 改为线性 kernel，显著降低推理显存并支持并行训练，但在 **in-context retrieval 与 long-context 任务上仍弱于 Transformer**（§1）。根因如 §1 所述：linear attention 本质是 outer-product key-value 联想记忆（tensor product representation, Smolensky 1990），可正交存储的 KV 对数受 head dimension 上界约束，序列长度一旦超过 d 即出现 "memory collision"，破坏精确检索（Schlag et al. 2021）。
 
 两条既有改进路径各有短板（§1）：
 
-1. **Mamba2 的 gated update rule** `St = αt St-1 + vt kt^T`（αt∈(0,1) 标量衰减，§2.1）：能快速遗忘，但 αt 对 *所有* KV 关联按同一比率均匀衰减，无法定向擦除某个特定 KV——"if the model needs to forget a specific key-value association, all key-value associations are equally forgotten, making the process less targeted and efficient"（§1）。
-2. **DeltaNet 的 delta rule**（Widrow 1960; Schlag 2021; Yang 2024b）`St = St-1(I − βt kt kt^T) + βt vt kt^T`（§2.2）：以 generalized Householder 转移矩阵 (I − βt kt kt^T) 选择性软替换当前 key 对应的旧 value，in-context associative recall 强，但一次只改一个 KV 对，**缺乏快速清空机制**，context switch 时旧信息难以及时清除，导致真实任务表现平庸（Yang 2024b）。
+1. **Mamba2 的 gated update rule**（§2.1，formulas.json [19]）：
+$$ \rmS_t = {\color{blue}\alpha_t} \rmS_{t-1} + \vv_t \vk_t^\intercal, \qquad \vo_t = \rmS_t \vq_t $$
+标量衰减 αt∈(0,1) 能快速遗忘，但对 *所有* KV 关联按同一比率均匀衰减，无法定向擦除某条 KV——"if the model needs to forget a specific key-value association, all key-value associations are equally forgotten, making the process less targeted and efficient"（§1）。
 
-论文核心动机：上述两机制是 **互补的**——gating 擅长 rapid memory erasure，delta rule 擅长 targeted update。二者合流即得本文 gated delta rule。Fig.1（M3 解读）所绘的 Gated DeltaNet block 把 α（衰减门）与 β（delta 写入强度）作为并列的两条 linear-projection 分支同时驱动状态更新，正是这一"互补合流"动机在结构层面的具象化；该图同时标出最终性能坐标（Wiki ppl 16.42、zero-shot avg 55.32、H2 混合 ppl 15.91），把"动机→block→结果"串成单一图示。
+2. **DeltaNet 的 delta rule**（§2.2，Widrow 1960; Schlag 2021; Yang 2024b，formulas.json [6]）：
+$$ \rmS_t = \rmS_{t-1} \left(\rmI - \beta_t \vk_t \vk_t^\intercal \right) + \beta_t \vv_t \vk_t^\intercal $$
+以 generalized Householder 转移 (I − βt kt kt^T) 选择性软替换当前 key 对应旧 value，in-context associative recall 强，但一次只改一个 KV 对，**缺乏快速清空机制**，context switch 时旧信息难以及时清除，真实任务表现平庸（Yang 2024b）。
+
+论文核心动机：上述两机制 **互补**——gating 擅长 rapid memory erasure，delta rule 擅长 targeted update，二者合流即得 gated delta rule。Fig.1（M3 解读）所绘 Gated DeltaNet block 把 α（衰减门）与 β（delta 写入强度）作为并列的两条 linear-projection 分支同时驱动状态更新，正是这一"互补合流"动机在结构层面的具象化；该图同时标出最终性能坐标（Wiki ppl 16.42、zero-shot avg 55.32、H2 混合 ppl 15.91），把"动机→block→结果"串成单一图示。**LaTeX↔M3 双源校验**：Eq.10（formulas.json [12]）中 α、β 各司其职（α 管状态衰减、β 管 delta 写入强度），与 Fig.1 block 设计图（M3 解读）将 α、β 画为仅经 `Lin.` 的两条独立分支、与 q/k 的 `Linear-Conv-L2`、v 的 `Linear-Conv` 路径相区分——公式变量与图中 block 一一对应。
 
 ## 关键创新点
 
-1. **Gated delta rule（Eq.10, §3.1）** —— 核心机制
-   `St = St-1 ( αt (I − βt kt kt^T) ) + βt vt kt^T`
-   数据相关门控 αt∈(0,1) 控制状态衰减。统一优势：
-   - αt→0 时退化为快速清空（gating 优势）。
-   - αt→1 时退化为纯 delta rule（定向更新优势）。
-   中间值则同时实现"遗忘 + 定向写入"。结构上即把 Mamba2 的对角转移 αt I 升级为 generalized Householder 矩阵 αt(I − βt kt kt^T)，兼顾遗忘幅度与方向性。Fig.1（M3 解读）的 block 设计把 α、β 画为仅经 linear projection 的两条独立分支（区别于 q/k 的 linear+shortconv+SiLU+L2norm 与 v 的 linear+shortconv+SiLU），与 Eq.10 中 α、β 各司其职（α 管状态衰减、β 管 delta 写入强度）的数学分工严格对应。
+1. **Gated delta rule（Eq.10, §3.1，formulas.json [12]）** —— 核心机制：
+$$ \rmS_t = \rmS_{t-1} \left( {\color{blue}{\alpha_t}} (\rmI - \beta_t \vk_t\vk_t^\intercal) \right) + \beta_t \vv_t \vk_t^\intercal $$
+数据相关门控 αt∈(0,1) 控制状态衰减。统一优势：αt→0 退化为快速清空（gating 优势）；αt→1 退化为纯 delta rule（定向更新优势）；中间值则同时实现"遗忘 + 定向写入"。结构上即把 Mamba2 的对角转移 αt I（formulas.json [19]）升级为 generalized Householder 矩阵 αt(I − βt kt kt^T)，兼顾遗忘幅度与方向性。**LaTeX↔M3 双源校验**：Eq.10 中 α、β 分工与 Fig.1 block（M3 解读"α/β=线性投影"）严格对应——α、β 各走一条 `Lin.` 支路，无 shortconv/SiLU/L2norm，区别于 q/k/v 路径。
 
-2. **Online-learning 视角的形式化（Table 1, §3.1）** —— 用 Liu et al. 2024 的在线学习框架解释
-   - LA 目标 `‖St − St-1‖²_F − 2⟨St kt, vt⟩` → Hebbian 更新。
-   - Mamba2 在正则项前置自适应缩放 αt：`‖St − αt St-1‖²_F` → 允许 St 偏离 St-1，提供 selective forgetting。
-   - DeltaNet 把损失换成 delta regression `−2⟨St kt, βt(vt − St-1 kt)⟩`（一步显式 SGD）。
-   - **Gated DeltaNet 同时在前正则项与回归项内引入 αt**：`‖St − αt St-1‖²_F − 2⟨St kt, βt(vt − αt St-1 kt)⟩`，相当于在 SGD 上加 adaptive weight decay。注：Longhorn（Liu 2024）用 implicit online learning 推出近似 delta rule 的闭式全局最优，GDN 则用一步显式梯度下降优化同目标（§3.1 脚注 3）。
+2. **Online-learning 视角的形式化（Table 1, §3.1）** —— 用 Liu et al. 2024 的在线学习框架解释。各方法的 online objective 与 closed-form update 见 Table 1，其中 Gated DeltaNet 的目标为：
+$$ \|\rmS_t - {\color{blue}\alpha_t}\rmS_{t-1}\|^2_F - 2\langle \rmS_t\vk_t, \beta_t (\vv_t - {\color{blue}\alpha_t}\rmS_{t-1}\vk_t)\rangle $$
+即在 Mamba2 的 `‖S_t − α_t S_{t-1}‖²` 正则项基础上，把 LA/Mamba2 的简单负内积损失 `−⟨S_t k_t, v_t⟩` 换成 delta 回归 `−2⟨S_t k_t, β_t(v_t − α_t S_{t-1} k_t)⟩`，**同时在前正则项与回归项内引入 αt**——相当于在 SGD 上加 adaptive weight decay。Longhorn（Liu 2024）用 implicit online learning 推闭式全局最优；GDN 用一步显式梯度下降优化同目标（§3.1 脚注 3）。
 
-3. **Test-time training / fast weight 视角（§3.1）** —— 把 S 解释为 fast weight，delta rule 是对 `L(St)=½‖St kt − vt‖²` 的 SGD：`St+1 = St − βt ∇L = St(I − βt kt kt^T) + βt vt kt^T`，βt 为 adaptive learning rate，αt 为 adaptive weight decay（Krogh & Hertz 1991）。与 Titans（Behrouz 2024）的 weight-decay 思路同期呼应。
+3. **Test-time training / fast weight 视角（§3.1，formulas.json [13]）** —— 把 S 解释为 fast weight，delta rule 是对 L(S_t)=½‖S_t k_t − v_t‖² 的 SGD：
+$$ \rmS_{t+1} = \rmS_{t} - \beta_t \nabla \mathcal{L}(\rmS_t) = \rmS_{t} - \beta_t (\rmS_t\vk_t - \vv_t)\vk_t^\intercal = \rmS_{t}\left(\rmI-\beta_t\vk_t\vk_t^\intercal\right) + \beta_t \vv_t\vk_t^\intercal $$
+βt 为 adaptive learning rate，gated delta rule 中的 αt 即 adaptive weight decay（Krogh & Hertz 1991）。与 Titans（Behrouz 2024）的 weight-decay 思路同期呼应。
 
-4. **S-NIAH 案例研究（Table 2, §3.2）的三大观察**（1.3B 模型，RULER）—— 直接验证"互补性"
-   - *Decay hurts retention*：S-NIAH-1（repeated synthetic，测长期记忆保持）DeltaNet 接近满分；Mamba2 在 >2K 时显著退化；GDN 退化较轻（4K 91.4 / 8K 91.8，vs Mamba2 65.4/30.4）——delta rule 帮助保持。
-   - *Gating facilitates filtering*：S-NIAH-2/3（真实文本上下文，测内存管理）DeltaNet 在长序列因无 clearance 而崩溃（S-NIAH-2 4K 仅 18.6，8K 14.4）；Mamba2/GDN 靠 gating 过滤无关信息维持表现——gating 帮助清除。
-   - *Delta rule helps memorization*：S-NIAH-3 UUID needle，Mamba2 急剧退化（4K 4.6），GDN 表现更优（4K 27.6 / 2K 84.2）。
-   这三条观察与 Eq.10 的两个极限情形（αt→1 退化为 DeltaNet 保 retention、αt→0 退化为快速清空保 filtering）在机理上一一对应，构成"公式 ↔ 表格"的闭环验证。
+4. **S-NIAH 案例研究（Table 2, §3.2）的三大观察**（1.3B 模型，RULER）—— 直接验证"互补性"：
+   - *Decay hurts retention*：S-NIAH-1（repeated synthetic，测长期保持）DeltaNet 接近满分；Mamba2 >2K 显著退化；GDN 退化较轻（4K 91.4 / 8K 91.8，vs Mamba2 65.4 / 30.4）——delta rule 帮助保持。
+   - *Gating facilitates filtering*：S-NIAH-2/3（真实文本上下文，测内存管理）DeltaNet 因无 clearance 崩溃（S-NIAH-2 4K 仅 18.6、8K 14.4）；Mamba2/GDN 靠 gating 过滤无关信息维持表现——gating 帮助清除。
+   - *Delta rule helps memorization*：S-NIAH-3 UUID needle，Mamba2 急剧退化（4K 4.6），GDN 保持（2K 84.2 / 4K 27.6）。
+   这三条与 Eq.10（formulas.json [12]）两个极限情形（αt→1 退化为 DeltaNet 保 retention、αt→0 退化为快速清空保 filtering）在机理上一一对应，构成"公式 ↔ 表格"闭环。
 
-5. **硬件高效 chunkwise 训练算法（§3.3, Appendix A）** —— 工程核心贡献
-   - 部分展开 Eq.10 得 `Sr[t] = S[t]·Fr[t] + Gr[t]`，其中 Fr[t] = γr[t]·Pr[t] 即 Mamba2 风格衰减后的 Householder 累积积，Gr[t] 为带衰减的增量。
-   - 把 Yang 2024b 的 WY 表示（Bischof & Loan 1985）扩展到含 αt：`Pr[t] = I − Σ wi[t] ki[t]^T`，`wr = βr (kr − Σ wi (ki^T kr))`；Gr[t] = Σ (γr/γi) ũi ki^T，`ũr = βr (vr − Σ ũi (γr/γi ki^T kr))`（§3.3, 附录 A 数学归纳法证明）。
-   - UT transform（Joffrain 2006）给出矩阵形式 `Ũ[t] = [I + strictLower(diag(β) (Γ⊙ KK^T))]^−1 diag(β) V`，全部转化为 matmul，可上 tensor core。
-   - 最终 chunkwise 更新（§3.3）：`S[t+1] = →S[t] + (Ũ − ←W S[t]^T)^T →K`，`O[t] = ←Q S[t]^T + (QK^T ⊙ M)(Ũ − ←W S[t]^T)`，箭头记号定义见 Eq.2（←q=γr q 衰减到 chunk 首位置；→k=γ^C/γr k 衰减到末位置；→S=γ^C S 衰减整 chunk）。
-   - 关键工程结论（§4 throughput + Fig.3 验证）：gated delta rule 相对纯 delta rule **只引入边际开销**。Fig.3（M3 解读）的 1.3B/H100 吞吐曲线显示 Gated DeltaNet 与 DeltaNet 在 2K×16→16K×2 各配置下基本重合（约 38–50 K t/s 区间），二者仅比 Mamba2 慢 2–3K t/s——正是"更 expressive 的 generalized Householder 转移矩阵"带来的可测量但很小的代价；而 Transformer++ 虽在 2K 短窗因 Flash-Attention-2 冲到约 55 K t/s，却随序列增长陡降至约 27 K t/s，GDN 全程平直，体现线性 scaling。
+5. **硬件高效 chunkwise 训练算法（§3.3, Appendix A）** —— 工程核心贡献。
+   - 部分展开 Eq.10（formulas.json [14]）：
+$$ \rmS_{[t]}^r = \rmS_{[t]} \underbrace{\left(\prod_{i=1}^r {\color{blue}{\alpha_{[t]}^i}}\left(\rmI - \beta_{[t]}^i \vk_{[t]}^i \vk_{[t]}^{i\intercal} \right)\right)}_{:= \mathbf{F}_{[t]}^r} + \underbrace{\sum_{i=1}^{r} \left( \beta^i_{[t]} \vv^i_{[t]} \vk_{[t]}^{i\intercal}\prod_{j=i+1}^{r} {\color{blue}{\alpha_{[t]}^j}} \left(\rmI - \beta_{[t]}^j \vk^j_{[t]} \vk_{[t]}^{j\intercal} \right) \right)}_{:= \rmG_{[t]}^r} $$
+其中 F^r[t] = γ^r[t] P^r[t]（即 Mamba2 风格衰减后的 Householder 累积积），G^r[t] 为带衰减的增量。
+   - 把 Yang 2024b 的 WY 表示（Bischof & Loan 1985）扩展到含 αt：G^r[t] 的紧凑形（formulas.json [15]）：
+$$ \rmG_{[t]}^r = \sum_{i=1}^r {\color{blue} \frac{\gamma_{[t]}^r}{\gamma_{[t]}^i} } \tilde{\vu}_{[t]}^i \vk_{[t]}^{i\intercal}, \qquad \tilde{\vu}_{[t]}^r = \beta_{[t]}^r \left(\vv_{[t]}^r - \sum_{i=1}^{r-1} \left( \tilde{\vu}_{[t]}^i ({\color{blue}\frac{\gamma_{[t]}^{r}}{\gamma_{[t]}^i}} \vk_{[t]}^{i\intercal}\vk_{[t]}^r)\right)\right) $$
+（附录 A 以数学归纳法证明，formulas.json [18] 给出序列形 S_t = Σ (γ_t/γ_i) u_i k_i^T。）
+   - UT transform（Joffrain 2006）给出矩阵形（formulas.json [16]）：
+$$ \widetilde{\rmU_{[t]}} = \left[\rmI + \operatorname{strictLower} \left(\operatorname{diag}\left(\beta_{[t]}\right) ({\color{blue}\Gamma_{[t]} } \odot \rmK_{[t]} \rmK_{[t]}^\intercal )\right) \right]^{-1} \operatorname{diag}\left(\beta_{[t]}\right) \rmV_{[t]} $$
+全部转化为 matmul，可上 tensor core。
+   - 最终 chunkwise 更新（§3.3，formulas.json [17]）：
+$$ \rmS_{[t+1]} = {\color{blue} \overrightarrow{\rmS_{[t]}}} + \left({ \widetilde{\rmU_{[t]}}} - {\color{blue} \overleftarrow{\rmW_{[t]}}} \rmS_{[t]}^\intercal\right)^\intercal {\color{blue} \overrightarrow{\rmK_{[t]}}}, \quad \rmO_{[t]} = {\color{blue} \overleftarrow{\rmQ_{[t]}}} \rmS_{[t]}^\intercal + (\rmQ_{[t]}\rmK_{[t]}^{\intercal} \odot \mathbf{M}) \left({{\widetilde{\rmU^{}_{[t]}}}} - {\color{blue} \overleftarrow{\rmW_{[t]}}}\rmS_{[t]}^\intercal\right) $$
+箭头记号定义见 Eq.2（formulas.json [5]）：←q^r = γ^r q^r 衰减到 chunk 首位置；→k^r = γ^C/γ^r k^r 衰减到末位置；→S = γ^C S 衰减整 chunk。
+   - **关键工程结论**（§4 throughput + Fig.3 验证）：gated delta rule 相对纯 delta rule **只引入边际开销**。Fig.3（M3 解读）1.3B/H100 吞吐曲线显示 Gated DeltaNet 与 DeltaNet 在 2K×16→16K×2 各配置下基本重合（约 38–50 K t/s），二者仅比 Mamba2 慢 2–3K t/s——正是"更 expressive 的 generalized Householder 转移矩阵"带来的可测量但很小的代价；Transformer++ 在 2K 短窗因 Flash-Attention-2 冲到约 55 K t/s，却随序列增长陡降至约 27 K t/s，GDN 全程平直，体现线性 scaling。
 
 6. **Block 设计与混合架构（§3.4, Fig.1）**
-   - Token mixer block：沿用 Llama 宏观结构（mixer + SwiGLU MLP 堆叠），self-attention 替换为 gated delta rule。Fig.1（M3 解读）的 block 设计图细化：q/k 路径 = linear proj + short conv + SiLU + L2 norm；v 路径 = linear proj + short conv + SiLU；α、β 仅 linear proj；输出 norm + gating（SiLU）+ output proj。α 复用 Mamba2 的参数化（§3.4 脚注 4）。该 block 的每条支路在 Table S.1 ablation（400M/15B）中都有对应消融：去 short conv 使 Avg-PPL 27.35→28.95、去 output gate→29.12、去 α（即 naive Delta Rule）→30.87，定量印证 Fig.1 所画各支路的必要性。
-   - **H1 = GDN + SWA**（类 Griffin/Samba）；**H2 = Mamba2 + GDN + SWA**（三路交错）。Fig.1（M3 解读）把 H1/H2 的层叠模式（H1: GDN-MLP-SWA-MLP；H2: Mamba2-MLP-GDN-MLP-SWA-MLP）与 standalone GDN 并排画出。Fig.3 显示 H1/H2 因 SWA 局部并行而吞吐高于 standalone GDN（约 50–54 K t/s，且 H1 在短序列也维持高吞吐，无 DeltaNet 短序列吞吐短板）；Table S.2 进一步给出 H2 内部排列顺序的最优选为 Mamba2+GDN+SWA（Avg-PPL 23.54 / Avg-Acc 48.73），与 Fig.1 所画 H2 的层序一致。
+   - Token mixer block：沿用 Llama 宏观结构（mixer + SwiGLU MLP 堆叠），self-attention 替换为 gated delta rule。Fig.1（M3 解读）block 设计图细化：q/k 路径 = linear proj + short conv + SiLU + L2 norm；v 路径 = linear proj + short conv + SiLU；α、β 仅 linear proj；输出 norm + gating（SiLU）+ output proj。α 复用 Mamba2 参数化（§3.4 脚注 4）。每条支路在 Table S.1 ablation（400M/15B）有对应消融：去 short conv 使 Avg-PPL 27.35→28.95、去 output gate→29.12、去 α（即 naive Delta Rule）→30.87，定量印证 Fig.1 各支路必要性。**LaTeX↔M3 双源校验**：Fig.1（M3 解读）block 图的 `q/k: Linear→Conv→SiLU→L2`、`v: Linear→Conv→SiLU`、`α/β: Lin.`、`输出: Linear→Norm→Linear+SiLU` 与 §3.4 正文"queries, keys and values {q,k,v} are generated through linear projection, short convolution and SiLU, with L2 normalization applied to q, k…α, β use linear projection only"逐句对应，公式变量（Eq.10 的 α、β、q、k、v）在图中均有专属 block。
+   - **H1 = GDN + SWA**（类 Griffin/Samba）；**H2 = Mamba2 + GDN + SWA**（三路交错）。Fig.1（M3 解读）把 H1/H2 层叠模式（H1: GDN-MLP-SWA-MLP；H2: Mamba2-MLP-GDN-MLP-SWA-MLP）与 standalone GDN 并排画出。Fig.3 显示 H1/H2 因 SWA 局部并行而吞吐高于 standalone GDN（约 50–54 K t/s，H1 在短序列也维持高吞吐，无 DeltaNet 短序列吞吐短板）；Table S.2 给出 H2 内部最优排列为 Mamba2+GDN+SWA（Avg-PPL 23.54 / Avg-Acc 48.73），与 Fig.1 所画 H2 层序一致。
+
+7. **长度外推（Fig.2, §4，与正文交织）** —— Fig.2（M3 解读）给出 4K→20K 六项 long-context benchmark（GovReport、QMSum、NarrativeQA、Qasper、CodeParrot、PG19）ppl-vs-length 曲线，对比 7 个模型。M3 核心结论：GatedDeltaNet 及 H1/H2 在六项任务上一致取得最低 ppl 且 20K 外推点退化最小——把 gating 加到 delta update rule 上同时改善外推稳定性与记忆管理。与 §4 正文"Gated DeltaNet achieves the lowest overall perplexity across tasks among RNN models…exhibits relatively more robust performance, suggesting better memory management"逐字对应，并把"hybrid 靠 SWA 处理局部上下文以进一步缓解长序列压力"落到 H1/H2 曲线在 20K 端点的更低 ppl。§4 同时坦承"we observe mixed results in length extrapolation"——部分任务曲线在 14K 附近出现 U 形回升，>20K 列为 future work。
 
 ## 表格（原文结构化）
 
 ### Table 1（§3.1）— Linear RNN 在线学习目标与闭式更新对比
 | 方法 | Online Learning Objective | Online Update |
 |---|---|---|
-| LA | ‖St − St-1‖²_F − 2⟨St kt, vt⟩ | St = St-1 + vt kt^T |
-| Mamba2 | ‖St − αt St-1‖²_F − 2⟨St kt, vt⟩ | St = αt St-1 + vt kt^T |
-| Longhorn | ‖St − St-1‖²_F − βt‖St kt − vt‖² | St = St-1(I − ɛt kt kt^T) + ɛt vt kt^T，ɛt = βt/(1+βt k^T k) |
-| DeltaNet | ‖St − St-1‖²_F − 2⟨St kt, βt(vt − St-1 kt)⟩ | St = St-1(I − βt kt kt^T) + βt vt kt^T |
-| **Gated DeltaNet** | ‖St − αt St-1‖²_F − 2⟨St kt, βt(vt − αt St-1 kt)⟩ | St = St-1(αt(I − βt kt kt^T)) + βt vt kt^T |
+| LA | ‖S_t − S_{t-1}‖²_F − 2⟨S_t k_t, v_t⟩ | S_t = S_{t-1} + v_t k_t^T |
+| Mamba2 | ‖S_t − α_t S_{t-1}‖²_F − 2⟨S_t k_t, v_t⟩ | S_t = α_t S_{t-1} + v_t k_t^T |
+| Longhorn | ‖S_t − S_{t-1}‖²_F − β_t‖S_t k_t − v_t‖² | S_t = S_{t-1}(I − ɛ_t k_t k_t^T) + ɛ_t v_t k_t^T，ɛ_t = β_t/(1+β_t k^T k) |
+| DeltaNet | ‖S_t − S_{t-1}‖²_F − 2⟨S_t k_t, β_t(v_t − S_{t-1} k_t)⟩ | S_t = S_{t-1}(I − β_t k_t k_t^T) + β_t v_t k_t^T |
+| **Gated DeltaNet** | ‖S_t − α_t S_{t-1}‖²_F − 2⟨S_t k_t, β_t(v_t − α_t S_{t-1} k_t)⟩ | S_t = S_{t-1}(α_t(I − β_t k_t k_t^T)) + β_t v_t k_t^T |
 
 ### Table 2（§3.2）— S-NIAH 1.3B zero-shot 准确率
 | Model | S-NIAH-1 (passkey) 1K/2K/4K/8K | S-NIAH-2 (number) 1K/2K/4K/8K | S-NIAH-3 (uuid) 1K/2K/4K |
@@ -80,7 +93,7 @@ Linear Transformers（含 Mamba2、GLA 等）以矩阵态 linear RNN 形式把 s
 | **GDN-H1** | 16.07 | 12.12 | 47.73 | 72.57 | 56.53 | 58.40 | 71.75 | 40.10 | 41.40 | 63.21 | **56.40** |
 | **GDN-H2** | **15.91** | 12.55 | 48.76 | 72.19 | 56.88 | 57.77 | 71.33 | 39.07 | 41.91 | 61.55 | 56.18 |
 
-注：Fig.1（M3 解读）所标的 Wiki ppl 16.42 / zero-shot avg 55.32 / H2 ppl 15.91 即对应本表 GDN 与 GDN-H2 两行，图与表数字一致。
+注：Fig.1（M3 解读）所标 Wiki ppl 16.42 / zero-shot avg 55.32 / H2 ppl 15.91 即对应本表 GDN 与 GDN-H2 两行，图与表数字一致。
 
 ### Table 4（§4）— In-context retrieval（输入截断到 2K，Cloze Completion）
 | Model | SWDE | SQuAD | FDA | TQA | NQ | Drop | Avg |
@@ -136,21 +149,17 @@ Linear Transformers（含 Mamba2、GLA 等）以矩阵态 linear RNN 形式把 s
 
 ## 与同类对比
 
-- **vs Mamba2**（§1, §3.2, Table 3/5）：Mamba2 用对角转移 αt I，均匀衰减；GDN 用 αt(I − βt kt kt^T) 兼具遗忘幅度与方向性。S-NIAH-1 长序列上 GDN 8K 91.8 vs Mamba2 30.4；Wiki ppl 16.42 vs 16.56；LongBench avg 16.6 vs 13.5（Mamba2 仅 13.5）。Mamba2 在 S-NIAH-3 UUID 上崩塌（4K 4.6）而 GDN 保持 27.6。Fig.3（M3 解读）进一步显示 Mamba2、DeltaNet、GDN 三者在 1.3B/H100 上吞吐曲线几乎贴合并保持平直（约 38–50 K t/s），而 Transformer++ 随序列增长陡降——说明 GDN 的质量提升不以线性 scaling 的吞吐为代价。
-- **vs DeltaNet**（§1, §3.2, Table 2/4）：DeltaNet 无 forget gate，真实世界 retrieval（Table 4 avg 26.2）与 S-NIAH-2/3 长序列（4K 18.6/22.4）显著掉点；GDN 在两者上均升级（30.6 / 92.2 / 27.6）。但纯 synthetic S-NIAH-1 DeltaNet 接近满分，说明 retention 任务无需 gating。Fig.3（M3 解读）指出 DeltaNet 在短序列吞吐偏低、而 GDN-H1/H2 通过 SWA 弥补了这一短板并在所有序列长度上保持最高吞吐。
+- **vs Mamba2**（§1, §3.2, Table 3/5）：Mamba2 用对角转移 αt I（formulas.json [19]），均匀衰减；GDN 用 αt(I − βt kt kt^T)（formulas.json [12]）兼具遗忘幅度与方向性。S-NIAH-1 长序列 GDN 8K 91.8 vs Mamba2 30.4；Wiki ppl 16.42 vs 16.56；LongBench avg 16.6 vs 13.5。Mamba2 在 S-NIAH-3 UUID 崩塌（4K 4.6）而 GDN 保持 27.6。Fig.3（M3 解读）显示 Mamba2、DeltaNet、GDN 三者在 1.3B/H100 上吞吐曲线几乎贴合并保持平直（约 38–50 K t/s），Transformer++ 随序列增长陡降——GDN 质量提升不以线性 scaling 吞吐为代价。
+- **vs DeltaNet**（§1, §3.2, Table 2/4）：DeltaNet 无 forget gate，真实 retrieval（Table 4 avg 26.2）与 S-NIAH-2/3 长序列（4K 18.6/22.4）显著掉点；GDN 两者均升级（30.6 / 92.2 / 27.6）。但纯 synthetic S-NIAH-1 DeltaNet 接近满分，retention 任务无需 gating。Fig.3（M3 解读）指出 DeltaNet 短序列吞吐偏低、GDN-H1/H2 通过 SWA 弥补并在所有序列长度保持最高吞吐。
 - **vs Longhorn**（§3.1 脚注 3）：优化同一 delta 目标，Longhorn 用 implicit online learning（Kulis & Bartlett 2010）推闭式全局最优；DeltaNet/GDN 用一步显式梯度下降——后者更简单、可并行。
-- **vs RWKV-7**（§5, concurrent）：思想类似但 RWKV-7 用 diagonal-plus-low-rank 转移 `St = St-1(diag(dt) − at bt^T) + vt kt^T`，形式更松散；其 chunkwise 算法已在 Flash Linear Attention 库（Yang & Zhang 2024）实现，可类比迁移到 GDN。
-- **vs Titans / TTT**（§3.1, §5）：均把 S 视作 fast weight + 在线 SGD；Titans/TTT 用非线性回归 `½‖fS(kt) − vt‖²`，表达力更强但需在整 chunk 后做非线性更新，损失并行性；GDN 仍是一阶线性递归，保持完全并行。
-- **吞吐对比**（Fig.3, §4）：Transformer++ 在 2K 短上下文因 Flash-Attention-2 最快（约 55 K t/s）；GDN ≈ DeltaNet，比 Mamba2 慢 2–3K t/s（更 expressive 的转移矩阵所致）；混合模型 H1/H2 因 SWA 局部并行而吞吐高于 standalone GDN（约 50–54 K t/s）。Fig.3（M3 解读）强调 GDN-H1 在短序列也保持高吞吐，是"质量 + 速度"双优的最优部署形态。
-
-## 长度外推（Fig.2 专项，与 §4 叙述交织）
-
-Fig.2（M3 解读）给出 4K→20K 六项 long-context benchmark（GovReport、QMSum、NarrativeQA、Qasper、CodeParrot、PG19）的 ppl-vs-length 曲线，对比 7 个模型（Mamba1、DeltaNet、Mamba2、Samba、GatedDeltaNet、GatedDeltaNet-H1、GatedDeltaNet-H2）。M3 解读的核心结论：GatedDeltaNet 及其 H1/H2 混合变体在六项任务上一致取得最低 ppl，且在 20K 外推点退化最小——即把 gating 加到 delta update rule 上同时改善了外推稳定性与记忆管理。这与 §4 正文"Gated DeltaNet achieves the lowest overall perplexity across tasks among RNN models…exhibits relatively more robust performance, suggesting better memory management"的叙述逐字对应，并把"混合模型靠 SWA 处理局部上下文以进一步缓解长序列压力"这一文字结论落到 H1/H2 曲线在 20K 端点的更低 ppl 上。需注意 §4 同时坦承"we observe mixed results in length extrapolation"——即 GDN 并非在每一项的每一长度都领先，Fig.2 中部分任务的曲线在 14K 附近出现 U 形回升，作者把 >20K 的进一步扩展列为 future work。
+- **vs RWKV-7**（§5, concurrent）：思想类似但 RWKV-7 用 diagonal-plus-low-rank 转移 `S_t = S_{t-1}(diag(d_t) − a_t b_t^T) + v_t k_t^T`，形式更松散；其 chunkwise 算法已在 Flash Linear Attention 库（Yang & Zhang 2024）实现，可类比迁移到 GDN。
+- **vs Titans / TTT**（§3.1, §5）：均把 S 视作 fast weight + 在线 SGD；Titans/TTT 用非线性回归 `½‖f_S(k_t) − v_t‖²`，表达力更强但需在整 chunk 后做非线性更新，损失并行性；GDN 仍是一阶线性递归，保持完全并行。
+- **吞吐对比**（Fig.3, §4）：Transformer++ 在 2K 短上下文因 Flash-Attention-2 最快（约 55 K t/s）；GDN ≈ DeltaNet，比 Mamba2 慢 2–3K t/s（更 expressive 转移矩阵所致）；混合 H1/H2 因 SWA 局部并行吞吐高于 standalone GDN（约 50–54 K t/s）。Fig.3（M3 解读）强调 GDN-H1 在短序列也保持高吞吐，是"质量 + 速度"双优的最优部署形态。
 
 ## 跨论文关系（→ MOC 谱系）
 
-- **[[mamba2-transformers-are-ssms-generalized-models-and-efficient-algorithms-through-structured-state-space-duality]]** — 直接前身：Mamba2 的 gated update rule 与 SSD chunkwise 算法是 GDN 的"gating 侧"基础（St=αt St-1+vt kt^T，§2.1）。GDN 把对角 αt I 升级为 Householder αt(I−βt kt kt^T)。
-- **[[deltanet-parallelizing-linear-transformers-with-the-delta-rule-over-sequence-length]]**（Yang 2024b）— 直接前身：WY 表示 + UT transform + chunkwise 并行算法被本文扩展到含 αt 的情况（§3.3, Appendix A 证明）。GDN 是 DeltaNet 的"gated 补完"。
+- **[[mamba2-transformers-are-ssms-generalized-models-and-efficient-algorithms-through-structured-state-space-duality]]** — 直接前身：Mamba2 的 gated update rule（formulas.json [19]）与 SSD chunkwise 算法是 GDN 的"gating 侧"基础（§2.1）。GDN 把对角 αt I 升级为 Householder αt(I − βt kt kt^T)。
+- **[[deltanet-parallelizing-linear-transformers-with-the-delta-rule-over-sequence-length]]**（Yang 2024b）— 直接前身：WY 表示 + UT transform + chunkwise 并行算法被本文扩展到含 αt（§3.3, Appendix A 证明）。GDN 是 DeltaNet 的"gated 补完"。
 - **[[gated-linear-attention-transformers-with-hardware-efficient-training]]**（GLA, Yang 2024a）— 同作者前作：matrix-valued decay + 通用化 chunkwise；GDN 沿用其 fine-grained decay 与 chunkwise 思路。
 - **[[kimi-linear-an-expressive-efficient-attention-architecture]]**（KDA / Kimi Linear）— **下游精化**：KDA = GDN + channel-wise fine gating；GDN 是 head-wise coarse-gating 前身，Kimi Linear 在其上把 α/β 从 head 粒度细化到 channel 粒度。谱系：Mamba2 → GDN → KDA。
 - **[[parallel-scan-on-ascend-ai-accelerators]]** — 工程侧下游：GDN 的 chunkwise scan kernel 在 NPU 上的实现/优化研究。
@@ -158,19 +167,14 @@ Fig.2（M3 解读）给出 4K→20K 六项 long-context benchmark（GovReport、
 - **[[titans-learning-to-memorize-at-test-time]]**（Behrouz 2024）— 同期并行：同样在 test-time SGD 上引入 weight decay，但用非线性回归；思路对照。
 - **[[samba-simple-hybrid-state-space-models]]** & **[[griffin-mixing-gated-linear-recurrences-with-local-attention]]** — 混合架构前作；GDN-H1/H2 直接对标其 linear+SWA 范式（Fig.1 H1/H2 层叠模式）。
 - **[[retnet-retentive-network]]**, **[[hgrn2-gated-linear-rnns-with-state-expansion]]**, **[[rwkv6-eagle-and-finch]]**, **[[mamba-linear-time-sequence-modeling-with-selective-state-spaces]]** — linear RNN 谱系中的姊妹节点，数据相关/无关 decay 分支。
-- 谱系定位：**GDN 是 delta-rule 分支的锚点**——线性/混合注意力基因树上 Mamba2（gated decay 分支）与 DeltaNet（delta rule 分支）的合流点，向上承接 SSD chunkwise 与 WY/UT 算法，向下衍生 KDA（channel-wise 精化）与 NPU 上的并行 scan 优化。
+- 谱系定位：**GDN 是 delta-rule 分支的锚点**——线性/混合注意力基因树上 Mamba2（gated decay 分支）与 DeltaNet（delta rule 分支）的合流点，向上承接 SSD chunkwise 与 WY/UT 算法，向下衍生 KDA（channel-wise 精化）与 NPU 上的并行 scan 优化。moc_relations 现有谱系已覆盖上述关系，**existing sufficient**。
 
 ## 局限与边界
 
 1. **真实 retrieval 提升幅度小于 synthetic**（§4）：Table 4 中 GDN 对 Mamba2/DeltaNet 的优势（30.6 vs 29.8 / 26.2）远小于 Table 2 S-NIAH 上的优势。作者归因于 instruction-unaligned 小模型易产生 repetition errors（Arora 2024b Appendix E），而该错误与 update rule 选择无关，缩小了模型间差距。
-2. **Length extrapolation 结果混合**（§4, Fig.2）：GDN 在六项 long-context 任务上整体 ppl 最低，但并非一致领先；Fig.2（M3 解读）显示部分任务曲线在 14K 附近出现 U 形回升，hybrid 模型靠 SWA 处理局部上下文才进一步缓解——说明 GDN 的记忆管理在 >20K 序列上仍有压力，作者明示"future work will explore…even longer sequences"。
+2. **Length extrapolation 结果混合**（§4, Fig.2）：GDN 在六项 long-context 任务上整体 ppl 最低，但并非一致领先；Fig.2（M3 解读）显示部分任务曲线在 14K 附近出现 U 形回升，hybrid 靠 SWA 处理局部上下文才进一步缓解——GDN 记忆管理在 >20K 仍有压力，作者明示"future work will explore…even longer sequences"。
 3. **纯 recurrent 在真实 retrieval 仍输给 attention**（§4）：Table 4 中 GDN（30.6）远低于 Transformer++（37.0）与 hybrid（40.1），印证 linear RNN 固定 state size 在真实检索上的天花板未被 GDN 完全打破。
 4. **delta rule 的理论局限**（§5 引 Irie 2023）：delta rule 存在已知表达力限制；GDN 未根本解决，只是靠 gating 缓解饱和。提升表达力需外挂 negative eigenvalues（Grazzi 2024）、Householder 连乘（DeltaProduct, Siems 2025）或非线性回归（TTT/Titans）——这些可叠加到 GDN，但会牺牲并行性或需 workaround。
-5. **算法证明范围**（Appendix A）：扩展 WY 表示的数学归纳法证明仅以"first chunk"演示，作者以"notation clutter"为由略去一般化推导；多 chunk 通用性需读者自验。
-6. **门控参数化沿袭 Mamba2**（§3.4 脚注 4）：α 直接复用 Mamba2 的参数化但未展开细节，可能限制了 α 的设计自由度——这正是后续 KDA channel-wise fine gating 改进的切入点。
-7. **无大规模实验**：主实验仅 1.3B / 100B tokens，scaling 行为未验证；ablation 在 400M / 15B tokens（Table S.1）与 500M / 15B（Table S.2）上完成。Fig.3 的吞吐仅报单 H100、1.3B，未覆盖更大模型/多卡。
-
-## 文件状态
-
-- 深读笔记已写入：`/mnt/project/g00952465/AICO-knowledge/extraction/deep/gated-delta-networks-improving-mamba2-with-delta-rule.md`
-- 未修改任何其他文件，未执行 git commit/push。
+5. **算法证明范围**（Appendix A）：扩展 WY 表示的数学归纳法证明仅以"first chunk"演示，作者以"notation clutter"为由略去一般化推导；多 chunk 通用性需读者自验（formulas.json [18] 给出序列形但未含完整一般化证明）。
+6. **门控参数化沿袭 Mamba2**（§3.4 脚注 4）：α 直接复用 Mamba2 的参数化但未展开细节，可能限制 α 的设计自由度——这正是后续 KDA channel-wise fine gating 改进的切入点。
+7. **无大规模实验**：主实验仅 1.3B / 100B tokens，scaling 行为未验证；ablation 在 400M / 15B tokens（Table S.1）与 500M / 15B（Table S.2）上完成。Fig.3 吞吐仅报单 H100、1.3B，未覆盖更大模型/多卡。

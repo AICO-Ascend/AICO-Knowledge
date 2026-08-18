@@ -1,6 +1,7 @@
-# Step-3 is Large yet Affordable: Model-system Co-design for Cost-effective Decoding — 技术点深读（DEEP 2026-08-18）
+# Step-3 is Large yet Affordable: Model-system Co-design for Cost-effective Decoding — 技术点深读（DEEP 2026-08-18, 公式重跑）
 > 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
 > 论文：Step-3 is Large yet Affordable · StepFun Inc. · arXiv:2507.19427v1
+> 公式权威源 = extraction/formulas.json LaTeX（下方以 `$$` 包裹直接引用，不凭训练知识重写）。
 
 ## 核心问题
 
@@ -14,17 +15,34 @@
 ## 关键创新点
 
 1. **Multi-Matrix Factorization Attention (MFA) —— 算术强度对齐硬件的 KV/计算双低注意力**（§2, §5.1）。机制：64 个 query head 共享 1 个 K head 与 1 个 V head，head dim 均为 256；query 先从 hidden dim 7168 下投影到低秩 2048，做 normalization，再上投影到 64×256=16384（§2）。这等价于在 QK 电路里做 low-rank matrix factorization（Elhage 2021 的 transformer circuits 框架），既保留高 attention effective rank（**16,384**，与 DSv3 MLA 同，是 Qwen3 MoE GQA 的 8,192 两倍），又把 KV cache 与算术强度同时压低。
-   - 效果（§5.1, Tables 2-3, 6，并对照 Figure 5 (p.8) 的 compute vs memory-access 散点图）：M3 解读 Figure 5：DSv3 MLA 算术强度 512 几乎贴合 H800 roofline 591（compute-bound）、远高于其他硬件线；Qwen3 GQA 强度 32 紧贴 H20 roofline 74（memory-bound）；Step-3 MFA 强度 128 落在 A800(156)/910B(175) ridge 点附近，与 H20(74) 差距小。图中 Step-3 8K→32K 的轨迹同时压在 DSv3 计算量 1/4、Qwen3 访存量 1/3 处。8K 下 KV 访问 **2.56×10⁸ bytes**，仅比 DSv3 MLA 的 2.88×10⁸ 低 ~10%，但 attention cost 在 H800 上从 DSv3 的 0.054 USD/M 降到 0.048，在 H20 上从 0.128 降到 0.040（降 ~69%）；32K 下 Step-3 attention cost 在 H800 上 0.176 vs DSv3 的 0.197、在 H20 上 0.114 vs 0.460（降 ~75%）。**关键不是 KV 体积本身，而是 arithmetic intensity 与硬件 roofline 的匹配**：MFA 的 arithmetic intensity = **128**（8-bit KV），DSv3 MLA = **512**，GQA Qwen3 = **32**；硬件 roofline 分别为 H800 591、H20 74、A800 156、910B 175。MFA 128 介于 A800/910B 之间，与 H20 差距小，因此在廉价硬件上成本低；MLA 512 远超除 H800 外所有硬件 → 在 H20 上成本飙升数倍。M3 直接点破：Step-3 MFA 强度 128 ≈ 910B ridge，"直击 910B roofline，与昇腾相关"。
+   - 效果（§5.1, Tables 2-3, 6，并对照 Figure 5 (p.8) 的 compute vs memory-access 散点图）。**LaTeX↔M3 双源校验**：formulas.json 给出 attention 理论成本公式（§4.2）为
+     $$\max(FLOP_{Attn}U_{FLOP},\;Byte_{KV}U_{byte}) + FLOP_{Linear}U_{FLOP}$$
+     该式表明 attention 成本取"core 计算成本"与"KV 访存成本"之大者再加线性投影成本 —— 正是 MFA 把"算"与"访"同时压低才能跨硬件都省的根因。M3 解读 Figure 5 进一步坐实：DSv3 MLA 算术强度 512 几乎贴合 H800 roofline 591（compute-bound）、远高于其他硬件线；Qwen3 GQA 强度 32 紧贴 H20 roofline 74（memory-bound）；Step-3 MFA 强度 128 落在 A800(156)/910B(175) ridge 点附近，与 H20(74) 差距小。图中 Step-3 8K→32K 的轨迹同时压在 DSv3 计算量 1/4、Qwen3 访存量 1/3 处。8K 下 KV 访问 **2.56×10⁸ bytes**，仅比 DSv3 MLA 的 2.88×10⁸ 低 ~10%，但 attention cost 在 H800 上从 DSv3 的 0.054 USD/M 降到 0.048，在 H20 上从 0.128 降到 0.040（降 ~69%）；32K 下 Step-3 attention cost 在 H800 上 0.176 vs DSv3 的 0.197、在 H20 上 0.114 vs 0.460（降 ~75%）。**关键不是 KV 体积本身，而是 arithmetic intensity 与硬件 roofline 的匹配**：MFA 的 arithmetic intensity = **128**（8-bit KV），DSv3 MLA = **512**，GQA Qwen3 = **32**；硬件 roofline 分别为 H800 591、H20 74、A800 156、910B 175。MFA 128 介于 A800/910B 之间，与 H20 差距小，因此在廉价硬件上成本低；MLA 512 远超除 H800 外所有硬件 → 在 H20 上成本飙升数倍。M3 直接点破：Step-3 MFA 强度 128 ≈ 910B ridge，"直击 910B roofline，与昇腾相关"。
    - 论文还指出（§5.1）：Step-3 的计算是 DSv3 的 **1/4**、KV 访问是 Qwen3 的 **1/3**，同时实现"低算 + 低访"。
 
-2. **Attention-FFN Disaggregation (AFD) —— 注意力与 FFN 物理解耦的 distributed decoding 系统**（§3, §7）。机制（对照 Figure 6 (p.11) 与 Figure 7 (p.12)）：Figure 6 (p.11) M3 解读显示 AFD 把 transformer block 拆成左右两个虚线分隔的 instance —— 左侧 Attention Instance 含 Norm→Attn→Norm 的 residual block，右侧 FFN Instance 含 Norm→Router→Expert Compute→Expert Combine 的 MoE pipeline，Router 还引出 Topk-score 辅助分支进 combiner；两者通过 "TP gather / EP scatter (fp8)" 前向、"TP scatter / EP gather (bf16)" 反向互联，且 FFN 可按 TP-only / EP-only / hybrid TP+EP 灵活部署。Figure 7 (p.12) M3 解读进一步给出通信拓扑与多级流水线：Attention/FFN 实例经 Direct RDMA 直连，数据沿时间轴分 Layer0/Layer1 两级、三样本 D1/D2/D3 依次 Attn→A→F (fp8)→FFN→F→A (bf16)→下一层 Attn；关键设计是 A→F 与 F→A 两条独立 RDMA 通道并发不抢带宽，混合精度（前向 FP8 节省带宽、反向 BF16 保残差精度）+ 多级流水使通信完全被计算掩盖，同一层可连续接收 D1' / D2' / D3'。
+2. **Attention-FFN Disaggregation (AFD) —— 注意力与 FFN 物理解耦的 distributed decoding 系统**（§3, §7）。机制（对照 Figure 6 (p.11) 与 Figure 7 (p.12)）。**LaTeX↔M3 双源校验**：Figure 6 (p.11) M3 解读显示 AFD 把 transformer block 拆成左右两个虚线分隔的 instance —— 左侧 Attention Instance 含 Norm→Attn→Norm 的 residual block，右侧 FFN Instance 含 Norm→Router→Expert Compute→Expert Combine 的 MoE pipeline，Router 还引出 Topk-score 辅助分支进 combiner；两者通过 "TP gather / EP scatter (fp8)" 前向、"TP scatter / EP gather (bf16)" 反向互联，且 FFN 可按 TP-only / EP-only / hybrid TP+EP 灵活部署，与正文 §3.2 "AFD is not a replacement for EP, but rather a complementary approach ... TP-EP hybrid" 一致。Figure 7 (p.12) M3 解读进一步给出通信拓扑与多级流水线：Attention/FFN 实例经 Direct RDMA 直连，数据沿时间轴分 Layer0/Layer1 两级、三样本 D1/D2/D3 依次 Attn→A→F (fp8)→FFN→F→A (bf16)→下一层 Attn；关键设计是 A→F 与 F→A 两条独立 RDMA 通道并发不抢带宽（对应正文 "two independent communication and do not compete for network bandwidth"），混合精度（前向 FP8 节省带宽、反向 BF16 保残差精度）+ 多级流水使通信完全被计算掩盖，同一层可连续接收 D1' / D2' / D3'。
    - 设计目标（§3.1）：50ms TPOT（≥20 tokens/s）通过 3-stage pipeline，每级 16.6ms（A/F/communication）；或 4-stage（A→comm→F→comm）每级 12.5ms。对 Step-3（61 层）每层预算 ≈ **272µs**（16.6ms/61，§6）。
    - 效果（§3.2, §7.3）：DSv3 EP 部署需 320 GPU/decoding 实例，Step-3 仅需 **32 GPU（2A2F）**；Step-3 上 AFD 把 attention 与 FFN 各自推到理想 MFU 区，attention 实例基于 vLLM 改造，FFN 实例仅基于轻量 C++ 通信库 + PyTorch 接口（§7.1）。AFD 还允许两侧硬件异构（attention 可换 4×L20 ≈ 1×H800，§6）。
 
-3. **MoE sparsity 与硬件 roofline 的联合设计 —— 反 over-sparsity**（§5.3-5.4）。机制：FFN 的 GEMM 计算访存比 = 2×B（B=batch size）；MoE 把理想 batch 推到 `B_MoE = B_dense / S`（S 为稀疏度）。再叠加 AFD 3-stage pipeline 要求网络传输 `3×H×B_MoE` 在 16.6ms 内完成，推导出"最优 MoE 稀疏度下限"：`S ≥ H×FLOPs×L / (Net×Bandwidth×11.1ms)`（§5.4 公式）。
+3. **MoE sparsity 与硬件 roofline 的联合设计 —— 反 over-sparsity**（§5.3-5.4）。机制：FFN 的 GEMM 计算访存比 = 2×B。**LaTeX 公式链（formulas.json [1]-[8]，§5.3-5.4）**：FFN 计算量
+   $$2 \times N_{\text{token}} \times W_{\text{FFN}}$$
+   其中 N_token 等价于进入 FFN 的 batch size B（无 MTP），故计算访存比（8-bit weight）= 2×B；dense 模型高 MFU 的理想 batch 下限为
+   $$2 \times B_{\text{dense}} \ge \frac{\text{FLOPs}}{\text{Bandwidth}}$$
+   MoE 把理想 batch 推到
+   $$B_{\text{MoE}} = \frac{B_{\text{dense}}}{S}$$
+   联立得
+   $$B_{\text{MoE}} \ge \frac{\text{FLOPs}}{2 \times S \times \text{Bandwidth}}$$
+   再叠加 AFD 3-stage pipeline 要求网络传输量
+   $$3 \times H \times B_{\text{MoE}}$$
+   在 16.6ms 内完成，即
+   $$\frac{3 \times H \times B_{\text{MoE}}}{\text{Net}} \le \frac{16.6\text{ms}}{L}$$
+   代入 B_MoE 得
+   $$\frac{H \times \text{FLOPs} \times L}{\text{Net} \times S \times \text{Bandwidth}} \le \frac{16.6\text{ms} \times 2}{3} = 11.1\text{ms}$$
+   最终推出"最优 MoE 稀疏度下限"（§5.4）：
+   $$S \ge \frac{H \times \text{FLOPs} \times L}{\text{Net} \times \text{Bandwidth} \times 11.1\text{ms}}$$
    - 效果（§5.4 Table 7）：H800 最小 S=**0.058**，H20=0.007，A800=0.031，910B=0.034。Step-3 选 S≈**0.08**（含 shared expert），刚好覆盖 H800 上限；而 DSv3（8/256，S≈0.031）需激活 **14 个 expert**（vs 官方 8）才能在 H800 上跑出高 MFU —— 即 DSv3 在 H800 上"把模型性能留在桌面上"。实测 DeepEP 在 H800 上网络吞吐仅 40 GB/s vs 理论 50 GB/s，进一步把最优 S 推高到 0.073。Llama 4 Maverick / Kimi K2 更稀疏，在 H800 上离高 MFU 区更远。
 
-4. **StepMesh —— AFD 专用 RDMA 通信库（zero-SM、零拷贝、异构加速器）**（§7.2，对照 Figure 8 (p.13)）。机制（M3 解读 Figure 8）：StepMesh workflow 显示两侧 GPU 经 unique tensor key 在 contiguous GPU 内存中预注册张量，"Prev Layer" 的 activation tensor 直接 in-place slice 成 token tensor，无需拼接/拷贝即经 RDMA 发送到对侧、喂入 "Current Layer" 计算，bottom 有统一的 tensor-allocation bus。具体：(a) 异步 API + 独立收发线程，CPU 端执行 RDMA PostSend/PollCQ（NUMA-aware core binding）以避免与计算抢 SM；(b) 预注册 tensor（unique tensor key），FFN 无需拼接 attention 多实例的张量，直接从 contiguous GPU 内存切片；(c) Rail-Optimized RoCE + Topology-aware 部署（attention/FFN 接同一 ToR 交换机），关拥塞控制、仅用 ToR-NIC PFC 保 lossless，每通信对建 2 个 RDMA QP 分配到两 NIC 端口做流量均衡；(d) 后端抽象 `AFTensorWorker` / `AFTensorServer`，新加速器实现 backend interface 即可接入（为异构硬件铺路，§7.2 Figure 9 多加速器框架）。
+4. **StepMesh —— AFD 专用 RDMA 通信库（zero-SM、零拷贝、异构加速器）**（§7.2，对照 Figure 8 (p.13)）。**LaTeX↔M3 双源校验**：Figure 8 (p.13) M3 解读显示两侧 GPU 经 unique tensor key 在 contiguous GPU memory 预注册张量，"Prev Layer" 的 activation tensor 直接 in-place slice 成 token tensor，无需拼接/拷贝即经 RDMA 发送到对侧、喂入 "Current Layer" 计算，bottom 有统一的 tensor-allocation bus；这与正文 §7.2 "tensors can be directly sliced from contiguous GPU memory that has been pre-registered" 完全对齐（Figure 8 即该工作流的可视化）。具体：(a) 异步 API + 独立收发线程，CPU 端执行 RDMA PostSend/PollCQ（NUMA-aware core binding）以避免与计算抢 SM；(b) 预注册 tensor（unique tensor key），FFN 无需拼接 attention 多实例张量；(c) Rail-Optimized RoCE + Topology-aware 部署（attention/FFN 接同一 ToR 交换机），关拥塞控制、仅用 ToR-NIC PFC 保 lossless，每通信对建 2 个 RDMA QP 分配到两 NIC 端口做流量均衡；(d) 后端抽象 `AFTensorWorker` / `AFTensorServer`，新加速器实现 backend interface 即可接入（为异构硬件铺路，§7.2 Figure 9 多加速器框架）。
    - 效果（§7.2）：满足 AFD 在 272µs 内完成 FP8 token + scale + expert distribution + BF16 activation 跨实例传输的硬要求；NCCL/DeepEP 因额外占 SM 抢算力被排除；open-source：github.com/stepfun-ai/StepMesh。
 
 5. **非旗舰硬件支持 —— AFD × 算术强度匹配打开廉价硬件路径**（§6）。机制：AFD 把 attention/FFN 各自可独立 scale，attention 实例可换更廉价卡（因 Step-3 MFA 是 memory-bandwidth bound，4×L20 ≈ 1×H800，L20 内存带宽 >25% H800）。每层 272µs 预算下，单 L20（864 GB/s）能访问 235 MB，扣除 linear 部分 67 MB 余 168 MB 给 KV cache → 单请求最大上下文 328K，8K 平均上下文时 batch ≤41 仍可满足 SLA；FFN 需 6 个 L20 server（48 卡）承载 ~300 GB FFN 权重。
@@ -89,9 +107,9 @@
 | ERNIE 4.5 | 0.155 | 0.063 | 0.105 | 0.116 | 0.606 | 0.214 | 0.388 | 0.432 | 0.021 | 0.057 |
 | Pangu Pro MoE | 0.135 | 0.049 | 0.088 | 0.098 | 0.536 | 0.183 | 0.340 | 0.379 | 0.007 | 0.018 |
 | **Step-3** | **0.048** | **0.040** | **0.040** | **0.043** | **0.176** | **0.114** | **0.120** | **0.133** | **0.015** | **0.040** |
-注：AFD 取 attention 与 FFN 各自最便宜硬件之和。8K AFD 最优：Step-3 = 0.048 (H800 attn) + 0.040 (H20 FFN) = 0.088 理论；论文正文（§4.2 Observation 1）给的是 Step-3 8K=0.055, DSv3=0.068, Qwen3 MoE=0.062; 32K Step-3=0.129, DSv3=0.211, Qwen3=0.193（含单位换算与 AFD 跨硬件组合后取最优，参见 Figure 2 (p.5) 的柱状对比）。Figure 2 中 Step-3 在 H800/H20/A800 三组柱中均显著低于 DSv3、Qwen3 MoE、Qwen3 32B。
+注：AFD 取 attention 与 FFN 各自最便宜硬件之和。8K AFD 最优：Step-3 = 0.048 (H800 attn) + 0.040 (H20 FFN) = 0.088 理论；论文正文（§4.2 Observation 1）给的是 Step-3 8K=0.055, DSv3=0.068, Qwen3 MoE=0.062; 32K Step-3=0.129, DSv3=0.211, Qwen3 MoE=0.193（含单位换算与 AFD 跨硬件组合后取最优，参见 Figure 2 (p.5) 的柱状对比）。Figure 2 中 Step-3 在 H800/H20/A800 三组柱中均显著低于 DSv3、Qwen3 MoE、Qwen3 32B。
 
-### Table 7 — 各硬件最小 MoE 稀疏度（H=7168, L=61, §5.4）
+### Table 7 — 各硬件最小 MoE 稀疏度（H=7168, L=61, §5.4，对应公式 [8]）
 | Accelerator | H800 | H20 | A800 | 910B |
 |---|---|---|---|---|
 | Minimum S | 0.058 | 0.007 | 0.031 | 0.034 |
@@ -131,7 +149,7 @@
 
 ## 与同类对比
 
-- **vs DeepSeek-V3 (MLA + EP-only, §3.2, §4.2, §7.3)**：DSv3 是最直接的对照。MLA 的 arithmetic intensity 512（Figure 5 (p.8) 中 DSv3 8K-32K 轨迹几乎沿 H800 roofline 线分布、远离 H20/A800/910B 线）→ 在 H20 上 attention cost 暴涨到 0.128（8K）/0.460（32K），是 Step-3 的 3.2×/4.0×；而 Step-3 MFA 的 128 跨硬件几乎持平（H800 0.048 / H20 0.040 / A800 0.040 / 910B 0.043）。EP-only 部署需 320 GPU/实例，AFD 仅需 32 GPU；DSv3 的 8/256 MoE 稀疏度 S≈0.031 低于 H800 最优 0.058，需 14 个激活 expert 才能高 MFU —— "把模型性能留在桌面上"。Step-3 同等规模下 4,039 vs 2,324 TGS（+74%）。但论文承认 Step-3 的优势在"DSv3 最有利的场景"（H800 + 4K 上下文 + EP）下测得，更长上下文与更廉价硬件优势会扩大（§7.3）。
+- **vs DeepSeek-V3 (MLA + EP-only, §3.2, §4.2, §7.3)**：DSv3 是最直接的对照。MLA 的 arithmetic intensity 512（Figure 5 (p.8) 中 DSv3 8K-32K 轨迹几乎沿 H800 roofline 线分布、远离 H20/A800/910B 线）→ 在 H20 上 attention cost 暴涨到 0.128（8K）/0.460（32K），是 Step-3 的 3.2×/4.0×；而 Step-3 MFA 的 128 跨硬件几乎持平（H800 0.048 / H20 0.040 / A800 0.040 / 910B 0.043）。EP-only 部署需 320 GPU/实例，AFD 仅需 32 GPU；DSv3 的 8/256 MoE 稀疏度 S≈0.031 低于 H800 最优 0.058（公式 [8]），需 14 个激活 expert 才能高 MFU —— "把模型性能留在桌面上"。Step-3 同等规模下 4,039 vs 2,324 TGS（+74%）。但论文承认 Step-3 的优势在"DSv3 最有利的场景"（H800 + 4K 上下文 + EP）下测得，更长上下文与更廉价硬件优势会扩大（§7.3）。
 - **vs Qwen3 MoE (GQA, §4.2)**：GQA arithmetic intensity 32 极低（Figure 5 (p.8) Qwen3 轨迹紧贴 H20 roofline 线）、KV 体积大（8K 7.89×10⁸ bytes，是 Step-3 的 3.1×），只在 H20（roofline 74，差距小）上便宜，其他硬件贵；Qwen3 MoE 总参少 65%、激活少 40% 却只比 DSv3 便宜 10%。Figure 1 (p.1) Pareto 中 Qwen3 MoE 位于灰色 GQA Pareto 区。
 - **vs Kimi K2 (§5.4)**：继承 DSv3 over-sparsity（Workaround 1：large EP），但移除 routing 限制（Workaround 2）→ 网络瓶颈比 DSv3 更严重。
 - **vs Llama 4 Maverick (hybrid linear, §4.3，Figure 3 (p.6))**：hybrid 但 full GQA 层的 KV 总量已超 Step-3 全模型（Figure 3 上方 KV 体积子图，8K 时 Llama 4 M / MM M1 的柱已高于 Step-3），且层间时间不平衡 → 在 AFD pipeline 中产生 bubble。
@@ -157,7 +175,7 @@
 ## 局限与边界
 
 - **vision encoder 不讨论**：5B vision encoder 与 decoding 无关被略过（§2），VLM 侧未给评估，仅作为参数总数加成（321B VLM vs 316B LLM）。后续会"release more details on the model side"（§2）。
-- **理论成本分析基于 AFD 理想化假设**：(a) 假设 attention/FFN 各自都能跑到硬件峰值 FLOPs/BW 与高 MFU（§4.1）；(b) 假设所有网络通信可被计算完全 overlap，通信成本被忽略（§5.4，Figure 7 (p.12) 的流水线掩盖模型即此假设的可视化）；(c) MLA/MFA 的 q/k/v_proj 因 TP-unfriendly 在 H800 上可能未到 compute-bound 区，论文承认"slightly underestimate MLA and MFA costs on H800"（§4.1）；(d) embedding 与 output linear 因 <5% 被忽略（§4.1）。
+- **理论成本分析基于 AFD 理想化假设**：(a) 假设 attention/FFN 各自都能跑到硬件峰值 FLOPs/BW 与高 MFU（§4.1，即公式 [0] 中 UFLOP/Ubyte 取满利用率）；(b) 假设所有网络通信可被计算完全 overlap，通信成本被忽略（§5.4 公式 [6]-[8] 的推导前提，Figure 7 (p.12) 的流水线掩盖模型即此假设的可视化）；(c) MLA/MFA 的 q/k/v_proj 因 TP-unfriendly 在 H800 上可能未到 compute-bound 区，论文承认"slightly underestimate MLA and MFA costs on H800"（§4.1）；(d) embedding 与 output linear 因 <5% 被忽略（§4.1）。
 - **对 over-sparse 模型（DSv3/Kimi K2/Llama 4 M）"给面子"**：§4.1 明确指出"for simplicity, we omit it and give them a favor" —— 即假设它们 FFN 也能跑高 MFU；实际 DSv3 在 H800 上可能 FFN 成本翻倍甚至三倍（worst case）。这意味着 Figure 1 (p.1) / Figure 2 (p.5) / Table 6 高估了 over-sparse 模型的竞争力，Step-3 的实际优势更大。
 - **MTP 未实现**：§5.2 的 +50% 提升仅是估计，§8 列为"immediate next step"。MTP 的 FFN 成本无条件增加陷阱（§5.2）也未实测验证。
 - **Pangu Pro MoE 的训练成本估算粗糙**：§4.3 假设 100% MFU（即便用 40% 也只趋势不变，Figure 4 (p.7)），未考虑实际训练系统开销。

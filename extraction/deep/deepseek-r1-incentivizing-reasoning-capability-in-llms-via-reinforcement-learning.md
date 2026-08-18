@@ -12,17 +12,41 @@ LLM 推理能力长期受制于人类标注的 CoT 轨迹——SFT-on-human-demo
 
 ## 关键创新点
 
-1. **R1-Zero：纯 RL 无 SFT 冷启动，证明推理可自发涌现（§2）。** 以 DeepSeek-V3-Base（671B MoE，37B 激活，MLA + auxiliary-loss-free load balancing + MTP，§A.1）为基础，直接上 GRPO，模板（Table 1）仅约束 `‹reasoning process here›</think>` + `<answer>...</answer>` 结构，不施加任何内容先验。奖励只有 rule-based 的 `Reward_rule = Reward_acc + Reward_format`（§2.2，式 4），**明确拒绝 neural reward model**——理由是大规模 RL 下神经 RM 必被 reward hacking，且重训成本高（§2.2）。AIME 2024 pass@1 从 15.6% 涨到 77.9%，cons@16 达 86.7%，超过人类参赛者均值（§2.3）。Figure 1a（p.4）的 M3 解读：横轴 0–10000 steps、纵轴 Accuracy，r1-zero-pass@1 与 cons@16 双曲线单调上行，human participants 基线被显著超越；步数末段仍未饱和说明 RL 训练可继续。
+1. **R1-Zero：纯 RL 无 SFT 冷启动，证明推理可自发涌现（§2）。** 以 DeepSeek-V3-Base（671B MoE，37B 激活，MLA + auxiliary-loss-free load balancing + MTP，§A.1）为基础，直接上 GRPO，模板（Table 1）仅约束 `‹reasoning process here›</think>` + `<answer>...</answer>` 结构，不施加任何内容先验。奖励只有 rule-based 的
+
+$$\text{Reward}_\text{rule} = \text{Reward}_\text{acc} + \text{Reward}_\text{format}$$
+
+（§2.2，式 4；acc 与 format 等权相加），**明确拒绝 neural reward model**——理由是大规模 RL 下神经 RM 必被 reward hacking，且重训成本高（§2.2）。AIME 2024 pass@1（$$\text{pass@1} = \frac{1}{k}\sum_{i=1}^{k} p_i$$，式 pass@1 定义）从 15.6% 涨到 77.9%，cons@16 达 86.7%，超过人类参赛者均值（§2.3）。Figure 1a（p.4）的 M3 解读：横轴 0–10000 steps、纵轴 Accuracy，r1-zero-pass@1 与 cons@16 双曲线单调上行，human participants 基线被显著超越；步数末段仍未饱和说明 RL 训练可继续。
 
 2. **"Aha moment" 与 self-evolution（§2.3, Table 2, §C.2）。** 训练中自发出现反思词（"wait"/"mistake"/"however"/"verify" 等）频次提升；"wait" 一词在 step 4000–7000 偶发、step 8000 后陡增（Figure 9b）。模型自发学会自我验证、回溯、探索替代策略，且响应长度随训练单调增长（Figure 1b，p.4；M3 解读：横轴 steps 0–10000、纵轴 avg length/token 0–20000，曲线持续上扬）——即"思考时间"被 RL 内化。Table 2 记录了模型在解 `√(x−√(x²−y²))=y` 时突然自语 "Wait, wait. Wait. That's an aha moment I can flag here." 并重评——作者称"这是我们的 aha moment"。
 
-3. **GRPO 取代 PPO，省去 value model（§2.1, §A.3, 式 1–3, 11–13, Figure 3 p.14, Figure 4 p.16）。** 关键差异：PPO 用 GAE 估计 advantage 需训练一个与 policy 同尺寸的 value model，内存/算力开销大；而长 CoT 场景下基于"前缀 token 预测最终 reward"几乎不可能（模型中途会反思、改写、推翻前文，§A.3）。GRPO 直接从一组 G 个采样的 group reward 计算标准化 advantage `A_i = (r_i − mean)/std`，**无 value model**——Figure 3（p.14）的 M3 注记：该页 M3 caption 仅识别到 §A.3 正文与式 11–13 的文字引用，原图未渲染（caption "Demonstration of PPO and our GRPO. GRPO foregoes the value model, instead estimating the advantages from group scores."），故机制要点以 §A.3 文本为准：PPO 需 value model 估计 advantage，GRPO 用 group scores 代替。KL 散度用 unbiased estimator 直接加到 loss（式 11），而 PPO 把 per-token KL 作为 dense reward，会隐式惩罚响应长度，阻碍长 CoT 增长。每 400 步把参考模型替换为最新 policy，平衡探索与稳定。Figure 4（p.16）显示在 DeepSeek-Coder-V2-Lite (16B MoE, 2.4B 激活) MATH 任务上 GRPO 与精心调过 λ（GAE 系数设为 1.0）的 PPO 相当，但 PPO 默认 λ=0.95 时显著劣于 GRPO。
+3. **GRPO 取代 PPO，省去 value model（§2.1, §A.3, 式 1–3, 11–13, Figure 3 p.14, Figure 4 p.16）。** 关键差异：PPO 用 GAE 估计 advantage 需训练一个与 policy 同尺寸的 value model，内存/算力开销大；而长 CoT 场景下基于"前缀 token 预测最终 reward"几乎不可能（模型中途会反思、改写、推翻前文，§A.3）。GRPO 直接从一组 G 个采样的 group reward 计算标准化 advantage
+
+$$A_i = \frac{r_i - \mathrm{mean}(\{r_1, r_2, \cdots, r_G\})}{\mathrm{std}(\{r_1, r_2, \cdots, r_G\})}$$
+
+（§2.1，式 3/13），**无 value model**。GRPO 优化目标（§2.1，式 1/11）即对该 group 做 PPO 式 clipped ratio，并减去 KL 正则：
+
+$$\mathcal{J}_{GRPO}(\theta) = \mathbb{E}\left[q \sim P(Q), \{o_i\}_{i=1}^G \sim \pi_{\theta_{old}}(O|q)\right]\frac{1}{G}\sum_{i=1}^G\left(\min\left(\frac{\pi_\theta}{\pi_{\theta_{old}}}A_i, \mathrm{clip}\left(\frac{\pi_\theta}{\pi_{\theta_{old}}}, 1-\epsilon, 1+\epsilon\right)A_i\right) - \beta\,\mathbb{D}_{KL}(\pi_\theta \| \pi_{ref})\right)$$
+
+其中 KL 用 unbiased estimator（Schulman 2020）直接加到 loss：
+
+$$\mathbb{D}_{KL}(\pi_\theta \| \pi_{ref}) = \frac{\pi_{ref}(o_i|q)}{\pi_\theta(o_i|q)} - \log\frac{\pi_{ref}(o_i|q)}{\pi_\theta(o_i|q)} - 1$$
+
+（式 2/12）。Figure 3（p.14）的 M3 注记：该页 M3 caption 仅识别到 §A.3 正文与式 11–13 的文字引用，原图未渲染（caption "Demonstration of PPO and our GRPO. GRPO foregoes the value model, instead estimating the advantages from group scores."），故机制要点以 §A.3 文本为准：PPO 需 value model 估计 advantage，GRPO 用 group scores 代替。KL 散度用 unbiased estimator 直接加到 loss（式 11），而 PPO 把 per-token KL 作为 dense reward，会隐式惩罚响应长度，阻碍长 CoT 增长。每 400 步把参考模型替换为最新 policy，平衡探索与稳定。Figure 4（p.16）显示在 DeepSeek-Coder-V2-Lite (16B MoE, 2.4B 激活) MATH 任务上 GRPO 与精心调过 λ（GAE 系数设为 1.0）的 PPO 相当，但 PPO 默认 λ=0.95 时显著劣于 GRPO。
 
 4. **R1 多阶段 pipeline：冷启动 SFT → reasoning RL → rejection sampling + 全量 SFT → 二阶段 RL（§3, Figure 2 p.6）。** Figure 2 的 M3 解读：四列从左到右流水线，紫色框=数据输入、蓝色框=训练操作、黑色三角=阶段转换；Stage 1 冷启动 SFT 数据（紫）→SFT（蓝）→rejection sampling→**Dev1**；Stage 2–3 推理数据（紫）与 RL pass（蓝）交替，首轮 RL 优化推理/语言一致性得 **Dev2**，次轮引入 preference 数据得 **Dev3**；Stage 4 最终 RL pass on preference data 产出 **DeepSeek-R1**。该图对照前后文：阶段产物 Dev1/Dev2/Dev3 在 Table 3（§4）逐级提升——Dev1（冷启动+一阶段 RL）IF-Eval 46.6→71.7、ArenaHard 53.6→77.0，但 AIME 因冷启动数据小而退化 77.9→59.0；Dev2（rejection sampling + 第二轮 SFT）推理回升 AIME 74.0、Codeforces Rating 1687；Dev3（加入非推理 SFT）Aider 12.2→44.8、AlpacaEval2.0 24.7→62.1；最终 R1（二阶段混合 RL）AlpacaEval2.0 87.6、ArenaHard 92.3，AIME 79.8、MATH-500 97.3。Figure 2 的"冷启动数据→RL→rejection SFT→preference RL"四段架构是修复 R1-Zero 可读性差/语言混杂/非推理弱三大缺陷的工程答案。
 
-5. **Language Consistency Reward 抑制语言混杂（§3.2.1, 式 7, §B.6, Figure 7 p.37）。** `Reward_language = Num(Words_target)/Num(Words)`，直接加到总 reward。Figure 7（p.37）的 M3 解读：横轴=RL training steps、纵轴=语言一致性指标；两条曲线对照——无 LC reward 的 baseline 随步数单调退化（drift into language mixing），加 LC reward 后全程稳定 monolingual；side panel 显示数学基准持平、编码略降。即 LC 以"边际编码退步"换"可读性 + 人类偏好对齐"，与 §B.6 ablation 结论一致。
+5. **Language Consistency Reward 抑制语言混杂（§3.2.1, 式 7, §B.6, Figure 7 p.37）。**
 
-6. **二阶段 RL 的 reward 分解（§3.2.2, 式 8–10）。** `Reward = Reward_reasoning + Reward_general + Reward_language`，其中 reasoning 用 rule-based（数学/代码/逻辑），general 用 model-based RM（helpfulness + format），language 用 LC。关键工程细节：温度从一阶段的 1.0 降到 0.7（高温导致二阶段生成不连贯）；共 1700 步，general/preference 数据只在最后 400 步引入——超过几百步的 model-based reward 会触发 reward hacking（§B.5, Figure 6：reward 上升而 Codeforces 下降）。
+$$\text{Reward}_{language} = \frac{Num(Words_{target})}{Num(Words)}$$
+
+（§3.2.1，式 7；CoT 中目标语言词数占比），直接加到总 reward。Figure 7（p.37）的 M3 解读：横轴=RL training steps、纵轴=语言一致性指标；两条曲线对照——无 LC reward 的 baseline 随步数单调退化（drift into language mixing），加 LC reward 后全程稳定 monolingual；side panel 显示数学基准持平、编码略降。即 LC 以"边际编码退步"换"可读性 + 人类偏好对齐"，与 §B.6 ablation 结论一致。
+
+6. **二阶段 RL 的 reward 分解（§3.2.2, 式 8–10）。**
+
+$$\text{Reward} = \text{Reward}_{\text{reasoning}} + \text{Reward}_{\text{general}} + \text{Reward}_{\text{language}}$$
+
+其中 $\text{Reward}_{\text{reasoning}} = \text{Reward}_{\text{rule}}$，$\text{Reward}_{\text{general}} = \text{Reward}_{\text{reward\_model}} + \text{Reward}_{\text{format}}$（式 9–10）。即 reasoning 用 rule-based（数学/代码/逻辑），general 用 model-based RM（helpfulness + format），language 用 LC。model-based RM 由两部分构成：helpful RM 用 pairwise 形式 $Reward_{helpful} = RM_{helpful}(Response_A, Response_B)$（式 5），safety RM 用 point-wise $Reward_{safety} = RM_{safety}(Response)$（式 6）。关键工程细节：温度从一阶段的 1.0 降到 0.7（高温导致二阶段生成不连贯）；共 1700 步，general/preference 数据只在最后 400 步引入——超过几百步的 model-based reward 会触发 reward hacking（§B.5, Figure 6：reward 上升而 Codeforces 下降）。
 
 7. **大 clip ratio 策略（§3.2.1）。** GRPO clip ratio ε 设为 10（远大于 PPO 常用 0.1–0.2）——作者归功于 Zhibin Gou 提出的 large PPO clipping（§7 作者贡献）。过小会截断大量 token 梯度降性能，过大则训练失稳（§3.2.1）。
 

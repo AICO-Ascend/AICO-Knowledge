@@ -4,7 +4,21 @@
 
 ## 核心问题
 
-Moonshot AI 团队针对 Muon optimizer（K. Jordan et al. 2024，通过对 2D weight matrix 的 momentum 做 Newton-Schulz 近似正交化来更新参数）在 small-scale LM 上展现的优势，回答三个悬而未决的开放问题（§1）：
+Moonshot AI 团队针对 Muon optimizer（K. Jordan et al. 2024，通过对 2D weight matrix 的 momentum 做 Newton-Schulz 近似正交化来更新参数，原始更新规则见下方 Eq.1–2）在 small-scale LM 上展现的优势，回答三个悬而未决的开放问题（§1）：
+
+Muon 原始更新（formulas.json [1]，Eq.1）：
+
+$$
+\mathbf{M}_t = \mu \mathbf{M}_{t-1} + \nabla\mathcal{L}_t(\mathbf{W}_{t-1}), \quad
+\mathbf{O}_t = \text{Newton-Schulz}(\mathbf{M}_t), \quad
+\mathbf{W}_t = \mathbf{W}_{t-1} - \eta_t \mathbf{O}_t
+$$
+
+Newton-Schulz 迭代（formulas.json [2]，Eq.2，正交化算子核心，系数 a,b,c 为固定常数）：
+
+$$
+\mathbf{X}_k = a \mathbf{X}_{k-1} + b (\mathbf{X}_{k-1} \mathbf{X}_{k-1}^\mathrm{T}) \mathbf{X}_{k-1} + c (\mathbf{X}_{k-1} \mathbf{X}_{k-1}^\mathrm{T})^2 \mathbf{X}_{k-1}
+$$
 
 1. **可扩展性**：基于 matrix orthogonalization 的 optimizer 能否 scale 到数十亿参数 + 数万亿 token 量级训练？
 2. **分布式可行性**：近似正交化如何在分布式集群上计算？Muon 需要完整梯度矩阵（非 element-wise），与 ZeRO-1 直接冲突。
@@ -15,18 +29,43 @@ Moonshot AI 团队针对 Muon optimizer（K. Jordan et al. 2024，通过对 2D w
 ## 关键创新点
 
 1. **引入 Weight Decay 修复长尾发散（§2.2 Weight Decay, Figure 2 p.4）**
-   机制：在原始 Muon 更新上叠加 AdamW 式 weight decay —— `W_t = W_{t-1} − η_t(O_t + λW_{t-1})`（Eq.3），λ 全程设 0.1（§3.3）。
-   动机：scaling up 时观测到 weight RMS 与 layer output RMS 持续增长，超出 bf16 高精度范围，损害性能。原始 Muon 不带 weight decay。
+   机制：在原始 Muon 更新上叠加 AdamW 式 weight decay（formulas.json [3]，Eq.3），λ 全程设 0.1（§3.3）：
+
+   $$
+   \mathbf{W}_t = \mathbf{W}_{t-1} - \eta_t (\mathbf{O}_t + \lambda \mathbf{W}_{t-1})
+   $$
+
+   一句话机制：对正交化更新 O_t 再加一项 λW_{t-1} 比例收缩，约束权重 RMS 不无限增长。
+   动机：scaling up 时观测到 weight RMS 与 layer output RMS 持续增长，超出 bf16 高精度范围，损害性能。原始 Muon 不带 weight decay（§2.2 脚注 2 标注原始实现省略 WD）。
    效果（§3.2，800M 模型 / 100B tokens ≈ 5× optimal）：Figure 2（p.4）三条 val-loss 曲线（AdamW 绿 / Muon-no-WD 红 / Muon-WD 蓝）在 0–65k iter 单调下降，两种 Muon 全程低于 AdamW 收敛到 ~2.25；M3 解读的 inset 差值图标注了两个 crossover：vanilla Muon 在 iter 24000 处领先 0.023，但长期权重过大被 Muon-WD 反超，iter 66000 处 Muon-WD 领先 0.017。最终在 over-train regime Muon-WD 同时优于 vanilla Muon 与 AdamW —— 该图直接论证了"加 WD 不是早期加速，而是长程稳定性收益"。
 
 2. **Consistent Update RMS —— 修正 shape-dependent 更新幅度（§2.2 Lemma 1）**
    机制：作者证明 **Lemma 1**：对 full-rank `[A, B]` 矩阵，Muon 理论 update RMS = `√(1/max(A,B))`（证明见 Appendix A：对正交更新 X=U[:,:r]V[:r,:]，RMS²=r/(mn)，full-rank 时 r=m 即 RMS=√(1/n)）。
    问题：scaling 时不同 shape 的矩阵 update RMS 不一致 —— `max(A,B)` 大（如 dense MLP）更新过小，限制表示能力；`max(A,B)` 小（如 GQA/MLA 下每个 KV head 单独参数）更新过大，导致训练不稳定。
-   方案：将 Muon update 乘以 `√max(A,B)` 抵消 Lemma 1，进一步乘 0.2 以匹配 AdamW 经验 update RMS 区间 0.2~0.4 —— 最终更新规则 `W_t = W_{t-1} − η_t(0.2·O_t·√max(A,B) + λW_{t-1})`（Eq.4）。
+   方案：将 Muon update 乘以 `√max(A,B)` 抵消 Lemma 1，进一步乘 0.2 以匹配 AdamW 经验 update RMS 区间 0.2~0.4 —— 最终更新规则（formulas.json [4]，Eq.4，Adjusted LR 方案）：
+
+   $$
+   \mathbf{W}_t = \mathbf{W}_{t-1} - \eta_t (0.2\cdot\mathbf{O}_t\cdot\sqrt{\max(A,B)} + \lambda \mathbf{W}_{t-1})
+   $$
+
+   一句话机制：用 `0.2·√max(A,B)` 逐矩阵缩放正交化更新，使各 shape 的 update RMS 对齐到 AdamW 经验区间，从而免超参调优。
    副产物：因 update RMS 与 AdamW 对齐，**Muon 可直接复用为 AdamW 调好的 LR / weight decay**，免超参调优（"out-of-the-box"）。
 
 3. **Adjusted LR 作为低成本 RMS 控制方案（§3.1, Table 1）**
-   三种 RMS 控制方案对比：Baseline（乘 0.2·√H）、Update Norm（直接 RMS(O_t)=0.2，Eq.6）、Adjusted LR（按 shape 乘 0.2·√max(A,B)，Eq.7）。
+   三种 RMS 控制方案对比：Baseline（formulas.json [5]，乘 `0.2·√H`）、Update Norm（直接 RMS(O_t)=0.2，formulas.json [6]，Eq.6）、Adjusted LR（按 shape 乘 `0.2·√max(A,B)`，Eq.4）。
+
+   Baseline（formulas.json [5]）：
+
+   $$
+   \mathbf{W}_t = \mathbf{W}_{t-1} - \eta_t (0.2\cdot\mathbf{O}_t\cdot\sqrt{H} + \lambda \mathbf{W}_{t-1})
+   $$
+
+   Update Norm（formulas.json [6]，Eq.6，强行把更新 RMS 归一为 0.2）：
+
+   $$
+   \mathbf{W}_t = \mathbf{W}_{t-1} - \eta_t (0.2\cdot\mathbf{O}_t/\mathop{\text{RMS}}(\mathbf{O}_t) + \lambda \mathbf{W}_{t-1})
+   $$
+
    800M/4B-token 实验在改用 2-layer MLP（`[H,4H]`）以放大 shape 差异后：Update Norm 与 Adjusted LR 都优于 Baseline；对 `[H,4H]` MLP 权重 RMS 约为 Baseline 的 2 倍（因 √max(H,4H)/√H=2）；对 `[H,H]` query 权重，Adjusted LR 退化为与 Baseline 相同（因 √max(H,H)/√H=1），而 Update Norm 仍放大。**作者选 Adjusted LR 因其计算成本更低**。
 
 4. **Distributed Muon —— ZeRO-1 兼容的分布式实现（§2.3, Algorithm 1）**
@@ -49,7 +88,13 @@ Moonshot AI 团队针对 Muon optimizer（K. Jordan et al. 2024，通过对 2D w
    图证：Figure 1b（p.1）Pareto 散点中 Moonlight-2.4B-1.2T 与 5.7T 两颗红星压制全部对照模型；Table 5（p.9）原文矩阵图按 English / Code / Math / Chinese 四类组织，Moonlight 在 13 项中 11 项 bold 最优 —— MMLU 70.0、GSM8K 77.4、CMMLU 78.2，仅 GSM8K 略逊于 Qwen2.5-3B（79.1，但后者用 18T tokens）。
 
 7. **SVD Entropy 谱分析佐证"多方向探索"直觉（§3.4, Figure 4 p.10 / Figure 9 p.18 / Figure 10 p.19）**
-   对权重矩阵奇异值 σ 定义 SVD entropy `H(σ) = −(1/log n)·Σ (σ_i²/Σσ_j²)·log(σ_i²/Σσ_j²)`。
+   对权重矩阵奇异值 σ 定义 SVD entropy（formulas.json [0]，归一到 [0,1]，最大值表示所有奇异值等大）：
+
+   $$
+   H(\sigma) = -\frac{1}{\log n}\sum_{i=1}^n \frac{\sigma^2_i}{\sum_{j=1}^n \sigma^2_j} \log \frac{\sigma^2_i}{\sum_{j=1}^n \sigma^2_j}
+   $$
+
+   一句话机制：归一化熵度量权重谱的"均匀度/秩丰富度"，熵越高表示该权重保留了更多近等大的奇异方向。
    Figure 4（p.10）1×6 网格线图（AttnQO / AttnKV / Experts / SharedExperts / Router / Dense），每 panel 叠加 AdamW 红线与 Muon 蓝线：M3 解读确认 Muon 在全部 6 组权重上 SVD entropy 始终高于 AdamW，其中 **Router 权重差异最显著** —— 暗示 MoE 从 Muon 获益更大。Appendix F 显示 >90% 权重矩阵 Muon 的 SVD entropy 高于 AdamW。
    深层验证：Figure 9（p.18）展开 attention 各子矩阵（WC/WV/WO/WKR/WKC/WQR/WQC）逐层 SV 谱，红线 spine 标注 Muon entropy 反低于 AdamW 的少数情形；Figure 10（p.19）以 E0/E2/E3/SE/RW × WO/WI/WV × Layer L2–L27 的矩阵网格逐 cell 显示排序后的 SV 谱，红框 spine 同样标记 Muon 反例 —— 两图共同把"Muon 产生更 spectrally uniform、更各向同性的权重"这一结论落地到逐层粒度。
 

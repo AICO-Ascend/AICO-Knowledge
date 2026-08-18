@@ -17,11 +17,43 @@
 ## 关键创新点
 
 1. **将 conditional memory 定义为独立稀疏轴，并以 Engram 实例化（§2）**
-   - 机制：如图示架构（Figure 1，p.4）所示，Engram 在特定 layer 残差注入、保留标准 input/un-embedding 不变；模块分两个相位工作。**Retrieval**：对位置 `t` 抽取 suffix N-gram `g_{t,n}`，先经 tokenizer compression（§2.2 满射 `P: V→V'`，基于 NFKC+lowercasing 的规范化等价类，128k tokenizer 实际压缩 23.43%，见 Table 6），再用 K-head multiplicative-XOR hash 映射到素数大小 `M_{n,k}` 的嵌入表 `E_{n,k}`，最终拼接所有 `e_{t,n,k}` 得到 `e_t ∈ R^{d_mem}`（Eq. 1-2）。**Fusion**：把 `e_t` 当 Key/Value 源，当前 hidden state `h_t` 当 Query，经 RMSNorm 后算 scalar gate `α_t = σ(RMSNorm(h_t)^T RMSNorm(k_t)/√d)`（Eq. 3-4）；再经 kernel=4、dilation=最大 N-gram 阶的 depthwise causal conv + SiLU + residual（Eq. 5），最后以 residual `H^(l) ← H^(l) + Y` 注入 backbone，随后才是标准 Attention 与 MoE。
+   - 机制：如图示架构（Figure 1，p.4）所示，Engram 在特定 layer 残差注入、保留标准 input/un-embedding 不变；模块分两个相位工作。**Retrieval**：对位置 `t` 抽取 suffix N-gram `g_{t,n}`，先经 tokenizer compression（§2.2 满射 `P: V→V'`，基于 NFKC+lowercasing 的规范化等价类，128k tokenizer 实际压缩 23.43%，见 Appendix C），再用 K-head multiplicative-XOR hash 映射到素数大小 `M_{n,k}` 的嵌入表 `E_{n,k}`，最终拼接所有 `e_{t,n,k}` 得到 `e_t ∈ R^{d_mem}`；权威 LaTeX（formulas.json，Eq. 1-2）：
+
+$$
+z_{t,n,k} \triangleq \phi_{n,k}(g_{t,n}), \quad \mathbf{e}_{t,n,k} = \mathbf{E}_{n,k}[z_{t,n,k}].
+$$
+
+$$
+\mathbf{e}_t \triangleq \mathop{\Vert}_{n=2}^{N} \mathop{\Vert}_{k=1}^{K} \mathbf{e}_{t,n,k}.
+$$
+
+   一句话机制：`φ_{n,k}` 为 multiplicative-XOR hash 把压缩后的 N-gram 上下文映射到素数大小的嵌入表索引，再沿 N-gram 阶 `n` 与 head `k` 拼接成统一 memory 向量（§2.2，Eq. 1-2）。**Fusion**：把 `e_t` 当 Key/Value 源，当前 hidden state `h_t` 当 Query，经 RMSNorm 后算 scalar gate（Eq. 3-4）：
+
+$$
+\mathbf{k}_t = \mathbf{W}_K \mathbf{e}_t, \quad \mathbf{v}_t = \mathbf{W}_V \mathbf{e}_t
+$$
+
+$$
+\alpha_t = \sigma\left( \frac{\text{RMSNorm}(\mathbf{h}_t)^\top \text{RMSNorm}(\mathbf{k}_t)}{\sqrt{d}} \right).
+$$
+
+   一句话机制：`h_t` 作 Query、检索到的 `e_t` 作 K/V 源，RMSNorm 后做 scaled dot-product 得到 sigmoid gate `α_t∈(0,1)`，门控输出 `ṽ_t = α_t·v_t`；当检索 memory 与上下文矛盾时 `α_t→0` 抑制噪声（§2.3，Eq. 3-4）。再经 kernel=4、dilation=最大 N-gram 阶的 depthwise causal conv + SiLU + residual（Eq. 5）：
+
+$$
+\mathbf{Y} = \text{SiLU}\left( \text{Conv1D}( \text{RMSNorm}(\tilde{\mathbf{V}}) ) \right) + \tilde{\mathbf{V}},
+$$
+
+   最后以 residual `H^(l) ← H^(l) + Y` 注入 backbone，随后才是标准 Attention 与 MoE。
    - 效果：gating 趋零时自动抑制哈希碰撞/多义噪声（§2.3）；case study（§6.5, Figure 7，p.18）显示 gate 在多 token 命名实体（"Alexander the Great"、"the Milky Way"）与公式化短语（"By the way"、"Princess of Wales"）、中文成语与历史实体（"四大发明"、"张仲景"）处一致激活——证明它确实识别了刻板语言依赖（M3 解读：因为 Engram 作用于 suffix N-gram，某 token 上的高激活意味着以该 token 结尾的短语被识别为可静态查表的 pattern；图中 mHC M=4 + 双 layer 注入共产生 8 个 gate scalar，仅展示与语义 pattern 最相关的分支）。
 
 2. **U-shaped Sparsity Allocation scaling law（§3.1）**
-   - 机制：定义分配比 `ρ ∈ [0,1]`，`P_MoE^{(sparse)} = ρ·P_sparse`，`P_Engram = (1-ρ)·P_sparse`（Eq. 7）。固定稀疏比 `P_tot/P_act ≈ 10`，在 `C=2e20`（`P_tot≈5.7B`, `P_act=568M`, baseline 106 experts）与 `C=6e20`（`P_tot≈9.9B`, `P_act=993M`, baseline 99 experts）两个量级下，仅调整 routed expert 数与 Engram slot 数构造不同 ρ。
+   - 机制：定义分配比 `ρ ∈ [0,1]`，权威 LaTeX（formulas.json，Eq. 7）：
+
+$$
+P_{\mathrm{MoE}}^{(\mathrm{sparse })} = \rho\, P_{\mathrm{sparse}}, \qquad P_{\mathrm{Engram}} = (1-\rho)\, P_{\mathrm{sparse}}.
+$$
+
+   一句话机制：把"未激活参数预算" `P_sparse = P_tot − P_act` 在 MoE routed expert (`ρ` 份额) 与 Engram 嵌入 slot (`1−ρ` 份额) 之间切分；`ρ=1` 即纯 MoE，`ρ<1` 把腾出的 routed expert 容量转成 Engram 嵌入（§3.1，Eq. 7）。固定稀疏比 `P_tot/P_act ≈ 10`，在 `C=2e20`（`P_tot≈5.7B`, `P_act=568M`, baseline 106 experts）与 `C=6e20`（`P_tot≈9.9B`, `P_act=993M`, baseline 99 experts）两个量级下，仅调整 routed expert 数与 Engram slot 数构造不同 ρ。
    - 效果：Figure 3(left)（p.8）呈现一致的 U 形。在 10B 量级（`C=6e20`），validation loss 从 ρ=100% 的 1.7248 降至 ρ≈80% 最优点的 1.7109（Δ=0.0139）。最优点在两量级下都稳定在 **ρ≈75%-80%**，即把 20%-25% 的稀疏预算让给 Engram。ρ=1 时缺静态存储需靠深度重建；ρ→0 时失去 conditional computation 伤害动态推理——验证了两模块的结构互补性。
    - 反直觉点：ρ≈40% 时 Engram 模型已可与纯 MoE baseline 相当（5.7B 模型从 106 expert 减到 46；9.9B 模型从 99 减到 43），即便在大幅让出 expert 容量后仍不输。
 
@@ -30,13 +62,29 @@
    - 效果：Figure 3(right)（p.8）表现 **严格的 log-space 线性（幂律）**，意味着扩 slot 持续有收益且不增计算。同 slot 预算下 Engram 比 OverEncoding（直接平均进 vocab embedding，Huang et al. 2025a）解锁了更大的 scaling 潜力——这条曲线把"扩 slot"确立为一个可预测、可外推的容量旋钮。
 
 4. **多分支架构整合与 FP8 融合（§2.4）**
-   - 机制：默认 backbone 为 mHC（Manifold-Constrained Hyper-Connections, M=4, Xie et al. 2025）。Engram topology-agnostic 地接入：**单个嵌入表 + 单个 W_V 在 M 个分支间共享，M 个不同 W_K^(m) 实现分支特异 gating**（Eq. 6），从而 W_V 与 M 个 W_K^(m) 可融合为单个 dense FP8 matmul。
+   - 机制：默认 backbone 为 mHC（Manifold-Constrained Hyper-Connections, M=4, Xie et al. 2025）。Engram topology-agnostic 地接入：**单个嵌入表 + 单个 W_V 在 M 个分支间共享，M 个不同 W_K^(m) 实现分支特异 gating**，权威 LaTeX（formulas.json，Eq. 6）：
+
+$$
+\alpha_t^{(m)} = \sigma\left( \frac{\text{RMSNorm}(\mathbf{h}_t^{(m)})^\top \text{RMSNorm}(\mathbf{W}_K^{(m)} \mathbf{e}_t)}{\sqrt{d}} \right).
+$$
+
+   一句话机制：对第 m 个分支用其专属 `W_K^(m)` 与共享 `e_t` 计算分支特异性 gate `α_t^(m)`，再调制共享 value `u_t^(m) = α_t^(m)·(W_V e_t)`；从而 W_V 与 M 个 W_K^(m) 可融合为单个 dense FP8 matmul（§2.4，Eq. 6）。
    - 效果：最大化 GPU 算力利用率，同时保留分支特异性调制；ablation 证明去掉 multi-branch 融合是损失最大的几项之一（§6.2, Figure 5 markers，p.16）。
 
 5. **27B/40B 实证：推理增益超过知识任务本身（§4.2, Table 1）**
    - 机制：Engram-27B 把 MoE-27B 的 routed expert 从 72 减到 55，腾出 5.7B 给 Engram（ρ=74.3%），插入 layer 2 与 15；激活参数严格 3.8B、训练 token 严格 262B。Engram-40B 同 backbone 同 P_act，仅扩 Engram 至 18.5B。
    - 效果（Engram-27B vs MoE-27B，iso-param/iso-FLOPs）：知识任务 MMLU +3.0（57.4→60.4）、MMLU-Pro +1.8（28.3→30.1）、CMMLU +4.0（57.9→61.9）。**更显著的是一般推理**：BBH +5.0（50.9→55.9）、ARC-Challenge +3.7（70.1→73.8）、DROP +3.3（55.7→59.0）。代码/数学：HumanEval +3.0（37.8→40.8）、MBPP +1.6、GSM8K +2.2（58.4→60.6）、MATH +2.4（28.3→30.7）。Validation loss 从 1.634 降到 1.622，Pile loss 1.960→1.950。
-   - 关键解释（§6.1，Figure 4，p.13）：Engram 把"早期静态重建"从 backbone 卸载，相当于 **加深了有效深度**。LogitLens（Figure 4a）显示 Engram 各层 KL divergence 系统性低于 MoE baseline，尤其在早期 block 最明显，曲线下降更陡；CKA 软对齐（Figure 4b-c，公式 Eq. 8-9，top-k=5）显示 Engram layer 5 对齐 MoE layer ~12（`a_j > j` 的 off-diagonal shift 在 Engram-27B/40B 上均成立），即 Engram 的浅层在功能上等价于 MoE 的深层。
+   - 关键解释（§6.1，Figure 4，p.13）：Engram 把"早期静态重建"从 backbone 卸载，相当于 **加深了有效深度**。LogitLens（Figure 4a）显示 Engram 各层 KL divergence 系统性低于 MoE baseline，尤其在早期 block 最明显，曲线下降更陡；CKA 软对齐（Figure 4b-c，权威 LaTeX Eq. 8-9，top-k=5）显示 Engram layer 5 对齐 MoE layer ~12（`a_j > j` 的 off-diagonal shift 在 Engram-27B/40B 上均成立），即 Engram 的浅层在功能上等价于 MoE 的深层。CKA 与 soft alignment index 的权威 LaTeX（formulas.json，Eq. 8-9）：
+
+$$
+\text{CKA}(K, L) = \frac{\text{HSIC}(K, L)}{\sqrt{\text{HSIC}(K, K)\text{HSIC}(L, L)}}
+$$
+
+$$
+a_j = \frac{\sum_{i \in \mathcal{I}_j} S_{i,j} \cdot i}{\sum_{i \in \mathcal{I}_j} S_{i,j}}, \quad \text{where } \mathcal{I}_j = \mathop{\text{argtop}k}_{i} (S_{i,j}).
+$$
+
+   一句话机制：CKA 用 HSIC 度量两表示集合的独立性归一化相似度；`a_j` 是 Engram 层 j 相对 top-k 最相似 MoE 层的加权质心，作为"对应 MoE 有效深度"的鲁棒代理（§6.1.2，Eq. 8-9）。LaTeX↔M3 双源校验：M3 对 Figure 2/5/Table 4 的文本级解读与公式所定义的机制（确定性 hash 寻址、context-aware gating、ρ 分配）完全一致；M3 明确指出 Figure 2 的 prefetch-and-overlap 与 Zipf 多级缓存正源于 §2.5 描述的确定性寻址特性，公式 Eq. 1-2 的 `φ_{n,k}`（token-ID 函数）是该系统特性的数学根因。
 
 6. **结构消融：layer 2 单层最优，layer 2+6 双层更优（§6.2, Figure 5，p.16）**
    - 机制：12-layer 3B MoE backbone（0.56B activated，训 100B tokens），1.6B Engram 预算，{2,3}-gram，参考配置插入 Layers 2&6 得 Val Loss = 1.768（vs baseline 1.808，Δ=0.04）。固定预算单层 sweep layer 1→12，再对参考配置做组件 ablation。
@@ -48,8 +96,8 @@
    - 效果：Iso-Loss 下 Multi-Query NIAH 97.0 vs 84.2、Variable Tracking 87.2 vs 77.0、FWE 98.6 vs 73.0、QA 37.5 vs 34.5；iso-FLOPs (50k) 下进一步全指标领先。即便用 82% 算力（41k）的 Engram-27B 仍在 LongPPL 平手、RULER 上反超 MoE baseline。
 
 8. **infrastructure-aware efficiency：确定性寻址→host-memory offload 几乎零开销（§2.5, §6.4, Table 4，p.18）**
-   - 机制：与 MoE 依赖 hidden state 动态路由不同，Engram 的 hash ID 仅由 input token 决定，前向之前完全已知 → inference 时把整个表常驻 host DRAM，异步经 PCIe 预取与前一 block 计算重叠（Figure 2(b)，p.6；M3 解读：前置 dense block 的计算强度提供了掩盖检索延迟的时间窗，且单步实际通信量随 *activated slot 数* 缩放而非表大小）；并利用 N-gram 的 Zipf 分布做多级缓存（HBM→DRAM→NVMe）。训练时用 All-to-All 跨 GPU 分片（Figure 2(a)，p.6；M3 解读：forward 收集活跃行、backward 分发梯度，容量随 GPU 数线性扩展）。
-   - 效果：在 nano-vLLM 上把 100B 参数 Engram 层 offload 到 host（H800, 512 序列, len~Uniform(100,1024)），4B backbone 吞吐仅降 1.92%（9031.62→8858.28），8B backbone 仅降 2.79%（6315.52→6140.02）。这是保守基线（强制所有检索走 PCIe，未用 HBM 缓存热点），全优化后开销可忽略。
+   - 机制：与 MoE 依赖 hidden state 动态路由不同，Engram 的 hash ID 仅由 input token 决定（数学根因见 Eq. 1 的 `φ_{n,k}(g_{t,n})`，`g_{t,n}` 仅依赖输入 token ID），前向之前完全已知 → inference 时把整个表常驻 host DRAM，异步经 PCIe 预取与前一 block 计算重叠（Figure 2(b)，p.6；M3 解读：前置 dense block 的计算强度提供了掩盖检索延迟的时间窗，且单步实际通信量随 *activated slot 数* 缩放而非表大小）；并利用 N-gram 的 Zipf 分布做多级缓存（HBM→DRAM→NVMe）。训练时用 All-to-All 跨 GPU 分片（Figure 2(a)，p.6；M3 解读：forward 收集活跃行、backward 分发梯度，容量随 GPU 数线性扩展）。M3 逐字转录 Table 4 caption："End-to-end Inference Throughput. We measure inference throughput with a 100B-parameter Engram layer entirely offloaded to host memory."
+   - 效果：在 nano-vLLM 上把 100B 参数 Engram 层 offload 到 host（H800, 512 序列, len~Uniform(100,1024)），4B backbone 吞吐仅降 1.92%（9031.62→8858.28），8B backbone 仅降 2.79%（6315.52→6140.02）。这是保守基线（强制所有检索走 PCIe，未用 HBM 缓存热点），全优化后开销可忽略。LaTeX↔M3 双源校验：M3 给出的吞吐数字（4B 降 1.92%、8B 降 2.79%、峰值 2.8%）与 §6.4 正文/Table 4 完全一致；M3 指出"有效通信量随 activated slot 数缩放而非表大小"正是 Eq. 1-2 每位置仅取常数 K·(N-1) 个 slot 的直接推论。
 
 ## 表格（原文结构化）
 
@@ -83,13 +131,15 @@
 | Engram-27B (46k, 1.63) Iso-Loss | 13.59 | 97.6 | 89.0 | 95.5 | **97.0** | **87.2** | 4.3 | 98.6 | 37.5 |
 | Engram-27B (50k, 1.62) Iso-FLOPs | **13.41** | 99.3 | 89.3 | 96.5 | **97.0** | **89.0** | 5.9 | 99.3 | 40.5 |
 
-### Table 4｜推理吞吐（100B Engram offload，§6.4，p.18）
+### Table 4｜推理吞吐（100B Engram offload，§6.4，p.18；M3 逐字转录 caption）
+> **Table 4 | End-to-end Inference Throughput.** We measure inference throughput with a 100B-parameter Engram layer entirely offloaded to host memory.
+
 | Backbone | Config | Throughput (tok/s) | 下降 |
 |---|---|---|---|
 | 4B-Dense | Baseline | 9,031.62 | — |
-| 4B-Dense | +100B Engram (CPU offload) | 8,858.28 | 1.92% |
+| 4B-Dense | +100B Engram (CPU Offload) | 8,858.28 | 1.92% |
 | 8B-Dense | Baseline | 6,315.52 | — |
-| 8B-Dense | +100B Engram (CPU offload) | 6,140.02 | 2.79% |
+| 8B-Dense | +100B Engram (CPU Offload) | 6,140.02 | 2.79% |
 
 ### Table 3｜实体解析示例（§6.1，reproduced from Ghandeharioun et al. 2024）
 | Layer | Latent State Translation（"Wales" token，PatchScope） | 解释 |
@@ -119,7 +169,7 @@
 - **vs OverEncoding (Huang et al. 2025a)**：OverEncoding 把 hash N-gram 嵌入直接平均进 vocab embedding。论文 §3.2 同 slot 预算下 Engram 解锁更大 scaling 潜力（Figure 3 right）；§7 指出 OverEncoding 在 sparse MoE backbone 上即便非 iso-param 也"无有意义提升"。机制上 OverEncoding 必须放在 Layer 0，**串行化内存访问与计算**；Engram 放深层 layer 实现 comm-comp overlap（Figure 2，p.6）。
 - **vs SCONE (Yu et al. 2025)**：SCONE 面向 inference，带额外 f-gram 模块并增加训练 FLOPs，**破坏 iso-compute 约束**，故未纳入主对比；Engram 严格 iso-FLOPs。
 - **vs N-Grammer (Roy et al. 2022)** / **SuperBPE (Liu et al. 2025a)** / **BLT (Pagnoni et al. 2025)**：都把 N-gram 嵌入注入表示空间，但都放在输入层；Engram 区别在于 (i) 深层插入 + context-aware gating；(ii) 把它当作 first-class 建模原语并与 MoE 做 Sparsity Allocation 联合优化。
-- **vs parametric memory networks (PKM, PEER, UltraMem, Memory+)**：这些用稀疏 key-value store 直接挂在 layer，依赖 query-dependent 路由（动态、需运行时 hidden state 决定寻址）；Engram 寻址是 deterministic token-ID 函数，天然支持 prefetch，这是它独有的系统优势（§2.5，Figure 2 p.6）。
+- **vs parametric memory networks (PKM, PEER, UltraMem, Memory+)**：这些用稀疏 key-value store 直接挂在 layer，依赖 query-dependent 路由（动态、需运行时 hidden state 决定寻址）；Engram 寻址是 deterministic token-ID 函数（Eq. 1 的 `φ_{n,k}`），天然支持 prefetch，这是它独有的系统优势（§2.5，Figure 2 p.6）。
 - **vs non-parametric retrieval (RETRO, REALM, CoG, PlugLM)**：外部 KV store 可编辑可扩展，但检索是运行时动态；Engram 是 in-model 静态查表，无需检索器、无 retrieval latency。
 - **vs MoE (DeepSeekMoE)**：MoE 是 conditional computation 轴，用动态路由稀疏激活 expert 处理动态逻辑；Engram 是 conditional memory 轴，用确定性 hash 查表取静态嵌入。两者结构互补——纯 MoE 浪费深度重建静态知识，纯 Engram 失去动态推理能力，U 形配比给出最优分工。
 

@@ -1,7 +1,8 @@
-# DeepSeek-V4 — 全要素深读（DEEP 2026-08-18 重写）
+# DeepSeek-V4 — 全要素深读（DEEP 2026-08-18 重写 v2，公式权威源 LaTeX 校验）
 > 独立文件，extract_phase1 重跑不丢。整篇论文为单位，文本/图/表/公式交织。
 > 论文：DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence · arXiv:2606.19348 (v1, 26 Apr 2026)
-> fulltext 摘录覆盖至 §3.2 TileLang；§3.3–§6 系据目录 + 摘要 + 图说整合，已在局限节标注。
+> fulltext 摘录覆盖至 §3.2 TileLang（含 §2.4 Muon / Algorithm 1 / §3.1 EP / §3.2 TileLang 全文 + §5 后训练摘要）；§3.3–§6 系据目录 + 摘要 + 图说整合，已在局限节标注。
+> 公式权威源 = formulas.json LaTeX（下方 `$$` 直接引用，已与 M3 caption（p14 Algorithm 1 / p15 Figure 5）双源校验）。
 
 ## 核心问题
 
@@ -10,10 +11,23 @@ vanilla attention 的二次复杂度在百万 token 上下文下成为不可承�
 ## 关键创新点
 
 1. **混合注意力 CSA + HCA（§2.3，对照 Figure 2 总体架构 / Figure 3 CSA / Figure 4 HCA）** — V4 的核心机制，两类高效注意力交错（interleaved hybrid）配置：
-   - **CSA（Compressed Sparse Attention，§2.3.1，Figure 3）**：两步。先压缩——每 `q` 个 KV entry 用 softmax 权重聚合成 1 个压缩 entry（序列长缩到 1/q）；再稀疏——用 "Lightning Indexer" 在压缩后的 KV 上做 DSA（DeepSeek Sparse Attention）top-k 选择，每个 query token 只 attend `p` 个压缩块。索引打分 `I_{t,s} = Σ_h w^I_{t,h} · ReLU(q^I_{t,h} · K^{IComp}_s)`（式 15–16），低秩生成（先 `c^Q_t = h_t·W^{DQ}` 降到 `d_q` 维，再升维成 indexer 头）。关键细节：CSA 的压缩是**重叠（overlapped）**的——用于 `C^{Comp}_i` 的 `C^b` 索引与 `C^a` 索引有重叠（§2.3.1 末），故实际压缩率恰为 1/q。
-   - **HCA（Heavily Compressed Attention，§2.3.2，Figure 4）**：更激进压缩但保持 dense。每 `q'`（`q' ≫ q`）个 KV 聚合成 1 个 entry，序列长缩到 1/q'，**不做重叠压缩、不做稀疏选择**，直接对所有压缩 entry 做 dense attention。
-   - 二者共享 Shared Key-Value MQA（每个压缩 entry 既当 key 又当 value，§2.3.1 "Shared Key-Value MQA"）与 Grouped Output Projection（把 `n_h` 个头分 6 组，先升到 `d_o` 中间维再聚合，缓解 `d_h·n_h` 过大的输出投影成本，§2.3.1 末 / §2.3.2）。
-   - **因果性补救（§2.3.3，对应 Figure 3/4 的 sliding window 旁路）**：严格保因果使 query 无法访问同一压缩块内 token，故引入 `n_win` 个未压缩 sliding-window KV 补救局部依赖（§2.3.3 "Additional Branch"）。另配 Partial RoPE（仅末 64 维，§2.3.3）、Q/KV entry RMSNorm（防 logits 爆炸，§2.3.3）、Attention Sink（式 27，允许每头总注意力分数≠1）。
+   - **CSA（Compressed Sparse Attention，§2.3.1，Figure 3）**：两步。先压缩——每 `q` 个 KV entry 用 softmax 权重聚合成 1 个压缩 entry（序列长缩到 1/q）；再稀疏——用 "Lightning Indexer" 在压缩后的 KV 上做 DSA（DeepSeek Sparse Attention）top-k 选择，每个 query token 只 attend `p` 个压缩块。稀疏选择集合由 indexer 打分 top-k 决定（Eq. in §2.3.1，formulas.json LaTeX）：
+     $$\mathcal{C}^{\text{SprsComp}}_t = \left\{ C^{\text{Comp}}_{s} ~\Big|~ I_{t, s} \in \operatorname{Top-k} (I_{t, :}) \right\}.$$
+     索引打分本身为多头低秩 ReLU 内积（式 14，formulas.json LaTeX）：
+     $$I_{t, s} = \sum_{h=1}^{n_h^I} w_{t, h}^I \cdot \text{ReLU}\left(\mathbf{q}^{I}_{t, h} \cdot K^{\text{IComp}}_{s}\right),$$
+     其中 indexer query 先经低秩投影生成（式 13）：$\mathbf{c}_{t}^{Q} = \mathbf{h}_{t} \cdot W^{DQ}$，再升维成 indexer 头 $\mathbf{q}_{t}^{I} = \mathbf{c}_{t}^{Q} \cdot W^{IUQ}$。最终每个头的输出（式 5）：
+     $$\mathbf{o}_{t,i} = \operatorname{CoreAttn}\left( \texttt{query=}\mathbf{q}_{t,i}, \texttt{key=}\mathcal{C}^{\text{SprsComp}}_t, \texttt{value=}\mathcal{C}^{\text{SprsComp}}_t \right).$$
+     关键细节：CSA 的压缩是**重叠（overlapped）**的——用于 `C^{Comp}_i` 的 `C^b` 索引与 `C^a` 索引有重叠（§2.3.1 末，式 11–12），故实际压缩率恰为 1/q。压缩 KV 与门控 logits 由双分支生成（式 11–12，formulas.json LaTeX）：
+     $$C^{a} = H \cdot W^{aKV}, \quad C^{b} = H \cdot W^{bKV}, \quad Z^{a} = H \cdot W^{aZ}, \quad Z^{b} = H \cdot W^{bZ},$$
+     $$[S^a_{mi:m(i+1)-1};S^b_{m(i-1):mi-1}] = \operatorname{Softmax}_{\text{row}}([Z^{a}_{mi:m(i+1)-1} + B^a;Z^{b}_{m(i-1):mi-1} + B^b]),$$
+     $$C^{\text{Comp}}_{i} = \sum_{j=mi}^{m(i+1)-1} S^a_j \odot C^{a}_{j} + \sum_{j=m(i-1):mi-1} S^b_j \odot C^{b}_{j}.$$
+   - **HCA（Heavily Compressed Attention，§2.3.2，Figure 4）**：更激进压缩但保持 dense。每 `q'`（`q' ≫ q`）个 KV 聚合成 1 个 entry，序列长缩到 1/q'，**不做重叠压缩、不做稀疏选择**，直接对所有压缩 entry 做 dense attention（式 15–16，formulas.json LaTeX）：
+     $$C = H \cdot W^{KV}, \quad Z = H \cdot W^{Z},$$
+     $$S_{m^{\prime}i:m^{\prime}(i+1)-1} = \operatorname{Softmax}_{\text{row}}(Z_{m^{\prime}i:m^{\prime}(i+1)-1} + B), \quad C^{\text{Comp}}_{i} = \sum_{j=m^{\prime}i}^{m^{\prime}(i+1)-1} S_j \odot C_{j}.$$
+   - 二者共享 Shared Key-Value MQA（每个压缩 entry 既当 key 又当 value，§2.3.1 "Shared Key-Value MQA"）与 Grouped Output Projection（把 `n_h` 个头分 6 组，先升到 `d_o` 中间维再聚合，缓解 `d_h·n_h` 过大的输出投影成本，§2.3.1 末 / §2.3.2）。query 侧投影（式 4 / 17）：$[\mathbf{q}_{t,1};...;\mathbf{q}_{t,n_h}] = \mathbf{q}_t = \mathbf{c}_t^Q \cdot W^{UQ}$。
+   - **因果性补救（§2.3.3，对应 Figure 3/4 的 sliding window 旁路）**：严格保因果使 query 无法访问同一压缩块内 token，故引入 `n_win` 个未压缩 sliding-window KV 补救局部依赖（§2.3.3 "Additional Branch"）。另配 Partial RoPE（仅末 64 维，§2.3.3）、Q/KV entry RMSNorm（防 logits 爆炸，§2.3.3）、**Attention Sink（式 27，formulas.json LaTeX）**——允许每头总注意力分数≠1：
+     $$s_{h, i, j} = \frac{\operatorname{Exp}(z_{h, i, j})}{\sum_k \operatorname{Exp}(z_{h, i, k}) + \operatorname{Exp}(z^{\prime}_h)}.$$
+     分母多出的 $\operatorname{Exp}(z^{\prime}_h)$ 项即 "sink" 通道，吸收溢出注意力质量。
 
 2. **百万上下文效率量级（§1, §2.3.4，对照 Figure 1 右）** — 量化效果，1M-token 上下文下相对 DeepSeek-V3.2：
    - DeepSeek-V4-Pro（1.6T 总参 / 49B 激活）：单 token 推理 FLOPs 仅 **27%**（等效 FP8 FLOPs），KV cache 仅 **10%**（§1）。
@@ -21,18 +35,29 @@ vanilla attention 的二次复杂度在百万 token 上下文下成为不可承�
    - 相对 BF16 GQA8（head dim 128，常见 baseline）基线：1M 上下文下 V4 的 KV cache 仅约 **2%**（§2.3.4 末）。
    - 机制来源（§2.3.4 四点）：(a) 混合存储格式——RoPE 维 BF16、其余 FP8，KV cache 比纯 BF16 几乎减半；(b) Lightning indexer 内部 attention 计算走 **FP4**，超长上下文下加速；(c) 相对 V3.2 选了更小的 attention top-k；(d) 压缩 + 混合注意力的结构性下降是主因。
 
-3. **Manifold-Constrained Hyper-Connections / mHC（§2.2，对照 Figure 2 残差路径）** — 残差连接升级。标准 HC（Zhu et al., 2025）把残差流从 R^d 扩到 R^(λ_hc·d)（`λ_hc` 残差宽度因子，远小于隐藏维 d），引入输入映射 `A_l`、残差变换 `B_l`、输出映射 `C_l`（式 1）。问题：叠多层后数值频繁不稳定，阻碍 scaling（§2.2 "Standard Hyper-Connections"）。
-   - mHC 核心约束：把残差映射 `B_l` 约束到**双随机矩阵流形（Birkhoff polytope）M**（式 2：行和=1、列和=1、非负）。保证 `||B_l||_2 ≤ 1`（非扩张），且 M 对乘法封闭（深栈稳定）。输入/输出映射用 Sigmoid 限制为非负有界（式 6–7：`A_l=σ(Ã_l)`，`C_l=2σ(C̃_l)`）。
-   - 投影方法：Sinkhorn-Knopp 迭代——先 `M^(0)=exp(B̃_l)` 保正，再交替行/列归一化（式 8：`M^(t)=T_r(T_c(M^(t-1)))`），取 `t_max=20`（§2.2）。
-   - Dynamic Parameterization（§2.2）：`A_l/B_l/C_l` 的原始参数 = 动态（输入相关）分量 + 静态偏置。先 `X̂_l=RMSNorm(vec(X_l))`，再用可学习矩阵 `U^{pre}/U^{res}/U^{post}` 生成 `Ã_l/B̃_l/C̃_l`（式 3–5）；门控因子 `U` 初始化为小值。
+3. **Manifold-Constrained Hyper-Connections / mHC（§2.2，对照 Figure 2 残差路径）** — 残差连接升级。标准 HC（Zhu et al., 2025）把残差流从 R^d 扩到 R^(λ_hc·d)（`λ_hc` 残差宽度因子，远小于隐藏维 d），引入输入映射 `A_l`、残差变换 `B_l`、输出映射 `C_l`（式 1，formulas.json LaTeX）：
+   $$X_{l+1} = B_{l} X_l + C_{l} \mathcal{F}_{l}(A_{l} X_l).$$
+   问题：叠多层后数值频繁不稳定，阻碍 scaling（§2.2 "Standard Hyper-Connections"）。
+   - mHC 核心约束：把残差映射 `B_l` 约束到**双随机矩阵流形（Birkhoff polytope）M**（式 2，formulas.json LaTeX）：
+     $$B_l \in \mathcal{M} \coloneq \{ M \in \mathbb{R}^{n \times n} \mid M\mathbf{1}_n = \mathbf{1}_n, \; \mathbf{1}_n^T M = \mathbf{1}_n^T, \; M \geq 0 \}.$$
+     保证 `||B_l||_2 ≤ 1`（非扩张），且 M 对乘法封闭（深栈稳定）。输入/输出映射用 Sigmoid 限制为非负有界（式 6–7，formulas.json LaTeX）：
+     $$A_l = \sigma(\tilde{A}_l), \quad C_l = 2\sigma(\tilde{C}_l).$$
+   - 投影方法：Sinkhorn-Knopp 迭代——先 `M^(0)=exp(B̃_l)` 保正，再交替行/列归一化（式 8，formulas.json LaTeX）：
+     $$M^{(t)} = \mathcal{T}_r(\mathcal{T}_c(M^{(t-1)})),$$
+     取 `t_max=20`（§2.2）。
+   - Dynamic Parameterization（§2.2，式 3–5，formulas.json LaTeX）：`A_l/B_l/C_l` 的原始参数 = 动态（输入相关）分量 + 静态偏置。先 `X̂_l=RMSNorm(vec(X_l))`，再用可学习矩阵 `U^{pre}/U^{res}/U^{post}` 生成 `Ã_l/B̃_l/C̃_l`：
+     $$\tilde{A}_l = \alpha_l^\mathrm{pre} \cdot (\hat{X}_l W^\mathrm{pre}_l) + S_l^\mathrm{pre}, \quad \tilde{B}_l = \alpha_l^\mathrm{res} \cdot \operatorname{Mat}(\hat{X}_l W^\mathrm{res}_l) + S_l^\mathrm{res}, \quad \tilde{C}_l = \alpha_l^\mathrm{post} \cdot (\hat{X}_l W^\mathrm{post}_l)^T + S_l^\mathrm{post}.$$
+     门控因子 `α` 初始化为小值。
 
-4. **Muon 优化器（§2.4 + Algorithm 1，对照 Figure p14 M3 caption）** — 加快收敛 + 训练稳定。M3 caption（Algorithm 1, p14）逐条确认算法流程：梯度计算 → 动量累积（Nesterov）→ 混合 Newton-Schulz 正交化（10 步：8 步快速收敛 + 2 步稳定）→ 更新矩阵 RMS 重缩放（复用 AdamW 超参）→ weight decay 更新（`θ_B = θ_{B-1}·(1−ω) − η·O_B`，式见 Algorithm 1）。双优化器策略：嵌入层、预测头、RMSNorm、mHC 门控与静态偏置保留 AdamW，其余模块统一用 Muon（§2.4 "Basic Configurations"）。
-   - **Hybrid Newton-Schulz 双阶段系数**（§2.4，式 28）：共 10 次迭代；前 8 步用 `(a,b,c)=(3.4445, −4.7750, 2.0315)` 快速把奇异值推向 1；后 2 步切到 `(a,b,c)=(2, −1.5, 0.5)` 精细稳定到 1。M3 caption 强调"兼顾收敛速度与数值精度"。
+4. **Muon 优化器（§2.4 + Algorithm 1，对照 Figure p14 M3 caption；LaTeX↔M3 双源校验通过）** — 加快收敛 + 训练稳定。**M3 caption（p14, Algorithm 1）逐条确认算法流程**：梯度计算 → 动量累积（Nesterov）→ 混合 Newton-Schulz 正交化（10 步：8 步快速收敛 + 2 步稳定）→ 更新矩阵 RMS 重缩放（复用 AdamW 超参）→ weight decay 更新。双优化器策略：嵌入层、预测头、RMSNorm、mHC 门控与静态偏置保留 AdamW，其余模块统一用 Muon（§2.4 "Basic Configurations"）。
+   - **Hybrid Newton-Schulz 迭代核心（式 28，formulas.json LaTeX；与 M3 caption "10 步 = 8 快 + 2 稳" 双源一致）**：每步对归一化后的更新矩阵 `M_{k-1}` 做
+     $$M_k = a M_{k-1} + b (M_{k-1} M_{k-1}^T) M_{k-1} + c (M_{k-1} M_{k-1}^T)^2 M_{k-1}.$$
+   - **Hybrid Newton-Schulz 双阶段系数**（§2.4，式 28 系数；M3 caption p14 与公式 LaTeX 完全一致）：共 10 次迭代；前 8 步用 `(a,b,c)=(3.4445, −4.7750, 2.0315)` 快速把奇异值推向 1；后 2 步切到 `(a,b,c)=(2, −1.5, 0.5)` 精细稳定到 1。M3 caption 强调"兼顾收敛速度与数值精度"。
    - **弃用 QK-Clip**（§2.4 末）：V4 的注意力架构允许直接对 Q 与 KV entry 做 RMSNorm（§2.3.3），从根上避免 logits 爆炸，故无需 Liu et al.(2025) 的 QK-Clip 技巧。
 
-5. **细粒度 EP 通信-计算重叠（§3.1，对照 Figure 5 / Figure p15 M3 caption）** — MoE expert parallelism 的 mega-kernel。M3 caption（p15）确认架构：把 MoE 层拆 Dispatch/Linear-1/Linear-2/Combine 四段（2 通信 bound + 2 计算 bound）。Comet（Zhang et al., 2025b）仅粗粒度重叠 Dispatch↔L1、L2↔Combine；V4 把 expert 再切 wave，一波 dispatch 完即开算、下一波并行 dispatch，稳态下"当前波计算 + 下一波 token 传输 + 上一波结果回送"三路并发 = 连续计算-通信流水。因单层通信 < 计算，融合成单流水 kernel 藏住互连延迟，低带宽互连也不掉吞吐。
+5. **细粒度 EP 通信-计算重叠（§3.1，对照 Figure 5 / Figure p15 M3 caption；LaTeX↔M3 双源校验通过）** — MoE expert parallelism 的 mega-kernel。**M3 caption（p15）确认架构**：把 MoE 层拆 Dispatch/Linear-1/Linear-2/Combine 四段（2 通信 bound + 2 计算 bound）。Comet（Zhang et al., 2025b）仅粗粒度重叠 Dispatch↔L1、L2↔Combine；V4 把 expert 再切 wave，一波 dispatch 完即开算、下一波并行 dispatch，稳态下"当前波计算 + 下一波 token 传输 + 上一波结果回送"三路并发 = 连续计算-通信流水。因单层通信 < 计算，融合成单流水 kernel 藏住互连延迟，低带宽互连也不掉吞吐。
    - 性能（§3.1 末）：NVIDIA GPU + HUAWEI Ascend NPU 双平台验证；相对强非融合 baseline，通用推理 **1.50~1.73×** 加速，RL rollout 等延迟敏感场景最高 **1.96×**。开源为 MegaMoE（DeepGEMM 组件，PR #304）。
-   - 关键洞察（§3.1 "Observations"，对照 Figure 5）：单层内通信总时 < 计算总时 → 通信可完全藏于计算之下。硬件平衡点：每 token-expert 对需 6d FLOPs（SwiGLU gate/up/down）但仅 3d 字节通信（FP8 Dispatch + BF16 Combine）→ `C/B ≥ 6144 FLOPs/Byte`，即每 1 GBps 互连带宽即可藏住 6.1 TFLOP/s 计算；超此点带宽不再是瓶颈，再堆带宽边际递减。
+   - 关键洞察（§3.1 "Observations"，对照 Figure 5）：单层内通信总时 < 计算总时 → 通信可完全藏于计算之下。硬件平衡点：每 token-expert 对需 6d FLOPs（SwiGLU gate/up/down）但仅 3d 字节通信（FP8 Dispatch + BF16 Combine）→ `C/B ≥ 6144 FLOPs/Byte`（§3.1 原文给出 6144 = 6d/3d×1024），即每 1 GBps 互连带宽即可藏住 6.1 TFLOP/s 计算；超此点带宽不再是瓶颈，再堆带宽边际递减。
    - 向硬件厂商的四点提议（§3.1 末）：Computation-Communication Ratio 平衡点、Power Budget（power throttling 是全并发负载的关键限制）、Communication Primitives（pull-based 避免 push 通知延迟，未来低延迟信令可使 push 可行）、Activation Function（用无 exp/div 的低成本 element-wise 激活替换 SwiGLU，防 GEMM 流水被激活算子 stall）。
 
 6. **继承自 V3 的设计与变体（§2.1）**：保留 DeepSeekMoE + MTP。MoE 侧三处改动——(a) affinity 从 Sigmoid 改为 `Sqrt(Softplus(·))`；(b) auxiliary-loss-free 负载均衡 + 轻度 sequence-wise balance loss，并**移除路由目标节点数量约束**、重设并行策略；(c) 初始若干 Transformer block 的 dense FFN 换成 Hash routing（Roller et al., 2021）的 MoE 层，按 token ID 哈希定路由（§2.1）。
@@ -45,8 +70,10 @@ vanilla attention 的二次复杂度在百万 token 上下文下成为不可承�
 
 9. **两阶段后训练：Specialist Training + On-Policy Distillation（§1, §5.1）**：
    - 阶段一 Specialist Training（§5.1.1）：每个目标域（数学、coding、agent、指令遵循）独立训练一个专家。先 SFT 建基础能力，再用 GRPO（DeepSeek-AI, 2025）+ 域定制 reward model 做 RL，得到一组专门化专家。
-   - 阶段二 On-Policy Distillation / OPD（§5.1.2）：用单一统一模型作为 student，向多个 teacher 专家优化 **reverse KL** 损失整合能力（§1 末段："the unified model acts as the student learning to optimize the reverse KL loss with teacher models"）。
-   - FP4 QAT（§5.2.1）：后训练阶段对 MoE 专家权重 + indexer QK 路径引入 FP4 quantization-aware training，降内存与计算（§1 末）。
+   - 阶段二 On-Policy Distillation / OPD（§5.1.2，formulas.json LaTeX）：用单一统一模型作为 student，向多个 teacher 专家优化 **reverse KL** 损失整合能力（§1 末段："the unified model acts as the student learning to optimize the reverse KL loss with teacher models"）。损失形如：
+     $$\mathcal{L}_{\text{OPD}}(\theta) = \sum_{i=1}^{N} w_i \cdot \text{D}_{\text{KL}} \left( \pi_{\theta} \parallel \pi_{E_i} \right).$$
+     注意是 $\pi_\theta \parallel \pi_{E_i}$（reverse KL：student 在前），使 student 模式被约束在 teacher 支持域内，避免 mode-covering 的反向 KL 在多专家融合下塌陷。
+   - FP4 QAT（§5.2.1，§1 末）：后训练阶段对 MoE 专家权重 + indexer QK 路径引入 FP4 quantization-aware training，降内存与计算。
 
 ## 表格（原文结构化）
 
@@ -82,7 +109,7 @@ vanilla attention 的二次复杂度在百万 token 上下文下成为不可承�
 | mHC 静态偏置与门控因子 | AdamW |
 | 其余模块（含 attention、MoE、mHC 动态映射） | Muon（Hybrid Newton-Schulz） |
 
-### 表 5 — Hybrid Newton-Schulz 双阶段系数（§2.4，式 28）
+### 表 5 — Hybrid Newton-Schulz 双阶段系数（§2.4，式 28；M3 caption p14 双源一致）
 | 阶段 | 迭代步数 | (a, b, c) | 目的 |
 |---|---|---|---|
 | 快速收敛 | 前 8 步 | (3.4445, −4.7750, 2.0315) | 奇异值快速趋向 1 |
@@ -93,8 +120,8 @@ vanilla attention 的二次复杂度在百万 token 上下文下成为不可承�
 - **vs DeepSeek-V3.2（直接前代，§1, §2.3.4，Figure 1 右）**：V4 在 1M 上下文把 FLOPs 压到 27%/10%、KV cache 压到 10%/7%。V3.2 用 MLA 压缩 KV，V4 进一步用 CSA+HCA 双重压缩 + 稀疏 + FP4 indexer 把量级再下一档。能力上 V4-Flash-Base 已超 V3.2-Base 多数 benchmark。
 - **vs 通用注意力 baseline（BF16 GQA8 head-dim 128，§2.3.4）**：1M 上下文 KV cache 仅 ~2%。
 - **vs Comet（Zhang et al., 2025b，§3.1 / Figure 5 / Figure p15 M3）**：Comet 粗粒度重叠 Dispatch↔L1、L2↔Combine；V4 wave-based 细粒度切分使通信完全藏于计算下，1.50~1.96× 加速。
-- **vs Muon 原作（Liu et al., 2025，§2.4）**：V4 区别在用 hybrid Newton-Schulz（双阶段系数 8+2）而非单一系数；并因 Q/KV RMSNorm 而弃用 QK-Clip。
-- **vs 标准 Hyper-Connections（Zhu et al., 2025，§2.2）**：标准 HC 叠层易数值不稳定；mHC 把 `B_l` 约束到 Birkhoff polytope（非扩张 + 乘法封闭）保证深栈稳定。
+- **vs Muon 原作（Liu et al., 2025，§2.4）**：V4 区别在用 hybrid Newton-Schulz（双阶段系数 8+2，式 28 LaTeX $M_k = a M_{k-1} + b (M_{k-1} M_{k-1}^T) M_{k-1} + c (M_{k-1} M_{k-1}^T)^2 M_{k-1}$）而非单一系数；并因 Q/KV RMSNorm 而弃用 QK-Clip。
+- **vs 标准 Hyper-Connections（Zhu et al., 2025，§2.2）**：标准 HC 叠层易数值不稳定；mHC 把 `B_l` 约束到 Birkhoff polytope（式 2 LaTeX，行和/列和=1、非负，非扩张 + 乘法封闭）保证深栈稳定。
 - **vs 闭源前沿（GPT-5.4 / Gemini-3.1-Pro / Claude-Opus-4.6，§1）**：能力约落后 3–6 个月；1M 长上下文学术 benchmark 上可超 Gemini-3.1-Pro。
 
 ## 跨论文关系（→ MOC 谱系）
@@ -102,14 +129,14 @@ vanilla attention 的二次复杂度在百万 token 上下文下成为不可承�
 - **[[deepseek-v3-technical-report]]** — 直接前身。V4 继承 DeepSeekMoE + MTP（§2.1），仍属同一 MoE 家族；V3 的 MLA 思想在 V4 演进为 CSA/HCA 双重压缩 + 稀疏（§2.3）。V4-Flash-Base 多数 benchmark 超 V3.2-Base。效率对比基线即 V3.2。
 - **[[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]]** — R1/GRPO 是 V4 后训练阶段一（Specialist Training）所用的 RL 方法（§1）；V4 把 test-time scaling 作为核心动机（§1），是 R1 路线的工程延续。
 - **[[kimi-linear-an-expressive-efficient-attention-architecture]]** — 同属长上下文高效注意力方向。Kimi 用线性/混合注意力降复杂度，V4 用压缩+稀疏（CSA/HCA）路线；二者是百万上下文的两条主流架构解法，可对照"压缩+稀疏 vs 线性"范式。
-- **[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]** — V4 的 Lightning Indexer 与 sparse attention 强相关；IndexCache 的跨层索引复用思想可作为 V4 每层独立 indexer 的潜在优化方向（V4 现为每层独立计算 indexer query/score，式 13–16）。
+- **[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]** — V4 的 Lightning Indexer 与 sparse attention 强相关；IndexCache 的跨层索引复用思想可作为 V4 每层独立 indexer 的潜在优化方向（V4 现为每层独立计算 indexer query/score，式 13–14）。
 - **[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]** — 长上下文 serving 侧。V4 把单 token FLOPs 压到 27%/10%，为 LongSpec 类 speculative decoding 在 1M 上下文下的 drafting/verification 提供了更低成本的基座。
 
 ## 局限与边界
 
-1. **fulltext 覆盖边界**：本次深读的 fulltext 摘录止于 §3.2 TileLang，§3.3–§6（batch-invariant kernel、训练/推理框架细节、预训练 setups 与 instability 缓解、post-training 全流程、benchmark 详表、conclusion/limitations 原文）不在摘录中；上述各节内容系据目录 + 摘要 + 图说整合，机制级细节需补原文 PDF。
+1. **fulltext 覆盖边界**：本次深读的 fulltext 摘录止于 §3.2 TileLang（§3.3–§6：batch-invariant kernel 库细节、训练/推理框架实现、预训练 setups 与 instability 缓解、post-training 全流程细则、benchmark 详表、conclusion/limitations 原文）不在摘录中；上述各节内容系据目录 + 摘要 + 图说整合，机制级细节需补原文 PDF。注意：§2.4 Muon / Algorithm 1 / §3.1 EP / §3.2 TileLang 为 fulltext 原文覆盖，非整合。
 2. **能力仍落后闭源前沿 3–6 个月**（§1 Reasoning 段），尤其在 knowledge 类评测上仍 trailing Gemini-3.1-Pro；Agent 公开 benchmark 上略逊前沿闭源模型。
-3. **FP4 收益当前未兑现**（§1 末）：routed expert 用 FP4，但"FP4×FP8 当前硬件上峰值 FLOPs 与 FP8×FP8 相同"，理论 1/3 效率提升要等未来硬件。
-4. **mHC 的 Sinkhorn 开销**：每层每步 20 次迭代投影到 Birkhoff polytope（§2.2，`t_max=20`），虽 M 对乘法封闭保证深栈稳定，但相对标准 HC 增加了一次 matrix-级迭代成本（论文用 recompute + fused kernel 缓解，§3.4.2 目录项）。
+3. **FP4 收益当前未兑现**（§1 末 / §2.3.4）：routed expert 用 FP4，但"FP4×FP8 当前硬件上峰值 FLOPs 与 FP8×FP8 相同"，理论 1/3 效率提升要等未来硬件。
+4. **mHC 的 Sinkhorn 开销**：每层每步 20 次迭代投影到 Birkhoff polytope（§2.2，`t_max=20`，式 8），虽 M 对乘法封闭保证深栈稳定，但相对标准 HC 增加了一次 matrix-级迭代成本（论文用 recompute + fused kernel 缓解，§3.4.2 目录项）。
 5. **CSA/HCA 的因果性代价**：为严格保因果，query 只 attend 前面的压缩块，导致 query 无法访问**同一压缩块内**的 token（§2.3.3 "Additional Branch"），需引入 sliding window 旁路（`n_win` 个未压缩 KV）补救局部依赖——这是压缩-稀疏架构的固有边界。
 6. **通信-计算重叠有硬件前提**（§3.1 "Observations"）：平衡点 `C/B ≥ 6144 FLOPs/Byte` 一旦带宽达标，再加带宽边际递减；但极端 kernel fusion 带来 power throttling 限制（"Power Budget"），对硬件设计提出新要求——软件红利依赖硬件配合。

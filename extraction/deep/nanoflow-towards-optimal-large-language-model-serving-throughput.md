@@ -1,7 +1,8 @@
 # NanoFlow: Towards Optimal Large Language Model Serving Throughput — 技术点深读（DEEP 2026-08-18）
 
-> 全要素深读笔记：文本技术点提炼 + 跨论文关系 + M3 figure caption 织入。独立文件，extract_phase1 重跑不丢。
+> 全要素深读笔记：文本技术点提炼 + 跨论文关系 + M3 figure caption 织入 + 权威 LaTeX 公式渲染。独立文件，extract_phase1 重跑不丢。
 > 论文：NanoFlow: Towards Optimal Large Language Model Serving Throughput · arXiv:2408.12757v2 (25 May 2025)
+> 公式权威源：extraction/formulas.json（5 条 LaTeX，对应原文 Eq.1–5，已逐一与全文核验）。
 
 ## 核心问题
 
@@ -21,26 +22,37 @@ NanoFlow 攻击的核心问题：**如何在单 GPU 内部把 compute/memory/net
 ### 1. Nano-batching + intra-device parallelism（§3.7, §4）
 - **机制**：把原 dense batch（如 2048）切成多个 nano-batch（如 0-768、768-2048），对每个 nano-batch 各起一份相同算子（nano-operation），因 nano-batch 间无数据依赖，compute-bound / memory-bound / network-bound nano-op 可**在同一 device 上并行**执行，对每种资源分别占满。代价是模型权重需重复加载多次，但只要整体 compute-bound（TR<1，§3.3），多余 memory I/O 可被 pipeline 隐藏。auto-search 在 LLaMA-2-70B 上产出的实际 pipeline 见 Figure 6（p.11，M3 解读：DecAttn1-4 / KQV1-4 / PF1 / Attn.AG1-2 / O.AG1 / O.AR1-2 / O1-3 / UGD1-2 / UGD.AR1-3 沿时间轴交错；solid 背景 = batch 0-768（prefill），shaded = batch 768-2048（decode），每块标注 R=0.1-0.9；M3 要点：异质算子交叠使 compute/memory/network 同时繁忙，推升 GPU 利用率逼近最优峰）。
 - **效果**：相对 vLLM/DeepSpeed-FastGen/TensorRT-LLM 平均 **1.91×** 吞吐（abstract + §6.2），达到理论最优的 **50%-72%**（多模型，§6.6），LLaMA-2-70B 最佳 case 达 **68.5%**（§6.2）。
+- **公式↔图双源校验**：nano-batching 之所以"划算"，本质依赖 §3.2 cost model（Eq.1–3）+ §3.3 的 TR 判据（Eq.4）。三类资源延迟分别建模为：内存 $$T_{mem} = \frac{MemSize}{MemBW}$$（Eq.1，§3.2，机制：最大 batch 下整设备显存每迭代全量载入寄存器/cache，权重复用距离过长不可缓存）；计算 $$T_{Compute} \approx \frac{2B_{Dense} \cdot P_{Model}}{Compute}$$（Eq.2，§3.2，机制：dense GEMM 主导计算，每 GEMM 算 $$2B_{Dense}N_wK_w$$，$$\sum N_wK_w$$ 以 PModel 近似）；网络 $$T_{net} \approx 4\cdot\frac{N_{GPU}B_{Dense}D_{model} S_{type} L }{NetBW}$$（Eq.3，§3.2，机制：TP 下每 GPU 传 $$4\cdot B_{Dense}D_{model}S_{type}L$$ 字节，2AG+1AR 等价于传激活 4 倍）。三式相除得资源比 TR（Eq.4，见下文创新点 2），TR<1 即 compute-bound——这正是 Figure 1/2/3 三图（M3：compute-bound 算子黄、network-bound 蓝、memory-bound 绿）所图示的算子分类的数学根。Figure 4 的"WASTED"段即 TR<1 但算子串行时 compute 被浪费的视觉证据。双源一致。
 
-### 2. 两阶段 auto-search（MILP）自动构造 intra-device pipeline（§4.1）
+### 2. compute-bound 判据 TR 与理论最优吞吐（§3.3, §3.5）
+- **机制**：把 Eq.1（Tmem）与 Eq.2（TCompute）相除，得资源比
+$$T_R = \frac{T_{Mem}}{T_{Compute}} \approx \frac{Compute}{MemBW} \frac{MemSize}{P_{model}} \frac{1}{2B_{dense}}$$
+（Eq.4，§3.3）。给定硬件后大括号内仅 PModel 与 Bdense 可变：现代模型用 GQA（LLaMA-3/Qwen2）使同内存可塞更多请求 → Bdense 大（如 LLaMA-2-70B 8×A100 下 Bdense 可达 2048，非 GQA 同规模仅 256），且 PModel 越大 TR 越小 → TR<1，compute 成主瓶颈。GQA 使 KV 头共享正与 Figure 1（M3：green memory-bound 算子载每请求 KV）"小 batch 避压 KV"的图示互证。
+- **理论最优吞吐**：compute 全占满时，由 Eq.2 反推
+$$\mathrm{Throughput_{optimal}} = \frac{B_{Dense}}{T_{Compute}} = \frac{Compute}{2 P_{Model}}$$
+（Eq.5，§3.5）。机制：compute-bound 前提下最优吞吐**仅依赖 aggregate compute 与参数量**，与内存容量/带宽、dtype、prefill/decode 长度无关。LLaMA-2-70B on 8×A100：profiled peak Compute=280 TFLOPS（CUTLASS），PModel=70B → 1857 tokens/s/GPU。
+- **效果**：Eq.4 给出适用边界（TR<1 才成立），Eq.5 给出优化上界。NanoFlow 实测达此上界的 50%–72%，最佳 68.5%。
+- **LaTeX↔M3 校验**：Eq.4 与 Figure 3（TR heatmap，M3：黄=compute-bound TR<1，绿=memory-bound TR>1）一致——除 LLaMA-3-8B 长解码 TR≈1 边界例外，全图主流 workload 落在黄色 compute-bound 区。Eq.5 与 Figure 7（M3 caption "optimal=1857" 红虚线）一致——四 baseline 远低于此线（22%–37.8%），NanoFlow 1286 接近 68.5%。双源吻合。
+
+### 3. 两阶段 auto-search（MILP）自动构造 intra-device pipeline（§4.1）
 - **机制**：用 mixed integer linear programming 自动决定 nano-operation 的 (a) 数量、(b) batch size、(c) 执行顺序、(d) GPU 资源分配 R。两阶段逼近降搜索空间：
   - **Stage I（pipeline structure search，§4.1.2）**：忽略 kernel 间干扰，先解出 nano-op 数量/batch size/顺序。从"每算子切 2 份"起步，若仍有 compute bubble 就对 bubble 附近算子增加 nano-op 数，直到 MILP 无法再优化。约束：batch size ∈ [128, dense_batch]（128 为 GEMM tile-friendly）；依赖由父算子依赖 + input batch 交集共同决定；同类瓶颈资源的算子不重叠；探索 AG↔AR 等价网络变换。Figure 6 中 KQV 部分用 4 个 nano-op（R=0.4 各）正是 Stage I 为消除层首三资源重叠区 bubble 而增切的结果，其余部分 GEMM 优先仅 2 nano-op（UGD R=0.9）。
   - **Stage II（resource allocation refining，§4.1.3）**：固定 Stage I 结构，引入 kernel interference 模型，再解一个 MILP 分配各 nano-op 资源利用率 R，约束**任意时刻并发 R 之和 ≤ 1.0**，执行时间用 D_best/P 估算（P 由 Table 3 查得）。Figure 6 各块标注的 R=0.1-0.9 即 Stage II 输出。
 - **效果**：约 10 分钟搜出实用 pipeline（§4.1.2 末段），相对部署时长可忽略；仅在模型架构或输入/输出长度显著变化时重搜。
 
-### 3. GEMM-centric kernel interference 建模（§4.1.1）
+### 4. GEMM-centric kernel interference 建模（§4.1.1）
 - **机制**：GPU 不暴露 compute/mem/net 带宽的显式分配接口（R_physical 不可控），用 **GEMM 性能比 R 作为代理**。两两测 GEMM × (GEMV 或 network) kernel 重叠时性能：例如 GEMM 降到 0.8、GEMV 升到 0.3 → 建立非线性"R→P 交换率"表（Table 3，即 RGEMV=0.2↔PGEMV=0.3）。只测 pairwise（compute-memory、compute-network），假定三 kernel 重叠时该映射仍成立。剪枝：GEMV/network kernel thread block 数限制在 8-128（步长 8，128 饱和），剔除"占资源多但更慢"的 GEMM 实现（Figure 5 中灰点被丢弃的即此类）。
 - **效果**：对 A100 上 ~100 个 GEMM-GEMV pair profile，sensitivity 分析跨所有 GEMM shape 与 64 个 batch size 组合，R→P 映射标准差 < 5% 均值（§4.1.1 末段）→ Table 3 可泛化用于所有后续 auto-search。
 
-### 4. 异步 request scheduling（§4.2.1）
+### 5. 异步 request scheduling（§4.2.1）
 - **机制**：batch formation（内存预估、新请求 admit、PagedAttention 页表调整、EOS 检测）在 CPU 侧耗时不可忽略。NanoFlow 在 iteration i 的 GPU 执行**同时**为 i+1 形成 batch；i+1 launch 后再为 i+2 形 batch 并处理 i 的 EOS。即检测 EOS 滞后 1 个 iteration。
 - **效果**：因平均 decode 长度 >100 tokens（Table 4），多算 1 个 token 的开销 < 1%，换得完全隐藏 batch formation 开销。配合固定 dense batch size，P99 latency 仅是均值的 **1.07×**（§6.3）。
 
-### 5. Batch formation：chunked prefill + 固定 dense batch（§4.2.1）
+### 6. Batch formation：chunked prefill + 固定 dense batch（§4.2.1）
 - **机制**：沿用 Sarathi-Serve 的 chunked prefill 策略，token 粒度切 prefill 以**恰好填满**选定的最佳 dense batch（如 2048）。优先 unfinished decode，再用 prefill chunk 补满。预测未来 peak 内存（按每请求已 decode token 数 + 平均 decode 长度估完成时间），仅在预测内存安全时 admit 新请求；OOM 则把请求 offload 到 CPU 后 reload（不重算）。
 - **效果**：dense 算子跨 iteration batch size 恒定 → 降低 tail latency；decode↔prefill 自动稳态平衡（decode 多了 prefill 预算自动减少，反之亦然）。
 
-### 6. 分层 KV-cache offloading + contiguous-then-scatter 加载（§4.2.2）
+### 7. 分层 KV-cache offloading + contiguous-then-scatter 加载（§4.2.2）
 - **机制**：多轮对话场景下，KQV 生成后立即（不等请求结束）把 KV 向量 offload 到 CPU mem + SSD 层级缓存（LRU 管理）。offload 用 GPU-initiated copy，**藏在 FFN compute-bound 算子执行期间**，只占少量 GPU 资源；NUMA-aware 线程绑定降开销。下一轮对话到达时从 CPU/SSD 取回，因 PagedAttention 的 page 碎片化，先 copy 到 GPU 上连续空间再 scatter 到各 page 目的地。
 - **效果**：contiguous-then-scatter 比直接 copy 到碎片化 page 目的地快 **7-10× host-to-device 带宽**（§4.2.2）。开启 offloading 整体仅拖慢 pipeline 3.0%（§6.4），但多轮 LMSYS-Chat workload 节省 **3.02× compute**（§6.4 末段）。
 
@@ -77,14 +89,16 @@ NanoFlow 攻击的核心问题：**如何在单 GPU 内部把 compute/memory/net
 | Net | 18.8 | 75.2 | 75.2 | 0.01 | 4.70 | 31.33 | 47.92 |
 | **Total** | — | — | — | **114.17** | **45.09** | **31.33** | — |
 
-关键读法：Tcomp (114ms) >> Tmem (45ms) > Tnet (31ms) → 整体 compute-bound，验证 §3.3。PfAttn 实测（4.56ms）远大于估算（0.37ms），因 kernel launch overhead 占大头（§3.4 末段说明）。
+关键读法：Tcomp (114ms) >> Tmem (45ms) > Tnet (31ms) → 整体 compute-bound，验证 §3.3。PfAttn 实测（4.56ms）远大于估算（0.37ms），因 kernel launch overhead 占大头（§3.4 末段说明）。三列估算即分别代入 Eq.1/Eq.2/Eq.3 的结果。
 
-### 理论最优吞吐（Equation 5，§3.5）
+### 理论最优吞吐（Eq.5，§3.5）
+$$\mathrm{Throughput_{optimal}} = \frac{Compute}{2 P_{Model}}$$
+
 | Model | Hardware | Compute (FP16) | PModel | Optimal (tokens/s/GPU) |
 |---|---|---|---|---|
 | LLaMA-2-70B | 8×A100 SXM | 280 TFLOPS (profiled via CUTLASS) | 70B | **1857** |
 
-Throughput_optimal = Compute / (2·PModel)，与 batch size、内存带宽、prefill/decode 长度无关（compute-bound 前提下）。
+Throughput_optimal 与 batch size、内存带宽、prefill/decode 长度无关（compute-bound 前提下，Eq.5 仅含 Compute 与 PModel）。
 
 ### Figure 7：离线吞吐对比（LLaMA-2-70B，8 GPU，TP=8，optimal=1857）
 | Workload | vLLM | DeepSpeed-FastGen | TensorRT-LLM | NanoFlow |
@@ -164,7 +178,7 @@ NanoFlow 位于 **LLM serving 系统优化谱系**的"算子级 / intra-device �
 
 ## 局限与边界
 
-- **前提强依赖 compute-bound**：整个方法成立的前提是 TR<1（§3.3）。Figure 3 自己承认 **LLaMA-3-8B 上 512-1024（长 decode）workload TR≈1**，此时 compute 不再显著主导，nano-batching 重复加载权重的开销可能无法被 pipeline 隐藏 → 收益打折。MoE Mixtral 仅达 optimal 50.4%（§6.6），是所测模型中最低，反映 MoE 的 expert 不均衡 + grouped-GEMM 特性使算子重叠空间受限。
+- **前提强依赖 compute-bound（TR<1）**：整个方法成立的前提是 Eq.4 给出的 TR<1（§3.3）。Figure 3 自己承认 **LLaMA-3-8B 上 512-1024（长 decode）workload TR≈1**，此时 compute 不再显著主导，nano-batching 重复加载权重的开销可能无法被 pipeline 隐藏 → 收益打折。MoE Mixtral 仅达 optimal 50.4%（§6.6），是所测模型中最低，反映 MoE 的 expert 不均衡 + grouped-GEMM 特性使算子重叠空间受限。
 - **硬件互连强依赖**：Figure 2（p.5 M3）明确显示，PCIe-attached 卡（如 Ada6000）上 TNet/TCompute 比值反超 >1，workload 反转为 network-bound，NanoFlow 的"compute 是最受限资源"前提崩塌。即 NanoFlow 仅在 NVLink/Infinity Fabric 级高带宽互连环境下成立，PCIe 部署不在甜区。
 - **kernel interference 模型为近似**：(1) 仅 profile **pairwise**（compute-memory、compute-network），三 kernel 同时重叠时假设 R→P 映射不变（§4.1.1 末段）；(2) 用 GEMM 性能 R 作为 R_physical 的代理，GPU 不暴露真实资源分配 → 模型本身是经验近似，标准差 <5% 但非零。复杂场景（多算子深重叠）下误差会放大。
 - **MILP 搜索非最优**：Stage I/II 都是启发式逼近，"practical pipeline 可在 ~10 分钟内找到"（§4.1.2 末段），但**不保证 provably optimal**。论文明确写"搜索最优解需 hours-days"，故放弃。
