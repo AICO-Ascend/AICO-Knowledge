@@ -112,5 +112,9 @@ $$
 - [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] — Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism
 - [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] — Efficient Training of Large Language Models on Distributed Infrastructures: A Survey
 
+## 技术点深读（DEEP）
+
+![[deep/muon-is-scalable-for-llm-training]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/muon-is-scalable-for-llm-training.txt`（55936 字符）供引用检索。

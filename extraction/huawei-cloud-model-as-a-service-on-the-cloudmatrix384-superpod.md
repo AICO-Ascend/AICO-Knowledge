@@ -63,5 +63,9 @@ $$
 L_\ell = \sum_{t\in T}\text{token\_count}[\ell][h_{\ell,t}][t].
 $$
 
+## 技术点深读（DEEP）
+
+![[deep/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.txt`（94761 字符）供引用检索。
