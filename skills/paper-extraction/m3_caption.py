@@ -12,8 +12,15 @@ Usage:
   m3_caption.py --model glm-5.2 <image.png> ... # swap vision/text model (env M3_MODEL)
 
 Model is configurable (--model flag or M3_MODEL env, default MiniMax-M3) so the
-skill is portable across gateway models. MiniMax-M3 is the default vision model;
-glm-5.2 also reads images. Swap freely — the caption contract is model-agnostic.
+skill is portable across gateway models.
+
+**Vision-capable models on the gateway** (accept image input):
+  - MiniMax-M3 (default) — reasoning model, max_tokens must be >=8000 (default)
+    else reasoning_content eats the budget and content comes back EMPTY.
+  - doubao-seed-2.1-pro — text+vision, smaller max_tokens OK.
+**Text-ONLY models** (image input -> HTTP 400, do NOT use here):
+  glm-5.2, deepseek-v4-flash/pro, hy3, qwen3.7-*, kimi-k2.7-code.
+Pick a vision model for any image task. Verified 2026-08-18.
 
 Key: env VOLC_GATEWAY_KEY, or ~/.config/aico/volc_gateway_key (chmod 600, outside repo).
 Base URL is not secret (hardcoded default, overridable via VOLC_GATEWAY_URL).

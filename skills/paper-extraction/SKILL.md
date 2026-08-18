@@ -31,7 +31,7 @@ python3 skills/paper-extraction/sync_from_source.py --push
 **这个 skill 的「调教」分两层**：(1) 脚本（`sync_from_source.py`/`extract_phase1.py`/`eprint_formulas.py`/`kb_query.py`/`m3_caption.py`/`chunk_download.py`/`verify_pdfs.py`）—— 100% 确定性 Python，模型无关，换任何主模型都不变；(2) agent 推理（读 SKILL.md 的 pitfall、挑架构图、解析待确认）—— 跟模型强弱相关。**让能力可复制的本质 = 把判断尽量搬进脚本，让 agent 按清单执行而非临场推理。** 已落地的几手：
 
 - **BibTeX 源**（上节）消除了最模型依赖的两步：Phase-0 垃圾清理 + arxiv 标题搜索（标题截断→待确认的根因）。弱模型只需 `--push`，不再做判断。
-- **`m3_caption.py --model <m>` / `M3_MODEL` env**：视觉/文本模型可一行替换，默认 `MiniMax-M3`（多模态解读），换 `glm-5.2` 等同样吃图。换模型不换脚本。
+- **`m3_caption.py --model <m>` / `M3_MODEL` env**：模型可一行替换，默认 `MiniMax-M3`（多模态解读）。**吃图模型**：`MiniMax-M3`、`doubao-seed-2.1-pro`；`glm-5.2` / `deepseek-v4-*` 等仅文本（喂图返回 400）——图解读务必用吃图模型。换模型不换脚本。
 - **小上下文模型友好**：永远走 `kb_query.py` 取用，**不要整库载入 MD**（glm-5.2 有 1M 上下文能整库 hold，换小窗模型必须用 `kb_query search|fig|formula` 按需取）。
 - **一次搞掉的兜底 = 自检先行**：每次开干前跑这三条，全绿才继续，避免中途因环境问题返工——
 
