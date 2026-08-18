@@ -142,5 +142,9 @@ $$
 
 - [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] — LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification
 
+## 技术点深读（DEEP）
+
+![[deep/deepseek-v4-towards-highly-efficient-million-token-context-intelligence]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.txt`（45725 字符）供引用检索。

@@ -90,5 +90,9 @@ $$
 - [[qwen2-5-vl-technical-report]] — Qwen2.5-VL Technical Report
 - [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
 
+## 技术点深读（DEEP）
+
+![[deep/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.txt`（62336 字符）供引用检索。
