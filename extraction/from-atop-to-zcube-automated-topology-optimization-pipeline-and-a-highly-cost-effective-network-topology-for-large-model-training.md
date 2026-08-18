@@ -158,5 +158,9 @@ tags: [training, architecture]
 - [[muon-is-scalable-for-llm-training]] — Muon is Scalable for LLM Training
 - [[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]] — GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints
 
+## 技术点深读（DEEP）
+
+![[deep/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.txt`（107386 字符）供引用检索。

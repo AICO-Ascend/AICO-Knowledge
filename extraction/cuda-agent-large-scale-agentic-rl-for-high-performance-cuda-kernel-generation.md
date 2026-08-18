@@ -32,5 +32,9 @@ _未检测到带 caption 的 figure_
 - p.7 `LCLIP(θ) = Eτ∼D`
 - p.7 `where ρt(θ) =`
 
+## 技术点深读（DEEP）
+
+![[deep/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.txt`（74680 字符）供引用检索。
