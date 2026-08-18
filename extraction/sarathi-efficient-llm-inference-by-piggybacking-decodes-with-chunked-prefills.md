@@ -104,5 +104,9 @@ $$
 - [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] — Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving
 - [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] — Efficiently Serving Large Multimodal Models Using EPD Disaggregation
 
+## 技术点深读（DEEP）
+
+![[deep/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills.txt`（76688 字符）供引用检索。

@@ -115,5 +115,9 @@ $$
 - [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] — Efficient Training of Large Language Models on Distributed Infrastructures: A Survey
 - [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] — Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning
 
+## 技术点深读（DEEP）
+
+![[deep/megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/megascale-scaling-large-language-model-training-to-more-than-10000-gpus.txt`（77210 字符）供引用检索。
