@@ -119,5 +119,9 @@ $$
 N_{opt}(C)=G \bigg(\frac{C}{6}\bigg)^a, \text{~~~} D_{opt}(C)=G^{-1} \bigg(\frac{C}{6}\bigg)^b,
 $$
 
+## 技术点深读（DEEP）
+
+![[deep/a-survey-of-large-language-models]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/a-survey-of-large-language-models.txt`（860409 字符）供引用检索。

@@ -42,5 +42,9 @@ tags: []
 - p.3 `LOTT(dk1, dk2) = ∥Fσ( ¯dk1) −Fσ( ¯dk2)∥σ`
 - p.4 `LOT( ¯dk) = [z1, z2, . . . , z|T|] ∈R|T|d.`
 
+## 技术点深读（DEEP）
+
+![[deep/linear-optimal-topic-transport-for-document-similarity]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/linear-optimal-topic-transport-for-document-similarity.txt`（58255 字符）供引用检索。
