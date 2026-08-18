@@ -6,8 +6,8 @@
 ## KV cache 复用谱系
 - **vLLM / PagedAttention**（[[efficient-memory-management-for-large-language-model-serving-with-pagedattention]]，#52）：**谱系根**——首次把 OS 虚拟内存 + 分页引入 LLM serving：KV block(page) + block table(page table) + COW(fork) + 抢占式 swap/recompute。KV 有效利用率 20.4%(Orca Max) → 96.3%，吞吐 2–4× over SOTA。后续所有 paging/eviction/hierarchy 工作的 block 抽象来源。
 - **SGLang RadixAttention**（#43）：把"简单系统提示共享"升级为"radix tree + 叶子优先 LRU + cache-aware 调度"多级树结构自动复用，覆盖 few-shot/self-consistency/multi-turn/ToT 四级共享模式。在 vLLM *显式* 前缀共享之上做 *自动* 前缀树复用。
-- **Mooncake**（#45）：vLLM 单机分页 KV → 跨节点 disagg 全局可寻址 KV 池（GPU/CPU/DRAM/SSD 分层迁移），vLLM block 成为迁移单元。
-- **IndexCache**（#1）：跨层 sparse attention 索引复用，正交于 SGLang 前缀复用。
+- **Mooncake**（[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]，#45）：**跨节点 disagg 锚点**。vLLM block 从"单机内存管理单位"推广为"跨节点调度/迁移/复制/swap 的全局单位"，KV 在 GPU/CPU/DRAM/SSD 分层迁移；KVCache-centric，prefill(compute-bound)/decode(memory-bound) 物理分离 + 全局池。reuse 逻辑与 vLLM 类似但 vLLM 仅本地（§6.1）。生产 trace：ArXiv +20%、L-Eval +40%、Simulated +50%~+525%、Real +75% 请求且 TBT 满足率 ~100% vs vLLM 57%；调度 TTFT 6.26s vs random 92.07s。
+- **IndexCache**（[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]，#1）：**跨层 sparse-index 复用锚点**——复用的是 sparse attention 的 *index 张量*（哪些 token 被 attend），不是 KV 张量；与 SGLang 前缀复用、Mooncake 跨节点 KV 池三条正交路径。1.82× prefill / 1.48× decode @ 200K，cross-layer overlap 0.7–1.0。正交于 [[kimi-linear-an-expressive-efficient-attention-architecture]]（架构级降二次 vs 算子级去冗余，可叠加）。DeepSeek-V3.2/GLM-5 默认 DSA-style sparse attention，作者预期 cross-layer index reuse 成前沿 LLM 推理标配。
 - **Prefill-as-a-Service**（#58）：Mooncake 跨节点思想的进一步跨数据中心规模化。
 - **Huawei CloudMatrix384**（[[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]]）：KV cache 跨 NPU P2P 迁移 + KV INT8 量化（non-RoPE 部分稳定）—— paging 思想在 Ascend SuperPod UB fabric 上的工业实例，对照 GPU/RoCE 系 vLLM/Mooncake。
 
@@ -17,19 +17,24 @@
 - **SGLang**（#43）：多调用间前缀复用调度，与 Sarathi 正交可叠加。
 
 ## 推测解码谱系
-- **Medusa**（[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]，#2）→ **EAGLE**（[[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]]，#4）→ **EAGLE-2**（#5）→ **EAGLE-3**（#3）：多头/特征不确定性 → 动态 draft 树 → 训练时测试扩展。
-  - EAGLE 是 **feature-prediction 分支 anchor**：复用 target LLM 末层特征、单头 1-layer draft（7B→0.24B 可训练参）+ **shifted-token（超前一拍 token）**消解特征自回归采样二义（Vicuna-7B speedup 1.9×→2.8×）+ Multi-round speculative sampling（§A.2 Alg.1）保 tree draft 下分布无损。上游 Medusa 多头独立预测，EAGLE 改单头特征级自回归链 + shifted-token 补无损 non-greedy 保证，取代 Medusa 成新 anchor。
-  - MoE 局限：Mixtral 8x7B 仅 1.50×（expert 调度削弱算力复用红利），EAGLE 在 dense decoder-only 上最优。论文自承树结构 "not rigorously optimized"（§A.1）→ EAGLE-2 动态树直接埋点。
+- **Medusa**（[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]，#2）→ **EAGLE**（[[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]]，#4）→ **EAGLE-2**（[[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]]，#5）→ **EAGLE-3**（#3）：多头/特征不确定性 → 动态 draft 树 → 训练时测试扩展。
+  - EAGLE 是 **feature-prediction 分支 anchor**：复用 target LLM 末层特征、单头 1-layer draft（7B→0.24B 可训练参）+ **shifted-token（超前一拍 token）**消解特征自回归采样二义（Vicuna-7B speedup 1.9×→2.8×）+ Multi-round speculative sampling（§A.2 Alg.1）保 tree draft 下分布无损。上游 Medusa 多头独立预测，EAGLE 改单头特征级自回归链 + shifted-token 补无损 non-greedy 保证，取代 Medusa 成新 anchor。论文自承树结构 "not rigorously optimized"（§A.1）→ EAGLE-2 埋点。
+  - EAGLE-2 = **context-aware 动态树**：把 EAGLE-1 静态直觉树换成 confidence-driven 动态树（draft 置信度 = 接受率代理，路径连乘打分 → top-k 扩展 → top-m reranking 保连通树不变式 → ancestor-only attention mask）。无需额外训练，复用 EAGLE-1 draft 模型。3.39×–4.10× @ T=0 vs EAGLE 2.78×–3.09×；τ≈4.6–4.7 vs EAGLE ≈3.7–3.9。confidence<0.05→accept≈0.04、>0.95→≈0.98 是经验基础。
+  - MoE 局限：Mixtral 8x7B 仅 1.50×（expert 调度削弱算力复用红利），EAGLE 在 dense decoder-only 上最优。
+- **Block Diffusion**（#6）→ **DFlash**（#7）/ **DSpark**（#8）：块级半自回归扩散解码分支。
+- **JetSpec**（#9）：并行树 drafting 破 scaling 上限——与 EAGLE-2 单树动态 shaping 正交可组合（并行动态树）。
+- **LongSpec**（#59）/ **SpecExtend**（#60）：长上下文场景的 draft 与上下文增强。
 - **Block Diffusion**（#6）→ **DFlash**（#7）/ **DSpark**（#8）：块级半自回归扩散解码分支。
 - **JetSpec**（#9）：并行树 drafting 破 scaling 上限。
 - **LongSpec**（#59）/ **SpecExtend**（#60）：长上下文场景的 draft 与上下文增强。
 - **Huawei CloudMatrix384 MTP**（[[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]]）：vLLM/EAGLE MTP 默认调度有 stall，FlowServe 用 5 步 pipeline 消 CPU bubble；训练专用第二 MTP（28 万样本）使 tokens/step 2.26→2.35。MTP 是 speculative 在工业 serving 的部署形态。
 
 ## 训练系统谱系
-- **Megatron-LM**（#49）→ **Megatron-LM 分布式**（#48）→ **MegaScale**（#46）：模型并行 → 大规模 GPU 集群 → 万卡级。
-- **ZeRO**（#47）：内存优化，与 Megatron 正交可组合。
-- **Megatron Core MoE**（#12）：MoE 可扩展训练。
-- **Muon**（[[muon-is-scalable-for-llm-training]]）：优化器轴——对标 AdamW（element-wise adaptive momentum），Muon 对 2D 权重矩阵经 Newton-Schulz 正交化 momentum。Scaling law ~2× compute efficiency（52% FLOPs 匹配 AdamW compute-optimal）；Distributed Muon 直接构建在 Megatron-LM TP/PP/EP/DP 之上，ZeRO-1 gather 范围从 global 收窄到 DP group；仅 1 个 momentum buffer，额外内存为 ZeRO-1 AdamW 的一半。Appendix D：RMSNorm gamma 必须加 weight decay。MoE 侧线：Router 权重从 Muon 获益最大（SVD entropy 分析）。
+- **Megatron-LM**（[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]，#49）：**模型并行根**——intra-layer tensor parallelism（column-parallel linear → row-parallel linear，fused pair 一次 all-reduce；f/g 共轭 autograd 算子）+ 与 pipeline parallelism 正交声明。无 compiler，原生 PyTorch。沿 MP 轴切分（vs ZeRO 沿 DP 轴切分，可组合）。峰值 15.1 PetaFLOPs @ 8.3B/512 GPU。
+- **Megatron-LM 分布式**（#48）→ **MegaScale**（#46）：direct scale-out → 万卡级，继承 TP/PP/DP + comm/compute overlap。
+- **ZeRO**（#47）：沿 DP 轴切分 optimizer state/grads/params，与 Megatron 沿 MP 轴切分**正交可组合**（Megatron-DeepSpeed 叠加）。Megatron-LM 不切 optimizer state。
+- **Megatron Core MoE**（#12）：在 Megatron MP/DP 拓扑之上的 expert-parallel 扩展。
+- **Muon**（[[muon-is-scalable-for-llm-training]]）：优化器轴——对标 AdamW（element-wise adaptive momentum），Muon 对 2D 权重矩阵经 Newton-Schulz 正交化 momentum。Scaling law ~2× compute efficiency（52% FLOPs 匹配 AdamW compute-optimal）；Distributed Muon 构建在 Megatron TP/PP/EP/DP 之上，ZeRO-1 gather 范围从 global 收窄到 DP group；仅 1 个 momentum buffer，额外内存为 ZeRO-1 AdamW 的一半。Appendix D：RMSNorm gamma 必须加 weight decay。MoE 侧线：Router 权重从 Muon 获益最大（SVD entropy 分析）。
 
 ## RL 系统谱系
 - **DeepSeek-R1**（#34）→ **Search-R1**（#25）：RL 激励推理 → RL + 搜索引擎。
@@ -58,5 +63,5 @@
 - 与 [[sglang-efficient-execution-of-structured-language-model-programs]] 正交：SGLang 多调用间 KV 前缀复用，Sarathi-Serve 单 replica 内 prefill-decode 混合调度——可叠加。
 
 ## 第一轮深读锚点（2026-08-18，DEEP 笔记已落 extraction/deep/）
-`[[sglang-efficient-execution-of-structured-language-model-programs]]` · `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]` · `[[kimi-linear-an-expressive-efficient-attention-architecture]]` · `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]` · `[[hyper-connections]]` · `[[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]]` · `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]` · `[[efficient-memory-management-for-large-language-model-serving-with-pagedattention]]`（KV-cache 根）· `[[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]]`（speculative feature-prediction anchor）· `[[muon-is-scalable-for-llm-training]]`（优化器轴）· `[[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]]`（Ascend SuperPod serving 工业实例）—— 共 11 篇全要素深读，每篇含核心问题/创新点/表格/对比/局限；后续夜间任务按 [[extract-phase1-overwrite-gotcha]] 持续补充剩余论文。
+`[[sglang-efficient-execution-of-structured-language-model-programs]]` · `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]` · `[[kimi-linear-an-expressive-efficient-attention-architecture]]` · `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]` · `[[hyper-connections]]` · `[[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]]` · `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]` · `[[efficient-memory-management-for-large-language-model-serving-with-pagedattention]]`（KV-cache 根）· `[[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]]`（speculative feature-prediction anchor）· `[[muon-is-scalable-for-llm-training]]`（优化器轴）· `[[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]]`（Ascend SuperPod serving 工业实例）· `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`（跨节点 disagg 锚点）· `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`（模型并行根）· `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`（跨层 sparse-index 复用锚点）· `[[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]]`（context-aware 动态树）—— 共 15 篇全要素深读，每篇含核心问题/创新点/表格/对比/局限；后续夜间任务按 [[extract-phase1-overwrite-gotcha]] 持续补充剩余论文。
 
