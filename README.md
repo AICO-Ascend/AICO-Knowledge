@@ -19,6 +19,7 @@ AICO-knowledge/
 │   ├── SKILL.md                  #   工作流手册（日常同步入口 + agent 收尾 + 决策树 + 踩坑）
 │   ├── sync_from_source.py       #   ⭐ 一键同步编排（源表→diff→下载→萃取→推送，幂等）
 │   ├── kb_query.py               #   统一查询 CLI（search/fig/formula/topics/info/stats，--json）
+│   ├── m3_caption.py             #   火山网关 MiniMax-M3 图深度解读（--save 直写 captions.json）
 │   ├── extract_phase1.py         #   全量深度萃取（文本+图表+公式+相关论文+MOC+manifest）
 │   ├── eprint_formulas.py        #   arxiv e-print LaTeX 源公式抽取（失败冷却 3 天）
 │   ├── chunk_download.py         #   arxiv 分块续传下载（256KB 块+15 重试，jobs 文件驱动）

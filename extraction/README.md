@@ -119,6 +119,7 @@ python3 $KB info <slug>                  # 单篇全卡片（路径/图数/公�
 
 - `sync_from_source.py` — ⭐ 一键同步编排（日常唯一入口）
 - `kb_query.py` — 统一查询 CLI（search/fig/formula/topics/info/stats，--json）
+- `m3_caption.py` — 火山网关 MiniMax-M3 图深度解读（--save 直写 minimax_captions.json）
 - `extract_phase1.py` — 全量深度萃取（merge 解读+公式+MOC+manifest）
 - `eprint_formulas.py` — arxiv e-print LaTeX 公式抽取
 - `chunk_download.py` — arxiv 分块续传下载（应对网络截断）

@@ -26,7 +26,7 @@ python3 skills/paper-extraction/sync_from_source.py --push
 
 读 `extraction/sync_report.md`：
 1. **⚠️ 待确认**：arxiv 解析失败的条目——web 搜索人工解析（找到 arxiv ID 就手动加行进 `papers_effective.md` + 下载 + 重跑本脚本；确认非论文就如实报告用户）。**绝不猜来源**。
-2. **🖼️ 架构图深度解读**：对新增论文，挑 caption 含 overview/architecture/framework/illustration 的图，`Read` PNG（或 MiniMax `understand_image`，key 有效时）写解读 → 追加 `extraction/minimax_captions.json`（key=`extraction/assets/<slug>-pNN.png`）→ 重跑 `extract_phase1.py` 合并 → 再次 `--push`。
+2. **🖼️ 架构图深度解读**：对新增论文，挑 caption 含 overview/architecture/framework/illustration 的图，用 `m3_caption.py --save <png>`（蓝区火山网关 MiniMax-M3，自动追加 `extraction/minimax_captions.json`）或 Claude `Read` PNG 手写解读 → 重跑 `extract_phase1.py` 合并 → 再次 `--push`。
 3. 若 `--push` 未带：手动 commit + push（pull --rebase 先行）。
 
 ## Repo layout (convention)
@@ -44,7 +44,8 @@ python3 skills/paper-extraction/sync_from_source.py --push
 │   ├── eprint_formulas.py       #   arxiv e-print LaTeX 公式抽取
 │   ├── chunk_download.py        #   分块续传下载（jobs 文件/命令行驱动）
 │   ├── verify_pdfs.py           #   PDF 体检（截断/损坏/缺失/孤儿）
-│   └── kb_query.py              #   统一查询 CLI（外部工程/RAG 消费入口）
+│   ├── kb_query.py              #   统一查询 CLI（外部工程/RAG 消费入口）
+│   └── m3_caption.py            #   火山网关 MiniMax-M3 图深度解读（--save 直写 captions.json）
 └── extraction/                  # generated knowledge base
     ├── <slug>.md                # per-paper structured (Obsidian-flavored)
     ├── fulltext/<slug>.txt      # full text for grep / RAG chunk 源
@@ -120,7 +121,7 @@ After download: update index local-file column + counts; append `papers_download
 **urlopen timeout 是 per-socket-op**——dribble 连接能挂死永远；eprint/PDF 下载都要包**总 deadline**（180s）。
 
 **Efficiency levers**:
-- MiniMax/Read 深度解读：4-5 张图并行/批处理。
+- 深度解读：4-5 张图并行/批处理（`m3_caption.py` 走火山网关 M3，或 Claude Read PNG）。
 - extract_phase1.py 幂等 + 跳过已存在 PNG —— 重跑免费。
 - eprint_formulas.py 跳过确定性结果（含空）；只跑新增。
 - Abstract：abs 页 scrape 可靠，PDF 两栏解析脆弱。
