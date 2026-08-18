@@ -207,5 +207,9 @@ $$
 \beta_j^* = \operatorname{quantile}_{1-k/n}\big(\bm{s}_{:,j} - \bm{\alpha}\big).
 $$
 
+## 技术点深读（DEEP）
+
+![[deep/kimi-k3-open-frontier-intelligence]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/kimi-k3-open-frontier-intelligence.txt`（189122 字符）供引用检索。

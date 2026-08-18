@@ -56,5 +56,9 @@ $$
 \matC_1 &= \matA_s\ @\ \ones_s \nonumber \\ \matC_2 &= \matA_s\ @\ \matU_s \nonumber \\ \matC_2 &= \matC_2 + \matL_s^{-}\ @\ \matC_1. \nonumber
 $$
 
+## 技术点深读（DEEP）
+
+![[deep/parallel-scan-on-ascend-ai-accelerators]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/parallel-scan-on-ascend-ai-accelerators.txt`（66637 字符）供引用检索。

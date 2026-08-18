@@ -24,5 +24,9 @@ tags: []
 ## 图表（原文 caption + 页码）
 _未检测到带 caption 的 figure_
 
+## 技术点深读（DEEP）
+
+![[deep/ascend-950-npu-architecture-whitepaper]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/ascend-950-npu-architecture-whitepaper.txt`（28777 字符）供引用检索。
