@@ -144,3 +144,8 @@
 - #59 [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] — LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification
 - #60 [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] — SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences
 - #61 [[a-survey-of-large-language-models]] — A Survey of Large Language Models
+
+## 跨论文关系与演进
+
+![[moc_relations]]  <!-- 人工维护的跨论文谱系，独立文件，重跑不丢 -->
+

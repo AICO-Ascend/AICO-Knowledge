@@ -65,18 +65,18 @@ tags: []
 > Communication topology and the multi-stages pipeline of the AFD architecture.
 
 > [!tip] 技术解读（多模态）
-> ## 1) 主要架构/组件/数据流描述
+> **1) 主要架构/组件/数据流描述**
 
 图示展示了 **AFD（Attention-FFN 分离）架构** 的通信拓扑与多阶段流水线：
 - **Attention 实例**（下方）和 **FFN 实例**（上方）通过 **Direct RDMA** 直连，每侧各包含多块 GPU（G）。
 - 数据流沿时间轴分为 **Layer0 / Layer1** 两个阶段，三个样本 **D1, D2, D3** 依次经 Attn→A→F（fp8）送至 FFN，FFN 计算后经 **F→A（bf16）** 回传残差，再进入下一层 Attn。
 - 三条独立通道并行：**Attn** 计算、**A→F（fp8）前向广播**、**F→A（bf16）反向回传**，互不抢占带宽。
 
-## 2) 关键技术要点
+**2) 关键技术要点**
 
-**混合精度通信 + 多阶段流水线重叠**：Attention→FFN 方向采用 **FP8 量化**以节省带宽，FFN→Attention 方向保留 **BF16** 以保护残差精度；通过让 **A→F 与 F→A 两条独立路径并发**（不抢带宽），结合各阶段近似的计算耗时，使通信完全被计算掩盖，实现 **低延迟下的高吞吐** 流水（同一层可连续接收 D1', D2', D3'）。
+**混合精度通信 + 多阶段流水线重叠**：Attention→FFN 方向采用 **FP8 量化**以节省带宽，FFN→Attention 方向保留 **BF16** 以保护残差精度；通过让 **A→F 与 F→A 两条独立路径并发**（不抢带宽），结合各阶段近似的计算耗时，使通信完全被计算掩盖，实现 **低延迟下的高吞吐** 流水（同一层可连续接收 D1', D2', D3'）。**
 
-## 3) 图 caption 逐字转录
+**3) 图 caption 逐字转录**
 
 **Figure 7: Communication topology and the multi-stages pipeline of the AFD architecture.**
 

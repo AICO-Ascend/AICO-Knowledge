@@ -194,6 +194,14 @@ def write_paper_md(num, meta, doc, full_text, figs, fig_paths, mm, related=None,
         for rslug, rtitle in related:
             m.append(f"- [[{rslug}]] — {rtitle}")
         m.append("")
+    # 深度解读笔记：extraction/deep/<slug>.md 由夜间深读(DEEP_LEARNING_PROTOCOL)产出，
+    # 独立文件、不参与重生成，故此处仅嵌入 wikilink 指针，重跑 extract 不丢深读产出。
+    deep_path = OUT / "deep" / f"{slug}.md"
+    if deep_path.exists():
+        m.append("## 技术点深读（DEEP）")
+        m.append("")
+        m.append(f"![[deep/{slug}]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->")
+        m.append("")
     m.append("## 全文文本")
     m.append(f"全文已存 `extraction/fulltext/{slug}.txt`（{len(full_text)} 字符）供引用检索。")
     # save full text
@@ -272,6 +280,15 @@ def main():
     mo.append("## 全部论文（按编号）"); mo.append("")
     for p0 in manifest:
         mo.append(f"- #{p0['num']} [[{p0['slug']}]] — {p0['title']}")
+    # 跨论文关系谱系：extraction/moc_relations.md 由夜间深读人工维护，
+    # 独立文件、不参与重生成，此处仅嵌入 wikilink 指针，重跑 extract 不丢人工沉淀。
+    rel_path = OUT / "moc_relations.md"
+    if rel_path.exists():
+        mo.append("")
+        mo.append("## 跨论文关系与演进")
+        mo.append("")
+        mo.append("![[moc_relations]]  <!-- 人工维护的跨论文谱系，独立文件，重跑不丢 -->")
+        mo.append("")
     (OUT/"MOC.md").write_text("\n".join(mo)+"\n",encoding="utf-8")
     # master figures index
     b=["# 📊 图表素材索引（figures_index）","","",
