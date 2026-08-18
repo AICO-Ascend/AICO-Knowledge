@@ -33,5 +33,9 @@ _未检测到带 caption 的 figure_
 - [[zero-memory-optimizations-toward-training-trillion-parameter-models]] — ZeRO: Memory Optimizations Toward Training Trillion Parameter Models
 - [[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]] — GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints
 
+## 技术点深读（DEEP）
+
+![[deep/scalable-training-of-mixture-of-experts-models-with-megatron-core]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/scalable-training-of-mixture-of-experts-models-with-megatron-core.txt`（8903 字符）供引用检索。
