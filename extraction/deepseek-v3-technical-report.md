@@ -100,5 +100,9 @@ $$
 \texttt{<|fim\_begin|>}f_{\text{pre}}\texttt{<|fim\_hole|>}f_{\text{suf}}\texttt{<|fim\_end|>}f_{\text{middle}}\texttt{<|eos\_token|>} . \nonumber
 $$
 
+## 技术点深读（DEEP）
+
+![[deep/deepseek-v3-technical-report]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/deepseek-v3-technical-report.txt`（150416 字符）供引用检索。
