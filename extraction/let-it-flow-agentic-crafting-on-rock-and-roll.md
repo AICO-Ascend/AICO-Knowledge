@@ -152,5 +152,9 @@ Figure 2: The overview of agentic RL ecosystem (a) and its training pipeline (b)
 - p.24 `∇JChunk-RL(π) = ∑`
 - p.26 `LIPA = λIL · ∑`
 
+## 技术点深读（DEEP）
+
+![[deep/let-it-flow-agentic-crafting-on-rock-and-roll]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
+
 ## 全文文本
 全文已存 `extraction/fulltext/let-it-flow-agentic-crafting-on-rock-and-roll.txt`（160353 字符）供引用检索。
