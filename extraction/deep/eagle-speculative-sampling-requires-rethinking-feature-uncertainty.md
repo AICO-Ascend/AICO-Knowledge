@@ -25,13 +25,23 @@ EAGLE 的核心追问：能否在 draft 阶段做特征级自回归（而非 tok
 
 4. **Tree attention + 多路 draft 树**（§3.1, §3.3, Appendix A.1, Figure 6, Figure 9（p.12, M3：左树根节点 k=4，分支不对称——左支最深约 5 层、最宽，右支快速终止；右图为无 tree attention 的线性链））。draft 阶段经 m 次 forward 生成深度 m、节点数 > m 的树（Figure 6 示例：3 次 forward 生成 10-token 树）。verify 阶段 target LLM 单次 forward 算树上所有 token 概率。树结构按直觉设计、未严格优化（§A.1: "not rigorously optimized but rather based on intuition"）。消融（§4.3.1, Table 5, Figure 7（p.7, M3：分组柱状图，w/ tree 蓝柱 2.78–3.07x，w/o tree 绿柱 2.27–2.66x，Vanilla 橙柱 1.00x））：tree vs chain 平均接受长度 τ 提升 +0.62~+0.75（Vicuna 7B: 3.20→3.94），speedup +0.3~0.5；不增 forward 次数，仅增每 forward 的 token 数。即使无 tree（chain-only），EAGLE 仍达 2.3x-2.7x（§4.3.1）。
 
-5. **组合损失：回归 + 分类**（§3.2）。draft 的中间目标是预测 feature（回归），最终目标是 token（分类）。`L_reg = SmoothL1(f_{i+1}, Draft(T_{2:i+1}, F_{1:i}))`；`p_{i+2}=Softmax(LM_Head(f_{i+1}))`，`p̂_{i+2}=Softmax(LM_Head(f̂_{i+1}))`，`L_cls = CrossEntropy(p_{i+2}, p̂_{i+2})`。联合 `L = L_reg + w_cls·L_cls`，`w_cls=0.1`（因分类损失数值上比回归大约一个数量级）。注意分类目标是 target LLM 自家 LM_Head 上的分布，蒸馏对齐。
+5. **组合损失：回归 + 分类**（§3.2, 权威源 formulas.json LaTeX 双源校验）。draft 的中间目标是预测 feature（回归），最终目标是 token（分类）。formulas.json 收录的两条权威 LaTeX（与 fulltext §3.2 verbatim 一致；M3 caption p02/p04 描述「draft model 输入 f_t + 超前一拍 t_{t+1} → 预测 f_{t+1} → LM Head 得 draft token」的架构机制，与下式 `Draft_Model(T_{2:i+1}, F_{1:i})` 输入与 `LM_Head(f_{i+1})` 输出对齐，文本+图双源校验通过）：
+
+$$
+L_{reg} = \text{Smooth L1}(f_{i+1}, \text{Draft\_Model}(T_{2:i+1}, F_{1:i})).
+$$
+
+$$
+{p}_{i+2}=\text{Softmax}(\text{LM\_Head}({f}_{i+1})), \\ \hat{p}_{i+2}=\text{Softmax}(\text{LM\_Head}(\hat{f}_{i+1})), \\ L_{cls} = \text{Cross\_Entropy}({p}_{i+2},\hat{p}_{i+2}).
+$$
+
+联合 `L = L_reg + w_cls·L_cls`，`w_cls=0.1`（因分类损失数值上比回归大约一个数量级）。注意分类目标是 target LLM 自家 LM_Head 上的分布 `p_{i+2}`，draft 预测 feature `f̂_{i+1}` 经同一冻结 LM_Head 得 `p̂_{i+2}`，蒸馏对齐——这正是 §3.1「复用 target LLM 的 LM Head 保证 draft 与 target 同分布空间」机制的损失层体现。
 
 6. **数据增强对抗特征误差累积**（§3.2）。draft 阶段自回归处理 feature，feature 误差会累积。训练时对 target LLM 的 feature 加 `U(-0.1, 0.1)` 均匀噪声（借鉴 NEFTune, Jain et al. 2023），提升对失真 feature 的鲁棒性。对应 Table 2 中 1-α 到 4-α 几乎不衰减的现象（§4.1: "slight variation between 1-α to 4-α underscores EAGLE's robustness to feature errors"）。
 
 7. **训练数据低敏感性 → 固定数据集即可**（§3.2, §4.3.3, Table 6）。理想训练数据应是 target LLM 自回归生成的文本，但成本高。Table 6：固定 ShareGPT 数据集 vs 用 target LLM 生成答案，speedup 2.78x vs 2.88x、τ 3.62 vs 3.75——增益微弱，故 EAGLE 全部实验统一用 ShareGPT 68k 对话训练，zero-shot 评测 MT-bench/GSM8K/HumanEval/Alpaca（§4.3.3）。训练配置：lr 3e-5，AdamW β=(0.9, 0.95)，grad clip 0.5，1-2 天 / 4×A100 40G（70B）。
 
-8. **Multi-round speculative sampling 保证树形 draft 下分布不变**（§3.3, Appendix A.2, Algorithm 1（p.12））。树形 draft 有 k 个候选 token，标准 speculative sampling 的 reject-after-sample 不够。Algorithm 1：对 k 个 token 依次按 `min(1, p(t_i)/p̂(t_i))` 接受；拒绝时不直接从调整分布 `norm(max(0, p−p̂))` 采样，而是**递归调用 A**；全拒才直接采样。与 SpecInfer 一致，保证输出分布 = target LLM 分布，greedy 与 non-greedy 均成立（§1, §3.3）。
+8. **Multi-round speculative sampling 保证树形 draft 下分布不变**（§3.3, Appendix A.2, Algorithm 1（p.12））。树形 draft 有 k 个候选 token，标准 speculative sampling 的 reject-after-sample 不够。Algorithm 1：对 k 个 token 依次按接受概率 `min(1, pj+i(ˆtj+i)/ˆpj+i(ˆtj+i))`（fulltext §2 verbatim，未收录于 formulas.json，按 .txt 引用不渲染 `$$`）接受；拒绝时不直接从调整分布 `norm(max(0, pj+i − ˆpj+i))`（fulltext §2 verbatim）采样，而是**递归调用 A**；全拒才直接采样。与 SpecInfer 一致，保证输出分布 = target LLM 分布，greedy 与 non-greedy 均成立（§1, §3.3）。
 
 ## 表格（原文结构化）
 

@@ -26,9 +26,29 @@ DeepSeek Sparse Attention (DSA) 把每层核心注意力从 O(L²) 降到 O(Lk)�
 - 不同层对 indexer 移除的敏感度差异极大，**early 和 transitional 区层**远比其他层关键；uniform（如 `FSSSFSSS…`）可能恰好移除关键 indexer 而保留冗余层 → 明显质量退化（§4.3 定量：1/2 uniform Long Avg 掉 2.8，1/4 掉 7.2）。这与 Figure 4 (p.16) 的"早期层因传播路径最长最脆弱"相吻合——M3 指出对角线外的早-晚层 overlap ≤ 0.4，early layers 的 perturbation 会 cascade 通过最长下游路径。
 
 ### 4. Training-aware：Multi-layer Distillation Loss（§3.2 + 公式 1-3 + Proposition 1）
-- **机制**：标准 DSA 每 layer ℓ 的 indexer 只对自己层做 KL 蒸馏 `L_I = Σ_t D_KL(p_t^(ℓ) ‖ q_t^(ℓ))`。本文推广为：F 层 ℓ 的 indexer 要对其后续 m 个 S 层 ℓ+1…ℓ+m 的**聚合注意力分布**联合蒸馏：
-  `L_I^multi = Σ_{j=0}^{m} (1/(m+1)) Σ_t D_KL(p_t^(ℓ+j) ‖ q_t^(ℓ))`（公式 1）。
-- **梯度等价定理（Proposition 1）**：`∇_θ L_I^multi = ∇_θ L_I^avg`，其中 `L_I^avg = Σ_t D_KL(p̄_t ‖ q_t^(ℓ))`，`p̄_t = (1/(m+1))Σ p_t^(ℓ+j)`。证明用 q^(ℓ) 是唯一参数依赖项、p 的熵在微分下消失（公式 3）。**多层蒸馏 = 蒸馏到目标层注意力分布的质心 (centroid)**，indexer 学到跨所有 served 层的 consensus top-k。
+- **机制**：标准 DSA 每 layer ℓ 的 indexer 只对自己层做 KL 蒸馏（原文 §2.1 式，未收录于 formulas.json，按 .txt 引用不渲染 `$$`：`L_I = Σ_t D_KL(p_t^(ℓ) ‖ q_t^(ℓ))`）。本文推广为：F 层 ℓ 的 indexer 要对其后续 m 个 S 层 ℓ+1…ℓ+m 的**聚合注意力分布**联合蒸馏，multi-layer distillation loss（公式 1，权威 LaTeX 源 formulas.json，`$$` 渲染）：
+
+$$
+\mathcal{L}^{\mathrm{I}}_{\mathrm{multi}} = \sum_{j=0}^{m} \frac{1}{m+1}\sum_{t} D_{\mathrm{KL}}\!\left( \mathbf{p}^{(\ell+j)}_{t} \,\big\|\, \mathbf{q}^{(\ell)}_t \right),
+$$
+
+- **梯度等价定理（Proposition 1）**：multi 与 avg 梯度等价，avg loss（公式 2，权威 LaTeX 源 formulas.json）：
+
+$$
+\mathcal{L}^{\mathrm{I}}_{\mathrm{avg}} = \sum_{t} D_{\mathrm{KL}}\!\left( \bar{\mathbf{p}}_{t} \,\big\|\, \mathbf{q}^{(\ell)}_t \right).
+$$
+
+  其中 $\bar{\mathbf{p}}_t = \sum_{j=0}^{m}\frac{1}{m+1}\mathbf{p}^{(\ell+j)}_t$ 为 served 层注意力分布的质心。证明（公式 3，权威 LaTeX 源 formulas.json，含 `&=`/`\notag` 对齐标记，包 `aligned` 环境渲染）：
+
+$$
+\begin{aligned}
+\nabla_\theta \, \mathcal{L}^{\mathrm{I}}_{\mathrm{multi}} &= -\sum_{j=0}^{m} \frac{1}{m+1} \sum_{t} \nabla_\theta \sum_{s} \mathbf{p}^{(\ell+j)}_{t}(s) \log \mathbf{q}^{(\ell)}_t(s) \notag \\ &= -\sum_{t} \nabla_\theta \sum_{s} \underbrace{\Bigl(\textstyle\sum_{j=0}^{m} \frac{1}{m+1} \mathbf{p}^{(\ell+j)}_{t}(s)\Bigr)}_{\bar{\mathbf{p}}_{t}(s)} \log \mathbf{q}^{(\ell)}_t(s) \;=\; \nabla_\theta \, \mathcal{L}^{\mathrm{I}}_{\mathrm{avg}}.
+\end{aligned}
+$$
+
+  关键步骤：$\mathbf{q}^{(\ell)}_t$ 是 DKL 中唯一参数依赖项，$\mathbf{p}$ 的熵在微分下消失（$\nabla_\theta D_{\mathrm{KL}}(\mathbf{p}\|\mathbf{q}^{(\ell)}_t) = -\nabla_\theta \sum_s \mathbf{p}(s)\log \mathbf{q}^{(\ell)}_t(s)$），故多层 KL 求和可合并为对质心 $\bar{\mathbf{p}}_t$ 的单层蒸馏。
+- **双源校验**：上述三式 LaTeX 取自 `extraction/formulas.json`（权威源），与 `extraction/fulltext/...txt` §3.2 Eq.(1)(2)(3) + Proposition 1 证明段一致；M3 captions 未直接覆盖公式（M3 仅覆盖 Figure 1/2/3/4），故双源校验走 LaTeX↔fulltext .txt 两源，公式无训练记忆重写/补全。
+- **结论**：**多层蒸馏 = 蒸馏到目标层注意力分布的质心 (centroid)**，indexer 学到跨所有 served 层的 consensus top-k。
 - **实现取 multi 而非 avg**：avg 形式需同时前传 q^(ℓ) 和 p^(ℓ)，内存/运行时开销更大；multi 形式后续 S 层只需接收当前层预测 q^(ℓ)。
 - **训练流程**：两阶段。warm-up 仅训 F 层 indexer 用 `L_I^multi`，其余参数冻结；sparse 阶段继续训 `L_I^multi`（仅 over 已选 top-k token 的 KL）+ LM loss 训其余参数。实验初始化自 GLM-4.7-Flash，1,000 步 dense warm-up + 4,000 步 sparse 训练（ctx=200K, SFT 数据）。
 - **效果**：uniform 1/2 即达 Long Avg 51.6 超过 baseline 51.0（Table 3）；1/4 时 Long/G&R 均 within 0.4% of baseline。**training-free 中的 pattern 敏感性消失**——uniform 与 searched pattern 表现相当（甚至 uniform 略优）。去掉 cross-layer loss → Long Avg 51.6→49.8、AA-LCR 49.8→44.0，证明该 loss 实质有益。

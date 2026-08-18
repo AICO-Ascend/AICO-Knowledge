@@ -4,7 +4,11 @@
 
 ## 核心问题
 
-LLM serving 的吞吐瓶颈是 **memory-bound**，而非 compute-bound。自回归解码阶段每步只产一个 token、走 matrix-vector mul，GPU 算力严重闲置；要提吞吐只能靠 batching，但 batch size 上限被 **KV cache 显存** 卡死。论文 §1 用 Figure 1（p.1）给出宏观证据：13B OPT 部署在 A100-40G 上，参数 26GB（65%）常驻、KV cache >30% 按请求动态增减、激活仅小片。M3 解读点出"传统系统把每请求 KV 存成单连续张量→内部+外部碎片严重、batch 受限"，正是 vLLM 要消除的根因。Figure 1 右半进一步把"现有系统 [31,60] KV 急速增长曲线"与"vLLM 平滑曲线 → 吞吐 2–4×"并列，定下全文论据链。
+LLM serving 的吞吐瓶颈是 **memory-bound**，而非 compute-bound。自回归解码阶段每步只产一个 token、走 matrix-vector mul，GPU 算力严重闲置；要提吞吐只能靠 batching，但 batch size 上限被 **KV cache 显存** 卡死。论文 §2.1 把自回归生成本身形式化为概率链式分解（Eq.1，权威 LaTeX↔fulltext §2.1 双源校验一致）：
+
+$$P(x) = P(x_1) \cdot P(x_2\mid x_1) \cdots P(x_n \mid x_1, \ldots, x_{n-1}).$$
+
+该分解决定了两点工程后果：(a) 只能逐 token 串行采样、新 token 依赖全部历史 K/V，故 KV cache 必须按 token 累积缓存；(b) prompt phase 可矩阵-矩阵并行、generation phase 退化为 matrix-vector 受限于显存带宽——正是 §2.2 所述 memory-bound 的根因。论文 §1 用 Figure 1（p.1）给出宏观证据：13B OPT 部署在 A100-40G 上，参数 26GB（65%）常驻、KV cache >30% 按请求动态增减、激活仅小片。M3 解读点出"传统系统把每请求 KV 存成单连续张量→内部+外部碎片严重、batch 受限"，正是 vLLM 要消除的根因。Figure 1 右半进一步把"现有系统 [31,60] KV 急速增长曲线"与"vLLM 平滑曲线 → 吞吐 2–4×"并列，定下全文论据链。
 
 §3 把问题量化为三类显存浪费：
 
@@ -14,7 +18,15 @@ LLM serving 的吞吐瓶颈是 **memory-bound**，而非 compute-bound。自回�
 
 ## 关键创新点
 
-1. **PagedAttention 算法（§4.1）** — 借鉴 OS virtual memory paging[25]：把 KV cache 切成固定大小 `B`-token 的 KV block，key/value 向量存于**非连续**物理显存。注意力改写为 block-wise 形式（Eq.4）：
+1. **PagedAttention 算法（§4.1）** — 借鉴 OS virtual memory paging[25]：把 KV cache 切成固定大小 `B`-token 的 KV block，key/value 向量存于**非连续**物理显存。先回顾它所改造的常规 self-attention 基线（§2.1，Eq.2/Eq.3，权威 LaTeX↔fulltext 双源校验一致）：每个位置 i 先经线性变换产出 Q/K/V（Eq.2），
+
+   $$q_i = W_q x_i, \ k_i = W_k x_i, \ v_i = W_v x_i.$$
+
+   再以 softmax 归一化点积得 attention score、对 V 加权求和（Eq.3，因果掩码上界 i），
+
+   $$a_{ij} = \frac{\exp(q_i^\top k_j / \sqrt{d})}{\sum_{t=1}^{i}\exp(q_i^\top k_t / \sqrt{d})}, \ o_i = \sum_{j=1}^{i} a_{ij} v_j.$$
+
+   PagedAttention 把 Eq.3 的逐 token 注意力改写为 block-wise 形式（Eq.4，权威 LaTeX↔fulltext §4.1 双源校验一致；M3 对 Fig.5 的解读给出"key/value 向量分布于 3 个非连续物理块、kernel 逐 block 取 K_j→算 A_ij→乘 V_j"的图文佐证）：
 
    $$A_{ij}=\frac{\exp(q_i^\top K_j/\sqrt d)}{\sum_{t=1}^{\lceil i/B\rceil}\exp(q_i^\top K_t\mathbf{1}/\sqrt d)},\quad o_i=\sum_{j=1}^{\lceil i/B\rceil}V_j A_{ij}^\top$$
 

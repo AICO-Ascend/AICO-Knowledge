@@ -6,9 +6,25 @@
 
 本文攻击的不是单一机制，而是一个 **组织性/认知性问题**：KV cache 优化技术已爆炸式增长（token-level / model-level / system-level 散落数百篇），但缺乏统一、机制级、可对照的分类法，导致研究者难以判断"在某约束下该选哪一类、彼此是否正交、与 vLLM/FlashAttention 是否兼容"。
 
-底层动机来自 KV cache 的 **二次复杂度与线性内存增长的张力**（§2.2.2）：
-- 计算节省：缓存 `t_c` 个 token 在 `L` 层 `h` 头上节省 `O(L·h·t_c·t·(d_k+d_v) + L·h·t_c·(τ_1+τ_2))`（式 10），随序列长度 `t` 线性增长。
-- 空间代价：Float16 下额外空间 `O(L·h·t_c·(d_k+d_v)·sizeof(Float16))`（式 11），随序列与层数线性膨胀，长上下文下逼近 GPU HBM 上限。
+底层动机来自 KV cache 的 **二次复杂度与线性内存增长的张力**（§2.2.2）。在解码步 `t`，新 token 的 Q/K/V 经线性投影生成（§2.2.1, Eq.(7)），其 K/V 被拼接到历史缓存上，attention 在 cached 集合上做 scaled dot-product（§2.2.1, Eq.(9)）：
+
+$$
+\mathbf{z}^t_i = \text{Softmax}\left(\frac{\mathbf{q}_i^t {\mathbf{K}_i^t}^\top}{\sqrt{d_k}}\right) \mathbf{V}_i^t,
+$$
+
+其中 `\mathbf{K}_i^t = \text{Concat}(\hat{\mathbf{K}}_i^{t-1}, \mathbf{k}_i^t)`、`\mathbf{V}_i^t` 同理——即 `t` 步的复杂度仍随已缓存 token 数线性增长，不经缓存则需对全部历史重算。缓存 `t_c` 个 token 在 `L` 层 `h` 头上节省的 **计算量**（§2.2.2, Eq.(10)）为：
+
+$$
+O\left(L\cdot h \cdot t_c \cdot t \cdot (d_k+d_v)+ L\cdot h \cdot t_c\left(\triangle_1 + \triangle_2\right)\right)
+$$
+
+（`t` 为序列长度，`\triangle_1,\triangle_2` 分别对应 Eq.(1) 的 QKV 投影与 Eq.(3) 的多头合并耗时），随 `t` 线性增长、长序列收益放大。但其 **空间代价**（§2.2.2, Eq.(11)）同步线性膨胀：
+
+$$
+O(L\cdot h \cdot t_c \cdot (d_k+d_v) \cdot sizeof(Float16))
+$$
+
+Float16 下随序列与层数线性膨胀，长上下文下逼近 GPU HBM 上限。LaTeX↔M3 校验：本文无对应 figure PNG（`minimax_captions.json` 未收录本 slug 图），故以 formulas.json LaTeX 为唯一权威源渲染，未引入 M3 caption 旁证。
 
 由此衍生 §2.3 列出的六大挑战：Cache Eviction Policies（LRU/LFU 与 LLM attention pattern 不匹配）、Memory Management（GPU/CPU/external 协同）、Latency Bottlenecks（每步解码的 cache 访问）、Compression Trade-offs（压缩 vs 精度）、Dynamic Workloads、Distributed Coordination。本文的产出是 **三级 taxonomy（Token / Model / System，§3, Fig.2）** 作为对这六大挑战的系统性应答，并对每个叶子节点给出机制级比较表（Tab.2–Tab.12）和未来方向。
 
@@ -17,11 +33,65 @@
 作为 survey，"创新点"指其分类法骨架与跨方法对照贡献，而非新算法：
 
 1. **三级 taxonomy：Token-level / Model-level / System-level（§3, Fig.2）**
-   - 机制：按"是否改模型架构 / 是否动系统底层"分层。Token-level（§4）不动架构，只按 KV 对的特征做选择/预算/合并/量化/低秩；Model-level（§5）改 attention 结构或引入非 transformer；System-level（§6）做内存管理/调度/硬件感知。
+   - 机制：按"是否改模型架构 / 是否动系统底层"分层。其判别基准是 transformer block 的标准前向：输入 `X` 经 QKV 线性投影（§2.1.1, Eq.(1)）
+
+$$
+\mathbf{Q}_i = \mathbf{X}\mathbf{W}_{Q_i}, \quad \mathbf{K}_i = \mathbf{X}\mathbf{W}_{K_i}, \quad \mathbf{V}_i = \mathbf{X}\mathbf{W}_{V_i},
+$$
+
+     每头做 scaled dot-product attention（§2.1.1, Eq.(2)）
+
+$$
+\mathbf{Z}_i = \text{Attention}(\mathbf{Q}_i, \mathbf{K}_i, \mathbf{V}_i) = \text{Softmax}\left(\frac{\mathbf{Q}_i \mathbf{K}_i^\top}{\sqrt{d_k}}\right) \mathbf{V}_i,
+$$
+
+     多头拼接后线性合并（§2.1.1, Eq.(3)）：
+
+$$
+\mathbf{Z}=\text{Concat}(\mathbf{Z}_1, \mathbf{Z}_2, \dots, \mathbf{Z}_h)\mathbf{W}_O,
+$$
+
+     再过 FFN（§2.1.1, Eq.(4)）：
+
+$$
+\text{FFN}(\mathbf{Z}) = \sigma(\mathbf{Z}\mathbf{W}_1 + \mathbf{b}_1)\mathbf{W}_2 + \mathbf{b}_2
+$$
+
+     整个 block 由自回归生成驱动（§2.1.2）：每步建模下一 token 条件概率（Eq.(5)）：
+
+$$
+P(x_{t+1} | x_1, x_2, \cdots, x_t) = \text{Softmax}(\mathbf{h}_t \mathbf{W}_{\text{out}} + \mathbf{b}_{\text{out}}),
+$$
+
+     并采样（Eq.(6)）：
+
+$$
+x_{t+1} \sim P(x_{t+1} | x_1, x_2, \cdots, x_t).
+$$
+
+     Token-level（§4）不动上述任一公式，只按 KV 对的特征做选择/预算/合并/量化/低秩；Model-level（§5）改 Eq.(2) 的 attention 结构或引入非 transformer；System-level（§6）做内存管理/调度/硬件感知，不改公式只改 K/V 的存放与搬运。
    - 效果：将 §2.3 的六大挑战归口到三类正交技术轴，使"压缩 vs 重用 vs 调度"可组合性显式化。每类再二/三分子类（如 Token 下分 selection/budget/merging/quantization/low-rank），共 12 张对照表覆盖 ~150 个方法。
 
 2. **Token-level 五子类的精细再分（§4, Fig.3）**
-   - 机制：KV cache selection（§4.1）按"prefill 一次性 / decode 永久驱逐 / decode 多层缓存不驱逐"三分；budget allocation（§4.2）按 layer-wise vs head-wise；merging（§4.3）按 intra-layer vs cross-layer；quantization（§4.4）按 fixed / mixed / outlier-redistribution；low-rank（§4.5）按 SVD / tensor / learned。
+   - 机制：Token-level 全部作用于 KV cache 的增量机制本身。解码步 `t` 新 token 经投影生成单步 Q/K/V（§2.2.1, Eq.(7)）：
+
+$$
+\mathbf{q}_i^t = \mathbf{x}_t \mathbf{W}_{Q_i}, \quad \mathbf{k}_i^t = \mathbf{x}_t \mathbf{W}_{K_i}, \quad \mathbf{v}_i^t = \mathbf{x}_t \mathbf{W}_{V_i},
+$$
+
+     新 K/V 拼接到历史缓存（§2.2.1, Eq.(8)）：
+
+$$
+\mathbf{K}_i^{t} = \text{Concat}(\mathbf{\hat{K}}_i^{t-1}, \mathbf{k}_i^t ), \ \mathbf{V}_i^{t} = \text{Concat}(\mathbf{\hat{V}}^{t-1}_i, \mathbf{V}_i^t ),
+$$
+
+     Token-level 五子类即对 `\hat{\mathbf{K}}/\hat{\mathbf{V}}` 的"选哪些保留 / 各层分多少预算 / 合并相似 KV / 降精度 / 降秩"——全部不改 Eq.(7)/(8) 的形式，只改缓存内容与表示。其中低秩子类的 **Tensor Decomposition**（§4.5.2, DecoQuant[66]）以 Matrix Product Operator (MPO) 分解权重矩阵 `W`（Eq.(12)）：
+
+$$
+\text{TD}(\mathbf{W}) = \prod_{k=1}^n \mathcal{T}_{(k)}[d_{k-1}, i_k, j_k, d_k],
+$$
+
+     其中 `\mathcal{T}_{(k)}` 为第 `k` 个局部张量（尺寸 `d_{k-1} \times i_k \times j_k \times d_k`），将 KV 权重矩阵因子化为局部张量乘积以最小化冗余。KV cache selection（§4.1）按"prefill 一次性 / decode 永久驱逐 / decode 多层缓存不驱逐"三分；budget allocation（§4.2）按 layer-wise vs head-wise；merging（§4.3）按 intra-layer vs cross-layer；quantization（§4.4）按 fixed / mixed / outlier-redistribution；low-rank（§4.5）按 SVD / tensor / learned。
    - 效果：Tab.2 给出 selection 方法的 (initial tokens / top-k / recent / permanent eviction / dynamic / granularity) 六维布尔对照；Tab.3 给 budget allocation 的 (layer/head/retrieval-head/input-specific/extra-calibration) 五维对照；Tab.5 给 mixed-precision 的 (Keys/Vals 策略 × 重要 token × outlier × channel reorder × initial/mid/recent) 对照；Tab.6 给 outlier redistribution 的 (operation/formula/learn) 对照。这是机制级而非口号级比较。
 
 3. **Model-level 区分 "grouping/sharing" vs "alteration" vs "non-transformer"（§5, Fig.7）**

@@ -30,11 +30,19 @@
 
 3. **Computation Optimizations 支柱（§5）**
    - **Operator Optimizations（§5.1）**：Manual（FlashAttention 系列 IO-aware tiling + online softmax；FlashAttention-3 H100 WGMMA/TMA warp-specialized pipeline；BPT 扩展 tiling 到 FFN；SWattention Sunway；ByteTransformer padding-free variable-length）+ Automatic（kernel-level Halide/TVM/Roller/Triton/ALCOP；graph-level Chimera/Welder/Slapo/TorchDynamo+TorchInductor/JIT-Q）。
+
+     该支柱的算法基元即标准 scaled dot-product attention（§5.1.1，fulltext L205-211 原文公式；LaTeX 权威源 `extraction/formulas.json` 该 slug 条目[0]，双源校验一致）：
+
+     $$
+     \text{Attention}(Q, K, V) = \texttt{softmax}\left(\frac{QK^T}{\sqrt{d}}\right)V
+     $$
+
+     其中 $Q,K,V$ 为输入 token 向量 $X=[x_1,\dots,x_n]$ 经线性变换得到的 query/key/value 张量，$d$ 为 head 维度，$\sqrt{d}$ 缩放因子稳定 softmax 数值。FlashAttention 系列的核心机制在于：把上式中 $QK^T$、softmax、$\cdot V$ 的多次 HBM 往返融合为单个 CUDA kernel 内的分块（tiling）+ online softmax（lazy 除法延迟到末端），从而把 attention 的 HBM 访问复杂度从 $O(n^2)$ 降到 $O(n^2 d / M)$（$M$ 为 SRAM 容量），而数学输出与原式严格等价——这是 §5.1.1 所有 manual 算子优化的共同不变式。FlashAttention-3 进一步在 H100 上用 WGMMA/TMA warp-specialized pipeline 把非-GEMM 操作（softmax 等）隐藏到异步 GEMM 后面。
    - **Mixed-Precision Training（§5.2）**：16-Bit（FP16/BF16 + loss scaling；Campo casting 优化；THC 同态压缩）→ Sub-8-Bit（FP8 Wang/Sun hybrid/FP8-LM/Rouhani microscaled）→ Low-Bit Fixed Point（INT8 Jetfire；INT4 Xi et al. Hadamard；1-Bit BitNet/b1.58 ternary {-1,0,1}）。
 
-4. **Memory Optimizations 支柱（§6）** —— 四类 memory 占用（Model States 16Φ / Activations / Temp Buffers / Fragmentation）对应四类技术
+4. **Memory Optimizations 支柱（§6）** —— 四类 memory 占用（Model States 16Φ / Activations / Temp Buffers / Fragmentation，Φ 为模型参数量；该 16Φ=4Φ 参数+4Φ 梯度+12Φ Adam 一/二阶矩 的 memory 推导见 fulltext L2250-2255，**未收录 formulas.json，按 .txt 引用不渲染 $$**）对应四类技术
    - **Activation Recomputation（§6.1）**：Static evicting（Checkmate MILP；Selective-checkpointing Megatron-SP；DistFlashAttn 在 FlashAttention 输出设 ckpt；LoongTrain selective-checkpoint++；Yuan et al. Pareto frontier）+ Dynamic evicting（DTR/MegTaiChi/Coop contiguous eviction）。
-   - **Redundancy Reduction（§6.2）**：Fully sharding（ZeRO-1/2/3 把 16Φ 降到 16Φ/N）+ Partially sharding（ZeRO++ 二级 shard+量化；MiCS；AMSP/PaRO 三策略 Full-Replica/Full-Sharding/Partial-Sharding；RTP rotated tensor）。
+   - **Redundancy Reduction（§6.2）**：Fully sharding（ZeRO-1/2/3 把 16Φ 降到 16Φ/N，N 为数据并行度；推导见 fulltext L2399-2411，**未收录 formulas.json，按 .txt 引用不渲染 $$**）+ Partially sharding（ZeRO++ 二级 shard+量化；MiCS；AMSP/PaRO 三策略 Full-Replica/Full-Sharding/Partial-Sharding；RTP rotated tensor）。
    - **Defragmentation（§6.3）**：Tensor-based（ROAM 树搜索；Imanishi 2D bin-packing + simulated annealing；MegTaiChi/Coop）+ VMM-based（GMLake virtual memory stitching；PyTorch expandable segments v2.1 集成）。
    - **Offloading（§6.4）**：CPU 静态（L2L/ZeRO-Offload 70B@16×V100/Elixir/Yuan 激活粒度）+ CPU 动态（TSPLIT micro-tensor/PatrickStar chunk/Mobius/Harmony/TMOF/STRONGHOLD/MPipeMoE）+ SSD（ZeRO-Infinity 32T@512×V100/Smart-Infinity near-storage/Fuyou activation-to-SSD/MoESys 2D prefetch）。
 
@@ -80,7 +88,7 @@
 | 支柱 | 子类 | 代表方法 | 仓库关联 |
 |---|---|---|---|
 | Memory | Activation Recomputation | Checkmate；Selective-checkpointing；DistFlashAttn；LoongTrain selective++ | — |
-| Memory | Redundancy Reduction | ZeRO-1/2/3；ZeRO++；MiCS；AMSP；RTP | [[zero-memory-optimizations-toward-training-trillion-parameter-models]]（ZeRO 全系，§6.2.1 16Φ→16Φ/N 数学推导源头） |
+| Memory | Redundancy Reduction | ZeRO-1/2/3；ZeRO++；MiCS；AMSP；RTP | [[zero-memory-optimizations-toward-training-trillion-parameter-models]]（ZeRO 全系，§6.2.1 16Φ→16Φ/N 数学推导源头；推导见 fulltext L2399-2411，未收录 formulas.json，按 .txt 引用） |
 | Memory | Offloading | ZeRO-Offload；ZeRO-Infinity；PatrickStar；Fuyou；MoESys | [[zero-memory-optimizations-toward-training-trillion-parameter-models]]（ZeRO-Offload/Infinity 同源延伸） |
 | Communication | Collective Comm | NCCL；RCCL；Ring/Tree/Hybrid；SCCL；TACCL；Blink | [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]]（大规模 collective 实践 + ECMP/Enhanced-ECMP） |
 | Communication | Comm Scheduling | ByteScheduler；PACE；Lina；CoCoNet；ooo-backprop；Lynx | — |
@@ -113,7 +121,7 @@
 - [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] — §4.1.3 Interleaved 1F1B + 3D 并行（DP×TP×PP）的工业级落地，本 survey §4.1.3 pipeline bubble 与 §4.1 hybrid parallelism 的核心引证。
 - [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] — §3.2.3 rail-optimized topology + §8.1 failure analysis + §8.3 snapshot-stall checkpoint 的 10K+ GPU 实践范本，本 survey 多章节直接引用。
 - [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] — §4.1.5 Expert Parallelism 三子类（sparse activation / comm optimization / load balance）的 Megatron-Core 实现。
-- [[zero-memory-optimizations-toward-training-trillion-parameter-models]] — §6.2.1 Redundancy Reduction 的 ZeRO-1/2/3 源头（16Φ→16Φ/N 数学推导），并延伸至 §6.4.1 ZeRO-Offload、§6.4.3 ZeRO-Infinity。
+- [[zero-memory-optimizations-toward-training-trillion-parameter-models]] — §6.2.1 Redundancy Reduction 的 ZeRO-1/2/3 源头（16Φ→16Φ/N 数学推导，推导见 fulltext L2250-2255 + L2399-2411，未收录 formulas.json，按 .txt 引用），并延伸至 §6.4.1 ZeRO-Offload、§6.4.3 ZeRO-Infinity。
 - [[muon-is-scalable-for-llm-training]] — 优化器侧可扩展性参照，与本 survey §5 computation optimization + §4.1.3 pipeline 协同的设计空间互补（本 survey §2.4 明确声明"advanced optimization algorithms [34] 不在 scope"，Muon 类正落在该边界）。
 - [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] — §3.2.3 Training-Optimized Topology + Reconfigurable Topology 的工业自动化对应（ATop→ZCube 直接对标 rail-optimized/rail-only/TopoOpt/SiP-ML 谱系）。
 - [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] — §3.1 AI Accelerators + §3.2 Network + §7.3 In-Network Aggregation 的华为侧 infra 对照（CloudMatrix384 vs NVIDIA SuperPod/TPUv4）。

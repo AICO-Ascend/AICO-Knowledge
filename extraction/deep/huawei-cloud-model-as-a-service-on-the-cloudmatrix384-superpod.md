@@ -32,7 +32,15 @@
 
 7. **Proactive GC 降 jitter**（§4.4）。首 dispatch（DeepSeek 第 4 层 / Kimi K2 第 2 层）全局同步首次发生，jitter 可 >100 ms。三手段：core pinning、PTA caching（bypass guard check）、manual Python GC（每数百 forward 触发）。
 
-8. **EPLB（Expert Placement Load Balancing）**（§4.5，Figure 11 p16 + Figure 12）。数据驱动周期性复制 hot expert。四步（Figure 12）：(1) Collect kernel（gating 后插）统计每 expert 每 NPU token 数，每分钟上报；(2) EPLB 算法——`h_{ℓ,t}=argmax_e token_count[ℓ][e][t]`，`L_ℓ=Σ_{t∈T} token_count[ℓ][h_{ℓ,t}][t]`，在冗余预算 R 内贪心选使模拟总负载最小的 expert 复制；(3) 四阶段热重配（prefetch→disable slot→async load→restore mapping）；(4) communication-free token rotation：按 token 在 batch 中位置轮转映射到 replica，无需跨 NPU 通信。**Figure 11（p16，M3 解读）**：(a) DeepSeek-R1 某 MoE 层在 ShareGPT 下的 per-expert hit CDF——曲线在 0% 附近陡升后饱和，红色虚线标均衡 hit ~0.35%，少量尾部 hot expert 吸收不成比例的 token；论文与 M3 一致认定 **20% experts 承载超均值负载，最热 expert 30× 均值**。(b) EP288、1K-token seq，batch 8–192 三策略对比：MoE-Native（原路由，最高延迟，BS=192 约 150 μs）、MoE-Balanced（EPLB，紧贴下界）、MoE-Avg-Routing（强制均匀，下界）。M3 视觉读出 Balanced 较 Native 恢复约 30% 延迟；论文文本（§4.5）声称 forward 延迟降 **>40%**（取文本值为准，差异源于测量口径）。三线均线性 scale，证 EPLB 在不扰动 router 前提下接近均匀负载下界。
+8. **EPLB（Expert Placement Load Balancing）**（§4.5，Figure 11 p16 + Figure 12）。数据驱动周期性复制 hot expert。四步（Figure 12）：(1) Collect kernel（gating 后插）统计每 expert 每 NPU token 数，每分钟上报；(2) EPLB 算法——先在每个时间片 $t$ 为层 $\ell$ 选出最热 expert（hottest expert，权威源 formulas.json LaTeX，§4.5 正文）：
+$$
+h_{\ell,t} = \arg\max_{e} \text{ token\_count}[\ell][e][t].
+$$
+再对该层所有时间片求和得层总负载：
+$$
+L_\ell = \sum_{t\in T}\text{token\_count}[\ell][h_{\ell,t}][t].
+$$
+在冗余预算 $R$ 内贪心模拟：对每个候选 hot expert $c$ 假装将其 token 均分到所有 replica，重算 $L_\ell(c)$，选使 $L_\ell$ 最小的 $c^*$ 加入冗余列表并更新 token 计数（机制见 §4.5 Step 2 算法 1–4）；(3) 四阶段热重配（prefetch→disable slot→async load→restore mapping）；(4) communication-free token rotation：按 token 在 batch 中位置轮转映射到 replica，无需跨 NPU 通信。**双源校验**：上述两式 LaTeX 与 fulltext（§4.5 Step 2 原文 `arg max_e token_count[ℓ][e][t]`、`Σ_{t∈T} token_count[ℓ][h_{ℓ,t}][t]`）逐字符一致；M3 Figure 11（p16）未转写公式本身（caption 仅述 hit CDF 与 latency 对比图），故公式权威源唯一为 formulas.json LaTeX，无 M3 分歧。**Figure 11（p16，M3 解读）**：(a) DeepSeek-R1 某 MoE 层在 ShareGPT 下的 per-expert hit CDF——曲线在 0% 附近陡升后饱和，红色虚线标均衡 hit ~0.35%，少量尾部 hot expert 吸收不成比例的 token；论文与 M3 一致认定 **20% experts 承载超均值负载，最热 expert 30× 均值**。(b) EP288、1K-token seq，batch 8–192 三策略对比：MoE-Native（原路由，最高延迟，BS=192 约 150 μs）、MoE-Balanced（EPLB，紧贴下界）、MoE-Avg-Routing（强制均匀，下界）。M3 视觉读出 Balanced 较 Native 恢复约 30% 延迟；论文文本（§4.5）声称 forward 延迟降 **>40%**（取文本值为准，差异源于测量口径）。三线均线性 scale，证 EPLB 在不扰动 router 前提下接近均匀负载下界。
 
 9. **MTP（Multi-Token Prediction）**（§4.6，Figure 13）。5 步紧优化循环：(1) MTP forward 生成 k draft；(2) sample；(3) 主模型 verify；(4) sample；(5) 检查 logits 决定接受。单 MTP 层 acceptance 70–90%，固定 batch 下降延迟 ≤40%。训练第二 MTP（冻结主模型+原 MTP，28 万内部样本）使 tokens/step 从复用权重的 2.26 提升到 2.35（+9%）。
 

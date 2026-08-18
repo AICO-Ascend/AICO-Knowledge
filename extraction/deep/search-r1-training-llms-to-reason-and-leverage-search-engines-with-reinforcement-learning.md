@@ -15,14 +15,30 @@
 
 ## 关键创新点
 
-### 1. 把搜索引擎建模为 RL 环境的一部分（§3.1，Eq.1/6）
+### 1. 把搜索引擎建模为 RL 环境的一部分（§3.1，Eq.1）
 
-- **机制**：经典 RLHF 目标 `max_{πθ} E[rϕ(x,y)] − β D_KL[πθ||πref]` 假设整条 y 由 policy LLM 独立生成。Search-R1 把目标改写为条件于搜索引擎 R 的形式：`max_{πθ} E_{y∼πθ(·|x;R)}[rϕ(x,y)] − β D_KL[πθ(·|x;R)||πref(·|x;R)]`（Eq.6）。轨迹 y 现在是"LLM 生成 token"与"R 检索回的 passage"交错拼接的序列，形式化记为 `πθ(·|x;R) = πθ(·|x) ⨝ R`（⨝ 表示 interleaved retrieval-and-reasoning，§3.1）。KL 散度在"条件于 prompt 与检索增强 context 的联合分布"上计算，保证即便混入外部信息，policy 仍被 reference 锚定。
+- **机制**：经典 RLHF 目标（背景描述，非本文编号公式）假设整条 y 由 policy LLM 独立生成。Search-R1 把目标改写为条件于搜索引擎 R 的形式（Eq.1，formulas.json 权威 LaTeX）：
+
+$$\max_{\pi_\theta} \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi_{\theta}(\cdot \mid x; \se)} \left[ r_{\phi}(x, y) \right] - \beta \mathbb{D}_{\text{KL}} \left[ \pi_{\theta}(y \mid x; \se) \,||\, \pi_{\text{ref}}(y \mid x; \se) \right]$$
+
+一句话机制：rollout 轨迹 y 不再由 πθ 独立生成，而是"LLM 生成 token"与"R 检索回的 passage"交错拼接的序列；条件记号 πθ(·|x;R) 表示检索增强 policy。其形式化记号按 .txt 原文（§3.1，line 232）引用：`πθ(·|x;R) = πθ(·|x) N R`，其中"N denotes interleaved retrieval-and-reasoning"（该记号未入 formulas.json，按 .txt 原文引用、不渲染 `$$`）。KL 散度在"条件于 prompt 与检索增强 context 的联合分布"上计算，保证即便混入外部信息，policy 仍被 reference 锚定。
+- **LaTeX↔M3 双源校验**：Figure 1（p04 M3 caption）明确指出 "this framework makes the policy explicitly retrieval-aware via π_θ(·|x;ℛ), and uses loss masking so gradients update only LLM-generated tokens, not retrieved content"——与 Eq.1 中 πθ(·|x;R) 的条件记号、以及 §3.1 末"retrieved token masking 亦施加于 KL 散度损失"的表述在变量与机制层面一致：M3 图中 Rollout Module 内 Policy LLM + Search Engine 的交错输出，正是 Eq.1 期望项中 `y ∼ πθ(·|x;R)` 的可视化对应；PPO 分支的 Value LLM→GAE→A 与 GRPO 分支的 Group Computation→group-relative Â，分别对应下文 Eq.2 的 A_t 与 Eq.3 的 Â_{i,t}。
 - **效果**：使 PPO 与 GRPO 两种主流 policy-gradient 方法都能直接挂载搜索引擎 rollout，无需改算法骨架。Figure 1 给出 PPO/GRPO with Search Engine 的 rollout module 示意：policy LLM + Search Engine 在 Rollout Module 内交互，再回灌给 Reward Model / Group Computation / Value LLM。
 
 ### 2. Retrieved Token Loss Masking ——梯度只流过 LLM 自己生成的 token（§3.1，Table 4/6）
 
-- **机制**：在 PPO（Eq.2）与 GRPO（Eq.3）的 token-level loss 中引入指示函数 `I(y_t)`：`I(y_t)=1` 当 y_t 是 LLM 生成 token，`I(y_t)=0` 当 y_t 是被 `<information>…</information>` 包裹的检索 token。求和项 `1/Σ I(y_t) · Σ_{t: I(y_t)=1}` 保证 policy gradient 只对 LLM 生成 token 计梯度，检索内容仅作 context 影响 advantage/未来 token 概率。**KL 散度损失 D_KL 的计算同样施加 retrieved token masking**（§3.1 末），避免 reference policy 被外部文档分布污染。
+- **机制**：在 PPO（Eq.2）与 GRPO（Eq.3）的 token-level loss 中引入指示函数 `I(y_t)`：`I(y_t)=1` 当 y_t 是 LLM 生成 token，`I(y_t)=0` 当 y_t 是被 `<information>…</information>` 包裹的检索 token（.txt line 275-276，未入 formulas.json 按 .txt 原文引用）。求和项中的 `1/Σ I(y_t) · Σ_{t: I(y_t)=1}` 保证 policy gradient 只对 LLM 生成 token 计梯度，检索内容仅作 context 影响 advantage/未来 token 概率。两式权威 LaTeX（formulas.json，分别对应索引 [2] 与 [0]）：
+
+PPO 目标（Eq.2）：
+
+$$\mathcal{J}_{PPO}(\theta) = \mathbb{E}_{x \sim \mathcal{D}, y \sim \pi_{\text{old}}( \cdot| x; \se)} \left[ \frac{1}{\sum_{t=1}^{|y|} I(y_t)} \sum_{t=1: I(y_t)=1}^{|y|} \min \left( \frac{\pi_{\theta}(y_t | x, y_{<t}; \se)}{\pi_{\text{old}}(y_t | x, y_{<t}; \se)} A_t, \text{clip} \left( \frac{\pi_{\theta}(y_t | x, y_{<t}; \se)}{\pi_{\text{old}}(y_t | x, y_{<t}; \se)}, 1 - \epsilon, 1 + \epsilon \right) A_t \right) \right]$$
+
+GRPO 目标（Eq.3）：
+
+$$\mathcal{J}_{GRPO}(\theta) = \, & \mathbb{E}_{x \sim \mathcal{D}, \{ y_i \}_{i=1}^{G} \sim \pi_{\text{old}}( \cdot| x; \se)} \Bigg[ \frac{1}{G} \sum_{i=1}^{G} \frac{1}{\sum_{t=1}^{|y_i|} I(y_{i,t})} \sum_{t=1: I(y_{i,t})=1}^{|y_i|} \min \Bigg( \frac{\pi_{\theta}(y_{i,t} | x, y_{i,<t}; \se)}{\pi_{\text{old}}(y_{i,t} | x, y_{i,<t}; \se)} \hat{A}_{i,t}, \nonumber \\[8pt] & \hspace{120pt} \text{clip} \Bigg( \frac{\pi_{\theta}(y_{i,t} | x, y_{i,<t}; \se)}{\pi_{\text{old}}(y_{i,t} | x, y_{i,<t}; \se)}, 1 - \epsilon, 1 + \epsilon \Bigg) \hat{A}_{i,t} \Bigg) - \beta \mathbb{D}_{KL} \left[ \pi_{\theta} || \pi_{\text{ref}} \right] \Bigg]$$
+
+一句话机制：两式均通过指示函数 `I(y_{i,t})=1` 的 mask 把求和限定到 LLM 生成 token；GRPO 相对 PPO 去 value model，改用 group-relative advantage `Â_{i,t}` 并把 KL 直接加到 loss（而非 reward）。**KL 散度损失 D_KL 的计算同样施加 retrieved token masking**（§3.1 末 / .txt line 327），避免 reference policy 被外部文档分布污染。
+- **LaTeX↔M3 双源校验**：Figure 1（p04 M3）描述 PPO 分支"frozen Reward/Reference LLM 产出 r；trained Value LLM 产 v；(v,r) feeds GAE → per-token advantage A"对应 Eq.2 中的 `A_t`（GAE-estimated advantage）；GRPO 分支"samples G rollouts (o₁…o_G), scores each (r₁…r_G), and uses Group Computation to derive group-relative advantages (A₁…A_G)"对应 Eq.3 中的 `Â_{i,t}` 与外层 `1/G · Σ_{i=1}^G` group averaging。M3 标注的 KL 约束 "back to the policy" 对应 Eq.3 末项 `−β D_KL[πθ||πref]`。变量层面三处（A_t / Â_{i,t} / D_KL 项）图文一致。
 - **效果**（Table 4，Qwen2.5-7b-base/PPO）：w. mask 在 7 个数据集全面胜过 w.o. mask，Avg 0.431 vs 0.343（绝对 +0.088，相对 +25.6%）；NQ 0.480 vs 0.388、Musique 0.196 vs 0.108（近乎翻倍）。3b 上同样成立（Table 6：0.303 vs 0.262）。Figure 3 训练曲线显示 mask 版训练更稳、reward 持续上行，无 mask 版趋于震荡。这是论文最关键的稳定性贡献，也是"为何把搜索引擎塞进 RL 不会塌"的工程答案。
 
 ### 3. Multi-turn 交错推理-检索的 rollout 协议（§3.2，Algorithm 1，Table 1）
@@ -33,7 +49,11 @@
 
 ### 4. 极简 outcome-based reward ——拒绝 format reward 与神经 reward model（§3.4，Eq.4）
 
-- **机制**：reward 仅 `rϕ(x,y) = EM(a_pred, a_gold)`（Exact Match 规则判定），a_pred 是从 `<answer>` 抽取的答案。**显式声明与 Guo et al. 2025 不同：不引入 format rewards**，理由是"learned model already demonstrates strong structural adherence"。同时拒绝训练神经 reward model，避免大规模 RL 对特定 reward 形式的敏感性 + 重训 reward model 的算力/复杂度成本。
+- **机制**：reward 仅按 Eq.4（formulas.json 权威 LaTeX，索引 [3]）：
+
+$$r_{\phi}(x, y) = \text{EM}(a_\text{pred}, a_\text{gold}),$$
+
+其中 a_pred 是从 `<answer>` 抽取的答案，a_gold 是 ground truth（.txt line 416-418）。**显式声明与 Guo et al. 2025 不同：不引入 format rewards**，理由是"learned model already demonstrates strong structural adherence"。同时拒绝训练神经 reward model，避免大规模 RL 对特定 reward 形式的敏感性 + 重训 reward model 的算力/复杂度成本。
 - **效果**：仅凭 0/1 EM 信号即能引导出多轮检索、self-verification、query refinement 等复杂涌现行为——回答了挑战 (3)："simple outcome-based rewards are sufficient"。对比基线 R1（无搜索引擎的同套 RL，§4.2）证明加 search 的增益不是 reward 工程的产物。
 
 ### 5. PPO vs GRPO 的实证裁决 ——PPO 默认，稳定性优先（§5.1，Table 3，Figure 5）

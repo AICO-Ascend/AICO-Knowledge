@@ -14,7 +14,11 @@ MegaScale 用两条系统原则回应：**algorithm-system co-design**（针对 
 ## 关键创新点
 
 1. **算法层优化（§3.1）**——在不损失精度前提下压低单步计算与流水气泡：
-   - **Parallel Transformer Block (PTB)**：将标准串行式 `y = x + MLP(LN(x+Attention(LN(x))))` 重写为并行式 `y = x + MLP(LN(x)) + Attention(LN(x))`（式 1→2），Attention 与 MLP 并行执行，缩短关键路径。引用 PaLM [5] 表明数百亿参数规模下不降质。Figure 3（p.4，M3：PTB 将 All-Gather/Reduce-Scatter 与 QKV/Self-Attention/MLP 的 ColParaLinear/RowParaLinear 并列编排，SP 与 TP 区域显式切分）即以 PTB 为底座展示通信融合方案。
+   - **Parallel Transformer Block (PTB)**：将标准串行式 transformer block 重写为并行式——式 (1) 串行形式（Attention 与 MLP 串接，关键路径长）：
+$$\begin{aligned} y = x + \text{MLP}(\text{LN}(x + \text{Attention}(\text{LN}(x)))) \end{aligned}$$
+重写为式 (2) 并行形式（Attention 与 MLP 共享同一 LN 输入、并行执行，缩短关键路径）：
+$$\begin{aligned} y = x + \text{MLP}(\text{LN}(x)) + \text{Attention}(\text{LN}(x)) \end{aligned}$$
+LaTeX 权威源：`extraction/formulas.json` 本条目两条公式；全文核对源：`extraction/fulltext/...txt` L350（式 1 `y = x+MLP(LN(x+Attention(LN(x))))`）与 L353（式 2 `y = x+MLP(LN(x))+Attention(LN(x))`），双源一致（仅 `\text{}` 与空格渲染差异，数学语义零偏差）。引用 PaLM [5] 表明数百亿参数规模下不降质。Figure 3（p.4，M3：PTB 将 All-Gather/Reduce-Scatter 与 QKV/Self-Attention/MLP 的 ColParaLinear/RowParaLinear 并列编排，SP 与 TP 区域显式切分）即以 PTB 为底座展示通信融合方案。
    - **Sliding Window Attention (SWA)**：固定窗口 w 的稀疏注意力，复杂度 O(s·w) vs full self-attention 的 O(s·s)（w≪s）；通过堆叠层获得大 receptive field 保留全局信息。
    - **LAMB optimizer** [9]：将 LLM batch size 放大 4× 而不损失精度（microbenchmark Figure 10b，4× BS LAMB 在 ~250B tokens 时与 ADAM 1× BS 同 loss）。结合 interleaved pipeline，4 步 1× batch 的气泡 `4((p-1)/v)` 转化为 1 步 4× batch 的气泡 `(p-1)/(4v)`，**直接削减 87.5% pipeline bubble**（§3.1）。Ablation 中 LAMB BS×3 贡献 +3.0% MFU（Table 3 第 9 行）。
 

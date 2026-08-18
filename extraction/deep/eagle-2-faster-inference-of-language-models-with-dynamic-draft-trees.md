@@ -18,7 +18,7 @@ EAGLE-2 指出该假设与 speculative sampling 的核心洞察（"某些 token 
 
 2. **节点 value 定义——路径置信度乘积作为全局接受率近似（§4.1）**。
    对 draft tree 中节点 t_i，定义其 value：
-   $$V_i = \prod_{t_j \in \text{Path(root, t_i)}} p_j \approx \prod_{t_j \in \text{Path(root, t_i)}} c_j$$
+   $$V_i = \prod_{t_j \in \text{Path}\left(\text{root}, t_i\right)} p_j \approx \prod_{t_j \in \text{Path}\left(\text{root}, t_i\right)} c_j$$
    其中 p_j 为真实接受率，c_j 为 draft model confidence。理论基础是 §3.2 的 calibration 观察：confidence 强正相关于 acceptance rate（confidence<0.05 → 接受率≈0.04；confidence>0.95 → 接受率≈0.98）。乘积形式源于 speculative sampling 的级联拒绝语义——一个 token 最终被接受当且仅当路径上所有前缀都被接受。这一"局部 confidence → 全局 value"的转换，是把 EAGLE 的局部校准性升级为全局接受率近似的关键算子。
 
 3. **Expansion Phase：top-k 全局 value 节点扩展（§4.1）**。

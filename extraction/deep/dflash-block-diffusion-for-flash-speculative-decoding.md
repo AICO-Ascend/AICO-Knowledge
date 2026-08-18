@@ -15,9 +15,27 @@ DFlash 的核心命题：**能否同时做到轻量 + 高接受率 + 并行起�
 ## 关键创新点
 
 1. **KV injection 条件化机制**（§4.1, §A.3，对应 Figure 2 p.4）
-   - **机制**：从 target model 浅到深均匀采样 5 层 hidden states，concat 后过一个轻量投影 `H_t = RMSNorm(W_c [H^(l_1);...;H^(l_5)])`（§A.3）。与 EAGLE-3 把特征 fuse 到 drafter 输入 embedding 不同，DFlash 把 `H_t` 作为 **persistent KV entries 直接注入每一层 draft layer 的 K/V 投影**：`K_i = [W^K_i H_t ; W^K_i H_d]`, `V_i = [W^V_i H_t ; W^V_i H_d]`（§A.3）。target 特征只作为额外 KV，bypass draft 的 Q 投影、output projection、self-attention update、FFN。
+   - **机制**：从 target model 浅到深均匀采样 5 层 hidden states，concat 后过一个轻量投影层融成 compact target context feature（§A.3 权威公式）：
+
+     $$
+     \mathbf{H}_{t} = \mathrm{RMSNorm} \left( W_c[\mathbf{H}^{(l_1)};\ldots;\mathbf{H}^{(l_5)}] \right).
+     $$
+
+     与 EAGLE-3 把特征 fuse 到 drafter 输入 embedding 不同，DFlash 把 `H_t` 作为 **persistent KV entries 直接注入每一层 draft layer 的 K/V 投影**，target 特征只作为额外 KV，bypass draft 的 Q 投影、output projection、self-attention update、FFN（§A.3 权威公式）：
+
+     $$
+     \begin{aligned} \mathbf{Q}_i &= W_i^Q \mathbf{H}_d, \\ \mathbf{K}_i &= [W_i^K \mathbf{H}_t;\, W_i^K \mathbf{H}_d]_{\mathrm{seq}}, \\ \mathbf{V}_i &= [W_i^V \mathbf{H}_t;\, W_i^V \mathbf{H}_d]_{\mathrm{seq}}. \end{aligned}
+     $$
+
+     **双源校验**：`formulas.json` LaTeX（projection + per-layer Q/K/V 注入，target feature 仅入 K/V 不入 Q）与 M3 对 Figure 2（p.4）的解读一致——"target LLM 先 prefill 产首 token 并取若干层隐藏态，concat 后过投影层融成 target context feature，**注入每个 draft 层的 KV cache 并跨轮复用**"。
    - **图证**：Figure 2（p.4）的 M3 解读点出架构核心：block-diffusion draft model 块内并行生成多 token → 低 draft 延迟；target LLM 先 prefill 产首 token 并取若干层隐藏态，concat 后过投影层融成 target context feature，**注入每个 draft 层的 KV cache 并跨轮复用**，持续提供上下文引导 → 接受长度随 draft 深度增长，无 token-embedding 稀释（优于 EAGLE 式输入融合）。这正对应 §4.1 "Conditioning via KV injection enables acceptance scaling" 的论断。
-   - **效果**：EAGLE-3 式 input fusion 在 draft 深度增加时 target 信息逐层稀释，acceptance 增益递减；DFlash 的 per-layer 注入让 acceptance length 随 draft 层数 **有效 scaling**（§4.1, §5.5.2）。消融（Table 9, §5.5.5）：block-diffusion + KV injection 在 GSM8K/HumanEval/MT-Bench 上 τ=4.2/4.0/3.0，speedup 3.3×/3.2×/2.2×，全面优于 block-diffusion + input fusion（τ=3.5/3.5/2.6，2.9×/2.9×/2.0×）。内存开销可忽略：Qwen3.5-35B-A3B 上 `W_c` 仅 ~42 MB（相对 70 GB target），block size 16 解码时临时 activation < 400 KB（§A.3）。
+   - **效果**：EAGLE-3 式 input fusion 在 draft 深度增加时 target 信息逐层稀释，acceptance 增益递减；DFlash 的 per-layer 注入让 acceptance length 随 draft 层数 **有效 scaling**（§4.1, §5.5.2）。消融（Table 9, §5.5.5）：block-diffusion + KV injection 在 GSM8K/HumanEval/MT-Bench 上 τ=4.2/4.0/3.0，speedup 3.3×/3.2×/2.2×，全面优于 block-diffusion + input fusion（τ=3.5/3.5/2.6，2.9×/2.9×/2.0×）。内存开销可忽略：唯一新增的参数化组件是共享投影 `W_c ∈ R^{D×5D}`，对 Qwen3.5-35B-A3B（D=2048, BF16）的参数量与显存开销为（§A.3 权威公式）：
+
+     $$
+     5 \times 2048 \times 2048 \times 2 \approx 42\text{ MB},
+     $$
+
+     相对 ~70 GB target 可忽略；block size 16 解码时临时 activation < 400 KB（§A.3）。**双源校验**：`formulas.json` LaTeX 的算术 `5×2048×2048×2`（5 层 × D × 5D × BF16 2 bytes）与 .txt 全文 §A.3 "5 × 2048 × 2048 × 2 ≈ 42 MB" 逐字一致，M3 未覆盖此算式（纯文本推导），故以 LaTeX↔.txt 双源锚定。
 
 2. **Block-diffusion 并行起草**（§3.2 eq. 3, §4.1，对应 Figure 3 p.3）
    - **机制**：所有 γ 个 masked token 在 **单次 forward pass** 内并行解码，`T_draft = t_parallel`，与 γ **几乎无关**。GPU 对并行操作效率远高于多次串行 pass，`t_parallel ≪ γ · t_step`。

@@ -38,7 +38,13 @@ Kimi-VL 给出的答案是一个三件套架构（Figure 3，p.3，M3 解读：�
    - Figure 5（p.5，M3 解读为三段顺序流水线：(1) Joint SFT 文本+多模态 1 Epoch@32K + 1 Epoch@128K → 产出 Kimi-VL；(2) Long-CoT SFT 含 Planning/Evaluation/Reflection/Exploration 四类认知原语 → 产出 Kimi-VL-Thinking；(3) RL online RL on answer only + length penalty + difficulty control。M3 takeaway：通过先扩 context (32K→128K) 再注入 long-CoT 认知原语再 RL 细化，激活深度推理而不弃多模态对话能力）。
    - **Joint SFT**：ChatML 格式，仅对 answer + special tokens 监督（system/user prompt masked），format-aware packing 保跨模态位置关系。先 32K 训 1 epoch（LR 2e-5→2e-6），再 128K 训 1 epoch（re-warmup 到 1e-5→1e-6）。
    - **Long-CoT SFT**：小而精的 warmup set，prompt 工程生成 + 类 rejection sampling 验证。覆盖 4 类认知过程：planning（执行前系统列步）、evaluation（中间步批判）、reflection（重审改进）、exploration（考虑替代方案）。
-   - **RL**：online policy mirror descent 变体（§2.4 明言 "similar as Kimi k1.5"），目标函数 Eq.(1) `max_θ E[ E_{(y,z)~πθ}[r] - τ·KL(π_θ(x)||π_{θ_i}(x)) ]`，r∈{0,1}。每轮迭代后新策略变下一轮 reference。三个提效手段：length-based reward 惩罚过长响应（治 overthinking）；curriculum sampling（用难度标签）；prioritized sampling（用 per-instance 成功率）。推理时仍标准 autoregressive，不需专门 planning 算法的并行计算。
+   - **RL**：online policy mirror descent 变体（§2.4 明言 "similar as Kimi k1.5"），目标函数 Eq.(1)（权威 LaTeX 源 formulas.json，`$$` 渲染）：
+
+     $$
+     \max_\theta \mathbb{E}_{(x, y^*)\sim\mathcal{D}}\left[ \mathbb{E}_{(y, z)\sim\pi_\theta} \left[r(x, y, y^*)\right] - \tau \mathrm{KL} (\pi_{\theta}(x) || \pi_{\theta_i}(x)) \right]\, ,
+     $$
+
+     机制：外层期望在数据集 $\mathcal{D}$ 上采 $(x, y^*)$，内层期望在当前策略 $\pi_\theta$ 上采推理轨迹 $(y, z)$，奖励 $r(x,y,y^*)\in\{0,1\}$（仅判 answer 正确性，.txt 原文未单列 LaTeX 故不渲染 `$$`），$\tau>0$ 控 KL 正则强度——relative-entropy 正则化稳定策略更新（§2.4 原文 "regularized by relative entropy to stabilize policy updates"）。每轮迭代后新策略 $\pi_{\theta_{i+1}}$ 变下一轮 reference policy $\pi_{\theta_i}$。**双源校验**：formulas.json LaTeX 与 fulltext/kimi-vl-technical-report.txt §2.4 Eq.(1) 文本（`max_θ E_{(x,y*)~D}[ E_{(y,z)~πθ}[r(x,y,y*)] - τ KL(πθ(x)||πθ_i(x)) ]`）逐符号一致，无训练记忆补全。三个提效手段：length-based reward 惩罚过长响应（治 overthinking）；curriculum sampling（用难度标签）；prioritized sampling（用 per-instance 成功率）。推理时仍标准 autoregressive，不需专门 planning 算法的并行计算。
 
 8. **Kimi-VL-Thinking-2506：reasoning 与 perception 一体化**（§4.3, Table 4/5；定性证据见 Figure 6 p.8）
    - 相对原 Kimi-VL-Thinking 的推理增益（§4.3 原文与 Table 4，以 §4.2 文本给出的 Thinking 基线计）：MathVision **+20.1**（36.8→56.9，§4.3 原文给出 +20.1）、MathVista +8.8（71.3→80.1）、MMMU +2.3（61.7→64.0）、MMMU-Pro +3.3（43.0→46.3）、VideoMMMU +9.7（55.5→65.2）。注：Table 4 中 Kimi-VL-A3B-Thinking 列与 §4.2 文本给出的同名模型值存在内部不一致（MathVision 表 38.6 vs 文本 36.8；MathVista 表 74.9 vs 文本 71.3；MMMU 表 70.0 vs 文本 61.7），§4.3 的 +20.1 增益以 §4.2 文本基线 36.8 为准。

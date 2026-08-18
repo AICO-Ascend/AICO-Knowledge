@@ -21,7 +21,27 @@ LLM 应用正从"单轮聊天"转向"程序化多调用"——即 LM Programs：
 - **共享内存池**：不预分配固定 cache 池，缓存与运行请求**共享同一内存池**——队列积压时宁可赶光缓存换更大 batch size（§3, Alg.1）。
 - **四级共享模式**（Figure 9, p.14，M3 解读）：few-shot examples 跨 prompt 完全相同（蓝）；self-consistency 同 prompt 多采样；multi-turn chat 累积历史；tree-of-thought 树状分支共享 search history。M3 明确指出：现有系统（vLLM 仅 basic prefix sharing）无法全部自动处理，RadixAttention 在运行时统一覆盖这四类不规则 sharing pattern。
 - **9 时间点演化**（Figure 3, p.5，M3）：节点颜色编码 绿=新加 / 蓝=命中 / 红=驱逐。step(1) 空树→(2) "Hello/Hi" 合并单边→(3) 新轮复用前缀→(4) 节点分裂共享系统提示→(5) 内存压力驱逐节点 c→(6) few-shot 查询根分裂→(7) 批量 few-shot 分裂共享→(8) 第二会话消息驱逐 g/h→(9) self-consistency 采样驱逐 i/k/l。直观演示动态树形共享 + LRU，正是线性 prefix 系统无法处理的场景。
-- **cache-aware 调度**：等待队列按"已匹配前缀长度"排序（longest-shared-prefix-first ≡ DFS 序）。**Theorem 3.1**（§3, 证明见 A.3）：cache size ≥ 最长请求长度时，DFS 序达到最优 cache 命中率下界 C = Σ|e|（每条边 KV 恰计算一次）。在线情形被扰动，但 longest-prefix 序仍近似 augmented radix tree 上的 DFS（A.3 归纳证明）。
+- **cache-aware 调度**：等待队列按"已匹配前缀长度"排序（longest-shared-prefix-first ≡ DFS 序）。**Theorem 3.1**（§3, 证明见 A.3）：设 C 为该批请求的总 prefill 计算量，则任意调度的下界为
+
+$$
+C \geq \sum_{e \in \text{edges}(T)} |e|.
+$$
+
+当 cache size ≥ 最长请求长度（即 radix tree 最长路径）时，DFS 序恰使每条边 KV 恰计算一次，达到该下界：
+
+$$
+C = \sum_{e \in \text{edges}(T)} |e|.
+$$
+
+其中 T 为请求的 radix tree，edges(T) 为其边集，|e| 为边 e 对应 token 序列长度（formulas.json LaTeX 权威源；fulltext §A.3 line 1169-1185 逐字一致；M3 caption p14 双源校验——M3 明确"cache size ≥ 最大请求长度时 DFS / longest-shared-prefix-first 序遍历 radix tree 可获最优 cache 命中率"，与 LaTeX 下界结论一致）。在线情形 DFS 序被新到请求扰动，但 longest-prefix 序仍近似 augmented radix tree 上的 DFS（A.3 归纳证明）。
+
+- **cache 命中率定义**：batch R 中已命中（复用）的 prefill token 数占总 prefill token 数之比（formulas.json LaTeX 权威源；fulltext §A.3 line 1188-1196 逐字一致）：
+
+$$
+\frac{\sum_{r\in R}\text{number of cached prefill tokens in } r}{\sum_{r\in R}\text{number of prefill tokens in } r}.
+$$
+
+Theorem 3.1 的最优性即指上式取上界——DFS 序下 C 达下界 ⇒ 全部 prefill token 均被缓存复用 ⇒ 命中率趋于 1。
 - **Frontend Hint**：fork 时 interpreter 先发前缀作 hint，runtime 提前插树、简化调度匹配——前后端协同设计的实例（§3）。
 - **效果**：cache 命中率 50%–99%（§6.2，Figure 13 p.19）；cache-aware 调度达**最优命中率 96% 均值**（§6.2）。Figure 13 (M3) 显示 MMLU/ReAct/ToT/SoT/HellaSwag/JSON/DSPy RAG 实际命中率逼近最优（差<5%），短板在 Multi-Turn Chat（short ~50% vs 最优 ~60%、long ~55% vs ~75%，约 20% 空间）。无命中场景开销 <0.3%（ShareGPT 100 请求 74.3s，树管理仅 0.2s，§6.3）→ 可默认开启。生产部署 Chatbot Arena：Vicuna-33B 命中 74.1%、首 token 延迟均降 1.7×；LLaVA-NeXT-34B 命中 52.4%（§6.2）。
 - **分布式扩展**：tensor parallelism 每 GPU 维护分片 KV，树操作相同无需额外同步；data parallelism 由 router 维护 meta-tree 跟踪各 worker 子树，按 affinity（共享前缀长度）派发，弱一致性设计，4 worker 线性扩展（A.4）。

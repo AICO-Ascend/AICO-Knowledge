@@ -3,6 +3,7 @@
 > 论文：DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models
 > Shao, Wang, Zhu et al. (DeepSeek-AI / Tsinghua / Peking), arXiv:2402.03300v3, 27 Apr 2024
 > 深读锚点：GRPO 算法根（RL 系统谱系的起点）、数学语料 pipeline、code→math 训练顺序、unified RL paradigm
+> 公式权威源：extraction/formulas.json LaTeX（20 条，本文核心公式按 Eq. 号引用渲染 `$$`）。LaTeX↔M3 双源校验：本论文 Figure 2/3/4/5/6/7 未进入 M3 caption pipeline（minimax_captions.json 无本 slug 条目），LaTeX 即唯一权威源，无 M3 对照项；变量名（π_θ/π_ref/π_θ_old/A_t/β/ε/G）与 .txt 原文 Eq.2–Eq.21 逐字一致。
 
 ---
 
@@ -37,13 +38,37 @@ DeepSeekMath 攻击三个机制级瓶颈，而非"再做一次数学 SFT"：
 - Outcome supervision（§4.1.2）：Â_{i,t} = r̃_i = (r_i − mean(r)) / std(r)，对该 output 内所有 token 共享同一标量优势。
 - Process supervision（§4.1.3）：对第 i 个 output 的第 j 步给 reward r^{index(j)}_i，归一化为 r̃^{index(j)}_i；token t 的 advantage = 该步及之后所有步的归一化 reward 之和，Â_{i,t} = Σ_{index(j)≥t} r̃^{index(j)}_i。
 
-GRPO 还把 KL 正则**从 reward 中移出**，直接加到 loss 上（Eq. 3 末项 −β·D_KL[π_θ||π_ref]），并用 Schulman 2020 的无偏 KL 估计器（Eq. 4: π_ref/π_θ − log(π_ref/π_θ) − 1，保证非负）。这避免了 per-token KL penalty 污染 advantage 估计。
+GRPO 还把 KL 正则**从 reward 中移出**，直接加到 loss 上——核心目标 Eq.3（formulas.json [2]，clip 形式 + 末项 −β·D_KL）：
+
+$$
+\footnotesize \begin{split} \mathcal{J}_{GRPO}(\theta) &= \mathbb{E}{[q \sim P(Q), \{o_i\}_{i=1}^G \sim \pi_{\theta_{old}}(O|q)]} \\ & \frac{1}{G}\sum_{i=1}^G\frac{1}{|o_i|} \sum_{t=1}^{|o_i|} \left\{ \min \left[ \frac{\pi_\theta(o_{i,t} | q, o_{i,<t})}{\pi_{\theta_{old}}(o_{i,t} | q, o_{i,<t})} \hat{A}_{i,t}, \text{clip} \left( \frac{\pi_\theta(o_{i,t} | q, o_{i,<t})}{\pi_{\theta_{old}}(o_{i,t} | q, o_{i,<t})}, 1 - \epsilon, 1 + \epsilon \right) \hat{A}_{i,t} \right] - \beta \mathbb{D}_{KL}\left[\pi_{\theta} || \pi_{ref}\right]\right\} , \end{split}
+$$
+
+机制：对 G 个组内样本做 PPO-style clipped ratio，但 advantage Â_{i,t} 来自组内归一化而非 GAE+V_ψ；KL 项直接进 loss 而非污染 reward。KL 项用 Schulman 2020 的无偏估计器 Eq.4（formulas.json [3]），保证非负：
+
+$$
+\small \mathbb{D}_{KL}\left[\pi_{\theta} || \pi_{ref}\right] = \frac{\pi_{ref}(o_{i,t}|q,o_{i,<t})}{\pi_{\theta}(o_{i,t}|q,o_{i,<t})}- \log\frac{\pi_{ref}(o_{i,t}|q,o_{i,<t})}{\pi_{\theta}(o_{i,t}|q,o_{i,<t})} - 1,
+$$
+
+这避免了 per-token KL penalty 污染 advantage 估计。
 
 **效果**（§4.2, Table 5）：DeepSeekMath-RL 7B（仅用 144K 条 GSM8K+MATH 的 CoT 数据 RL，§4.2）→ GSM8K 82.9%→88.2%、MATH 46.8%→51.7%、CMATH 84.6%→88.8%、MGSM-zh 73.2%→79.6%。**开源 7B–70B 全域第一**，且 OOD 全面提升。训练配置（§4.2）：policy lr 1e-6, KL coeff β=0.04, 每题采样 64 outputs, max_len 1024, batch 1024, 每次探索后单次更新。
 
 ### 创新点 4 — Unified RL Paradigm（SFT/RFT/Online RFT/DPO/PPO/GRPO 的统一梯度框架）
 
-**机制**（§5.2.1 Eq. 5, Table 10）：把所有方法的梯度统一写成 ∇θJ = E[(q,o)∼D] (1/|o|) Σ_t GC(q,o,t,π_rf) · ∇θ log π_θ(o_t|q,o_<t)，三要素 = **Data Source**（offline SFT-sample / online policy-sample）× **Reward Function**（Rule 答案正确性 / Model 学习的 RM）× **Gradient Coefficient**（GC, Appendix A.1 推导）。GRPO 的 GC（Eq. 21）= Â_{i,t} + β(π_ref/π_θ − 1)，是唯一基于 group-relative reward model 且 differential reinforce/penalize 的。
+**机制**（§5.2.1 Eq. 5, Table 10）：把所有方法的梯度统一写成 Eq.5（formulas.json [4]）：
+
+$$
+\nabla_{\theta}\mathcal{J}_{\textcolor{red}{\mathcal{A}}}(\theta) = \mathbb{E}[\underbrace{(q,o) \sim \textcolor{red}{\mathcal{D}}}_{Data \ Source}]\left( \frac{1}{|o|} \sum_{t=1}^{|o|} \underbrace{GC_{{\mathcal{A}}}(q, o, t, \textcolor{red}{\pi_{{rf}}})}_{Gradient \ Coefficient} \nabla_{\theta}\log \pi_{\theta}(o_t | q, o_{<t})\right).
+$$
+
+三要素 = **Data Source** D（offline SFT-sample / online policy-sample）× **Reward Function** π_rf（Rule 答案正确性 / Model 学习的 RM）× **Gradient Coefficient** GC（Appendix A.1 推导）。GRPO 的 GC（Eq.21，formulas.json [19]）是唯一基于 group-relative reward model 且 differential reinforce/penalize 的：
+
+$$
+\footnotesize GC_{GRPO}(q, o, t, \pi_{\theta_{rm}}) = \hat{A}_{i,t} + \beta \left(\frac{\pi_{ref}(o_{i,t}|o_{i,<t})}{\pi_{\theta}(o_{i,t}|o_{i,<t})} - 1\right),
+$$
+
+机制：Â_{i,t}（组归一化优势）+ β·(π_ref/π_θ − 1)（KL 项的梯度系数），可正可负且按 reward 量级 differential。
 
 **效果**（§5.2.1 Figure 5）：在 1.3B 上对照——Online RFT > RFT（online sampling 后期优势）；GRPO > Online RFT（**关键：GRPO 对错误响应有负梯度而 Online RFT 仅对正确响应无差别 +1**）；GRPO+PS（process supervision）> GRPO+OS（outcome supervision），证明 step-aware 梯度系数更优。Iterative RL（2 轮，Figure 6）第一轮提升尤其显著。
 
@@ -81,6 +106,18 @@ GRPO 还把 KL 正则**从 reward 中移出**，直接加到 loss 上（Eq. 3 �
 | PPO | q∼P_sft, o∼π_θ(online) | Model (RM) | Eq. 18: A_t (via GAE+V_ψ) |
 | **GRPO** | q∼P_sft, **{o_i}^G ∼ π_θ(online, group)** | **Model (RM)** | **Eq. 21: Â_{i,t} + β(π_ref/π_θ − 1)** |
 
+表 B 中各 GC 的权威 LaTeX（formulas.json）：
+
+- **PPO GC（Eq.18，formulas.json [16]）** = 优势 A_t（经 GAE+V_ψ）：
+
+$$
+GC_{PPO}(q, o, t, \pi_{\theta_{rm}}) = A_t,
+$$
+
+- **GRPO GC（Eq.21，formulas.json [19]）** = 组归一化优势 + KL 梯度项（详见创新点 4 渲染）。
+- **RFT GC（Eq.10，formulas.json [9]）** = I(o) 正确性指示函数（详见 §4 渲染）。
+- **DPO GC（Eq.14，formulas.json [13]）** = sigmoid(β·log-ratio 差)（详见 §4 渲染）。
+
 ### Table C — GRPO 训练超参（§4.2）
 
 | 项 | 值 |
@@ -108,9 +145,27 @@ GRPO 还把 KL 正则**从 reward 中移出**，直接加到 loss 上（Eq. 3 �
 
 ## 4. 与同类对比
 
-- **vs PPO**（§4.1.1）：PPO 需一个与 policy 同量级的 V_ψ，且 per-token KL penalty 直接污染 reward（Eq. 2）。GRPO 删掉 V_ψ → 显存/算力大幅下降；KL 从 reward 移到 loss → advantage 干净。代价：每题须采 G=64 outputs（PPO 只需 1），**采样预算换价值函数预算**。
-- **vs Online RFT**（§5.2.1 Figure 5）：Online RFT 的 GC = I(o)（Eq. 10），错误响应 GC=0（不惩罚），正确响应 GC=1（无差别强化）。GRPO 的 GC = group-normalized Â，可正可负且按 reward 量级 differential。实验上 GRPO 超越 Online RFT，证明"对错误响应负梯度 + 量级敏感"是关键。
-- **vs DPO**（§A.1.4）：DPO 是 offline pairwise（o+, o− 均来自 π_sft），GC（Eq. 14）依赖 sigmoid(β·log-ratio 差)；本质是简化 RL（无显式 RM）。GRPO 用显式 RM + online group sampling，信号更细。
+- **vs PPO**（§4.1.1）：PPO 需一个与 policy 同量级的 V_ψ，且 per-token KL penalty 直接污染 reward（Eq.2，formulas.json [1]）：
+
+$$
+r_{t} = r_\phi(q, o_{\le t}) - \beta \log\frac{\pi_{\theta}(o_{t}|q, o_{<t})}{\pi_{ref}(o_{t}|q, o_{<t})},
+$$
+
+  机制：reward model r_φ 给出的标量 reward 被 per-token 的 log-ratio KL 项按 β 缩放后从 reward 中扣除，污染逐 token 的 advantage。GRPO 删掉 V_ψ → 显存/算力大幅下降；KL 从 reward 移到 loss → advantage 干净。代价：每题须采 G=64 outputs（PPO 只需 1），**采样预算换价值函数预算**。
+- **vs Online RFT**（§5.2.1 Figure 5）：Online RFT 的 GC = I(o)（Eq.10，formulas.json [9]）：
+
+$$
+GC_{RFT}(q, o, t) = \mathbb{I}(o)=\left\{ \begin{aligned} 1 & & {\rm the \ answer \ of \ o \ is \ correct} \\ 0 & & {\rm the \ answer \ of \ o \ is \ incorrect} \\ \end{aligned} \right.
+$$
+
+  机制：错误响应 GC=0（不惩罚），正确响应 GC=1（无差别强化）。GRPO 的 GC = group-normalized Â，可正可负且按 reward 量级 differential。实验上 GRPO 超越 Online RFT，证明"对错误响应负梯度 + 量级敏感"是关键。
+- **vs DPO**（§A.1.4）：DPO 是 offline pairwise（o+, o− 均来自 π_sft），GC（Eq.14，formulas.json [13]）依赖 sigmoid(β·log-ratio 差)：
+
+$$
+\footnotesize GC_{DPO}(q,o,t) = \sigma\left(\beta\log \frac{\pi_{\theta}(o^-_t | q, o^-_{<t})}{\pi_{\text{ref}}(o^-_t | q, o^-_{<t})} - \beta\log \frac{\pi_{\theta}(o^+_t | q, o^+_{<t})}{\pi_{\text{ref}}(o^+_t | q, o^+_{<t})}\right)
+$$
+
+  本质是简化 RL（无显式 RM）。GRPO 用显式 RM + online group sampling，信号更细。
 - **vs RFT/DPO 数据源**（Table 10）：RFT、DPO 是 offline（从 π_sft 采样），GRPO 是 online（从实时 π_θ 采样）。Figure 5 显示 online 在训练后期显著占优——因 actor 偏离 SFT 后，实时分布提供更 informative 的负样本。
 - **vs Minerva 540B**（§2.3 Table 2）：7B 模型 MATH 36.2% > 540B Minerva 33.6%，证明参数量非唯一关键，高质量 web 语料 + code 初始化可弥补 77× 的规模差。
 

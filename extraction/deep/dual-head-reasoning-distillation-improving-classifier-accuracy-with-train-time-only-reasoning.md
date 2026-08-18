@@ -20,23 +20,42 @@ DHRD 攻击的就是这个 **accuracy-vs-throughput trade-off**：在保留 pool
 ## 关键创新点
 
 ### 1. 双头共享 decoder 架构（Dual-Head Architecture, §3.1 / Figure 2）
-**机制**：在一个共享的 causal-attention decoder-only transformer 上挂两个轻量头，使单次 forward 同时支持分类与训练期推理（§3.1）。Figure 2（M3 caption 要点）刻画了这一数据流：共享 decoder 产出 hidden embedding tokens `ℝ^(L×D)`，向上分两支——
-- **Classification head**（推理期使用）：Pooler 对输入 span（蓝色 tokens）做聚合，经 2-layer MLP 产出 K 类 logits `ℝ^K`。论文采用**最后一个真实输入 token**（即 `<REASON>` 之前）的 last-token pooling（§3.1，遵循 Suganthan et al., 2025 的 pooling-MLP 适配方案）。
-- **Reasoning (LM) head**（仅训练期）：复用 base model 的 LM head，对完整序列 `s_i = [x_i, <REASON>, r_i, <ANS>, y_i]` 计算标准 causal LM next-token loss，产出 reasoning logits `ℝ^(L×V)`（§3.1, Eq. 1）。Figure 2 的 M3 要点明确：训练期输入是把分类序列（蓝）与教师 rationale tokens（橙）拼接，reasoning head 的 causal LM loss 覆盖两段，而 classification head 只作用于蓝色 span；推理期 rationale 被丢弃，仅走分类路径。
+**机制**：在一个共享的 causal-attention decoder-only transformer 上挂两个轻量头，使单次 forward 同时支持分类与训练期推理（§3.1）。训练期对样本 $i$ 先拼出统一序列（§3.1, Eq. 1，formulas.json LaTeX 权威源）：
+
+$$
+\begin{aligned} s_i &= [\,x_i,\ \text{\texttt{<REASON>}},\ r_i,\ \text{\texttt{<ANS>}},\ y_i\,],\qquad L_i = |s_i|, \qquad L^{(x)}_i = |x_i|. \end{aligned}
+$$
+
+即把分类输入 $x_i$、教师 rationale $r_i$ 与 gold label $y_i$ 用 `<REASON>` / `<ANS>` sentinel 串成一条序列；$L_i$ 与 $L^{(x)}_i$ 分别为全长与分类段长，是下方 Eq. 3 中 token-mask 边界的依据。Figure 2（M3 caption 要点）刻画了这一数据流：共享 decoder 产出 hidden embedding tokens $\mathbb{R}^{L\times D}$，向上分两支——
+- **Classification head**（推理期使用）：Pooler 对输入 span（蓝色 tokens，长度 $L^{(x)}_i$）做聚合，经 2-layer MLP 产出 K 类 logits $\mathbb{R}^K$。论文采用**最后一个真实输入 token**（即 `<REASON>` 之前）的 last-token pooling（§3.1，遵循 Suganthan et al., 2025 的 pooling-MLP 适配方案）。
+- **Reasoning (LM) head**（仅训练期）：复用 base model 的 LM head，对完整序列 $s_i$ 计算标准 causal LM next-token loss，产出 reasoning logits $\mathbb{R}^{L\times V}$（§3.1, Eq. 1）。Figure 2 的 M3 要点明确：训练期输入是把分类序列（蓝）与教师 rationale tokens（橙）拼接，reasoning head 的 causal LM loss 覆盖两段，而 classification head 只作用于蓝色 span；推理期 rationale 被丢弃，仅走分类路径。双源校验：formulas.json Eq. 1 的 sentinel 序列与 Figure 2 的 M3 caption 描述（"inputs concatenate task text with teacher rationales"、蓝/橙双色分段）一致。
 
 关键设计约束（§2）：**刻意保留 causal attention 与 last-token pooling**，避免 future-token leakage，并匹配 autoregressive pretraining 的归纳偏置（这是与 Gemma Encoder 这类双向注意力适配路线的明确分野）。
 
 **效果**：单次 forward pass 同时支持分类与训练期推理；推理期只跑分类头 forward，无解码、无 KV-cache 增长、无额外参数开销 —— Figure 2 M3 要点的"key technical takeaway"即此：把教师 rationale 蒸馏进共享 decoder 的表示，推理期零延迟加成。
 
 ### 2. 加权联合目标（Weighted Objective, §3.2, Eq. 2–4）
-**机制**：联合损失
-```
-L_total = β · L_cls + α · L_reason          (Eq. 4, α,β ≥ 0)
-```
-- `L_cls`：标准 K 类 cross-entropy（显式 log-softmax 形式，Eq. 2）。
-- `L_reason`：覆盖**整个序列**（input + rationale + label）的 token-level causal LM cross-entropy，带 `m_{i,t+1}` mask（Eq. 3），N 为有效 token 数。
+**机制**：设 batch size $B$、类别 logits $\mathbf{z}_i\in\mathbb{R}^K$、gold label $y_i\in\{1,\dots,K\}$。分类损失为显式 log-softmax 形式的 K 类 cross-entropy（§3.2, Eq. 2，formulas.json LaTeX 权威源）：
 
-教师 rationale 由 **Gemini 2.5 Flash** 用 Zero-shot CoT prompt（"Let's think step by step"，Kojima et al., 2022）生成，且教师被**给定了 gold label** 但被规则禁止在 rationale 中复述 Yes/No（§E.3：须以 `[END OF REASONING]` sentinel 分隔解释与答案），以保证 rationale 是"解释"而非"答案泄漏"。
+$$
+\mathcal{L}_{\mathrm{cls}} = -\frac{1}{B}\sum_{i=1}^B \Big( \mathbf{z}_i[y_i] - \log\!\sum_{k=1}^K e^{\mathbf{z}_i[k]} \Big).
+$$
+
+推理（causal LM）损失覆盖**整个序列** $s_i$（input + rationale + label）的 token-level cross-entropy，带 next-token mask $m_{i,t+1}$，$N$ 为有效 token 数（§3.2, Eq. 3，formulas.json LaTeX 权威源；词表大小 $V$、位置 $t$ 的 token logits $\ell_{i,t}$、目标 $v_{i,t}$）：
+
+$$
+\mathcal{L}_{\mathrm{reason}} = -\,\frac{1}{N}\sum_{i=1}^{B}\sum_{t=1}^{L_i-1} m_{i,t+1}\, \log\!\left( \frac{\exp\{\ell_{i,t}[\,v_{i,t+1}\,]\}} {\sum_{w=1}^{V}\exp\{\ell_{i,t}[w]\}} \right), \qquad N=\sum_{i=1}^{B}\sum_{t=1}^{L_i-1} m_{i,t+1}.
+$$
+
+两者以加权联合目标组合（§3.2, Eq. 4，formulas.json LaTeX 权威源）：
+
+$$
+\mathcal{L}_{\mathrm{total}} = \beta\,\mathcal{L}_{\mathrm{cls}} + \alpha\,\mathcal{L}_{\mathrm{reason}}, \quad \alpha,\beta \ge 0.
+$$
+
+双源校验：$\mathcal{L}_{\mathrm{cls}}$ 显式 log-softmax 形式、$\mathcal{L}_{\mathrm{reason}}$ 覆盖 input + rationale（蓝 + 橙）的 causal LM loss，与 Figure 2 的 M3 caption "causal LM loss over the full sequence, covering both classification input tokens (blue) and teacher rationale tokens (orange)" 完全对齐；$\alpha,\beta\ge 0$ 的非负约束与论文 §3.2 推理期"input only $x$, ignore reasoning head"的弃用机制互洽（$\beta>0$ 保留分类路径，$\alpha$ 仅训练期注入）。
+
+教师 rationale 由 **Gemini 2.5 Flash** 用 Zero-shot CoT prompt（"Let's think step by step"，Kojima et al., 2022）生成，且教师被**给定了 gold label** 但被规则禁止在 rationale 中复述 Yes/No（§E.3：须以 `[END OF REASONING]` sentinel 分隔解释与答案），以保证 rationale 是"解释"而非"答案泄漏"——这正对应 Eq. 1 中 `<REASON>` / `<ANS>` sentinel 的设置，使 $\mathcal{L}_{\mathrm{reason}}$ 监督的是非泄漏的解释文本。
 
 **效果**：α/β 在不同 backbone 上的最优点不同（§Table 1 / Table 3）：
 - Llama-3.1-8B / Llama-3.2-3B / Qwen-3-8B：**α=β=1** 最优；
@@ -44,7 +63,7 @@ L_total = β · L_cls + α · L_reason          (Eq. 4, α,β ≥ 0)
 - 8B 的两个 DHRD 设置 Avg 都**超过教师 Gemini 2.5 Flash**（87.52 / 87.23 vs 86.40，§Table 1；Figure 1 M3 要点：8B 雷达图上 DHRD 红线在 Avg 轴上外扩超过紫色教师线）—— 学生反超教师，证明增益不是简单复制教师知识。
 
 ### 3. 推理期零 rationale（Train-Time-Only Reasoning, §3.2 / §4.2）
-**机制**：推理时只输入 `x`，忽略 reasoning head，直接由 pooled 表示产出 `z`（§3.2 末段）。无 CoT 生成、无 KV-cache 增长、无采样。Figure 2 的 M3 caption 明示：reasoning head 与 rationale tokens 在 test time 被整体丢弃。
+**机制**：推理时只输入 $x$，忽略 reasoning head，直接由 pooled 表示产出类别 logits $\mathbf{z}$（§3.2 末段，对应 Eq. 2 中的 $\mathbf{z}_i$）。无 CoT 生成、无 KV-cache 增长、无采样。Figure 2 的 M3 caption 明示：reasoning head 与 rationale tokens 在 test time 被整体丢弃。
 
 **效果（§Table 5）**：
 | Backbone | QPS (pooled) | QPS (CoT) | 加速 |

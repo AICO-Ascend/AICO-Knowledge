@@ -91,11 +91,11 @@ C1→C2：加 Pa，激活内存 ×1/MP 度，模型 40B→60B；C2→C4：Pos→
 | 40B-60B | 88, 132 | 4096 |
 | 80B-170B | 100, 125, 150 | 8192 |
 
-**关键公式** — mixed-precision Adam 单设备 model-state 内存（§3.1）：
+**关键公式** — mixed-precision Adam 单设备 model-state 内存（§3.1）。fulltext 原文（L283）作 .txt 引用：`2Ψ + 2Ψ + KΨ = 16Ψ bytes`，其中 K=12（fp32 参数副本 4Ψ + momentum 4Ψ + variance 4Ψ）。**此式未收录于 formulas.json，按规则不渲染 `$$`**。LaTeX↔M3 双源校验：M3 p03 caption 记 `(2+2+K)·Ψ = 120 GB`（7.5B/Nd=64/K=12），与 .txt 数值一致，双源吻合。
 
-$$2\Psi + 2\Psi + K\Psi = 16\Psi \text{ bytes}, \quad K=12$$
+ZeRO-DP 三阶段内存（均未收录 formulas.json，按 .txt 引用不渲染 `$$`）：`Pos→4Ψ+KΨ/Nd`（fulltext L407，Nd 大时 ≈4Ψ，4× 缩减），`Pos+g→2Ψ+14Ψ/Nd`（fulltext L431，≈2Ψ，8× 缩减），`Pos+g+p→16Ψ/Nd`（fulltext L524，线性缩减）。这三条公式即 Figure 1（p.3）三根递减柱的数学刻度。通信量分析同理：baseline DP = `2Ψ`（fulltext L685），Pos+g = `2Ψ`（fulltext L699，与 baseline 同），Pos+g+p = `3Ψ`（fulltext L717，1.5× baseline）。
 
-ZeRO-DP 三阶段后：`Pos→4Ψ+KΨ/Nd`, `Pos+g→2Ψ+14Ψ/Nd`, `Pos+g+p→16Ψ/Nd`。这三条公式即 Figure 1 三根递减柱的数学刻度。
+> **formulas.json 数据质量备注**：formulas.json 中归至本 slug 的唯一 LaTeX 公式 `\frac{batch \times seq\_length \times n \times h}{B_{gpu}} \leq \frac{24 \times n \times h^2}{B_{data}}` 在全文及全部 M3 caption（p03/p04/p05/p16）中均无对应内容，LaTeX↔M3 双源校验失败，疑为误归属/幻觉，未渲染入本文。上述论文真实公式（16Ψ 内存模型、三阶段分片、通信量 2Ψ/3Ψ）均仅存于 fulltext .txt，未入 formulas.json，故按 .txt 引用不渲染 `$$`。
 
 ## 与同类对比
 

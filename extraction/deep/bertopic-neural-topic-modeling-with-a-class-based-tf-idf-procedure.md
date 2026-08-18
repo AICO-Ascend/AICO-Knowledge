@@ -21,14 +21,32 @@ BERTopic 的目标：**保留嵌入聚类的灵活性，同时把"主题表征"�
    - 效果：解耦带来 §7.1 列举的灵活性——embedding 阶段与 topic representation 阶段可分别使用不同预处理（如表征阶段去停用词而 embedding 不去）；簇定下来后无需 re-cluster 即可调整 topic n-gram。并使 embedding 模型可热替换：实验用 4 个 LM（USE / Doc2Vec / MiniLM / MPNET），Table 2 表现稳定。这一解耦也是 Figure 1（M3 caption 要点：BERTopic-MPNET 与 Top2Vec-MPNET 在 wall time 上"quite similar"，因二者 embedding 阶段同用 MPNET SBERT）的机制根源——§6.4 明示 BERTopic 与 Top2Vec 在使用同一 LM 时 wall time 相近，差异主要来自表征阶段，而 BERTopic 的 c-TF-IDF 表征阶段是统计运算、几乎不增加 wall time。
 
 2. **class-based TF-IDF（c-TF-IDF）——核心机制创新**
-   - 机制（§3.3，公式 2）：把同一 cluster 内全部文档**拼接为单一"类文档" c**，将经典 TF-IDF 中的 "document" 替换为 "class"：
-     - 经典（公式 1）：`W_{t,d} = tf_{t,d} · log(N / df_t)`
-     - c-TF-IDF（公式 2）：`W_{t,c} = tf_{t,c} · log(1 + A / tf_t)`，其中 `tf_{t,c}` 是词 t 在类 c（拼接文档）中的频次，`tf_t` 是 t 在所有类中的总频次，`A` 是各类平均词数。`+1` 保证取对数后非负。
+   - 机制（§3.3）：把同一 cluster 内全部文档**拼接为单一"类文档" c**，将经典 TF-IDF 中的 "document" 替换为 "class"。公式权威源 `extraction/formulas.json`（LaTeX，下同），已与 `extraction/fulltext/...txt` §3.3 Eq.(1)/Eq.(2) 双源校验一致（txt OCR 渲染与 LaTeX 同源，无训练记忆改写/补全）：
+     - 经典 TF-IDF（公式 1，cite: Joachims 1996，§3.3）：
+
+       $$
+       W_{t,d} = tf_{t,d} \cdot \log({\frac{N}{df_t}})
+       $$
+
+       其中 `tf_{t,d}` 为词 t 在文档 d 中的频次，`N` 为语料文档总数，`df_t` 为含 t 的文档数。
+     - c-TF-IDF（公式 2，cite: §3.3）：
+
+       $$
+       W_{t,c} = tf_{t,c} \cdot \log({1+\frac{A}{tf_t}})
+       $$
+
+       其中 `tf_{t,c}` 是词 t 在类 c（拼接文档）中的频次，`tf_t` 是 t 在所有类中的总频次，`A` 是各类平均词数。`+1` 于对数内层保证取对数后非负（论文原文："To output only positive values, we add one to the division within the logarithm"）。这一改写把 inverse document frequency 替换为 inverse class frequency，度量"词对类（簇）的信息量"。
    - 效果：**绕开 centroid 假设**——主题词不再由"距 centroid 近"决定，而由"在该簇内显著高于其他簇"决定。这一表征是簇级词分布，天然支持后续的 dynamic / 跨类扩展（§4、§7.1）。配合 HDBSCAN 软聚类的概率矩阵，可作为文档多主题分布的 proxy（§7.2 第一条弱点中的缓解）。
    - 主题数控制：**iteratively 合并最不常见主题与其最相似主题**，可降到用户指定主题数（§3.3 末段）。
 
 3. **动态主题建模——global IDF × local TF 的解耦**
-   - 机制（§4，公式 3）：先在**全语料无时序**拟合得到 global topics 与 global IDF；再对每个 timestep i，仅用 local `tf_{t,c,i}` 乘以**预计算的 global IDF**：`W_{t,c,i} = tf_{t,c,i} · log(1 + A / tf_t)`。
+   - 机制（§4，公式 3）：先在**全语料无时序**拟合得到 global topics 与 global IDF；再对每个 timestep i，仅用 local `tf_{t,c,i}` 乘以**预计算的 global IDF**。公式权威源 `extraction/formulas.json`（LaTeX），已与 `extraction/fulltext/...txt` §4 Eq.(3) 双源校验一致（txt OCR 与 LaTeX 同源，未用训练记忆改写/补全）：
+
+     $$
+     W_{t,c,i} = tf_{t,c,i} \cdot \log({1+\frac{A}{tf_t}})
+     $$
+
+     cite: §4。注意公式 3 与公式 2 的对数项形式完全相同（均沿用 global IDF），仅在 `tf` 下标增加 timestep i 以指明 local 词频；这正是"global IDF 复用、local TF 替换"解耦的数学体现。
    - 效果：local 表征**无需重新 embed/cluster**，计算极快（§4）。同一全局主题可在不同时段有不同词表征（论文举例：1990 年汽车主题词是 "car/vehicle"，2020 年是 "Tesla/self-driving"，但属同一 global topic）。
    - 可选线性平滑（§4.1）：对 c-TF-IDF 向量 L1-norm 归一化后取 t 与 t-1 的均值，引入"线性演化"假设。Table 3 显示平滑对 TC/TD 几乎无影响（§6.3），故为可选。
 
@@ -126,4 +144,4 @@ BERTopic 的目标：**保留嵌入聚类的灵活性，同时把"主题表征"�
 - **短文本 + Doc2Vec 崩塌（Table 2, §6.2）**：BERTopic-Doc2Vec 在 Trump 短文本 TC -.088，与 Top2Vec-Doc2Vec 同病。需用 SBERT 系嵌入规避短文本场景。
 - **GPU 依赖（§6.4）**：wall time 实验在 P100 GPU 上做，论文明示"wall time is expected to increase significantly when embedding documents without a GPU"。Doc2Vec 可作无 GPU 替代，但其稳定性已在上条被证伪——存在"无 GPU 则质量降级"的硬件-质量耦合边界。
 - **未覆盖的评测**：§7 开篇承认未做 unsupervised/supervised modeling metrics，且 use-case 覆盖有限；本文只做 NPMI + TD + wall time。
-- **未解决的中心问题残留**：c-TF-IDF 解决了 centroid 假设，但**主题词的最终选择仍依赖簇内词频对比**——若一个簇内某高频词恰好在多簇中都高频（c-TF-IDF 通过 `log(1+A/tf_t)` 抑制），但极端情况下仍可能选入冗余词。论文未给出该边界的形式化分析。
+- **未解决的中心问题残留**：c-TF-IDF 解决了 centroid 假设，但**主题词的最终选择仍依赖簇内词频对比**——若一个簇内某高频词恰好在多簇中都高频（c-TF-IDF 通过 Eq.(2) 对数项 $\log(1+\frac{A}{tf_t})$ 抑制，见公式 2 渲染块，权威源 formulas.json LaTeX），但极端情况下仍可能选入冗余词。论文未给出该边界的形式化分析。

@@ -14,7 +14,19 @@
 ## 关键创新点
 
 1. **Column-parallel → Row-parallel GEMM 融合，消除中间同步点（§3, Figure 3a p.4）**
-   机制：MLP 第一个 GEMM `Y = GeLU(XA)`（公式 1）。若按行切 A（`A=[A1;A2]`，对应切 X 的列），则 `Y = GeLU(X1·A1 + X2·A2)`（公式 2），因 GeLU 非线性，必须在 GeLU 前 all-reduce 同步——多一个同步点。论文改用 **按列切** `A = [A1, A2]`，得到 `[Y1,Y2] = [GeLU(XA1), GeLU(XA2)]`（公式 3），GeLU 可独立施加于每个分片，**消除同步点**。第二个 GEMM 沿行切，直接吃 GeLU 输出无需通信。整层 MLP 只需前向 1 次 all-reduce（g 算子）、反向 1 次 all-reduce（f 算子）。f/g 互为共轭：f 前向 identity / 反向 all-reduce；g 前向 all-reduce / 反向 identity（Code 1）。**Figure 3a（p.4）M3 解读**：输入 X 经 identity `f` 复制到各 worker，权重 `A=[A1,A2]` 按列切分，每 GPU 独立 `X·Ai→GeLU→Yi`（GeLU 内部无同步），第二个 GEMM 用 `B=[B1;B2]` 按行切吃 Yi，输出经 `g`（前向 all-reduce）汇合后接 Dropout→Z——图示完整对应公式 (1)-(3) 的推导链。
+   机制：MLP 第一个 GEMM 为
+
+   $$Y = \textrm{GeLU}(XA)$$
+
+   （formulas.json [0]，权威源 LaTeX 渲染；对应 fulltext L277 公式 (1)，双源校验一致）。若按行切 A，则权重与输入沿行列方向拆分为
+
+   $$X = [X_1, X_2], \ A=\begin{bmatrix} A_1 \\ A_2 \end{bmatrix}.$$
+
+   （formulas.json [1]，权威源；对应 fulltext L281-285 公式 (2)）。该分片会导出 `Y = GeLU(X1A1 + X2A2)`（fulltext L287-290 原文，**未收录于 formulas.json，按 .txt 引用不渲染 `$$`**）。因 GeLU 非线性，`GeLU(X1A1+X2A2) ≠ GeLU(X1A1)+GeLU(X2A2)`，必须在 GeLU 前 all-reduce 同步——多一个同步点。论文改用 **按列切** `A = [A1, A2]`，得到
+
+   $$[Y_1, Y_2]= [\textrm{GeLU}(XA_1), \textrm{GeLU}(XA_2)]$$
+
+   （formulas.json [2]，权威源；对应 fulltext L297 公式 (3)，双源校验一致），GeLU 可独立施加于每个分片，**消除同步点**。第二个 GEMM 沿行切，直接吃 GeLU 输出无需通信。整层 MLP 只需前向 1 次 all-reduce（g 算子）、反向 1 次 all-reduce（f 算子）。f/g 互为共轭：f 前向 identity / 反向 all-reduce；g 前向 all-reduce / 反向 identity（Code 1）。**Figure 3a（p.4）M3 解读**：输入 X 经 identity `f` 复制到各 worker，权重 `A=[A1,A2]` 按列切分，每 GPU 独立 `X·Ai→GeLU→Yi`（GeLU 内部无同步），第二个 GEMM 用 `B=[B1;B2]` 按行切吃 Yi，输出经 `g`（前向 all-reduce）汇合后接 Dropout→Z——图示完整对应公式 (1)-(3) 的推导链。
 
 2. **Multi-head attention 按 head 切分（§3, Figure 3b p.4）**
    机制：Q/K/V 的 GEMM 按 column-parallel 切分，使得**每个 attention head 的矩阵乘完全本地化在一个 GPU 上**，self-attention 内部无需通信。输出线性层按 row-parallel，直接吃并行 attention 输出。**Figure 3b（p.4）M3 解读**：X 经 `f` 广播，per-head 参数 `Q=[Q1,Q2], K=[K1,K2], V=[V1,V2]` 列切，单 GPU 完成一个 head 的完整 Q·K·V；输出投影用行切 `B`，`g` 把 heads 合并。与 MLP 同构，同样 f/g 共轭。净效果：单 transformer 层前向 2 次 all-reduce + 反向 2 次 all-reduce，共 4 次通信（见下条 Figure 4）。
@@ -72,7 +84,11 @@ Baseline：1.2B 单卡 = 39 TeraFLOPs = 单 V100(DGX-2H) 峰值的 30%（强基�
 | 8.3B | **10.81** | **66.51%** |
 | Previous SOTA | 15.79 | 63.24% |
 
-GPT-2 的规模-精度单调性另见 **Figure 6（p.7）** 验证曲线（M3 解读）：三条 perplexity 学习曲线分别对应 355M（蓝，平台 ~16）/ 2.5B（红，平台 ~10）/ 8.3B（黄，平台 ~9），共享同一 300k iter 训练管线、仅模型容量变化。**8.3B 在相同 iteration 预算内达到更小模型无法触及的更低 PPL**，且 355M 曲线最早在最高 PPL 处变平——即 compute-optimal 训练偏好更大模型，固定 step 预算被大架构更高效利用。该曲线形态与 Table 3 数字（19.31→12.76→10.81）互证。
+GPT-2 的规模-精度单调性另见 **Figure 6（p.7）** 验证曲线（M3 解读）：三条 perplexity 学习曲线分别对应 355M（蓝，平台 ~16）/ 2.5B（红，平台 ~10）/ 8.3B（黄，平台 ~9），共享同一 300k iter 训练管线、仅模型容量变化。**8.3B 在相同 iteration 预算内达到更小模型无法触及的更低 PPL**，且 355M 曲线最早在最高 PPL 处变平——即 compute-optimal 训练偏好更大模型，固定 step 预算被大架构更高效利用。该曲线形态与 Table 3 数字（19.31→12.76→10.81）互证。WikiText103 PPL 的评测定义（论文 §E.1 给出）为
+
+$$PPL= \exp({-\frac{1}{T_o}\sum_{t}^{T} \text{log} P(t|0:t-1)}$$
+
+（formulas.json [3]，权威源 LaTeX 渲染；对应 fulltext L1529-1535 公式 (4)，双源校验一致）——PPL 即语料平均交叉熵的指数化，是 LM 概率分布质量的自然度量。
 
 **Table 4 — BERT 配置（per-head hidden=64 恒定）**
 

@@ -9,9 +9,15 @@ LLM 适配下游任务的主流路径是 RLVR（如 GRPO），但 RL 方法**样
 
 GEPA 的核心论点（§1）：复合 AI 系统的一次 rollout 可被**序列化为自然语言轨迹**（各模块指令、推理链、工具调用、以及 reward 函数内部文本如编译器报错——在塌缩成 scalar reward 之前）。这些轨迹富含 LLM 已能理解的诊断信号；**在自然语言空间反思式学习**比在标量 policy-gradient 空间学习能更好利用 LLM 的语言先验，从而用极少 rollouts 达到大幅质量提升。
 
-形式化（§2，公式 1-2）：复合 AI 系统 Φ=(M,C,X,Y)，M=⟨M₁,…,M_{|M|}⟩ 为语言模块，C 为控制流，X/Y 为全局 IO schema。每个 module M_i=(π_i, θ_i, X_i, Y_i)，π 为 prompt（含指令与 few-shot）、θ 为底层权重。系统对任务实例 (x,m) 产出 y=Φ(x;⟨Π,Θ⟩)，度量 μ:Y×M→[0,1] 衡量输出质量。优化目标：
-- 公式(1)：argmax_{⟨Π,Θ⟩} E_{(x,m)~T}[μ(Φ(x;⟨Π,Θ⟩);m)]——允许同时更新 prompts 与权重，以兼容不同参数空间优化器（GEPA vs GRPO）的可比性。
-- 公式(2)：在 rollout 预算 B 约束下的 argmax 版本。
+形式化（§2，公式 1-2）：复合 AI 系统 Φ=(M,C,X,Y)，M=⟨M₁,…,M_{|M|}⟩ 为语言模块，C 为控制流，X/Y 为全局 IO schema。每个 module M_i=(π_i, θ_i, X_i, Y_i)，π 为 prompt（含指令与 few-shot）、θ 为底层权重。系统对任务实例 (x,m) 产出 y=Φ(x;⟨Π,Θ⟩)，度量 μ:Y×M→[0,1] 衡量输出质量。优化目标（Eq.1，formulas.json 权威 LaTeX，与 fulltext §2 p.4 双源校验一致）：
+
+$$
+\langle \Pi^*, \Theta^* \rangle_\Phi = \arg\max_{\langle \Pi, \Theta \rangle_\Phi} \mathbb{E}_{(x, m) \sim \mathcal{T}} \left[ \mu\big( \Phi(x; \langle \Pi, \Theta \rangle_\Phi),\, m \big) \right].
+$$
+
+机制：该目标允许同时更新 prompts（Π）与权重（Θ），使不同参数空间优化器（GEPA 仅更新 Π、GRPO 更新 Θ）在同一 argmax 框架下可比——这是 GEPA 与 GRPO 可对照的形式化根因（cite: §2, Eq.(1), fulltext p.4）。
+
+- 公式(2)（未收录 formulas.json，按 .txt 引用不渲染 $$，见 fulltext §2 p.4 Eq.(2)）：在 Eq.(1) 基础上增加约束 `s.t. #rollouts ≤ B`，即 rollout 预算 B 约束下的 argmax 版本——刻画"样本昂贵→预算受限"的核心挑战，为 GEPA 样本效率优化的对标设定。
 
 GEPA 只更新 Π（prompts），Θ 冻结——这使其天然可用于闭源模型，并与权重空间优化器（GRPO）形成"学习媒介"维度的对照（Figure 3，p.5，M3 解读：迭代循环 propose→minibatch 评估→若改进则升评到 D_pareto→Pareto 采样保多样→写入 pool P 含 ancestry；Figure 4，p.6 给出 Algorithm 1 主循环 + Algorithm 2 SelectCandidate 的形式化伪代码）。
 

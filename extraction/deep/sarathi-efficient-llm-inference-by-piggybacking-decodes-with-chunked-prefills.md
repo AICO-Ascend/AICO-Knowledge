@@ -31,7 +31,11 @@ bubbles 即 GPU 空转、直接掉吞吐。FasterTransformer/FastServe 用 micro
 ### 2. Decode-maximal batching（§4.3）
 - **机制**：一个 hybrid batch = **1 个 prefill chunk + 尽可能多的 decode token 填满剩余 slot**。关键操作是 **fused linear operation**：prefill chunk 与 decode token 在 preproj/postproj/ffn 等线性算子上合并成单次 matmul，prefill 的 weight 一旦从 HBM 取出即被 decode 复用——decode 从 memory-bound 转为 compute-bound。attention 仍 prefill/decode 分开算（decode 之间 batched，prefill chunk 单独）。
 - **关键 insight**：每请求只有 1 个 prefill phase 但多个 decode phase，prefill 请求数远不够给所有 decode 配 piggyback。Chunked-prefill 把 1 个 prefill 切成 N 个 chunk → 单条 prefill 即可服务 N 个 hybrid batch → 把 piggyback 覆盖率从"请求级"放大到"chunk 级"（§1 末、§4.1）。
-- **最大 batch size**（§4.3.1 Decode batch）：`B = ⌊(M_G − M_S) / (L·m_kv)⌋`，其中 `M_G` GPU 总显存、`M_S` 模型参数显存、L 最大序列长度、`m_kv` 每 token 的 K/V pair 显存。baseline decode-only 可用 B，SARATHI 只能 B−1（多出 1 个 slot 给 prefill chunk，其 KV cache 须驻留到对应 decode 启动）。
+- **最大 batch size**（§4.3.1 Decode batch）。机制：给定 GPU 总显存 `M_G`、模型参数显存 `M_S`、最大序列长度 L、每 token 的 K/V pair 显存 `m_kv`，可 piggyback 的最大 decode batch 由 KV-cache 显存占用反推——可用显存 `(M_G − M_S)` 除以单请求 KV 占用 `L·m_kv` 后取整：
+
+$$B = \lfloor \left(\frac{M_G - M_S}{L*m_{kv}}\right) \rfloor$$
+
+  公式权威源：formulas.json 收录的 LaTeX（与 fulltext §4.3.1 双源校验一致；该公式位于正文 p.6 非图内，M3 图注未覆盖此公式，故第二源取 fulltext.txt）。baseline decode-only 可用 B，SARATHI 只能 B−1（多出 1 个 slot 给 prefill chunk，其 KV cache 须驻留到对应 decode 启动）。
 - **效果**（§4.3.1 Table 2，LLaMA-13B/A6000）：baseline decode-only 每 token 12.49ms，decode-maximal 仅 1.2ms，**~10× 提速**；prefill per-token 0.229ms 不变。decode 的 marginal cost 几乎为零（线性算子）。这与 Figure 8（p.9，M3 解读 grouped bar：batch=2/seq=1K 时 decode speedup 峰值 ~10×，随 batch 增大单调下降至 batch=18 的 2.5–3×，短序列始终优于长序列）一致——speedup 随 batch 上升而下降的原因：baseline decode 越大越高效；随序列长度上升，attention 二次增长蚕食 SARATHI 改进空间（仅线性算子受益）。论文给出 decode speedup 总区间 **2.8×–10×**（§5.1.1）。
 
 ### 3. Chunk size 选择 + Tile quantization（§4.4）

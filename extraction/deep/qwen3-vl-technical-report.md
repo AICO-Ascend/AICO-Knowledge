@@ -1,6 +1,8 @@
 # Qwen3-VL — 技术点深读（DEEP 2026-08-18）
 
 > 来源说明：本地全文抽取 `extraction/fulltext/qwen3-vl-technical-report.txt` 仅含 Abstract（2448 字符，42 页 PDF 的抽取不完整）。本深读笔记的所有机制描述与数字均严格回溯至该 Abstract（§Abstract / L8–L35），网络受限无法拉取 arXiv 全文 HTML。涉及具体 benchmark 分数处，本文仅引用 Abstract 中点名的 benchmark 名称（MMMU / MathVista / MathVision）与定性结论，不杜造精确数字。
+>
+> 公式合规审计（2026-08-19）：`extraction/formulas.json` 中本 slug 仅收录 1 条 LaTeX = `\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}`，系与本文无关的通用二次公式占位 stub，并非 Qwen3-VL Abstract 中的任何公式（Abstract 仅有 "square-root reweighting" 的定性描述，无闭式公式）。按铁律#2「未收录按 .txt 引用不渲染 `$$`」，本笔记**不渲染任何 `$$` 公式块**；正文出现的 "√N" 仅为对术语 "square-root reweighting" 的机制释义（按样本量 N 的平方根重加权），属行内描述性文本而非权威 LaTeX 渲染，且未引入训练记忆补全的闭式。全文 truncated，具体重加权形式 / MRoPE 相位分解 / DeepStack 注层配置等公式均标 not-available，待全文补全后回填。无 M3 captions（本 slug 未抽取任何 PNG 图，铁律#1 禁图直读自动满足）。
 
 ---
 
