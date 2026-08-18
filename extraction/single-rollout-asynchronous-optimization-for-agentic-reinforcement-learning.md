@@ -53,21 +53,39 @@ tags: [rl]
 > [!quote] caption
 > Training reward for token-level SAO training and step-level variants, where token-level shows better training rewards.
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.2 `πθ(y|q), which generates a response sequence y = [y1, . . . , y|y|] given a query q from dataset D.`
-- p.3 `where rt(θ) =`
-- p.3 `ϕ = E[(Vϕ(q, y<t) −R)2], where R denotes the cumulative reward. To balance`
-- p.3 `where δt = rt + γVϕ(st+1) −Vϕ(st). While effective, this approach necessitates maintaining a copy`
-- p.4 `i.e., rt(θ) =`
-- p.4 `L(θ) = ˆEt`
-- p.4 `rt(θ) = exp (log πθ(at|st) −log πrollout(at|st))`
-- p.5 `ˆA(ai,N) = δ + γλ ˆA(ai+1,0)`
-- p.5 `δ = rt + γV (ai+1,0) −V (ai,N)`
-- p.6 `ϵlow = 0.3, ϵhigh = 5.0. We adopt a length-adaptive GAE [Yue et al., 2025] with λpolicy = 1 −1`
-- p.6 `and α = 1.5. The value model is trained with a learning rate of 5 × 10−6, λcritic = 1, and a 10-step`
-- p.9 `recent rewards, thereby facilitating advantage computation as ˆA = r −E[rwindow]. By decoupling`
-- p.13 `λpolicy = 1 −`
+$$
+\mathbb{E}\left[ \frac{1}{|y|} \sum_{t=1}^{|y|} \min \left( r_t(\theta) \hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t \right) \right]
+$$
+
+$$
+\hat{A}_t^{\text{GAE}} = \sum_{l=0}^{|y|-t-1} (\gamma \lambda)^l \delta_{t+l}
+$$
+
+$$
+\hat{A}_{i,t} = \frac{R_i - \mu_R}{\sigma_R}, \quad \text{with} \quad \mu_R = \frac{1}{G}\sum_{j=1}^G R_j
+$$
+
+$$
+L(\theta) = \hat{\mathbb{E}}_t \left[ f(r_t(\theta), \epsilon_l, \epsilon_h) \hat{A}_t \log \pi_{\theta}(a_t|s_t) \right]
+$$
+
+$$
+r_t(\theta) = \exp\left( \log \pi_\theta(a_t|s_t) - \log \pi_{\text{rollout}}(a_t|s_t) \right)
+$$
+
+$$
+f(x; \epsilon_\ell, \epsilon_h) = \begin{cases} x, & \text{if } 1-\epsilon_\ell < x < 1+\epsilon_h \\ 0, & \text{otherwise} \end{cases}
+$$
+
+$$
+\hat{A}(a_{i, N}) = \delta + \gamma \lambda \hat{A}(a_{i+1, 0})
+$$
+
+$$
+\delta = r_t + \gamma V(a_{i+1, 0}) - V(a_{i, N})
+$$
 
 ## 相关论文
 

@@ -1660,5 +1660,293 @@
    "env": "eqnarray",
    "latex": "N_{opt}(C)=G \\bigg(\\frac{C}{6}\\bigg)^a, \\text{~~~} D_{opt}(C)=G^{-1} \\bigg(\\frac{C}{6}\\bigg)^b,"
   }
+ ],
+ "kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference": [
+  {
+   "env": "equation",
+   "latex": "KV_{per\\ token} = 2 \\times H\\times D \\times B \\times L"
+  },
+  {
+   "env": "equation",
+   "latex": "KV_{cache\\ size} = KV_{per\\ token} \\times \\mathrm{Context Length}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Score}\\left( Q_i, K_j\\right) = \\frac{Q_i \\cdot K_j^{T}}{\\sqrt{d_k}}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\alpha_{ij} = \\mathrm{softmax}\\!\\left( \\frac{Q_i \\cdot K_j^{T}}{\\sqrt{d_k}} \\right)"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{output}_i = \\sum_{j} \\alpha_{ij} V_j"
+  },
+  {
+   "env": "equation",
+   "latex": "\\tilde Q^{(\\text{layer}+1)} = X^{(\\text{layer})} \\cdot M \\cdot W_Q^{(\\text{layer}+1)}"
+  },
+  {
+   "env": "display",
+   "latex": "V_i' = \\frac{\\phi(Q_i)^T \\sum_{j=1}^{i} \\phi(K_j) V_j^T} {\\phi(Q_i)^T \\sum_{j=1}^{i} \\phi(K_j)}"
+  },
+  {
+   "env": "display",
+   "latex": "V_i' = \\frac{\\phi(Q_i)^T S_i}{\\phi(Q_i)^T Z_i}"
+  },
+  {
+   "env": "display",
+   "latex": "S_i = \\sum_{j=1}^{i} \\phi(K_j) V_j^T"
+  },
+  {
+   "env": "display",
+   "latex": "Z_i = \\sum_{j=1}^{i} \\phi(K_j)"
+  },
+  {
+   "env": "display",
+   "latex": "o_t = \\sum_{\\ell=0}^{L-1} \\lambda_t^{(\\ell)} q_t^T \\left(\\sum_{s \\in B_t^{(\\ell)}} v_s k_s^T \\right) = \\sum_{\\ell=0}^{L-1} \\lambda_t^{(\\ell)} q_t^T S_t^{(\\ell)}"
+  },
+  {
+   "env": "display",
+   "latex": "S_t = (I - \\beta_t k_t k_t^T)\\,\\mathrm{Diag}(\\alpha_t)S_{t-1} + \\beta_t k_t v_t^T \\in \\mathbb{R}^{d_k \\times d_v}"
+  },
+  {
+   "env": "display",
+   "latex": "o_t = S_t^T q_t \\in \\mathbb{R}^{d_v}"
+  }
+ ],
+ "kimi-linear-an-expressive-efficient-attention-architecture": [
+  {
+   "env": "equation",
+   "latex": "\\mathbf{S}_t = \\left(\\mathbf{I}-\\beta_t\\bm{k}_{t}\\bm{k}_{t}^{\\top}\\right)\\brickred{\\operatorname{Diag}\\left(\\bm{\\alpha}_t \\right)}\\mathbf{S}_{t-1} + \\beta_t\\bm{k}_{t}\\bm{v}_{t}^{\\top}\\in\\mathbb{R}^{d_k\\times d_v}; \\qquad \\bm{o}_t = \\mathbf{S}^\\top_t \\bm{q}_t\\in\\mathbb{R}^{d_v}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} \\mathbf{S}_{[t]}^r & = \\underbrace{\\left(\\prod_{i=1}^r \\left(\\mathbf{I} - \\beta_{[t]}^i \\boldsymbol{k}_{[t]}^i \\boldsymbol{k}_{[t]}^{i\\top}\\right) \\brickred{\\operatorname{Diag}(\\boldsymbol{\\alpha}_{[t]}^i)}\\right)}_{:= \\mathbf{P}_{[t]}^r} \\cdot\\mathbf{S}_{[t]}^{0} + \\underbrace{\\sum_{i=1}^{r} \\left(\\prod_{j=i+1}^r \\left(\\mathbf{I} - \\beta_{[t]}^j \\boldsymbol{k}_{[t]}^j \\boldsymbol{k}_{[t]}^{j\\top}\\right)\\brickred{\\operatorname{Diag}(\\boldsymbol{\\alpha}_{[t]}^j)}\\right)\\cdot\\beta_{[t]}^i \\boldsymbol{k}_{[t]}^i\\boldsymbol{v}_{[t]}^{i\\top}}_{:=\\mathbf{H}_{[t]}^r} \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{S}_{[t+1]} = \\brickred{\\operatorname{Diag}(\\boldsymbol{\\gamma}_{[t]}^C)} \\mathbf{S}_{[t]} + \\left(\\brickred{\\bm{\\Gamma}_{[t]}^{i\\rightarrow C}} \\odot \\mathbf{K}_{[t]}\\right)^\\top \\left(\\mathbf{U}_{[t]} - \\mathbf{W}_{[t]} \\mathbf{S}_{[t]}\\right) \\in \\mathbb{R}^{d_k\\times d_v}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{O}_{[t]} = \\underbrace{\\left(\\brickred{{\\bm{\\Gamma}}_{[t]}^{1\\rightarrow C}} \\odot\\mathbf{Q}_{[t]}\\right) \\mathbf{S}_{[t]}}_\\text{inter chunk} + \\underbrace{\\operatorname{Tril}\\left(\\left(\\brickred{{\\bm{\\Gamma}}_{[t]}^{1\\rightarrow C}} \\odot \\mathbf{Q}_{[t]} \\right) \\left(\\frac{\\mathbf{K}_{[t]}}{\\brickred{{\\bm{\\Gamma}}_{[t]}^{1\\rightarrow C}}} \\right)^\\top \\right)}_\\text{intra chunk} \\underbrace{\\left(\\mathbf{U}_{[t]} - \\mathbf{W}_{[t]} \\mathbf{S}_{[t]}\\right)}_{\\text{``pseudo''-value term}} \\in \\mathbb{R}^{C\\times d_v}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} \\bm{o}_t = \\mathbf{W}_o\\left( \\operatorname{Sigmoid}\\left(\\mathbf{W}_g^{\\uparrow}\\mathbf{W}_g^{\\downarrow} \\bm{x}_t\\right)\\odot \\operatorname{RMSNorm}\\left(\\operatorname{KDA}\\left( \\bm{q}_t,\\bm{k}_t,\\bm{v}_t,\\brickred{\\bm{\\alpha}_t},\\beta_t \\right) \\right)\\right) \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "s_{t,i} = \\bm{q}_t^{\\top} \\left( \\prod_{j=i+1}^t \\mathbf{R}_j\\right) \\bm{k}_i"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{FLOPs}_{\\text{Attn}}(T; d_h) \\;=\\; 2 T^2 d_h."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{S}_{t}=\\brickred{\\mathbf{A}_t}\\mathbf{S}_{t-1} + \\bm{k}_t\\bm{v}_t^\\top,\\quad\\bm{o}_{t}=\\mathbf{S}_t^\\top\\bm{q}_t."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{P}_{[t]}^r = \\brickred{\\operatorname{Diag}(\\boldsymbol{\\gamma}_{[t]}^r)} - \\sum_{i=1}^{r} \\brickred{\\operatorname{Diag}(\\boldsymbol{\\gamma}_{[t]}^{i\\rightarrow r})} \\boldsymbol{k}_{[t]}^i \\boldsymbol{w}_{[t]}^{i\\top}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\boldsymbol{w}_{[t]}^r = \\beta_{[t]}^r \\left( \\brickred{\\operatorname{Diag}(\\boldsymbol{\\gamma}_{[t]}^r)} \\boldsymbol{k}_{[t]}^r - \\sum_{i=1}^{r-1} \\boldsymbol{w}_{[t]}^i\\left( \\boldsymbol{k}_{[t]}^{i\\top}\\brickred{\\operatorname{Diag}\\left(\\boldsymbol{\\gamma}_{[t]}^{i\\rightarrow r} \\right)}\\boldsymbol{k}_{[t]}^r \\right) \\right)"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{H}_{[t]}^r = \\sum_{i=1}^{r} \\brickred{\\operatorname{Diag}\\left(\\boldsymbol{\\gamma}_{[t]}^{i\\rightarrow r}\\right)} \\boldsymbol{k}_{[t]}^i \\boldsymbol{u}_{[t]}^{i\\top}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\boldsymbol{u}_{[t]}^r = \\beta_{[t]}^r \\left(\\boldsymbol{v}_{[t]}^r - \\sum_{i=1}^{r-1}\\boldsymbol{u}_{[t]}^i \\left(\\boldsymbol{k}_{[t]}^{i\\top} \\brickred{\\operatorname{Diag}\\left(\\boldsymbol{\\gamma}_{[t]}^{i\\rightarrow r}\\right)} \\boldsymbol{k}_{[t]}^r\\right) \\right)"
+  },
+  {
+   "env": "align",
+   "latex": "\\boldsymbol{w}_{[t]}^r &= \\beta_{[t]}^r \\left( \\brickred{\\operatorname{Diag}(\\boldsymbol{\\gamma}_{[t]}^r)} \\boldsymbol{k}_{[t]}^r - \\sum_{i=1}^{r-1} \\boldsymbol{w}_{[t]}^i\\left( \\boldsymbol{k}_{[t]}^{i\\top}\\brickred{\\operatorname{Diag}\\left(\\boldsymbol{\\gamma}_{[t]}^{i\\rightarrow r} \\right)}\\boldsymbol{k}_{[t]}^r \\right) \\right) \\\\ \\boldsymbol{u}_{[t]}^r &= \\beta_{[t]}^r \\left(\\boldsymbol{v}_{[t]}^r - \\sum_{i=1}^{r-1}\\boldsymbol{u}_{[t]}^i \\left(\\boldsymbol{k}_{[t]}^{i\\top} \\brickred{\\operatorname{Diag}\\left(\\boldsymbol{\\gamma}_{[t]}^{i\\rightarrow r}\\right)} \\boldsymbol{k}_{[t]}^r\\right) \\right)"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{M}_{[t]}&=\\left(\\mathbf{I} + \\operatorname{StrictTril} \\left(\\operatorname{Diag}\\left(\\beta_{[t]}\\right) \\left(\\brickred{{\\bm{\\Gamma}}_{[t]}^{1\\rightarrow C}} \\odot \\mathbf{K}_{[t]} \\right) \\left(\\frac{\\mathbf{K}_{[t]}}{\\brickred{\\bm{\\Gamma}_{[t]}^{1\\rightarrow C}}} \\right)^\\top\\right) \\right)^{-1} \\operatorname{Diag}\\left(\\beta_{[t]}\\right)\\\\ \\mathbf{W}_{[t]} &= \\mathbf{M}_{[t]} \\left(\\brickred{{\\bm{\\Gamma}}_{[t]}^{1\\rightarrow C}}\\odot\\mathbf{K}_{[t]}\\right), \\quad\\quad\\quad \\mathbf{U}_{[t]}=\\mathbf{M}_{[t]} \\mathbf{V}_{[t]}"
+  },
+  {
+   "env": "align",
+   "latex": "\\bm{q}^h_t,\\bm{k}^h_t &= \\operatorname{L2Norm}(\\operatorname{Swish}(\\operatorname{ShortConv}(\\mathbf{W}^h_{q/k}\\bm{x}_t)))\\in \\mathbb{R}^{d_k}\\\\ \\bm{v}^h_t &= \\operatorname{Swish}(\\operatorname{ShortConv}(\\mathbf{W}^h_v\\bm{x}_t))\\in \\mathbb{R}^{d_v} \\\\ \\brickred{\\bm{\\alpha}^h_t} &= f(\\mathbf{W}_{\\alpha}^{\\uparrow}\\mathbf{W}_{\\alpha}^{\\downarrow}\\bm{x}_t) \\in [0,1]^{d_k}\\\\ \\beta^h_t &= \\operatorname{Sigmoid}(\\mathbf{W}_{\\beta}^h\\bm{x}_t) \\in [0,1]\\\\"
+  },
+  {
+   "env": "align",
+   "latex": "\\bm{o}_t = \\sum_{i=1}^t \\left( \\bm{q}_t^{\\top} \\left(\\prod_{j=i+1}^t\\brickred{\\mathbf{A}_j}\\left(\\mathbf{I}-\\beta_j\\bm{k}_j\\bm{k}_j^\\top\\right) \\right)\\bm{k}_j\\right) \\bm{v}_j"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathrm{FLOPs}_{\\text{KDA}}(T; C, d_h) &= 6 T d_h^2 + 3 T C d_h + T C^2."
+  },
+  {
+   "env": "display",
+   "latex": "\\mathbf{S}_t = \\mathbf{S}_{t-1} + \\bm{k}_t \\bm{v}_t^\\top, \\qquad \\bm{o}_t = \\mathbf{S}_t^\\top \\bm{q}_t ."
+  },
+  {
+   "env": "display",
+   "latex": "\\mathcal{L}_t(\\mathbf{S}) = -\\langle \\mathbf{S}^\\top \\bm{k}_t, \\bm{v}_t \\rangle ,"
+  },
+  {
+   "env": "display",
+   "latex": "\\mathcal{L}_t(\\mathbf{S}) = \\tfrac{1}{2}\\|\\mathbf{S}^\\top\\bm{k}_t - \\bm{v}_t\\|^2 ."
+  }
+ ],
+ "muon-is-scalable-for-llm-training": [
+  {
+   "env": "equation",
+   "latex": "H(\\sigma) = -\\frac{1}{\\log n}\\sum_{i=1}^n \\frac{\\sigma^2_i}{\\sum_{j=1}^n \\sigma^2_j} \\log \\frac{\\sigma^2_i}{\\sum_{j=1}^n \\sigma^2_j} \\notag"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{M}_t &= \\mu \\mathbf{M}_{t-1} + \\nabla\\mathcal{L}_t(\\mathbf{W}_{t-1}) \\notag \\\\ \\mathbf{O}_t &= \\text{Newton-Schulz}(\\mathbf{M}_t)\\text{\\footnotemark[1]} \\\\ \\mathbf{W}_t &= \\mathbf{W}_{t-1} - \\eta_t \\mathbf{O}_t \\notag"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{X}_k &= a \\mathbf{X}_{k-1} + b (\\mathbf{X}_{k-1} \\mathbf{X}_{k-1}^\\mathrm{T}) \\mathbf{X}_{k-1} + c (\\mathbf{X}_{k-1} \\mathbf{X}_{k-1}^\\mathrm{T})^2 \\mathbf{X}_{k-1}"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{W}_t = \\mathbf{W}_{t-1} - \\eta_t (\\mathbf{O}_t + \\lambda \\mathbf{W}_{t-1})"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{W}_t = \\mathbf{W}_{t-1} - \\eta_t (0.2\\cdot\\mathbf{O}_t\\cdot\\sqrt{\\max(A,B)} + \\lambda \\mathbf{W}_{t-1})"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{W}_t = \\mathbf{W}_{t-1} - \\eta_t (0.2\\cdot\\mathbf{O}_t\\cdot\\sqrt{H} + \\lambda \\mathbf{W}_{t-1})"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathbf{W}_t = \\mathbf{W}_{t-1} - \\eta_t (0.2\\cdot\\mathbf{O}_t/\\mathop{\\text{RMS}}(\\mathbf{O}_t) + \\lambda \\mathbf{W}_{t-1})"
+  }
+ ],
+ "attention-residuals": [
+  {
+   "env": "equation",
+   "latex": "\\bm{h}_{l} = \\brickred{\\alpha_{0 \\to l}} \\cdot \\bm{h}_1 + \\sum_{i=1}^{l-1} \\brickred{\\alpha_{i \\to l}} \\cdot f_i(\\bm{h}_{i})"
+  },
+  {
+   "env": "equation",
+   "latex": "\\brickred{\\alpha_{i \\to l}} = \\frac{\\phi\\left(\\bm{q}_{l}, \\bm{k}_{i}\\right)}{\\sum_{j=0}^{l-1} \\phi\\left(\\bm{q}_{l}, \\bm{k}_{j}\\right)}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\bm{q}_{l} = \\bm{w}_{l}, \\quad \\quad \\bm{k}_{i} = \\bm{v}_{i} = \\begin{cases} \\bm{h}_1 & i = 0 \\\\ f_i(\\bm{h}_{i}) & 1 \\leq i \\leq l-1 \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\bm{h}_{l} = \\sum_{i=0}^{l-1} \\brickred{\\alpha_{i \\to l}} \\cdot \\bm{v}_{i}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\bm{b}_n = \\sum_{j \\in \\mathcal{B}_n} f_j(\\bm{h}_j)"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{V} = \\begin{cases} [\\bm{b}_0, \\bm{b}_1, \\ldots, \\bm{b}_{n-1}]^\\top & \\text{if } i = 1 \\text{ (first layer of block } n\\text{)} \\\\ [\\bm{b}_0, \\bm{b}_1, \\ldots, \\bm{b}_{n-1}, \\bm{b}_n^{i-1}]^\\top & \\text{if } i \\geq 2 \\text{ (subsequent layers)} \\\\ \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Comm}_{\\text{na\\\"ive}} = \\sum_{j=1}^{C-1} jN_p \\cdot d = \\frac{C(C{-}1)}{2}\\,N_p d."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Comm}_{\\text{cached}} = \\underbrace{\\frac{P(P{-}1)}{2}\\, N_p d}_{\\text{first virtual stage}} + \\underbrace{(V{-}1)\\, P^2\\, N_p d}_{\\text{subsequent virtual stages}}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{W}_t = \\mathbf{W}_{t-1} - \\eta\\,\\nabla\\ell(\\mathbf{W}_{t-1};\\, \\bm{x}_t),"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathbf{M}_{i \\to l} = \\bm{\\beta}_{i}^\\top \\, \\mathbf{A}_{i+1 \\to l}^{\\times} \\, \\bm{\\alpha}_{l},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Read}_{\\text{inter}}^{(n)} = 2(n-1)Sd,"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Read}_{\\text{inter}} = \\sum_{n=1}^{N} 2(n-1)Sd = 2Sd \\cdot \\frac{N(N-1)}{2} = dL(N-1)."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Write}_{\\text{inter}} = Ld"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Read}_{\\text{intra}}^{(n)} = \\sum_{t=1}^{S} 2(t-1)d = S(S-1)d."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathrm{Read}_{\\text{total}} = dL(N-1) + N \\cdot S(S-1)d, \\qquad \\mathrm{Write}_{\\text{total}} = 2Ld."
+  },
+  {
+   "env": "equation",
+   "latex": "\\text{Read per layer} = (N-1)d + (S-1)d = (S + N - 2)d, \\qquad \\text{Write per layer} = 2d,"
+  },
+  {
+   "env": "equation",
+   "latex": "\\boxed{\\;\\text{Total I/O per layer} = (S + N)\\,d.\\;}"
+  },
+  {
+   "env": "display",
+   "latex": "\\begin{bmatrix} \\bm{h}_1 \\\\ \\bm{h}_2 \\\\ \\vdots \\\\ \\bm{h}_L \\end{bmatrix} = \\begin{bmatrix} 1 & & & \\\\ 1 & 1 & & \\\\ \\vdots & \\vdots & \\ddots & \\\\ 1 & 1 & \\cdots & 1 \\end{bmatrix} \\begin{bmatrix} \\bm{v}_0 \\\\ \\bm{v}_1 \\\\ \\vdots \\\\ \\bm{v}_{L-1} \\end{bmatrix}"
+  },
+  {
+   "env": "display",
+   "latex": "\\mathbf{H}_{l} = \\mathbf{H}_{l-1} \\mathbf{A}_{l} + f_{l-1}(\\mathbf{H}_{l-1} \\bm{\\alpha}_{l-1})\\, \\bm{\\beta}_{l-1}^\\top,"
+  }
+ ],
+ "huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod": [
+  {
+   "env": "display",
+   "latex": "h_{\\ell,t} = \\arg\\max_{e} \\text{ token\\_count}[\\ell][e][t]."
+  },
+  {
+   "env": "display",
+   "latex": "L_\\ell = \\sum_{t\\in T}\\text{token\\_count}[\\ell][h_{\\ell,t}][t]."
+  }
+ ],
+ "single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning": [
+  {
+   "env": "equation",
+   "latex": "\\mathbb{E}\\left[ \\frac{1}{|y|} \\sum_{t=1}^{|y|} \\min \\left( r_t(\\theta) \\hat{A}_t, \\text{clip}(r_t(\\theta), 1-\\epsilon, 1+\\epsilon) \\hat{A}_t \\right) \\right]"
+  },
+  {
+   "env": "equation",
+   "latex": "\\hat{A}_t^{\\text{GAE}} = \\sum_{l=0}^{|y|-t-1} (\\gamma \\lambda)^l \\delta_{t+l}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\hat{A}_{i,t} = \\frac{R_i - \\mu_R}{\\sigma_R}, \\quad \\text{with} \\quad \\mu_R = \\frac{1}{G}\\sum_{j=1}^G R_j"
+  },
+  {
+   "env": "equation",
+   "latex": "L(\\theta) = \\hat{\\mathbb{E}}_t \\left[ f(r_t(\\theta), \\epsilon_l, \\epsilon_h) \\hat{A}_t \\log \\pi_{\\theta}(a_t|s_t) \\right]"
+  },
+  {
+   "env": "equation",
+   "latex": "r_t(\\theta) = \\exp\\left( \\log \\pi_\\theta(a_t|s_t) - \\log \\pi_{\\text{rollout}}(a_t|s_t) \\right)"
+  },
+  {
+   "env": "equation",
+   "latex": "f(x; \\epsilon_\\ell, \\epsilon_h) = \\begin{cases} x, & \\text{if } 1-\\epsilon_\\ell < x < 1+\\epsilon_h \\\\ 0, & \\text{otherwise} \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\hat{A}(a_{i, N}) = \\delta + \\gamma \\lambda \\hat{A}(a_{i+1, 0})"
+  },
+  {
+   "env": "equation",
+   "latex": "\\delta = r_t + \\gamma V(a_{i+1, 0}) - V(a_{i, N})"
+  }
  ]
 }

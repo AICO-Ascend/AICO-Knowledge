@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 588 张图，来自 62 篇论文；其中 ⭐38 张已深度解读。
+共 588 张图，来自 62 篇论文；其中 ⭐50 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -14,10 +14,37 @@
 > [!tip] 【MiniMax 解读】IndexCache 架构图(Fig.2)：对比 (a) 标准 DSA（每层跑 lightning indexer）与 (b) IndexCache（加条件分支：F 层算并缓存索引到临时 buffer T_cache，S 层直接复用 T_cache 跳过 indexer）。T_cache 仅存当前索引张量、每 F 层覆写、无额外显存。利用 token 选择跨层冗余消除稳定层 indexer 计算。架构核心图。
 *caption: Side-by-side comparison of inference loops. (a) Standard DSA runs the lightning indexer at every layer. (b) IndexCache adds a single conditional branc… ｜ 论文 [[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]] ｜ arxiv 见 MD 元信息*
 
+### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.1 (p.2)
+![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p02.png]]
+> [!tip] ## Figure Description
+
+The diagram illustrates the **MEDUSA** inference pipeline. On the left, the **Original Model** stacks an Embedding layer, Transformer Layers, and an LM Head. The **Last Hidden state** from the transformer is tapped and branched: it feeds both the standard LM Head (predicting token *t*) and multiple parallel **Medusa Heads** (1, 2, 3), each forecasting a future position (*t+1*, *t+2*, *t+3*). Each head emits **Top-k Predictions** (e.g., Head 1 → "is, ', the"; Head 2 → "difficult, is, '"; Head 3 → "not, difficult, a"). These are combined with the LM Head output ("It, I, As") into a set of **Candidates** (e.g., "It is difficult" ✓, "It' difficult" ✗). A verifier accepts the longest valid prefix, producing the **Single-step prediction** — here "It is difficult" — which then becomes the new input for the next decoding cycle.
+
+### Key Technical Takeaway
+MEDUSA eliminates the separate draft model required by speculative decoding by attaching lightweight, fine-tunable heads to the existing backbone's last hidden state; the backbone remains frozen, so the method drops into any deployed LLM with minimal memory overhead and yields 2.3–2.8× speedups without quality degradation.
+
+### Caption (Verbatim)
+
+*Figure 1.* MEDUSA introduces *multiple heads* on top of the last hidden states of the LLM, enabling the prediction of several subsequent tokens in parallel (Section 2.1.1). During inference, each head generates multiple top predictions for its designated position. These predictions are assembled into candidates, which are processed in parallel using a *tree-based attention* mechanism (Section 2.1.2). The final step is to verify the candidates and accept a continuation. Besides the standard rejection sampling scheme, a *typical acceptance* scheme (Section 2.3.1) can also be used here to select reasonable continuations, and the *longest accepted candidate prefix* will be used for the next decoding phase.
+*caption: MEDUSA introduces multiple heads on top of the last hidden states of the LLM, enabling the prediction of several sub- sequent tokens in parallel (Sect… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
+
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.2 (p.3)
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p03.png]]
 > [!tip] 【MiniMax 解读】MEDUSA 框架：在 LLM 最后隐藏层挂多个轻量解码头，第 k 个头预测 t+k+1 位 token，单次前向并行产出多候选；候选组织成树，用 tree attention 掩掩码保证因果正确，一次前向验证多分支、接受最长有效续写。无需独立 draft model，2-3x 加速，兼容分布式 serving。架构核心图。
 *caption: Remarkably, similar ideas have also been explored in independent works like Miao et al. (2023); Spector & Re (2023), where they follow a bottom-up app… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
+
+### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.3 (p.7)
+![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p07.png]]
+> [!tip] # Figure Description
+
+The figure is a two-panel bar-chart benchmark, not an architecture diagram. **Panel (a)** "Speedup on different model sizes" plots *Tokens per Second* for Vicuna-7B and Vicuna-13B across three configurations (w/o Medusa, Medusa-1, Medusa-2). Medusa-1 reaches 2.18× (7B) and 2.33× (13B) over the HuggingFace baseline, while Medusa-2 pushes both to ~2.83×. **Panel (b)** breaks down Medusa-2 speedup on Vicuna-7B across 8 MT-Bench categories, ranging from Humanities (2.58×) up to Extraction (3.62×), with Coding (3.29×) and Math (3.01×) showing the strongest gains.
+
+**Key takeaway:** Medusa's parallel decoding heads are especially effective on structured-output tasks (coding, extraction, math), where prediction is more deterministic and parallelizable, yielding >3× wall-time speedup without retraining the base model.
+
+# Caption (verbatim)
+
+*Figure 3.* Left: Speed comparison of baseline, M*EDUSA*-1 and M*EDUSA*-2 on Vicuna-7B/13B. M*EDUSA*-1 achieves more than 2× wall-time speedup compared to the baseline implementation while M*EDUSA*-2 further improves the speedup by a significant margin. Right: Detailed speedup performance of Vicuna-7B with M*EDUSA*-2 on 8 categories from MT-Bench.
+*caption: Left: Speed comparison of baseline, MEDUSA-1 and MEDUSA-2 on Vicuna-7B/13B. MEDUSA-1 achieves more than 2× wall-time speedup compared to the baseline … ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.2 (p.2)
 ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]]
@@ -39,10 +66,74 @@
 > [!tip] 【MiniMax 解读】JetSpec 因果并行草稿头(Fig.3)：轻量 draft head 接冻结目标模型 M_q 中间层融合特征，单次前向并行预测所有 γ 个 draft 位的 top-k 候选→组成 k^γ 候选树；输出重排为广度优先、分支级因果序列再回灌 M_q 验证（满足 tree-SD 左到右依赖）。M_q 冻结只训 head。把草稿成本 c 压到 head 级、接受率 α 保持高→加速随 γ 单调增长，破解 c/α 鱼与熊掌。架构核心图。
 *caption: Expected speculative decoding speedup scales as a function of draft length γ, under different per-token drafting costs c and acceptance rates α. Compa… ｜ 论文 [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] ｜ arxiv 见 MD 元信息*
 
+### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.1 (p.1)
+![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]]
+> [!tip] ## Main Figure Description
+
+**Architecture/Components:** Figure 1 presents two side-by-side learning-curve plots comparing three optimization methods on Qwen3 8B across benchmarks (a) HotpotQA and (b) IFBench. Each panel plots score (y-axis) vs. rollouts sampled on a log scale (x-axis), tracking three lines — GEPA (green), GRPO (blue/black step function), and MIPROv2 (orange). Star markers (blue and gray/orange) denote held-out test-set scores at the start and end.
+
+**Data Flow:** Rollouts are sampled → prompt optimizer updates prompts → performance evaluated → Pareto-frontier of attempted prompts evolves.
+
+**Key Takeaway:** GEPA's natural-language reflection reaches a high-quality plateau with dramatically fewer rollouts than GRPO's gradient-based learning, while also surpassing MIPROv2 on final test-set accuracy.
+
+## Caption (Verbatim)
+
+Figure 1: A comparison of learning behavior of the GEPA prompt optimizer against a state-of-the-art prompt optimizer (MIPROv2) and GRPO (24,000 rollouts). As more rollouts are sampled, the prompt optimizers can learn much more quickly than GRPO. GEPA substantially outperforms both GRPO and MIPROv2 in final score. The Test-set star markers demonstrate the performance gap in a held-out set of questions.
+*caption: A comparison of learning behavior of the GEPA prompt optimizer against a state-of-the-art prompt optimizer (MIPROv2) and GRPO (24,000 rollouts). As mo… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
+
+### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.2 (p.3)
+![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]]
+> [!tip] **Description (architecture/components/data flow + key takeaway):**
+
+The figure presents a side-by-side comparison of two text panels. The top panel ("Seed Prompt") is a terse, one-line instruction: given fields *question* and *summary_1*, produce a *query*. The bottom panel ("GEPA's Optimized Prompt, GPT-4.1 Mini") is an expanded, richly structured system prompt with five sections — Input Understanding, Purpose/Context, Key Observations & Lessons, How to Build the Query, Practical Strategy, and Output — featuring bullet points, worked examples (e.g., parish→archipelago population), and explicit constraints like "not found in first hop." No explicit arrows are shown; data flow is implicit (question + summary_1 → query). Key takeaway: GEPA transforms a minimal seed prompt into a detailed, reasoning-guided prompt by injecting task-specific heuristics, examples, and negative constraints to improve multi-hop retrieval quality.
+
+**Caption (verbatim):**
+
+> Figure 2: This figure shows an example prompt generated by GEPA for the second-hop document retrieval to be performed in a multi-hop question-answer system, along with the seed prompt it started with. Appendix L compares GEPA's prompts for all tasks with prompts generated by MIPROv2.
+*caption: This figure shows an example prompt generated by GEPA for the second-hop document retrieval to be performed in a multi-hop question-answer system, alo… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
+
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.2 (p.3)
 ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p03.png]]
 > [!tip] 【MiniMax 解读】SARATHI chunked-prefill：把 prompt 切成等长 prefill chunk（匹配流水级算力），在途 decode 请求 piggyback 到每个 prefill chunk 上→单次前向混合 prefill+decode token。解耦长 prefill 与 decode 延迟：每个流水级跑统一 hybrid-phase 步、消除 prefill-decode bubble、打满 GPU。更高单卡利用率+decode 吞吐+更大 batch。架构核心图。
 *caption: High-level architecture of a decoder block. sequence length of each request (i.e., the number of input tokens in the given query), and H is the model’… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
+
+### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.2 (p.2)
+![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p02.png]]
+> [!tip] **Figure Description:**
+
+The figure is a 2D scatter plot comparing four LLM serving systems on a Throughput (y-axis) vs. TBT Latency (x-axis) plane. Four systems are plotted:
+- **FasterTransformer** (bottom-left, red dot): Decode-prioritizing — low throughput, low TBT latency
+- **Orca** (middle, pink dot): Prefill-prioritizing with iteration-level batching
+- **vLLM** (top-right, blue dot): Prefill-prioritizing with paged attention — high throughput, high TBT latency
+- **Sarathi-Serve** (top-left, green star): Stall-free batching — high throughput, low TBT latency
+
+Dashed trajectory lines connect the points, illustrating how prior approaches (Orca → vLLM via paged attention) trend toward higher latency as throughput is optimized.
+
+**Key Technical Takeaway:** Sarathi-Serve uniquely occupies the favorable top-left region, breaking the conventional throughput-latency tradeoff by using stall-free batching to coalesce ongoing decodes with prefill chunks from new requests.
+
+**Caption (verbatim):**
+
+Figure 2: Current LLM serving systems involve a tradeoff between throughput and latency depending on their scheduling policy. Prioritizing prefills optimizes throughput but sacrifices TBT (time-between-tokens) tail latency whereas prioritizing decodes has the opposite effect. Sarathi-Serve serves high throughput with low TBT latency via stall-free batching. (The figure is illustrative and actual values will depend on the model and workload characteristics.)
+*caption: Current LLM serving systems involve a tradeoff be- tween throughput and latency depending on their scheduling policy. Prioritizing prefills optimizes … ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
+
+### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.3 (p.5)
+![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]
+> [!tip] ## Main Figure Description (Figure 4)
+
+**Architecture/Components:** Two side-by-side stacked bar charts breaking down LLM inference runtime for Mistral-7B on a single A100 GPU. The left chart ("Prefill") plots total time (ms) against sequence length (128 → 2K), while the right chart ("Decode") plots time (ms) against batch size (1 → 64). Each bar is segmented into three stacked components shown in the legend: **linear** (teal, hatched), **attention** (gray), and **others** (red, hatched).
+
+**Data Flow:** The decomposition shows how the wall-clock time of a forward pass is partitioned among operator categories. Prefill scales sharply with sequence length (peaking ~145 ms at 2K tokens), dominated by linear layers, while decode remains flat across batch sizes (~10–25 ms) since the per-token cost is nearly constant.
+
+**Key Technical Takeaway:** **Linear (matmul) layers—not attention—dominate LLM inference runtime**, contributing >80% of total time even at long sequence lengths. Furthermore, because of low arithmetic intensity in decode, the cost of one linear operation on **1 decode token ≈ the cost on 128 prefill tokens**, implying decode is fundamentally memory-bound and batching is the lever to amortize linear-layer weight-loading cost. (~118 words)
+
+---
+
+## Captions Verbatim
+
+**Figure 3:** "Throughput of the prefill and decode phases with different batch sizes for Mistral-7B running on a single A100 GPU. We use prompt length of 1024 for both prefill and decode experiments. Note that different y-axis, showing prefills are much more efficient than decode. Further, note that *batching boosts decode throughput almost linearly but has a marginal effect on prefill throughput*."
+
+**Figure 4:** "Prefill and decode time with different input sizes for Mistral-7B running on single A100 GPU. Linear layers contribute to the majority of runtime in both prefill and decode phases. Due to the low arithmetic intensity in decode batches, the cost of linear operation for 1 decode token is nearly same as 128 prefill tokens."
+*caption: Throughput of the prefill and decode phases with different batch sizes for Mistral-7B running on a single A100 GPU. We use prompt length of 1024 for b… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeek-V4: Towards Highly Efficient Million-Token Context  — Fig.1 (p.14)
 ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]]
@@ -79,10 +170,83 @@ Require: Learning rate η, momentum β, weight decay ω, update rescaling factor
 > [!tip] 【MiniMax 解读】DeepSeek-V4 细粒度 EP(Fig.5)：MoE 层拆 Dispatch/Linear-1/Linear-2/Combine 四段。Comet 仅粗粒度重叠 Dispatch↔L1、L2↔Combine；本方案把 expert 再切 wave，一波 dispatch 完即开算、下一波并行 dispatch→稳态下「当前波计算+下一波 token 传输+上一波结果回送」三路并发=连续计算-通信流水。因单层通信<计算，融合成单流水 kernel 藏住互连延迟→低带宽互连也不掉吞吐。架构核心图，与 MoE/EP 相关。
 *caption: This forms a fine-grained pipeline among experts, keeping both computation and communication continuous throughout the wave. The wave-based scheduling… ｜ 论文 [[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]] ｜ arxiv 见 MD 元信息*
 
+### HYPER-CONNECTIONS — Fig.1 (p.1)
+![[assets/hyper-connections-p01.png]]
+> [!tip] **Figure description**
+
+This is a four-panel empirical comparison (not an architecture diagram) plotting two model variants — `OLMoE-1B-7B` (baseline, red) vs `OLMoE-1B-7B-DHC×4` (hyper-connections, blue) — as a function of training tokens (100B → 500B):
+1. Training loss (0.99 EMA smoothed) — blue sits below red throughout.
+2. C4-en validation loss — same trend.
+3. HellaSwag accuracy (%) — blue higher.
+4. ARC-Challenge accuracy (%) — blue higher.
+
+Annotations mark a "×1.8" convergence-speedup gap at ~0.027 / 0.028 loss. Lightly shaded regions indicate variance across runs.
+
+**Key takeaway**: Hyper-connections yield ~1.8× faster convergence and sustained downstream-accuracy gains (HellaSwag, ARC-Challenge) over standard residual connections, without changing the underlying architecture.
+
+**Caption (verbatim)**
+
+"Figure 1: The performance of the baseline model `OLMoE-1B-7B` and the model with hyper-connections, `OLMoE-1B-7B-DHC×4`. (1) and (2) show the training loss (0.99 EMA smoothed) and the C4-en validation loss, respectively. Our method converges 1.8 times faster compared to the baseline and maintains a significant advantage at the 500B tokens. (3) and (4) show the accuracy curves on `HellaSwag` and `ARC-Challenge`, demonstrating the superior performance of the `OLMoE-1B-7B-DHC×4` model."
+*caption: The performance of the baseline model OLMoE-1B-7B and the model with hyper- connections, OLMoE-1B-7B-DHC×4. (1) and (2) show the training loss (0.99 E… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
+
 ### HYPER-CONNECTIONS — Fig.2 (p.2)
 ![[assets/hyper-connections-p02.png]]
 > [!tip] 【MiniMax 解读】Hyper-Connections 架构(Fig.2)：(a) 传统残差连接=层输出与单隐层 h 求和；(b) HC n=2 把输入复制成两个隐向量 h1/h2，层输出经可学习标量(β,α)路由回→加权连接矩阵灵活跨深+宽组合特征。解耦成 (c) depth-connections（层输出与 h1 加权和）+ (d) width-connections（h1/h2 横向混合）。核心：用可学习、输入依赖的路由替固定恒等 skip，让网络自主调制 skip 强度→缓解固定 Pre/Post-Norm 残差的表征塌缩+梯度消失。架构核心图。
 *caption: Hyper-connections (HC) with an expansion rate of n = 2. (a) Residual connections. (b) Hyper-connections: β1, β2, α0,0, α0,1, α1,0, α1,1, α2,1, and α2,… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
+
+### HYPER-CONNECTIONS — Fig.4 (p.5)
+![[assets/hyper-connections-p05.png]]
+> [!tip] **Figure 4 Description:**
+
+Figure 4 illustrates two hyper-connection topologies with expansion rate n = 2, showing how a learnable matrix determines layer arrangement.
+
+**Components (shared by both subfigures):**
+- Blue/yellow rectangular token blocks (residual stream + expanded inputs)
+- Rounded "layer 1" / "layer 2" modules
+- ⊕ summation nodes connecting layer outputs back into the stream
+- Directed arrows encoding weighted connections (the hyper-connection matrix entries)
+
+**(a) Sequential Arrangement:** Lower-triangular HC = `(0,1;1,1)`; each layer feeds forward, and the depth connection degenerates into a standard residual connection.
+
+**(b) Parallel Arrangement:** Odd/even HC matrices `(0,1,0;1,1,1;1,1,1)` and `(0,0,1;0,1,0;1,0,1)` route both layers' inputs simultaneously — analogous to parallel transformer blocks.
+
+**Key takeaway:** The same layer stack yields sequential or parallel behavior purely from the HC matrix pattern, enabling a learnable sequential–parallel duality beyond fixed architectural choices.
+
+**Caption (verbatim):**
+> Figure 4: Sequential and parallel arrangements of hyper-connections with n = 2.
+*caption: Sequential and parallel arrangements of hyper-connections with n = 2.… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
+
+### Let It Flow: Agentic Crafting on Rock and Roll — Fig.1 (p.1)
+![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p01.png]]
+> [!tip] **Architecture & Data Flow**
+The figure presents the Agentic Learning Ecosystem (ALE) as a closed-loop, full-stack infrastructure. Three components interlock: **ROCK** (sandbox environment manager that generates executable trajectories), **iFlow CLI** (agent framework handling context engineering and environment interaction), and **ROLL** (scalable RL framework for multi-environment policy optimization). Data flows circularly: Instructions → iFlow → trajectories generated inside ROCK → consumed by ROLL → ROME model update → context/policy feedback returns to iFlow. A linear Task→Action→Execution→Feedback→Learning workflow underlies the loop.
+
+**Key Technical Takeaway**
+Empirical scaling is striking: ROME's accuracy climbs from 41.80% (initial) to 89.83% (peak) over training — a +47.07 absolute / +113.16% relative gain — while achieving 57.40% on SWE-bench Verified and 24.72% on Terminal-Bench 2.0, outperforming similarly-sized open models (100B parameters).
+
+**Caption (verbatim):**
+Figure 1: Overview of the Agentic Learning Ecosystem (ALE) and ROME Performance.
+*caption: Overview of the Agentic Learning Ecosystem (ALE) and ROME Performance. 1[cs.AI] 12 Mar 2026… ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
+
+### Let It Flow: Agentic Crafting on Rock and Roll — Fig.2 (p.4)
+![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p04.png]]
+> [!tip] ## Main Figure Description
+
+The figure has two panels illustrating the **Agentic Learning Ecosystem (ALE)**:
+
+**(a) Ecosystem architecture** — Two coupled subsystems. The left block, *ROLL* (RL training framework), contains an Actor-Train model whose weights are synced to an Actor-Infer model; an Env. Manager dispatches LLM Requests to multiple Env. Workers (each backed by Rock SDK) and collects LLM Responses/Training Data. The right block, *ROCK Sandbox* (execution engine), hosts the *iFlow CLI* agent framework and a ModelProxy Service that mediates Poll Request / LLM Request / Deliver Response traffic via Request and Response Queues. The two subsystems communicate over the Rock SDK interface.
+
+**(b) RL training pipeline** — A closed loop: the *Rollout Stage* cycles Agentic LLM ↔ Environment through Action tokens and Observations, emitting Trajectory Data that drives the *Training Stage* (Weight Update), whose updated weights are synchronized back to rollout.
+
+**Key takeaway:** Decoupling rollout environment execution (ROCK) from model training/inference (ROLL) — connected via queued ModelProxy RPCs — enables scalable, fault-tolerant, closed-loop agentic RL.
+
+## Caption (verbatim)
+
+Figure 2: The overview of agentic RL ecosystem (a) and its training pipeline (b).
+
+(a) The overview of **A**gentic **L**earning **E**cosystem (**ALE**).
+(b) Agentic RL training pipeline.
+*caption: The overview of agentic RL ecosystem (a) and its training pipeline (b). technical stack, ALE is also a call to reframe the community’s priorities. In … ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.4 (p.8)
 ![[assets/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-p08.png]]
@@ -770,10 +934,34 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 > [!tip] 【MiniMax 解读】PagedAttention 内存布局(Fig.1)：13B 模型在 A100-40G 上参数占 65%（26GB 常驻）、KV cache >30%（每请求动态）、激活小片。传统系统把每请求 KV 存成单连续张量→内部+外部碎片严重、batch 受限。PagedAttention 借 OS 虚拟内存分页：KV 切成固定块（如 16 token）存非连续物理显存，每请求 block table 映射逻辑→物理（类比页表）；请求间可共享物理块（并行采样/beam search/前缀共享）；碎片仅剩 sub-block 余量（~1 token vs GB 级）→近乎零 KV 浪费、吞吐 2-4x。架构核心图，KV-cache/serving 基石。
 *caption: Left: Memory layout when serving an LLM with 13B parameters on NVIDIA A100. The parameters (gray) persist in GPU memory throughout serving. The memory… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
+### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.1 (p.1)
+![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p01.png]]
+> [!tip] No figure is visible on this page — it is the title page of the paper "DEFT: Decoding with Flash Tree-Attention for Efficient Tree-structured LLM Inference," containing only the title, author affiliations, abstract, and the opening of the Introduction. The text references "Figure 1" (illustrating tree-structured LLM applications such as self-consistency, few-shot prompting, multi-step reasoning, and speculative decoding) and "Table 1" (showing token volume differences), but neither the figure nor its caption appears in the provided image, so I cannot describe the figure's architecture/components/data flow or transcribe its caption verbatim.
+*caption: Usually, these applications produce substantially more tokens than traditional ones, to provide large space for tree search (Graves, 2012; Lu et al., … ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
+
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.2 (p.5)
 ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p05.png]]
 > [!tip] 【MiniMax 解读】DeFT flash 树注意力(Fig.2)：① Input Metadata（Q + 共享前缀 K0 + 分支 K1/K2 + 树拓扑）载入 SM；② Phase1 QKV 准备(HBM 2TB/s)：KV-Guided Grouping 跨分支复用 K0、Flattened Tree KV Splitting 把树切成均衡组 G0/G1/G2 并行；③ Phase2 注意力计算(Shared Mem 19TB/s)：DeFT kernel 各 split 跑部分注意力 + 树拓扑感知全局归约(A0/A1/A2→Final)，避免跨全分支全局同步。消除共享前缀冗余 KV IO、平衡 SM 负载→内存高效、硬件友好的树结构投机解码注意力。架构核心图。
 *caption: Overview of DEFT. Input Metadata is prepared in the system elaborated in Appendix A.1. In QKV… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
+
+### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.3 (p.6)
+![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p06.png]]
+> [!tip] ## Main Figure Description (≤120 words)
+
+The figure compares QKV partitioning strategies for tree-structured KV cache attention in three panels:
+
+**(a)** Dataflow: Decoding Tree Metadata → Phase 1 (QKV Preparation) → Phase 2 (Attention Calculation, loading groups $G_i$ onto SM$_i$). Contrasts Vanilla Tree Attention (low parallelism, dense causal mask) with Q-Guided vs. KV-Guided grouping.
+
+**(b)** Q-Guided grouping (Flash-Attention, Flash-Decoding/Radix) loads the prefix KV$_0$ redundantly for each query group, while KV-Guided grouping (DeFT-Node, DeFT-Node-Chunk) is IO-aware—KV$_0$ is loaded only once and shared.
+
+**(c)** DeFT-Flatten performs load-balanced partitioning via depth-first flattening, blockwise splitting, and bitmask extraction (KV-BCM) for even workload distribution.
+
+**Key takeaway:** KV-Guided grouping eliminates redundant prefix KV loads by binding each KV node to all queries sharing it, making the partitioning prefix-aware and IO-efficient compared to query-driven baselines.
+
+## Caption (verbatim)
+
+**Figure 3: Comparison of QKV partitioning strategies during the QKV Preparation Phase between DeFT-Node/Node-Chunk/Flatten and different attention algorithm baselines.** Note that the partitioning is logically designed without incurring any data movement costs for QKV. The amount of IO between the GPU HBM and shared memory required by each group is highlighted in red rectangles. Part (a) illustrates the dataflow of a two-cascaded decoding tree example and three categories of QKV partitioning strategies: no partition(Vanilla Tree Attention), Q-Guided Grouping and KV-Guided Grouping. The partitioning strategy will guide the loading of QKV during the subsequent *Attention calculation phase*, where each QKV group $G_i$ will be loaded into $SM_i$ on the GPU. Part (b) shows the comparison of Q-Guided Grouping and KV-Guided Grouping, where the latter can be IO-aware of prefix KV cache $KV_0$ and only load it once. DeFT-Node-Chunk is a weak load-balancing improvement of DeFT-Node by splitting large nodes (e.g., $KV_0$) to chunks. Part (c) illustrates the details (discussed in Remark 3.1) of Flattened Tree KV Splitting in DeFT-Flatten for load-balanced partitions, including Depth-first Flatten strategy, Evenly block-wise strategy, and Bit mask. For a summary of baselines and DeFT, see Table 2. See analysis of tree-attention baselines (Cai et al., 2024; Miao et al., 2023) in Remark 3.2.
+*caption: Comparison of QKV partitioning strategies during the QKV Preparation Phase between DEFT-… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.1 (p.3)
 ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p03.png]]
@@ -899,9 +1087,9 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 - ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p12.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.12 (p.12): Impact of SARATHI on pipeline bubbles (top) and request completion times (bottom…  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
 - ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p13.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.13 (p.13): Ablation study: Effect of varying the chunk size on different components of the …  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
 - ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p01.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.1 (p.1): Yi-34B running on two A100 GPUs serving 128 requests from arxiv-summarisation tr…  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
-- ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p02.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.2 (p.2): Current LLM serving systems involve a tradeoff be- tween throughput and latency …  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
-- ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.3 (p.5): Throughput of the prefill and decode phases with different batch sizes for Mistr…  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
-- ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.4 (p.5): Prefill and decode time with different input sizes for Mistral-7B running on sin…  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
+- ⭐ ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p02.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.2 (p.2): Current LLM serving systems involve a tradeoff be- tween throughput and latency …  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
+- ⭐ ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.3 (p.5): Throughput of the prefill and decode phases with different batch sizes for Mistr…  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
+- ⭐ ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.4 (p.5): Prefill and decode time with different input sizes for Mistral-7B running on sin…  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
 - ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.5 (p.6): Arithmetic intensity trend for LLaMA2-70B lin- ear operations with different num…  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
 - ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.6 (p.6): Linear layer execution time as function of number of tokens in a batch for LLaMA…  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
 - ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]] — **Taming Throughput-Latency Tradeoff in LLM Inferenc** Fig.7 (p.6): A generation stall occurs when one or more prefills are scheduled in between con…  `[[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]]`
@@ -1067,8 +1255,8 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 ### rl (95)
 
-- ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
+- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
+- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p05.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.3 (p.5): GEPA proposes a new candidate in every iteration by improving existing candidate…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.4 (p.4): GEPA receives the following inputs: A system  instan- tiated with simple prompt…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p07.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.5 (p.7): GEPA’s reflective prompt mutation systematically incorporates task-specific nuan…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
@@ -1094,8 +1282,8 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p33.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.25 (p.33): PUPA GPT-4.1 Mini 33…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p34.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.26 (p.34): PUPA Qwen3 8B K.1 PROMPTS AT INTERMEDIATE STAGES FOR PUPA…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p12.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.27 (p.12): We also note that generation stochasticity (temperature based sampling) is elimi…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
+- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
+- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p05.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.3 (p.5): GEPA proposes a new candidate in every iteration by improving existing candidate…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.4 (p.4): GEPA receives the following inputs: A system  instan- tiated with simple prompt…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p07.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.5 (p.7): GEPA’s reflective prompt mutation systematically incorporates task-specific nuan…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
@@ -1172,9 +1360,9 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 ### speculative (78)
 
-- ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p02.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.1 (p.2): MEDUSA introduces multiple heads on top of the last hidden states of the LLM, en…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
+- ⭐ ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p02.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.1 (p.2): MEDUSA introduces multiple heads on top of the last hidden states of the LLM, en…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
 - ⭐ ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p03.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.2 (p.3): Remarkably, similar ideas have also been explored in independent works like Miao…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
-- ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p07.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.3 (p.7): Left: Speed comparison of baseline, MEDUSA-1 and MEDUSA-2 on Vicuna-7B/13B. MEDU…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
+- ⭐ ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p07.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.3 (p.7): Left: Speed comparison of baseline, MEDUSA-1 and MEDUSA-2 on Vicuna-7B/13B. MEDU…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
 - ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p08.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.4 (p.8): Effectiveness of numbers of candidate tokens for decoding introduced by trees (d…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
 - ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p05.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.5 (p.5): 5…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
 - ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p15.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.6 (p.15): Visualization of a sparse tree setting for MEDUSA-2 Vicuna-7B. The tree has 64 n…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
@@ -1369,11 +1557,11 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 ### #2 MEDUSA: Simple LLM Inference Acceleration Framework with Mul
 
-- Fig.1 (p.2) ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p02.png]]
+- ⭐ Fig.1 (p.2) ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p02.png]]
   - MEDUSA introduces multiple heads on top of the last hidden states of the LLM, enabling the prediction of several sub- sequent tokens in parallel (Section 2.1.1). During inference, each head generates 
 - ⭐ Fig.2 (p.3) ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p03.png]]
   - Remarkably, similar ideas have also been explored in independent works like Miao et al. (2023); Spector & Re (2023), where they follow a bottom-up approach and construct the tree by merging mul- tiple
-- Fig.3 (p.7) ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p07.png]]
+- ⭐ Fig.3 (p.7) ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p07.png]]
   - Left: Speed comparison of baseline, MEDUSA-1 and MEDUSA-2 on Vicuna-7B/13B. MEDUSA-1 achieves more than 2× wall-time speedup compared to the baseline implementation while MEDUSA-2 further improves the
 - Fig.4 (p.8) ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p08.png]]
   - Effectiveness of numbers of candidate tokens for decoding introduced by trees (default number of candidate token for decoding is 1 when using KV cache). Left: The acceleration rate for randomly sample
@@ -1616,9 +1804,9 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 ### #16 GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM
 
-- Fig.1 (p.1) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]]
+- ⭐ Fig.1 (p.1) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]]
   - A comparison of learning behavior of the GEPA prompt optimizer against a state-of-the-art prompt optimizer (MIPROv2) and GRPO (24,000 rollouts). As more rollouts are sampled, the prompt optimizers can
-- Fig.2 (p.3) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]]
+- ⭐ Fig.2 (p.3) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]]
   - This figure shows an example prompt generated by GEPA for the second-hop document retrieval to be performed in a multi-hop question-answer system, along with the seed prompt it started with. Appendix 
 - Fig.3 (p.5) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p05.png]]
   - GEPA proposes a new candidate in every iteration by improving existing candidates using one of the two strategies (Reflective Prompt Mutation (Section 3) or System Aware Merge (Appendix D.1)), first e
@@ -1704,11 +1892,11 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 - Fig.1 (p.1) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p01.png]]
   - Yi-34B running on two A100 GPUs serving 128 requests from arxiv-summarisation trace. 1a highlights one of the many generation stalls lasting over several seconds in vLLM [53]. 1b shows the impact of i
-- Fig.2 (p.2) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p02.png]]
+- ⭐ Fig.2 (p.2) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p02.png]]
   - Current LLM serving systems involve a tradeoff be- tween throughput and latency depending on their scheduling policy. Prioritizing prefills optimizes throughput but sacrifices TBT (time-between-tokens
-- Fig.3 (p.5) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]
+- ⭐ Fig.3 (p.5) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]
   - Throughput of the prefill and decode phases with different batch sizes for Mistral-7B running on a single A100 GPU. We use prompt length of 1024 for both prefill and decode experiments. Note that diff
-- Fig.4 (p.5) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]
+- ⭐ Fig.4 (p.5) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]
   - Prefill and decode time with different input sizes for Mistral-7B running on single A100 GPU. Linear layers contribute to the majority of runtime in both prefill and decode phases. Due to the low arit
 - Fig.5 (p.6) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]]
   - Arithmetic intensity trend for LLaMA2-70B lin- ear operations with different number of token running on four A100s. Decode batches have low arithmetic intensity i.e., they are bottlenecked by memory f
@@ -1733,9 +1921,9 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 ### #19 GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEME
 
-- Fig.1 (p.1) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]]
+- ⭐ Fig.1 (p.1) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]]
   - A comparison of learning behavior of the GEPA prompt optimizer against a state-of-the-art prompt optimizer (MIPROv2) and GRPO (24,000 rollouts). As more rollouts are sampled, the prompt optimizers can
-- Fig.2 (p.3) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]]
+- ⭐ Fig.2 (p.3) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]]
   - This figure shows an example prompt generated by GEPA for the second-hop document retrieval to be performed in a multi-hop question-answer system, along with the seed prompt it started with. Appendix 
 - Fig.3 (p.5) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p05.png]]
   - GEPA proposes a new candidate in every iteration by improving existing candidates using one of the two strategies (Reflective Prompt Mutation (Section 3) or System Aware Merge (Appendix D.1)), first e
@@ -1883,13 +2071,13 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 ### #26 HYPER-CONNECTIONS
 
-- Fig.1 (p.1) ![[assets/hyper-connections-p01.png]]
+- ⭐ Fig.1 (p.1) ![[assets/hyper-connections-p01.png]]
   - The performance of the baseline model OLMoE-1B-7B and the model with hyper- connections, OLMoE-1B-7B-DHC×4. (1) and (2) show the training loss (0.99 EMA smoothed) and the C4-en validation loss, respec
 - ⭐ Fig.2 (p.2) ![[assets/hyper-connections-p02.png]]
   - Hyper-connections (HC) with an expansion rate of n = 2. (a) Residual connections. (b) Hyper-connections: β1, β2, α0,0, α0,1, α1,0, α1,1, α2,1, and α2,2 are learnable scalars or scalars predicted by th
 - ⭐ Fig.3 (p.2) ![[assets/hyper-connections-p02.png]]
   - Cosine similarity be- tween the input of the current and the previous layers for the OLMo-1B models (Groeneveld et al., 2024). The curve represents the median of similarity, while the shaded area indi
-- Fig.4 (p.5) ![[assets/hyper-connections-p05.png]]
+- ⭐ Fig.4 (p.5) ![[assets/hyper-connections-p05.png]]
   - Sequential and parallel arrangements of hyper-connections with n = 2.
 - Fig.5 (p.6) ![[assets/hyper-connections-p06.png]]
   - Comparison of training loss curves for different expansion rate. The left subfigure includes models with dynamic hyper-connections (DHC) at various expansion rates, while the right subfigure shows the
@@ -1976,9 +2164,9 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 ### #31 Let It Flow: Agentic Crafting on Rock and Roll
 
-- Fig.1 (p.1) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p01.png]]
+- ⭐ Fig.1 (p.1) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p01.png]]
   - Overview of the Agentic Learning Ecosystem (ALE) and ROME Performance. 1[cs.AI] 12 Mar 2026
-- Fig.2 (p.4) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p04.png]]
+- ⭐ Fig.2 (p.4) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p04.png]]
   - The overview of agentic RL ecosystem (a) and its training pipeline (b). technical stack, ALE is also a call to reframe the community’s priorities. In complex agentic settings, the central challenge is
 - Fig.3 (p.5) ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p05.png]]
   - ROLL Architecture. (a) ROLL pipelines LLM generation, environment interaction, and reward phases at trajectory-level granularity. Training is also decoupled via a sample buffer using an asyn- chronous
@@ -2365,11 +2553,11 @@ SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据�
 
 ### #53 DeFT: Decoding with Flash Tree-attention for Efficient Tree-
 
-- Fig.1 (p.1) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p01.png]]
+- ⭐ Fig.1 (p.1) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p01.png]]
   - Usually, these applications produce substantially more tokens than traditional ones, to provide large space for tree search (Graves, 2012; Lu et al., 2022; Liu et al., 2023) or selection, as shown in 
 - ⭐ Fig.2 (p.5) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p05.png]]
   - Overview of DEFT. Input Metadata is prepared in the system elaborated in Appendix A.1. In QKV
-- Fig.3 (p.6) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p06.png]]
+- ⭐ Fig.3 (p.6) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p06.png]]
   - Comparison of QKV partitioning strategies during the QKV Preparation Phase between DEFT-
 - Fig.4 (p.9) ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p09.png]]
   - Latency breakdown for specula- tive decoding with a token tree of 32 queries, whose tree topology is from Medusa (Cai et al., 2024). U means unpaged memory.

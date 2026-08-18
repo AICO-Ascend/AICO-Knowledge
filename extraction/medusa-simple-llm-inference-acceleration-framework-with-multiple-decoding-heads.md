@@ -23,10 +23,22 @@ tags: [speculative]
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.2)
+### Figure 1 (p.2) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p02.png]]
 > [!quote] caption
 > MEDUSA introduces multiple heads on top of the last hidden states of the LLM, enabling the prediction of several sub- sequent tokens in parallel (Section 2.1.1). During inference, each head generates multiple top predictions for its designated posi- tion. These predictions are assembled into candidates, which are processed in parallel using a tree-based attention mechanism (Sec- tion 2.1.2). The f
+
+> [!tip] 技术解读（多模态）
+> ## Figure Description
+
+The diagram illustrates the **MEDUSA** inference pipeline. On the left, the **Original Model** stacks an Embedding layer, Transformer Layers, and an LM Head. The **Last Hidden state** from the transformer is tapped and branched: it feeds both the standard LM Head (predicting token *t*) and multiple parallel **Medusa Heads** (1, 2, 3), each forecasting a future position (*t+1*, *t+2*, *t+3*). Each head emits **Top-k Predictions** (e.g., Head 1 → "is, ', the"; Head 2 → "difficult, is, '"; Head 3 → "not, difficult, a"). These are combined with the LM Head output ("It, I, As") into a set of **Candidates** (e.g., "It is difficult" ✓, "It' difficult" ✗). A verifier accepts the longest valid prefix, producing the **Single-step prediction** — here "It is difficult" — which then becomes the new input for the next decoding cycle.
+
+### Key Technical Takeaway
+MEDUSA eliminates the separate draft model required by speculative decoding by attaching lightweight, fine-tunable heads to the existing backbone's last hidden state; the backbone remains frozen, so the method drops into any deployed LLM with minimal memory overhead and yields 2.3–2.8× speedups without quality degradation.
+
+### Caption (Verbatim)
+
+*Figure 1.* MEDUSA introduces *multiple heads* on top of the last hidden states of the LLM, enabling the prediction of several subsequent tokens in parallel (Section 2.1.1). During inference, each head generates multiple top predictions for its designated position. These predictions are assembled into candidates, which are processed in parallel using a *tree-based attention* mechanism (Section 2.1.2). The final step is to verify the candidates and accept a continuation. Besides the standard rejection sampling scheme, a *typical acceptance* scheme (Section 2.3.1) can also be used here to select reasonable continuations, and the *longest accepted candidate prefix* will be used for the next decoding phase.
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p03.png]]
@@ -36,10 +48,21 @@ tags: [speculative]
 > [!tip] 技术解读（多模态）
 > 【MiniMax 解读】MEDUSA 框架：在 LLM 最后隐藏层挂多个轻量解码头，第 k 个头预测 t+k+1 位 token，单次前向并行产出多候选；候选组织成树，用 tree attention 掩掩码保证因果正确，一次前向验证多分支、接受最长有效续写。无需独立 draft model，2-3x 加速，兼容分布式 serving。架构核心图。
 
-### Figure 3 (p.7)
+### Figure 3 (p.7) ⭐深度解读
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p07.png]]
 > [!quote] caption
 > Left: Speed comparison of baseline, MEDUSA-1 and MEDUSA-2 on Vicuna-7B/13B. MEDUSA-1 achieves more than 2× wall-time speedup compared to the baseline implementation while MEDUSA-2 further improves the speedup by a significant margin.
+
+> [!tip] 技术解读（多模态）
+> # Figure Description
+
+The figure is a two-panel bar-chart benchmark, not an architecture diagram. **Panel (a)** "Speedup on different model sizes" plots *Tokens per Second* for Vicuna-7B and Vicuna-13B across three configurations (w/o Medusa, Medusa-1, Medusa-2). Medusa-1 reaches 2.18× (7B) and 2.33× (13B) over the HuggingFace baseline, while Medusa-2 pushes both to ~2.83×. **Panel (b)** breaks down Medusa-2 speedup on Vicuna-7B across 8 MT-Bench categories, ranging from Humanities (2.58×) up to Extraction (3.62×), with Coding (3.29×) and Math (3.01×) showing the strongest gains.
+
+**Key takeaway:** Medusa's parallel decoding heads are especially effective on structured-output tasks (coding, extraction, math), where prediction is more deterministic and parallelizable, yielding >3× wall-time speedup without retraining the base model.
+
+# Caption (verbatim)
+
+*Figure 3.* Left: Speed comparison of baseline, M*EDUSA*-1 and M*EDUSA*-2 on Vicuna-7B/13B. M*EDUSA*-1 achieves more than 2× wall-time speedup compared to the baseline implementation while M*EDUSA*-2 further improves the speedup by a significant margin. Right: Detailed speedup performance of Vicuna-7B with M*EDUSA*-2 on 8 categories from MT-Bench.
 
 ### Figure 4 (p.8)
 ![[assets/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-p08.png]]
@@ -175,6 +198,10 @@ $$
 - [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] — JETSPEC: Breaking the Scaling Ceiling of Speculative Decoding with Parallel Tree Drafting
 - [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] — EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test
 - [[dflash-block-diffusion-for-flash-speculative-decoding]] — DFlash: Block Diffusion for Flash Speculative Decoding
+
+## 技术点深读（DEEP）
+
+![[deep/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
 
 ## 全文文本
 全文已存 `extraction/fulltext/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.txt`（86865 字符）供引用检索。

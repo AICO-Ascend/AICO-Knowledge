@@ -23,10 +23,27 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.1)
+### Figure 1 (p.1) ⭐深度解读
 ![[assets/hyper-connections-p01.png]]
 > [!quote] caption
 > The performance of the baseline model OLMoE-1B-7B and the model with hyper- connections, OLMoE-1B-7B-DHC×4. (1) and (2) show the training loss (0.99 EMA smoothed) and the C4-en validation loss, respectively. Our method converges 1.8 times faster compared to the baseline and maintains a significant advantage at the 500B tokens. (3) and (4) show the accuracy curves on HellaSwag and ARC-Challenge, de
+
+> [!tip] 技术解读（多模态）
+> **Figure description**
+
+This is a four-panel empirical comparison (not an architecture diagram) plotting two model variants — `OLMoE-1B-7B` (baseline, red) vs `OLMoE-1B-7B-DHC×4` (hyper-connections, blue) — as a function of training tokens (100B → 500B):
+1. Training loss (0.99 EMA smoothed) — blue sits below red throughout.
+2. C4-en validation loss — same trend.
+3. HellaSwag accuracy (%) — blue higher.
+4. ARC-Challenge accuracy (%) — blue higher.
+
+Annotations mark a "×1.8" convergence-speedup gap at ~0.027 / 0.028 loss. Lightly shaded regions indicate variance across runs.
+
+**Key takeaway**: Hyper-connections yield ~1.8× faster convergence and sustained downstream-accuracy gains (HellaSwag, ARC-Challenge) over standard residual connections, without changing the underlying architecture.
+
+**Caption (verbatim)**
+
+"Figure 1: The performance of the baseline model `OLMoE-1B-7B` and the model with hyper-connections, `OLMoE-1B-7B-DHC×4`. (1) and (2) show the training loss (0.99 EMA smoothed) and the C4-en validation loss, respectively. Our method converges 1.8 times faster compared to the baseline and maintains a significant advantage at the 500B tokens. (3) and (4) show the accuracy curves on `HellaSwag` and `ARC-Challenge`, demonstrating the superior performance of the `OLMoE-1B-7B-DHC×4` model."
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/hyper-connections-p02.png]]
@@ -44,10 +61,30 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【MiniMax 解读】Hyper-Connections 架构(Fig.2)：(a) 传统残差连接=层输出与单隐层 h 求和；(b) HC n=2 把输入复制成两个隐向量 h1/h2，层输出经可学习标量(β,α)路由回→加权连接矩阵灵活跨深+宽组合特征。解耦成 (c) depth-connections（层输出与 h1 加权和）+ (d) width-connections（h1/h2 横向混合）。核心：用可学习、输入依赖的路由替固定恒等 skip，让网络自主调制 skip 强度→缓解固定 Pre/Post-Norm 残差的表征塌缩+梯度消失。架构核心图。
 
-### Figure 4 (p.5)
+### Figure 4 (p.5) ⭐深度解读
 ![[assets/hyper-connections-p05.png]]
 > [!quote] caption
 > Sequential and parallel arrangements of hyper-connections with n = 2.
+
+> [!tip] 技术解读（多模态）
+> **Figure 4 Description:**
+
+Figure 4 illustrates two hyper-connection topologies with expansion rate n = 2, showing how a learnable matrix determines layer arrangement.
+
+**Components (shared by both subfigures):**
+- Blue/yellow rectangular token blocks (residual stream + expanded inputs)
+- Rounded "layer 1" / "layer 2" modules
+- ⊕ summation nodes connecting layer outputs back into the stream
+- Directed arrows encoding weighted connections (the hyper-connection matrix entries)
+
+**(a) Sequential Arrangement:** Lower-triangular HC = `(0,1;1,1)`; each layer feeds forward, and the depth connection degenerates into a standard residual connection.
+
+**(b) Parallel Arrangement:** Odd/even HC matrices `(0,1,0;1,1,1;1,1,1)` and `(0,0,1;0,1,0;1,0,1)` route both layers' inputs simultaneously — analogous to parallel transformer blocks.
+
+**Key takeaway:** The same layer stack yields sequential or parallel behavior purely from the HC matrix pattern, enabling a learnable sequential–parallel duality beyond fixed architectural choices.
+
+**Caption (verbatim):**
+> Figure 4: Sequential and parallel arrangements of hyper-connections with n = 2.
 
 ### Figure 5 (p.6)
 ![[assets/hyper-connections-p06.png]]
@@ -200,6 +237,10 @@ $$
 $$
 \mathcal{HC}^{\{ k \mid k-1 \equiv i \pmod{n}, i \neq 0 \}}= \begin{pmatrix} \mathbf{0}_{1\times 1} & \mathbf{e}_i^\intercal \\ \mathbf{e}_i & \mathbf{e}_{n\times n}, \end{pmatrix}.
 $$
+
+## 技术点深读（DEEP）
+
+![[deep/hyper-connections]]  <!-- 深度解读：技术点/表格/跨论文关系，独立维护，重跑不丢 -->
 
 ## 全文文本
 全文已存 `extraction/fulltext/hyper-connections.txt`（82287 字符）供引用检索。

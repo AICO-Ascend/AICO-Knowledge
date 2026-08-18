@@ -23,15 +23,43 @@ tags: []
 
 ## 图表（原文 caption + 页码）
 
-### Figure 1 (p.1)
+### Figure 1 (p.1) ⭐深度解读
 ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p01.png]]
 > [!quote] caption
 > Overview of the Agentic Learning Ecosystem (ALE) and ROME Performance. 1[cs.AI] 12 Mar 2026
 
-### Figure 2 (p.4)
+> [!tip] 技术解读（多模态）
+> **Architecture & Data Flow**
+The figure presents the Agentic Learning Ecosystem (ALE) as a closed-loop, full-stack infrastructure. Three components interlock: **ROCK** (sandbox environment manager that generates executable trajectories), **iFlow CLI** (agent framework handling context engineering and environment interaction), and **ROLL** (scalable RL framework for multi-environment policy optimization). Data flows circularly: Instructions → iFlow → trajectories generated inside ROCK → consumed by ROLL → ROME model update → context/policy feedback returns to iFlow. A linear Task→Action→Execution→Feedback→Learning workflow underlies the loop.
+
+**Key Technical Takeaway**
+Empirical scaling is striking: ROME's accuracy climbs from 41.80% (initial) to 89.83% (peak) over training — a +47.07 absolute / +113.16% relative gain — while achieving 57.40% on SWE-bench Verified and 24.72% on Terminal-Bench 2.0, outperforming similarly-sized open models (100B parameters).
+
+**Caption (verbatim):**
+Figure 1: Overview of the Agentic Learning Ecosystem (ALE) and ROME Performance.
+
+### Figure 2 (p.4) ⭐深度解读
 ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p04.png]]
 > [!quote] caption
 > The overview of agentic RL ecosystem (a) and its training pipeline (b). technical stack, ALE is also a call to reframe the community’s priorities. In complex agentic settings, the central challenge is no longer merely data scale or curation quality, but the co-design of training infrastructure, executable environments, and evaluation protocols. We hope this work catalyzes collaborative efforts tow
+
+> [!tip] 技术解读（多模态）
+> ## Main Figure Description
+
+The figure has two panels illustrating the **Agentic Learning Ecosystem (ALE)**:
+
+**(a) Ecosystem architecture** — Two coupled subsystems. The left block, *ROLL* (RL training framework), contains an Actor-Train model whose weights are synced to an Actor-Infer model; an Env. Manager dispatches LLM Requests to multiple Env. Workers (each backed by Rock SDK) and collects LLM Responses/Training Data. The right block, *ROCK Sandbox* (execution engine), hosts the *iFlow CLI* agent framework and a ModelProxy Service that mediates Poll Request / LLM Request / Deliver Response traffic via Request and Response Queues. The two subsystems communicate over the Rock SDK interface.
+
+**(b) RL training pipeline** — A closed loop: the *Rollout Stage* cycles Agentic LLM ↔ Environment through Action tokens and Observations, emitting Trajectory Data that drives the *Training Stage* (Weight Update), whose updated weights are synchronized back to rollout.
+
+**Key takeaway:** Decoupling rollout environment execution (ROCK) from model training/inference (ROLL) — connected via queued ModelProxy RPCs — enables scalable, fault-tolerant, closed-loop agentic RL.
+
+## Caption (verbatim)
+
+Figure 2: The overview of agentic RL ecosystem (a) and its training pipeline (b).
+
+(a) The overview of **A**gentic **L**earning **E**cosystem (**ALE**).
+(b) Agentic RL training pipeline.
 
 ### Figure 3 (p.5)
 ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p05.png]]
