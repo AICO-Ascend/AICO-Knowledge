@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 588 张图，来自 62 篇论文；其中 ⭐441 张已深度解读。
+共 644 张图，来自 64 篇论文；其中 ⭐453 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -1337,6 +1337,53 @@ Kimi K2.5 augments its native visual perception with **external tool calls** to 
 **Caption (verbatim):**
 > Figure 12: Qualitative examples of Kimi K2.5 solving visual reasoning tasks via tool use.
 *caption: Qualitative examples of Kimi K2.5 solving visual reasoning tasks via tool use. 29… ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
+
+### Qwen3-VL Technical Report — Fig.1 (p.3)
+![[assets/qwen3-vl-technical-report-p03.png]]
+> [!tip] ## Main Figure Description
+
+The diagram illustrates the **Qwen3-VL** architecture and its multimodal data flow. Three native-resolution inputs are shown at the bottom: a tall webpage screenshot (Picture 1, 1248×9376), a tiny logo (Picture 2, 256×32), a cat photo (Picture 3, 1440×800), and a multi-frame kitten video (Video 1, 736×448). These feed into a **Vision Encoder** (SigLIP-2) that produces **variable-length visual tokens** — Picture 1 generates 11,427 tokens, Picture 2 only 8, Picture 3 produces 1,125, and the video yields per-frame tokens plus `<0.5 second>` timestamp text tokens. Tokens are interleaved with text tokens and passed to a **Qwen3 LM Dense/MoE Decoder**. The **DeepStack** mechanism injects vision tokens from multiple encoder layers into corresponding LLM Blocks (1, 5, 7, 9, …, N).
+
+**Key takeaway:** Token count scales with native resolution (small images get few tokens, dense screenshots get many), enabling efficient variable-length visual encoding.
+
+## Caption (verbatim)
+
+**Figure 1:** The Qwen3-VL framework integrates a vision encoder and a language model decoder to process multimodal inputs, including text, images, and video. The vision encoder is specifically designed to handle dynamic, native-resolution visual inputs, mapping them to visual tokens of variable length. To enhance perceptual capability and preserve rich visual information, we incorporate the pioneering DeepStack mechanism, which injects visual tokens from multiple layers of the vision encoder into corresponding layers of the LLM. Furthermore, we adopt Interleaved MRoPE to encode positional information for multimodal inputs with a balanced frequency spectrum, and introduce text-based timestamp tokens to more effectively capture the temporal structure of video sequences.
+*caption: The Qwen3-VL framework integrates a vision encoder and a language model decoder to process multimodal inputs, including text, images, and video. The v… ｜ 论文 [[qwen3-vl-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### Qwen3-VL Technical Report — Fig.2 (p.17)
+![[assets/qwen3-vl-technical-report-p17.png]]
+> [!tip] ## Figure Description
+
+**Type:** Vertical bar chart, sorted ascending by accuracy.
+
+**Axes:**
+- **Y-axis:** Accuracy (%), linear scale 0–100
+- **X-axis:** Language (39 categorical entries, ordered low→high)
+
+**Encoding:** Each bar represents a language's OCR accuracy. Bars are color-graded from light purple (low) to dark purple (high), reinforcing the sort order. Values span roughly **71%** (Romanian, lowest) to **~97%** (Swedish, highest).
+
+**Components visible:** 39 discrete language labels (Romanian, Swahili, Russian, Hindi, Hebrew, Polish, Cebuano, Italian, German, Vietnamese, Ukrainian, Uzbek, Spanish, French, Portuguese, Japanese, Turkish, Korean, Arabic, Persian, Urdu, Finnish, Dutch, Norwegian, Czech, Greek, Thai, Indonesian, Danish, Serbian, Swedish, etc.).
+
+**Key takeaway:** 32/39 languages clear the 70% practical-utility threshold, with most non-Latin scripts (Thai, Korean, Arabic, Greek, Hindi) also performing strongly — indicating the OCR is genuinely multilingual rather than Latin-script-biased.
+
+## Caption (Verbatim)
+
+> **Figure 2:** Multilingual OCR performance of our model on a self-built test set. The model achieves over 70% accuracy on 32 out of 39 supported languages, demonstrating strong and usable multilingual capabilities.
+*caption: Multilingual OCR performance of our model on a self-built test set. The model achieves over 70% accuracy on 32 out of 39 supported languages, demonstr… ｜ 论文 [[qwen3-vl-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### Qwen3-VL Technical Report — Fig.3 (p.25)
+![[assets/qwen3-vl-technical-report-p25.png]]
+> [!tip] **Figure Description (≤120 words):**
+
+Figure 3 is a 2D heatmap evaluating the Needle-in-a-Haystack (NIAH) retrieval capability of Qwen3-VL-235B-A22B-Instruct on long videos. The X-axis encodes **Context Length** (0 → 120 min, with token equivalents up to 1024K), split into "Within Training Context (0–30 min)" and "Extrapolation Context (40–120 min)." The Y-axis encodes **needle Depth (%)** from 0–100%. Each cell's color (red→yellow→green) maps to the Accuracy Score (0.0–1.0) for locating/answering a question about an inserted salient frame. The matrix appears uniformly deep-green.
+
+**Key takeaway:** Qwen3-VL achieves ~100% accuracy across all depths within training context (≤256K tokens) and retains 99.5% accuracy when extrapolated to ~1M tokens (~2h video) via YaRN positional extension—demonstrating robust long-sequence multimodal modeling.
+
+**Caption (verbatim):**
+
+"Figure 3: Needle-in-a-Haystack performance heatmap for Qwen3-VL-235B-A22B-Instruct across varying video durations and needle positions. Each cell shows accuracy (%) for locating and answering questions about the inserted "needle" frame."
+*caption: Needle-in-a-Haystack performance heatmap for Qwen3-VL-235B-A22B-Instruct across varying video durations and needle positions. Each cell shows accuracy… ｜ 论文 [[qwen3-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim — Fig.1 (p.1)
 ![[assets/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-p01.png]]
@@ -3438,7 +3485,156 @@ DEPA's two-stage variant achieves higher aggregate scores than single-stage base
 > "Figure : ... DEPA vs ... 1,NLL 2, ... 1,EOS 2, ... 1, ... 2, ... Avg@4 Stage 1 Stage 2 Stage 1 Stage 2 ... (a) ... 2-output ... (b) ..."
 
 **Note:** The page (arXiv:2508.07976v4) has severely overlapping/illegible glyphs in this figure region, so a clean verbatim transcription is not possible from the rendered image alone — most labels appear stacked and unreadable.
-*caption: (Left) Asynchronous RL brings substantial improvements: Through RL training, our agent, ASearcher-Web-QwQ, obtains +15.0, +2.4, and +15.6 improvements… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+*caption: (Left) Asynchronous RL brings substantial improvements: Through RL training, our agent, ASearcher-Web-QwQ, obtains +15.0, +22.4, and +15.6 improvement… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.2 (p.3)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p03.png]]
+> [!tip] **Figure Description (Architecture & Data Flow):**
+
+The figure contrasts two agent architectures for search-augmented QA. **Search-R1 (left)** uses a single-loop pipeline: User Query → Trainable LLM Gen → Tool Calling → Search Query → External Search Engine → Top-K Entries, looping back over ≤10 turns to produce an Answer. **ASearcher (right)** extends this with a dual-tool design: the same LLM Gen / Tool Calling dispatch can invoke either the Search tool (→ Search Engine → Top-K Entries) **or** a Browser tool (→ Webpage ~100K chars → Summarize ~100 chars), allowing up to **128 turns** before yielding the Answer. The legend distinguishes trainable components (blue LLM Gen), external tools (pink), external info (green), and tool-calling logic (orange).
+
+**Key Technical Takeaway:** ASearcher's novelty lies in jointly optimizing **long-horizon reasoning and long-context summarization** through end-to-end RL on a single LLM — no external LLM is required, and the 128-turn budget enables multi-hop web evidence synthesis (Figure 2).
+
+**Caption (Verbatim):**
+
+Figure 2: Comparison between ASearcher and Search-R1. (Left) Search-R1 is only equipped with search tools and lacks web browsing capability. (Right) ASearcher utilizes a simple agent design with two basic tools including search and browsing tools, without relying on any external LLM. ASearcher is a comprehensive agent capable of both reasoning and summarizing lengthy web contents. Notably, both reasoning and summarization abilities are optimized through end-to-end RL training.
+*caption: Comparison between ASearcher and Search-R1. (Left) Search-R1 is only equipped with search tools and lacks web browsing capability. (Right) ASearcher u… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.3 (p.4)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p04.png]]
+> [!tip] ## Description (≤120 words)
+
+The figure compares three systems on a complex GAIA multi-hop query (answer: "Mice"). It is organized as a three-column case study:
+
+1. **Search-R1-32B** (left): Fails — cannot decompose the query, hallucinates (claims alvei = Coprococcus), lacks verification, and ends with the wrong answer ("Pigs").
+2. **Search-o1 (QwQ)** (middle): Identifies the genus but misses key information, jumps to a wrong conclusion, and cannot verify it.
+3. **ASearcher-Web-QwQ** (right): Performs a structured pipeline — focused search → key-info extraction → uncertainty-aware source identification → cross-document inference (vet/animal filtering) → grounded verification — arriving at the correct answer "Mice."
+
+**Key takeaway:** End-to-end RL agents that explicitly incorporate *uncertainty-aware reasoning, precise noisy-content extraction, cross-document inference, and grounded verification* outperform tool-call baselines on complex multi-hop search tasks.
+
+## Caption (verbatim)
+
+**Figure 3:** A case study on a complex query from GAIA. **Search-R1-32B** is unable to break down the complex question and has severe hallucinations. **Search-o1 (QwQ)** can identify the correct articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, **ASearcher-Web-QwQ**, exhibits key behaviors featuring Search Intelligence: *uncertainty-aware reasoning* (list and examine candidate answers), *precise extraction* from noisy contents, *cross-document inference*, and *grounded verification*.
+*caption: A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) c… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.4 (p.7)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p07.png]]
+> [!tip] ## Main Figure Description (Figure 4 — Data Synthesis Agent)
+
+**Architecture & Components:**
+- **Synthetic QA & Facts** (left): seed QA pair + supporting facts feed an LLM agent.
+- **Two Actions** branching from the agent:
+  - **Extract Fact & Inject** (top): a Search Engine/Browser retrieves external facts and injects them into the question.
+  - **Select Info. & Fuzz** (bottom): specific values (e.g., "2014") are blurred into uncertain placeholders (e.g., "early 2010s").
+- **Quality Verification** (right): three sequential checks — (1) Basic Quality (solvability + clarity), (2) Difficulty Measurement (model must produce wrong answer among distractors), (3) Answer Uniqueness.
+
+**Data Flow:** Seed QA → Agent → {Inject | Fuzz} → Modified Question + tracked supporting facts → 3-step Verification → loop until pass.
+
+**Key Technical Takeaway:** The agent's two complementary actions (Injection adds facts to broaden reasoning; Fuzz hides facts to increase difficulty) combined with the 3-step verifier create a self-curating loop that yields hard-but-solvable multi-hop QA pairs.
+
+---
+
+## Verbatim Caption Transcription
+
+**Figure 4:** Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, *Injection* and *Fuzz*. Through *injection*, the agent enriches the question by adding some external facts. Through *Fuzz*, the agent blurs certain information to increase uncertainty and difficulty. The related fact to the question are tracked during the synthesis process. Each time the question is modified, a quality verification step is applied to ensure quality and difficulty of the synthetic questions.
+*caption: Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, Injection and Fuzz. Thr… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.6 (p.9)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p09.png]]
+> [!tip] **Figure description (architecture/components/data flow + key takeaway):**
+
+Figure 6 is a three-panel empirical analysis of ASearcher-Web-QwQ supporting the section's claim that scaling RL trajectory length is hard.
+
+- **Left panel** – Accuracy (y-axis, ~52–55%) vs. enforced minimum tool-call turns (x-axis, 6–12). Accuracy rises monotonically with more tool calls, justifying long-horizon training.
+- **Middle panel** – #Tool calls per trajectory vs. training step (0–200), tracking MIN/MAX/AVG. The MAX curve climbs to ~70 while AVG stays near 10, revealing a widening gap between long and short rollouts.
+- **Right panel** – #Generated tokens per trajectory (log scale, 10³–10⁵) vs. training step. MAX trajectories reach ~10⁵ tokens while MIN stays ~10³, a ~100× spread.
+
+**Key takeaway:** Long-horizon agentic RL suffers from extreme runtime variance — the longest trajectories consume ~100× more tokens than the shortest, making synchronous batched training inefficient and motivating the asynchronous design introduced later.
+
+**Caption (verbatim):**
+
+"Figure 6: (Left) Test scaling of ASearcher-Web-QwQ. Data points are obtained by enforcing different minimum turns. The accuracy is averaged over GAIA, xBench-DeepSearch, and Frames. (Middle) Number of tool calls versus training steps. During training time, long trajectories require much more tool calls than short ones. (Right) Number of generated tokens versus training steps. The number of output tokens exhibits significant variance, with long trajectories exceeding short ones by up to two orders of magnitude."
+*caption: (Left) Test scaling of ASearcher-Web-QwQ. Data points are obtained by enforcing different minimum turns.The accuracy is averaged over GAIA, xBench-Dee… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.7 (p.10)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p10.png]]
+> [!tip] ## Figure 7 Description
+
+The figure compares two RL training paradigms for agentic LLM systems:
+
+**One-Step-Off RL (top):** Trajectories (Traj 1–12) execute in parallel with alternating LLM Gen and Tool calls. While training for step N overlaps with step N+1 generation, the batch is blocked by the slowest trajectory (Traj 7), producing a visible "Idle Time" gap before Train Step N+1 begins.
+
+**Fully Async RL (bottom):** All trajectories run independently with no synchronization barrier. Training steps (N, N+1, N+2) launch as soon as any sufficient batch is ready — Traj 7 can span multiple training versions while other trajectories continuously feed new batches.
+
+**Key Takeaway:** Fully decoupling trajectory rollout from model updates eliminates GPU idle time caused by long-running trajectories, yielding near-full resource utilization and faster training than batch-generation alternatives.
+
+*(120 words)*
+
+## Caption (verbatim)
+
+**Figure 7:** One-Step-off RL v.s. Fully Asynchronous RL. In batch generation systems, a batch should wait for the longest trajectory, leading to significant GPU idle time. In contrast, fully asynchronous RL achieves faster training than batch generation RL by fully decoupling training and trajectory generation, achieving near-full resource utilization for trajectory generation.
+*caption: One-Step-off RL v.s. Fully Asynchronous RL. In batch generation systems, a batch should wait for the longest trajectory, leading to significant GPU id… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.8 (p.14)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p14.png]]
+> [!tip] **Main figure description**
+
+Figure 8 contains two grouped bar charts comparing three variants of the QwQ-32B agent across three benchmarks (GAIA, xBench-DeepSearch, Frames). The left panel plots Avg@4 Score (%) and the right panel plots Pass@4 Score (%). Each benchmark group contains three bars: "Before RL" (tan), "ASearcher-v1 (ours)" (coral), and "ASearcher-v2 (ours)" (purple).
+
+**Data flow**: Base model → RL training (v1 then v2) → evaluation on three deep-research test suites via two scoring protocols.
+
+**Key takeaway (≤120 words):** RL training delivers monotonic gains on every benchmark under both metrics. ASearcher-v2 uniformly dominates v1 and the un-tuned baseline. The largest absolute improvement appears on xBench-DeepSearch, where Avg@4 nearly doubles (28.7 → 42.1 → 51.1) and Pass@4 climbs from 51.0 to 75.0. On Frames the gains are smaller (already a strong baseline), suggesting RL helps most where the base agent struggles most. The Pass@4 gaps being larger than Avg@4 gaps indicates RL also improves the agent's consistency/reliability, not just peak performance.
+
+**Caption (verbatim):** Figure 8: Comparison of the performance of QwQ-32B agent before and after RL Training.
+*caption: Comparison of the performance of QwQ-32B agent before and after RL Training. training pipeline trains the agent to learn complex search strategies to … ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.9 (p.15)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p15.png]]
+> [!tip] ## Main Figure Description
+
+**Architecture/Components:** Two tri-panel figures (Fig. 9: ASearcher-Local-7B; Fig. 10: ASearcher-Local-14B), each containing three side-by-side line plots sharing the x-axis (Training Step: 0–300+ for 7B, 0–225 for 14B). Y-axes track per-trajectory metrics: (a) # Generated Tokens (up to 1000/800), (b) # Search Queries (0–6), and (c) # URL Accesses (0–0.4 / 0–2.5). Red curves denote averages over a gray grid.
+
+**Data flow:** Training step progresses → measured agent behavior (token output length, search-tool usage, web retrieval) evolves, revealing the learning trajectory.
+
+**Key Takeaway:** Both models exhibit emergent scaling — generated tokens and search-query counts grow over training (U-shaped for tokens: initial dip, then rise), indicating RL autonomously induces longer, more tool-intensive reasoning chains rather than requiring hand-engineered trajectories.
+
+## Caption Verbatim
+
+**Figure 9:** Figure 9: Training Dynamics of ASearcher-Local-7B.
+
+**Figure 10:** Figure 10: Training Dynamics of ASearcher-Local-14B.
+
+Subplot labels (verbatim):
+- (a) Generated Tokens
+- (b) Search Queries
+- (c) URL Accesses
+*caption: Training Dynamics of ASearcher-Local-7B.… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.11 (p.16)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p16.png]]
+> [!tip] **Figure 11 Description (≤120 words):**
+
+Figure 11 contains two side-by-side line plots tracking keyword frequency per training trajectory across ~420 training steps. The **left panel** plots six reflective keywords (search, alternatively, wait, check, confirm, however) — "search" dominates, climbing sharply after step ~250 to ~8k occurrences/trajectory, with "alternatively" as the secondary rising signal. The **right panel** plots five explicit reference keywords (doc, mention, source, earlier, previous) — "doc" rises most steeply post-step 250 to ~2.5k, followed by "previous." Both plots share axes (Training Step × Word Count/Traj) and exhibit a synchronized inflection near step 250, indicating emergent behaviors.
+
+**Key takeaway:** Reflective and external-reference behaviors co-emerge around training step 250, with "search" and "doc" usage growing most aggressively — suggesting RL training progressively induces more deliberate, source-grounded reasoning patterns.
+
+**Caption (verbatim):**
+
+Figure 11: Left: Word count of reflective keywords during training time. Right: Word count of keywords indicating explicit reference of external information.
+*caption: Left: Word count of reflective keywords during training time. Right: Word count of keywords indicating explicit reference of external information. sop… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
+
+### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.12 (p.20)
+![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p20.png]]
+> [!tip] **Figure Description:**
+
+The diagram presents a three-column case study comparing agents on a complex multi-hop query about a "C1 genus named for Copenhagen" alvei species. Each column traces a parallel pipeline: **Question** (Q) → **Search operations** (focused search, hallucination, mis-key info, comparative analysis, cross-doc inference) → **Retrieved documents** (D) → **Reasoning thoughts** (T) → **Final Answer** (A). Left: Search-R1-32B fails with hallucinations (❌ "Goats"). Middle: Search-o1 (QwQ) fails due to missing info and unverified conclusions (❌ "Goats"). Right: ASearcher-Web-QwQ succeeds (✅ "Mice") by combining precise extraction, cross-document inference, and confirmation.
+
+**Key Takeaway:** End-to-end RL training instills Search Intelligence behaviors—uncertainty-aware reasoning, precise extraction from noisy content, cross-document inference, and rigorous confirmation—that baseline RAG/agentic methods systematically lack.
+
+**Caption (verbatim):**
+
+Figure 12: A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) can identify the corrects articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, **ASearcher-Web-QwQ**, exhibits key behaviors featuring Search Intelligence: *uncertainty-aware reasoning* (list and examine candidate answers), *precise extraction from noisy contents, cross-document inference,* and *rigorous confirmation*.
+*caption: A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) c… ｜ 论文 [[beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl]] ｜ arxiv 见 MD 元信息*
 
 ### AREAL: A Large-Scale Asynchronous Reinforcement Learning Sys — Fig.1 (p.4)
 ![[assets/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-p04.png]]
@@ -7709,7 +7905,52 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p08.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.5 (p.8): Latency breakdown for a single speculative decoding loop comparing the EAGLE imp…  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
 - ⭐ ![[assets/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-p09.png]] — **LongSpec: Long-Context Lossless Speculative Decodi** Fig.6 (p.9): Throughput comparison of Vanilla, MagicDec, and LONGSPEC. not suitable for such …  `[[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]]`
 
-### multimodal (43)
+### moe (42)
+
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p09.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.1 (p.9): Data flow through an MoE layer: Route, Dispatch, Compute, and Combine stages.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p10.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.2 (p.10): Router architecture: linear projection, score function, top-𝑘selection, and load…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p13.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.3 (p.13): Dense Model vs MoE Model parameter/compute scaling.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p15.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.4 (p.15): Expert Parallelism (EP) distributes experts across GPUs. The all-to-all communic…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p17.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.5 (p.17): Parallelism mappings: traditional constraints vs. MoE Parallel Folding decouplin…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p18.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.6 (p.18): Parallel Folding: decoupled attention and MoE parallelism mappings.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p22.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.7 (p.22): Memory-Efficient Permutation.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p23.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.8 (p.23): Selective Recomputation.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p24.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.9 (p.24): Fine-grained activation offloading: stream overlap for forward and backward pass…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p26.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.10 (p.26): Fine-grained offloading and recomputation: complementary memory optimization str…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.11 (p.28): Comparison of sharding strategies: (a) FSDP2 shards each parameter uniformly; (b…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.12 (p.28): Persistent double-buffer design: two pre-allocated buffers are cycled across FSD…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p30.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.13 (p.30): Expert parallelism across 4 GPUs with 4 experts.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.14 (p.31): The dispatch kernel design of HybridEP.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.15 (p.31): The combine kernel design of HybridEP.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p32.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.16 (p.32): Merged FWD-FWD Timeline with all-to-all Overlapping.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p33.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.17 (p.33): Merged FWD-BWD Timeline with all-to-all Overlapping.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p34.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.18 (p.34): EP all-to-all communication overlap strategies: baseline vs. 1F1B with W/D split…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p35.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.19 (p.35): Interleaved PP Timeline with all-to-all Overlapping.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p37.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.20 (p.37): The pipeline for permute fusion in the training process. • Preprocessing: Permut…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p38.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.21 (p.38): The workflow of the router fusion. • Computation of MoE auxiliary loss: Building…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.22 (p.39): Traditional execution (top) versus CUDA Graph execution (bottom).…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.23 (p.39): Full versus layer-wise CUDA Graphs in one training iteration (three layers, two …  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p40.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.24 (p.40): Partial CUDA Graphs capture static components (attention, shared experts, router…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p41.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.25 (p.41): Transformer layer forward pass: without (upper) and with (lower) partial CUDA Gr…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p42.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.26 (p.42): Why Pipeline Parallelism prevents CUDA Graphs from being shared across microbatc…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p45.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.27 (p.45): ECHO workflow for forward and backward passes. The planner generates routing and…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.28 (p.46): Memory layout comparison across three execution modes. Left: Eager mode allocate…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.29 (p.46): Paged Stashing stream overlap. Forward pass: After Layer N computes, its activat…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p50.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.30 (p.50): FP8 training recipes: Per-Tensor Scaling, Blockwise FP8, and MXFP8. A reduced-pr…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p52.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.31 (p.52): The computation of a linear layer with various FP8 recipes. Note the differences…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p53.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.32 (p.53): FP8 primary weight quantization scheme for blockwise scaling.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p54.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.33 (p.54): FP8 primary weight quantization scheme for delayed scaling and per-tensor curren…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p57.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.34 (p.57): SDPA exhibits 𝑂(𝑠2) complexity, while MoE and the remaining attention operations…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p59.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.35 (p.59): Communication and computation patterns of TP and two types of CP.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.36 (p.61): Unpacked vs. Packed sequences.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.37 (p.61): Compute imbalance in causal attention over packed sequences. are partitioned and…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.38 (p.61): Dynamic Context Parallelism for Packed Sequences.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p64.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.39 (p.64): Load balancing strategies in Megatron-Core MoE.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p65.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.40 (p.65): Shared expert architecture in Megatron-Core MoE. The shared expert processes all…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p66.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.41 (p.66): Flexible Pipeline Parallel Placement. 66…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p67.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.42 (p.67): An example of granular upcycling a dense layer into E2G2T2 fine-grained MoE. E2G…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+
+### multimodal (46)
 
 - ⭐ ![[assets/kimi-k2-5-visual-agentic-intelligence-p01.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.1 (p.1): Kimi K2.5 main results. 1…  `[[kimi-k2-5-visual-agentic-intelligence]]`
 - ⭐ ![[assets/kimi-k2-5-visual-agentic-intelligence-p04.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.2 (p.4): Vision RL training curves on vision benchmarks starting from minimal zero-vision…  `[[kimi-k2-5-visual-agentic-intelligence]]`
@@ -7723,6 +7964,9 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ ![[assets/kimi-k2-5-visual-agentic-intelligence-p23.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.10 (p.23): Overview of our agentic RL framework. environments with minimal overhead. Our de…  `[[kimi-k2-5-visual-agentic-intelligence]]`
 - ⭐ ![[assets/kimi-k2-5-visual-agentic-intelligence-p28.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.11 (p.28): Qualitative example of Kimi K2.5 analyzing a complete playthrough of Black Myth:…  `[[kimi-k2-5-visual-agentic-intelligence]]`
 - ⭐ ![[assets/kimi-k2-5-visual-agentic-intelligence-p29.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.12 (p.29): Qualitative examples of Kimi K2.5 solving visual reasoning tasks via tool use. 2…  `[[kimi-k2-5-visual-agentic-intelligence]]`
+- ⭐ ![[assets/qwen3-vl-technical-report-p03.png]] — **Qwen3-VL Technical Report** Fig.1 (p.3): The Qwen3-VL framework integrates a vision encoder and a language model decoder …  `[[qwen3-vl-technical-report]]`
+- ⭐ ![[assets/qwen3-vl-technical-report-p17.png]] — **Qwen3-VL Technical Report** Fig.2 (p.17): Multilingual OCR performance of our model on a self-built test set. The model ac…  `[[qwen3-vl-technical-report]]`
+- ⭐ ![[assets/qwen3-vl-technical-report-p25.png]] — **Qwen3-VL Technical Report** Fig.3 (p.25): Needle-in-a-Haystack performance heatmap for Qwen3-VL-235B-A22B-Instruct across …  `[[qwen3-vl-technical-report]]`
 - ⭐ ![[assets/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-p01.png]] — **DeepStack: Deeply Stacking Visual Tokens is Surpri** Fig.1 (p.1): Left: Conventional large multimodal models (LMMs) string all visual tokens into …  `[[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]]`
 - ⭐ ![[assets/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-p04.png]] — **DeepStack: Deeply Stacking Visual Tokens is Surpri** Fig.2 (p.4): Architecture of DeepStack. The main innovation lies in the DeepStack strategy th…  `[[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]]`
 - ⭐ ![[assets/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-p08.png]] — **DeepStack: Deeply Stacking Visual Tokens is Surpri** Fig.3 (p.8): Analysis on using LLM layers to process visual tokens. (a) We insert the visual …  `[[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]]`
@@ -7941,7 +8185,7 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p06.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.5 (p.6): Speedup comparison of standard speculative decoding and SpecExtend across varyin…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
 - ⭐ ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p07.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.6 (p.7): Decoding speed (left) and average ac- cepted length (right) of the DeepSeek-R1-D…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
 
-### training (100)
+### training (142)
 
 - ⭐ ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p01.png]] — **EAGLE-3: Scaling up Inference Acceleration of Larg** Fig.1 (p.1): Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target …  `[[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]`
 - ⭐ ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]] — **EAGLE-3: Scaling up Inference Acceleration of Larg** Fig.2 (p.2): Speedup ratios of different methods at temperature=0. For the standard speculati…  `[[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]`
@@ -7974,6 +8218,48 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ ![[assets/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-p20.png]] — **From ATOP to ZCube: Automated Topology Optimizatio** Fig.22 (p.20): Rail-only topology for a 16384 GPU cluster based on 51.2 Tbps switches. Each Rai…  `[[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]]`
 - ⭐ ![[assets/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-p20.png]] — **From ATOP to ZCube: Automated Topology Optimizatio** Fig.23 (p.20): HPN topology (dual-port designs for ROFT) for a 16384 GPU cluster based on 51.2 …  `[[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]]`
 - ⭐ ![[assets/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-p20.png]] — **From ATOP to ZCube: Automated Topology Optimizatio** Fig.24 (p.20): ZCube(128,2) topology for a 16384 GPU cluster based on 51.2 Tbps switches. 880…  `[[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p09.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.1 (p.9): Data flow through an MoE layer: Route, Dispatch, Compute, and Combine stages.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p10.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.2 (p.10): Router architecture: linear projection, score function, top-𝑘selection, and load…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p13.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.3 (p.13): Dense Model vs MoE Model parameter/compute scaling.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p15.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.4 (p.15): Expert Parallelism (EP) distributes experts across GPUs. The all-to-all communic…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p17.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.5 (p.17): Parallelism mappings: traditional constraints vs. MoE Parallel Folding decouplin…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p18.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.6 (p.18): Parallel Folding: decoupled attention and MoE parallelism mappings.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p22.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.7 (p.22): Memory-Efficient Permutation.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p23.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.8 (p.23): Selective Recomputation.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p24.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.9 (p.24): Fine-grained activation offloading: stream overlap for forward and backward pass…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p26.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.10 (p.26): Fine-grained offloading and recomputation: complementary memory optimization str…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.11 (p.28): Comparison of sharding strategies: (a) FSDP2 shards each parameter uniformly; (b…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.12 (p.28): Persistent double-buffer design: two pre-allocated buffers are cycled across FSD…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p30.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.13 (p.30): Expert parallelism across 4 GPUs with 4 experts.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.14 (p.31): The dispatch kernel design of HybridEP.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.15 (p.31): The combine kernel design of HybridEP.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p32.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.16 (p.32): Merged FWD-FWD Timeline with all-to-all Overlapping.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p33.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.17 (p.33): Merged FWD-BWD Timeline with all-to-all Overlapping.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p34.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.18 (p.34): EP all-to-all communication overlap strategies: baseline vs. 1F1B with W/D split…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p35.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.19 (p.35): Interleaved PP Timeline with all-to-all Overlapping.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p37.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.20 (p.37): The pipeline for permute fusion in the training process. • Preprocessing: Permut…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p38.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.21 (p.38): The workflow of the router fusion. • Computation of MoE auxiliary loss: Building…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.22 (p.39): Traditional execution (top) versus CUDA Graph execution (bottom).…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.23 (p.39): Full versus layer-wise CUDA Graphs in one training iteration (three layers, two …  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p40.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.24 (p.40): Partial CUDA Graphs capture static components (attention, shared experts, router…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p41.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.25 (p.41): Transformer layer forward pass: without (upper) and with (lower) partial CUDA Gr…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p42.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.26 (p.42): Why Pipeline Parallelism prevents CUDA Graphs from being shared across microbatc…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p45.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.27 (p.45): ECHO workflow for forward and backward passes. The planner generates routing and…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.28 (p.46): Memory layout comparison across three execution modes. Left: Eager mode allocate…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.29 (p.46): Paged Stashing stream overlap. Forward pass: After Layer N computes, its activat…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p50.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.30 (p.50): FP8 training recipes: Per-Tensor Scaling, Blockwise FP8, and MXFP8. A reduced-pr…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p52.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.31 (p.52): The computation of a linear layer with various FP8 recipes. Note the differences…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p53.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.32 (p.53): FP8 primary weight quantization scheme for blockwise scaling.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p54.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.33 (p.54): FP8 primary weight quantization scheme for delayed scaling and per-tensor curren…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p57.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.34 (p.57): SDPA exhibits 𝑂(𝑠2) complexity, while MoE and the remaining attention operations…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p59.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.35 (p.59): Communication and computation patterns of TP and two types of CP.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.36 (p.61): Unpacked vs. Packed sequences.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.37 (p.61): Compute imbalance in causal attention over packed sequences. are partitioned and…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.38 (p.61): Dynamic Context Parallelism for Packed Sequences.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p64.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.39 (p.64): Load balancing strategies in Megatron-Core MoE.…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p65.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.40 (p.65): Shared expert architecture in Megatron-Core MoE. The shared expert processes all…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p66.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.41 (p.66): Flexible Pipeline Parallel Placement. 66…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
+- ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p67.png]] — **Scalable Training of Mixture-of-Experts Models wit** Fig.42 (p.67): An example of granular upcycling a dense layer into E2G2T2 fine-grained MoE. E2G…  `[[scalable-training-of-mixture-of-experts-models-with-megatron-core]]`
 - ⭐ ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p04.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.1 (p.4): Demonstration of PPO and GRPO training with the search engine (SEARCH-R1).…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
 - ⭐ ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p09.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.2 (p.9): (a) PPO vs. GRPO: GRPO generally converges faster but may exhibit instability af…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
 - ⭐ ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p17.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.3 (p.17): Retrieved Token Loss Masking Study instruction-tuned models exhibit faster conve…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
@@ -8290,6 +8576,102 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
   - Qualitative example of Kimi K2.5 analyzing a complete playthrough of Black Myth: Wukong (24 hours of continuous gameplay across 32 videos at 1080p) using parallel visual agents. See generated webpage 
 - ⭐ Fig.12 (p.29) ![[assets/kimi-k2-5-visual-agentic-intelligence-p29.png]]
   - Qualitative examples of Kimi K2.5 solving visual reasoning tasks via tool use. 29
+
+### #12 Scalable Training of Mixture-of-Experts Models with Megatron
+
+- Fig.1 (p.9) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p09.png]]
+  - Data flow through an MoE layer: Route, Dispatch, Compute, and Combine stages.
+- Fig.2 (p.10) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p10.png]]
+  - Router architecture: linear projection, score function, top-𝑘selection, and load balancing. combine_postprocess (backward).
+- Fig.3 (p.13) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p13.png]]
+  - Dense Model vs MoE Model parameter/compute scaling.
+- Fig.4 (p.15) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p15.png]]
+  - Expert Parallelism (EP) distributes experts across GPUs. The all-to-all communication dispatches tokens to their assigned experts and combines results.
+- Fig.5 (p.17) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p17.png]]
+  - Parallelism mappings: traditional constraints vs. MoE Parallel Folding decoupling.
+- Fig.6 (p.18) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p18.png]]
+  - Parallel Folding: decoupled attention and MoE parallelism mappings.
+- Fig.7 (p.22) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p22.png]]
+  - Memory-Efficient Permutation.
+- Fig.8 (p.23) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p23.png]]
+  - Selective Recomputation.
+- Fig.9 (p.24) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p24.png]]
+  - Fine-grained activation offloading: stream overlap for forward and backward passes.
+- Fig.10 (p.26) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p26.png]]
+  - Fine-grained offloading and recomputation: complementary memory optimization strategies. optimization target. Megatron-Core provides two techniques: precision-aware optimization that reduces storage r
+- Fig.11 (p.28) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]]
+  - Comparison of sharding strategies: (a) FSDP2 shards each parameter uniformly; (b) Megatron-FSDP flattens per-module and shards non-uniformly, aligning with communication buffers.
+- Fig.12 (p.28) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]]
+  - Persistent double-buffer design: two pre-allocated buffers are cycled across FSDP collectives, eliminating allocation overhead and enabling NCCL User Buffer Registration.
+- Fig.13 (p.30) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p30.png]]
+  - Expert parallelism across 4 GPUs with 4 experts.
+- Fig.14 (p.31) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]]
+  - The dispatch kernel design of HybridEP.
+- Fig.15 (p.31) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]]
+  - The combine kernel design of HybridEP.
+- Fig.16 (p.32) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p32.png]]
+  - Merged FWD-FWD Timeline with all-to-all Overlapping.
+- Fig.17 (p.33) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p33.png]]
+  - Merged FWD-BWD Timeline with all-to-all Overlapping.
+- Fig.18 (p.34) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p34.png]]
+  - EP all-to-all communication overlap strategies: baseline vs. 1F1B with W/D split.
+- Fig.19 (p.35) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p35.png]]
+  - Interleaved PP Timeline with all-to-all Overlapping.
+- Fig.20 (p.37) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p37.png]]
+  - The pipeline for permute fusion in the training process. • Preprocessing: Permutation is fundamentally a data transfer process that requires tokens to be stored consecutively in the buffer correspondi
+- Fig.21 (p.38) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p38.png]]
+  - The workflow of the router fusion. • Computation of MoE auxiliary loss: Building on step 2, the auxiliary loss computation is fused into a single kernel.
+- Fig.22 (p.39) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]]
+  - Traditional execution (top) versus CUDA Graph execution (bottom).
+- Fig.23 (p.39) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]]
+  - Full versus layer-wise CUDA Graphs in one training iteration (three layers, two microbatches).
+- Fig.24 (p.40) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p40.png]]
+  - Partial CUDA Graphs capture static components (attention, shared experts, router, preprocessing) while leaving dynamic expert computation outside the graph.
+- Fig.25 (p.41) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p41.png]]
+  - Transformer layer forward pass: without (upper) and with (lower) partial CUDA Graphs. CPU overhead is largely eliminated for static components.
+- Fig.26 (p.42) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p42.png]]
+  - Why Pipeline Parallelism prevents CUDA Graphs from being shared across microbatches. With PP (top): Execution is interleaved—multiple forward passes run before any backward pass. If microbatches share
+- Fig.27 (p.45) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p45.png]]
+  - ECHO workflow for forward and backward passes. The planner generates routing and hot expert maps. Expert Dispatch clones hot expert weights to spare slots; Expert Gradient Dispatch reduces gradients b
+- Fig.28 (p.46) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]]
+  - Memory layout comparison across three execution modes. Left: Eager mode allocates memory dynamically based on actual usage. Middle: Baseline static shape requires worst-case sized buffers for each lay
+- Fig.29 (p.46) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]]
+  - Paged Stashing stream overlap. Forward pass: After Layer N computes, its activations are stashed (copied from tmp buffer to paged stashing buffer) on a dedicated Pack stream while Layer N+1 computes o
+- Fig.30 (p.50) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p50.png]]
+  - FP8 training recipes: Per-Tensor Scaling, Blockwise FP8, and MXFP8. A reduced-precision training recipe consists of: • Data format. There are two types of FP8 format: E4M3 and E5M2 [71, 74]. Usually t
+- Fig.31 (p.52) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p52.png]]
+  - The computation of a linear layer with various FP8 recipes. Note the differences in quantization granularity and tensor layout requirements across platforms. precise due to the finer-grained scaling g
+- Fig.32 (p.53) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p53.png]]
+  - FP8 primary weight quantization scheme for blockwise scaling.
+- Fig.33 (p.54) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p54.png]]
+  - FP8 primary weight quantization scheme for delayed scaling and per-tensor current scaling.
+- Fig.34 (p.57) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p57.png]]
+  - SDPA exhibits 𝑂(𝑠2) complexity, while MoE and the remaining attention operations exhibit 𝑂(𝑠) complexity. Therefore, SDPA dominates the computation at longer sequence lengths.
+- Fig.35 (p.59) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p59.png]]
+  - Communication and computation patterns of TP and two types of CP.
+- Fig.36 (p.61) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]
+  - Unpacked vs. Packed sequences.
+- Fig.37 (p.61) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]
+  - Compute imbalance in causal attention over packed sequences. are partitioned and which CP communication group is used by attention operators, without requiring any parameter redistribution or optimize
+- Fig.38 (p.61) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]
+  - Dynamic Context Parallelism for Packed Sequences.
+- Fig.39 (p.64) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p64.png]]
+  - Load balancing strategies in Megatron-Core MoE.
+- Fig.40 (p.65) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p65.png]]
+  - Shared expert architecture in Megatron-Core MoE. The shared expert processes all tokens while routed experts process only their assigned tokens. When overlap is enabled, shared expert computation runs
+- Fig.41 (p.66) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p66.png]]
+  - Flexible Pipeline Parallel Placement. 66
+- Fig.42 (p.67) ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p67.png]]
+  - An example of granular upcycling a dense layer into E2G2T2 fine-grained MoE. E2G2T2 denotes 4 experts, top 2, with half intermediate size. (1) We shard MLP weights in the intermediate dimension (4ℎ→2ℎ
+
+### #13 Qwen3-VL Technical Report
+
+- ⭐ Fig.1 (p.3) ![[assets/qwen3-vl-technical-report-p03.png]]
+  - The Qwen3-VL framework integrates a vision encoder and a language model decoder to process multimodal inputs, including text, images, and video. The vision encoder is specifically designed to handle d
+- ⭐ Fig.2 (p.17) ![[assets/qwen3-vl-technical-report-p17.png]]
+  - Multilingual OCR performance of our model on a self-built test set. The model achieves over 70% accuracy on 32 out of 39 supported languages, demonstrating strong and usable multilingual capabilities.
+- ⭐ Fig.3 (p.25) ![[assets/qwen3-vl-technical-report-p25.png]]
+  - Needle-in-a-Haystack performance heatmap for Qwen3-VL-235B-A22B-Instruct across varying video durations and needle positions. Each cell shows accuracy (%) for locating and answering questions about th
 
 ### #14 DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim
 
@@ -8706,7 +9088,29 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 ### #32 Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with
 
 - ⭐ Fig.1 (p.1) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p01.png]]
-  - (Left) Asynchronous RL brings substantial improvements: Through RL training, our agent, ASearcher-Web-QwQ, obtains +15.0, +2.4, and +15.6 improvements on GAIA, xBench, and
+  - (Left) Asynchronous RL brings substantial improvements: Through RL training, our agent, ASearcher-Web-QwQ, obtains +15.0, +22.4, and +15.6 improvements on GAIA, xBench, and
+- ⭐ Fig.2 (p.3) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p03.png]]
+  - Comparison between ASearcher and Search-R1. (Left) Search-R1 is only equipped with search tools and lacks web browsing capability. (Right) ASearcher utilizes a simple agent design with two basic tools
+- ⭐ Fig.3 (p.4) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p04.png]]
+  - A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) can identify the corrects articles through extensiv
+- ⭐ Fig.4 (p.7) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p07.png]]
+  - Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, Injection and Fuzz. Through injection, the agent enriches the question by
+- ⭐ Fig.5 (p.7) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p07.png]]
+  - Statistics from our data synthesis process. (Left) The distribution of the number of supporting facts. (Middle) The distribution of the number of fuzz actions and injection actions. (Right) The accura
+- ⭐ Fig.6 (p.9) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p09.png]]
+  - (Left) Test scaling of ASearcher-Web-QwQ. Data points are obtained by enforcing different minimum turns.The accuracy is averaged over GAIA, xBench-DeepSearch, and Frames. (Middle)
+- ⭐ Fig.7 (p.10) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p10.png]]
+  - One-Step-off RL v.s. Fully Asynchronous RL. In batch generation systems, a batch should wait for the longest trajectory, leading to significant GPU idle time. In contrast, fully asynchronous RL achiev
+- ⭐ Fig.8 (p.14) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p14.png]]
+  - Comparison of the performance of QwQ-32B agent before and after RL Training. training pipeline trains the agent to learn complex search strategies to perform precise searches, extract key information,
+- ⭐ Fig.9 (p.15) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p15.png]]
+  - Training Dynamics of ASearcher-Local-7B.
+- ⭐ Fig.10 (p.15) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p15.png]]
+  - Training Dynamics of ASearcher-Local-14B. 15
+- ⭐ Fig.11 (p.16) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p16.png]]
+  - Left: Word count of reflective keywords during training time. Right: Word count of keywords indicating explicit reference of external information. sophisticated prompt-based agents powered by Large Re
+- ⭐ Fig.12 (p.20) ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p20.png]]
+  - A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) can identify the corrects articles through extensiv
 
 ### #33 AREAL: A Large-Scale Asynchronous Reinforcement Learning Sys
 

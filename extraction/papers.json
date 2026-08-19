@@ -190,10 +190,10 @@
    "training"
   ],
   "pages": 88,
-  "figs": 0,
+  "figs": 42,
   "md": "extraction/scalable-training-of-mixture-of-experts-models-with-megatron-core.md",
   "fulltext": "extraction/fulltext/scalable-training-of-mixture-of-experts-models-with-megatron-core.txt",
-  "fulltext_chars": 8903
+  "fulltext_chars": 265930
  },
  {
   "num": 13,
@@ -206,10 +206,10 @@
    "multimodal"
   ],
   "pages": 42,
-  "figs": 0,
+  "figs": 3,
   "md": "extraction/qwen3-vl-technical-report.md",
   "fulltext": "extraction/fulltext/qwen3-vl-technical-report.txt",
-  "fulltext_chars": 2448
+  "fulltext_chars": 150008
  },
  {
   "num": 14,
@@ -491,10 +491,10 @@
   "pdf_url": "https://arxiv.org/pdf/2508.07976",
   "tags": [],
   "pages": 21,
-  "figs": 1,
+  "figs": 12,
   "md": "extraction/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.md",
   "fulltext": "extraction/fulltext/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.txt",
-  "fulltext_chars": 2528
+  "fulltext_chars": 66936
  },
  {
   "num": 33,
