@@ -564,52 +564,51 @@ expert implementations can use different GEMM backends transparently.
 Scalable Training of Mixture-of-Experts Models with Megatron Core
 2.1.1. Forward Pass: Route, Dispatch, Compute, Combine
 The MoE layer processes input tokens through four sequential stages:
- 6 K D U H G  ( [ S H U W  0 / 3
- , Q S X W
- 7 R N H Q V
- > % ð 6   + @
- 2 X W
- S X W
- 7 R N H Q V
- > % ð 6   + @
- 7 R S . 5 R X W H U
- * D W L Q J  / L Q H D U
- 6 F R U H  ) X Q F W L R Q 
- 6 R I W P D [  6 L J P R L G
- 7 R S  N  6 H O H F W L R Q ‹
- / R D G  % D O D Q F L Q J
- 7 R N H Q  ’ L V S D W F K H U
- 3 H U P X W H   J U R X S
- W R N H Q V  E \  H [ S H U W
- $ O O  W R  $ O O   V H Q G
- W R  H [ S H U W  * 3 8 V
- 3 R V W S U R F H V V 
- S U H S D U H  I R U
- F R P S X W D W L R Q
- ( [ S H U W  & R P S X W D W L R Q
- * U R X S H G  * ( 0 0
- ( [ S H U W  
- ( [ S H U W  
- ( [ S H U W  (  1
-   
- 7 R N H Q  & R P E L Q H U
- $ O O  W R  $ O O 
- U H W X U Q  W R
- R U L J L Q D O  * 3 8 V
- 8 Q S H U P X W H 
- U H V W R U H  W R N H Q
- R U G H U
- :  H L J K W H G  F R P E L Q H  E \
- U R X W L Q J  S U R E V
- S U R E V
- U R X W L Q J
- P D S
- L Q S X W
- W R N H Q V
- G L V S D W F K H G
- W R N H Q V
- F R P S X W H G
- W R N H Q V
+Shared Expert MLP
+Input
+Tokens
+[B×S, H]
+Output
+Tokens
+[B×S, H]
+TopKRouter
+Gating Linear
+Score Function:
+Softmax/Sigmoid
+Top-k Selection 
+Load Balancing
+Token Dispatcher
+Permute: group
+tokens by expert
+All-to-All: send
+to expert GPUs
+Postprocess:
+prepare for
+computation
+Expert Computation
+Grouped GEMM
+Expert 0
+Expert 1
+Expert E-N
+...
+Token Combiner
+All-to-All:
+return to
+original GPUs
+Unpermute:
+restore token
+order
+Weighted combine by
+routing probs
+probs
+routing
+map
+input
+tokens
+dispatched
+tokens
+computed
+tokens
 Figure 1: Data flow through an MoE layer: Route, Dispatch, Compute, and Combine stages.
 Stage 1: Route. The TopKRouter determines which experts process each token. A learned linear projection
 maps each token’s hidden state to 𝐸logits (one per expert), a score function (softmax or sigmoid) converts
@@ -645,74 +644,43 @@ The dispatcher manages token movement between GPUs through a six-phase pipeline:
 9
 
 Scalable Training of Mixture-of-Experts Models with Megatron Core
-GA
-TING
-LAYER:
-Linear
-Projection
-SCORE
-FUNCTION
-Softmax
-:
-T OP
-- K
+GATING LAYER:
+Linear Projection
+SCORE FUNCTION
+Softmax:
+TOP-K
 SELECTION
 E
 scores
 logits
-In
-put
-Hiden
+Input
+Hidden
 States
 scores
-z - los
+z-loss
 Sinkhorn
 Expert
 Bias
-LO
-AD
-BALANCING
-MECHANISMS
-Aux_los
-Seq_aux_los
-Global_aux_los
-[ BxS
-, E]
-[ BxS
-, E]
-Per
-- Token
+LOAD BALANCING MECHANISMS
+Aux_loss
+Seq_aux_loss
+Global_aux_loss
+[BxS, E]
+[BxS, E]
+Per-Token
 Probabilities
-[ BxS
-, E]
-Weights
-for
-combinding
-expert
-outputs
-Routing
-Map
-[ BxS
-, E]
-Bolean
-mask
-for
-dispatcher
-Auxiliary
-- los
-- fre
-Micro
-- batch
-level
-Sequence
-level
-Global
-- batch
-level
-Megatron
-Core
-MoE
-TopKRouter
+[BxS, E]
+Weights for combinding
+expert outputs
+Routing Map
+[BxS, E]
+Boolean mask
+for dispatcher
+Auxiliary-loss-free
+Micro-batch level
+Sequence level
+Global-batch level
+Megatron Core MoE TopKRouter
 Figure 2: Router architecture: linear projection, score function, top-𝑘selection, and load balancing.
 combine_postprocess (backward).
 Communication Backends. Three dispatcher types are available:
@@ -1972,26 +1940,23 @@ CUDA Graphs and layer-wise CUDA Graphs—and how they address this dynamic-shape
 F11
 F12
 F13
- %  
- %  
+B11
+B12
 B13
- )  
+F21
 F22
 F23
 B21
 B22
- %  
- &
-]iW  &}` U u]}Z 
-]U o˙ i
- ]iW  l` U u]}Z 
-]U o˙ i
+B23
+Fij: Forward pass, microbatch i, layer j
+Bij: Backward pass, microbatch i, layer j
 Opti
- /
+L
 L
 Full CUDA Graphs
 Layer-wise CUDA Graphs
-YY
+……
 Figure 23: Full versus layer-wise CUDA Graphs in one training iteration (three layers, two microbatches).
 Full CUDA Graphs vs Layer-wise CUDA Graphs
 As shown in figure 23, two types of CUDA Graphs are
@@ -2010,43 +1975,38 @@ device-host synchronization is required to retrieve per-expert token counts for 
 describes our effort to overcome the dynamic dispatching and synchronization issues so that the full CUDA
 Graphs can also be applied to dropless MoE. Alternatively, here we introduce a simpler method based on
 layer-wise CUDA Graphs, called partial CUDA Graphs.
- 5 R X W H U 
- 7 R N H Q  & R P E L Q H U
- 7 R N H Q  ’ L V S D W F K H U
- * ( 0 0
- 0 R (  / D \ H U V
- ( 3  & R P P X Q L F D W L R Q
- / D \ H U 1 R U P
- & R U H 
- $ W W H Q W L R Q
- % L D V    ’ U R S R X W   
- $ G G
- / D \ H U 1 R U P
- 3 H U P X W D W L R Q
- * O R E D O 
- $  $  Y  W R  H [ F K D Q J H  W R N H Q V
- 8 Q S H U P X W D W L R Q
- % L D V    ’ U R S R X W   
- $ G G
- 7 R S  .  5 R X W L Q J
- 5 R X W H G  ( [ S H U W V
- * O R E D O 
- $  $  Y  W R  U H F R Y H U  W R N H Q V
- $ *  $  $  Y 
- V  L Q  R X W  V S O L W V
- * D W L Q J
- / R F D O  3 H U P X W D W L R Q
- / R F D O  8 Q S H U P X W D W L R Q
- 6 K D U H G  ( [ S H U W
-  D W W Q 
- V F R S H
-  P R H B U R X W
- V F R S H
-  P R H B S U H S U R F  V F R S H
- ’ \ Q D P L F  6 K D S H V
- $ W W H Q W L R Q  3 U R M H F W L R Q
- $ W W H Q W L R Q  4 . 9
- $ W W H Q W L R Q  / D \ H U V
+Router 
+Token Combiner
+Token Dispatcher
+GEMM
+MoE Layers
+EP-Communication
+LayerNorm
+Core Attention
+Bias - Dropout - Add
+LayerNorm
+Permutation
+Global A2A-v to exchange tokens
+Unpermutation
+Bias - Dropout - Add
+Top-K Routing
+Routed Experts
+Global A2A-v to recover tokens
+AG A2A-v's in/out splits
+Gating
+Local Permutation
+Local Unpermutation
+Shared Expert
+"attn"
+scope
+"moe_router"
+scope
+"moe_preprocess"
+scope
+Dynamic Shapes
+Attention Projection
+Attention QKV
+Attention Layers
 Figure 24: Partial CUDA Graphs capture static components (attention, shared experts, router, preprocessing)
 while leaving dynamic expert computation outside the graph.
 Layer-wise CUDA Graphs capture each transformer layer separately. As with full CUDA Graphs, capturing an
@@ -2120,8 +2080,7 @@ Interleaved Execution
 [B_mb0]
 [B_mb1]
 Time
-WITHOUT PIPELINE PARALLELISM (Non
--PP)
+WITHOUT PIPELINE PARALLELISM (Non-PP)
 Sequential Execution
 [F_mb0]
 [B_mb0]
@@ -2130,10 +2089,10 @@ Sequential Execution
 [F_mb2]
 [F_mb2]
 Time
-YY
-YY
-YY
-YY
+……
+……
+……
+……
 Safe to share graphs across microbatches: F_mb(i+1) executes AFTER B_mb(i) completes
 Cannot share graphs across microbatches: F_mb(i+1) executes BEFORE B_mb(i) completes
 Result: L x M x 2 graphs total
@@ -2471,13 +2430,13 @@ NVFP4
 Having established the impact of reduced-precision training on all three walls, we now examine the technical
 components that define a reduced-precision training configuration.
 S
-1 scale / tensor
+1 scale / tensor
 Per-Tensor
 S
 S
 S
 S
-1 scale / 128×128 block
+1 scale / 128×128 block
 Blockwise
 S
 S
@@ -2515,12 +2474,12 @@ S
 S
 S
 S
-1 scale / 1×32 elements
+1 scale / 1×32 elements
 MXFP8
-Coarse Granularity
-Fine Granularity
-Fewer Scales
-More Scales
+Coarse Granularity
+Fine Granularity
+Fewer Scales
+More Scales
 Figure 30: FP8 training recipes: Per-Tensor Scaling, Blockwise FP8, and MXFP8.
 A reduced-precision training recipe consists of:
 • Data format. There are two types of FP8 format: E4M3 and E5M2 [71, 74]. Usually there are two
@@ -2796,7 +2755,7 @@ Sequence Length (tokens)
 25000
 30000
 TFLOPs
-O(s 2)
+O(s2)
 O(s)
 (a) Absolute FLOPs by Component
 SDPA
@@ -2930,9 +2889,9 @@ Tensor shard on the
 current device
 Tensor shard not on 
 the current device
-Head -sharded 
+Head-sharded 
 Tensor
-Sequence -sharded 
+Sequence-sharded 
 Tensor
 Figure 35: Communication and computation patterns of TP and two types of CP.
 In practice, P2P CP is the more common CP mode. Relative to TP, its main advantage is that communication
@@ -3029,18 +2988,20 @@ As shown in Figure 38c, with Dynamic-CP, the orange sequence in microbatch-0 sti
 microbatch-1, we no longer need to split the blue and green sequences; instead, we let each of them run with
 CP=1 independently.
 (a) Input sequences.
- * 3 8  
- * 3 8  
- & 3 
- P L F U R  E D W F K    P L F U R  E D W F K  
- & 3 
+GPU-0
+GPU-1
+CP2
+micro-batch-0
+micro-batch-1
+CP2
 (b) Standard CP2.
- * 3 8  
- * 3 8  
- & 3 
- & 3 
- & 3 
- P L F U R  E D W F K    P L F U R  E D W F K  
+GPU-0
+GPU-1
+CP2
+CP1
+CP1
+micro-batch-0
+micro-batch-1
 (c) Dynamic-CP.
 Figure 38: Dynamic Context Parallelism for Packed Sequences.
 To make per-microbatch CP resizing practical in Megatron-Core, Dynamic-CP avoids any expensive redistribution
@@ -3152,52 +3113,46 @@ Pad-to-Max for Static Shapes. Droppable mode also enables pad-to-max functionali
 inputs to the same capacity limit. This converts MoE’s inherently dynamic per-expert token counts into static
 shapes, enabling optimizations like CUDA Graphs (Section 4.3.6) that require fixed tensor dimensions across
 iterations.
-  D  
- $ X [ L O L D U \  / R V V
-  E   6 L Q N K R U Q 
- $ O J R U L W K P
- $ V V L J Q P H Q W  E D V H G
-  F  
- $ X [  / R V V  ) U H H  ( [ S H U W  % L  ) H H G E D F N  E D V H G
- / R J L W V
- 6 F R U H  ) X Q F W L R Q
- 7 R S  N  6 H O H F W L R Q
- ’ L V S D W F K
- / R J L W V
- H [ S  ˆ 
- Q R B J U D G
-           
-           
-           
- 5 R Z
- 1 R U P
- & R O X P Q
- 1 R U P
-           
-           
-           
- , W H U D W H  W R  F R Q Y H U J H Q F H
- 7 R S  N  6 H O H F W L R Q
- ’ L V S D W F K
- / R J L W V
- 7 R S  N  6 H O H F W L R Q
- ’ L V S D W F K
- 7 R N H Q  & R X Q W V
- ( [ S H U W  % L D V
- % L D V  8 S G D W H
- ) H H G E D F N
- Q R B J U D G
- ’ L I
- I H U H Q W L D E O H  ˆ  6 R I W  E D O D Q F H
- 1 R Q  G L I
- I H U H Q W L D E O H  ˆ  + D U G  E D O D Q F H
- 1 R Q  G L I
- I H U H Q W L D E O H  ˆ 
- $ G D S W L Y H  E D O D Q F H
- * U D G L H Q W  E D V H G
- S U R E V
- U R X W L Q J  P D S
- 
+(a) Auxiliary Loss
+(b) Sinkhorn Algorithm
+Assignment-based
+(c) Aux-Loss-Free(Expert Bias)
+Feedback-based
+Logits
+Score Function
+Top-k Selection
+Dispatch
+Logits
+exp(·)
+no_grad
+.4 .3 .2 .1
+.5 .2 .2 .1
+.3 .3 .3 .1
+Row
+Norm
+Column
+Norm
+.3 .2 .3 .2
+.2 .3 .2 .3
+.3 .3 .2 .2
+Iterate to convergence
+Top-k Selection
+Dispatch
+Logits
+Top-k Selection
+Dispatch
+Token Counts
+Expert Bias
+Bias Update
+Feedback
+no_grad
+Differentiable · Soft balance
+Non-differentiable · Hard balance
+Non-differentiable · Adaptive balance
+Gradient-based
+probs
+routing map
++
 Figure 39: Load balancing strategies in Megatron-Core MoE.
 7.2. Shared Experts
 Some MoE architectures (DeepSeek-V2/V3 [17, 6], Qwen [32]) include a shared expert that processes all
@@ -3240,41 +3195,39 @@ at iso-cost. At scales up to 95B parameters, ℓ-MoEacc consistently outperforms
 64
 
 Scalable Training of Mixture-of-Experts Models with Megatron Core
- , Q S X W 
- 7 R N H Q V
- 7 
- 7 
- 7 
- 7 
- 7 
- 7 
- 7 
- 7 
- 5 R X W H U
- $ O O  W R N H Q V
- 7 R S  .  W R N H Q V  S H U  H [ S H U W
- 6 K D U H G  ( [ S H U W ‹
- ) &   & R P S X W H
- & R P S  & R P P
- ‹ 2 Y H U O D S
- 7 R N H Q  ’ L V S D W F K
- 5 R X W H G  ( [ S H U W V  & R
- 7 R N H Q  & R P E L Q H
- $ G G
- 7 
- 7 
- 7 
- 7 
- 7 
- 7 
- 7 
- 7 
- 2 X W S X W 
- 7 R N H Q V
- 6 K D U H G  ( [ S H U W ‹
- ) &   & R P S X W H
- & R P S  & R P P
- ‹ 2 Y H U O D S
+Input Tokens
+T0
+T1
+T2
+T3
+T4
+T5
+T6
+T7
+Router
+All tokens
+Top-K tokens per expert
+Shared Expert 
+FC1 Compute
+Comp/Comm
+ Overlap
+Token Dispatch
+Routed Experts Compute
+Token Combine
+Add
+T0
+T1
+T2
+T3
+T4
+T5
+T6
+T7
+Output Tokens
+Shared Expert 
+FC2 Compute
+Comp/Comm
+ Overlap
 Figure 40: Shared expert architecture in Megatron-Core MoE. The shared expert processes all tokens while
 routed experts process only their assigned tokens. When overlap is enabled, shared expert computation runs in
 parallel with the token dispatch/combine communication, hiding its latency.
@@ -3334,59 +3287,59 @@ placement strategies for specialized layers (MTP, encoder-decoder structures, et
 architectures to fully exploit the latency-hiding benefits of pipeline parallelism. Practitioners can design layouts
 that distribute computationally expensive layers across ranks to avoid memory pressure and minimize pipeline
 bubbles.
-PP Rank 0
-PP Rank 1
-PP Rank 2
-PP Rank 1-13
-PP Rank 13
-PP Rank 14
-PP Rank 15
+PP Rank 0
+PP Rank 1
+PP Rank 2
+PP Rank 1-13
+PP Rank 13
+PP Rank 14
+PP Rank 15
 VPP
-Stage 0
+Stage 0
 VPP
-Stage 1
+Stage 1
 Embedding
 Dense
 Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
-MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
+MoE Decoder
 ...
-MoE Decoder
-MoE Decoder
+MoE Decoder
+MoE Decoder
 MTP
 (Multi-Token
 Prediction)
-MoE Decoder
-MoE Decoder
-Loss Layer
-Standard Stages
-(Uniform MoE Distribution)
-Final Stages
-(Strategic MTP & Loss Placement)
+MoE Decoder
+MoE Decoder
+Loss Layer
+Standard Stages
+(Uniform MoE Distribution)
+Final Stages
+(Strategic MTP & Loss Placement)
 LEGEND
-Embedding / Loss Layer (Lightweight, Special)
-Dense Decoder Layer (Light Compute)
-MoE Decoder Layer (Heavy Compute, Larger Memory)
-MTP Layer (Specialized Heavy Compute)
-Data Flow
+Embedding / Loss Layer (Lightweight, Special)
+Dense Decoder Layer (Light Compute)
+MoE Decoder Layer (Heavy Compute, Larger Memory)
+MTP Layer (Specialized Heavy Compute)
+Data Flow
 Dense
 Decoder
 Dense
 Decoder
-First Stage
-(Embed + 3*Dense   2*MoE)
+First Stage
+(Embed + 3*Dense ≈ 2*MoE)
 Figure 41: Flexible Pipeline Parallel Placement.
 66
 
