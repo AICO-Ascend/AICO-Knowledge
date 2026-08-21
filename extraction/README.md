@@ -20,8 +20,8 @@ extraction/
 ├── MOC.md                  # 🗺️ 主题图谱导航（wikilink 节点，Obsidian 图谱视图可视化）
 ├── moc_relations.md        # 跨论文关系谱系（人工维护，重跑不丢）
 ├── papers.json             # 机器可读 manifest（69 篇全字段，RAG/程序化摄取入口）
-├── formulas.json           # LaTeX 源公式库（54 篇 459 条，$$ 块可直接粘贴，公式权威源）
-├── minimax_captions.json   # 页级图多模态深度解读（441 张，图路径 → 解读）
+├── formulas.json           # LaTeX 源公式库（55 篇 468 条，$$ 块可直接粘贴，公式权威源）
+├── minimax_captions.json   # 页级图多模态深度解读（548 张 100% 覆盖，图路径 → 解读）
 └── sync_report.md          # 最近一次源列表同步报告（新增/待确认/失败/待解读）
 ```
 
@@ -123,12 +123,12 @@ python3 $KB info <slug>                  # 单篇全卡片（路径/图数/公�
 **Agent（Claude Code 等）提示词模板**：
 > 论文知识库在 /mnt/project/g00952465/AICO-knowledge。检索用 `python3 skills/paper-extraction/kb_query.py <search|fig|formula|topics> <kw> [--json]`；深度分析在 extraction/deep/<slug>.md（6 段，公式LaTeX权威源+图M3解读已织入）；图片在 extraction/assets/，引用格式 [slug, Fig.N, p.X, arXiv:ID]。
 
-## 当前覆盖（2026-08-18）
+## 当前覆盖（2026-08-21）
 
-- **69 篇论文**全文 + 图表 caption 萃取（**588 张图**），`verify_pdfs.py` 报 0 截断（3 篇 truncated-PDF 的 deep note 已标 not-available 待全文回填）
-- **441 张**页级图经 MiniMax-M3 vision 精解读（覆盖 61 篇有图论文，铁律：图理解全走 M3）
+- **69 篇论文**全文 + 图表 caption 萃取（**685 条图 caption 目录 / 548 张渲染页**），`verify_pdfs.py` 报 0 截断（3 篇 truncated-PDF 已于 2026-08-19/20 全文回填并重新深读）
+- **548 张**页级图经 MiniMax-M3 vision 精解读（**覆盖率 100%**，含 2026-08-21 图正则修复补抽的 68 张历史漏检图：deepseekmath/hc-manifold/cuda-agent/ascend-950/efficient-training，铁律：图理解全走 M3）
 - **69 篇**一体化深度分析 note（`extraction/deep/`，6 段结构，图表+公式织入）
-- **54 篇 459 条** LaTeX 源公式（e-print 提取，$$ 直贴，公式权威源）
+- **55 篇 468 条** LaTeX 源公式（e-print 提取，$$ 直贴，公式权威源）
 - 跨论文谱系 `moc_relations.md`：14 大主题簇 + taxonomy anchor
 - 图谱三件套：`MOC.md` 主题导航 + 单篇「相关论文」交叉链接 + `papers.json` manifest
 - 一键同步 `sync_from_source.py` 已上线实测

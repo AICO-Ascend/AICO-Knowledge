@@ -236,7 +236,7 @@
   "pdf_url": "https://public-download.obs.cn-east-2.myhuaweicloud.com/ascend/%E6%98%87%E8%85%BE950%20NPU%E6%9E%B6%E6%9E%84%E7%99%BD%E7%9A%AE%E4%B9%A6.pdf",
   "tags": [],
   "pages": 40,
-  "figs": 0,
+  "figs": 22,
   "md": "extraction/ascend-950-npu-architecture-whitepaper.md",
   "fulltext": "extraction/fulltext/ascend-950-npu-architecture-whitepaper.txt",
   "fulltext_chars": 28777
@@ -290,22 +290,6 @@
   "fulltext_chars": 82501
  },
  {
-  "num": 19,
-  "title": "GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEMENT LEARNING",
-  "slug": "gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning",
-  "date": "2025/4/27",
-  "arxiv": "https://arxiv.org/abs/2507.19457",
-  "pdf_url": "https://arxiv.org/pdf/2507.19457",
-  "tags": [
-   "rl"
-  ],
-  "pages": 96,
-  "figs": 27,
-  "md": "extraction/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.md",
-  "fulltext": "extraction/fulltext/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.txt",
-  "fulltext_chars": 98756
- },
- {
   "num": 20,
   "title": "DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence",
   "slug": "deepseek-v4-towards-highly-efficient-million-token-context-intelligence",
@@ -346,7 +330,7 @@
   "pdf_url": "https://arxiv.org/pdf/2402.03300",
   "tags": [],
   "pages": 30,
-  "figs": 0,
+  "figs": 7,
   "md": "extraction/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.md",
   "fulltext": "extraction/fulltext/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.txt",
   "fulltext_chars": 81353
@@ -551,7 +535,7 @@
   "pdf_url": "https://arxiv.org/pdf/2512.24880",
   "tags": [],
   "pages": 19,
-  "figs": 0,
+  "figs": 8,
   "md": "extraction/hc-manifold-constrained-hyper-connections.md",
   "fulltext": "extraction/fulltext/hc-manifold-constrained-hyper-connections.txt",
   "fulltext_chars": 55403
@@ -786,7 +770,7 @@
    "training"
   ],
   "pages": 42,
-  "figs": 0,
+  "figs": 15,
   "md": "extraction/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.md",
   "fulltext": "extraction/fulltext/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.txt",
   "fulltext_chars": 271696
@@ -1039,7 +1023,7 @@
   "pdf_url": "https://arxiv.org/pdf/2602.24286",
   "tags": [],
   "pages": 32,
-  "figs": 0,
+  "figs": 16,
   "md": "extraction/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.md",
   "fulltext": "extraction/fulltext/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.txt",
   "fulltext_chars": 74680

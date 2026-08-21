@@ -43,7 +43,7 @@ AICO-knowledge/
     ├── moc_relations.md          #   跨论文关系谱系（人工维护，重跑不丢）
     ├── papers.json               #   机器可读 manifest（RAG/程序化摄取入口）
     ├── formulas.json             #   LaTeX 源公式库（$$ 块可直接粘贴，公式权威源）
-    ├── minimax_captions.json     #   架构图多模态深度解读（441 张）
+    ├── minimax_captions.json     #   架构图多模态深度解读（548 张，100% 覆盖）
     ├── sync_report.md            #   最近一次同步报告（新增/待确认/失败/待解读）
     └── README.md                 #   知识库使用说明 + 外部工程接入指南
 ```
@@ -79,11 +79,11 @@ python3 skills/paper-extraction/sync_from_source.py --push
 - `EXPERIENCE.md` — 案例复盘（建库 + 增量刷新全过程踩坑与解法）
 - `extraction/README.md` — 知识库使用说明 + 外部工程接入指南
 
-## 现状（2026-08-18）
+## 现状（2026-08-21）
 
-- **69 篇**论文全部深度萃取：**588 张图**、**441 张**页级图经 MiniMax-M3 vision 精解读（覆盖 61 篇有图论文）、**69 篇**一体化深度分析 note（`extraction/deep/`，6 段结构，图表+公式织入）、**54 篇 459 条** LaTeX 源公式（公式权威源）
+- **69 篇**论文全部深度萃取：**685 条图 caption 目录 / 548 张渲染页**，**548 张**页级图经 MiniMax-M3 vision 精解读（覆盖率 100%，含 2026-08-21 正则修复补抽的 68 张历史漏检图）、**69 篇**一体化深度分析 note（`extraction/deep/`，6 段结构，图表+公式织入）、**55 篇 468 条** LaTeX 源公式（公式权威源）
 - 三条铁律已落地：M3 图解读全覆盖 + 公式 LaTeX 权威源 + 按论文维度一体化深读
-- 全部 PDF 校验有效（verify_pdfs.py 报 0 截断，3 篇 truncated-PDF 的深读 note 已标 not-available 待回填）
+- 全部 PDF 校验有效（verify_pdfs.py 报 0 截断，3 篇 truncated-PDF 已于 2026-08-19/20 全文回填并重新深读）
 - 一键同步已上线并实测（源库 58 条 → 自动识别 2 条待确认，41s 完成全链路+自动推送）
 - 主题覆盖：speculative decoding（10 篇成簇）、kv-cache、disaggregated-serving、sparse-attention、training、moe、rl、multimodal、long-context、architecture、topic-modeling、relational-table-learning
 - 跨论文谱系（`moc_relations.md`）：KV cache 复用/压缩/调度、推测解码全家族、训练系统+网络拓扑、RL 系统+GRPO 根、Reasoning 蒸馏+latent、线性/混合注意力、NPU/Ascend、frontier 模型、残差/层间拓扑、多模态/VLM、长上下文、结构化/表格学习、主题建模/文档相似度、稀疏性第二轴 + taxonomy anchor

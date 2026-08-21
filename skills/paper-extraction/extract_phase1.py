@@ -19,12 +19,21 @@ OUT.mkdir(exist_ok=True); ASSETS.mkdir(exist_ok=True); FULLTEXT.mkdir(exist_ok=T
 def parse_index():
     """num -> (title, date, abs_link, pdf_link, slug, tags)"""
     info={}
+    seen_slugs=set()
     for line in open(REPO/"papers_effective.md",encoding="utf-8"):
         parts=[p.strip() for p in line.split("|")]; inner=parts[1:-1]
         if not inner or not re.match(r'\d+$',inner[0] or ''): continue
         num,title,date,al,pl,loc,ab=inner[:7]
         m=re.match(r'✓ papers/(.+)\.pdf',loc)
-        if m: info[num]={"title":title,"date":date,"abs":al,"pdf":pl,"slug":m.group(1),"ab":ab}
+        if m:
+            slug=m.group(1)
+            # dedup by slug: same paper may appear twice in the source list
+            # (e.g. GEPA #16/#19, same arxiv 2507.19457, near-identical titles)
+            if slug in seen_slugs:
+                print(f"  [dedup] skipping duplicate source row #{num} -> {slug}")
+                continue
+            seen_slugs.add(slug)
+            info[num]={"title":title,"date":date,"abs":al,"pdf":pl,"slug":slug,"ab":ab}
     return info
 
 def extract_authors(t):
@@ -48,6 +57,52 @@ def extract_authors(t):
     s=re.sub(r'\s+',' ',s).strip()
     return s[:220]
 
+# Fallback caption styles (2026-08-21 recall fix): only applied when the strict
+# pattern finds 0 figures in a paper, so the 64 well-extracted papers see zero change.
+#   "Figure 1 | caption"      (deepseekmath, hc-manifold — pipe separator)
+#   "Figure 1 Overview ..."   (cuda-agent — space separator, caption starts uppercase)
+#   "Fig. 1: caption"         (efficient-training survey — colon only; in-text refs
+#                              like "Fig. 2 depicts" have no colon and won't match)
+#   "图3-1 caption"           (ascend-950 whitepaper — Chinese chapter-figure numbering,
+#                              encoded as chapter*100+fig so num stays a sortable int)
+_FIG_PIPE  = r'Figure\s+(\d+)\s*\|\s*([^\n]{8,})'
+_FIG_SPACE = r'(?:^|\n)\s*Figure\s+(\d+)\s+([A-Z][^\n]{9,})'
+_FIG_ABBR  = r'Fig\.\s*(\d+):\s*([^\n]{8,})'
+_FIG_CN    = r'图\s*(\d+)\s*[-‑–—]\s*(\d+)\s*[:：]?\s*([^\n]{2,})'
+# in-text reference openers ("Figure 3 shows ...") — not caption starts
+_FIG_SPACE_STOP = frozenset(
+    "shows show depicts depict illustrates illustrate presents present we in on as is are "
+    "was were and or the a an for to from with it this that".split())
+
+def _extract_figures_fallback(doc, seen, figs):
+    for p in range(doc.page_count):
+        t = doc[p].get_text()
+        for m in re.finditer(_FIG_PIPE, t):
+            num = int(m.group(1))
+            if num in seen: continue
+            seen.add(num)
+            figs.append({"num": num, "page": p+1,
+                         "caption": re.sub(r'\s+', ' ', m.group(2)).strip()[:400]})
+        for m in re.finditer(_FIG_SPACE, t):
+            num = int(m.group(1))
+            cap = re.sub(r'\s+', ' ', m.group(2)).strip()
+            if cap.split()[0].lower() in _FIG_SPACE_STOP: continue
+            if num in seen: continue
+            seen.add(num)
+            figs.append({"num": num, "page": p+1, "caption": cap[:400]})
+        for m in re.finditer(_FIG_ABBR, t):
+            num = int(m.group(1))
+            if num in seen: continue
+            seen.add(num)
+            figs.append({"num": num, "page": p+1,
+                         "caption": re.sub(r'\s+', ' ', m.group(2)).strip()[:400]})
+        for m in re.finditer(_FIG_CN, t):
+            num = int(m.group(1)) * 100 + int(m.group(2))
+            if num in seen: continue
+            seen.add(num)
+            figs.append({"num": num, "page": p+1,
+                         "caption": re.sub(r'\s+', ' ', m.group(3)).strip()[:400]})
+
 def extract_figures(full_text, doc):
     """Find Figure N captions in text, return list of {num, page(1-indexed), caption}."""
     figs=[]
@@ -62,6 +117,8 @@ def extract_figures(full_text, doc):
             if num in seen: continue
             seen.add(num)
             figs.append({"num":num,"page":p+1,"caption":cap[:400]})
+    if not figs:
+        _extract_figures_fallback(doc, seen, figs)
     return sorted(figs,key=lambda x:x["num"])
 
 def render_figure_pages(doc, slug, figs):

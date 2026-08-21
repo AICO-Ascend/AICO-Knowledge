@@ -39,7 +39,6 @@
    "latex": "\\sum_{\\sbr{i_1, i_2, \\cdots, i_k}\\in I}\\prod_{j=1}^k a_j^{(i_j)}."
   }
  ],
- "eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test": [],
  "eagle-speculative-sampling-requires-rethinking-feature-uncertainty": [
   {
    "env": "equation",
@@ -362,7 +361,6 @@
    "latex": "B = \\lfloor \\left(\\frac{M_G - M_S}{L*m_{kv}}\\right) \\rfloor"
   }
  ],
- "taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve": [],
  "deepseek-v4-towards-highly-efficient-million-token-context-intelligence": [
   {
    "env": "equation",
@@ -859,7 +857,6 @@
    "latex": "\\eta_{\\mathcal{E}, \\mathcal{D}} &= \\eta^{\\text{base}}_{\\text{token}} \\cdot s_{\\text{token}}^{-1} \\\\ \\eta_{\\mathcal{M}} &= \\eta^{\\text{base}}_{\\text{concept}} \\cdot s_{\\text{concept}}^{-1}"
   }
  ],
- "hybridflow-a-flexible-and-efficient-rlhf-framework": [],
  "areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning": [
   {
    "env": "equation",
@@ -1042,8 +1039,6 @@
    "latex": "\\small \\begin{split} & \\frac{\\partial \\mathcal{L}}{\\partial \\mathbf{W}} = \\sum_{i=1}^n \\left[\\mathbf{x}^T \\otimes \\left(\\text{diag}\\left(\\mathbf{g} \\odot \\frac{\\partial \\mathcal{L}}{\\partial \\mathbf{v}} \\right) \\times \\mathbf{R}\\right)\\right]_{i}, \\text{where}~~ \\mathbf{R} = \\frac{1}{{\\text{RMS}(\\mathbf{a})}} \\left(\\mathbf{I}-\\frac{\\left(\\mathbf{Wx}\\right)\\left(\\mathbf{Wx}\\right)^T}{n\\text{RMS}(\\mathbf{a})^2}\\right), \\end{split}"
   }
  ],
- "gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints": [],
- "qwen2-5-vl-technical-report": [],
  "deepseek-v3-technical-report": [
   {
    "env": "equation",
@@ -1188,7 +1183,6 @@
    "latex": "kv_{t+1}^d, o_{t+1}^d = D(kv_t^d, o_t^d)"
   }
  ],
- "mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving": [],
  "megascale-scaling-large-language-model-training-to-more-than-10000-gpus": [
   {
    "env": "equation",
@@ -1947,6 +1941,44 @@
   {
    "env": "equation",
    "latex": "\\delta = r_t + \\gamma V(a_{i+1, 0}) - V(a_{i, N})"
+  }
+ ],
+ "let-it-flow-agentic-crafting-on-rock-and-roll": [
+  {
+   "env": "equation",
+   "latex": "\\nabla J_{\\text{REINFORCE}}(\\pi) = \\mathbb{E}_{\\tau \\sim \\pi} \\left[ R(\\tau)\\, \\nabla \\log \\pi(\\tau) \\right],"
+  },
+  {
+   "env": "equation",
+   "latex": "G_k = \\gamma^{\\Delta(j,k)} \\times R_{\\text{final}},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\text{\\texttt{\\textcolor{orange}{IPA}}}} = \\lambda_{\\text{IL}} \\cdot \\underbrace{ \\sum_{{c}^{*}_{k}\\in{\\tau}^{*}_{\\leq c^*_{f}}} \\pi^{megatron}_\\theta({c}^{*}_{k}) G_{c^*_k} \\nabla \\log \\pi^{megatron}_\\theta({c}^{*}_{k} \\mid {\\tau}^{*}_{\\leq {c}^{*}_{k-1}}) }_{\\text{Imitation learning style update}} + \\lambda_{\\text{RL}} \\cdot \\mathcal{L}^{c \\in \\tau_{\\geq {{c}_{f}}}}_{\\text{\\textcolor{orange}{Chunk-RL}}}."
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\mathrm{SFT}}(\\theta) = - \\frac{1}{\\sum_{k=1}^{K} m_k\\,|c_{k}| + \\epsilon} \\sum_{k=1}^{K} m_k\\log \\pi_\\theta\\left(c_{k} \\mid s_{k}\\right),"
+  },
+  {
+   "env": "equation",
+   "latex": "m_k = m_k^{\\mathrm{err}} \\cdot m_k^{\\mathrm{task}}, \\quad m_k^{\\mathrm{err}} = \\mathbf{1}\\big[\\neg \\mathrm{Err}(k)\\big], \\quad m_k^{\\mathrm{task}} = \\mathbf{1}\\big[\\mathrm{Rel}(k)\\big],"
+  },
+  {
+   "env": "align",
+   "latex": "\\nabla J_{\\text{RL}}(\\pi) = \\mathbb{E}_{\\tau \\sim \\mu^{\\text{SGLang}}_{\\theta_{old}}} [\\underbrace{\\left[ {\\rho(\\tau)}\\right]_{0}^{1}}_{TIS} R(\\tau) \\nabla \\log \\pi^{\\text{megatron}}_{\\theta}(\\tau)],\\quad\\rho(\\tau) = \\big(\\prod_{t \\in \\tau} \\frac{\\pi^{\\text{megatron}}_\\theta(\\tau_t \\mid \\tau_{<t})}{\\pi^{\\text{megatron}}_{\\theta_{\\text{old}}}(\\tau_t \\mid \\tau_{<t})}\\big)^{\\frac{1}{|\\tau|}}"
+  },
+  {
+   "env": "align",
+   "latex": "\\nabla J_{\\text{RL}}(\\pi) &= \\underbrace{\\sum_{\\tau \\in \\mathcal{T}^+} \\mu^{\\text{SGLang}}_{\\theta_{old}}(\\tau) R(\\tau)\\nabla \\log \\pi^{\\text{megatron}}_{\\theta}(\\tau)}_{\\textrm{Weighted SL update for positive examples}} + \\underbrace{\\sum_{\\tau \\in \\mathcal{T}^-} \\mu^{\\text{SGLang}}_{\\theta_{old}}(\\tau)\\left[\\rho(\\tau) \\right]_{0}^{1} R(\\tau)\\nabla \\log \\pi^{\\text{megatron}}_{\\theta}(\\tau)}_{\\textrm{Clipped IS update for negative examples}} \\;,"
+  },
+  {
+   "env": "align",
+   "latex": "\\nabla J_{\\text{RL}}(\\pi) = &\\underbrace{ \\sum_{\\tau \\in \\mathcal{T}^+} \\mu^{\\text{SGLang}}_{\\theta_{old}}(\\tau) R(\\tau) \\sum_{k=1}^{|\\tau|} m_k \\nabla \\log \\pi^{\\text{megatron}}_\\theta(\\tau_k \\mid \\tau_{<k}) }_{\\text{Weighted SL update with token-level masking}} \\nonumber\\\\&+\\underbrace{ \\sum_{\\tau \\in \\mathcal{T}^-} \\mu^{\\text{SGLang}}_{\\theta_{old}}(\\tau) \\left[\\rho(\\tau)\\right]_0^1 R(\\tau) \\sum_{k=1}^{|\\tau|} m_k \\nabla \\log \\pi^{\\text{megatron}}_\\theta(\\tau_k \\mid \\tau_{<k}) }_{\\text{Clipped IS update with token-level masking}} ."
+  },
+  {
+   "env": "align",
+   "latex": "\\rho_c (c) = \\bigg(\\prod_{t \\in c} \\frac{\\pi^{\\text{megatron}}_\\theta(\\tau_t \\mid \\tau_{<t})}{\\pi^{\\text{megatron}}_{\\theta_{\\text{old}}}(\\tau_t \\mid \\tau_{<t})}\\bigg)^{\\frac{1}{|c|}}."
   }
  ]
 }

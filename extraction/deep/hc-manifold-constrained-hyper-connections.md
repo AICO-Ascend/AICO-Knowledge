@@ -1,4 +1,4 @@
-# HC: Manifold-Constrained Hyper-Connections — 技术点深读（DEEP 2026-08-18）
+# HC: Manifold-Constrained Hyper-Connections — 技术点深读（DEEP 2026-08-18，2026-08-21 图解读回填）
 
 > 全要素深读笔记。独立文件，extract_phase1 重跑不丢。
 > 论文：mHC: Manifold-Constrained Hyper-Connections · arXiv:2512.24880v2 (5 Jan 2026)
@@ -25,7 +25,11 @@ $$
 \mathbf{x}_{l+1} = \mathcal{H}_{l}^{\mathrm{res}}\mathbf{x}_l + \mathcal{H}_{l}^{\mathrm{post}\, \top}\mathcal{F}(\mathcal{H}_{l}^{\mathrm{pre}}\mathbf{x}_l, \mathcal{W}_l),
 $$
 
-其中 `x_l, x_{l+1}` 特征维度由 `C` 扩展为 `n×C`，`Hres_l ∈ R^{n×n}` 控制流内混合、`Hpre_l ∈ R^{1×n}` 把 `nC` 流聚合为 `C` 维层输入、`Hpost_l ∈ R^{1×n}` 把层输出映射回流（§3）。但作者指出 HC 在大规模训练下暴露出两个机制级根因问题：
+其中 `x_l, x_{l+1}` 特征维度由 `C` 扩展为 `n×C`，`Hres_l ∈ R^{n×n}` 控制流内混合、`Hpre_l ∈ R^{1×n}` 把 `nC` 流聚合为 `C` 维层输入、`Hpost_l ∈ R^{1×n}` 把层输出映射回流（§3）。
+
+三种残差范式的结构对比如 Fig.1（Figure 1, p.1）所示（M3 图解读）：三联图并置 (a) 标准 Residual Connection（单流，`x_l` 经 Layer `F` 后与 skip connection 相加得 `x_{l+1}`）、(b) HC（残差流扩展为多路并行向量栈，由 `Hres_l`（Res Mapping → `h_res_l`）、`Hpre_l`（Pre Mapping → 层输入 `h_in_l`）、`Hpost_l`（Post Mapping → `h_post_l`）等可学习线性映射编排数据流，输出经 ⊕ 聚合回 `x_{l+1}` 栈）、(c) mHC（拓扑与 HC 完全一致，但每个映射被替换为**流形投影算子** `P_M^res`、`P_M^pre`、`P_M^post`，图中以绿色标出）。M3 的关键解读：mHC 不改变 HC 的顶层数据流，而是给每个映射加上一层**几何归纳偏置**——把矩阵约束到恢复 identity 性质的受限子空间，从而"保留 HC 容量增益的同时恢复训练稳定性与可扩展性"。
+
+但作者指出 HC 在大规模训练下暴露出两个机制级根因问题：
 
 1. **数值不稳定（Numerical Instability, §3.1）**：HC 递归地跨层展开后，浅层 `l` 到深层 `L` 的有效信号传播由复合映射 `∏_{i=1}^{L-l} Hres_{L-i}` 控制。把 Eq.3 递归展开得多层形式（Eq.4）：
 
@@ -35,14 +39,14 @@ $$
 
 对比 Eq.2 可见，Eq.2 中 `x_l` 直接出现在和号外（守恒），而 Eq.4 中 `x_l` 被复合映射 `∏ Hres_{L-i}` 调制——由于 `Hres_l` **无任何约束**，该复合映射偏离 identity mapping 的"信号守恒"性质，导致前向/反向信号范数无界放大或衰减。实证证据（§3.1, Fig.2/3，27B 模型）：
    - HC 在 ~12k step 出现 loss surge，与 gradient norm 失稳高度相关（Fig.2）。
-   - 用"Amax Gain Magnitude"（复合映射的 max 绝对行和=前向增益、max 绝对列和=反向增益）度量，HC 的复合映射峰值达 **3000**（Fig.3b），与理想值 1 形成三个数量级的偏离——直接证明 residual stream 在爆炸。
+   - 用"Amax Gain Magnitude"（复合映射的 max 绝对行和=前向增益、max 绝对列和=反向增益）度量，HC 的复合映射峰值达 **3000**（Fig.3b），与理想值 1 形成三个数量级的偏离——直接证明 residual stream 在爆炸。Fig.3（Figure 3, p.7）的 M3 图解读补全了这张图的细粒度结构：两幅对数坐标子图，x 轴为 layer index `l`（0–60，每个 Transformer block 展开为 Attention + FFN 两个独立子层），y 轴为 Amax Gain Magnitude。(a) 单层映射 `Hres_l`：前向信号增益与反向梯度增益在中间层都贴近 1，仅在**首层与末层**出现尖峰——单层本身是良态的；(b) 复合映射 `∏ Hres_{l,i}`：前向乘积尚有界（~10–20），但**反向梯度乘积随深度近似指数增长**，在中间层附近冲到 ~10³–10⁴ 峰值后向两端回落。M3 提炼的机制结论：HC 的不稳定不是单层病态，而是**深度方向复合后反向通路的爆炸**——这正是 Eq.4 中 `∏ Hres_{L-i}` 项的实证显影。
    - 消融（Tab.1）显示 `Hres_l` 是 HC 性能增益的主要来源（关掉它 loss gap 从 −0.027 退到 −0.022），但它同时也是不稳定根源——这正是要修复的靶点。
 
 2. **系统开销（System Overhead, §3.2）**：HC 的 FLOPs 增量可忽略，但 memory access（I/O）成本近似按 `n` 倍增长（Tab.2：residual connection 总 I/O 为 `2C` 读 / `C` 写，而 HC 为 `(5n+1)C + n²+2n` 读 / `(3n+1)C + n²+2n` 写）；中间激活需保留用于反向，推高 GPU 显存，常需 gradient checkpointing；pipeline parallelism 下通信成本也 `n` 倍增加，bubble 变大。
 
 核心矛盾：HC 通过"放宽 identity mapping 以换取拓扑表达力"，但这恰好破坏了 ResNet (He et al. 2016b) 十年来支撑大规模训练稳定性的 identity mapping 性质。mHC 的命题是——**能否在保留 HC 拓扑表达力的同时，把 residual mapping 投影回一个使 identity mapping 性质被"恢复"的流形上？**
 
-> 公式权威源：本节 Eq.1/2/3/4 的 LaTeX 取自 `extraction/formulas.json[hc-manifold-constrained-hyper-connections][0..3]`，与 `fulltext/...txt` Eq.(1)(2)(3)(4) 逐字符校验一致；本 slug 无 M3 图描述（`minimax_captions.json` 未收录对应 PNG），Fig.2/3 的图机制描述按 `.txt` §3.1 转述，不走 `$$` 渲染。
+> 公式权威源：本节 Eq.1/2/3/4 的 LaTeX 取自 `extraction/formulas.json[hc-manifold-constrained-hyper-connections][0..3]`，与 `fulltext/...txt` Eq.(1)(2)(3)(4) 逐字符校验一致。本 slug 于 2026-08-21 回填 5 张图的 M3 解读（`minimax_captions.json`：Fig.1/p.1、Fig.3/p.7、Fig.4/p.12、Fig.6/p.13、Fig.8/p.14）；Fig.2/5/7 未抽到 PNG，其机制描述仍按 `.txt` §3.1/§5 转述，不走 `$$` 渲染。
 
 ## 关键创新点
 
@@ -63,6 +67,8 @@ $$
 此外对 `Hpre_l`、`Hpost_l` 施加非负约束（§4.1 末），防止正负系数叠加引起的信号对消——也可视为一种特殊流形投影。
 
 **效果**：在 27B 模型上，mHC 把复合映射的 Amax Gain Magnitude 从 HC 的峰值 3000 压到最大约 1.6（§5.4, Fig.7b）——**减少约三个数量级**；训练曲线不再出现 HC 的 12k-step loss surge，gradient norm 与 baseline 平稳度相当（Fig.5）。同时仍保留了 HC 的性能增益：相对 baseline 最终 loss 降低 0.021（§5.2）。
+
+Fig.8（Figure 8, p.14）给出了这一约束效果的直接可视化证据（M3 图解读）：2×6 heatmap 网格，上排 HC、下排 mHC，取三个深度切面——单层映射 `Hres_1 / Hres_30 / Hres_60` 与复合映射 `∏_30 / ∏_60`；每个矩阵对所选序列所有 token 取平均，**y 轴标注行和=前向信号增益、x 轴标注列和=反向梯度增益**。HC 的矩阵出现极端无界取值（如 −251.4、−475.3、+509.1）且增益剧烈震荡——vanilla HC 失稳问题的矩阵级实证；mHC 的矩阵则接近 doubly stochastic——元素聚集在 1/n 附近、增益被紧束缚在 1.0 附近（典型 0.95–1.11），这正是 Sinkhorn-Knopp 约 20 次迭代把映射压回 Birkhoff 流形的可视化显影。
 
 ### 2. Sinkhorn-Knopp 参数化与 manifold projection（§4.2）
 **机制**：mHC 沿用 HC 的 dynamic + static 双部分参数化。HC 原始形式（§3 Eq.5）对 `x_l ∈ R^{n×C}` 逐行 RMSNorm 后生成三组系数：
@@ -114,14 +120,14 @@ $$
 
 理论最优值恰好与 pipeline stage 的层数对齐，故**把 recomputation 边界与 pipeline stage 对齐**。
 
-- **Overlapping Communication in DualPipe（§4.3.3）**：扩展 DualPipe (DeepSeek-V3) 调度，处理 `n`-stream residual 跨 stage 的额外通信与 stage 边界处的 `L_r` 层 mHC 重算开销（Fig.4）。关键技巧：MLP 层的 `F_post,res` kernel 在**专用高优先级 compute stream** 上执行避免阻塞通信流；attention 层不使用 persistent kernel 以允许抢占式调度；重算与 pipeline 通信解耦（每 stage 初始激活 `x_{l0}` 已本地缓存）。
+- **Overlapping Communication in DualPipe（§4.3.3）**：扩展 DualPipe (DeepSeek-V3) 调度，处理 `n`-stream residual 跨 stage 的额外通信与 stage 边界处的 `L_r` 层 mHC 重算开销（Fig.4）。关键技巧：MLP 层的 `F_post,res` kernel 在**专用高优先级 compute stream** 上执行避免阻塞通信流；attention 层不使用 persistent kernel 以允许抢占式调度；重算与 pipeline 通信解耦（每 stage 初始激活 `x_{l0}` 已本地缓存）。Fig.4（Figure 4, p.12）的 M3 图解读把这个调度显影为**三条并行时间线**：① Normal Compute Stream——前/反向 MLP 与 Attention kernel（F/B/W 三段）加 "Whole Stage Recompute (B)" 块，两侧标注残差输入/输出 `F_pre`、`F_post,res`（Attention 为 `F_A`、MLP 为 `F_M`）；② Communication Stream——all-to-all 的 DISPATCH/COMBINE 与 PP Send/Recv 点对点流水线通信交错；③ High Priority Compute Stream——专门承载必须在下一 pipeline stage 开始前完成的小型 `F_post,res` 残差输出 kernel。M3 提炼的机制要点：通过把残差重组合 kernel 挪到专用高优先级流，mHC 把 hyper-connection 残差重组合的额外成本**藏进通信气泡的空闲时段**，保住 DualPipe 的通信-计算重叠效率（图中块长仅为示意，不代表真实时长）。
 
 **效果**：在 `n=4` 的大规模训练中仅引入 **6.7% 额外时间开销**（§1, §4.3），使 mHC 在工业规模上可行。
 
 ### 4. 性能与可扩展性实证（§5）
 - **27B main results（Tab.4）**：mHC 在 8 个下游 benchmark 上 8/8 优于 baseline，多数优于 HC。相对 HC 的额外增益：BBH +2.1%（51.0 vs 48.9）、DROP +2.3%（53.9 vs 51.6）、MMLU +0.4%、GSM8K +0.6%、TriviaQA +1.3%。说明稳定性不仅没损害、反而进一步释放了 HC 的表达力（推理类任务受益最显著）。
-- **Scaling（§5.3, Fig.6）**：compute scaling curve（3B/9B/27B）显示 mHC 相对 baseline 的 loss 优势随规模增大仅"轻微衰减"——robust to scale；token scaling curve（3B on 1T tokens）持续保持优势。
-- **Stability Analysis（§5.4, Fig.7/8）**：可视化 HC 与 mHC 的单层/复合映射矩阵——HC 在大增益时其他路径也普遍失稳（整体不稳定）；mHC 始终平稳。
+- **Scaling（§5.3, Fig.6）**：compute scaling curve（3B/9B/27B）显示 mHC 相对 baseline 的 loss 优势随规模增大仅"轻微衰减"——robust to scale；token scaling curve（3B on 1T tokens）持续保持优势。Fig.6（Figure 6, p.13）的 M3 图解读补全坐标语义：每幅子图配**双 y 轴**——左轴 Absolute Loss Gap（−0.04 ~ +0.02）、右轴 Relative Loss Ratio（98.0%–101.0%），baseline 归一化为 0 / 100% 的黑色平线，mHC 蓝线稳定处于下方（绝对 gap ≈ −0.025 ~ −0.015，相对比率 ≈ 98.5%–99.2%）。(a) Compute Scaling：x 轴 FLOPs 对数刻度（~10²¹–10²²），每点是一个 compute-optimal 的模型规模×数据量配置（3B→9B→27B）；(b) Token Scaling：x 轴 FLOPs（2–5×10²¹），追踪 3B 模型随训练 token 增长的轨迹。M3 结论：mHC 的 loss 优势在算力与 token 两个维度上都**保持且仅边际衰减、无饱和迹象**，可直接迁移到大规模预训练区间。
+- **Stability Analysis（§5.4, Fig.7/8）**：可视化 HC 与 mHC 的单层/复合映射矩阵——HC 在大增益时其他路径也普遍失稳（整体不稳定）；mHC 始终平稳（矩阵级细节见"关键创新点 1"效果段对 Figure 8, p.14 的 M3 解读）。
 
 ## 表格（原文结构化）
 

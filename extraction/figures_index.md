@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 644 张图，来自 64 篇论文；其中 ⭐489 张已深度解读。
+共 685 张图，来自 68 篇论文；其中 ⭐548 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -2109,6 +2109,380 @@ The figure presents three 4×4 grids of color-coded, numbered cells (1–4) that
 **Figure 5:** Visualization of three sampling methods for **DeepStack**.
 *caption: Visualization of three sam- pling methods for DeepStack.… ｜ 论文 [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] ｜ arxiv 见 MD 元信息*
 
+### 昇腾 950 NPU 架构白皮书 — Fig.301 (p.12)
+![[assets/ascend-950-npu-architecture-whitepaper-p12.png]]
+> [!tip] # Figure Description: Ascend 950 Chip Architecture (图3-1)
+
+## Architecture / Components / Data Flow
+
+The schematic depicts a **multi-die chiplet** layout with a symmetric, two-AI-Die structure flanked by two IO Dies:
+
+- **Two central AI Dies** (mirror-symmetric), each containing:
+  - A large central **AI Core** tile
+  - Two **Linx816 CPU** cores (left & right flanks)
+  - **L2 Cache** rails (top & bottom)
+  - **DVPP** (Digital Video Pre-Processing) units on outer edges
+  - **D2D** (Die-to-Die) links on the inner edge facing the peer AI Die, plus **STARS** interconnect bridges between the two AI Dies
+  - **Memory Interface** controllers on top/bottom, each feeding external **Global Memory** (HBM)
+- **Two IO Dies** (leftmost & rightmost) hosting **PCIe5.0 CTRL**, **Security Core**, **UB CTRL**, additional D2D links, and **Hilink** I/O ports at the bottom
+- **Data flow**: Compute → AI Core ↔ Linx816 CPU/L2 Cache ↔ Memory Interface ↔ Global Memory; die-to-die traffic flows via D2D/STARS between AI Dies and IO Dies; external connectivity via PCIe5.0 and Hilink.
+
+## Key Technical Takeaway
+
+The Ascend 950 uses a **2 AI-Die + 2 IO-Die chiplet design** unified via high-speed **D2D links** into a single **UMA (Unified Memory Access)** domain — pairing in-package HBM with the new **CCU** and **Cube-Vector/MXFP8/MXFP4** compute paths to deliver ~**1.5–2× per-core LLM inference gains** over the prior generation while scaling super-nodes to 8K cards (128K-card clusters).
+
+## Verbatim Caption
+
+**图3-1 昇腾 950 芯片架构示意图**
+*caption: 昇腾950 芯片架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.401 (p.17)
+![[assets/ascend-950-npu-architecture-whitepaper-p17.png]]
+> [!tip] **Architecture Description:**
+
+The figure depicts a three-column AI Core architecture under a top-level **Bus Interface**:
+
+- **Middle column (control & compute hub):** Scalar 0 → **L1 buffer (512KB)** → split into **L0A (64KB) + L0B (64KB)** inputs → fed into the **Cube Core (16×16×16 FP16 matrix multiply)** → output written to **L0C (256KB)**.
+- **Left column:** Scalar 2 controls **Vector Core 1** (two 64×64 FP32 / 128×128 FP16 lanes) backed by **UB1 (256KB)** and a **Register File**.
+- **Right column:** Scalar 1 controls the mirror **Vector Core 0** with **UB0 (256KB)** and its own Register File.
+- **Data flow:** Bus Interface → L1 → L0A/L0B → Cube Core → L0C → back to UB0/UB1 or L1; Vector Cores stream data between Unified Buffers and Register Files in parallel.
+
+**Key takeaway (≈90 words):** The design decouples *matric-heavy* workloads (Cube Core with split input buffers L0A/L0B and accumulator L0C) from *vector/elementwise* workloads (dual Vector Cores with symmetric UBs). This separation enables concurrent execution — the Cube handles GEMM/FlashAttention while Vector Cores handle non-linear ops — sharing the L1 tier and bus to maximize throughput and memory reuse.
+
+**Caption (verbatim):** 图4-1 AI Core 架构及各层级 SRAM 示意图
+*caption: AI Core 架构及各层级SRAM 示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.402 (p.18)
+![[assets/ascend-950-npu-architecture-whitepaper-p18.png]]
+> [!tip] **Figure 4-2 (Cube Core Architecture):** A linear chain of multipliers (×) receives inputs x₀…x_{k-1} horizontally and y₀…y_{k-1} vertically (green arrows). Each multiplier's product feeds a shared Σ (accumulator), whose output feeds a 4×4 grid of PE_s (Processing Elements) — the cubic compute array.
+
+**Figure 4-3 (Supported Numerical Precisions):** Bit-layout diagrams show supported formats grouped by width: **32-bit** (FP32: 1/8/23, TF32: 1/8/10), **16-bit** (BF16: 1/8/7, FP16: 1/5/10), **8-bit** (HiFi8: dynamic, FP8-E5M2: 1/5/2, FP8-E4M3: 1/4/3), and **4-bit** (FP4: 1/2/1). Legend: SIGN (1 bit) / EXPONENT / MANTISSA.
+
+**Key takeaway:** The Cube Core pairs a systolic MAC pipeline with a configurable PE array and natively scales precision from FP32 down to FP4, letting users trade accuracy for throughput/bandwidth within the same hardware.
+
+**Captions verbatim:**
+- 图4-2 Cube Core 处理架构示意图
+- 图4-3 Cube Core 支持的数值精度示意
+*caption: Cube Core 处理架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.404 (p.19)
+![[assets/ascend-950-npu-architecture-whitepaper-p19.png]]
+> [!tip] **Figure Description:**
+
+The figure (图4-4 HiF8 数值精度) illustrates the bit-layout of the HiF8 floating-point format using two tables.
+
+**Components / Data Flow:**
+- **HiF8 Normal encoding:** Formula `X = (-1)^S * 2^E * 1.M`. An 8-bit word is partitioned as: 1 sign bit (S) + a variable-length exponent prefix (Dot: 0–4) + remaining exponent bits (E, with 1 hidden bit, shown in red) + mantissa bits (M). The Dot field doubles the exponent range per increment (E=0, ±1, ±[2,3], ±[4,7], ±[8,15]).
+- **HiF8 Denormal encoding:** Formula `X = (-1)^S * 2^(M−23) * 1.0`, extending the range down to E=[−22, −16] via a Subnormal design.
+- Legend: Dot = variable-length prefix (also flags Denormal); 阶码 = unbiased code, 1-bit hidden value not stored (red); SE = Sign of Exponent.
+
+**Key Technical Takeaway (≤120 words):**
+HiF8 uses a **variable-length exponent prefix** (Dot, 0–4) to signal how many exponent bits follow, creating a tapered precision layout suited to AI data distributions. Exponents use **unbiased code** with a hidden 1-bit (saving one bit per code) so that exponent ranges of different widths do not overlap, achieving redundancy-free encoding. Combined with a Subnormal-number design, the total exponent space is extended from [−15, 15] to **[−22, 15]** — 38 unique values — approaching FP16's 40 values while keeping an 8-bit width and eliminating the need for an 8-bit MX scaling factor used in MXFP8.
+
+**Caption (verbatim):**
+
+图4-4 HiF8 数值精度
+
+HiF8 Normal编码 : X = (-1)^S * 2^E * 1.M          阶码值
+
+Dot = 0    | S | 0 | 0 | 0 | 1 | 0 | M | M | M | E = 0
+Dot = 1    | S | 0 | 0 | 1 | SE | 1 | M | M | M | E = ±1
+Dot = 2    | S | 0 | 1 | SE | 1 | E | M | M | M | E = ±[2, 3]
+Dot = 3    | S | 1 | 0 | SE | 1 | E | E | M | M | E = ±[4, 7]
+Dot = 4    | S | 1 | 1 | SE | 1 | E | E | E | M | E = ±[8, 15]
+
+HiF8 Denormal编码 : X = (-1)^S * 2^(M - 23) * 1.0
+
+Dot = Denormal    | S | 0 | 0 | 0 | 0 | M | M | M |          E = [-22, -16]
+
+说明：
+• 点位域Dot：变长前缀码，编码阶码存储的位宽，和Denormal标志
+• 阶码：原码编码，含1-bit隐藏位不存储(红色数字表示)
+• SE: Sign of Exponent
+
+1. HiF8 利用变长前缀码编码的点位域 Dot，显式指示阶码存储的位宽和 Denormal 标志，实现符合 AI 数据分布特征的锥形精度格式。
+2. 同时阶码采用原码编码，并隐藏了 1 比特固定值不存储，确保了不同位宽的阶码表达范围不重复，进而实现无冗余编码。
+3. 最后通过特殊的浮点 Subnormal number 设计，将综合阶码范围从[-15, 15]提升到了[-22, 15]共 38 个阶码，接近 FP16 的 40 个综合阶码值表达。
+*caption: HiF8 数值精度… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.405 (p.21)
+![[assets/ascend-950-npu-architecture-whitepaper-p21.png]]
+> [!tip] **Architecture Overview**
+
+The Vector Core diagram shows a unified core feeding two execution modes from shared infrastructure.
+
+**Left (Core Front-end):** Scalar Unit, Async Function Queues tagged with execution type (SIMD/SIMT/NULL), DMA Unit, Vector Unit (SIMD/SIMT), Vector Cache/Buffer, Bus Interface, and Global Memory.
+
+**Right-Top — SIMD Mode:** I Cache → Program Sequence → QoO Dispatch → Vector Cache/Uniform Buffer (N banks + Cache Controller + Coalescing Unit) → Vector Load/Store Unit → Vector Register File (Lanes 0…VL-1) → Vector Execution Unit.
+
+**Right-Bottom — SIMT Mode:** I Cache → Program Sequence → Warp Scheduler → In-order Dispatch → Shared Vector Cache/Uniform Buffer → SIMT Load/Store Unit → SIMT Register File (Lanes 0…warp_size-1) → Vector Execution Unit.
+
+Both modes reuse the **same Vector Cache/Buffer banks and Vector Execution Unit**, differing only in front-end scheduling (QoO vs. Warp) and register layout.
+
+**Key Technical Takeaway:** SIMD/SIMT heterogeneity is achieved by sharing the memory subsystem and execution backend while swapping the dispatch logic — allowing per-VF mode selection at compile/launch time for performance–portability trade-offs.
+
+**Caption (verbatim):** 图4-5 Vector Core 架构示意图
+*caption: Vector Core 架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.406 (p.22)
+![[assets/ascend-950-npu-architecture-whitepaper-p22.png]]
+> [!tip] **Description:**
+The diagram depicts an AI Core with Cube-Vector fusion architecture. Two **Vector Cores** (left: Vector Core 1 with UB1; right: Vector Core 0 with UB0) flank a central **Cube Core** block. The Cube Core sits between **L0A/L0B** buffers (above) and the **L0C** buffer (below), with an **L1** buffer on top. Bidirectional arrows show direct data pathways: UB1 � L0A and L0B ↔ UB0 enable Vector-to-Cube operand sharing, while L0C feeds results back to the Vector cores via UB0/UB1. **Bus Interfaces** on top and bottom handle external traffic. Each Vector Core has its own Register File.
+
+**Key takeaway:** Direct UB↔L0A/L0B/L0C coupling bypasses L2 traffic, enabling efficient Cube-Vector fusion (e.g., for FlashAttention) while supporting inline data-layout/precision conversions to boost end-to-end throughput and energy efficiency.
+
+**Caption (verbatim):** 图4-6 AI Core Cube-Vector 融合示意图
+*caption: AI Core Cube-Vector 融合示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.407 (p.23)
+![[assets/ascend-950-npu-architecture-whitepaper-p23.png]]
+> [!tip] # Figure Description: 图4-7 NDDMA 指令
+
+## Architecture / Components / Data Flow
+
+The figure illustrates a two-stage memory transformation:
+
+**Left – Global Memory (32-row array):** Data elements (1–24) are scattered sparsely across non-contiguous rows (e.g., row 0 holds {1,13}, row 2 holds {5,17}, row 4 holds {9,21}, row 11 holds {10,22}, row 21 holds {4}, row 31 holds {24}). Values are color-coded by original row group (teal, blue, orange, gray) and arranged in a column-wise stride pattern.
+
+**Center – NDDMA arrow:** A single hardware-level DMA operation.
+
+**Right – Unified Buffer:** The same values emerge densely packed in sequential order (1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19, 21, 22, 23, …), now contiguous and stride-free.
+
+## Key Technical Takeaway
+NDDMA fuses data movement **and** reordering/transposition in one instruction (up to 5 dimensions). Its internal cache exploits locality, collapsing many small element-wise reads into efficient 128-byte burst reads — drastically improving effective memory bandwidth and reducing programming complexity.
+
+---
+
+## Caption (verbatim)
+**图4-7 NDDMA 指令**
+*caption: NDDMA 指令… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.408 (p.24)
+![[assets/ascend-950-npu-architecture-whitepaper-p24.png]]
+> [!tip] **Figure 4-8 Description:**
+
+The figure presents a side-by-side comparison of two synchronization code patterns used in the Ascend 950 NPU pipeline, with an arrow indicating the evolution from the legacy mechanism to the new one.
+
+**Left block — 基于set_flag/wait_flag (flag-based synchronization):**
+A 100-iteration loop uses explicit flag-setting primitives to coordinate the MTE2 (memory transfer) and Vector units. Each iteration must: wait for the upstream Vector unit's flag, execute MTE2, set/clear its own flag, then wait for MTE2's flag before running Vector(), and finally emit the next producer flag.
+
+**Right block — 基于BufferID (BufferID-based synchronization):**
+The same 100-iteration pipeline is expressed through explicit buffer acquisition/release. Each iteration calls `get_buf`/`rel_buf` on MTE2 and Vector pipeline stages in lockstep — acquire MTE2 buffer, transfer, release; acquire Vector buffer, compute, release — replacing all flag operations with buffer-ownership semantics.
+
+**Key technical takeaway:**
+The new BufferID API replaces four flag operations per stage per iteration with two `get_buf`/`rel_buf` pairs, removing the `if i>0` boundary checks and the trailing `if i<99` tail condition. This eliminates edge-iteration corner cases, shortens instruction sequences, and exposes pipeline buffer occupancy to the runtime for improved scheduling and overlap.
+
+**Caption (verbatim):**
+图4-8 昇腾950新同步机制代码示例
+*caption: 昇腾950 新同步机制代码示例… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.409 (p.25)
+![[assets/ascend-950-npu-architecture-whitepaper-p25.png]]
+> [!tip] ## Description
+
+**Architecture/Components:**
+The diagram shows a **two-Die structure** (Die 0 and Die 1), each containing:
+- **AI Cores**: composed of AIC (with L1, L0A, L0B, L0C buffers) and AIV (with UB — Unified Buffer)
+- **AI CPUs**: each with CPU L1 and CPU L2 caches
+
+**Data Flow (bottom-up hierarchy):**
+L0A/L0B/L0C, L1, UB → **L2 Cache** (serves AIC/AIV) → **Directory (Cache Coherence)** → **Global Memory**
+CPU L1/L2 → **L3 Cache** (serves AI CPUs) → Directory → Global Memory
+
+---
+
+## Key Technical Takeaway (≤120 words)
+
+The Ascend 950 implements a **heterogeneous, multi-tier memory hierarchy** that decouples AI accelerator (AIC/AIV) from general-purpose CPU memory paths. AIC/AIV accesses flow through dedicated L2 Cache optimized for tensor/matrix operations, while AI CPUs use their own L3 Cache for scalar control logic — both unified by a **Directory-based cache coherence** layer above Global Memory. Local Memory buffers (L1, L0A/L0B/L0C, UB) inside each AI Core minimize high-bandwidth on-chip memory traffic. This split-path design with cache coherence enables **parallel AI compute and control without contention**, while keeping global data consistent across dies.
+
+---
+
+## Caption (Verbatim)
+
+**图4-9 昇腾950内存层次示意图**
+*caption: 昇腾950 内存层次示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.410 (p.27)
+![[assets/ascend-950-npu-architecture-whitepaper-p27.png]]
+> [!tip] ## Main Figure Description (Figure 4-11)
+
+**Architecture & Components:**
+- **STARS container** holds an array of **Task** slots, alongside sidecar features: **Notify Sync**, **Conds**, **Profiling**, and **Fusion**. A **Sched** bar sits beneath, dispatching tasks to two interconnect fabrics:
+  - **HSCB** → **AIV**, **AIC** (compute engines)
+  - **NoC** → **UB DMA**, **SDMA**, **CCU**, **CPU**, **DVPP** (data-movement & general engines)
+
+**Data Flow:** Tasks are queued in STARS → the scheduler (Sched) fans them out through HSCB/NoC to heterogeneous engines, with Notify Sync/Conds orchestrating dependencies and Profiling/Fusion collecting runtime telemetry.
+
+**Key Takeaway:** STARS2.0 centralizes whole-chip task and resource orchestration, unifying compute (AIC/AIV/CPU/DVPP) and DMA engines (SDMA/UB/CCU) under one scheduler to enable efficient software–hardware co-scheduling with top-down profiling.
+
+## Caption (verbatim)
+**图4-11 STARS2.0 架构示意图**
+*caption: Non-allocate（L2 hint）典型应用场景示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.412 (p.31)
+![[assets/ascend-950-npu-architecture-whitepaper-p31.png]]
+> [!tip] **Architecture/Data Flow:**
+The diagram illustrates URMA (Ultra-Remote Memory Access) asynchronous communication between two nodes. On the left (local) node: **Core** triggers a *Doorbell* signal to the **URMA** engine, which fetches data from local **Memory** via the local **UMMU** (Unified Memory Management Unit), then distributes it across multiple **Ports** to the remote node. On the right (remote) node: incoming **Ports** feed into the remote **UMMU**, which performs translation and writes data into remote **Memory**.
+
+**Key Takeaway:**
+UMMU sits in the critical path on both sides, providing VA→PA address translation and access permission control for cross-node memory access—ensuring secure, virtualized remote memory operations while enabling multi-port parallel data transfer.
+
+**Caption (verbatim):**
+图4-12 URMA 异步访存通信的过程示意图
+*caption: URMA 异步访存通信的过程示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.413 (p.32)
+![[assets/ascend-950-npu-architecture-whitepaper-p32.png]]
+> [!tip] ## Figure Description
+
+**Architecture/Components:**
+The figure (图4-13) depicts two chips in a multi-chip system:
+
+- **Left chip (source):** Contains a `Core` → `UB Mem Decoder` → multiple `Port` modules, with local `Memory` below.
+- **Right chip (destination):** Contains multiple `Port` modules feeding into a `UMMU` (Unified Memory Management Unit), with local `Memory` below.
+
+**Data Flow (orange arrow):**
+1. Core issues an access → 
+2. UB Mem Decoder routes the operation to one of the outgoing Ports → 
+3. Operation crosses the chip-to-chip interconnect → 
+4. A Port on the destination chip receives it → 
+5. UMMU performs **address translation + permission checking** → 
+6. Direct access to the remote chip's Memory.
+
+**Key Technical Takeaway:**
+UB Memory relies on hardware-level **semantic address translation via UMMU** at the destination, enabling the source Core to directly access remote memory without software intervention. This supports synchronous Write/Read plus atomic operations (AtomicStore, AtomicLoad, AtomicSwap, AtomicCompareAndSwap), preserving memory consistency across chips while keeping coherence overhead low.
+
+## Caption (verbatim)
+
+**图4-13 UB Memory 同步访存语义地址通信过程示意图**
+*caption: UB Memory 同步访存语义地址通信过程示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.414 (p.33)
+![[assets/ascend-950-npu-architecture-whitepaper-p33.png]]
+> [!tip] ## Figure Description (Architecture / Components / Data Flow)
+
+The CCU (Collective Communication Unit) architecture is a three-tier hierarchical design. **Top tier — CCUM (Management):** The Mission Call Interface feeds the Mission Commander, which routes instructions through the Instruction Implementation Unit to either a Reduce Call Interface or a URMA Call Interface. **Middle tier — CCUA (Agents):** Multiple CCUA instances each integrate Memory Slices (storage) and a Reduce Unit (computation). **Bottom tier — I/O:** The URMA module bridges the URMA Call Interface to an array of Ports for remote transfers. Data flow splits at the dispatcher: Reduce tasks go down to CCUA compute units, while URMA tasks go through the URMA block to Ports. **Key takeaway:** Hardware-managed dispatch cleanly separates local reduction from remote RDMA-style data movement, with CCUA agents acting as unified compute+storage endpoints.
+
+## Caption (Verbatim)
+
+图4-14 CCU 架构示意图
+
+集合通信软件通过 CCU Management（CCUM）中的 Mission 任务的入口进行软件编程，硬件完成指令的解析和处理，并根据指令判断当前是执行 Reduce 计算还是 URMA 搬运。CCU Agent（CCUA）中集成了 MemorySlice 用作数据存储，集成了 Reduce Unit 用作数据计算。
+
+如果是 URMA 搬运则调用 URMA 执行数据搬移，可完成远端节点到本端节点 DRAM 或 MemorySlice 之间的灵活数据搬运。
+
+如果是 Reduce 则调用 CCUA 的计算单元进行计算。
+
+CCU 完成集合通信任务后通过 Mission 任务的编程接口上报任务完成状态。
+*caption: CCU 架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.415 (p.34)
+![[assets/ascend-950-npu-architecture-whitepaper-p34.png]]
+> [!tip] # Figure Description: UB On-Chip Switch Forwarding Diagram
+
+**Architecture / Components (top-to-bottom):**
+- **Network On Chip (NoC)** — purple block at top representing the on-chip interconnect fabric
+- **Routing Table** — green band in the middle, shared across all ports
+- **Ports** — 9 × x4 ports (blue blocks) at the bottom, each connected upward to both the routing table and the NoC
+
+**Data Flow:**
+Solid vertical lines carry traffic between ports and the routing table. Dashed arrows depict a forwarding path: a packet enters an ingress port → the routing table determines it is **not** destined for the local chip → it is forwarded through the NoC → it exits from a different egress port. The "…" between ports indicates the remaining (unshown) ports in the array.
+
+---
+
+## Key Technical Takeaway (≤120 words)
+
+The UB on-chip switch performs **local forwarding entirely within the IO DIE**, without ever consuming compute DIE resources or DRAM bandwidth. Traffic arriving at any of the 9 × x4 ports is classified by a shared routing table; non-local traffic is switched across ports via the Network-on-Chip and emitted directly from the determined egress port. This effectively turns the IO DIE into an embedded Layer-2-style switch fabric, enabling mixed deployment of injection and pass-through traffic and giving operators flexible, low-cost topology options (e.g., leaf-spine, ring, or hybrid) for service chaining without burdening compute dies.
+
+---
+
+## Verbatim Caption Transcription
+
+**图4-15 UB On Chip Switch 转发示意图**
+
+本芯片支持单 IO DIE 内 9 个 x4 Port 之间进行流量转发。从每个端口进入的流量在查询路由表后如判断该流量并非本芯片流量且判断得到转发的出端口，此时该流量会经过片上互联网络（Network on Chip，即 NoC）转发至出口端口送出。此转发流量不会进入计算 DIE，也不会占用 DRAM 带宽，在 IO DIE 上即完成数据转发。
+
+本芯片支持注入流量和转发流量的混合部署，提供更多样的组网和业务规划可能性。
+*caption: UB On Chip Switch 转发示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.416 (p.35)
+![[assets/ascend-950-npu-architecture-whitepaper-p35.png]]
+> [!tip] **Architecture / Components / Data Flow**
+
+The figure shows the PCIe 5.0 subsystem inside the Ascend 950 SoC, bridged to the on-chip **System Bus** via a bidirectional link. The **PCIe Gen5x16** controller is structured as a stacked protocol stack: an **Application** layer (top, hosting embedded **MCTP** and **DMA** accelerators) sits above the standard **Transaction Layer**, **DataLink Layer**, and a 16-lane **Physical Layer**. A separate **Serdes** block sits beneath the controller and handles the physical signaling to the off-chip lanes.
+
+Data flows from the System Bus down through the four-layer PCIe stack, out the x16 Physical Layer into the Serdes, and across the link; inbound traffic follows the reverse path, with DMA/MCTP accelerating host-to-device transfers at the application layer.
+
+**Key Technical Takeaway:** Backward compatibility with Gen4/3/2/1, configurable link widths (x16/x8/x4/x2), dual EP/RC roles (statically selected), and integrated DMA + MCTP accelerators make this a flexible, host-agnostic Gen5 endpoint/root-complex block.
+
+**Caption (verbatim):** 图4-16 PCIe 5.0 架构示意图
+*caption: PCIe 5.0 架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.417 (p.36)
+![[assets/ascend-950-npu-architecture-whitepaper-p36.png]]
+> [!tip] ## Main Figure Description (Figure 4-17)
+
+**Architecture / Components:**
+- **Top tier (Spine):** A row of UB Switches (with "…" indicating scalability)
+- **Middle tier (Leaf):** Two switch groups, each serving a pod/rack
+- **Bottom tier (Compute):** Multiple Ascend 950 chips per group, fully meshed
+- Interconnects form a **two-level fat-tree / Clos-like topology** with full-mesh links between Ascend 950 chips within each group, fanning up through leaf switches to spine switches
+
+**Data flow:** Ascend 950 ↔ (full mesh) ↔ Leaf Switch ↔ Spine Switch ↔ Leaf Switch (other pod) ↔ Ascend 950
+
+**Key technical takeaway (≤120 words):**
+Ascend 950 chips leverage the **UB (Unified Bus) interconnect protocol** to compose a hierarchical super-node. By chaining UB Switches, the architecture scales to K-level super-nodes while enabling high-bandwidth, low-latency intra-super-node communication. The topology is flexible — supporting Full Mesh, Clos, or hybrid layouts — allowing the same silicon to be re-deployed across different cluster shapes. Crucially, UB is not just a chip-to-chip link but a hierarchical switching fabric: every Ascend 950 can reach any peer through at most two switch hops, making the super-node behave like a single logical compute domain.
+
+**Verbatim caption:**
+> 图4-17 昇腾950的一种超节点示意图
+*caption: 昇腾950 的一种超节点示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.419 (p.37)
+![[assets/ascend-950-npu-architecture-whitepaper-p37.png]]
+> [!tip] **Architecture / Data Flow Description**
+
+The diagram illustrates a fat-tree-style topology with a central Switch (depicted as a stacked unit) fanning out to two Racks. The **left Rack** is a compute pod containing two stacked server groups, each pairing CPUs with **Ascend950** AI accelerator chips. The **right Rack** is a dedicated storage pod built from a 5×4 grid of Storage nodes. The Switch provides a single high-bandwidth interconnect plane that lets Ascend950 chips reach the entire storage pool directly.
+
+**Key Technical Takeaway:** Native UB (Unified Bus) ports on the Ascend950 enable direct, protocol-translation-free access to a shared storage pool, eliminating intermediate storage gateway overhead and delivering high bandwidth at lower cost.
+
+---
+
+**Verbatim Caption / Surrounding Text**
+
+> **4.7.3 昇腾超节点与超大存储资源池组网**
+>
+> 图4-19 昇腾950直接访问超大存储资源池示意图
+>
+> 基于UB 互连可以构建超大存储资源池，昇腾 950 Rack/Pod 的计算芯片可以通过 UB 端口直接访问该超大存储资源池，不需要中间的存储协议转换开销，从而实现高带宽和低成本的存储资源访问。
+*caption: 昇腾950 直接访问超大存储资源池示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.420 (p.38)
+![[assets/ascend-950-npu-architecture-whitepaper-p38.png]]
+> [!tip] **Architecture & Data Flow**
+The figure illustrates an Ascend super-node bridging the UB (Unified Bus) fabric with the external Ethernet world. Two external **Ethernet Switches** connect downward via ETH links in a cross-redundant topology to two **UB Switches** enclosed within the super-node boundary. Each UB Switch exposes both ETH (uplink) and UB (downlink) ports. Below, multiple **Ascend950** processors form a fully-meshed UB network — each chip links to both UB Switches and interconnects with every other Ascend950 over UB. Data flows upward: Ascend950 ↔ UB Switch � Ethernet Switch, with cross-links providing failover.
+
+**Key Technical Takeaway:** The UB Switch natively translates UB ↔ Ethernet, enabling seamless integration of an Ascend super-node into existing data-center Ethernet fabrics **without extra gateway hardware**, lowering cost and operational complexity.
+
+**Caption (verbatim):**
+图4-20 昇腾超节点基于UB Switch转换为以太网与以太世界互通示意图
+*caption: 昇腾超节点基于UB Switch 转换为以太网与以太世界互通示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.421 (p.39)
+![[assets/ascend-950-npu-architecture-whitepaper-p39.png]]
+> [!tip] ## Description
+
+**Architecture / Data Flow:**
+- **Top tier:** Two external *Ethernet Switches* (industry-standard).
+- **Middle tier (server box):** Two internal *Ethernet Switches* with ETH ports, cross-connected to the top switches for redundancy.
+- **Bottom tier:** A row of *Ascend950* AI accelerator chips, each equipped with an ETH port and linked to both middle-layer switches (full mesh) via ETH.
+- **Inter-chip:** Ascend950 chips are tied together by a green **UB** (Unified Bus) ring/bus for chip-to-chip communication.
+
+**Key Takeaway:** Ascend 950 leverages **UBoE (UB-over-Ethernet)**, allowing it to plug directly into standard off-the-shelf Ethernet switches — eliminating proprietary fabric hardware and enabling seamless interop with the wider Ethernet ecosystem.
+
+## Caption (verbatim)
+**图4-21 昇腾芯片支持以太网与以太世界互通示意图**
+*caption: 昇腾芯片支持以太网与以太世界互通示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.1 (p.1)
 ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]]
 > [!tip] ## Main Figure Description
@@ -3006,6 +3380,113 @@ Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segment
 
 > Figure 12: Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional video content by analyzing frame sequences and extracting conceptual progression over time. In this case, the model identifies a deepening of the traditional saying "Teach a man to fish, and you feed him for a lifetime" into a more nuanced idea: "Teach him the taste of fish and make him hungry."
 *caption: Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional vide… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.1 (p.1)
+![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p01.png]]
+> [!tip] **Figure 1 Description (≤120 words):**
+
+The figure is a time-series scatter plot tracking MATH benchmark Top@1 accuracy of open-source LLMs from early 2023 to January 2024. The X-axis shows dates; the Y-axis shows accuracy (10–50+). Plotted models form an ascending dashed trend line: LLaMA1-65B (~10), WizardMath-70B (~23), Qwen-14B (~25), Mistral-7B (~28), Llemma-34B (~30), Qwen-72B (~35), culminating in **DeepSeekMath-7B** (~51.7, marked by a red star). Three horizontal dashed reference lines denote closed-source baselines: GPT-4 early version (~42), GPT-4 API (~52), and Gemini-Ultra (~53).
+
+**Key takeaway:** A compact 7B open-source model surpassed GPT-4's level on competition-grade math, showing that data curation + targeted RL (GRPO) can close the gap to frontier proprietary systems without tool use or ensembling.
+
+**Caption (verbatim):**
+"Figure 1 | Top1 accuracy of open-source models on the competition-level MATH benchmark (Hendrycks et al., 2021) without the use of external toolkits and voting techniques."
+*caption: Top1 accuracy of open-source models on the competition-level MATH benchmark… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.2 (p.5)
+![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p05.png]]
+> [!tip] **Figure Description**
+
+The figure depicts a four-step iterative pipeline that bootstraps a mathematical web corpus from Common Crawl:
+
+1. **Train a FastText Model** — uses the current *Math Seed* to build a classifier.
+2. **Recall Math-Related Webpages From Common Crawl** — applies the fastText model to the *Deduplicated Common Crawl (40B HTML pages)*, retaining top-ranked pages to build the *Math Corpus*.
+3. **Discover Math-Related Domains** — clusters the corpus by base URL and flags domains where >10% of pages were recalled (e.g., `mathoverflow.net`).
+4. **Annotate Math-Related URL Path From Labelers** — human labelers mark math-specific URL paths within those domains, expanding the seed corpus.
+
+The dashed arrows show feedback from step 4 → step 1, closing the loop for the next iteration.
+
+**Key technical takeaway:** Domain-driven seed enrichment (step 3–4) compensates for fastText's limited positive diversity, yielding 35.5M math pages / 120B tokens after 4 iterations, at which point 98% recall saturation is reached and the loop terminates.
+
+**Caption (verbatim):**
+> Figure 2 | An iterative pipeline that collects mathematical web pages from Common Crawl.
+*caption: An iterative pipeline that collects mathematical web pages from Common Crawl.… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.3 (p.7)
+![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p07.png]]
+> [!tip] ## Figure Description
+
+**Layout:** A 2×2 grid of benchmark curves evaluating DeepSeek-LLM 1.3B trained on four mathematical corpora: **MathPile** (blue), **OpenWebMath** (orange), **Proof-Pile-2** (green), and **DeepSeekMath Corpus** (red).
+
+**Panels (Acc% vs. Training Tokens in B):**
+- **GSM8K** (top-left): DeepSeekMath climbs to ~24%, others plateau around 12–14%; MathPile collapses to ~2%.
+- **MATH** (top-right): DeepSeekMath reaches ~13%, OpenWebMath/Proof-Pile-2 ~10–11%, MathPile flat at ~3%.
+- **CMATH** (bottom-left): DeepSeekMath ~43% vs. ~18% for others; MathPile drops to ~0%.
+- **BBH** (bottom-right): DeepSeekMath ~34%, Proof-Pile-2 ~32%, MathPile ~25%.
+
+**Key Technical Takeaway:** DeepSeekMath Corpus demonstrates the **steepest and most sustained learning curve** across all four benchmarks, reaching higher accuracy with continued training, while smaller/English-centric corpora plateau early or even degrade (e.g., MathPile on GSM8K/CMATH) — evidencing the corpus's superior scale and quality.
+
+## Caption (Verbatim)
+
+**Figure 3 | Benchmark curves of DeepSeek-LLM 1.3B trained on different mathematical corpora.**
+*caption: Benchmark curves of DeepSeek-LLM 1.3B trained on different mathematical corpora.… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.4 (p.13)
+![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p13.png]]
+> [!tip] ## Figure Description (≤120 words)
+
+The figure contrasts **PPO** (top) and **GRPO** (bottom) RL training pipelines for a query `q`. In **PPO**, a trained Policy Model produces output `o`, which feeds a frozen Reference Model and Reward Model (combined via KL penalty into reward `r`) and a separately trained Value Model producing `v`. Both `r` and `v` flow into a **GAE** (Generalized Advantage Estimation) block yielding advantage `A`, which updates the policy.
+
+In **GRPO**, the policy samples a *group* of outputs `{o₁, …, o_G}` per query. Only frozen Reference and Reward Models are used (with KL applied directly to the loss). Per-sample rewards `{r₁, …, r_G}` are passed to a **Group Computation** block that derives advantages `{A₁, …, A_G}`—no value model or GAE required.
+
+**Key takeaway:** GRPO replaces the learned value function (≈ policy-sized, memory-heavy) with group-relative reward statistics, cutting training cost while exploiting reward models' comparative nature.
+
+## Caption (verbatim)
+
+> **Figure 4 | Demonstration of PPO and our GRPO. GRPO foregoes the value model, instead estimating the baseline from group scores, significantly reducing training resources.**
+*caption: Demonstration of PPO and our GRPO. GRPO foregoes the value model, instead… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.5 (p.19)
+![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p19.png]]
+> [!tip] **Main Figure Description (Figure 5):**
+
+Two side-by-side line plots compare four training methods across training steps (0–~8500) on accuracy (%):
+
+- **GSM8K (left):** Y-axis 56–66%
+- **MATH (right):** Y-axis 27–30%
+- **Four methods plotted:** RFT (purple), Online RFT (green), GRPO+OS (orange), GRPO+PS (blue)
+
+**Data flow:** All methods initialize from the SFT model. RFT/Online RFT use rule-based filtering/rewards, while PPO/GRPO methods use a learned reward model. Outputs sampled either from the frozen SFT model (offline) or the real-time policy model (online) feed back into training.
+
+**Key takeaway:** GRPO variants (especially GRPO+PS, blue) consistently outperform RFT/Online RFT, with GRPO+PS reaching ~66% on GSM8K and ~30% on MATH—demonstrating that online policy sampling with model-based rewards yields superior gains over offline rejection-sampling baselines.
+
+**Caption (verbatim):**
+
+"Figure 5 | Performance of the DeepSeekMath-Instruct 1.3B model, which was further trained using various methods, on two benchmarks."
+*caption: Performance of the DeepSeekMath-Instruct 1.3B model, which was further trained… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.6 (p.20)
+![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p20.png]]
+> [!tip] **Figure 6 Description:**
+
+The figure consists of two side-by-side line plots tracking model accuracy over training steps. The left panel shows GSM8K benchmark (y-axis: 83–89%) and the right shows MATH (y-axis: 47–52%); both share an x-axis of steps (0–5300). Three colored curves represent successive training iterations: Iteration-0 (purple), Iteration-1 (orange), and Iteration-2 (green). Iteration-0 plateaus earliest and lowest on both benchmarks, while Iterations-1 and 2 extend further and reach higher accuracies (~89% on GSM8K, ~52% on MATH).
+
+**Key takeaway:** Iterative reinforcement learning yields substantial performance gains, with the largest jump occurring after the first iteration—suggesting that successive rounds of RL progressively refine the policy beyond the SFT initialization.
+
+**Caption (verbatim):**
+"Figure 6 | Performance of iterative reinforcement learning with DeepSeekMath-Instruct 7B on two benchmarks."
+*caption: Performance of iterative reinforcement learning with DeepSeekMath-Instruct 7B on… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.7 (p.21)
+![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p21.png]]
+> [!tip] ## Figure Description (≤120 words)
+
+The figure consists of **two side-by-side line plots** comparing model accuracy on two math benchmarks: **GSM8K** (left) and **MATH** (right). Both plots share an x-axis of "K: number of candidates" on a log scale (1, 4, 8, 16, 32, 64) and a y-axis of accuracy (%). Four curves are plotted: **Maj@K-Instruct (purple), Maj@K-RL (orange), Pass@K-Instruct (green), and Pass@K-RL (blue)**, evaluated on the DeepSeekMath 7B model at temperature 0.7. All curves rise monotonically with K. Pass@K curves (green/blue) climb steeply and converge near the top (~97–99% on GSM8K, ~85–87% on MATH), while Maj@K curves (purple/orange) plateau at lower values. **Key takeaway**: RL boosts Maj@K but not Pass@K, indicating RL sharpens the top-K output distribution rather than expanding the model's underlying capability.
+
+## Caption (verbatim)
+
+**Figure 7 | The Maj@K and Pass@K of SFT and RL DeepSeekMath 7B on GSM8K and MATH (temperature 0.7). It was noted that RL enhances Maj@K but not Pass@K.**
+*caption: The Maj@K and Pass@K of SFT and RL DeepSeekMath 7B on GSM8K and MATH… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### High-Dimensional Continuous Control Using Generalized Advant — Fig.1 (p.8)
 ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p08.png]]
@@ -4490,6 +4971,98 @@ If you intended to ask about Table 4 instead of a figure, here is a brief summar
 
 Please share Figure 7 (or the intended figure) and I'll describe its architecture/components/data flow as requested.
 *caption: The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static pa… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### HC: Manifold-Constrained Hyper-Connections — Fig.1 (p.1)
+![[assets/hc-manifold-constrained-hyper-connections-p01.png]]
+> [!tip] ## Main Figure Description (Figure 1)
+
+The figure presents three side-by-side diagrams comparing residual connection paradigms:
+
+**(a) Residual Connection:** Simplest form. Single stream: input `x_l` passes through Layer `F`, is added (⊕) with a skip connection, producing `x_{l+1}`.
+
+**(b) Hyper-Connections (HC):** Expands the residual stream into multiple parallel vectors (`x_l` stack). Four learned linear mappings orchestrate the flow:
+- **Res Mapping** `H_l^res` → produces `h_l^res` (residual stream)
+- **Pre Mapping** `H_l^pre` → produces `h_l^in` (input to Layer F)
+- Layer `F` → produces `h_l^out`
+- **Post Mapping** `H_l^post` → produces `h_l^post`
+Outputs aggregated (⊕) into `x_{l+1}` stack.
+
+**(c) Manifold-Constrained HC (mHC):** Identical topology to HC, but each mapping is replaced by a **manifold-projected** operator `P_M^res`, `P_M^pre`, `P_M^post` (shown in green). These constrain the matrices onto a specific geometric manifold, unlike the unconstrained `H_l` matrices in HC.
+
+**Key Technical Takeaway (≤120 words):**
+Standard residual connections preserve an *identity mapping* property essential for stable deep training. Hyper-Connections (HC) widen the residual stream with four unconstrained linear mappings (`H_l^res`, `H_l^pre`, `H_l^post`, etc.), boosting expressivity but breaking identity mapping—causing training instability, poor scalability, and memory overhead. **mHC solves this by wrapping each mapping with a manifold-projection operator `P_M(·)`**, restricting the matrices to a constrained subspace where the identity property is restored. The result: HC's capacity gains are retained while training stability and scalability are recovered, enabling effective large-scale training. In essence, mHC adds a *geometric inductive bias* to HC without altering its top-level data flow.
+
+## Caption (Verbatim)
+
+> Figure 1 | **Illustrations of Residual Connection Paradigms.** This figure compares the structural design of (a) standard Residual Connection, (b) Hyper-Connections (HC), and (c) our proposed **Manifold-Constrained Hyper-Connections (mHC)**. Unlike the unconstrained HC, *mHC* focuses on optimizing the residual connection space by projecting the matrices onto a constrained manifold to ensure stability.
+*caption: Illustrations of Residual Connection Paradigms. This figure compares the structural… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
+
+### HC: Manifold-Constrained Hyper-Connections — Fig.2 (p.7)
+![[assets/hc-manifold-constrained-hyper-connections-p07.png]]
+> [!tip] **Figure 3 — Description (main figure):**
+
+Figure 3 has two side-by-side log-scale plots of Amax Gain Magnitude (y-axis) vs. Layer Index *l* (x-axis, 0–60, with each Transformer block unrolled into Attention + FFN sub-layers).
+
+- **(a) Single-Layer Mapping H_l^res:** Forward Signal Gain and Backward Gradient Gain both hover near 1 across interior layers, with sharp spikes only at the first and last layers.
+- **(b) Composite Mapping:** The forward product ∏ H_l,i^res stays bounded (~10–20), but the backward gradient product grows roughly exponentially, peaking near ~10³–10⁴ around the middle layers before dropping at the ends.
+
+**Key takeaway:** Although per-layer mappings are well-conditioned, the *composed* backward gradient gain explodes across depth, revealing a depth-wise backward-pass instability inherent to Hyper-Connections.
+
+**Caption (verbatim):**
+
+> Figure 3 | Propagation Instability of Hyper-Connections (HC). This figure illustrates the propagation dynamics of (a) the single-layer mapping $\mathcal{H}_l^{\text{res}}$ and (b) the composite mapping $\prod_{i=1}^{L-l}\mathcal{H}_{l,i}^{\text{res}}$ within the 27B model. The layer index $l$ ($x$-axis) unrolls each standard Transformer block into two independent layers (Attention and FFN). The Amax Gain Magnitude ($y$-axis) is calculated as the maximum absolute row sum (for the forward signal) and column sum (for the backward gradient), averaged over all tokens in a selected sequence.
+*caption: Training Instability of Hyper-Connections (HC). This figure illustrates (a) the absolute… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
+
+### HC: Manifold-Constrained Hyper-Connections — Fig.4 (p.12)
+![[assets/hc-manifold-constrained-hyper-connections-p12.png]]
+> [!tip] # Main Figure Description
+
+**Architecture/Components/Data Flow:**
+Figure 4 depicts a DualPipe-style timeline scheduling diagram with three parallel horizontal streams:
+
+1. **Normal Compute Stream** — Forward/backward MLP and Attention kernels (MLP(B), MLP(W), MLP(F), ATTN(B), ATTN(W), ATTN(F)) with a "Whole Stage Recompute (B)" block for backward recomputation, bracketed by residual-input/output markers (𝓕ᵖʳᵉ, �ᵖᵒˢᵗ,ʳᵉˢ for both Attention 𝓕ᴬ and MLP 𝓕ᴹ).
+2. **Communication Stream** — All-to-all ops (DISPATCH/COMBINE in F or B) interleaved with point-to-point pipeline-parallel sends/receives (PP Send Recv).
+3. **High Priority Compute Stream** — Hosts the small post-residual kernels (𝓕ᵖᵒˢᵗ,ʳᵉˢ) that must finish before the next pipeline stage begins.
+
+**Key Takeaway:** By moving the residual-output kernels onto a dedicated high-priority compute stream, mHC hides the additional cost of hyper-connection residual recombination under otherwise idle communication bubbles, preserving DualPipe's overlap efficiency.
+
+# Caption (verbatim)
+
+**Figure 4 | Communication-Computation Overlapping for *m*HC.** We extend the DualPipe schedule to handle the overhead introduced by *m*HC. Lengths of each block are illustrative only and do not represent actual duration. (F), (B), (W) refers to forward pass, backward pass, weight gradient computation, respectively. 𝓕ᴬ and 𝓕ᴹ represents kernels corresponded to Attention and MLP, respectively.
+*caption: Communication-Computation Overlapping for mHC. We extend the DualPipe… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
+
+### HC: Manifold-Constrained Hyper-Connections — Fig.6 (p.13)
+![[assets/hc-manifold-constrained-hyper-connections-p13.png]]
+> [!tip] ## Main Figure Description
+
+**Figure 6** presents a 2×2 grid of line plots comparing Baseline (black, flat reference) vs. *m*HC (blue) across two experimental dimensions:
+
+- **(a) Compute Scaling Curve** — X-axis: FLOPs (log scale, ~10²¹ to 10²²), plotted across compute-optimal configurations spanning 3B → 9B → 27B parameter models.
+- **(b) Token Scaling Curve** — X-axis: FLOPs (2 to ~5×10²¹), tracking the 3B model's trajectory over training tokens.
+
+Each subfigure contains paired Y-axes: **Absolute Loss Gap** (left, –0.04 to 0.02) and **Relative Loss Ratio** (right, 98.0% to 101.0%). The Baseline is normalized to 0 / 100%, while the blue *m*HC line stays consistently below (≈ –0.025 to –0.015 absolute; ≈ 98.5–99.2% relative).
+
+**Key takeaway (≈45 words):** *m*HC's loss-reduction advantage over the Baseline is preserved — and only marginally attenuated — as compute scales from 3B to 27B and as training tokens increase, demonstrating that the method transfers favorably to large-scale pre-training regimes without saturation.
+
+## Caption (verbatim)
+
+**Figure 6 | Scaling properties of *m*HC compared to the Baseline. (a) Compute Scaling Curve.** Solid lines depict the performance gap across different compute budgets. Each point represents a specific compute-optimal configuration of model size and dataset size, scaling from 3B and 9B to 27B parameters. **(b) Token Scaling Curve.** Trajectory of the 3B model during training. Each point represents the model's performance at different training tokens. Detailed architectures and training configurations are provided in Appendix A.1.
+*caption: Scaling properties of mHC compared to the Baseline. (a) Compute Scaling Curve.… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
+
+### HC: Manifold-Constrained Hyper-Connections — Fig.7 (p.14)
+![[assets/hc-manifold-constrained-hyper-connections-p14.png]]
+> [!tip] ## Main Figure (Figure 8): Visualizations of Learnable Mappings
+
+**Architecture / Components.** A 2×6 grid of heatmap matrices comparing **HC (top row)** vs. **mHC (bottom row)** at three depth slices — single-layer mappings (H₁^res, H₃₀^res, H₆₀^res) and composite mappings (∏₃₀, ∏₃₀, ∏₆₀). Each cell shows an averaged mapping weight; **row sums along the y-axis** annotate the **forward signal gain**, while **column sums along the x-axis** annotate the **backward gradient gain**.
+
+**Data Flow.** Token activations are routed through these learnable mapping matrices layer-by-layer. Single-layer mappings are composed multiplicatively across depth to form the composite mappings, propagating signals forward and gradients backward through the network.
+
+**Key Technical Takeaway.** HC matrices exhibit extreme, unbounded values (e.g., −251.4, −475.3, +509.1) and wildly oscillating gain magnitudes — confirming the instability problem of vanilla Hyper-Connections. In contrast, mHC matrices stay near-doubly-stochastic, with entries clustered close to 1/width and gains tightly bounded near 1.0 (typically 0.95–1.11), thanks to the Sinkhorn-Knopp projection that enforces the manifold constraint at ~20 iterations.
+
+## Caption (verbatim)
+
+> **Figure 8 | Visualizations of Learnable Mappings.** This figure displays representative single-layer and composite mappings for HC (first row) and *m*HC (second row). Each matrix is computed by averaging over all tokens within a selected sequence. The labels annotated along the y-axis and x-axis indicate the forward signal gain (row sum) and the backward gradient gain (column sum), respectively.
+*caption: Propagation Stability of Manifold-Constrained Hyper-Connections (mHC). This… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### Linear Optimal Topic Transport for Document Similarity — Fig.1 (p.7)
 ![[assets/linear-optimal-topic-transport-for-document-similarity-p07.png]]
@@ -6267,6 +6840,249 @@ The diagram illustrates a 2D grid of **512 GPUs** organized along two parallelis
 
 *Figure 8.* Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel and 64-way data parallel.
 *caption: Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel and 64-way data parallel. C. Text Samples… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.1 (p.2)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p02.png]]
+> [!tip] ## Figure Description
+
+**Architecture/Components:** The figure is a 2×3 taxonomic grid mapping the survey's six core technical chapters (Sections 3–8), each broken into numbered subsections linked by braces.
+
+- **Section 3 — Infrastructure:** AI Accelerators, Network Infrastructure, Storage
+- **Section 4 — Parallelism Schemes:** Hybrid, Auto, Heterogeneous Parallelism
+- **Section 5 — Computation Optimizations:** Operator Optimization, Mixed-Precision Training
+- **Section 6 — Memory Optimizations:** Activation Recomputation, Redundancy Reduction, Defragmentation, Offloading
+- **Section 7 — Communication Optimizations:** Collective Communication, Scheduling, In-Network Aggregation
+- **Section 8 — Fault Tolerance:** Failure Analysis, Anomaly Detection, Checkpoint-Based & Checkpoint-Free Recovery
+
+**Key Takeaway:** The taxonomy progresses logically from **hardware substrate → distributed coordination → micro-optimization → resilience**, showing that scalable LLM training requires co-design across compute, memory, network, and fault-recovery layers—each is necessary but not sufficient alone.
+
+## Caption (Verbatim)
+
+**Fig. 1: Overall structure of this survey.**
+*caption: Overall structure of this survey.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.2 (p.3)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p03.png]]
+> [!tip] **Description:** The figure depicts a standard Transformer layer with two parallel sub-blocks sharing the same input X. **Left — Attention Block:** X → Norm → Linear(Wqkv) projects into Q, K, V in parallel → MHA/GQA (Multi-Head or Grouped-Query Attention) → Linear(Wo) → residual addition (⊕). **Right — FFN Block:** X → Norm → two parallel Linear projections W1 and W3 → SiLU activation on W1's output → element-wise product (⊙) with W3's output → Linear(W2) → residual addition (⊕). Data flows bottom-up through each block. **Key takeaway:** The FFN uses a **SwiGLU-style gated activation** (two parallel linear projections combined via SiLU·gated multiplication), which is the modern LLaMA-family replacement for the original ReLU-based two-layer FFN, yielding better parameter efficiency at comparable compute. Residual connections and pre-normalization are applied in both blocks.
+
+**Caption (verbatim):**
+"Fig. 2: A typical Transformer layer contains an Attention block and a Feed-Forward Network (FFN) block."
+*caption: A typical Transformer layer contains an Attention… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.3 (p.4)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p04.png]]
+> [!tip] **Figure 3 Description (≤120 words):**
+
+The diagram depicts a hierarchical distributed LLM training infrastructure. Four **Compute Nodes** sit at the core, interconnected via the **Backend Network** (high-bandwidth training traffic). Below them, the **Frontend Network** (management & storage traffic) links the compute cluster to **Training Dataset Storage** and **Checkpoint Storage**. On the right, two orthogonal control subsystems are shown: a **Scheduling System** at the top, and a **Fault Tolerance** stack containing **Anomaly Detection** and **Failure Recover** modules.
+
+**Key takeaway:** The architecture deliberately *decouples* compute traffic (backend) from I/O/management traffic (frontend) and pairs the data plane with dedicated reliability and scheduling planes—enabling independent scaling, lower contention, and rapid fault isolation across thousands of GPUs.
+
+**Caption (verbatim):**
+> Fig. 3: Infrastructure overview for distributed LLM training.
+*caption: Infrastructure overview for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.4 (p.5)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p05.png]]
+> [!tip] **Figure Description:**
+
+The figure is a hierarchical taxonomy titled "Infrastructure for LLM Training" with four main branches expanding left-to-right:
+
+1. **AI Accelerators** — splits into NVIDIA GPUs (Ampere, Hopper, Blackwell) and Other Accelerators (AMD GPU, GAUDI, TPU, Graphcore IPU, Cerebras CS-2).
+2. **Network Infrastructure** — four sub-branches: Chip-to-Chip (Cube-Mesh/FC/Torus), Node-to-Node (GPUDirect-RDMA, InfiniBand, RoCE, iWARP), Network Topology (HPC/Training-Optimized/Reconfigurable), and Load Balancing & CC (ECMP, packet spraying, PFC, DCQCN, HPCC, etc.).
+3. **Storage Systems** — Checkpoint Storage (Tectonic, HDFS, Ceph) and Training Data Storage (Lustre, GPFS, BeeGFS, Alluxio, JuiceFS, etc.).
+4. **Scheduling Systems** — Workload Scheduling (Tiresias, Pollux, Sia…) and Resource Scheduling (Cassini, HIRE, Zeus, Perseus…).
+
+**Key takeaway:** Communication overhead dominates LLM training (>90% of time in some cases), so the taxonomy is heavily weighted toward network-stack innovations—spanning physical interconnects, topology design, and congestion control—reflecting that bandwidth and latency, not raw compute, are the primary scalability bottleneck.
+
+**Caption (verbatim):**
+Fig. 4: Studies on infrastructure optimizations for distributed LLM training.
+*caption: Studies on infrastructure optimizations for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.5 (p.6)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p06.png]]
+> [!tip] ## Figure Description
+
+The figure illustrates **five chip-to-chip interconnect topologies** used in accelerator systems:
+
+- **(a) Tree Topology**: Hierarchical structure with PCIe Switch and Root Complex forming a multi-level hierarchy.
+- **(b) Cube-Mesh Topology**: A regular grid (planar mesh for 4 GPUs; cube-mesh for 8 GPUs), as in NVLink-1.0.
+- **(c) Switch-based Fully-Connected**: GPUs connect through NVSwitch chips, enabling all-to-all bandwidth (e.g., DGX-2 with six NVSwitches).
+- **(d) P2P-based Fully-Connected**: Direct peer-to-peer links between every chip pair (used by Intel, AMD, Huawei Ascend).
+- **(e) 2D-Torus Topology**: Grid layout with wraparound edges for multiple shortest paths (Google TPUv2/v3).
+
+**Key Takeaway**: Bandwidth, latency, and scalability trade-offs drive topology choice—torus offers redundant paths, fully-connected maximizes bandwidth but scales expensively in wiring, while mesh/tree trade cost for performance.
+
+**Caption (verbatim)**:
+"Fig. 5: Five chip-to-chip topologies: tree topology, cube-mesh topology, switch-based fully-connected topology, P2P-based fully-connected topology, and 2D-torus topology."
+*caption: Five chip-to-chip topologies: tree topology, cube-mesh topology, switch-based fully-connected topology, P2P-based… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.6 (p.7)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p07.png]]
+> [!tip] **Description (architecture & key takeaway):**
+
+The figure compares four GPU cluster network topologies built from three switch tiers — **Core (green) → Spine (red) → Leaf (blue) → GPU endpoints (purple)** — grouped into Pods. (a) **Clos** is a full fat-tree: every leaf connects to every spine, every spine to every core, giving any-to-any bandwidth at high switch cost. (b) **Dragonfly+** removes the core tier and adds direct pod-to-pod links (curved arcs). (c) **Rail-Optimized** preserves Clos's full hierarchy but aligns GPUs across racks by index onto shared leaf switches, shortening collective traffic. (d) **Rail-Only** drops the core entirely; intra-rail traffic stays local, while inter-rail traffic is offloaded to a separate side Clos.
+
+**Key takeaway:** Network topology for LLM training is increasingly *co-designed with parallelism strategy* — rail-optimized layouts exploit predictable collective-communication patterns, while the rail-only variant trades flexibility for cost, signaling a shift toward workload-aware, slim switching fabrics.
+
+**Caption (verbatim):**
+
+Fig. 6: Four typical network topologies in large-scale GPU clusters: Clos topology, Dragonfly+ topology, rail-optimization topology, and rail-only topology.
+*caption: Four typical network topologies in large-scale GPU clusters: Clos topology, Dragonfly+ topology, rail-optimization… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.7 (p.10)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p10.png]]
+> [!tip] ## Figure Description
+
+The figure is a hierarchical taxonomy classifying **Parallelism Schemes for LLM Training** into three top-level branches:
+
+1. **Hybrid Parallelism** — combines hand-crafted strategies: Data, Tensor, Pipeline (subdivided into Pipeline Bubble / Memory Imbalance mitigations), Sequence, and Expert Parallelism (Sparse Activation, Communication Optimization, Load Balancing).
+2. **Auto Parallelism** — automated strategy selection, split into General Frameworks and Transformer-Specific approaches.
+3. **Heterogeneous Parallelism** — exploits hardware heterogeneity (mixed accelerators) and model heterogeneity (e.g., RLHF), with techniques for each.
+
+Each leaf node enumerates representative systems/papers by citation number, forming a literature map from category → subcategory → concrete works.
+
+**Key takeaway:** The taxonomy shows that efficient LLM training is no longer solved by a single dimension (e.g., pure data parallelism); modern systems must *compose* multiple strategies—often via automation—to hide pipeline bubbles, balance MoE loads, and exploit hardware/model heterogeneity at HPC scale.
+
+## Caption (verbatim)
+
+**Fig. 7:** Studies on parallelism schemes for distributed LLM training.
+*caption: Studies on parallelism schemes for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.8 (p.12)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p12.png]]
+> [!tip] ## Main Figure Description
+
+**Architecture & Components (nested, outermost → innermost):**
+1. **Data Parallelism (outermost):** Two DP ranks (Rank 0, Rank 1) replicate the full model and synchronize gradients via **AllReduce (AR)** across nodes.
+2. **Sequence Parallelism:** Sits inside each DP rank, coordinating activations along the sequence dimension (shown enclosing the TP group).
+3. **Tensor Parallelism (TP):** Four-way partition (TP-0…TP-3) splitting weight matrices/activations across GPUs within a node, communicating via **Send/Recv** between stages.
+4. **Pipeline Parallelism (innermost):** Four sequential stages assigned to contiguous LLM layer ranges — Stage 0 (Layers 0–3), Stage 1 (4–7), Stage 2 (8–11), Stage 4 (12–15) — exchanging activations via Send/Recv.
+
+**Data flow:** Tokens → micro-batches flow left-to-right across pipeline stages while TP shards compute in parallel; gradients aggregate up the DP hierarchy via AR.
+
+## Key Technical Takeaway (≤120 words)
+3D-parallelism **hierarchically nests** three orthogonal strategies to match each to the appropriate interconnect bandwidth: **TP** uses fast intra-node NVLink for weight/activation sharding; **pipeline parallelism** exploits cheap inter-node bandwidth by only exchanging activations at layer boundaries via Send/Recv; and **DP** wraps the whole stack, replicating models and averaging gradients with AllReduce. This decomposition lets trillion-parameter LLM training scale across thousands of GPUs while balancing compute, memory, and communication costs. Each axis addresses a distinct bottleneck — memory (TP/PP) vs. throughput (DP) — that no single scheme can solve alone.
+
+## Caption (Verbatim)
+**Fig. 8:** An example of 3D-parallelism with data parallelism, tensor parallelism, and pipeline parallelism.
+*caption: An example of 3D-parallelism with data parallelism, tensor parallelism, and pipeline parallelism.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.9 (p.14)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p14.png]]
+> [!tip] **Figure Description (architecture/components/data flow + key takeaway):**
+
+The figure illustrates **Expert Parallelism** across *N* devices (only Device 1 and Device N shown). Vertical data flow per device (bottom→top): Input Token Vector → **Embedding** → Add & Norm → **Attention** → Add & Norm → **Gating** → (cross-device) → **Expert-i** → (cross-device) → Add & Norm → Output Token Vector. Two **All-to-All Dispatch** operations (orange ovals) sit between the gating network and the experts, enabling tokens to be routed to—and results returned from—their assigned expert on a remote device. A dotted ellipse encloses the MoE-specific blocks (Gating + All-to-All Dispatch + Experts), distinguishing them from the standard Transformer blocks (Embedding, Attention, Add & Norm).
+
+**Key takeaway:** Each device hosts exactly one expert; inter-device collaboration is achieved entirely through All-to-All communication around the gating layer, rather than replicating experts.
+
+**Caption (verbatim):**
+> Fig. 9: Expert parallelism. The dotted line highlights the MoE components within the transformer model, where each device maintains one expert for expert parallelism and collaborate based on All-to-All communication.
+*caption: Expert parallelism. The dotted line highlights the… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.10 (p.17)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p17.png]]
+> [!tip] **Figure 10 — RLHF architecture and data flow**
+
+The diagram depicts an RLHF (Reinforcement Learning from Human Feedback) pipeline with two interacting phases. A Query Dataset feeds a **trainable Actor Model** (red) that generates responses. These responses, together with the original queries, are routed to three **frozen models** (blue): a Critic Model (producing a *value*), a Reward Model (producing a *score*), and a Reference Model (producing a *KL estimation*). In the training phase, the value/score/KL signals collected during inference drive gradient-descent weight updates back into the Actor and Critic models.
+
+**Key takeaway:** RLHF decouples *inference* (frozen models producing training signals) from *training* (gradient updates of actor/critic), and the model heterogeneity — keeping reference/reward/critic frozen while only actor/critic are updated — is the central source of its extra memory and time cost. (~110 words)
+
+**Caption (verbatim):**
+"Fig. 10: An example of RLHF. **Inference process:** ① The actor model generates a response from a given query. ② The critic model, reward model, and reference model use the query and response pairs to generate the value, score, and KL divergence required for training through inference. **Training process:** ③ The actor model and critic model use the data collected in the inference process to update their weights through gradient descent."
+*caption: An example of RLHF. Inference process: 1 The… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.11 (p.19)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p19.png]]
+> [!tip] **Figure Description (Architecture/Components/Data Flow):**
+
+The hierarchical tree diagram, labeled "Computational Optimizations for LLM Training," branches into two primary categories:
+
+1. **Operator Optimizations** → splits into *Manual* (FlashAttention family, BPT, SWattention, ByteTransformer) and *Automatic* optimizations, the latter further divided into *Kernel-level* (Halide, TVM, Roller, Triton, ALCOP) and *Graph-level* compilers (Chimera, Welder, Slapo, TorchDynamo/TorchInductor, JIT-Q).
+
+2. **Mixed-precision Training** → splits into *16-Bit Floating Point* (FP16/BF16 training, Campo, THC), *Sub-8-Bit Floating Point* (Wang et al., Sun et al., FP8-LM, Rouhani et al.), and *Low-Bit Fixed Point* with INT8 (Jetfire), INT4 (Xi et al.), and 1-Bit (BitNet, BitNet b1.58).
+
+**Key Technical Takeaway:** Optimization strategies span a granularity spectrum—from fine-grained kernel-level tiling for memory/compute efficiency to coarse-grained graph fusion, paired with aggressive precision reduction down to binary representations.
+
+**Caption (verbatim):**
+Fig. 11: Studies on computation optimizations for distributed LLM training.
+*caption: Studies on computation optimizations for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.12 (p.21)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p21.png]]
+> [!tip] **Description of the main figure:**
+
+The figure is a hierarchical taxonomy diagram titled *"Memory Optimizations for LLM Training"*, organized as a three-level tree branching from a single root into four main optimization categories:
+
+1. **Activation Recomputation** → splits into *Dynamic Evicting* (DTR, MegTaiChi, Coop) and *Static Evicting* (Checkmate, LoongTrain, Yuan et al., Selective Checkpointing, DistFlashAttn).
+2. **Redundancy Reduction** → splits into *Fully Sharding* (ZeRO, FSDP) and *Partially Sharding* (ZeRO++, MiCS, PaRO, RTP, AMSP).
+3. **Defragmentation** → splits into *Tensor-based* (ROAM, ZeRO-R, Imanishi et al., MegTaiChi, Coop) and *VMM-based* (GMLake, Expandable Segments).
+4. **Offloading** → splits into *CPU Offloading* (Static: L2L, ZeRO-Offload, Elixir, Yuan et al.; Dynamic: TSPLIT, PatrickStar, Mobius, Harmony, TMOF, STRONGHOLD) and *SSD Offloading* (ZeRO-Infinity, Angel-PTM, Smart-Infinity, Fuyou, MoESys).
+
+**Key technical takeaway:** No single technique dominates — each addresses a different bottleneck (compute-for-memory trade-off, parameter duplication, fragmented allocation, or capacity scaling), and practical systems typically compose multiple strategies from different branches to fit the GPU memory budget.
+
+**Caption (verbatim):**
+
+Fig. 12: Studies on memory optimizations for distributed LLM training.
+*caption: Studies on memory optimizations for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.13 (p.25)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p25.png]]
+> [!tip] ## Figure Description
+
+**Fig. 13** is a 128×128 GPU-pair heatmap visualizing per-iteration communication traffic for InternLM-2 102B pre-training across 128 GPUs, using a hybrid TP=8 / PP=4 / DP=4 / ZeRO-1=4 configuration.
+
+**Components & Data Flow:**
+- **Axes**: GPU index 0–127 on both x and y, representing ordered GPU pairs.
+- **Color scale**: Traffic volume, ranging 256 MB (yellow) → 12 GB (deep purple) per pair.
+- **Pattern overlays** (priority TP > DP/ZeRO-1 > PP):
+  - ① **TP traffic**: 16 dense 8×8 diagonal squares from NVSwitch fully-connected intra-node topology.
+  - ②③ **DP/ZeRO-1 traffic**: six symmetric diagonal stripes spanning 32×32 rectangular sub-grids (ReduceScatter + AllGather).
+  - ④ **PP traffic**: two thin yellow lines at offsets ((32,0),(128,96)) and ((0,32),(96,128)) — Send/Recv.
+
+**Key technical takeaway:** Because TP traffic (intra-node NVSwitch) carries the largest volume per pair, hybrid parallelism layouts that keep TP groups co-resident on the same node dominate bandwidth pressure, while PP contributes negligible traffic — making it the cheapest dimension to scale across nodes.
+
+## Caption (verbatim)
+
+Fig. 13: Communication traffic heatmap for InternLM-2 102B pre-training using 128 GPUs during a single iteration, with tensor parallelism (TP) size 8, pipeline parallelism (PP) size 4, data parallelism (DP) size 4 and ZeRO stage 1 (ZeRO-1) size 4. The prioritization of topology arrangement is TP >DP/ZeRO-1 >PP. There are four different data traffic loads: ① the AllReduce of TP; ②③ ReduceScatter/AllGather of DP/ZeRO-1; ④ Send/Recv of PP. The communication for TP utilizes the fully-connected topology of NVSwitch, resulting in sixteen dense square traffic patterns along the diagonals in the diagram, with each pattern representing a node. The cross-node communication traffic for DP and ZeRO-1 are shown in the diagram as six symmetric diagonal lines within the four 32×32 rectangular topologies. It is important to note that DP/ZeRO-1 also involves intra-node communication traffic, which accumulates into the same heatmap grid as TP. Due to its relatively small communication volume, PP forms two yellow lines on the heatmap at coordinates ((32, 0), (128, 96)) and ((0, 32), (96, 128)). (In this diagram, all communications use the ring-based collective algorithm)
+*caption: Communication traffic heatmap for InternLM-2… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.14 (p.26)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p26.png]]
+> [!tip] **Description**
+
+The figure is a hierarchical taxonomy titled "Communication Optimizations for LLM Training," branching into three top-level categories:
+
+1. **Collective Communication** — split into *Pre-Defined Algorithms* (libraries: MPI, NCCL, RCCL; patterns: Ring, Tree, Hybrid) and *Synthesized Algorithms* (GC3, SCCL, TACCL, Blink, P²).
+2. **Communication Scheduling** — three sub-branches: *FIFO-based* (Poseidon, GradientFlow, PyTorch DDP), *Priority-based* (P3, TicTac, ByteScheduler, PACE, Lina), and *Decomposition-based* (Pipeline/Communication/Computation decomposition plus out-of-order backpropagation).
+3. **In-Network Aggregation** — *Ethernet-based* (SwitchML, FPISA, NetReduce, AllReduce-Switch, PANAMA, ATP) and *InfiniBand-based* (NVIDIA Mellanox SHARP v1/v2/v3).
+
+Each leaf lists concrete systems/methods with reference numbers.
+
+**Key Technical Takeaway:** Optimizations form three complementary layers—custom collective algorithms (latency reduction), intelligent scheduling overlapping compute/comm (dependency-aware reordering via FIFO, priority, or decomposition), and hardware-accelerated aggregation inside switches (offloading AllReduce to the network)—which together address the dominant communication bottleneck of distributed LLM training.
+
+**Caption (verbatim):** "Fig. 14: Studies on communication optimizations for distributed LLM training."
+*caption: Studies on communication optimizations for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
+
+### Efficient Training of Large Language Models on Distributed I — Fig.15 (p.29)
+![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p29.png]]
+> [!tip] ## Description
+
+The figure presents a three-level hierarchical taxonomy rooted at **"Fault Tolerance for LLM Training"**, branching into three primary pillars:
+
+1. **Anomaly Detection** — splits into *Statistical Monitoring* (Healthd, MegaScale, C4, Vela, Unicorn, Transom, NCCLK, NCCL flight recorder) and *Proactive Validation* (MegaScale lightweight tests, SuperBench, Vela, TPUv4 Preflight Check).
+2. **Checkpointing-Based Recovery** — divides into *Persistent Checkpointing* (sub-classified into **Synchronous** solutions like DeepSpeed, Varuna, JIT-Checkpointing, Flash-Checkpoint, Universal Checkpointing, **Snapshot-Stall** like Check-N-Run/TorchSnapshot, and **Asynchronous** approaches DeepFreeze, CheckFreq, LightCheck, DataStates-LLM, FastPersist) and *In-Memory Checkpointing* (Gemini, REFT).
+3. **Checkpointing-Free Recovery** — covers *Live Migration* (Parcae, Oobleck) and *Module Redundancy* (Bamboo, SlipStream, SWARM).
+
+Each leaf node maps concrete systems/tools to its category, giving readers a citation-indexed landscape of the field.
+
+## Key Technical Takeaway (≤120 words)
+
+The taxonomy reveals a clear design spectrum: **detection-first** (statistical monitoring + proactive validation) catches faults early, while recovery strategies trade off **durability vs. overhead** — persistent checkpointing offers fault survival at storage/IO cost, in-memory checkpointing trades persistence for speed, and checkpointing-free approaches (migration/redundancy) eliminate IO bottlenecks entirely but require spare resources. Notably, persistent checkpointing has bifurcated into synchronous (strong consistency, higher stall) vs. asynchronous (lower stall, weaker guarantees) regimes, reflecting the field's shift toward overlapping compute with checkpoint IO. The taxonomy shows that no single technique dominates; modern systems (e.g., MegaScale, Vela) combine multiple pillars.
+
+## Caption (verbatim)
+
+Fig. 15: Studies on fault tolerance techniques for distributed LLM training.
+*caption: Studies on fault tolerance techniques for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.1 (p.1)
 ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p01.png]]
@@ -8191,6 +9007,220 @@ Four side-by-side scatter plots compare quality score (F1-Score for 2WikiMQA/Mus
 Figure 16. *CACHEBLEND* has minimal loss in quality compared with full KV recompute, with 5%–18% selective recompute ratio, with Yi-34B.
 *caption: CacheBlend’s outperforms baselines when using RAM and slower disks… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.1 (p.3)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p03.png]]
+> [!tip] **Figure Description (Architecture / Components / Data Flow + Key Takeaway):**
+
+The figure depicts a linear three-stage data collection pipeline, with arrows flowing left-to-right:
+
+1. **Seed Problem Crawling (blue box):** Operators (matmul, relu, conv2d) are mined from PyTorch / Transformers libraries, building a primitive repository.
+2. **Combinatorial Problem Synthesis (green box):** An LLM fuses those primitives (e.g., conv2d → relu → matmul) into multi-operator "fused op" tasks.
+3. **Rubric-based Problem Filtering (white box):** A four-quadrant rubric applies checks — Executable ✅, Non-random ✅, Reasonable Workload ✅, Non-trivial ✅ — to retain only high-quality problems.
+
+**Key technical takeaway:** Quality control is decoupled from generation — synthesis by an LLM is *post-hoc* gated by deterministic rubric filters, ensuring fused CUDA tasks remain executable, non-trivial, and benchmark-ready rather than purely synthetic.
+
+---
+
+**Caption (verbatim):**
+
+> **Figure 1** Overview of the three-stage data collection pipeline. We first crawl seed operators from PyTorch and Transformer libraries to build a repository of fundamental computational primitives. Next, an LLM performs combinatorial synthesis to generate fused, multi-operator tasks. Finally, a rubric-based filtering stage retains only executable, deterministic, non-trivial problems with reasonable workloads to ensure data quality and reliable evaluation.
+*caption: Overview of the three-stage data collection pipeline. We first crawl seed operators from PyTorch… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.2 (p.4)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p04.png]]
+> [!tip] **Architecture / Data Flow**
+The diagram depicts a closed-loop CUDA optimization agent. On the left, a **SKILL.md** directive (expert prompt) plus a **Workdir** containing the original PyTorch model, utils, and verification scripts feeds into a **CUDA Agent** (center). The agent emits a **Generated** set of artifacts (`kernels/kernel.cu`, `kernel_binding.cpp`, `model_new.py`). These are dispatched to a **GPU Pool** for execution, which returns a **Performance** panel reporting a correctness check, generated kernel time, Torch eager time, and compile time—closing the feedback loop.
+
+**Key technical takeaway**
+A lightweight, file-based scaffolding (SKILL.md + workdir) lets an LLM agent iteratively emit fused CUDA kernels and benchmark them against a GPU pool, replacing hand-written reference kernels with agent-generated ones that beat the Torch eager baseline.
+
+**Caption (verbatim)**
+Figure 2 Overview of the agent loop.
+*caption: Overview of the agent loop.… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.3 (p.5)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p05.png]]
+> [!tip] **Figure Description:**
+
+The figure depicts a three-stage training pipeline for building a CUDA agent, partitioned by dashed boxes:
+
+1. **Single-Turn Warm-up** — A Base Model is fine-tuned via PPO into a Single-Turn Model.
+2. **Agent Warm-up** — The Single-Turn Model generates sample trajectories by acting as an agent; these trajectories are then used to (a) initialize the **Actor Model** via RFT (rejection fine-tuning) and (b) pretrain the **Critic Model** via value pretraining.
+3. **Agentic RL** — The actor–critic pair undergoes PPO to yield the final **CUDA Agent**.
+
+**Key takeaway:** Sampled rollouts from the single-turn warm-up seed *both* actor and critic, mitigating cold-start issues before PPO-based agentic RL — a pragmatic bootstrapping trick for multi-turn code-generation agents.
+
+**Caption (verbatim):**
+"Figure 3 Overview of training pipeline. Following a single-turn RL warm-up stage, the sampled trajectories are used to initialize actor model and critic model before agentic RL stage."
+*caption: Overview of training pipeline. Following a single-turn RL warm-up stage, the sampled trajectories are… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.4 (p.10)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p10.png]]
+> [!tip] **Figure description (≤120 words):**
+
+The page presents two ablation figures evaluating stability components of a PPO-based RL training pipeline for CUDA Agent. **Figure 4** plots Training Reward and Actor Entropy over ~30 steps, comparing PPO w/ RFT (orange, stable) vs. PPO w/o RFT (green, reward collapses near step 20 while entropy spikes sharply upward). **Figure 5** plots Explained Variation of the Value Function and Response-Length Clipped Ratio, comparing PPO w/ Value Pretrain (orange, flat near zero) vs. PPO w/o Value Pretrain (green, EV drops to ≈ −8 and response length explodes before termination). Both panels share x-axis = training step.
+
+**Key takeaway:** Reward Filtering (RFT) and Value Pretraining are non-removable stability anchors—ablation triggers correlated failure modes (reward collapse � entropy blow-up; EV collapse ↔ trajectory explosion).
+
+**Caption transcription (verbatim):**
+
+**Figure 4** Ablation: RFT. Removing RFT causes training reward to collapse. The concurrent increase in actor entropy suggests that the policy becomes increasingly diffuse and poorly structured.
+
+**Figure 5** Ablation: Value Pretraining. Without Value Pretraining, the critic fails to learn a meaningful value function, as reflected by low explained variance. This leads to inefficient exploration, manifested as excessively long interaction trajectories.
+*caption: Ablation: RFT. Removing RFT causes training reward to collapse. The concurrent increase in actor entropy… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.6 (p.13)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p13.png]]
+> [!tip] **Figure 7 — Histogram of Max AST Similarity**
+
+*Architecture/components:* A single-panel histogram on a white background. X-axis is "Max similarity to any test sample" (0.0–1.0). Y-axis is "Proportion (%)" (0–12%). Gray bars show the empirical distribution; a yellow dashed vertical line marks threshold = 0.9.
+
+*Data flow:* Each training sample is compared against every evaluation sample, and its maximum AST (Abstract Syntax Tree) similarity score is recorded and binned into the histogram.
+
+*Key technical takeaway:* The distribution is concentrated near 0.25–0.35 with peak proportion ≈12%, and almost no samples exceed the 0.9 threshold, demonstrating that the training and evaluation sets are essentially disjoint — i.e., minimal risk of data leakage/contamination in the benchmark.
+
+**Caption (verbatim):**
+"Figure 7: Distribution of the maximum AST similarity between each training sample and all evaluation samples."
+*caption: Examples of operator classes in our training data.… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.8 (p.22)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p22.png]]
+> [!tip] **Figure Description**
+
+The figure displays a PyTorch reference operator implementation (~35 lines) for diagonal-matrix-times-dense-matrix multiplication (Case D.2).
+
+**Components:**
+- **Imports** (lines 1–2): `torch` and `torch.nn as nn`
+- **`Model(nn.Module)` class** with three methods:
+  - `__init__`: trivial superclass init
+  - `forward(self, A, B)`: computes `torch.diag(A) @ B`, where A is a 1D diagonal tensor `(N,)` and B is a 2D matrix `(N, M)`, returning `(N, M)`
+  - `get_inputs()`: produces random `A` and `B` tensors
+  - `get_init_inputs()`: returns `[]` (no learnable params)
+- **Constants**: `M = N = 4096`, defining the workload shape
+
+**Data flow:** 1D diagonal → materialized 2D diagonal matrix → matmul with dense matrix → output.
+
+**Key takeaway:** Diagonal matmul is O(N·M), not O(N²·M) like dense matmul, so an optimized kernel can skip redundant zero-multiplies by exploiting the diagonal structure of A.
+
+**Caption (verbatim):**
+**Figure 8** Reference operator for diagonal matmul (Case D.2).
+*caption: Reference operator for diagonal matmul (Case D.2).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.9 (p.23)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p23.png]]
+> [!tip] **Architecture / Data flow.** `ModelNew` (Figure 10) is a thin PyTorch `nn.Module` wrapper that forwards inputs `A (N,)` and `B (N, M)` to a compiled CUDA extension. The launcher (Figure 9) launches 1024 blocks × 128 threads; each thread strides through `output` with a grid-stride loop, derives `row = idx / 4096`, and writes `output[idx] = A[row] * B[idx]`. No diagonal matrix is materialized — only the 1-D diagonal `A` is indexed, and the full N×M result is produced by reusing `A[row]` across all columns `j` of row `row`.
+
+**Key takeaway.** Computing `C[i,j] = A[i] * B[i,j]` row-wise in a grid-stride loop avoids the O(N²) diagonal construction and exploits the broadcast reuse of `A[row]` across the 4096 columns — yielding an N×M output from just O(N+M) input storage and a single fused multiply.
+
+**Captions (verbatim):**
+- *Figure 9* Diagonal matmul kernel implementation (Case D.2).
+- *Figure 10* Custom operator for diagonal matmul (Case D.2).
+*caption: Diagonal matmul kernel implementation (Case D.2).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.11 (p.25)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p25.png]]
+> [!tip] **Description (architecture/components/data flow + key takeaway):**
+
+The figure shows a single-layer PyTorch `Model` (subclass of `nn.Module`) implementing a fused linear reduction. **Components:** a learnable weight matrix `W` of shape `(hidden_size, input_size)`, plus a scalar `scaling_factor`. **Data flow** on input `x ∈ ℝ^{batch × input}`:
+1. `Gemm`: `y = x · Wᵀ` → `(batch × hidden)`
+2. `Divide`: `y = y / 2`
+3. `Sum`: collapse dim-1 with `keepdim=True`
+4. `Scaling`: `y *= scaling_factor` (1.5)
+
+**Config:** batch=1024, input=hidden=8192. **Key takeaway:** despite four annotated ops, the sum-after-matmul reduces the output to a `(batch × 1)` vector, so the dominant cost is the 8192×8192 GEMM; the post-ops are memory-bound and fuse cheaply into the GEMM epilogue.
+
+**Caption (verbatim):**
+
+**Figure 11** Reference operator for matrix multiplication, division, summation, and scaling (Case D.3).
+*caption: Reference operator for matrix multiplication, division, summation, and scaling (Case D.3).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.12 (p.26)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p26.png]]
+> [!tip] **Architecture / Components / Data Flow**
+
+The figure shows a two-stage fused CUDA implementation (`fused_sum_dot_launcher`) for an input_size × hidden_size matrix operation (8192 × 8192):
+
+1. **Stage 1 — `sum_weight_kernel`**: 1 thread per input column; loops over the hidden dimension, accumulating column sums of the `weight` matrix into `sum_weight[8192]`. Launched with ⌈8192/128⌉ blocks × 128 threads.
+2. **Stage 2 — `dot_product_kernel`**: 1024 blocks × 128 threads, each thread performs a **float4-vectorized** dot product of `x` against `sum_weight` (4 multiply-adds per load), writes to shared memory, then performs a **log₂(128) tree reduction** in `smem`. Thread 0 emits `output[block] = smem[0] · (scaling_factor / 2.0f)`.
+
+**Key Technical Takeaway** — The fusion reduces the O(8192²) matrix–vector work to O(8192·1024) by pre-summing the weight columns on-GPU; combined with `float4` coalesced loads and in-block shared-memory reduction, this minimizes global-memory traffic and eliminates an intermediate host-visible reduction step.
+
+**Caption (verbatim):**
+Figure 12: Fused sum-then-dot-product kernel implementation (Case D.3).
+*caption: Fused sum-then-dot-product kernel implementation (Case D.3).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.13 (p.27)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p27.png]]
+> [!tip] **Description of Main Figure (Figure 13):**
+
+The figure displays a Python code listing defining a `ModelNew` PyTorch module that wraps a single fused custom CUDA kernel. **Components/architecture:**
+- **Imports:** `torch`, `torch.nn as nn`, and `cuda_extension` (the custom binding).
+- **`ModelNew(nn.Module)` class** holding a learnable `weight` parameter of shape `(hidden_size, input_size)` and a `scaling_factor` hyperparameter.
+- **`forward(x)` method:** instead of chaining separate ops, it invokes `cuda_extension.fused_sum_dot_forward(x, weight, scaling_factor)`, which returns a tensor of shape `(batch_size, hidden_size)`.
+
+**Data flow:** input tensor → single fused CUDA kernel (combined sum + dot product + scaling) → output tensor, with no intermediate Python-level operations.
+
+**Key Technical Takeaway (≤120 words):** The figure exemplifies kernel-fusion optimization — collapsing what would normally be separate CUDA launches for summation, matrix multiplication, division, and scaling into a single custom `fused_sum_dot_forward` operator. By exposing the fused kernel through a thin Python/C++ binding (`cuda_extension`), PyTorch's autograd-compatible `nn.Module` interface is preserved while eliminating kernel-launch overhead and intermediate memory traffic. This achieves substantial speedups over naïve operator-by-operator execution by reducing global memory round-trips and letting the GPU execute the entire linear-style transformation in one pass.
+
+**Caption (verbatim):**
+> Figure 13  Custom operator for matrix multiplication, division, summation, and scaling (Case D.3).
+*caption: Custom operator for matrix multiplication, division, summation, and scaling (Case D.3).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.14 (p.28)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p28.png]]
+> [!tip] **Description:**
+
+The figure presents a PyTorch implementation of a ResNet BasicBlock reference operator. The `Model` class (with `expansion=1`) is initialized with `in_channels`, `out_channels`, and `stride=1`. Its architecture comprises two sequential 3×3 convolutions (`conv1`, `conv2`) each followed by BatchNorm2d (`bn1`, `bn2`), with a ReLU activation after the first BN. A `downsample` Sequential (1×1 conv + BN) adjusts dimensions when stride ≠ 1. **Data flow:** input → conv1→bn1→ReLU → conv2→bn2 → add identity shortcut (downsampled if needed) → ReLU → output. Test code uses `in_channels=3, out_channels=64, stride=1, batch_size=10` on 224×224 tensors.
+
+**Key takeaway:** The skip connection enables gradient flow by adding the (optionally downsampled) input to the convolved output before the final ReLU — the defining feature of residual learning.
+
+**Caption (verbatim):**
+
+Figure 14 Reference operator for Resnet BasicBlock (Case D.4).
+*caption: Reference operator for Resnet BasicBlock (Case D.4).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.17 (p.30)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p30.png]]
+> [!tip] **Figure 17 — Fused Add-ReLU Kernel (CUDA)**
+
+**Architecture / Components / Data Flow:**
+- `fused_add_relu_kernel`: a CUDA device function where each thread processes a strided segment of `total_elements`.
+- Inputs (`input1`, `input2`) are loaded as `float4` vectors (4 lanes at once), summed via `__fadd_rn`, then passed through `fmaxf(..., 0.0f)` to fuse ReLU in-register.
+- A second pass handles the tail (remainder) elements scalar-wise.
+- `fused_add_relu_launcher` computes `grid_size` from `total_elements` (capped at 4096 blocks) and launches with 256 threads/block.
+
+**Key Technical Takeaway:** Operator fusion (add + ReLU) plus `float4` vectorization eliminates intermediate memory writes and quadruples per-thread throughput, while a tail loop preserves correctness for non-multiple-of-4 sizes.
+
+**Caption (verbatim):**
+*Figure 17* Fused add-relu kernel implementation (Case D.4).
+*caption: Fused add-relu kernel implementation (Case D.4).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.18 (p.31)
+![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p31.png]]
+> [!tip] ## Description
+
+**Architecture / Components**
+The figure shows a `ModelNew` (PyTorch `nn.Module`) implementing a fused ResNet BasicBlock for inference:
+- Two 3×3 conv layers (`conv1`, `conv2`) plus an optional 1×1 `downsample` conv
+- Three matching BatchNorm2d modules (`bn1`, `bn2`, `downsample[1]`)
+- A custom CUDA extension providing `conv_forwardd` (conv + optional ReLU) and `fused_add_relu_forward` (add + ReLU)
+
+**Data flow (`forward`)**
+1. Enable TF32 for matmul/conv
+2. Save `identity = x` (skip branch)
+3. Fold `bn1` into `conv1` weights/bias → call custom conv (stride, padding, dilation, ReLU=True)
+4. Fold `bn2` into `conv2` → call custom conv (ReLU=False)
+5. If downsample ≠ None, fold its BN and apply to `identity`
+6. `fused_add_relu_forward(out, identity)`
+7. Disable TF32; return `out`
+
+**Key technical takeaway (≤120 words):**
+The block performs inference-time **BN-folding**, absorbing each BatchNorm's γ/β/mean/var into the preceding Conv's weight and bias (`γ·W/√(var+ε)`, `β − μ·γ/√(var+ε)`). This lets the entire residual block — conv, BN, skip-add, and ReLU — collapse into just **two custom CUDA calls** (`conv_forwardd`, `fused_add_relu_forward`) per branch. The result is a single fused kernel that eliminates intermediate tensor materialization, cuts kernel-launch overhead, and keeps TF32 precision scoped only to the convolutions themselves. (~90 words)
+
+**Caption (verbatim):**
+Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
+*caption: Custom operator for Resnet BasicBlock (Case D.4).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
 ### Single-Rollout Asynchronous Optimization for Agentic Reinfor — Fig.1 (p.1)
 ![[assets/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-p01.png]]
 > [!tip] ## Figure Description
@@ -8636,7 +9666,7 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p13.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.11 (p.13): SLO attainment (↑) for end-to-end inference across multiple models and image cou…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 - ⭐ ![[assets/efficiently-serving-large-multimodal-models-using-epd-disaggregation-p16.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.12 (p.16): Breakdown of latency for encode and prefill stages using the InternVL2-8B model …  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 
-### rl (95)
+### rl (68)
 
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
@@ -8665,33 +9695,6 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p33.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.25 (p.33): PUPA GPT-4.1 Mini 33…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p34.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.26 (p.34): PUPA Qwen3 8B K.1 PROMPTS AT INTERMEDIATE STAGES FOR PUPA…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p12.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.27 (p.12): We also note that generation stochasticity (temperature based sampling) is elimi…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p05.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.3 (p.5): GEPA proposes a new candidate in every iteration by improving existing candidate…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.4 (p.4): GEPA receives the following inputs: A system  instan- tiated with simple prompt…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p07.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.5 (p.7): GEPA’s reflective prompt mutation systematically incorporates task-specific nuan…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p10.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.6 (p.10): Comparing the impact of different candidate selection strategies. (Left) As can …  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p13.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.7 (p.13): GEPA with GPT-4o is able to generate kernels for AMD NPUs that achieve vector ut…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p13.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.8 (p.13): GEPA with GPT-4o is able to iteratively refine and improve CUDA Kernel Code. The…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p24.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.9 (p.24): Details of System Aware Merge. r represents a seeded stochastic sampler.…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p28.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.10 (p.28): Final test set performance for aggregate and individual benchmarks.…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p28.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.11 (p.28): This figure compares the learning behaviour of GEPA against GRPO with full-param…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p29.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.12 (p.29): Hotpot QA Bench: rollout vs. score for different models/settings. (a) GPT-4.1 Mi…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p29.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.13 (p.29): IFBench: rollout vs. score for different models/settings. (a) GPT-4.1 Mini - MIP…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p29.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.14 (p.29): HoverBench: rollout vs. score for different models/settings. (a) GPT-4.1 Mini - …  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p29.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.15 (p.29): PUPA: rollout vs. score for different models/settings. 29…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p30.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.16 (p.30): Generalization gaps for different optimization methods. Following Wan et al. (20…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p30.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.17 (p.30): These plots visualize the final aggregate scores against the aggregate prompt si…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p31.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.18 (p.31): Comparing the token counts of optimized programs across benchmarks. (a) Abl:Sele…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p31.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.19 (p.31): HotpotQA GPT-4.1 Mini 31…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p32.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.20 (p.32): HotpotQA Qwen3 8B (a) Abl:SelectBestCandidate (b) SelectBestCandidate +…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p32.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.21 (p.32): IFBench GPT-4.1 Mini (a) Abl:SelectBestCandidate (b)…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p32.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.22 (p.32): IFBench Qwen3 8B 32…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p33.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.23 (p.33): HoVer GPT-4.1 Mini (a) Abl:SelectBestCandidate (b) SelectBestCandidate +…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p33.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.24 (p.33): HoVer Qwen3 8B (a) Abl:SelectBestCandidate (b) SelectBestCandidate +…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p33.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.25 (p.33): PUPA GPT-4.1 Mini 33…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p34.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.26 (p.34): PUPA Qwen3 8B K.1 PROMPTS AT INTERMEDIATE STAGES FOR PUPA…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p12.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM R** Fig.27 (p.12): We also note that generation stochasticity (temperature based sampling) is elimi…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p04.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.1 (p.4): Demonstration of PPO and GRPO training with the search engine (SEARCH-R1).…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
 - ⭐ ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p09.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.2 (p.9): (a) PPO vs. GRPO: GRPO generally converges faster but may exhibit instability af…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
 - ⭐ ![[assets/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-p17.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.3 (p.17): Retrieved Token Loss Masking Study instruction-tuned models exhibit faster conve…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
@@ -8822,7 +9825,7 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p06.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.5 (p.6): Speedup comparison of standard speculative decoding and SpecExtend across varyin…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
 - ⭐ ![[assets/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-p07.png]] — **SpecExtend: A Drop-in Enhancement for Speculative ** Fig.6 (p.7): Decoding speed (left) and average ac- cepted length (right) of the DeepSeek-R1-D…  `[[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]]`
 
-### training (142)
+### training (157)
 
 - ⭐ ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p01.png]] — **EAGLE-3: Scaling up Inference Acceleration of Larg** Fig.1 (p.1): Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target …  `[[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]`
 - ⭐ ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]] — **EAGLE-3: Scaling up Inference Acceleration of Larg** Fig.2 (p.2): Speedup ratios of different methods at temperature=0. For the standard speculati…  `[[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]]`
@@ -8956,6 +9959,21 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.6 (p.7): Validation set perplexity. All language models are trained for 300k iterations. …  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ⭐ ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p08.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.7 (p.8): Training loss for BERT model using the original architec- ture (a) and the rearr…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ⭐ ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p12.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.8 (p.12): Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p02.png]] — **Efficient Training of Large Language Models on Dis** Fig.1 (p.2): Overall structure of this survey.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p03.png]] — **Efficient Training of Large Language Models on Dis** Fig.2 (p.3): A typical Transformer layer contains an Attention…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p04.png]] — **Efficient Training of Large Language Models on Dis** Fig.3 (p.4): Infrastructure overview for distributed LLM training.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p05.png]] — **Efficient Training of Large Language Models on Dis** Fig.4 (p.5): Studies on infrastructure optimizations for distributed LLM training.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p06.png]] — **Efficient Training of Large Language Models on Dis** Fig.5 (p.6): Five chip-to-chip topologies: tree topology, cube-mesh topology, switch-based fu…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p07.png]] — **Efficient Training of Large Language Models on Dis** Fig.6 (p.7): Four typical network topologies in large-scale GPU clusters: Clos topology, Drag…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p10.png]] — **Efficient Training of Large Language Models on Dis** Fig.7 (p.10): Studies on parallelism schemes for distributed LLM training.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p12.png]] — **Efficient Training of Large Language Models on Dis** Fig.8 (p.12): An example of 3D-parallelism with data parallelism, tensor parallelism, and pipe…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p14.png]] — **Efficient Training of Large Language Models on Dis** Fig.9 (p.14): Expert parallelism. The dotted line highlights the…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p17.png]] — **Efficient Training of Large Language Models on Dis** Fig.10 (p.17): An example of RLHF. Inference process: 1 The…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p19.png]] — **Efficient Training of Large Language Models on Dis** Fig.11 (p.19): Studies on computation optimizations for distributed LLM training.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p21.png]] — **Efficient Training of Large Language Models on Dis** Fig.12 (p.21): Studies on memory optimizations for distributed LLM training.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p25.png]] — **Efficient Training of Large Language Models on Dis** Fig.13 (p.25): Communication traffic heatmap for InternLM-2…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p26.png]] — **Efficient Training of Large Language Models on Dis** Fig.14 (p.26): Studies on communication optimizations for distributed LLM training.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
+- ⭐ ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p29.png]] — **Efficient Training of Large Language Models on Dis** Fig.15 (p.29): Studies on fault tolerance techniques for distributed LLM training.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
 - ⭐ ![[assets/muon-is-scalable-for-llm-training-p01.png]] — **Muon is Scalable for LLM Training** Fig.1 (p.1): Scaling up with Muon. (a) Scaling law experiments comparing Muon and Adam. Muon …  `[[muon-is-scalable-for-llm-training]]`
 - ⭐ ![[assets/muon-is-scalable-for-llm-training-p04.png]] — **Muon is Scalable for LLM Training** Fig.2 (p.4): Validation loss curves for AdamW (green), Muon without weight decay (red), and M…  `[[muon-is-scalable-for-llm-training]]`
 - ⭐ ![[assets/muon-is-scalable-for-llm-training-p07.png]] — **Muon is Scalable for LLM Training** Fig.3 (p.7): Fitted scaling law curves for Muon and AdamW optimizers.…  `[[muon-is-scalable-for-llm-training]]`
@@ -9323,6 +10341,53 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ Fig.5 (p.9) ![[assets/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-p09.png]]
   - Visualization of three sam- pling methods for DeepStack.
 
+### #15 昇腾 950 NPU 架构白皮书
+
+- ⭐ Fig.301 (p.12) ![[assets/ascend-950-npu-architecture-whitepaper-p12.png]]
+  - 昇腾950 芯片架构示意图
+- ⭐ Fig.401 (p.17) ![[assets/ascend-950-npu-architecture-whitepaper-p17.png]]
+  - AI Core 架构及各层级SRAM 示意图
+- ⭐ Fig.402 (p.18) ![[assets/ascend-950-npu-architecture-whitepaper-p18.png]]
+  - Cube Core 处理架构示意图
+- ⭐ Fig.403 (p.18) ![[assets/ascend-950-npu-architecture-whitepaper-p18.png]]
+  - Cube Core 支持的数值精度示意
+- ⭐ Fig.404 (p.19) ![[assets/ascend-950-npu-architecture-whitepaper-p19.png]]
+  - HiF8 数值精度
+- ⭐ Fig.405 (p.21) ![[assets/ascend-950-npu-architecture-whitepaper-p21.png]]
+  - Vector Core 架构示意图
+- ⭐ Fig.406 (p.22) ![[assets/ascend-950-npu-architecture-whitepaper-p22.png]]
+  - AI Core Cube-Vector 融合示意图
+- ⭐ Fig.407 (p.23) ![[assets/ascend-950-npu-architecture-whitepaper-p23.png]]
+  - NDDMA 指令
+- ⭐ Fig.408 (p.24) ![[assets/ascend-950-npu-architecture-whitepaper-p24.png]]
+  - 昇腾950 新同步机制代码示例
+- ⭐ Fig.409 (p.25) ![[assets/ascend-950-npu-architecture-whitepaper-p25.png]]
+  - 昇腾950 内存层次示意图
+- ⭐ Fig.410 (p.27) ![[assets/ascend-950-npu-architecture-whitepaper-p27.png]]
+  - Non-allocate（L2 hint）典型应用场景示意图
+- ⭐ Fig.411 (p.27) ![[assets/ascend-950-npu-architecture-whitepaper-p27.png]]
+  - STARS2.0 架构示意图
+- ⭐ Fig.412 (p.31) ![[assets/ascend-950-npu-architecture-whitepaper-p31.png]]
+  - URMA 异步访存通信的过程示意图
+- ⭐ Fig.413 (p.32) ![[assets/ascend-950-npu-architecture-whitepaper-p32.png]]
+  - UB Memory 同步访存语义地址通信过程示意图
+- ⭐ Fig.414 (p.33) ![[assets/ascend-950-npu-architecture-whitepaper-p33.png]]
+  - CCU 架构示意图
+- ⭐ Fig.415 (p.34) ![[assets/ascend-950-npu-architecture-whitepaper-p34.png]]
+  - UB On Chip Switch 转发示意图
+- ⭐ Fig.416 (p.35) ![[assets/ascend-950-npu-architecture-whitepaper-p35.png]]
+  - PCIe 5.0 架构示意图
+- ⭐ Fig.417 (p.36) ![[assets/ascend-950-npu-architecture-whitepaper-p36.png]]
+  - 昇腾950 的一种超节点示意图
+- ⭐ Fig.418 (p.36) ![[assets/ascend-950-npu-architecture-whitepaper-p36.png]]
+  - 昇腾950 访问CPU 超大内存池示意图
+- ⭐ Fig.419 (p.37) ![[assets/ascend-950-npu-architecture-whitepaper-p37.png]]
+  - 昇腾950 直接访问超大存储资源池示意图
+- ⭐ Fig.420 (p.38) ![[assets/ascend-950-npu-architecture-whitepaper-p38.png]]
+  - 昇腾超节点基于UB Switch 转换为以太网与以太世界互通示意图
+- ⭐ Fig.421 (p.39) ![[assets/ascend-950-npu-architecture-whitepaper-p39.png]]
+  - 昇腾芯片支持以太网与以太世界互通示意图
+
 ### #16 GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM
 
 - ⭐ Fig.1 (p.1) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]]
@@ -9440,63 +10505,6 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
 - ⭐ Fig.14 (p.13) ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p13.png]]
   - Overhead of chunked-prefills in prefill computation for Yi-34B (TP-2) normalized to the cost of no-chunking, shown for various prompt lengths using chunk lengths of 512, 1024 and 2048.
 
-### #19 GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEME
-
-- ⭐ Fig.1 (p.1) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p01.png]]
-  - A comparison of learning behavior of the GEPA prompt optimizer against a state-of-the-art prompt optimizer (MIPROv2) and GRPO (24,000 rollouts). As more rollouts are sampled, the prompt optimizers can
-- ⭐ Fig.2 (p.3) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p03.png]]
-  - This figure shows an example prompt generated by GEPA for the second-hop document retrieval to be performed in a multi-hop question-answer system, along with the seed prompt it started with. Appendix 
-- ⭐ Fig.3 (p.5) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p05.png]]
-  - GEPA proposes a new candidate in every iteration by improving existing candidates using one of the two strategies (Reflective Prompt Mutation (Section 3) or System Aware Merge (Appendix D.1)), first e
-- ⭐ Fig.4 (p.4) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]]
-  - GEPA receives the following inputs: A system  instan- tiated with simple prompts to be optimized, training dataset D train (consisting of task instances (x; m) as described in Section 2), the standar
-- ⭐ Fig.5 (p.7) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p07.png]]
-  - GEPA’s reflective prompt mutation systematically incorporates task-specific nuances, leading to substantial improvements in performance. This figure visualizes the optimization trajectory taken by GEP
-- ⭐ Fig.6 (p.10) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p10.png]]
-  - Comparing the impact of different candidate selection strategies. (Left) As can be seen, selecting the best-performing candidate in every iteration led to a local-optima after one iteration, leading t
-- ⭐ Fig.7 (p.13) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p13.png]]
-  - GEPA with GPT-4o is able to generate kernels for AMD NPUs that achieve vector utilization rates as high as 70%, with a mean utilization score of 30.52%. In comparison, GPT-4o, even after up to 10 sequ
-- ⭐ Fig.8 (p.13) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p13.png]]
-  - GEPA with GPT-4o is able to iteratively refine and improve CUDA Kernel Code. The graphs shows fast p vs. rollouts plot for p=[0:5; 1], where the speedup is calculated over Pytorch-eager. fast p is a m
-- ⭐ Fig.9 (p.24) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p24.png]]
-  - Details of System Aware Merge. r represents a seeded stochastic sampler.
-- ⭐ Fig.10 (p.28) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p28.png]]
-  - Final test set performance for aggregate and individual benchmarks.
-- ⭐ Fig.11 (p.28) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p28.png]]
-  - This figure compares the learning behaviour of GEPA against GRPO with full-parameter finetun- ing on the 2-hop HoVer task. The relative gap mirrors the previously observed comparison of GEPA against G
-- ⭐ Fig.12 (p.29) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p29.png]]
-  - Hotpot QA Bench: rollout vs. score for different models/settings. (a) GPT-4.1 Mini - MIPRO (b) Qwen3 8B - MIPRO 0 50 10 150 20 250
-- ⭐ Fig.13 (p.29) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p29.png]]
-  - IFBench: rollout vs. score for different models/settings. (a) GPT-4.1 Mini - MIPRO (b) Qwen3 8B - MIPRO (c) Qwen3 8B - GRPO
-- ⭐ Fig.14 (p.29) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p29.png]]
-  - HoverBench: rollout vs. score for different models/settings. (a) GPT-4.1 Mini - MIPRO (b) Qwen3 8B - MIPRO (c) Qwen3 8B - GRPO
-- ⭐ Fig.15 (p.29) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p29.png]]
-  - PUPA: rollout vs. score for different models/settings. 29
-- ⭐ Fig.16 (p.30) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p30.png]]
-  - Generalization gaps for different optimization methods. Following Wan et al. (2024), we visualize the generalization gap (i.e., the difference between final test set performance and the best achieved 
-- ⭐ Fig.17 (p.30) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p30.png]]
-  - These plots visualize the final aggregate scores against the aggregate prompt size (across all benchmarks) of the final optimized system for each optimizer. It can be seen that GEPA consistently pro- 
-- ⭐ Fig.18 (p.31) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p31.png]]
-  - Comparing the token counts of optimized programs across benchmarks. (a) Abl:SelectBestCandidate (b) SelectBestCandidate +
-- ⭐ Fig.19 (p.31) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p31.png]]
-  - HotpotQA GPT-4.1 Mini 31
-- ⭐ Fig.20 (p.32) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p32.png]]
-  - HotpotQA Qwen3 8B (a) Abl:SelectBestCandidate (b) SelectBestCandidate +
-- ⭐ Fig.21 (p.32) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p32.png]]
-  - IFBench GPT-4.1 Mini (a) Abl:SelectBestCandidate (b)
-- ⭐ Fig.22 (p.32) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p32.png]]
-  - IFBench Qwen3 8B 32
-- ⭐ Fig.23 (p.33) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p33.png]]
-  - HoVer GPT-4.1 Mini (a) Abl:SelectBestCandidate (b) SelectBestCandidate +
-- ⭐ Fig.24 (p.33) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p33.png]]
-  - HoVer Qwen3 8B (a) Abl:SelectBestCandidate (b) SelectBestCandidate +
-- ⭐ Fig.25 (p.33) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p33.png]]
-  - PUPA GPT-4.1 Mini 33
-- ⭐ Fig.26 (p.34) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p34.png]]
-  - PUPA Qwen3 8B K.1 PROMPTS AT INTERMEDIATE STAGES FOR PUPA
-- ⭐ Fig.27 (p.12) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p12.png]]
-  - We also note that generation stochasticity (temperature based sampling) is eliminated by operating under a cache; this ensures that ob- served improvements tie closely to inference scaling through pro
-
 ### #20 DeepSeek-V4: Towards Highly Efficient Million-Token Context 
 
 - ⭐ Fig.1 (p.14) ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]]
@@ -9532,6 +10540,23 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
   - Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional video content by analyzing frame sequences and extract
 - ⭐ Fig.13 (p.16) ![[assets/kimi-vl-technical-report-p16.png]]
   - Specifically, increasing the max thinking token length at inference time consistently improves test-time accuracy across all three 16
+
+### #22 DeepSeekMath: Pushing the Limits of Mathematical Reasoning i
+
+- ⭐ Fig.1 (p.1) ![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p01.png]]
+  - Top1 accuracy of open-source models on the competition-level MATH benchmark
+- ⭐ Fig.2 (p.5) ![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p05.png]]
+  - An iterative pipeline that collects mathematical web pages from Common Crawl.
+- ⭐ Fig.3 (p.7) ![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p07.png]]
+  - Benchmark curves of DeepSeek-LLM 1.3B trained on different mathematical corpora.
+- ⭐ Fig.4 (p.13) ![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p13.png]]
+  - Demonstration of PPO and our GRPO. GRPO foregoes the value model, instead
+- ⭐ Fig.5 (p.19) ![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p19.png]]
+  - Performance of the DeepSeekMath-Instruct 1.3B model, which was further trained
+- ⭐ Fig.6 (p.20) ![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p20.png]]
+  - Performance of iterative reinforcement learning with DeepSeekMath-Instruct 7B on
+- ⭐ Fig.7 (p.21) ![[assets/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-p21.png]]
+  - The Maj@K and Pass@K of SFT and RL DeepSeekMath 7B on GSM8K and MATH
 
 ### #23 High-Dimensional Continuous Control Using Generalized Advant
 
@@ -9787,6 +10812,25 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
   - We find that three components yield the most significant gains: (i) branch- specific fusion within the multi-branch backbone, (ii) context-aware gating, and (iii) tokenizer compression. Removing any o
 - ⭐ Fig.7 (p.18) ![[assets/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-p18.png]]
   - The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static patterns. In English, we observe strong activations 
+
+### #36 HC: Manifold-Constrained Hyper-Connections
+
+- ⭐ Fig.1 (p.1) ![[assets/hc-manifold-constrained-hyper-connections-p01.png]]
+  - Illustrations of Residual Connection Paradigms. This figure compares the structural
+- ⭐ Fig.2 (p.7) ![[assets/hc-manifold-constrained-hyper-connections-p07.png]]
+  - Training Instability of Hyper-Connections (HC). This figure illustrates (a) the absolute
+- ⭐ Fig.3 (p.7) ![[assets/hc-manifold-constrained-hyper-connections-p07.png]]
+  - Propagation Instability of Hyper-Connections (HC). This figure illustrates the
+- ⭐ Fig.4 (p.12) ![[assets/hc-manifold-constrained-hyper-connections-p12.png]]
+  - Communication-Computation Overlapping for mHC. We extend the DualPipe
+- ⭐ Fig.5 (p.12) ![[assets/hc-manifold-constrained-hyper-connections-p12.png]]
+  - Training Stability of Manifold-Constrained Hyper-Connections (mHC). This figure
+- ⭐ Fig.6 (p.13) ![[assets/hc-manifold-constrained-hyper-connections-p13.png]]
+  - Scaling properties of mHC compared to the Baseline. (a) Compute Scaling Curve.
+- ⭐ Fig.7 (p.14) ![[assets/hc-manifold-constrained-hyper-connections-p14.png]]
+  - Propagation Stability of Manifold-Constrained Hyper-Connections (mHC). This
+- ⭐ Fig.8 (p.14) ![[assets/hc-manifold-constrained-hyper-connections-p14.png]]
+  - Visualizations of Learnable Mappings. This figure displays representative single-
 
 ### #37 Linear Optimal Topic Transport for Document Similarity
 
@@ -10052,6 +11096,39 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
   - Training loss for BERT model using the original architec- ture (a) and the rearranged architecture (b). Left ﬁgure shows the training loss for 336M and 752M BERT model. While the original architecture
 - ⭐ Fig.8 (p.12) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p12.png]]
   - Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel and 64-way data parallel. C. Text Samples
+
+### #51 Efficient Training of Large Language Models on Distributed I
+
+- ⭐ Fig.1 (p.2) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p02.png]]
+  - Overall structure of this survey.
+- ⭐ Fig.2 (p.3) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p03.png]]
+  - A typical Transformer layer contains an Attention
+- ⭐ Fig.3 (p.4) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p04.png]]
+  - Infrastructure overview for distributed LLM training.
+- ⭐ Fig.4 (p.5) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p05.png]]
+  - Studies on infrastructure optimizations for distributed LLM training.
+- ⭐ Fig.5 (p.6) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p06.png]]
+  - Five chip-to-chip topologies: tree topology, cube-mesh topology, switch-based fully-connected topology, P2P-based
+- ⭐ Fig.6 (p.7) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p07.png]]
+  - Four typical network topologies in large-scale GPU clusters: Clos topology, Dragonfly+ topology, rail-optimization
+- ⭐ Fig.7 (p.10) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p10.png]]
+  - Studies on parallelism schemes for distributed LLM training.
+- ⭐ Fig.8 (p.12) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p12.png]]
+  - An example of 3D-parallelism with data parallelism, tensor parallelism, and pipeline parallelism.
+- ⭐ Fig.9 (p.14) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p14.png]]
+  - Expert parallelism. The dotted line highlights the
+- ⭐ Fig.10 (p.17) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p17.png]]
+  - An example of RLHF. Inference process: 1 The
+- ⭐ Fig.11 (p.19) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p19.png]]
+  - Studies on computation optimizations for distributed LLM training.
+- ⭐ Fig.12 (p.21) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p21.png]]
+  - Studies on memory optimizations for distributed LLM training.
+- ⭐ Fig.13 (p.25) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p25.png]]
+  - Communication traffic heatmap for InternLM-2
+- ⭐ Fig.14 (p.26) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p26.png]]
+  - Studies on communication optimizations for distributed LLM training.
+- ⭐ Fig.15 (p.29) ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p29.png]]
+  - Studies on fault tolerance techniques for distributed LLM training.
 
 ### #52 Efficient Memory Management for Large Language Model Serving
 
@@ -10422,6 +11499,41 @@ BRIDGE simplifies Relational Data Learning (RDL) by (a) reducing multi-table inp
   - This means that even if the storage device is a fast device (ex. CPU RAM), the delay will be lower-bounded by the minimal recomputation to guarantee quality.
 - ⭐ Fig.17 (p.12) ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p12.png]]
   - CacheBlend’s outperforms baselines when using RAM and slower disks
+
+### #68 CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA
+
+- ⭐ Fig.1 (p.3) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p03.png]]
+  - Overview of the three-stage data collection pipeline. We first crawl seed operators from PyTorch
+- ⭐ Fig.2 (p.4) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p04.png]]
+  - Overview of the agent loop.
+- ⭐ Fig.3 (p.5) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p05.png]]
+  - Overview of training pipeline. Following a single-turn RL warm-up stage, the sampled trajectories are
+- ⭐ Fig.4 (p.10) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p10.png]]
+  - Ablation: RFT. Removing RFT causes training reward to collapse. The concurrent increase in actor entropy
+- ⭐ Fig.5 (p.10) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p10.png]]
+  - Ablation: Value Pretraining. Without Value Pretraining, the critic fails to learn a meaningful value
+- ⭐ Fig.6 (p.13) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p13.png]]
+  - Examples of operator classes in our training data.
+- ⭐ Fig.7 (p.13) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p13.png]]
+  - Distribution of the maximum AST similarity between each training sample and all evaluation samples.
+- ⭐ Fig.8 (p.22) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p22.png]]
+  - Reference operator for diagonal matmul (Case D.2).
+- ⭐ Fig.9 (p.23) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p23.png]]
+  - Diagonal matmul kernel implementation (Case D.2).
+- ⭐ Fig.10 (p.23) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p23.png]]
+  - Custom operator for diagonal matmul (Case D.2).
+- ⭐ Fig.11 (p.25) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p25.png]]
+  - Reference operator for matrix multiplication, division, summation, and scaling (Case D.3).
+- ⭐ Fig.12 (p.26) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p26.png]]
+  - Fused sum-then-dot-product kernel implementation (Case D.3).
+- ⭐ Fig.13 (p.27) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p27.png]]
+  - Custom operator for matrix multiplication, division, summation, and scaling (Case D.3).
+- ⭐ Fig.14 (p.28) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p28.png]]
+  - Reference operator for Resnet BasicBlock (Case D.4).
+- ⭐ Fig.17 (p.30) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p30.png]]
+  - Fused add-relu kernel implementation (Case D.4).
+- ⭐ Fig.18 (p.31) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p31.png]]
+  - Custom operator for Resnet BasicBlock (Case D.4).
 
 ### #69 Single-Rollout Asynchronous Optimization for Agentic Reinfor
 

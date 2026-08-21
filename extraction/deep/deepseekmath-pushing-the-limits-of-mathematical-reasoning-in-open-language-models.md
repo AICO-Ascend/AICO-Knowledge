@@ -3,7 +3,7 @@
 > 论文：DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models
 > Shao, Wang, Zhu et al. (DeepSeek-AI / Tsinghua / Peking), arXiv:2402.03300v3, 27 Apr 2024
 > 深读锚点：GRPO 算法根（RL 系统谱系的起点）、数学语料 pipeline、code→math 训练顺序、unified RL paradigm
-> 公式权威源：extraction/formulas.json LaTeX（20 条，本文核心公式按 Eq. 号引用渲染 `$$`）。LaTeX↔M3 双源校验：本论文 Figure 2/3/4/5/6/7 未进入 M3 caption pipeline（minimax_captions.json 无本 slug 条目），LaTeX 即唯一权威源，无 M3 对照项；变量名（π_θ/π_ref/π_θ_old/A_t/β/ε/G）与 .txt 原文 Eq.2–Eq.21 逐字一致。
+> 公式权威源：extraction/formulas.json LaTeX（20 条，本文核心公式按 Eq. 号引用渲染 `$$`）。LaTeX↔M3 双源校验：Figure 1–7 共 7 张图已全部进入 M3 caption pipeline（minimax_captions.json 有本 slug 条目，2026-08-21 正则修复后抽取），图解读要点已织入对应创新点段；公式变量名（π_θ/π_ref/π_θ_old/A_t/β/ε/G）与 .txt 原文 Eq.2–Eq.21 逐字一致，与 M3 图内符号（A/v/r/G group）无冲突。
 
 ---
 
@@ -15,15 +15,17 @@ DeepSeekMath 攻击三个机制级瓶颈，而非"再做一次数学 SFT"：
 2. **PPO 在 LLM-RL 场景的 value-function 失配**（§4.1.1）。PPO 的 advantage A_t 依赖 GAE + 学习的 value function V_ψ（§4.1.1 Eq. 1）。但 LLM RL 中 reward model 通常只对**最后一个 token**给一个标量 reward（§4.1.1），逐 token 训练一个准确的 V_ψ 既困难又要求一个与 policy 同量级的 critic 模型——带来显著的显存与算力负担（§4.1.1）。这是 RL 系统谱系中 [[high-dimensional-continuous-control-using-generalized-advantage-estimation]]（GAE）方法在 LLM 上的直接继承与卡点。
 3. **RL 在 SFT 之后是否仍能提升强基线、以及"为什么能"**（§5.2.1, §5.2.2）。DeepSeekMath-Instruct 7B 已在 MATH 达 46.8%、GSM8K 达 82.9%（§3.2 Table 5），此时 RL 还有没有空间？若有效，是因为模型"变强了"还是因为分布"变稳了"？论文用 Pass@K / Maj@K 解耦给出机制回答（§5.2.2, Figure 7）。
 
+**总览图**（Figure 1, p.01）：M3 解读——一张 2023 初至 2024 年 1 月的 MATH Top@1 时间序列散点图，开源模型沿上升虚线排列：LLaMA1-65B（~10）→ WizardMath-70B（~23）→ Qwen-14B（~25）→ Mistral-7B（~28）→ Llemma-34B（~30）→ Qwen-72B（~35），DeepSeekMath-7B 以红色五角星标注在 ~51.7；三条水平虚线为闭源基线 GPT-4 早期版（~42）、GPT-4 API（~52）、Gemini-Ultra（~53）。要点：7B 开源模型在无工具、无投票设置下达到 GPT-4 级别竞赛数学能力，直观支撑"数据精选 + 定向 RL 可弥合与前沿闭源系统的差距"这一全文立论。
+
 ---
 
 ## 2. 关键创新点
 
 ### 创新点 1 — 迭代式 fastText 语料回收 pipeline（DeepSeekMath Corpus, 120B tokens）
 
-**机制**（§2.1, Figure 2）：以 OpenWebMath 为 seed，训练 fastText 分类器（vector dim 256, lr 0.1, n-gram=3, min word count=3, 3 epochs；500K 正例 + 500K CC 负例），对 40B HTML 去重后的 CC 打分召回 → 保留 top-ranking → **domain-based seed 扩容**（base URL 聚合为 domain，召回率 >10% 的 domain 判为 math-related，如 mathoverflow.net，再人工标注 URL path 如 mathoverflow.net/questions）→ 用扩充后的 seed 重训 fastText → 进入下一轮。4 轮迭代后得 35.5M web pages / 120B tokens；第 4 轮新增数据中 98% 已在第 3 轮被收集，遂停止。去污染用 10-gram 精确匹配（<10g 且 ≥3g 也匹配）剔除 GSM8K/MATH/CMATH/AGIEval（§2.1）。
+**机制**（§2.1, Figure 2, p.05）：以 OpenWebMath 为 seed，训练 fastText 分类器（vector dim 256, lr 0.1, n-gram=3, min word count=3, 3 epochs；500K 正例 + 500K CC 负例），对 40B HTML 去重后的 CC 打分召回 → 保留 top-ranking → **domain-based seed 扩容**（base URL 聚合为 domain，召回率 >10% 的 domain 判为 math-related，如 mathoverflow.net，再人工标注 URL path 如 mathoverflow.net/questions）→ 用扩充后的 seed 重训 fastText → 进入下一轮。4 轮迭代后得 35.5M web pages / 120B tokens；第 4 轮新增数据中 98% 已在第 3 轮被收集，遂停止。去污染用 10-gram 精确匹配（<10g 且 ≥3g 也匹配）剔除 GSM8K/MATH/CMATH/AGIEval（§2.1）。Figure 2 的 M3 解读印证了上述四步闭环结构：① 用当前 Math Seed 训 fastText；② 对 Deduplicated CC（40B HTML pages）召回 top-ranked 页面构建 Math Corpus；③ 按 base URL 聚类、>10% 召回率的 domain 判为 math-related；④ 人工标注 domain 内 math-specific URL path 扩容 seed——图中虚线箭头从第 4 步指回第 1 步，明确表示反馈闭环驱动下一轮迭代。M3 要点：domain 驱动的 seed 扩容（第 3–4 步）正是弥补 fastText 正例多样性不足的关键，迭代至 98% 召回饱和即终止。
 
-**效果**（§2.2 Table 1, 1.3B 对照实验）：DeepSeekMath Corpus (120.2B) 在 DeepSeek-LLM 1.3B 上训练 150B tokens 后，GSM8K 23.8% / MATH 13.6% / CMATH 41.5%，全面碾压 Proof-Pile-2 (51.9B, 14.3%/11.2%/19.9%) 与 OpenWebMath (13.6B, 11.5%/8.9%/16.8%)。MathPile (8.9B) 甚至比 no-math-training 还差（GSM8K 2.7% vs 2.9%）。Figure 3 表明 DeepSeekMath Corpus 在 50B token 处即已超过 Proof-Pile-2 的 1 epoch 全量，证明**平均质量更高**而非单纯更大。
+**效果**（§2.2 Table 1, Figure 3, p.07, 1.3B 对照实验）：DeepSeekMath Corpus (120.2B) 在 DeepSeek-LLM 1.3B 上训练 150B tokens 后，GSM8K 23.8% / MATH 13.6% / CMATH 41.5%，全面碾压 Proof-Pile-2 (51.9B, 14.3%/11.2%/19.9%) 与 OpenWebMath (13.6B, 11.5%/8.9%/16.8%)。MathPile (8.9B) 甚至比 no-math-training 还差（GSM8K 2.7% vs 2.9%）。Figure 3 的 M3 解读——2×2 训练曲线图（GSM8K / MATH / CMATH / BBH，横轴为训练 tokens）：DeepSeekMath Corpus（红线）在全部四个基准上斜率最陡且持续上升，GSM8K 攀至 ~24%（其余语料 12–14% 即平台期）、CMATH ~43%（其余 ~18%）、BBH ~34%；MathPile（蓝线）在 GSM8K/CMATH 上随训练反而恶化崩塌至 ~2%/~0%。DeepSeekMath Corpus 在 50B token 处即已超过 Proof-Pile-2 的 1 epoch 全量，证明**平均质量更高**而非单纯更大——小体量/英文中心语料会早停平台甚至退化。
 
 ### 创新点 2 — DeepSeekMath-Base 7B：从 code 模型续训 + 500B tokens 混合配比
 
@@ -33,7 +35,7 @@ DeepSeekMath 攻击三个机制级瓶颈，而非"再做一次数学 SFT"：
 
 ### 创新点 3 — **GRPO（Group Relative Policy Optimization）**：去 value model 的 PPO 变体（本论文最大遗产，RL 系统谱系的算法根）
 
-**机制**（§4.1.1 Eq. 3, Figure 4）：对每个 question q，从 old policy π_θ_old 采样 **G 个 outputs {o_1..o_G}**，用 reward model r_φ 打分得 r={r_1..r_G}。优势不再经 GAE+V_ψ，而是**组内归一化**：
+**机制**（§4.1.1 Eq. 3, Figure 4, p.13）：对每个 question q，从 old policy π_θ_old 采样 **G 个 outputs {o_1..o_G}**，用 reward model r_φ 打分得 r={r_1..r_G}。优势不再经 GAE+V_ψ，而是**组内归一化**。Figure 4 的 M3 解读给出两条 pipeline 的拓扑对比：PPO（上）中 policy 产出 o 后，需冻结的 Reference Model 与 Reward Model（经 KL penalty 合成 reward r）外加一个独立训练的 Value Model 产出 v，r 与 v 同入 GAE 块得优势 A 再更新 policy；GRPO（下）中 policy 对每个 q 采一组 {o_1..o_G}，只用冻结的 Reference+Reward Model（KL 直接进 loss），逐样本 reward {r_1..r_G} 进入 Group Computation 块直接导出 {A_1..A_G}——value model 与 GAE 整体消失。M3 要点：GRPO 用组内相对 reward 统计替换了与 policy 同量级、显存吃紧的学习型 value function，同时利用了 reward model 本质上的相对比较特性。
 
 - Outcome supervision（§4.1.2）：Â_{i,t} = r̃_i = (r_i − mean(r)) / std(r)，对该 output 内所有 token 共享同一标量优势。
 - Process supervision（§4.1.3）：对第 i 个 output 的第 j 步给 reward r^{index(j)}_i，归一化为 r̃^{index(j)}_i；token t 的 advantage = 该步及之后所有步的归一化 reward 之和，Â_{i,t} = Σ_{index(j)≥t} r̃^{index(j)}_i。
@@ -70,11 +72,11 @@ $$
 
 机制：Â_{i,t}（组归一化优势）+ β·(π_ref/π_θ − 1)（KL 项的梯度系数），可正可负且按 reward 量级 differential。
 
-**效果**（§5.2.1 Figure 5）：在 1.3B 上对照——Online RFT > RFT（online sampling 后期优势）；GRPO > Online RFT（**关键：GRPO 对错误响应有负梯度而 Online RFT 仅对正确响应无差别 +1**）；GRPO+PS（process supervision）> GRPO+OS（outcome supervision），证明 step-aware 梯度系数更优。Iterative RL（2 轮，Figure 6）第一轮提升尤其显著。
+**效果**（§5.2.1 Figure 5, p.19）：在 1.3B 上对照——Online RFT > RFT（online sampling 后期优势）；GRPO > Online RFT（**关键：GRPO 对错误响应有负梯度而 Online RFT 仅对正确响应无差别 +1**）；GRPO+PS（process supervision）> GRPO+OS（outcome supervision），证明 step-aware 梯度系数更优。Figure 5 的 M3 解读——双联训练曲线（GSM8K 纵轴 56–66%、MATH 纵轴 27–30%，横轴 0–~8500 steps，四法均从同一 SFT 初始化）：GRPO+PS（蓝）全程居首，GSM8K 达 ~66%、MATH 达 ~30%；GRPO+OS（橙）次之；RFT（紫）与 Online RFT（绿）垫底。M3 要点：online policy 采样 + model-based reward 的组合持续拉开与 offline rejection-sampling 基线的差距。Iterative RL（2 轮，Figure 6, p.20）第一轮提升尤其显著——M3 解读：双联曲线（GSM8K 83–89%、MATH 47–52%，0–5300 steps）按 Iteration-0（紫）/Iteration-1（橙）/Iteration-2（绿）分色，Iteration-0 最早且最低平台化，Iteration-1/2 持续延伸并攀至 GSM8K ~89%、MATH ~52%，证明逐轮 RL 在 SFT 初始化之上持续精化 policy，最大跃升发生在第一轮之后。
 
 ### 创新点 5 — RL 为何有效：robustify 而非 empower（机制级诊断）
 
-**机制 + 效果**（§5.2.2, Figure 7）：对比 Instruct vs RL 的 Maj@K 和 Pass@K。**RL 提升 Maj@K 但不提升 Pass@K**——这意味着 RL 没有扩展模型的"根本能力上界"（TopK 中至少一个正确的概率不变），而是把概率质量从错误响应挪到正确响应上（让 Top1/多数投票更稳）。作者据此指出 RL 在此更像 preference alignment（呼应 [[rrhf-rank-responses-to-align-language-models-with-human-feedback-without-tears]] 与 Song et al. 2023 PRO），而非能力增长。
+**机制 + 效果**（§5.2.2, Figure 7, p.21）：对比 Instruct vs RL 的 Maj@K 和 Pass@K。**RL 提升 Maj@K 但不提升 Pass@K**——这意味着 RL 没有扩展模型的"根本能力上界"（TopK 中至少一个正确的概率不变），而是把概率质量从错误响应挪到正确响应上（让 Top1/多数投票更稳）。Figure 7 的 M3 解读——双联曲线（GSM8K 左 / MATH 右，横轴 K=1,4,8,16,32,64 对数刻度，temperature 0.7，四条曲线 Maj@K-Instruct 紫 / Maj@K-RL 橙 / Pass@K-Instruct 绿 / Pass@K-RL 蓝）：全部单调上升；两条 Pass@K 曲线陡峭攀升并在顶部收敛（GSM8K ~97–99%、MATH ~85–87%），绿蓝几乎重合——RL 与 Instruct 的 Pass@K 无差别；而 Maj@K 曲线在更低处平台化，橙线持续高于紫线——RL 只抬升多数投票精度。M3 要点：RL 锐化 top-K 输出分布而非扩展底层能力。作者据此指出 RL 在此更像 preference alignment（呼应 [[rrhf-rank-responses-to-align-language-models-with-human-feedback-without-tears]] 与 Song et al. 2023 PRO），而非能力增长。
 
 ### 创新点 6 — 两条预训练经验法则（负结果）
 
@@ -152,7 +154,7 @@ r_{t} = r_\phi(q, o_{\le t}) - \beta \log\frac{\pi_{\theta}(o_{t}|q, o_{<t})}{\p
 $$
 
   机制：reward model r_φ 给出的标量 reward 被 per-token 的 log-ratio KL 项按 β 缩放后从 reward 中扣除，污染逐 token 的 advantage。GRPO 删掉 V_ψ → 显存/算力大幅下降；KL 从 reward 移到 loss → advantage 干净。代价：每题须采 G=64 outputs（PPO 只需 1），**采样预算换价值函数预算**。
-- **vs Online RFT**（§5.2.1 Figure 5）：Online RFT 的 GC = I(o)（Eq.10，formulas.json [9]）：
+- **vs Online RFT**（§5.2.1 Figure 5, p.19）：Online RFT 的 GC = I(o)（Eq.10，formulas.json [9]）：
 
 $$
 GC_{RFT}(q, o, t) = \mathbb{I}(o)=\left\{ \begin{aligned} 1 & & {\rm the \ answer \ of \ o \ is \ correct} \\ 0 & & {\rm the \ answer \ of \ o \ is \ incorrect} \\ \end{aligned} \right.
@@ -166,7 +168,7 @@ $$
 $$
 
   本质是简化 RL（无显式 RM）。GRPO 用显式 RM + online group sampling，信号更细。
-- **vs RFT/DPO 数据源**（Table 10）：RFT、DPO 是 offline（从 π_sft 采样），GRPO 是 online（从实时 π_θ 采样）。Figure 5 显示 online 在训练后期显著占优——因 actor 偏离 SFT 后，实时分布提供更 informative 的负样本。
+- **vs RFT/DPO 数据源**（Table 10）：RFT、DPO 是 offline（从 π_sft 采样），GRPO 是 online（从实时 π_θ 采样）。Figure 5 (p.19) 显示 online 在训练后期显著占优——因 actor 偏离 SFT 后，实时分布提供更 informative 的负样本。
 - **vs Minerva 540B**（§2.3 Table 2）：7B 模型 MATH 36.2% > 540B Minerva 33.6%，证明参数量非唯一关键，高质量 web 语料 + code 初始化可弥补 77× 的规模差。
 
 ---
@@ -187,7 +189,7 @@ GRPO 是本仓库 **RL 系统谱系的算法根**，下游分叉清晰：
 
 1. **几何与定理证明弱**（§6）：dry run 显示模型无法处理三角形与椭圆相关问题——预训练/SFT 数据选择偏差，非纯规模问题。
 2. **few-shot 能力差**（§6）：GPT-4 随 few-shot input 提升明显，DeepSeekMath zero-shot ≈ few-shot——受限于 7B 规模。
-3. **RL 不扩展根本能力**（§5.2.2 Figure 7）：Pass@K 不动，意味着 RL 是 alignment 性质而非 capability 性质。作者自陈"naive nucleus sampling"是潜在原因，但未验证——后续 tree-search-based sampling（[[tree-of-thoughts-deliberate-problem-solving-with-large-language-models]]，§5.2.3 引用 Yao et al. 2023）是否突破此上限是开放问题。
+3. **RL 不扩展根本能力**（§5.2.2 Figure 7, p.21）：Pass@K 不动，意味着 RL 是 alignment 性质而非 capability 性质。作者自陈"naive nucleus sampling"是潜在原因，但未验证——后续 tree-search-based sampling（[[tree-of-thoughts-deliberate-problem-solving-with-large-language-models]]，§5.2.3 引用 Yao et al. 2023）是否突破此上限是开放问题。
 4. **arXiv 无用结论有边界**（§5.1.2）：未测 informalization、未测混合配比、未测更大模型；后续工作可能推翻。
 5. **GRPO 的 group sampling 成本**：每题 G=64 outputs 是固定开销；长 horizon agentic 任务（多轮搜索、工具调用）下 rollout 同步开销是后续 AREAL/Beyond-10-Turns/SRAO 等工作要解决的工程瓶颈，本论文未触及。
 6. **Reward model 噪声未处理**（§5.2.3）：作者指出 PRM800K 都有 ~20% 误标注，现行算法"完全信任 reward signal"是脆弱的；weak-to-strong alignment 留作 future work，本论文未实现。

@@ -397,16 +397,43 @@ The figure is a **5×3 comparative grid** (15 panels total) showing rendered out
 
 **Figure 18: Case study 2 screenshot examples: Solar System Modeling.**
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.19 `LSFT(θ) = −`
-- p.20 `∇JREINFORCE(π) = Eτ∼π [R(τ) ∇log π(τ)] ,`
-- p.20 `∇JRL(π) = Eτ∼µSGLang`
-- p.21 `∇JRL(π) = ∑`
-- p.21 `we define a binary loss mask: mk = I`
-- p.23 `Gk = γ∆(j,k) × Rfinal,`
-- p.24 `∇JChunk-RL(π) = ∑`
-- p.26 `LIPA = λIL · ∑`
+$$
+\nabla J_{\text{REINFORCE}}(\pi) = \mathbb{E}_{\tau \sim \pi} \left[ R(\tau)\, \nabla \log \pi(\tau) \right],
+$$
+
+$$
+G_k = \gamma^{\Delta(j,k)} \times R_{\text{final}},
+$$
+
+$$
+\mathcal{L}_{\text{\texttt{\textcolor{orange}{IPA}}}} = \lambda_{\text{IL}} \cdot \underbrace{ \sum_{{c}^{*}_{k}\in{\tau}^{*}_{\leq c^*_{f}}} \pi^{megatron}_\theta({c}^{*}_{k}) G_{c^*_k} \nabla \log \pi^{megatron}_\theta({c}^{*}_{k} \mid {\tau}^{*}_{\leq {c}^{*}_{k-1}}) }_{\text{Imitation learning style update}} + \lambda_{\text{RL}} \cdot \mathcal{L}^{c \in \tau_{\geq {{c}_{f}}}}_{\text{\textcolor{orange}{Chunk-RL}}}.
+$$
+
+$$
+\mathcal{L}_{\mathrm{SFT}}(\theta) = - \frac{1}{\sum_{k=1}^{K} m_k\,|c_{k}| + \epsilon} \sum_{k=1}^{K} m_k\log \pi_\theta\left(c_{k} \mid s_{k}\right),
+$$
+
+$$
+m_k = m_k^{\mathrm{err}} \cdot m_k^{\mathrm{task}}, \quad m_k^{\mathrm{err}} = \mathbf{1}\big[\neg \mathrm{Err}(k)\big], \quad m_k^{\mathrm{task}} = \mathbf{1}\big[\mathrm{Rel}(k)\big],
+$$
+
+$$
+\nabla J_{\text{RL}}(\pi) = \mathbb{E}_{\tau \sim \mu^{\text{SGLang}}_{\theta_{old}}} [\underbrace{\left[ {\rho(\tau)}\right]_{0}^{1}}_{TIS} R(\tau) \nabla \log \pi^{\text{megatron}}_{\theta}(\tau)],\quad\rho(\tau) = \big(\prod_{t \in \tau} \frac{\pi^{\text{megatron}}_\theta(\tau_t \mid \tau_{<t})}{\pi^{\text{megatron}}_{\theta_{\text{old}}}(\tau_t \mid \tau_{<t})}\big)^{\frac{1}{|\tau|}}
+$$
+
+$$
+\nabla J_{\text{RL}}(\pi) &= \underbrace{\sum_{\tau \in \mathcal{T}^+} \mu^{\text{SGLang}}_{\theta_{old}}(\tau) R(\tau)\nabla \log \pi^{\text{megatron}}_{\theta}(\tau)}_{\textrm{Weighted SL update for positive examples}} + \underbrace{\sum_{\tau \in \mathcal{T}^-} \mu^{\text{SGLang}}_{\theta_{old}}(\tau)\left[\rho(\tau) \right]_{0}^{1} R(\tau)\nabla \log \pi^{\text{megatron}}_{\theta}(\tau)}_{\textrm{Clipped IS update for negative examples}} \;,
+$$
+
+$$
+\nabla J_{\text{RL}}(\pi) = &\underbrace{ \sum_{\tau \in \mathcal{T}^+} \mu^{\text{SGLang}}_{\theta_{old}}(\tau) R(\tau) \sum_{k=1}^{|\tau|} m_k \nabla \log \pi^{\text{megatron}}_\theta(\tau_k \mid \tau_{<k}) }_{\text{Weighted SL update with token-level masking}} \nonumber\\&+\underbrace{ \sum_{\tau \in \mathcal{T}^-} \mu^{\text{SGLang}}_{\theta_{old}}(\tau) \left[\rho(\tau)\right]_0^1 R(\tau) \sum_{k=1}^{|\tau|} m_k \nabla \log \pi^{\text{megatron}}_\theta(\tau_k \mid \tau_{<k}) }_{\text{Clipped IS update with token-level masking}} .
+$$
+
+$$
+\rho_c (c) = \bigg(\prod_{t \in c} \frac{\pi^{\text{megatron}}_\theta(\tau_t \mid \tau_{<t})}{\pi^{\text{megatron}}_{\theta_{\text{old}}}(\tau_t \mid \tau_{<t})}\bigg)^{\frac{1}{|c|}}.
+$$
 
 ## 技术点深读（DEEP）
 

@@ -1,7 +1,8 @@
-# Efficient Training on Distributed Infrastructures Survey — 技术点深读（DEEP 2026-08-18）
+# Efficient Training on Distributed Infrastructures Survey — 技术点深读（DEEP 2026-08-18；2026-08-21 织入 15 张 M3 图解读）
 
 > 源文献：Duan et al., "Efficient Training of Large Language Models on Distributed Infrastructures: A Survey", arXiv:2407.20018v1 (29 Jul 2024). Shanghai AI Laboratory, CUHK, Fudan, SJTU, NTU, PKU.
 > 定位：distributed-training taxonomy 锚点 — 覆盖从基础设施到训练系统全栈的综述，是本仓库"训练系统谱系"的总纲。
+> 图注来源：M3 captions（`minimax_captions.json`，15 张，p.02–p.29），按段织入；公式以 `formulas.json` LaTeX 为权威源（该论文仅 1 条，见 §5 支柱）。
 
 ## 核心问题
 
@@ -13,22 +14,47 @@
 
 该 survey 的精确目标是：**给出从 distributed training infrastructure（accelerator/network/storage/scheduling）到 training systems（parallelism/computation/communication/memory/fault tolerance）的端到端技术图谱**（§1, Fig.1），补齐既有 LLM survey 偏算法/资源压缩而忽视 systemic 设计的空白（§2.4 明确对比 Wan [29]/Liu [30]/Xu [31]）。
 
+**综述结构图（Fig. 1, p.02）** 以 2×3 taxonomic grid 把 §3–§8 六章铺成一张总图：§3 Infrastructure（AI Accelerators / Network Infrastructure / Storage）、§4 Parallelism Schemes（Hybrid / Auto / Heterogeneous）、§5 Computation Optimizations（Operator Optimization / Mixed-Precision Training）、§6 Memory Optimizations（Activation Recomputation / Redundancy Reduction / Defragmentation / Offloading）、§7 Communication Optimizations（Collective Communication / Scheduling / In-Network Aggregation）、§8 Fault Tolerance（Failure Analysis / Anomaly Detection / Checkpoint-Based & Checkpoint-Free Recovery）。图的核心信息是：**taxonomy 沿"硬件底座 → 分布式协同 → 微观优化 → 韧性"递进**，即可扩展 LLM 训练需要 compute/memory/network/fault-recovery 四层协同设计——每一层必要但单独不充分。这张图也是本 deep note "关键创新点"六支柱结构的原文依据。
+
+**背景段（§2）图证：Transformer 层结构（Fig. 2, p.03）**——survey 的技术讨论对象。图中一个标准 Transformer 层由两个共享输入 $X$ 的并行子块构成，数据流自下而上：左 **Attention block** 为 $X \to$ Norm $\to$ Linear($W_{qkv}$) 并行投影出 $Q,K,V$ $\to$ MHA/GQA $\to$ Linear($W_o$) $\to$ 残差加（$\oplus$）；右 **FFN block** 为 $X \to$ Norm $\to$ 两路并行 Linear $W_1$ 与 $W_3$ $\to$ $W_1$ 输出经 SiLU 后与 $W_3$ 输出逐元素乘（$\odot$）$\to$ Linear($W_2$) $\to$ 残差加。两图要点：(1) FFN 采用 **SwiGLU 式门控激活**（两路线性投影经 SiLU 门控相乘），即 LLaMA 家族对原始 ReLU 两层 FFN 的现代替换，同等计算量下参数效率更优；(2) 两块均用 pre-norm + residual。该层结构是全文所有优化维度的作用对象：Attention block 的 $Q,K,V$ 投影与 MHA 是 §5.1.1 FlashAttention 融合与 §4.1.2 张量并行列-行切分的靶点，FFN 的双线性结构是 §4.1.5 Expert Parallelism（把 FFN 替换为 MoE）的插入位置，而 Norm/残差处的激活正是 §6.1 activation recomputation 选择 checkpoint 的候选点。
+
 ## 关键创新点
 
 该 survey 的 taxonomy 支柱按 §3–§8 六章组织，每一支柱既是分类轴也是技术演进脉络：
 
 1. **Infrastructure 支柱（§3）—— 硬件-网络-存储-调度四元组**
+
+   **基础设施总览（Fig. 3, p.04）** 给出分布式 LLM 训练部署的分层架构：核心是若干 **Compute Nodes**，由 **Backend Network**（高带宽训练流量）互联；下方 **Frontend Network**（管理与存储流量）把计算集群接到 **Training Dataset Storage** 与 **Checkpoint Storage**；右侧两个正交控制子系统——顶部 **Scheduling System**、以及含 **Anomaly Detection** 与 **Failure Recover** 模块的 **Fault Tolerance** 栈。架构刻意把计算流量（backend）与 I/O/管理流量（frontend）**解耦**，并为数据平面配上独立的可靠性与调度平面——支撑数千 GPU 的独立扩展、低争用与快速故障隔离。这张图正是 §3 四元组 + §8 容错在物理部署上的投影。
+
+   **基础设施 taxonomy（Fig. 4, p.05）** 把 §3 全章铺成四分支层级树：AI Accelerators（NVIDIA Ampere/Hopper/Blackwell × AMD GPU/GAUDI/TPU/Graphcore IPU/Cerebras CS-2）、Network Infrastructure（Chip-to-Chip：Cube-Mesh/FC/Torus；Node-to-Node：GPUDirect-RDMA/InfiniBand/RoCE/iWARP；Network Topology：HPC/Training-Optimized/Reconfigurable；Load Balancing & CC：ECMP/packet spraying/PFC/DCQCN/HPCC 等）、Storage Systems（Checkpoint：Tectonic/HDFS/Ceph；Training Data：Lustre/GPFS/BeeGFS/Alluxio/JuiceFS 等）、Scheduling Systems（Workload：Tiresias/Pollux/Sia…；Resource：Cassini/HIRE/Zeus/Perseus…）。图的要点：**通信开销在 LLM 训练中占主导（某些场景 >90% 时间），故 taxonomy 明显向网络栈倾斜**——从物理互联、拓扑设计到拥塞控制全覆盖，反映出带宽与延迟（而非裸算力）才是首要可扩展性瓶颈。
+
    - **AI Accelerators（§3.1）**：NVIDIA GPU（Ampere/Hopper/Blackwell，含 Transformer Engine 混合 FP8/FP16）、AMD MI250X（Frontier 64GB HBM, 191.5 TFLOPS FP16）、Habana GAUDI、Google TPUv4（4096 chips, ~60% peak FLOPS）、Graphcore Bow Pod64（22 petaFLOPS）、Cerebras CS-2（wafer-scale, 850K cores）。
    - **Network Infrastructure（§3.2）**：Chip-to-Chip（PCIe→NVLink cube-mesh→NVSwitch fully-connected 300/600/900 GB/s→TPU 2D/3D-Torus ICI）× Node-to-Node（GPUDirect-RDMA, InfiniBand EDR/HDR/NDR 100/200/400 Gbps, RoCE-v1/v2）× Network Topology（HPC Clos/Dragonfly+；训练优化 rail-optimized/rail-only/HPN/BiGraph/HammingMesh；可重构 SiP-ML/TopoOpt/TPUv4 OCS）× Load Balancing & Congestion Control（ECMP→packet spraying→Ethereal→HPN；PFC/TIMELY/DCQCN/HPCC/EQDS；MLTCP/CASSINI/MLT 基于 LLM 周期性 elephant-flow 特性）。
+
+     **Chip-to-chip 五种拓扑（Fig. 5, p.06）**：(a) **Tree**——PCIe Switch + Root Complex 构成多级层次；(b) **Cube-Mesh**——规则网格（4 GPU 为平面 mesh，8 GPU 为 cube-mesh），即 NVLink-1.0 形态；(c) **Switch-based Fully-Connected**——GPU 经 NVSwitch 芯片全互联取得 all-to-all 带宽（如 DGX-2 六颗 NVSwitch）；(d) **P2P-based Fully-Connected**——每对芯片直连（Intel/AMD/华为 Ascend 采用）；(e) **2D-Torus**——带 wraparound 边的网格，提供多条最短路径（Google TPUv2/v3）。要点：带宽/延迟/可扩展性的 trade-off 决定选型——torus 提供冗余路径，fully-connected 带宽最大但布线成本随规模陡增，mesh/tree 以成本换性能。
+
+     **GPU 集群四种网络拓扑（Fig. 6, p.07）**：统一由 Core（绿）→ Spine（红）→ Leaf（蓝）→ GPU 端点（紫）三层交换机组网并按 Pod 分组。(a) **Clos** 全 fat-tree：每 leaf 连每 spine、每 spine 连每 core，any-to-any 带宽但交换机成本高；(b) **Dragonfly+** 去掉 core 层、加 Pod 间直连弧；(c) **Rail-Optimized** 保留 Clos 全层级，但把跨机架同序号 GPU 对齐到共享 leaf 交换机上，缩短 collective 流量路径；(d) **Rail-Only** 干脆去掉 core：rail 内流量本地化，rail 间流量卸载到独立的旁路 Clos。要点：**LLM 训练网络拓扑正与并行策略协同设计**——rail-optimized 利用 collective 通信模式的可预测性，rail-only 以灵活性换成本，标志向 workload-aware 精简交换织物的转向。
    - **Storage（§3.3）**：Checkpoint 存储（Tectonic/HDFS/Ceph，70B 模型 ckpt 达 980GB）× 训练数据存储（Lustre/GPFS/BeeGFS 并行文件系统；Alluxio/JuiceFS/Quiver/Fluid 缓存层；LLaMA3 15T tokens≈30TB，原始数据 100× 放大达 PB 级）。
    - **Scheduling（§3.4）**：Workload scheduling（异构感知 Gavel/Gandivafair、job-packing FGD/Lucid、adaptive-scaling Pollux/Sia；LLM 专用 Crius/Hydro/Acme）× Resource scheduling（Cassini 网络、HIRE in-network、SiloD 存储、Synergy CPU、EnvPipe/Zeus/Perseus 能效）。
 
 2. **Parallelism Schemes 支柱（§4）—— Hybrid / Auto / Heterogeneous 三分法**
+
+   **并行策略 taxonomy（Fig. 7, p.10）** 把 §4 铺成三分支层级树：Hybrid Parallelism（Data/Tensor/Pipeline——细分为 Pipeline Bubble 与 Memory Imbalance 缓解/Sequence/Expert Parallelism——细分为 Sparse Activation、Communication Optimization、Load Balancing）、Auto Parallelism（General Frameworks × Transformer-Specific）、Heterogeneous Parallelism（硬件异构 × 模型异构如 RLHF），每个叶节点按引文编号列举代表系统。要点：**高效 LLM 训练早已不是单一维度（如纯数据并行）能解决**——现代系统必须组合多种策略（常靠自动化）来隐藏 pipeline 气泡、平衡 MoE 负载、利用硬件/模型异构性。
+
    - **Hybrid Parallelism（§4.1）** 5 子维：Data Parallelism（F=1 full replication PyTorch-DDP/Horovod；F=W full sharding ZeRO-3/FSDP；1<F<W hybrid sharding MiCS）→ Tensor Parallelism（1-D Megatron-LM 列-行切分；2-D Optimus；2.5-D Tesseract；3-D）→ Pipeline Parallelism（GPipe fill-drain；1F1B PipeDream；Interleaved 1F1B；Zero Bubble 拆 B/W 梯度；Chimera 双向；TeraPipe token 级；memory 平衡 BPipe/MPress/Chimera/Hanayo/V-Shape/AdaPipe）→ Sequence Parallelism（ring-based Ring Self-Attention/DistFlashAttn/Context Parallel/Striped Attention/BurstAttention/Blockwise Ring/WallFacer；head-dim DeepSpeed-Ulysses；hybrid USP/LoongTrain Double-Ring）→ Expert Parallelism（sparse activation GShard/Switch/Tutel/DeepSpeed-MoE/Megablocks/ScatterMoE；comm 优化 PipeMoE/ScheMoE/Lina/Janus/TA-MoE；load balance FasterMoE/SmartMoE/FlexMoE/Prophet）。
+
+     **3D 并行实例（Fig. 8, p.12）** 展示混合并行的层级嵌套（外→内）：最外 **Data Parallelism**——两个 DP rank 复制全模型、跨节点 AllReduce 同步梯度；其内 **Sequence Parallelism** 沿序列维度协调激活；再内 **Tensor Parallelism** 四路切分（TP-0…TP-3）在节点内分片权重矩阵/激活；最内 **Pipeline Parallelism** 四个串行 stage 分到连续层区间（Stage 0: Layer 0–3 … Stage 3: Layer 12–15），stage 间 Send/Recv 传激活。要点：**3D 并行层级嵌套三种正交策略，把每种匹配到合适带宽的互联**——TP 用节点内 NVLink 快带宽做权重/激活分片；PP 只在层边界换激活、用便宜的跨节点带宽；DP 包在最外复制模型、AllReduce 平均梯度。三个轴各解决不同瓶颈（TP/PP 解显存、DP 解吞吐），单一方案无法独立完成万亿参数训练。
+
+     **Expert Parallelism（Fig. 9, p.14）**：$N$ 台设备上的数据流（每台自下而上）：Input Token Vector → Embedding → Add&Norm → Attention → Add&Norm → **Gating** →（跨设备）→ **Expert-i** →（跨设备）→ Add&Norm → Output Token Vector。Gating 与 Experts 之间夹两个 **All-to-All Dispatch**（橙色椭圆），把 token 路由到远端设备上被指派的 expert、并把结果送回；虚线椭圆圈出 MoE 特有块（Gating + All-to-All + Experts），与标准 Transformer 块区分。要点：**每台设备恰好驻留一个 expert，设备间协作完全经由 gating 层两侧的 All-to-All 通信**而非复制 expert——这正是 §4.1.5 中 comm 优化（Lina/Janus 等）与 load balance 子类的共同作用点。
    - **Auto Parallelism（§4.2）**：General（Mesh-TensorFlow/GSPMD/OneFlow SBP/Alpa/Unity/Aceso/PartIR/nnScaler/AutoDDL；search-based FlexFlow SOAP+MCMC、AutoMap MCTS）+ Transformer-Specific（DeepSpeed-Autotuning/Galvatron/Merak/Colossal-AI/Galvatron-BMW）。
    - **Heterogeneous Parallelism（§4.3）**：异构硬件（HetPipe/Whale/AMP/Pathways/SDPIPE/HAP/PipePar + geo-distributed Yuan/SWARM/FusionAI）× 异构模型（RLHF 四模型 PPO：DeepSpeed-Chat/HuggingFace TRL/OpenRLHF/APP/ReaLHF/PUZZLE）。
 
+     **RLHF 架构与数据流（Fig. 10, p.17）**：Query Dataset 喂给**可训练 Actor Model**（红）生成 response；response 与原 query 一起路由到三个**冻结模型**（蓝）——Critic Model 产 value、Reward Model 产 score、Reference Model 产 KL 估计；训练阶段，推理期收集的 value/score/KL 信号驱动梯度下降，回灌更新 Actor 与 Critic 权重。要点：**RLHF 把推理（冻结模型产训练信号）与训练（actor/critic 梯度更新）解耦**，模型异构性——reference/reward/critic 冻结而仅 actor/critic 更新——是其额外显存与时间开销的核心来源。此即 §4.3.2 模型异构并行的系统化动因。
+
 3. **Computation Optimizations 支柱（§5）**
+
+   **计算优化 taxonomy（Fig. 11, p.19）** 把 §5 铺成两分支：Operator Optimizations → Manual（FlashAttention 家族、BPT、SWattention、ByteTransformer）× Automatic（Kernel-level：Halide/TVM/Roller/Triton/ALCOP；Graph-level 编译器：Chimera/Welder/Slapo/TorchDynamo+TorchInductor/JIT-Q）；Mixed-precision Training → 16-Bit Floating Point（FP16/BF16、Campo、THC）× Sub-8-Bit Floating Point（Wang et al./Sun et al./FP8-LM/Rouhani et al.）× Low-Bit Fixed Point（INT8 Jetfire；INT4 Xi et al.；1-Bit BitNet/BitNet b1.58）。要点：优化策略横跨一条**粒度谱**——从细粒度 kernel tiling 的访存/计算效率到粗粒度图融合，并伴以激进降精度直至二值表示。
+
    - **Operator Optimizations（§5.1）**：Manual（FlashAttention 系列 IO-aware tiling + online softmax；FlashAttention-3 H100 WGMMA/TMA warp-specialized pipeline；BPT 扩展 tiling 到 FFN；SWattention Sunway；ByteTransformer padding-free variable-length）+ Automatic（kernel-level Halide/TVM/Roller/Triton/ALCOP；graph-level Chimera/Welder/Slapo/TorchDynamo+TorchInductor/JIT-Q）。
 
      该支柱的算法基元即标准 scaled dot-product attention（§5.1.1，fulltext L205-211 原文公式；LaTeX 权威源 `extraction/formulas.json` 该 slug 条目[0]，双源校验一致）：
@@ -41,17 +67,28 @@
    - **Mixed-Precision Training（§5.2）**：16-Bit（FP16/BF16 + loss scaling；Campo casting 优化；THC 同态压缩）→ Sub-8-Bit（FP8 Wang/Sun hybrid/FP8-LM/Rouhani microscaled）→ Low-Bit Fixed Point（INT8 Jetfire；INT4 Xi et al. Hadamard；1-Bit BitNet/b1.58 ternary {-1,0,1}）。
 
 4. **Memory Optimizations 支柱（§6）** —— 四类 memory 占用（Model States 16Φ / Activations / Temp Buffers / Fragmentation，Φ 为模型参数量；该 16Φ=4Φ 参数+4Φ 梯度+12Φ Adam 一/二阶矩 的 memory 推导见 fulltext L2250-2255，**未收录 formulas.json，按 .txt 引用不渲染 $$**）对应四类技术
+
+   **内存优化 taxonomy（Fig. 12, p.21）** 把 §6 铺成四分支层级树：Activation Recomputation → Dynamic Evicting（DTR/MegTaiChi/Coop）× Static Evicting（Checkmate/LoongTrain/Yuan et al./Selective Checkpointing/DistFlashAttn）；Redundancy Reduction → Fully Sharding（ZeRO/FSDP）× Partially Sharding（ZeRO++/MiCS/PaRO/RTP/AMSP）；Defragmentation → Tensor-based（ROAM/ZeRO-R/Imanishi et al./MegTaiChi/Coop）× VMM-based（GMLake/Expandable Segments）；Offloading → CPU（Static：L2L/ZeRO-Offload/Elixir/Yuan et al.；Dynamic：TSPLIT/PatrickStar/Mobius/Harmony/TMOF/STRONGHOLD）× SSD（ZeRO-Infinity/Angel-PTM/Smart-Infinity/Fuyou/MoESys）。要点：**没有单一技术独大**——每类解决不同瓶颈（算换存 / 参数冗余 / 碎片分配 / 容量扩展），实用系统通常跨分支组合多种策略以塞进 GPU 显存预算。
+
    - **Activation Recomputation（§6.1）**：Static evicting（Checkmate MILP；Selective-checkpointing Megatron-SP；DistFlashAttn 在 FlashAttention 输出设 ckpt；LoongTrain selective-checkpoint++；Yuan et al. Pareto frontier）+ Dynamic evicting（DTR/MegTaiChi/Coop contiguous eviction）。
    - **Redundancy Reduction（§6.2）**：Fully sharding（ZeRO-1/2/3 把 16Φ 降到 16Φ/N，N 为数据并行度；推导见 fulltext L2399-2411，**未收录 formulas.json，按 .txt 引用不渲染 $$**）+ Partially sharding（ZeRO++ 二级 shard+量化；MiCS；AMSP/PaRO 三策略 Full-Replica/Full-Sharding/Partial-Sharding；RTP rotated tensor）。
    - **Defragmentation（§6.3）**：Tensor-based（ROAM 树搜索；Imanishi 2D bin-packing + simulated annealing；MegTaiChi/Coop）+ VMM-based（GMLake virtual memory stitching；PyTorch expandable segments v2.1 集成）。
    - **Offloading（§6.4）**：CPU 静态（L2L/ZeRO-Offload 70B@16×V100/Elixir/Yuan 激活粒度）+ CPU 动态（TSPLIT micro-tensor/PatrickStar chunk/Mobius/Harmony/TMOF/STRONGHOLD/MPipeMoE）+ SSD（ZeRO-Infinity 32T@512×V100/Smart-Infinity near-storage/Fuyou activation-to-SSD/MoESys 2D prefetch）。
 
 5. **Communication Optimizations 支柱（§7）**
+
+   **通信流量热图（Fig. 13, p.25）** 是全书最具实证分量的图：128×128 GPU 对热图，可视化 InternLM-2 102B 预训练在 128 GPU 上单 iteration 的通信流量，混合并行配置 TP=8 / PP=4 / DP=4 / ZeRO-1=4，色标 256 MB（黄）→ 12 GB（深紫）。按拓扑排布优先级 TP > DP/ZeRO-1 > PP，可分解出四类流量图样：① **TP 的 AllReduce**——16 个对角致密 8×8 方块，对应 NVSwitch 全互联的节点内拓扑；②③ **DP/ZeRO-1 的 ReduceScatter/AllGather**——四个 32×32 矩形子网格内六条对称对角条纹（且 DP/ZeRO-1 节点内流量与 TP 累进同格）；④ **PP 的 Send/Recv**——((32,0),(128,96)) 与 ((0,32),(96,128)) 处两条细黄线。要点：**TP 流量（节点内 NVSwitch）单对流量最大，故把 TP 组共置同节点的混合并行布局主导带宽压力；PP 流量可忽略，是最便宜的可跨节点扩展维度**——这为 §3.2.3 rail-optimized 拓扑与 §4 混合并行的协同设计提供了量化依据。
+
+   **通信优化 taxonomy（Fig. 14, p.26）** 把 §7 铺成三分支：Collective Communication → Pre-Defined Algorithms（库：MPI/NCCL/RCCL；模式：Ring/Tree/Hybrid）× Synthesized Algorithms（GC3/SCCL/TACCL/Blink/P²）；Communication Scheduling → FIFO-based（Poseidon/GradientFlow/PyTorch DDP）× Priority-based（P3/TicTac/ByteScheduler/PACE/Lina）× Decomposition-based（Pipeline/Communication/Computation decomposition + out-of-order backprop）；In-Network Aggregation → Ethernet-based（SwitchML/FPISA/NetReduce/AllReduce-Switch/PANAMA/ATP）× InfiniBand-based（NVIDIA Mellanox SHARP v1/v2/v3）。要点：三层互补——**定制 collective 算法（降延迟）、智能调度重叠算/通（FIFO/优先级/分解的依赖感知重排）、交换机内硬件加速聚合（把 AllReduce 卸载进网络）**——共同对付分布式 LLM 训练的主导通信瓶颈。
+
    - **Collective Communication（§7.1）**：Pre-Defined（MPI/NCCL/RCCL；Ring/Double Binary Tree/Hybrid Two-level AllReduce/BlueConnect/Plink）+ Synthesized（GC3 DSL；SCCL SMT；TACCL MILP；Blink topology probing；P² parallel matrix simulation）。
    - **Communication Scheduling（§7.2）**：FIFO（Poseidon/GradientFlow/PyTorch-DDP bucket fusion）+ Priority（P3 slice；TicTac critical path；ByteScheduler Bayesian tuning；PACE preemptive；Lina MoE All-to-All 优先）+ Decomposition（pipeline stage Breadth-First/Fold3D/TriRace；comm primitive Wang/SYNDICATE MCMC/Centauri/DeAR；computation CoCoNet/T3/Oases；ooo-backprop；Lynx recomputation overlap）。
    - **In-Network Aggregation（§7.3）**：Ethernet-based（SwitchML DPDK/FPISA P4 FP16/NetReduce RoCE+FPGA/AllReduce-Switch/PANAMA/ATP multi-tenant）+ InfiniBand-based（NVIDIA SHARP v1/v2/v3 on EDR/HDR/NDR + NVSwitch-v3）。
 
 6. **Fault Tolerance 支柱（§8）** —— 检测 + 恢复双层
+
+   **容错 taxonomy（Fig. 15, p.29）** 把 §8 铺成三分支层级树：Anomaly Detection → Statistical Monitoring（Healthd/MegaScale/C4/Vela/Unicorn/Transom/NCCLX/NCCL flight recorder）× Proactive Validation（MegaScale lightweight tests/SuperBench/Vela/TPUv4 Preflight Check）；Checkpointing-Based Recovery → Persistent Checkpointing（**Synchronous**：DeepSpeed/Varuna/JIT-Checkpointing/Flash-Checkpoint/Universal Checkpointing；**Snapshot-Stall**：Check-N-Run/TorchSnapshot；**Asynchronous**：DeepFreeze/CheckFreq/LightCheck/DataStates-LLM/FastPersist）× In-Memory Checkpointing（Gemini/REFT）；Checkpointing-Free Recovery → Live Migration（Parcae/Oobleck）× Module Redundancy（Bamboo/SlipStream/SWARM）。要点：清晰的**设计谱系**——检测先行（统计监控 + 主动校验）尽早抓故障；恢复策略在**持久性 vs 开销**间取捨（persistent ckpt 以存储/IO 成本换故障存活，in-memory 以持久性换速度，checkpoint-free 彻底消除 IO 瓶颈但要冗余资源）；且 persistent checkpointing 已分化为同步（强一致、高停顿）与异步（低停顿、弱保证）两派，反映领域向"checkpoint IO 与计算重叠"的转向；无单一技术独大，现代系统（MegaScale/Vela）多支柱组合。
+
    - **Failure Analysis（§8.1）**：硬件故障为主（Acme 硬件最严重；C4 82.5% 故障局限单节点；LLaMA3 78% 硬件问题；A100/H100 高故障率）；OPT 175B 实际 57 天 vs 理想 25 天，**56% 时间浪费于故障处理**（§8.1 标志性数字）。
    - **Anomaly Detection（§8.2）**：Statistical monitoring（DCGM SM/NVLink 指标 + heartbeat；MegaScale RDMA metric；C4 transport-layer；NCCLX PyTorch 共设计；Vela Multi-NIC health；TPUv4 healthd；Transom ML 异常检测）+ Proactive validation（MegaScale lightweight test；Vela two-tier；TPUv4 preflight；SuperBench）。
    - **Checkpoint-Based Recovery（§8.3）**：Persistent（Synchronous DeepSpeed/Varuna；JIT-Checkpointing 失败后即时 ckpt 最多损失 1 mini-batch；Flash-Checkpoint distributed cache；Universal Checkpointing 跨并行策略）+ Snapshot-Stall（Check-N-Run；TorchSnapshot chunking；MegaScale/InternEvo 单 worker 读+broadcast）+ Asynchronous（DeepFreeze/CheckFreq/LightCheck/DataStates-LLM/FastPersist double-buffer）+ In-Memory（Gemini CPU ckpt placement；REFT Redis+RAIM5 erasure coding）。
@@ -59,7 +96,7 @@
 
 ## 表格（原文结构化）
 
-### 表 1：基础设施支柱 → 仓库相关论文 / 系统映射（基于 §3, Fig.4）
+### 表 1：基础设施支柱 → 仓库相关论文 / 系统映射（基于 §3, Fig. 3 p.04 / Fig. 4 p.05 / Fig. 5 p.06 / Fig. 6 p.07）
 
 | 子领域 | 代表系统（原文引用） | 与仓库论文关联 |
 |---|---|---|
@@ -71,7 +108,7 @@
 | Workload Scheduling | Crius；Hydro；Acme；Pollux；Sia | — |
 | Resource Scheduling | Cassini；SiloD；Synergy；EnvPipe；Zeus；Perseus | — |
 
-### 表 2：并行策略支柱 → 仓库论文映射（基于 §4, Fig.7/Fig.8/Fig.9）
+### 表 2：并行策略支柱 → 仓库论文映射（基于 §4, Fig. 7 p.10 / Fig. 8 p.12 / Fig. 9 p.14 / Fig. 10 p.17）
 
 | 并行维度 | 代表方法（原文） | 与仓库论文关联 |
 |---|---|---|

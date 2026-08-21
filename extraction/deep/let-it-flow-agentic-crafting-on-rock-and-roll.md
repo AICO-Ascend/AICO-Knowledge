@@ -1,13 +1,26 @@
 # Let it Flow: Agentic Crafting on Rock and Roll — 技术点深读（DEEP 2026-08-18）
 
 > 原文：*Let It Flow: Agentic Crafting on Rock and Roll — Building the ROME Model within an Open Agentic Learning Ecosystem* (arXiv:2512.24873v3, 12 Mar 2026)。ROCK & ROLL & iFlow & DT Joint Team。本笔记为机制级深读，所有引用均以 §小节号 + 原文数字为准，图表解读织进对应技术节并标注 Figure N（p.X）+ M3 caption 要点。本文件为独立 deep note（不依赖 extract_phase1 再生）。
+> 公式权威源：extraction/formulas.json LaTeX（9 条，Eq. 1–8 + Eq. 10 按原文 Eq. 号逐字渲染 `$$`，2026-08-21 eprint 回填）。LaTeX↔M3 双源校验：公式变量名（π^megatron_θ / µ^SGLang_θold / ρ_c / G_k / m_k / λ_IL / λ_RL）与 .txt 原文 Eq.1–Eq.10 逐字一致，与 M3 图内符号无冲突。
 
 ## 核心问题
 
 论文攻击的不是一个单点算法问题，而是**开源社区缺乏端到端 agentic 训练生态**这一系统性空白（§1, §2.1）。作者把"agentic crafting"失败的根因拆成三条相互纠缠的链路，而 Figure 1（p.1）的 ALE 总览图恰好把这三条断链的修复路径可视化——M3 解读显示数据沿 Instruction→iFlow→trajectories（ROCK 内生成）→ROLL→ROME weight update→feedback 回注 iFlow 的闭环流动，Task→Action→Execution→Feedback→Learning 的线性工作流是其底座。同时 M3 还从该图读出一条关键经验曲线：ROME 训练过程中准确率从 41.80% 攀升到 89.83%（+47.07 绝对 / +113.16% 相对），最终落到 SWE-bench Verified 57.40%、Terminal-Bench 2.0 24.72%。三条断链如下：
 
 1. **训练—部署—数据三处上下文不一致**（§2.3 *Agent Native Mode*）。RL 训练框架（ROLL）与部署 agent 框架（iFlow CLI）对 multi-turn context management 处理逻辑不一致，会让训练得到的策略在生产环境性能退化（cite Rush, 2025）。naive 解法是让 ROLL 完全镜像 iFlow CLI 的 prompt 拼接逻辑，但每次 agent 逻辑更新都要在 ROLL 中重实现，维护成本不可持续。Figure 2（p.4）的 (a) 子图 M3 解读直接刻画了该问题的解法形态：左 ROLL 块的 Actor-Train 权重 sync 到 Actor-Infer，Env. Manager 经 Rock SDK 把 LLM Request 派发到多个 Env. Worker；右 ROCK Sandbox 块内放 iFlow CLI 与 ModelProxy Service，二者经 Request/Response Queue 以 RPC 通信——即把环境执行（ROCK）从训练/推理（ROLL）解耦，靠排队 ModelProxy RPC 互联。
-2. **长程 agentic RL 上的 REINFORCE 失稳**（§3.2.4 引言、§3.2.4.1）。工业级异步 off-policy 训练中，老策略 π^Megatron_θold 相对当前 π^Megatron_θ 持续过时；推理引擎（SGLang）与训练引擎（Megatron-LM）执行后端、量化、batching 不同，造成 µ^SGLang_θold ≠ π^Megatron_θold 即使权重相同（"infer-train mismatch"）。token-level importance sampling 在长轨迹上产生高方差梯度与不稳定更新；同时 agentic rollout 常达数百秒（Lu et al., 2025），rollout 占端到端开销约 70%（He et al., 2025; Gao et al., 2025b），环境交互占 >15%（§2.2, Figure 3b 的 M3 解读亦指 rollout 长尾 latency 分布是 GPU bubble 主因）。
+2. **长程 agentic RL 上的 REINFORCE 失稳**（§3.2.4 引言、§3.2.4.1）。工业级异步 off-policy 训练中，老策略 π^Megatron_θold 相对当前 π^Megatron_θ 持续过时；推理引擎（SGLang）与训练引擎（Megatron-LM）执行后端、量化、batching 不同，造成 µ^SGLang_θold ≠ π^Megatron_θold 即使权重相同（"infer-train mismatch"）。baseline 的出发点是 REINFORCE 梯度（Eq. 3, §3.2.4.1）：
+
+$$
+\nabla J_{\text{REINFORCE}}(\pi) = \mathbb{E}_{\tau \sim \pi} \left[ R(\tau)\, \nabla \log \pi(\tau) \right],
+$$
+
+机制：sequence-level reward 乘全轨迹 log-derivative，把整条轨迹当 bandit 臂、无需 value function 近似或 IS clipping，是 minimally biased 起点。适配工业异步 off-policy 后，期望改到 SGLang 采样分布 µ^SGLang_θold 上并引入几何均值 TIS 修正（Eq. 4, §3.2.4.1）：
+
+$$
+\nabla J_{\text{RL}}(\pi) = \mathbb{E}_{\tau \sim \mu^{\text{SGLang}}_{\theta_{old}}} [\underbrace{\left[ {\rho(\tau)}\right]_{0}^{1}}_{TIS} R(\tau) \nabla \log \pi^{\text{megatron}}_{\theta}(\tau)],\quad\rho(\tau) = \big(\prod_{t \in \tau} \frac{\pi^{\text{megatron}}_\theta(\tau_t \mid \tau_{<t})}{\pi^{\text{megatron}}_{\theta_{\text{old}}}(\tau_t \mid \tau_{<t})}\big)^{\frac{1}{|\tau|}}
+$$
+
+机制：[ρ(τ)]₀¹ 为截尾 importance sampling（TIS，clip 到 [0,1]，Munos et al., 2016），ρ(τ) 用几何均值（开 \|τ\| 次方）替代连乘以抑制低概率 token 离群值（Zheng et al., 2025b; Zhao et al., 2025）；但 token-level importance sampling 在长轨迹上仍产生高方差梯度与不稳定更新；同时 agentic rollout 常达数百秒（Lu et al., 2025），rollout 占端到端开销约 70%（He et al., 2025; Gao et al., 2025b），环境交互占 >15%（§2.2, Figure 3b 的 M3 解读亦指 rollout 长尾 latency 分布是 GPU bubble 主因）。
 3. **长程任务上正样本极度稀疏**（§3.2.4.4）。长程任务成功率受少数 "crucial forks" 支配，从初始状态朴素采样几乎拿不到正样本，policy gradient 信号为零 → 学习停滞甚至不可逆 policy collapse。Figure 11（p.24）M3 解读把这一困境画出来：左图 *Sampling From Beginning* 下所有 continuation 都标 ✗（Uninformative Rollouts），右图 *Chunk-Level Initialized Resampling* 在 crucial fork 后重新锚定、suffix 重采样并标 ✓（Valuable Rollouts）。
 
 为闭合这三条断链，论文构建了 ALE（Agentic Learning Ecosystem）：ROLL（RL 框架）+ ROCK（沙盒执行引擎）+ iFlow CLI（agent 框架），并以 **IPA（Interaction-Perceptive Agentic Policy Optimization）** 算法 + **ROME**（基于 Qwen3-MoE 的 30B-A3B agentic 模型）作为 capstone（§1, §3）。最终 ROME 在 SWE-bench Verified 取 57.40%、Terminal-Bench 2.0 取 24.72%（§3.3.3, Table 1），训练于 >1M trajectories。
@@ -42,17 +55,57 @@
    - 效果：消除 false positive / false negative / ambiguous 的执行轨迹，避免 agent 学会"利用 evaluator 弱点"而非真正解题（optimization drift）。
 
 6. **Error-Masked + Task-Aware Context Masking SFT 目标**
-   - 机制（§3.2.2，对应 Figure 7 p.16 Stage 2 的 masking 图示）：标准 SFT 对所有 token 等权传播梯度，会强化失败行为。提出 **error-masked training**：对触发 tool-call/execution 错误的 turn，根据 runtime log zero-out 该 turn 的 token-level loss。再提出 **task-aware context masking**：基于 pattern heuristics（tool-call trigger、loop-entry marker）识别任务相关 decision boundary，只保留与当前 subtask 直接相关的 context turn 的梯度，mask 掉冗余/高相似/被裁剪的历史 turn。完整目标（Eq. 1, 2）：
-     - L_SFT(θ) = −1/(Σ m_k |c_k| + ε) · Σ m_k log π_θ(c_k | s_k)
-     - m_k = m^err_k · m^task_k，m^err_k = 1[¬Err(k)]，m^task_k = 1[Rel(k)]；只有既无错又相关的 turn 贡献梯度。
+   - 机制（§3.2.2，对应 Figure 7 p.16 Stage 2 的 masking 图示）：标准 SFT 对所有 token 等权传播梯度，会强化失败行为。提出 **error-masked training**：对触发 tool-call/execution 错误的 turn，根据 runtime log zero-out 该 turn 的 token-level loss。再提出 **task-aware context masking**：基于 pattern heuristics（tool-call trigger、loop-entry marker）识别任务相关 decision boundary，只保留与当前 subtask 直接相关的 context turn 的梯度，mask 掉冗余/高相似/被裁剪的历史 turn。完整目标为动态 masked 最大似然（Eq. 1, §3.2.2）：
+
+$$
+\mathcal{L}_{\mathrm{SFT}}(\theta) = - \frac{1}{\sum_{k=1}^{K} m_k\,|c_{k}| + \epsilon} \sum_{k=1}^{K} m_k\log \pi_\theta\left(c_{k} \mid s_{k}\right),
+$$
+
+机制：s_k 为 turn k 前的 dialogue state（含交互历史与 tool 输出），c_k 为该 turn 响应，\|c_k\| 为 token 长度，ε 保数值稳定；interaction-level mask m_k ∈ {0,1} 选择性开启梯度流，且 m_k 因子化为执行正确性 × 任务相关性两个正交分量（Eq. 2, §3.2.2）：
+
+$$
+m_k = m_k^{\mathrm{err}} \cdot m_k^{\mathrm{task}}, \quad m_k^{\mathrm{err}} = \mathbf{1}\big[\neg \mathrm{Err}(k)\big], \quad m_k^{\mathrm{task}} = \mathbf{1}\big[\mathrm{Rel}(k)\big],
+$$
+
+机制：m^err_k 对触发 runtime 错误的 turn 清零，m^task_k 只保留与当前 subtask 相关的 turn——只有既无错又相关的 turn 贡献梯度。
    - 效果：提高信噪比，避免过拟合常见 failure mode；保持与真实软件开发（基于精简、task-adapted context）的行为一致性。M3 对 Figure 7 的总览把 Stage 2 概括为"error masking (zero-out loss on failed/unrelated turns) and context masking, with adaptive data revisiting"。配合两阶段 SFT（Stage 1 naive SFT with 70% agentic / 15% reasoning / 15% general instruction；Stage 2 adaptive valuable data revisiting——verified trajectories + expert-audited demos + preference-refined samples）。
 
 7. **IPA —— Chunk-Level Policy Optimization（核心算法创新）**
-   - 机制（§3.2.4.2 ~ §3.2.4.4，对应 Figure 8 p.20 的 IPA pipeline 总览与 Figure 9 p.22 的粒度对比）：将 multi-turn agentic task 建模为 **Chunked MDP** (S, C, P, R, γ)。把 token trajectory τ[1:T] 切成 chunks {c_1,...,c_K}，K ≪ T，每 chunk 从一次环境交互延续到下一次，通常以 tool invocation 结尾（reason → format API call → trigger execution）。Figure 9（p.22）的 M3 解读把三种粒度并排：token-level（多数 token 无外部效果，Interaction 箭头错位）、chunk-level（绿色 ✓，chunk 边界与 interaction 对齐）、sentence-level（一个序列含多轮决策，过粗）。基于此，IPA 对 baseline（§3.2.4.1）做三项重构，Figure 8（p.20）M3 解读将其拆为左面板 *Chunk-Level Initialized Resampling*、右上 *Chunk-Level Importance Sampling*、右下 *Inference-Training Mismatch Masking* 三块：
-     - **Chunk-Level Discounted Return**（Eq. 7）：G_k = γ^Δ(j,k) · R_final；Δ(j,k) 为 chunk c_k 到决定结果的 chunk c_j 的 chunk 距离；同 chunk 内所有 token 共享同一标量 G_k。在 token level 上 γ<1 会在数千 token 上指数衰减致信号消失，chunk level 因 K ≪ T 大幅缩短 effective horizon，既 downweight 早期无效尝试（如非法 tool call）又对邻近成功 chunk 给强梯度（γ^Δ≈1）。Figure 10（p.23）的 M3 量化解读：左图 unclipped gradient norm 上 chunk-level 稳定在 ~10⁻²，baseline 飙到 ~10²（约 3 个数量级差异）；中图 train success rate 爬到 ~68–70%，baseline 停在 ~62–65%；右图 test success rate 爬到 ~57%，baseline 停在 ~50–52%。
-     - **Chunk-Level Importance Sampling**（Eq. 8）：ρ_c(c) = (∏_{t∈c} π^Meg_θ(τ_t|τ<t) / π^Meg_θold(τ_t|τ<t))^(1/|c|)，几何均值 dampen 单 token 离群值；同时把 loss masking 从 token level 升到 chunk level：m_c = 1[(∏_{t∈c} π^Meg_θold/µ^SGLang_θold)^(1/|c|) ≤ H]，缓解 token-level 的 state occupancy mismatch（token-level policy gradient 在 inference policy 诱导的 state 分布上算，偏离 true visitation）与 reward signal mismatch（细粒度 token IS 权重与粗粒度 outcome-driven reward 错配）。
+   - 机制（§3.2.4.2 ~ §3.2.4.4，对应 Figure 8 p.20 的 IPA pipeline 总览与 Figure 9 p.22 的粒度对比）：将 multi-turn agentic task 建模为 **Chunked MDP** (S, C, P, R, γ)。把 token trajectory τ[1:T] 切成 chunks {c_1,...,c_K}，K ≪ T，每 chunk 从一次环境交互延续到下一次，通常以 tool invocation 结尾（reason → format API call → trigger execution）。Figure 9（p.22）的 M3 解读把三种粒度并排：token-level（多数 token 无外部效果，Interaction 箭头错位）、chunk-level（绿色 ✓，chunk 边界与 interaction 对齐）、sentence-level（一个序列含多轮决策，过粗）。基于此，IPA 对 baseline（§3.2.4.1）做三项重构，Figure 8（p.20）M3 解读将其拆为左面板 *Chunk-Level Initialized Resampling*、右上 *Chunk-Level Importance Sampling*、右下 *Inference-Training Mismatch Masking* 三块。该 baseline 的完整形态先固定如下：正样本走 weighted SL、负样本走 clipped IS 的 trajectory-level 梯度（Eq. 5, §3.2.4.1，借鉴 TOPR 以避免吃正样本梯度的干扰）：
+
+$$
+\nabla J_{\text{RL}}(\pi) &= \underbrace{\sum_{\tau \in \mathcal{T}^+} \mu^{\text{SGLang}}_{\theta_{old}}(\tau) R(\tau)\nabla \log \pi^{\text{megatron}}_{\theta}(\tau)}_{\textrm{Weighted SL update for positive examples}} + \underbrace{\sum_{\tau \in \mathcal{T}^-} \mu^{\text{SGLang}}_{\theta_{old}}(\tau)\left[\rho(\tau) \right]_{0}^{1} R(\tau)\nabla \log \pi^{\text{megatron}}_{\theta}(\tau)}_{\textrm{Clipped IS update for negative examples}} \;,
+$$
+
+机制：正样本集合 T⁺ 不加 IS 权重（直接 supervised-learning 式加权），负样本集合 T⁻ 才乘截尾 ρ(τ)，实现 efficient and stable policy optimization。再叠加 token-level mismatch masking 后得到 baseline 最终梯度（Eq. 6, §3.2.4.1）：
+
+$$
+\nabla J_{\text{RL}}(\pi) = &\underbrace{ \sum_{\tau \in \mathcal{T}^+} \mu^{\text{SGLang}}_{\theta_{old}}(\tau) R(\tau) \sum_{k=1}^{|\tau|} m_k \nabla \log \pi^{\text{megatron}}_\theta(\tau_k \mid \tau_{<k}) }_{\text{Weighted SL update with token-level masking}} \nonumber\\&+\underbrace{ \sum_{\tau \in \mathcal{T}^-} \mu^{\text{SGLang}}_{\theta_{old}}(\tau) \left[\rho(\tau)\right]_0^1 R(\tau) \sum_{k=1}^{|\tau|} m_k \nabla \log \pi^{\text{megatron}}_\theta(\tau_k \mid \tau_{<k}) }_{\text{Clipped IS update with token-level masking}} .
+$$
+
+机制：梯度从 trajectory 级细化到 token 级求和，m_k 为 token-level mask（m_k = 1[π^Meg_θold/µ^SGLang_θold ≤ H]），把 train-inference mismatch 超阈值 H 的 token 梯度清零——这正是 IPA 要升到 chunk 级的对象。三项重构如下：
+     - **Chunk-Level Discounted Return**（Eq. 7, §3.2.4.3）：
+
+$$
+G_k = \gamma^{\Delta(j,k)} \times R_{\text{final}},
+$$
+
+机制：Δ(j,k) 为 chunk c_k 到决定结果的 chunk c_j 的 chunk 距离；同 chunk 内所有 token 共享同一标量 G_k。在 token level 上 γ<1 会在数千 token 上指数衰减致信号消失，chunk level 因 K ≪ T 大幅缩短 effective horizon，既 downweight 早期无效尝试（如非法 tool call）又对邻近成功 chunk 给强梯度（γ^Δ≈1）。Figure 10（p.23）的 M3 量化解读：左图 unclipped gradient norm 上 chunk-level 稳定在 ~10⁻²，baseline 飙到 ~10²（约 3 个数量级差异）；中图 train success rate 爬到 ~68–70%，baseline 停在 ~62–65%；右图 test success rate 爬到 ~57%，baseline 停在 ~50–52%。
+     - **Chunk-Level Importance Sampling**（Eq. 8, §3.2.4.3）：
+
+$$
+\rho_c (c) = \bigg(\prod_{t \in c} \frac{\pi^{\text{megatron}}_\theta(\tau_t \mid \tau_{<t})}{\pi^{\text{megatron}}_{\theta_{\text{old}}}(\tau_t \mid \tau_{<t})}\bigg)^{\frac{1}{|c|}}.
+$$
+
+机制：对 chunk 内全部 token 的 IS 比率连乘后开 \|c\| 次方取几何均值，dampen 单 token 离群值、避免极端比率；同时把 loss masking 从 token level 升到 chunk level：m_c = 1[(∏_{t∈c} π^Meg_θold/µ^SGLang_θold)^(1/|c|) ≤ H]，缓解 token-level 的 state occupancy mismatch（token-level policy gradient 在 inference policy 诱导的 state 分布上算，偏离 true visitation）与 reward signal mismatch（细粒度 token IS 权重与粗粒度 outcome-driven reward 错配）。
      - 完整 chunk-level 梯度（Eq. 9）：正样本走 weighted SL update（µ·G_c·∇log π），负样本走 chunk-clipped IS update（µ·[ρ_c]^1/0·G_c·∇log π）。
-     - **Chunk-Level Initialized Resampling**（§3.2.4.4，对应 Figure 11 p.24 与 Figure 12 p.25）：对长程稀疏正样本任务，从 expert-like 轨迹的关键 chunk 后状态起 rollout。定义 crucial chunk c*_f：在其前缀上 resampling 的期望成功率显著低于其后续前缀。**Sequential Rollback**：从 expert 轨迹尾 chunk 向前回溯，逐步暴露关键 fork，实现 chunk-level curriculum。Figure 12（p.25）M3 解读三联图：左图 train success rate 在 Sequential Rollback 下呈"Success Rate Drops"锯齿（每次 drop 标志跨过一个 crucial chunk），baseline 一直 0%；中图 expert chunks used 从 ~42 单调缩到 ~1（沿 expert 轨迹 rollback）；右图 test success rate 在 step 75 后分两段——"All Attempts Failed"→"Learn to Succeed with Rollback"升至 100%。但 Sequential Rollback 对早期 decisive chunk 要扫尽后续所有位置，浪费 rollout；故提出 **Parallelized Initialization**（对应 Figure 13 p.26）：在多个 anchor 位置并发初始化环境、并行 rollout，稀释每 fork 的样本数但避免 bad-case 时间开销。Figure 13 M3 解读三联图：左图 IPA(w/ Chunk-Level Init.) train success rate 至 step 100 达 ~95%，baseline 仅 ~45%；中图 minimum train-task success rate IPA 升至 ~70%（标注 "Ability to Learn Challenging Tasks"），baseline 停在 0%；右图 test success rate IPA ~90% vs baseline ~55%。极端情况——某 crucial fork 完全采不到正样本——采用 **hybrid IL+RL 目标**（Eq. 10）：对 expert prefilled chunk τ*_{≤c*_f−1} 与 expert crucial chunk c*_f 用 imitation learning 风格 loss，对 resampled chunk τ_{≥c_f} 用 chunk-level RL，由 λ_IL / λ_RL 平衡。
+     - **Chunk-Level Initialized Resampling**（§3.2.4.4，对应 Figure 11 p.24 与 Figure 12 p.25）：对长程稀疏正样本任务，从 expert-like 轨迹的关键 chunk 后状态起 rollout。定义 crucial chunk c*_f：在其前缀上 resampling 的期望成功率显著低于其后续前缀。**Sequential Rollback**：从 expert 轨迹尾 chunk 向前回溯，逐步暴露关键 fork，实现 chunk-level curriculum。Figure 12（p.25）M3 解读三联图：左图 train success rate 在 Sequential Rollback 下呈"Success Rate Drops"锯齿（每次 drop 标志跨过一个 crucial chunk），baseline 一直 0%；中图 expert chunks used 从 ~42 单调缩到 ~1（沿 expert 轨迹 rollback）；右图 test success rate 在 step 75 后分两段——"All Attempts Failed"→"Learn to Succeed with Rollback"升至 100%。但 Sequential Rollback 对早期 decisive chunk 要扫尽后续所有位置，浪费 rollout；故提出 **Parallelized Initialization**（对应 Figure 13 p.26）：在多个 anchor 位置并发初始化环境、并行 rollout，稀释每 fork 的样本数但避免 bad-case 时间开销。Figure 13 M3 解读三联图：左图 IPA(w/ Chunk-Level Init.) train success rate 至 step 100 达 ~95%，baseline 仅 ~45%；中图 minimum train-task success rate IPA 升至 ~70%（标注 "Ability to Learn Challenging Tasks"），baseline 停在 0%；右图 test success rate IPA ~90% vs baseline ~55%。极端情况——某 crucial fork 完全采不到正样本——采用 **hybrid IL+RL 目标**（Eq. 10, §3.2.4.4）：
+
+$$
+\mathcal{L}_{\text{\texttt{\textcolor{orange}{IPA}}}} = \lambda_{\text{IL}} \cdot \underbrace{ \sum_{{c}^{*}_{k}\in{\tau}^{*}_{\leq c^*_{f}}} \pi^{megatron}_\theta({c}^{*}_{k}) G_{c^*_k} \nabla \log \pi^{megatron}_\theta({c}^{*}_{k} \mid {\tau}^{*}_{\leq {c}^{*}_{k-1}}) }_{\text{Imitation learning style update}} + \lambda_{\text{RL}} \cdot \mathcal{L}^{c \in \tau_{\geq {{c}_{f}}}}_{\text{\textcolor{orange}{Chunk-RL}}}.
+$$
+
+机制：对 expert prefilled chunk τ*_{≤c*_f−1} 与 expert crucial chunk c*_f 用 imitation learning 风格 loss（快速灌输可靠 subroutine，如 tool invocation formatting），对 resampled chunk τ_{≥c_f} 用 chunk-level RL（Eq. 9）做 outcome-determining interaction 上的自适应 credit assignment，由 λ_IL / λ_RL 平衡。
    - 效果：Figure 10/12/13 共同支撑 chunk-level optimization 相比 baseline 在梯度稳定性、train/test success rate 上的显著优势；论文宣称 IPA 让 30B-A3B MoE 的 ROME 突破规模瓶颈，达到可比 480B agentic 模型的能力（§3.2.4.4 末段）。
 
 8. **Safety-Aligned Data Composition —— 来自生产事故的反向驱动**

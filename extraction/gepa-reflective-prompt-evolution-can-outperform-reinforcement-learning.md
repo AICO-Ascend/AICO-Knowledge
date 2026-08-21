@@ -1,21 +1,21 @@
 ---
-paper_num: "19"
-title: "GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEMENT LEARNING"
+paper_num: "16"
+title: "GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING"
 authors: ""
-date: "2025/4/27"
+date: "2026/1/1"
 arxiv: "https://arxiv.org/abs/2507.19457"
 pdf: "papers/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.pdf"
 slug: "gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning"
 tags: [rl]
 ---
 
-# GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUTPERFORM REINFORCEMENT LEARNING
+# GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING
 
 > [!abstract] 摘要（原文）
-> 1\. 👉 GEPA (Genetic-Pareto) 是一种创新的提示优化器，它通过对语言轨迹进行自然语言反思来进化提示。 2. ✨ 该方法从试错中学习高层规则，诊断问题并提出提示更新，并结合帕累托前沿的经验，从而以极少的迭代实现显著的质量提升。 3. 🚀 结果表明，GEPA 在多个任务上平均优于 GRPO 6%，在某些情况下性能提升高达 20% 且所需的训练次数少 35 倍，并且还可作为代码优化的推理时搜索策略。
+> This appears to be the beginning of a research paper, specifically a conference paper published at ICLR 2026. Here's a breakdown of the key information presented on this page: \* \*\*Title:\*\* GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING \* \*\*Authors & Affiliations:\*\* \* Lakshya A Agrawal, Shangyin Tan, Rishi Khare, Koushik Sen, Alexandros G. Dimakis, Ion Stoica, Dan Klein, Matei Zaharia (UC Berkeley) \* Dilara Soylu, Arnav Singhvi, Herumb Shandilya, Michael J Ryan, Christopher Potts (Stanford) \* Noah Ziems, Meng Jiang (Notre Dame) \* Krista Opsahl-Ong, Matei Zaharia (Databricks) \* Omar Khattab (MIT) \* Alexandros G. Dimakis (BespokeLabs.ai) \* \*\*Abstract Summary:\*\* \* \*\*Problem:\*\* Reinforcement Learning (RL) methods like GRPO for adapting LLMs to tasks are sample-inefficient, requiring thousands of rollouts. \* \*\*Hypothesis:\*\* The interpretable nature of language offers a richer learning medium for LLMs than sparse, scalar rewards used in RL. \* \*\*Solution:\*\* Introduces GEPA (Genetic-Pareto), a prompt optimizer that uses natural language reflection to learn high-level rules from trial and error. \* \*\*Mechanism:\*\* GEPA samples trajectories (reasoning, tool calls, tool outputs), reflects on them in natural language to diagnose problems, proposes and tests prompt updates, and combines complementary lessons from the Pareto frontier of its attempts. \* \*\*Result:\*\* GEPA achieves large quality gains with few rollouts. It outperforms GRPO by 6 percentage points on average (up to 19pp) using up to 35x fewer rollouts. It also outperforms MIPROv2 (a leading prompt optimizer) by over 10 percentage points. \* \*\*Other Applications:\*\* Shows promise as an inference-time search strategy for code optimization. \* \*\*Availability:\*\* Code is released at \`https://github.com/gepa-ai/gepa\`. \* \*\*Figure 1 (a) and (b): Performance Comparison Graphs\*\* \* Plots "Score" against "Number of Rollouts" for HotpotQA and IFBench tasks (both using Qwen3 8B model). \* Compares Baseline, MIPROv2, GRPO, and GEPA. \* \*\*Key Observation (from graph):\*\* GEPA (green line) shows a much steeper learning curve and higher final scores compared to MIPROv2 (orange) and GRPO (blue), especially for the same number of rollouts. GRPO requires significantly more rollouts to achieve improvements. Star markers indicate Test-set Performance. \* \*\*Introduction (Section 1):\*\* \* LLMs enable agents and systems combining natural-language specifications with tools. \* Discusses the optimization problem for LLMs' downstream performance. \* Mentions Reinforcement Learning with Verifiable Rewards (RLVR), specifically GRPO, as a popular approach using scalar rewards and policy gradients.
 
 ## 元信息
-- **发表日期**: 2025/4/27
+- **发表日期**: 2026/1/1
 - **作者**: —
 - **arXiv**: https://arxiv.org/abs/2507.19457
 - **本地 PDF**: `papers/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.pdf`
@@ -721,7 +721,6 @@ $$
 
 ## 相关论文
 
-- [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] — GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING
 - [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] — Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning
 - [[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]] — DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning
 - [[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]] — AREAL: A Large-Scale Asynchronous Reinforcement Learning System for Language Reasoning
