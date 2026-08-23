@@ -356,11 +356,7 @@ The main figure shown is **Table 2**, which compares **transition overhead betwe
 
 ### 公式截图 (p.7)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-eq01.png]]
-> 原文文本线索：`critic_metrics = critic.update_critic(batch, loss_func=algo_type)`
-
-### 公式截图 (p.8)
-![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-eq02.png]]
-> 原文文本线索：`𝑁𝑎=𝑝×𝑡×𝑑=𝑝𝑔×𝑡𝑔×𝑑𝑔×𝑑such that 𝑑𝑔=`
+> 原文文本线索：`batch[“pretrain_loss”] = pretrain_loss`
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

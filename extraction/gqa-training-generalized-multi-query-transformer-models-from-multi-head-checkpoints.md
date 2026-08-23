@@ -158,20 +158,6 @@ Figure 2: Overview of grouped-query method. Multi-head attention has H query, ke
 **Caption verbatim:**
 "Figure 3: **Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality and faster speed than MHA-Large, and GQA achieves even better performance with similar speed gains and comparable quality to MHA-XXL.** Average performance on all tasks as a function of average inference time per sample for T5-Large and T5-XXL with multi-head attention, and 5% uptrained T5-XXL with MQA and GQA-8 attention."
 
-## 关键公式（原文截图，无 LaTeX 源 — 引用前请核对图片）
-
-### 公式截图 (p.2)
-![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-eq01.png]]
-> 原文文本线索：`et al., 2020). For α = 0.05, training took approxi-`
-
-### 公式截图 (p.3)
-![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-eq02.png]]
-> 原文文本线索：`proportion α = 0.05. We see that a larger up-`
-
-### 公式截图 (p.4)
-![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-eq03.png]]
-> 原文文本线索：`MQA with proportion α = 0.05. ‘Mean’ mean-pools`
-
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 
 - p.2 `et al., 2020). For α = 0.05, training took approxi-`

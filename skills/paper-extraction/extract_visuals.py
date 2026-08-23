@@ -88,12 +88,25 @@ def line_mathy(txt):
         return False
     if re.search(r'http|arxiv|figure|table|section', s, re.I):
         return False
+    # prose guard (2026-08-23): a display equation's tokens are mostly math, not
+    # English words. "γ = (γij) that redistributes mass ..." is prose with inline
+    # math — reject when >55% of tokens are plain English words.
+    toks = s.split()
+    if toks:
+        english = sum(1 for tk in toks if re.fullmatch(r'[a-zA-Z]{3,}', tk))
+        if english / len(toks) > 0.55:
+            return False
     return True
 
 
 def formula_regions(page, max_keep=12):
     """Detect display-formula regions at LINE level, expand to adjacent short lines
-    (multi-line equations: piecewise cases, subscript rows) + overlapping drawings."""
+    (multi-line equations: piecewise cases, subscript rows) + overlapping drawings.
+
+    Guards against prose-capture (2026-08-23 fix): growth stays in the seed's
+    column, merged region capped at 150pt tall / 30 words — a display equation is
+    short; anything taller/longer is body text with inline math, not a formula."""
+    col_mid = page.rect.width / 2
     lines = []
     for b in page.get_text("dict")["blocks"]:
         if b["type"] != 0:
@@ -102,7 +115,22 @@ def formula_regions(page, max_keep=12):
             txt = "".join(s["text"] for s in l["spans"]).strip()
             if txt:
                 lines.append((fitz.Rect(l["bbox"]), txt))
-    seeds = [(r, t) for r, t in lines if line_mathy(t)]
+    # display equations are centered/short and never start with a prose
+    # connective ("and νj, and that Σ..." is a body line with inline math)
+    PROSE_START = ("and", "the", "that", "this", "these", "where", "with",
+                   "which", "for", "from", "into", "over", "under", "when",
+                   "while", "if", "in", "on", "at", "by", "to", "we", "it")
+    def is_seed(r, t):
+        if not line_mathy(t):
+            return False
+        first = t.split()[0].lower().strip(",;:()") if t.split() else ""
+        if first in PROSE_START:
+            return False
+        col_w = col_mid if (r.x0 + r.x1) / 2 < col_mid else page.rect.width - col_mid
+        col_w = col_w - 2 * 50  # minus typical margins
+        strong_math = sum(1 for c in t if c in MATH_CHARS) >= 2
+        return strong_math or r.width < 0.72 * col_w
+    seeds = [(r, t) for r, t in lines if is_seed(r, t)]
     if not seeds:
         return []
     drawings = [dr["rect"] for dr in page.get_drawings()
@@ -113,21 +141,34 @@ def formula_regions(page, max_keep=12):
             break
         if any(abs(r.y0 - u) < 30 for u in used):
             continue
-        # grow: merge nearby short non-body lines in the same column band
+        seed_col = 0 if (r.x0 + r.x1) / 2 < col_mid else 1
+        # grow: merge nearby short non-body lines in the SAME column only
         region = fitz.Rect(r)
+        words = len(t.split())
         for r2, t2 in lines:
             if r2 is r:
                 continue
             if abs((r2.y0 + r2.y1) / 2 - (r.y0 + r.y1) / 2) > 42:
                 continue
+            r2_col = 0 if (r2.x0 + r2.x1) / 2 < col_mid else 1
+            if r2_col != seed_col:
+                continue
             if r2.x0 > r.x1 + 60 or r2.x1 < r.x0 - 60:
                 continue
-            if len(t2) <= 90 and not re.search(r'^(Figure|Table)\s+\d', t2):
-                region |= r2
+            if len(t2) <= 60 and not re.search(r'^(Figure|Table)\s+\d', t2):  # display-math lines are short; prose lines fill the column
+                # merged line must itself be mathy or a tiny lead-in ("subject to:")
+                lead_in = len(t2) <= 30
+                if not (any(c in MATH_CHARS for c in t2) or '=' in t2 or lead_in):
+                    continue
+                cand = region | r2
+                if cand.height <= 150 and words + len(t2.split()) <= 30:
+                    region = cand
+                    words += len(t2.split())
         for dr in drawings:
             if dr.y1 >= region.y0 - 6 and dr.y0 <= region.y1 + 6 \
                and dr.x1 >= region.x0 and dr.x0 <= region.x1:
-                region |= dr
+                if (region | dr).height <= 150:
+                    region |= dr
         used.append(r.y0)
         out.append((region, re.sub(r'\s+', ' ', t).strip()))
     return out

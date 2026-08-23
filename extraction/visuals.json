@@ -359,24 +359,9 @@
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq01.png"
    },
    {
-    "page": 16,
-    "text": "World Size = TP × CP × PP × DP,",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq02.png"
-   },
-   {
-    "page": 16,
-    "text": "at minimum. Since EP ⊆DP, requesting EP=8 forces DP ≥8. Combined with CP=8 for long sequences, the",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq03.png"
-   },
-   {
-    "page": 17,
-    "text": "• Traditional: EP ≤DP = 8, so maximum EP is 8.",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq04.png"
-   },
-   {
     "page": 64,
     "text": "output(x) = 𝑊↑·",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq05.png"
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq02.png"
    }
   ]
  },
@@ -1468,16 +1453,6 @@
     "page": 5,
     "text": "𝑖𝑗∈{𝑑| 𝑑> 0, 𝑁𝑖mod 𝑑= 0} ∪{0} to H",
     "path": "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-eq01.png"
-   },
-   {
-    "page": 6,
-    "text": "𝑖∈{𝑑| 𝑁remained > 0, 𝑁remained mod 𝑑= 0} to H",
-    "path": "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-eq02.png"
-   },
-   {
-    "page": 7,
-    "text": "follows: for a network topology 𝐺= (𝑉= 𝑉𝑠∪𝑉𝑔, 𝐸), where",
-    "path": "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-eq03.png"
    }
   ]
  },
@@ -2936,13 +2911,8 @@
   "formulas": [
    {
     "page": 7,
-    "text": "critic_metrics = critic.update_critic(batch, loss_func=algo_type)",
+    "text": "batch[“pretrain_loss”] = pretrain_loss",
     "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-eq01.png"
-   },
-   {
-    "page": 8,
-    "text": "𝑁𝑎=𝑝×𝑡×𝑑=𝑝𝑔×𝑡𝑔×𝑑𝑔×𝑑such that 𝑑𝑔=",
-    "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-eq02.png"
    }
   ]
  },
@@ -3155,13 +3125,7 @@
    }
   ],
   "tables": [],
-  "formulas": [
-   {
-    "page": 11,
-    "text": "JGRP O(θ) = Ex∼D,{τi}G",
-    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-eq01.png"
-   }
-  ]
+  "formulas": []
  },
  "areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning": {
   "figures": [
@@ -3659,11 +3623,6 @@
     "page": 3,
     "text": "LOTT(dk1, dk2) = ∥Fσ( ¯dk1) −Fσ( ¯dk2)∥σ",
     "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq05.png"
-   },
-   {
-    "page": 4,
-    "text": "LOT( ¯dk) = [z1, z2, . . . , z|T|] ∈R|T|d.",
-    "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq06.png"
    }
   ]
  },
@@ -3793,23 +3752,7 @@
     "path": "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-tab01.png"
    }
   ],
-  "formulas": [
-   {
-    "page": 2,
-    "text": "et al., 2020). For α = 0.05, training took approxi-",
-    "path": "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-eq01.png"
-   },
-   {
-    "page": 3,
-    "text": "proportion α = 0.05. We see that a larger up-",
-    "path": "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-eq02.png"
-   },
-   {
-    "page": 4,
-    "text": "MQA with proportion α = 0.05. ‘Mean’ mean-pools",
-    "path": "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-eq03.png"
-   }
-  ]
+  "formulas": []
  },
  "qwen2-5-vl-technical-report": {
   "figures": [
@@ -6706,18 +6649,7 @@
    }
   ],
   "tables": [],
-  "formulas": [
-   {
-    "page": 8,
-    "text": "5𝑇𝑟𝑒𝑐𝑜𝑚𝑝𝑢𝑡𝑒(𝑟%, 𝐿𝐿𝑀, 𝐿) = 𝑟% × 𝑃𝑟𝑒𝑓𝑖𝑙𝑙(𝐿𝐿𝑀, 𝐿). 𝑃𝑟𝑒𝑓𝑖𝑙𝑙(𝐿𝐿𝑀, 𝐿) is",
-    "path": "assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-eq01.png"
-   },
-   {
-    "page": 16,
-    "text": "is the rotary matrix with hyperparameter Θ ∈{𝜃𝑖= 10000−2𝑖𝑑,𝑖∈",
-    "path": "assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-eq02.png"
-   }
-  ]
+  "formulas": []
  },
  "cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation": {
   "figures": [
@@ -6826,28 +6758,7 @@
     "path": "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-tab03.png"
    }
   ],
-  "formulas": [
-   {
-    "page": 6,
-    "text": "LRFT(θ) = −Eτ∼D′",
-    "path": "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-eq01.png"
-   },
-   {
-    "page": 7,
-    "text": "and δt = rt + γVϕ(st+1) −Vϕ(st) is the temporal difference error with Vϕ(sT ) = 0. We set γ = 1 and λ = 0.95",
-    "path": "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-eq02.png"
-   },
-   {
-    "page": 7,
-    "text": "LCLIP(θ) = Eτ∼D",
-    "path": "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-eq03.png"
-   },
-   {
-    "page": 24,
-    "text": "= xi ·",
-    "path": "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-eq04.png"
-   }
-  ]
+  "formulas": []
  },
  "single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning": {
   "figures": [

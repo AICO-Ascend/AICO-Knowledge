@@ -629,14 +629,6 @@ Table 7: Configurations of the evaluated topology in §6.
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-eq01.png]]
 > 原文文本线索：`𝑖𝑗∈{𝑑| 𝑑> 0, 𝑁𝑖mod 𝑑= 0} ∪{0} to H`
 
-### 公式截图 (p.6)
-![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-eq02.png]]
-> 原文文本线索：`𝑖∈{𝑑| 𝑁remained > 0, 𝑁remained mod 𝑑= 0} to H`
-
-### 公式截图 (p.7)
-![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-eq03.png]]
-> 原文文本线索：`follows: for a network topology 𝐺= (𝑉= 𝑉𝑠∪𝑉𝑔, 𝐸), where`
-
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 
 - p.5 `𝑖𝑗∈{𝑑| 𝑑> 0, 𝑁𝑖mod 𝑑= 0} ∪{0} to H`

@@ -116,10 +116,6 @@ The image presents **Table 1** (titled *"Dataset statistics for evaluation"*), w
 ![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq05.png]]
 > 原文文本线索：`LOTT(dk1, dk2) = ∥Fσ( ¯dk1) −Fσ( ¯dk2)∥σ`
 
-### 公式截图 (p.4)
-![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq06.png]]
-> 原文文本线索：`LOT( ¯dk) = [z1, z2, . . . , z|T|] ∈R|T|d.`
-
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 
 - p.2 `matrix C = (cij) ∈Rn×m, where cij represents`
