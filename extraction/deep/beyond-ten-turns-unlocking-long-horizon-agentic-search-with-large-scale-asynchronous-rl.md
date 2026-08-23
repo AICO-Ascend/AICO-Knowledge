@@ -4,7 +4,7 @@
 > 作者：Jiaxuan Gao, Wei Fu, Minyang Xie, Shusheng Xu, Chuyi He, Zhiyu Mei, Banghua Zhu, Yi Wu · IIIS Tsinghua + Ant Group + UW
 > 开源：https://github.com/inclusionAI/ASearcher（模型、训练数据、代码全开源）
 > 数据源声明：**全文已回填（67271 字符，覆盖正文页 2–21，含 Table 1/2/3/4/5、§3.4 GRPO Eq.1、训练配置、合成数据统计、Appendix A 完整 case study）。** 9 张图 M3 caption 已补（p01/p03/p04/p07/p09/p10/p14/p15/p16/p20，其中 p15 同时覆盖 Fig.9 与 Fig.10）。下文精确数字一律引 fulltext `.txt` 为权威源。论文未给的字段（GRPO 组大小 G、turn-limit 系统消融、7B/14B GPU hours）仍标 not-available，已逐一与全文核对确认确实未给，未臆造。
-> 公式源声明：formulas.json 该篇收录 0 条公式。故 GRPO Eq.1 等按 fulltext `.txt` 原文引用，**不渲染 `$$`**（LaTeX 双源校验：formulas.json 空 ↔ .txt 含 Eq.1 伪排版，以 .txt 为准）。
+> 公式源声明：formulas.json 该篇 2026-08-21 新收录 **2 条公式**（§3.4 MDP 目标 J(π) + GRPO Eq.1），已按 LaTeX 权威源逐字渲染为 `$$` 块织入创新点 5（LaTeX 双源校验：formulas.json ↔ .txt §3.4 伪排版，逐符号一致；注：formulas.json 的 J(π) 含折扣因子 γ^t，.txt 伪排版无 γ^t，以 formulas.json LaTeX 为准）。
 > M3 caption 注：p01（Figure 1）的 M3 caption 误识为 "DEPA / Stage 1 vs Stage 2 / Avg@4"，且 M3 自述 "text is heavily overlapping/garbled ... a clean verbatim transcription is not possible"。该 M3 描述与 Figure 1 实际内容不符，判为不可靠并弃用；Figure 1 解读以 fulltext page 1 verbatim caption + §4.2 为准（见下，并标注 Figure 1 caption 与 §4.2 的数字不一致）。其余 9 张 M3 caption 可靠，已织进相关节。
 
 ## 核心问题
@@ -42,7 +42,15 @@ ASearcher 攻击的是**开源搜索智能体无法达到 expert-level Search In
 
    〔Figure 11 M3 caption 织入〕p16（Fig.11）M3 描述：左面板 6 个 reflection 关键词（search/alternatively/wait/check/confirm/however），"search" 在 step ~250 后飙升至 ~8k occurrences/traj；右面板 5 个 external-reference 关键词（doc/mention/source/earlier/previous），"doc" 在 step 250 后升至 ~2.5k。两图在 step ~250 同步 inflection，对应 stage 2 启动。与 .txt §4.4 一致。
 
-5. **MDP + GRPO 训练配方（§3.4）。** MDP `(S,A,T,R)`（.txt 原文 "an MDP is defined by the tuple (S; A; T; R)"），action 含可被 tag 提取的 tool call（如 `<search> search query </search>`）。用 GRPO [29]（Eq.1，.txt 原文伪排版，**此处按 .txt 引用不渲染 $$**）：对每个输入 x 生成 G 条 trajectory τ₁..τ_G，loss 为组内 token-level PPO clip + advantage `Â_i` 基于"relative rewards of all trajectories within each group"（.txt 原文）；clip 范围 `[1−ε, 1+ε]`，ε 为超参。**G 的具体值论文未给（全文已核对，§3.4 仅写符号 G，not-available）**——继承 DeepSeek-R1/DeepSeekMath GRPO 路线（弃 GAE + value model）。**Dynamic Filtering**：移除组内 reward 全相同（zero advantage）的 query（含已高准确率题与标错答案题）。**Reward**：base LLM = format reward × F1（乘法组合）；LRM = LLM-as-Judge [20][38]（Qwen2.5-72B-Instruct），**省略 format reward**（LRM 自身能保持格式）。sparse reward，trajectory 完成才结算。
+5. **MDP + GRPO 训练配方（§3.4）。** MDP `(S,A,T,R)`（.txt 原文 "an MDP is defined by the tuple (S; A; T; R)"），S 含历史/搜索结果/检索网页，action 含可被 tag 提取的 tool call（如 `<search> search query </search>`），T(s′|s,a) 为 tool call 作用后的状态转移。agent 目标是最大化期望折扣回报：
+
+$$J(\pi) = \mathbb{E}\left[\sum_{t=0}^{\infty} \gamma^t R(s_t, a_t) \bigg| a_t \sim \pi(s_t)\right]$$
+
+即整个 agentic search（含 tool call 与网页 summarization）被建模为标准 RL 序列决策问题，端到端优化回报而非分模块训练。用 GRPO [29] 训练（§3.4 Eq.1，formulas.json LaTeX 权威渲染）：对每个输入 x 由旧策略 π_θold 生成 G 条 trajectory τ₁..τ_G（τ_i = (sⁱ₀, aⁱ₀, sⁱ₁, …, sⁱ_{T_i})），loss 为：
+
+$$\mathcal J_{GRPO}(\theta)=\mathbb E_{x\sim \mathcal D,\{\tau_i\}_{i=1}^G\sim\pi_{\theta_{old}}(\cdot|x)}\Bigg[&\frac{1}{G}\sum_{i=1}^G\frac{1}{\sum_{t=0}^{T_i-1}|a^i_t|}\sum_{t=0}^{T_i-1}\sum_{j=1}^{|a_t^i|}\min\Bigg( \frac{\pi_\theta(a_{t,j}^i|s_t,a_{t,<j}^i)}{\pi_{\theta_{old}}(a_{t,j}^i|s_t,a_{t,<j}^i)}\hat A_{i},\nonumber \\ &\text{clip}\Bigg(\frac{\pi_\theta(a_{t,j}^i|s_t,a_{t,<j}^i)}{\pi_{\theta_{old}}(a_{t,j}^i|s_t,a_{t,<j}^i)},1-\epsilon,1+\epsilon\Bigg)\hat A_{i}\Bigg) \Bigg]$$
+
+机制解读：这是**组内 token-level PPO clip**——外层对 G 条 trajectory 求平均，内层用 `1/Σ|a^i_t|` 把每条 trajectory 按其总 token 数归一（长 trajectory 不因 token 多而 dominate loss），再逐 token 算新旧策略概率比并 clip 到 `[1−ε, 1+ε]`（ε 为超参）；advantage `Â_i` 是**trajectory 级**的，基于"relative rewards of all trajectories within each group"（.txt 原文）计算，同一 trajectory 内所有 token 共享同一 `Â_i`——即弃 GAE + value model、用组内相对 reward 做 baseline 的 DeepSeek-R1/DeepSeekMath GRPO 路线。**G 的具体值论文未给（全文已核对，§3.4 仅写符号 G，not-available）**。**Dynamic Filtering**：移除组内 reward 全相同（zero advantage）的 query（含已高准确率题与标错答案题）。**Reward**：base LLM = format reward × F1（乘法组合）；LRM = LLM-as-Judge [20][38]（Qwen2.5-72B-Instruct），**省略 format reward**（LRM 自身能保持格式）。sparse reward，trajectory 完成才结算。
 
 6. **端到端效果（§4.2, Table 4/5, Fig.8）。** ASearcher-Web-QwQ-v2 在 GAIA/xBench-DeepSearch/Frames 上 Avg@4 = **58.7 / 51.1 / 74.5**，Pass@4 = **74.7 / 75.0 / 85.5**——**开源 32B agent SOTA**（次强 Search-o1(QwQ) 48.1/40.3/63.6；SimpleDS-QwQ 47.6/35.8/67.0；WebDancer-QwQ 47.4/40.0/63.8；WebThinker-QwQ 42.5/32.8/57.7；Search-R1-32B 仅 28.6/19.5/44.1；QwQ-32B Direct Gen 23.1/11.8/29.9）。RL 训练带来绝对增益 +15.0（GAIA）/ +22.4（xBench）/ +14.6（Frames）Avg@4（§4.2 权威值，见创新点 1 的不一致说明），Pass@4 在 xBench +24.0（Fig.8）。intro 另报相对增益 xBench **78.0%**、GAIA **34.3%**（.txt 原文 "78.0% and 34.3% improvements on xBench-DeepSearch and GAIA"）。零样本外挂 DeepSeek-V3 做 summarizer → 60.3/56.4/76.6；再叠 K=16 test-time search（用 DeepSeek-V3 聚合）→ **71.8/75.0/83.4**，HLE-500 21.5→23.4→24.6，**逼近 Kimi-Researcher（69.0/78.8/26.9）/ OpenAI DeepResearch（67.0/26.6）/ OpenAI-o3（70.5/66.7/84.0/20.2）/ Claude-4-Sonnet（68.3/64.6/80.7/20.3）/ DeepSeek-R1（55.0/82.0/24.8）/ Qwen3-235B-A22B（45.6/46.0/20.0）/ Qwen3-30B-A3B（35.9/32.0/56.4/13.2）**（Table 5，†为官方报告值）。
 

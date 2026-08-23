@@ -24,7 +24,8 @@ tags: [multimodal]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/kimi-k2-5-visual-agentic-intelligence-p01.png]]
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig01.png]]
+*整页渲染: ![[assets/kimi-k2-5-visual-agentic-intelligence-p01.png]]*
 > [!quote] caption
 > Kimi K2.5 main results. 1
 
@@ -56,7 +57,8 @@ The figure presents two side-by-side line plots tracking vision RL training perf
 > Figure 2: Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve, demonstrating that zero-vision activation paired with long-running RL is sufficient for acquiring robust visual capabilities.
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/kimi-k2-5-visual-agentic-intelligence-p05.png]]
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig03.png]]
+*整页渲染: ![[assets/kimi-k2-5-visual-agentic-intelligence-p05.png]]*
 > [!quote] caption
 > An agent swarm has a trainable orchestrator that dynamically creates specialized frozen subagents and decomposes complex tasks into parallelizable subtasks for efficient distributed execution.
 
@@ -77,7 +79,8 @@ The figure presents two side-by-side line plots tracking vision RL training perf
 > **Figure 3:** An agent swarm has a trainable orchestrator that dynamically creates specialized frozen subagents and decomposes complex tasks into parallelizable subtasks for efficient distributed execution.
 
 ### Figure 4 (p.6) ⭐深度解读
-![[assets/kimi-k2-5-visual-agentic-intelligence-p06.png]]
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png]]
+*整页渲染: ![[assets/kimi-k2-5-visual-agentic-intelligence-p06.png]]*
 > [!quote] caption
 > In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as train- ing progresses. At the same time, the level of parallelism during training also gradually increases. many subagents without meaningful task decomposition. By rewarding completed subtasks, r finish enforces feasibility and guides the policy toward valid and effective decompositions.
 
@@ -93,7 +96,8 @@ The figure (Figure 4) visualizes two co-evolving training metrics over the cours
 > Figure 4: In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as training progresses. At the same time, the level of parallelism during training also gradually increases.
 
 ### Figure 5 (p.10) ⭐深度解读
-![[assets/kimi-k2-5-visual-agentic-intelligence-p10.png]]
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig05.png]]
+*整页渲染: ![[assets/kimi-k2-5-visual-agentic-intelligence-p10.png]]*
 > [!quote] caption
 > Comparison of model performance and token usage for Kimi K2 Thinking following token-efficient RL. compromise alleviates memory pressure, it does not fundamentally resolve the load imbalance caused by multimodal input sizes. More critically, it precludes the direct reuse of parallel strategies that have been highly optimized for text-only training.
 
@@ -108,7 +112,8 @@ The figure (Figure 4) visualizes two co-evolving training metrics over the cours
 > Figure 5: Comparison of model performance and token usage for Kimi K2 Thinking following token-efficient RL.
 
 ### Figure 6 (p.14) ⭐深度解读
-![[assets/kimi-k2-5-visual-agentic-intelligence-p14.png]]
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig06.png]]
+*整页渲染: ![[assets/kimi-k2-5-visual-agentic-intelligence-p14.png]]*
 > [!quote] caption
 > The word cloud visualizes heterogeneous K2.5-based sub-agents dynamically instantiated by the
 
@@ -123,7 +128,8 @@ The main figure (Figure 7) is a performance comparison chart on the **BrowseComp
 - *Figure 7:* "Comparison of Kimi K2.5 performance under Agent Swarm and Discard-all context management in BrowseComp."
 
 ### Figure 7 (p.14) ⭐深度解读
-![[assets/kimi-k2-5-visual-agentic-intelligence-p14.png]]
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig07.png]]
+*整页渲染: ![[assets/kimi-k2-5-visual-agentic-intelligence-p14.png]]*
 > [!quote] caption
 > Comparison of Kimi K2.5 performance un- der Agent Swarm and Discard-all context management in BrowseComp. (60.6%) and surpassing even GPT-5.2 Pro (77.9%). Similarly, WideSearch sees a 6.3% improvement (72.7% → 79.0%) on Item-F1, enabling K2.5 Agent Swarm to outperform Claude Opus 4.5 (76.2%) and establish a new state- of-the-art. The gains are most pronounced on In-house Swarm bench (16.7%), where
 
@@ -253,6 +259,122 @@ Kimi K2.5 augments its native visual perception with **external tool calls** to 
 
 **Caption (verbatim):**
 > Figure 12: Qualitative examples of Kimi K2.5 solving visual reasoning tasks via tool use.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.3) ⭐深度解读
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab01.png]]
+> [!quote] caption
+> Performance comparison across different vision-text joint-training strategies. Early fusion with a lower vision ratio yields better results given a fixed total vision-text token budget.
+
+> [!tip] 表格解读（多模态）
+> I'm unable to complete this request because **no figure is present in the image you provided**. The image only contains:
+
+- A page header: "Kimi K2.5 — Technical Report"
+- A caption labeled "Table 1" (text only — no chart, diagram, or visual element)
+
+Without an actual architecture diagram, components, or data-flow illustration to examine, I cannot describe figures, modules, or data flow. If you intended to share a specific figure (e.g., the Moonshot Kimi K2.5 system architecture diagram), please re-upload that image.
+
+---
+
+### Verbatim transcription of the visible caption:
+
+> **Table 1:** Performance comparison across different vision-text joint-training strategies. Early fusion with a lower vision ratio yields better results given a fixed total vision-text token budget.
+
+If you can share the intended figure, I'll happily provide the requested description and key technical takeaway within the 120-word limit.
+
+### Table 2 (p.4) ⭐深度解读
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab02.png]]
+> [!quote] caption
+> Cross-Modal Transfer: Vision RL Improves Textual Knowledge Benchmark Before Vision-RL After Vision-RL Improvement
+
+> [!tip] 表格解读（多模态）
+> There is **no figure** on this page — it contains only Table 2 and body text. I cannot describe architecture, components, or data flow that aren't shown. Here is what the page actually contains, with the table title transcribed verbatim:
+
+**Table title (verbatim):** "Table 2: Cross-Modal Transfer: Vision RL Improves Textual Knowledge"
+
+**Table contents:**
+| Benchmark | Before Vision-RL | After Vision-RL | Improvement |
+|---|---|---|---|
+| MMLU-Pro | 84.7 | 86.4 | +1.7 |
+| GPQA-Diamond | 84.3 | 86.4 | +2.1 |
+| LongBench v2 | 56.7 | 58.9 | +2.2 |
+
+**Key technical takeaway (from the surrounding text, ≤120 words):** Outcome-based visual RL unexpectedly improves *text-only* benchmarks (MMLU-Pro +1.7, GPQA-Diamond +2.1, LongBench v2 +2.2), suggesting visual RL enhances calibration on queries resembling visually grounded reasoning (counting, OCR). Motivated by this, Kimi K2.5's post-training abandons modality-specific expert routing in favor of a **Joint Multimodal RL** paradigm: RL domains are organized by *ability* (knowledge, reasoning, coding, agentic) rather than input modality, and a shared Generative Reward Model (GRM) judges traces across both text and vision — enabling cross-modal transfer without capability degradation.
+
+If you intended a different page containing an architecture/flow figure, please re-upload it.
+
+### Table 3 (p.7) ⭐深度解读
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab03.png]]
+> [!quote] caption
+> Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.
+
+> [!tip] 表格解读（多模态）
+> I only have access to the header and a single caption from the document — not the underlying figure or table content itself. The page shared shows:
+
+- **Header:** "K Kimi K2.5 — TECHNICAL REPORT"
+- **Visible caption:** Table 3's caption
+
+Since the actual table body (training stages, data composition, token volumes, sequence lengths, trainable components) and any architecture/data-flow figure are not included in the input, I cannot describe their structure, components, or flow.
+
+**Transcribed caption verbatim:**
+
+> **Table 3:** Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.
+
+If you can share the figure image or the table rows, I can produce the architecture/components/data-flow description plus the ≤120-word technical takeaway you asked for.
+
+### Table 4 (p.12) ⭐深度解读
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab04.png]]
+> [!quote] caption
+> Performance comparison of Kimi K2.5 against open-source and proprietary models. Bold denotes the global SOTA; Data points marked with * are taken from our internal evaluations. † refers to their scores of text-only subset.
+
+> [!tip] 表格解读（多模态）
+> **No figure provided.** The submitted content contains only a table caption (Table 4) from the Kimi K2.5 Technical Report, not a figure or diagram. Therefore, I cannot describe architecture, components, or data flow, as no architectural figure has been shared.
+
+If you intended to attach a figure (e.g., a diagram of model architecture, training pipeline, or system components), please re-upload the image, and I will provide the requested description and verbatim caption transcription.
+
+**What is present — caption of Table 4 (verbatim):**
+
+> "Table 4: Performance comparison of Kimi K2.5 against open-source and proprietary models. Bold denotes the global SOTA; Data points marked with * are taken from our internal evaluations. ^† refers to their scores of text-only subset."
+
+Please share the figure you would like analyzed, and I'll deliver a ≤120-word technical summary plus an exact caption transcription.
+
+### Table 5 (p.13) ⭐深度解读
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab05.png]]
+> [!quote] caption
+> Performance and token efficiency of some reasoning models. Average output token counts (in thousands) are shown in parentheses.
+
+> [!tip] 表格解读（多模态）
+> Looking at the provided image, I can only see a header banner and a table caption — **no main figure is present** in this image. The image contains text only:
+
+**Header:** "Kimi K2.5 — TECHNICAL REPORT"
+
+**Caption text (transcribed verbatim):**
+> "Table 5: Performance and token efficiency of some reasoning models. Average output token counts (in thousands) are shown in parentheses."
+
+**Technical takeaway (inferred from caption context, ≤120 words):**
+
+Since no figure/table data is visible, the key insight derivable from the caption itself is:
+
+> The figure compares reasoning models on **two axes** — task performance and **token efficiency** (output token count, reported in thousands in parentheses). The key takeaway for reasoning models is that **higher accuracy does not necessarily imply better efficiency**: a model can achieve competitive performance while generating substantially fewer output tokens, making token cost a critical second axis for evaluating reasoning systems alongside raw benchmarks. This dual metric helps identify Pareto-optimal reasoning models that balance capability with inference cost.
+
+If you can share the actual Table 5 contents or the main figure you'd like analyzed, I can provide a more specific architecture/components/data-flow description.
+
+### Table 6 (p.14) ⭐深度解读
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab06.png]]
+> [!quote] caption
+> Performance comparison of Kimi K2.5 Agent Swarm against single-agent and proprietary baselines on agentic search benchmarks. Bold denotes the best result per benchmark.
+
+> [!tip] 表格解读（多模态）
+> **Figure description (Table 6):**
+
+*Structure & components:* A 5-column × 4-row benchmark table comparing five agentic search systems — **K2.5 Agent Swarm** (multi-agent), single-agent **Kimi K2.5**, **Claude Opus 4.5**, **GPT-5.2**, and **GPT-5.2 Pro** — evaluated on three benchmarks: BrowseComp, WideSearch, and In-house Swarm Bench. Bold entries mark per-benchmark winners.
+
+*Data flow logic:* Each row reports a single accuracy score per system, enabling vertical comparison of swarm coordination gains vs. monolithic single-agent/proprietary baselines.
+
+*Key technical takeaway:* Coordinated agent swarms dominate on challenging, broad-scope search (e.g., +17.8 over Claude Opus 4.5 on BrowseComp, 78.4), while matched-cost single-agent models remain competitive on narrow retrieval (WideSearch). Multi-agent decomposition appears to pay off most when queries exceed a single model's effective search horizon.
+
+**Caption (verbatim):** *Table 6: Performance comparison of Kimi K2.5 Agent Swarm against single-agent and proprietary baselines on agentic search benchmarks. Bold denotes the best result per benchmark.*
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

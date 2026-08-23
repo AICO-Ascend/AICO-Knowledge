@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/hc-manifold-constrained-hyper-connections-p01.png]]
+![[assets/crops/hc-manifold-constrained-hyper-connections-fig01.png]]
+*整页渲染: ![[assets/hc-manifold-constrained-hyper-connections-p01.png]]*
 > [!quote] caption
 > Illustrations of Residual Connection Paradigms. This figure compares the structural
 
@@ -52,7 +53,8 @@ Standard residual connections preserve an *identity mapping* property essential 
 > Figure 1 | **Illustrations of Residual Connection Paradigms.** This figure compares the structural design of (a) standard Residual Connection, (b) Hyper-Connections (HC), and (c) our proposed **Manifold-Constrained Hyper-Connections (mHC)**. Unlike the unconstrained HC, *mHC* focuses on optimizing the residual connection space by projecting the matrices onto a constrained manifold to ensure stability.
 
 ### Figure 2 (p.7) ⭐深度解读
-![[assets/hc-manifold-constrained-hyper-connections-p07.png]]
+![[assets/crops/hc-manifold-constrained-hyper-connections-fig02.png]]
+*整页渲染: ![[assets/hc-manifold-constrained-hyper-connections-p07.png]]*
 > [!quote] caption
 > Training Instability of Hyper-Connections (HC). This figure illustrates (a) the absolute
 
@@ -71,7 +73,8 @@ Figure 3 has two side-by-side log-scale plots of Amax Gain Magnitude (y-axis) vs
 > Figure 3 | Propagation Instability of Hyper-Connections (HC). This figure illustrates the propagation dynamics of (a) the single-layer mapping $\mathcal{H}_l^{\text{res}}$ and (b) the composite mapping $\prod_{i=1}^{L-l}\mathcal{H}_{l,i}^{\text{res}}$ within the 27B model. The layer index $l$ ($x$-axis) unrolls each standard Transformer block into two independent layers (Attention and FFN). The Amax Gain Magnitude ($y$-axis) is calculated as the maximum absolute row sum (for the forward signal) and column sum (for the backward gradient), averaged over all tokens in a selected sequence.
 
 ### Figure 3 (p.7) ⭐深度解读
-![[assets/hc-manifold-constrained-hyper-connections-p07.png]]
+![[assets/crops/hc-manifold-constrained-hyper-connections-fig03.png]]
+*整页渲染: ![[assets/hc-manifold-constrained-hyper-connections-p07.png]]*
 > [!quote] caption
 > Propagation Instability of Hyper-Connections (HC). This figure illustrates the
 
@@ -90,7 +93,8 @@ Figure 3 has two side-by-side log-scale plots of Amax Gain Magnitude (y-axis) vs
 > Figure 3 | Propagation Instability of Hyper-Connections (HC). This figure illustrates the propagation dynamics of (a) the single-layer mapping $\mathcal{H}_l^{\text{res}}$ and (b) the composite mapping $\prod_{i=1}^{L-l}\mathcal{H}_{l,i}^{\text{res}}$ within the 27B model. The layer index $l$ ($x$-axis) unrolls each standard Transformer block into two independent layers (Attention and FFN). The Amax Gain Magnitude ($y$-axis) is calculated as the maximum absolute row sum (for the forward signal) and column sum (for the backward gradient), averaged over all tokens in a selected sequence.
 
 ### Figure 4 (p.12) ⭐深度解读
-![[assets/hc-manifold-constrained-hyper-connections-p12.png]]
+![[assets/crops/hc-manifold-constrained-hyper-connections-fig04.png]]
+*整页渲染: ![[assets/hc-manifold-constrained-hyper-connections-p12.png]]*
 > [!quote] caption
 > Communication-Computation Overlapping for mHC. We extend the DualPipe
 
@@ -111,7 +115,8 @@ Figure 4 depicts a DualPipe-style timeline scheduling diagram with three paralle
 **Figure 4 | Communication-Computation Overlapping for *m*HC.** We extend the DualPipe schedule to handle the overhead introduced by *m*HC. Lengths of each block are illustrative only and do not represent actual duration. (F), (B), (W) refers to forward pass, backward pass, weight gradient computation, respectively. 𝓕ᴬ and 𝓕ᴹ represents kernels corresponded to Attention and MLP, respectively.
 
 ### Figure 5 (p.12) ⭐深度解读
-![[assets/hc-manifold-constrained-hyper-connections-p12.png]]
+![[assets/crops/hc-manifold-constrained-hyper-connections-fig05.png]]
+*整页渲染: ![[assets/hc-manifold-constrained-hyper-connections-p12.png]]*
 > [!quote] caption
 > Training Stability of Manifold-Constrained Hyper-Connections (mHC). This figure
 
@@ -132,7 +137,8 @@ Figure 4 depicts a DualPipe-style timeline scheduling diagram with three paralle
 **Figure 4 | Communication-Computation Overlapping for *m*HC.** We extend the DualPipe schedule to handle the overhead introduced by *m*HC. Lengths of each block are illustrative only and do not represent actual duration. (F), (B), (W) refers to forward pass, backward pass, weight gradient computation, respectively. 𝓕ᴬ and 𝓕ᴹ represents kernels corresponded to Attention and MLP, respectively.
 
 ### Figure 6 (p.13) ⭐深度解读
-![[assets/hc-manifold-constrained-hyper-connections-p13.png]]
+![[assets/crops/hc-manifold-constrained-hyper-connections-fig06.png]]
+*整页渲染: ![[assets/hc-manifold-constrained-hyper-connections-p13.png]]*
 > [!quote] caption
 > Scaling properties of mHC compared to the Baseline. (a) Compute Scaling Curve.
 
@@ -153,7 +159,8 @@ Each subfigure contains paired Y-axes: **Absolute Loss Gap** (left, –0.04 to 0
 **Figure 6 | Scaling properties of *m*HC compared to the Baseline. (a) Compute Scaling Curve.** Solid lines depict the performance gap across different compute budgets. Each point represents a specific compute-optimal configuration of model size and dataset size, scaling from 3B and 9B to 27B parameters. **(b) Token Scaling Curve.** Trajectory of the 3B model during training. Each point represents the model's performance at different training tokens. Detailed architectures and training configurations are provided in Appendix A.1.
 
 ### Figure 7 (p.14) ⭐深度解读
-![[assets/hc-manifold-constrained-hyper-connections-p14.png]]
+![[assets/crops/hc-manifold-constrained-hyper-connections-fig07.png]]
+*整页渲染: ![[assets/hc-manifold-constrained-hyper-connections-p14.png]]*
 > [!quote] caption
 > Propagation Stability of Manifold-Constrained Hyper-Connections (mHC). This
 
@@ -171,7 +178,8 @@ Each subfigure contains paired Y-axes: **Absolute Loss Gap** (left, –0.04 to 0
 > **Figure 8 | Visualizations of Learnable Mappings.** This figure displays representative single-layer and composite mappings for HC (first row) and *m*HC (second row). Each matrix is computed by averaging over all tokens within a selected sequence. The labels annotated along the y-axis and x-axis indicate the forward signal gain (row sum) and the backward gradient gain (column sum), respectively.
 
 ### Figure 8 (p.14) ⭐深度解读
-![[assets/hc-manifold-constrained-hyper-connections-p14.png]]
+![[assets/crops/hc-manifold-constrained-hyper-connections-fig08.png]]
+*整页渲染: ![[assets/hc-manifold-constrained-hyper-connections-p14.png]]*
 > [!quote] caption
 > Visualizations of Learnable Mappings. This figure displays representative single-
 
@@ -187,6 +195,79 @@ Each subfigure contains paired Y-axes: **Absolute Loss Gap** (left, –0.04 to 0
 ## Caption (verbatim)
 
 > **Figure 8 | Visualizations of Learnable Mappings.** This figure displays representative single-layer and composite mappings for HC (first row) and *m*HC (second row). Each matrix is computed by averaging over all tokens within a selected sequence. The labels annotated along the y-axis and x-axis indicate the forward signal gain (row sum) and the backward gradient gain (column sum), respectively.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.6) ⭐深度解读
+![[assets/crops/hc-manifold-constrained-hyper-connections-tab01.png]]
+> [!quote] caption
+> | Ablation Study of HC Components. When a specific mapping ( H pre
+
+> [!tip] 表格解读（多模态）
+> **Note:** The provided image shows a **table** (Table 1, an ablation study), not a main figure with architecture/components/data flow. I will therefore describe the table's content and transcribe its caption as requested.
+
+**Description of the Table (Table 1 — Ablation Study):**
+The table presents an ablation study of "HC Components," evaluating the contribution of three mappings — ℋₗʳᵉˢ, ℋₗᵖʳᵉ, and ℋₗᵖᵒˢᵗ — against an "Absolute Loss Gap" metric. Each column corresponds to one component being toggled or evaluated, probing how dimensional consistency is preserved when specific mappings are disabled.
+
+**Key Technical Takeaway:**
+The authors enforce dimensional consistency by replacing disabled mappings with structurally motivated defaults: **1/n uniform weights for ℋₗᵖʳᵉ, all-ones weights for ℋₗᵖᵒˢᵗ, and the identity matrix for ℋₗʳᵉˢ** — enabling isolated measurement of each component's individual impact.
+
+**Caption (transcribed verbatim, noting truncation of the right edge):**
+
+> Table 1 | **Ablation Study of HC Components.** When a specific mapping (ℋₗᵖʳᵉ, ℋₗᵖᵒˢᵗ, ℋₗʳᵉˢ) is disabled, we employ a fixed mapping to maintain dimensional consistency: uniform weights of 1/n for ℋₗᵖʳᵉ, uniform weights of ones for ℋₗᵖᵒˢᵗ, and the identity matrix for ℋₗʳᵉˢ.
+
+*(The sentence "ℋₗʳᵉˢ is disabled..." portion on the right margin is clipped in the image; the visible text ends cleanly at "identity matrix for ℋₗʳᵉˢ." The table body rows are not visible — only the column headers: ℋₗʳᵉˢ | ℋₗᵖʳᵉ | ℋₗᵖᵒˢᵗ | Absolute Loss Gap.)*
+
+### Table 2 (p.8) ⭐深度解读
+![[assets/crops/hc-manifold-constrained-hyper-connections-tab02.png]]
+> [!quote] caption
+> | Comparison of Memory Access Costs Per Token. This analysis accounts for the overhead introduced by the residual stream maintenance in the forward pass, excluding the internal I/O of the layer function F .
+
+> [!tip] 表格解读（多模态）
+> The provided content is a **table** (Table 2), not a figure with architecture/components/data flow. Below is a description based on the table provided.
+
+**Description (≈120 words):**
+The figure is actually Table 2, a compact data table with four columns — *Method*, *Operation*, *Read (Elements)*, *Write (Elements)* — and a single visible data row for the "Residual" method, whose "Residual Merge" operation performs **2C** reads and **C** writes per token. No architectural diagram, schematic, or data-flow arrows are shown; the table merely quantifies element-level memory traffic during the forward pass. A partial second row is faintly visible beneath the rule but is cut off in the provided snippet. **Key takeaway:** residual-stream maintenance incurs a per-token memory-access cost of 2C reads + 1C writes, a non-trivial overhead that the authors explicitly factor in when comparing methods (note: internal I/O of ℱ is excluded by construction).
+
+**Caption (verbatim):**
+"Table 2 | Comparison of Memory Access Costs Per Token. This analysis accounts for the overhead introduced by the residual stream maintenance in the forward pass, excluding the internal I/O of the layer function ℱ."
+
+### Table 3 (p.11) ⭐深度解读
+![[assets/crops/hc-manifold-constrained-hyper-connections-tab03.png]]
+> [!quote] caption
+> | Stored and Recomputed Intermediate Activations We list per token activation pre- served for the backward pass and the transient activation recomputed in 𝐿 𝑟 consecutive layers. Layer 𝑙 0 represents the first layer in 𝐿 𝑟 layers and layer 𝑙 is in [ 𝑙 0 , 𝑙 0 + 𝐿 𝑟 − 1 ] .
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+
+The table (Table 3) enumerates intermediate activations handled during backpropagation in *mHC*-kernel recomputation, split into resident vs. transient memory. Two activations are *persistently stored*: the block input **x_l₀** (size *nC*, kept once per block of *L_r* layers) and the projected output **𝒻(ℋₗ^pre xₗ, 𝒲ₗ)** (size *C*, kept every layer). Three activations (**xₗ**, **ℋₗ^pre xₗ**, **RMSNorm(ℋₗ^pre xₗ)**) are recomputed *transiently* inside each block, contributing a per-block overhead of (*n*+2)*C* × *L_r* elements that sets the peak memory. Equation (20) balances resident term *nC*⌈*L*/*L_r*⌉ against transient term (*n*+2)*C*·*L_r* to derive the optimal block size *L_r*\* ≈ √(*nL*/(*n*+2)).
+
+**Key takeaway:** Optimal recomputation block size grows as √*L*, trading resident vs. transient memory.
+
+**Verbatim caption:**
+
+Table 3 | **Stored and Recomputed Intermediate Activations** We list per token activation preserved for the backward pass and the transient activation recomputed in *L_r* consecutive layers. Layer *l*₀ represents the first layer in *L_r* layers and layer *l* is in [*l*₀, *l*₀ + *L_r* − 1].
+
+### Table 5 (p.19) ⭐深度解读
+![[assets/crops/hc-manifold-constrained-hyper-connections-tab05.png]]
+> [!quote] caption
+> | Detailed Model Specifications and Hyper-parameters. This table presents the architec- tural configurations for the 3B, 9B, and 27B models based on the DeepSeek-V3 (Liu et al., 2024b) architecture. It outlines the specific hyper-parameters for m HC and HC, including the residual stream expansion an
+
+> [!tip] 表格解读（多模态）
+> ## Description
+
+The table is **Table 5**, a specification sheet comparing four model configurations: **3B, 9B, 27B** (DeepSeek-V3-style), and a **3B/1T-tokens** variant. It is organized into four blocks:
+
+1. **Capacity** — Vocab/Active/Total parameters (e.g., 27B has 4.14B active of 27.0B total).
+2. **Architecture** — MoE layers (12 → 30), routed experts (64/72), 6 active + 2 shared experts, **MLA attention** with RoPE, RMSNorm, and **mHC/HC** expansion (n=4, gating α=0.01, Sinkhorn-Knopp t_max=20).
+3. **Data** — 4 096 context, batch size 320 → 2 560, training steps 30k → 100k, tokens 39.3B → 1.05T.
+4. **Optimization** — AdamW (β=(0.9, 0.95)), step LR schedule (8.6e-4 → 4.0e-4), 2 000-step warmup, weight decay 0.1.
+
+**Key takeaway:** All variants keep MoE sparsity (only ~15–20% of total params active) and a uniform MLA + mHC backbone, scaling mainly via layers/dimensions; learning rate shrinks with model size while tokens-per-param and batch grow, preserving training stability across the 3B→27B sweep.
+
+## Caption (verbatim)
+
+**Table 5 | Detailed Model Specifications and Hyper-parameters.** This table presents the architectural configurations for the 3B, 9B, and 27B models based on the DeepSeek-V3 (Liu et al., 2024b) architecture. It outlines the specific hyper-parameters for *m*HC and HC, including the residual stream expansion and Sinkhorn–Knopp settings, alongside the optimization and training protocols used in the experiments.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

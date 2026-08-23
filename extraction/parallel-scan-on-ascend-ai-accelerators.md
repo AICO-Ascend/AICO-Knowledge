@@ -32,7 +32,8 @@ tags: []
 > 【MiniMax 解读】⭐Ascend 910B AI Core 架构(Fig.3)：单 AI Core = 1 个 AI Cube(AIC 矩阵乘引擎) + 2 个 AI Vector(AIV SIMD 核)，各有独立 Unified Buffer(UB) scratchpad，加 Memory Transfer Engine(MTE)+标量+控制块。AIC/AIV 共享全局 HBM/L2，Cube↔Vector 数据交换须走全局内存/L2（AIC 无直接写 AIV UB 的本地路径）。并行 scan：AIV 跑 element-wise/局部 scan + 解耦 look-back（在 UB 上），AIC 改作跨块前缀累积（矩阵乘式），MTE 编排块级 tile 传输。⭐结论：Ascend 非对称 Cube/Vector 划分 + UB 局部计算 + Cube↔Vector 仅全局通信→偏好 block-tiled、通信最小化的解耦 scan 设计，而非密集 GEMM 中心。直击昇腾线性注意力/SSM scan。
 
 ### Figure 4 (p.4) ⭐深度解读
-![[assets/parallel-scan-on-ascend-ai-accelerators-p04.png]]
+![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig04.png]]
+*整页渲染: ![[assets/parallel-scan-on-ascend-ai-accelerators-p04.png]]*
 > [!quote] caption
 > 1: Data path from an input tile xℓto an output tile yℓof the ScanU (Algorithm 4.1).
 
@@ -44,7 +45,8 @@ Figure 3.1 depicts the Ascend 910B AI core architecture. Global Memory connects 
 Figure 3.1: Architecture of Ascend 910B accelerators. Each AI core contains one cube and two vector units.
 
 ### Figure 5 (p.7) ⭐深度解读
-![[assets/parallel-scan-on-ascend-ai-accelerators-p07.png]]
+![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig05.png]]
+*整页渲染: ![[assets/parallel-scan-on-ascend-ai-accelerators-p07.png]]*
 > [!quote] caption
 > 1: A diagram of well-known parallel scan applica- tions considered here along with their dependencies.
 
@@ -65,7 +67,8 @@ The diagram is a directed acyclic graph (DAG) showing dependencies among paralle
 **Caption (verbatim):** "Figure 5.1: A diagram of well-known parallel scan applications considered here along with their dependencies."
 
 ### Figure 6 (p.8) ⭐深度解读
-![[assets/parallel-scan-on-ascend-ai-accelerators-p08.png]]
+![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig06.png]]
+*整页渲染: ![[assets/parallel-scan-on-ascend-ai-accelerators-p08.png]]*
 > [!quote] caption
 > 1:
 

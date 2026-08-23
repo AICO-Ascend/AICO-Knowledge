@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p01.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig01.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p01.png]]*
 > [!quote] caption
 > Kimi K3 main results. 1https://huggingface.co/moonshotai/Kimi-K3[cs.CL] 7 Aug 2026
 
@@ -40,7 +41,8 @@ Figure 1 is a multi-panel horizontal bar chart comparing Kimi K3 against six bas
 > Figure 1: Kimi K3 main results.
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p03.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig02.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p03.png]]*
 > [!quote] caption
 > The Kimi K3 architecture, organized around token, channel, and layer mixing, with a native vision pathway at the input.
 
@@ -48,7 +50,8 @@ Figure 1 is a multi-panel horizontal bar chart comparing Kimi K3 against six bas
 > Kimi K3 架构总览：每个 block 由 3 层 Kimi Delta Attention (KDA) + 1 层 Gated MLA 组成混合注意力，每个注意力层后接 Stable LatentMoE（16/896 路由专家+共享专家）做稀疏 channel mixing。深度维度引入 Attention Residuals (AttnRes)：用可学习 pseudo-query w 对 embedding 及前序各 block 输出算注意力权重 α，实现跨层选择性信息检索，突破顺序残差累积。输入侧原生视觉通路：MoonViT-V2 编码图像/视频经轻量 projector 映射进共享 embedding 空间。token/channel/layer 三维信息流设计，scaling 效率较 K2 提升 ~2.5×。
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p05.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig03.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p05.png]]*
 > [!quote] caption
 > Lower-bounded decay and its effect on chunkwise KDA computation. (a) Kimi Linear uses an unbounded negative-Softplus mapping, whereas Kimi K3 bounds the log-decay with a scaled sigmoid; the curves show A = 0 and gmin = −5. (b) Kimi Linear evaluates each diagonal tile with an explicit position-pair computation, while the bounded range in Kimi K3 allows all causal tiles to use dense Tensor Core matr
 
@@ -56,7 +59,8 @@ Figure 1 is a multi-panel horizontal bar chart comparing Kimi K3 against six bas
 > 下界衰减与 chunkwise KDA 计算：(a) Kimi Linear 用无界 negative-Softplus 映射 g=−e^A·Softplus(z)，K3 改为 g=g_min·Sigmoid(e^A·z) 把 log-decay 下界到 g_min=−5；(b) 有界范围使所有 causal tile（含对角 tile）都能用稠密 Tensor Core 矩阵乘，消掉逐位置对的 diagonal 路径。g_min=−5 时 16-token tile 累计 log-decay∈(−80,0)，rescale 因子 <e^80 仍在 BF16 动态范围内——分块线性注意力在 Tensor Core/NPU 上高效落地的关键参数化技巧。
 
 ### Figure 4 (p.7) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p07.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig04.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p07.png]]*
 > [!quote] caption
 > Gate and up branches of GLU, SwiGLU, and SiTU-GLU, together with their scalar responses, where σ denotes the sigmoid function. Both branches receive the scalar input x, and all curves share the domain x ∈[−10, 100]; the inset magnifies the near-origin region. SiTU-GLU, shown in red with β1 = 4 and β2 = 25, closely follows SwiGLU near the origin and approaches the bound |f(x)| ≤β1β2 = 100 for large
 
@@ -72,7 +76,8 @@ The figure is a two-panel comparison of three gated linear unit (GLU) activation
 "Figure 4: Gate and up branches of GLU, SwiGLU, and SiTU-GLU, together with their scalar responses, where σ denotes the sigmoid function. Both branches receive the scalar input x, and all curves share the domain x ∈ [−10, 100]; the inset magnifies the near-origin region. SiTU-GLU, shown in red with β₁ = 4 and β₂ = 25, closely follows SwiGLU near the origin and approaches the bound |f(x)| ≤ β₁β₂ = 100 for large positive inputs, whereas SwiGLU remains unbounded."
 
 ### Figure 5 (p.8) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p08.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig05.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p08.png]]*
 > [!quote] caption
 > Illustration of Quantile Balancing with m = 8 tokens, n = 4 routed experts, and k = 1 selected expert per token. (a)
 
@@ -93,7 +98,8 @@ The figure is a two-panel comparison of three gated linear unit (GLU) activation
 **Figure 5**: Illustration of Quantile Balancing with $m=8$ tokens, $n=4$ routed experts, and $k=1$ selected expert per token. (a) Token-wise Top-$k$ routing (tokens on the left, experts on the right) produces loads (4, 3, 1, 0); darker circles indicate overheated experts, whereas faded and dashed circles indicate underutilized and dying experts, respectively. (b) Each gray bar is the margin of the currently biased score, $s_{i,j} + b_j^{(t)} - \alpha_i^{(t)}$, so the row-wise maxima reproduce the routing in (a). The dashed red line in each column is the bias adjustment $b_j^{(t)} - \widehat{b}_j^{(t+1)}$, placed at the $(q+1)$-th largest margin so that exactly $q=2$ margins exceed it. The marker ★ denotes the row-wise Top-$k$ choice after subtracting the column adjustments, i.e., the routing in (c). (c) The retained choices yield the balanced load (2, 2, 2, 2); red edges denote assignments changed by **QB**.**
 
 ### Figure 6 (p.9) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p09.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig06.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p09.png]]*
 > [!quote] caption
 > Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lower gradient norms with fewer spikes, indicating more stable optimization. 9
 
@@ -108,7 +114,8 @@ The figure presents two side-by-side time-series line plots comparing vision-tow
 "Figure 6: Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lower gradient norms with fewer spikes, indicating more stable optimization."
 
 ### Figure 7 (p.11) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p11.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig07.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p11.png]]*
 > [!quote] caption
 > Fitted scaling-law curves for Kimi K2 and Kimi K3. Kimi K3 achieves 2.5× gain in scaling efficiency over Kimi K2.
 
@@ -123,7 +130,8 @@ The figure is a log-scale scatter plot comparing validation loss against trainin
 Figure 7: Fitted scaling-law curves for Kimi K2 and Kimi K3. Kimi K3 achieves 2.5× gain in scaling efficiency over Kimi K2.
 
 ### Figure 8 (p.13) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p13.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig08.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p13.png]]*
 > [!quote] caption
 > Scores and the average assistant steps across a variety of public and in-house evaluations during RL. By scaling RL FLOPs, tool-call steps scale up consistently, accompanied by a comprehensive improvement in the model’s overall capability.
 
@@ -146,7 +154,8 @@ Figure 7: Fitted scaling-law curves for Kimi K2 and Kimi K3. Kimi K3 achieves 2.
 > Figure 8: Scores and the average assistant steps across a variety of public and in-house evaluations during RL. By scaling RL FLOPs, tool-call steps scale up consistently, accompanied by a comprehensive improvement in the model's overall capability.
 
 ### Figure 9 (p.15) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p15.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig09.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p15.png]]*
 > [!quote] caption
 > Overview of knowledge-graph-guided task synthesis. The hierarchically organized knowledge graph represents concepts at multiple levels, ranging from broad domains to fine-grained concepts. Related nodes are sampled to form a keyword set that guides the retrieval of publicly available source materials. For each synthesis instance, the system selects a task type and uses the retrieved materials to s
 
@@ -167,7 +176,8 @@ On the **right**, a vertical pipeline processes that sample:
 Figure 9: Overview of knowledge-graph-guided task synthesis. The hierarchically organized knowledge graph represents concepts at multiple levels, ranging from broad domains to fine-grained concepts. Related nodes are sampled to form a keyword set that guides the retrieval of publicly available source materials. For each synthesis instance, the system selects a task type and uses the retrieved materials to synthesize a corresponding task.
 
 ### Figure 10 (p.17) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p17.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig10.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p17.png]]*
 > [!quote] caption
 > Completion curves on Camera Repair Management System, a black-box system replication task in which the agent reconstructs a hidden 3D-camera repair system as a web application through oracle queries. Completion denotes verifier-assessed task progress. 5
 
@@ -183,7 +193,8 @@ The figure is a step plot (completion curve) titled "Camera Repair Management Sy
 > Figure 10: Completion curves on Camera Repair Management System, a black-box system replication task in which the agent reconstructs a hidden 3D-camera repair system as a web application through oracle queries. Completion denotes verifier-assessed task progress.
 
 ### Figure 11 (p.19) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p19.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig11.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p19.png]]*
 > [!quote] caption
 > Computation, communication and offloading overlapped in different PP phases.
 
@@ -204,7 +215,8 @@ The figure (Figure 11) is a **pipeline-parallel execution timeline** showing how
 **Figure 11:** Computation, communication and offloading overlapped in different PP phases.
 
 ### Figure 12 (p.23) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p23.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig12.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p23.png]]*
 > [!quote] caption
 > Fine-grained prefix caching within a physical cache block. A 6144-token physical block contains twelve 512-token hash blocks, with cached MLA blocks shown in blue and empty blocks in light gray. The markers below show the KDA checkpoint status at each hash boundary. An open circle (◦) denotes a boundary without a stored checkpoint, a gray dot (•) denotes a persisted KDA checkpoint, and an orange d
 
@@ -221,7 +233,8 @@ Prefix hashing is decoupled from physical-block allocation: the coarse 6144-toke
 Figure 12: **Fine-grained prefix caching within a physical cache block.** A 6144-token physical block contains twelve 512-token hash blocks, with cached MLA blocks shown in blue and empty blocks in light gray. The markers below show the KDA checkpoint status at each hash boundary. An open circle (○) denotes a boundary without a stored checkpoint, a gray dot (●) denotes a persisted KDA checkpoint, and an orange dot (●) marks the checkpoint hit at B = 2560. Persisted checkpoints are sparse and typically coincide with conversation-turn boundaries. The request reuses the five MLA hash blocks and the KDA checkpoint at B, then resumes prefill without recomputing [0, B).
 
 ### Figure 13 (p.32) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p32.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig13.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p32.png]]*
 > [!quote] caption
 > Score vs. per-task inference cost on Kimi Code Bench 2.0, BrowseComp, GDPval-AA v2, and AA-Briefcase. Kimi K3 is marked with a star.
 
@@ -242,7 +255,8 @@ Figure 12: **Fine-grained prefix caching within a physical cache block.** A 6144
 > *Figure 13: Score vs. per-task inference cost on Kimi Code Bench 2.0, BrowseComp, GDPval-AA v2, and AA-Briefcase. Kimi K3 is marked with a star.*
 
 ### Figure 14 (p.33) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p33.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig14.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p33.png]]*
 > [!quote] caption
 > Case study: GPU kernel optimization on AttnRes. 7
 
@@ -264,7 +278,8 @@ Kimi K3 dominates in GPU kernel optimization, reaching the highest speedup (~59.
 Figure 14: Case study: GPU kernel optimization on AttnRes.
 
 ### Figure 15 (p.34) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p34.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig15.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p34.png]]*
 > [!quote] caption
 > Case study: GPU compiler development with MiniTriton. (a) CUDA-core and (b) tensor-core rooflines of MiniTriton kernels on an NVIDIA L20 (sm_89) against torch eager, torch.compile, Triton, and cuBLAS baselines (losing points included); (c) training-loss curves of the character-level GPT trained with MiniTriton versus torch eager; (d) two-GPU data-parallel training built on MiniTriton’s own distrib
 
@@ -272,7 +287,8 @@ Figure 14: Case study: GPU kernel optimization on AttnRes.
 > **Description (architecture/components/data flow):** Figure 15 is a four-panel benchmark suite for MiniTriton, an in-house GPU compiler. Panels (a) and (b) are log–log roofline plots on an NVIDIA L20 (sm_89): (a) fp32 CUDA-core throughput (GFLOP/s) vs arithmetic intensity (FLOP/byte), and (b) tensor-core rooflines split into tf32 and bf16 tiers. Each plots MiniTriton against torch eager, torch.compile, Triton, and cuBLAS for kernels (matmul, softmax, flash_attn, kda, gpt50m_step), with losing points included for fairness. Panel (c) overlays training-loss curves (character-level GPT, 100 steps) for MiniTriton vs torch eager. Panel (d) shows cross-entropy for single-GPU vs two-GPU NCCL DDP, identical seeds/schedule, demonstrating lossless scaling. **Key takeaway:** MiniTriton sits on or near the roofline across kernels/precisions and converges identically to torch eager, while custom NCCL primitives match single-GPU training loss.
 
 ### Figure 16 (p.46) ⭐深度解读
-![[assets/kimi-k3-open-frontier-intelligence-p46.png]]
+![[assets/crops/kimi-k3-open-frontier-intelligence-fig16.png]]
+*整页渲染: ![[assets/kimi-k3-open-frontier-intelligence-p46.png]]*
 > [!quote] caption
 > Structure of the Kimi K3 chat template. (a) Context layout: global option messages precede the input messages, while one-shot option messages follow them, so that per-request options leave the history KV cache intact; dynamically loaded tools are injected mid-session as input option messages (dashed). (b) Anatomy of an assistant message: the body is organized into think, response, and tools channe
 
@@ -296,6 +312,94 @@ The figure (Figure 16) depicts the **Kimi K3 chat template** across three panels
 ## Caption (verbatim)
 
 > **Figure 16:** Structure of the Kimi K3 chat template. **(a)** Context layout: global option messages precede the input messages, while one-shot option messages follow them, so that per-request options leave the history KV cache intact; dynamically loaded tools are injected mid-session as input option messages (dashed). **(b)** Anatomy of an assistant message: the body is organized into `think`, `response`, and `tools` channels. **(c)** Expansion of the `tools` channel: parallel tool calls are indexed so that tool results can be matched to their calls, and arguments are typed.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.11) ⭐深度解读
+![[assets/crops/kimi-k3-open-frontier-intelligence-tab01.png]]
+> [!quote] caption
+> Architectural comparison between Kimi K2 and Kimi K3.
+
+> [!tip] 表格解读（多模态）
+> ## Description
+
+The table compares Kimi K2 and K3 across ~22 architectural dimensions, organized into parameter counts, MoE/attention structure, context, and vision components. Key columns list the per-model value and a Δ showing relative change.
+
+**Architecture/Components:** Both use MoE. K3 scales total parameters from 1.04T → 2.78T (+167%) and activated params from 32.6B → 104.2B (+220%), achieved by raising layers (61→93), routed experts (384→896), active experts/token (8→16), shared experts (1→2), and per-expert hidden dim (2,048→3,072). A new **Latent MoE Dimension (3584, 0.5×)** appears in K3. Attention shifts from pure MLA to a **Hybrid KDA–MLA** (69 KDA + 24 MLA layers), with activation changing SwiGLU → **SiTU-GLU**. Training context jumps 8× (128K → 1M). K3 also adds a native ViT encoder (401M params, 27 layers, patch 14, 12 heads).
+
+**Key Technical Takeaway:** K3's gains come from jointly widening MoE capacity *and* replacing uniform MLA with a hybrid KDA–MLA stack, enabling 1M-token context with a native vision tower.
+
+## Caption (verbatim)
+
+*Table 1: Architectural comparison between Kimi K2 and Kimi K3.*
+
+### Table 2 (p.27) ⭐深度解读
+![[assets/crops/kimi-k3-open-frontier-intelligence-tab02.png]]
+> [!quote] caption
+> Performance comparison of Kimi K3 against proprietary and open-source models. Bold denotes the best result for each benchmark and underline the second-best. Unless otherwise noted, Kimi K3 results are obtained with reasoning effort set to max and temperature equal to 1 . 0 . For HLE-Full, MMMU-Pro, 
+
+> [!tip] 表格解读（多模态）
+> **Note:** The provided image contains only the caption for **Table 2** — no figure, diagram, or actual table data is visible, so I cannot describe a graphical architecture or data flow. The following describes what the caption indicates about the table itself.
+
+**Description:** Table 2 is a benchmark comparison matrix where rows are models (Kimi K3 vs. proprietary and open-source competitors) and columns are intelligence/reasoning benchmarks (e.g., HLE-Full, MMMU-Pro, CharXiv (RQ), Math-Vision, ZeroBench, plus standard suites). Cells contain performance scores; for select hard benchmarks, two scores are reported — without and with tool augmentation (general tools for HLE-Full, Python for vision benchmarks). Bold marks the best per column, underline the second-best.
+
+**Key technical takeaway:** Kimi K3 is stress-tested under maximum reasoning effort (temperature 1.0) head-to-head with top frontier models, including tool-augmented variants — a deliberate apples-to-apples comparison rather than a single-config benchmark.
+
+**Caption (verbatim):**
+
+> Table 2: Performance comparison of Kimi K3 against proprietary and open-source models. **Bold** denotes the best result for each benchmark and underline the second-best. Unless otherwise noted, Kimi K3 results are obtained with reasoning effort set to max and temperature equal to 1.0. For HLE-Full, MMMU-Pro, CharXiv (RQ), Math-Vision, and ZeroBench, each cell reports the scores without and with tool augmentation (general tools for HLE-Full, Python for the vision benchmarks), in that order. <sup>†</sup>On the official Agents' Last Exam leaderboard, the Claude Faible 5 entry runs at xhigh effort with 40% of tasks annotated as downgraded.
+
+### Table 3 (p.29) ⭐深度解读
+![[assets/crops/kimi-k3-open-frontier-intelligence-tab03.png]]
+> [!quote] caption
+> Results on our in-house benchmarks. Bold denotes the best reported result per benchmark; “-” denotes scores not yet included in this report. Unless otherwise noted, models are evaluated at maximum reasoning effort (GPT-5.5 at xhigh); harness assignments are shown in the Harness column. a 13 fallback
+
+> [!tip] 表格解读（多模态）
+> # Clarification
+
+The image provided does **not** contain a figure with architecture, components, or data flow. It contains a **table** (Table 3) showing benchmark results from a Kimi K3 technical report. I cannot describe architecture/components/data flow that isn't present.
+
+What is shown:
+- A **header banner** ("Kimi K3: Open Frontier Intelligence" / "TECHNICAL REPORT")
+- A **table caption** describing methodology and footnotes
+- The **top row of a results table**, with column headers beginning to appear at the bottom (e.g., "Proprietary," "Open Weight")
+
+There is no schematic, diagram, model architecture illustration, or data-flow visualization in this image.
+
+# Verbatim Caption Transcription
+
+> **Table 3:** Results on our in-house benchmarks. **Bold** denotes the best reported result per benchmark; "–" denotes scores not yet included in this report. Unless otherwise noted, models are evaluated at maximum reasoning effort (GPT-5.5 at *xhigh*); harness assignments are shown in the Harness column. ᵃ13 fallbacks and 1 refusal out of 80 tasks. ᵇ10 refusals out of 80 tasks. ᶜ3 refusals out of 80 tasks. ᵈIncludes 2 tasks that Claude Fable 5 refused to answer. ᵉIncludes 14 tasks that Claude Fable 5 refused to answer. ᶠ6 refusals out of 95 tasks. ᵍReported metric is 1−hallucination rate; higher is better.
+
+If you intended to share a different figure (e.g., a model architecture diagram), please upload it and I'll describe that instead.
+
+### Table 4 (p.29) ⭐深度解读
+![[assets/crops/kimi-k3-open-frontier-intelligence-tab04.png]]
+> [!quote] caption
+> Results on the in-house Kimi Webdev Bench: Kimi K3 (max) against Claude Opus 4.8 (max), both run with the Claude Code harness. The comparison is performed under blind expert judging, where experts score each output on code quality, feature completeness, visual fidelity, and interaction experience wi
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+Table 4 presents a blind A/B comparison between Kimi K3 (max) and Claude Opus 4.8 (max) on the in-house Kimi Webdev Bench, with both models sharing the same Claude Code harness for fair parity. The table is structured as a domain-stratified results matrix: rows are four task categories (Games, 3D / WebGL / Shader, Website / UI Clone, Overall), and columns are four rating metrics (Win %, Tie %, Lose %, Win − Lose net margin). Domain experts score each output on code quality, feature completeness, visual fidelity, and interaction experience without model attribution. **Key takeaway:** Kimi K3 wins overall at 58.6% vs 27.6% losses (+31.0%), with its largest advantage in 3D/WebGL/Shader rendering tasks (+59.1% margin).
+
+**Caption (verbatim):**
+Table 4: Results on the in-house Kimi Webdev Bench: Kimi K3 (max) against Claude Opus 4.8 (max), both run with the Claude Code harness. The comparison is performed under blind expert judging, where experts score each output on code quality, feature completeness, visual fidelity, and interaction experience without knowing which model produced it. Win, Tie, and Lose report the percentage of prompts where Kimi K3's output is preferred, rated comparable, or dispreferred, respectively.
+
+### Table 5 (p.32) ⭐深度解读
+![[assets/crops/kimi-k3-open-frontier-intelligence-tab05.png]]
+> [!quote] caption
+> Headline independent third-party evaluations of Kimi K3 (as of July 23, 2026). Bold denotes the best result per benchmark and underline the second best. Baseline scores are as reported by each source under its own evaluation setup a Text Arena entry is the xhigh variant listed on the leaderboard. b 
+
+> [!tip] 表格解读（多模态）
+> **Description of the main figure:**
+
+The image displays the header and caption for **Table 5** of the "Kimi K3: Open Frontier Intelligence" technical report. The actual table data is not visible — only the descriptive caption is shown. The caption introduces a results table presenting independent third-party benchmark evaluations of the Kimi K3 model as of July 23, 2026, comparing it against baseline scores reported by various leaderboard sources.
+
+**Key technical takeaway:**
+Kimi K3's performance is benchmarked against multiple external leaderboards (e.g., Text Arena), with formatting conventions encoding results — **bold** marks the best score per benchmark and *underline* the second best — while parenthetical numbers indicate Kimi K3's specific leaderboard rank, and Elo-style scores are noted to drift as matches accumulate.
+
+**Caption transcribed verbatim:**
+
+> Table 5: Headline independent third-party evaluations of Kimi K3 (as of July 23, 2026). **Bold** denotes the best result per benchmark and <u>underline</u> the second best. Baseline scores are as reported by each source under its own evaluation setup ᵃText Arena entry is the xhigh variant listed on the leaderboard. ᵇText Arena entry is the high variant listed on the leaderboard. Numbers in parentheses are Kimi K3's rank on that leaderboard. Elo-style scores drift as additional matches accumulate.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -24,7 +24,8 @@ tags: [training]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p01.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig01.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p01.png]]*
 > [!quote] caption
 > Scaling up with Muon. (a) Scaling law experiments comparing Muon and Adam. Muon is ∼2× more computational efficient than Adam with compute optimal training. (b) The MMLU performance of our Moonlight model optimized with Muon and other comparable models. Moonlight advances the Pareto frontier of performance vs training FLOPs. ∗Corresponding author: zhouxinyu@moonshot.cn[cs.LG] 24 Feb 2025
 
@@ -38,7 +39,8 @@ Figure 1 is a two-panel scaling analysis. **(a) Left panel** plots LM loss vs. P
 Figure 1: Scaling up with Muon. **(a)** Scaling law experiments comparing Muon and Adam. Muon is ∼ 2× more computational efficient than Adam with compute optimal training. **(b)** The MMLU performance of our Moonlight model optimized with Muon and other comparable models. Moonlight advances the Pareto frontier of performance vs training FLOPs.
 
 ### Figure 2 (p.4) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p04.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig02.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p04.png]]*
 > [!quote] caption
 > Validation loss curves for AdamW (green), Muon without weight decay (red), and Muon with weight decay (blue).
 
@@ -59,7 +61,8 @@ All curves descend monotonically. Both Muon variants stay below AdamW throughout
 > Figure 2: Validation loss curves for AdamW (green), Muon without weight decay (red), and Muon with weight decay (blue).
 
 ### Figure 3 (p.7) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p07.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig03.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p07.png]]*
 > [!quote] caption
 > Fitted scaling law curves for Muon and AdamW optimizers.
 
@@ -74,7 +77,8 @@ A log–log line chart comparing optimizer scaling behavior. The x-axis is compu
 > Figure 3: Fitted scaling law curves for Muon and AdamW optimizers.
 
 ### Figure 4 (p.10) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p10.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig04.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p10.png]]*
 > [!quote] caption
 > SVD entropy of weight matrices across different training iterations. We categorize the weight matrices into 6 different groups: 1) AttnQO denotes the weight matrices related to the query and output projection in the attention layer; 2) AttnKV denotes the weight matrices related to the key and value projection in the attention layer; 3) Experts denotes the weight matrices in expert models; 4) Share
 
@@ -92,7 +96,8 @@ A log–log line chart comparing optimizer scaling behavior. The x-axis is compu
 **Figure 4:** SVD entropy of weight matrices across different training iterations. We categorize the weight matrices into 6 different groups: 1) AttnQO denotes the weight matrices related to the query and output projection in the attention layer; 2) AttnKV denotes the weight matrices related to the key and value projection in the attention layer; 3) Experts denotes the weight matrices in expert models; 4) SharedExperts denotes the weight matrices in shared expert models; 5) Router denotes the weight matrices in the router; 6) Dense denotes the weight matrices in the first dense layer. The SVD entropy is calculated as the macro-average of the weight matrices in each group across all layers. For weights in expert models, we only calculate 3 out of 64 experts in different layers for efficiency.
 
 ### Figure 5 (p.15) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p15.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig05.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p15.png]]*
 > [!quote] caption
 > Optimization Landscapes for Scaling Law Hyper-parameters Across FLOPs Budgets
 
@@ -112,7 +117,8 @@ The figure consists of **three side-by-side scatter/line plots** displaying loss
 **Figure 5: Optimization Landscapes for Scaling Law Hyper-parameters Across FLOPs Budgets**
 
 ### Figure 6 (p.15) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p15.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig06.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p15.png]]*
 > [!quote] caption
 > D
 
@@ -132,7 +138,8 @@ The figure consists of **three side-by-side scatter/line plots** displaying loss
 **Figure 5: Optimization Landscapes for Scaling Law Hyper-parameters Across FLOPs Budgets**
 
 ### Figure 7 (p.17) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p17.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig07.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p17.png]]*
 > [!quote] caption
 > Training dynamics comparison between Moonlight and Moonlight-A
 
@@ -152,7 +159,8 @@ The figure is a 2×2 grid of line plots comparing training dynamics of two optim
 *Figure 7: Training dynamics comparison between Moonlight and Moonlight-A*
 
 ### Figure 8 (p.9) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p09.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig08.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p09.png]]*
 > [!quote] caption
 > 6.
 
@@ -170,7 +178,8 @@ The figure is a 2×2 grid of line plots comparing training dynamics of two optim
 **Table 5: Comparison of different models on various benchmarks.**
 
 ### Figure 9 (p.18) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p18.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig09.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p18.png]]*
 > [!quote] caption
 > Distribution of singular values for each weight matrix in the attention layers. We use WC to denote the weight matrices at each layer that compress the hidden states to the shared latent spaces for keys and values, WV to denote the weight matrices up-projecting the values from the latent space, WO to denote the output projection matrices, and WKR, WKC, WQR and WQC to denote the projection matrices
 
@@ -186,7 +195,8 @@ This scatter plot compares GSM8k accuracy against training compute (FLOPs, log-s
 > Figure 9: Distribution of singular values for each weight matrix in the attention layers. We use WC to denote the weight matrices at each layer that compress the hidden states to the shared latent spaces for keys and values, WV to denote the weight matrices up-projecting the values from the latent space, WO to denote the output projection matrices, and WKR, WKC, WQR and WQC to denote the projection matrices for the part of keys and queries with and without RoPE respectively. We set the spines of each line graph red if the corresponding weight matrix optimized by Muon has a lower singular entropy than AdamW.
 
 ### Figure 10 (p.19) ⭐深度解读
-![[assets/muon-is-scalable-for-llm-training-p19.png]]
+![[assets/crops/muon-is-scalable-for-llm-training-fig10.png]]
+*整页渲染: ![[assets/muon-is-scalable-for-llm-training-p19.png]]*
 > [!quote] caption
 > Distribution of singular values for each weight matrix in the feed-forward network (FFN) layers. We use WI, WV and WO to denote the weight matrices involved in the FFN layer with SwiGLU activation function, where WI represents the input projection to the Swish1 function, WV represents the extra input projection interacting with Swish1 activations, and WO represents the output projection. We use E0
 
@@ -200,6 +210,125 @@ Figure 10 is a matrix visualization of singular value (SV) distributions across 
 **Caption (verbatim):**
 
 "Figure 10: Distribution of singular values for each weight matrix in the feed-forward network (FFN) layers. We use WI, WV and WO to denote the weight matrices involved in the FFN layer with SwiGLU activation function, where WI represents the input projection to the Swish₁ function, WV represents the extra input projection interacting with Swish₁ activations, and WO represents the output projection. We use E0, E2, E3 to denote three arbitrarily selected expert models and SE to denote the weights in the shared expert model. We use RW to denote the weights in the router. We set the spines of each line graph red if the corresponding weight matrix optimized by Muon has a lower singular entropy than AdamW."
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.6) ⭐深度解读
+![[assets/crops/muon-is-scalable-for-llm-training-tab01.png]]
+> [!quote] caption
+> Controlling Muon’s Update RMS Across Different Model Params
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+
+Table 1 presents a 3×4 comparison matrix evaluating three methods (Baseline, Update Norm, Adjusted LR) against four metrics: Training loss, Validation loss, query weight RMS, and MLP weight RMS.
+
+Results show Update Norm achieves the lowest training loss (2.72) and best validation loss (2.789), but at the cost of substantially higher query weight RMS (4.918e-2) and MLP weight RMS (5.01e-2). In contrast, Adjusted LR matches the validation loss (2.789) while keeping query weight RMS (3.496e-2) and MLP weight RMS (4.89e-2) closer to baseline levels.
+
+**Key takeaway:** Adjusting the learning rate is the more effective lever for controlling Muon's update RMS — it preserves validation performance while successfully constraining weight magnitudes, unlike direct norm rescaling which inflates them.
+
+**Caption (verbatim):**
+"Table 1: Controlling Muon's Update RMS Across Different Model Params"
+
+### Table 3 (p.7) ⭐深度解读
+![[assets/crops/muon-is-scalable-for-llm-training-tab03.png]]
+> [!quote] caption
+> Fitted parameters of the scaling law curves
+
+> [!tip] 表格解读（多模态）
+> **Description:** Although the submission is labeled "main figure," what is provided is **Table 3**, not a graphical figure. The table reports fitted scaling-law parameters for language-model loss at a sequence length of 8K, comparing two optimizers side-by-side. It contains a single data row ("LM loss (seqlen=8K)") with two columns: **Muon**, yielding the fitted curve 2.506 × C^(−0.052), and **AdamW**, yielding 2.608 × C^(−0.054). There is no architecture diagram, pipeline, or data-flow schematic—only parameter values organized in a 2-column × 1-row grid beneath a title and headers. **Key takeaway:** Muon's fitted scaling-law front coefficient (2.506) is ~4% lower than AdamW's (2.608) at seq=8K, while its decay exponent is marginally shallower (−0.052 vs −0.054), indicating Muon attains a uniformly better loss curve across compute C, rather than merely better asymptotics.
+
+**Caption (verbatim):**
+> **Table 3:** Fitted parameters of the scaling law curves
+
+### Table 4 (p.8) ⭐深度解读
+![[assets/crops/muon-is-scalable-for-llm-training-tab04.png]]
+> [!quote] caption
+> Comparison of different models at around 1.2T tokens.
+
+> [!tip] 表格解读（多模态）
+> **Description of the main figure (Table 4):**
+
+The main figure is actually **Table 4** — a benchmark comparison matrix across three models at matched ~1.2T training tokens. **Components:** top rows list model specs (activated/total params, training tokens, optimizer), followed by grouped benchmarks — English (MMLU, MMLU-pro, BBH, TriviaQA), Code (HumanEval, MBPP), Math (GSM8K, MATH, CMath), and Chinese (C-Eval, CMMLU) — with best scores bolded. Data flow is column-wise: each model reports downward through shared evaluation categories. A footnote (†) notes parameter counts exclude embeddings.
+
+**Key technical takeaway:** Moonlight@1.2T (Muon optimizer) beats its AdamW twin Moonlight-A and DSV3-Small on most benchmarks — most starkly on Code (HumanEval 37.2 vs 29.3/26.8) and Math (GSM8K 45.0 vs 43.8/31.4) — confirming Muon's scaling effectiveness at fixed parameter/token budgets despite identical architecture.
+
+*(≈119 words)*
+
+**Caption transcribed verbatim:**
+
+> Table 4: Comparison of different models at around 1.2T tokens.
+
+### Table 5 (p.9) ⭐深度解读
+![[assets/crops/muon-is-scalable-for-llm-training-tab05.png]]
+> [!quote] caption
+> Comparison of different models on various benchmarks.
+
+> [!tip] 表格解读（多模态）
+> ## Description
+
+The figure is **Table 5**, a benchmark comparison matrix with four model columns (Llama3.2-3B, Qwen2.5-3B, DSV2-Lite, Moonlight) and grouped benchmark rows organized into **English** (MMLU, MMLU-pro, BBH, TriviaQA), **Code** (HumanEval, MBPP), **Math** (GSM8K, MATH, CMath), and **Chinese** (C-Eval, CMMLU). A top metadata block reports activated/total parameters, training tokens, and optimizer. Bolded cells flag per-row winners, and footnotes clarify parameter exclusion and TriviaQA evaluation scope.
+
+**Key takeaway:** Moonlight (2.24B activated / 15.29B total, MoE, Muon optimizer, 5.7T tokens) achieves top scores on 9 of 12 benchmarks—beating DSV2-Lite (same architecture, AdamW) and remaining competitive with dense models trained on 3× more tokens—demonstrating the Muon optimizer's superior compute efficiency at the Pareto frontier.
+
+## Caption (verbatim)
+
+**Table 5: Comparison of different models on various benchmarks.**
+
+### Table 6 (p.10) ⭐深度解读
+![[assets/crops/muon-is-scalable-for-llm-training-tab06.png]]
+> [!quote] caption
+> Examining the impact of optimizer interchangeability between pretraining and SFT phases.
+
+> [!tip] 表格解读（多模态）
+> ## Description of Main Figure
+
+The figure presents **seven side-by-side line plots** displaying **SVD entropy of weight matrices** across training iterations (0–~45K) for distinct weight-matrix groups within a Mixture-of-Experts (MoE) transformer. Each subplot tracks **two curves (red and blue)**, likely corresponding to two model variants being compared. The categories include: **AttnQO** (query/output projection), **AttnKV** (key/value projection), **Experts**, **SharedExperts**, **Router**, and **Dense** (first dense layer). SVD entropy is macro-averaged across layers (or 3-of-64 experts per layer for efficiency).
+
+**Key technical takeaway:** Across nearly all subplots, **entropy drops sharply within the first few thousand iterations then stabilizes**, indicating that weight-matrix spectral structure **rapidly crystallizes early in training**—suggesting heavy pretraining-time computation could potentially be optimized or early-stopped without significant spectral loss. Counterintuitively, the **red (smaller/slower) curve often shows a brief initial entropy *dip* before recovering**, implying a transient spectral re-organization phase.
+
+## Verbatim Caption Transcription
+
+**Figure 4:** SVD entropy of weight matrices across different training iterations. We categorize the weight matrices into six different groups: 1) AttnQO denotes the weight matrices related to the query and output projection in the attention layer; 2) AttnKV denotes the weight matrices related to the key and value projection in the attention layer; 3) [Experts] denotes the weight matrices in expert models; 4) SharedExperts denotes the weight matrices in shared expert models; 5) [R]outer denotes the weight matrices in the router; 6) Dense denotes the weight matrices in the first dense layer. The SVD entropy is calculated as the macro-average of the weight matrices in each group across all layers. For weight matrices in expert models, we only calculate 3 out of 64 experts in different layers for efficiency.
+
+*Note: The leftmost characters of the original caption are partially cut off; bracketed terms above [Experts], [R]outer are reconstructed from context to reflect the truncated text as displayed.*
+
+### Table 9 (p.14) ⭐深度解读
+![[assets/crops/muon-is-scalable-for-llm-training-tab09.png]]
+> [!quote] caption
+> Empirical Relationships Between Scaling Law Parameters and Computational Budget (FLOPs)
+
+> [!tip] 表格解读（多模态）
+> **Description of Table 9**
+
+The table presents four fitted power-law relationships of the form *a · C^b*, where C is the compute budget (FLOPs) and each column represents a different training hyperparameter:
+- **N(C)** — model parameter count: 0.0483359 · C^0.5112684
+- **D(C)** — dataset/token count: 3.4480927 · C^0.4887316
+- **η(C)** — learning rate: 0.0127339 · C^−0.0574752
+- **B(C)** — batch size: 0.0065202 · C^0.4137915
+
+**Key takeaway:** Model size and dataset tokens scale almost identically with C (exponents ≈ 0.5), recovering the Chinchilla-style joint allocation. However, learning rate surprisingly decreases with more compute (negative exponent), while batch size grows sub-linearly — a nuance often overlooked in simpler scaling prescriptions.
+
+**Caption (verbatim):** *Table 9: Empirical Relationships Between Scaling Law Parameters and Computational Budget (FLOPs)*
+
+### Table 10 (p.16) ⭐深度解读
+![[assets/crops/muon-is-scalable-for-llm-training-tab10.png]]
+> [!quote] caption
+> presents a comparative analysis between our Moonlight model (optimized with Muon) and publicly available models trained with greater computational resources, including LLama3.1-8B (Grattafiori et al. 2024), Gemma-9B (Gemma Team et al. 2024) and Qwen2.5-7B (Yang et al. 2024). Figure 8 illustrates the
+
+> [!tip] 表格解读（多模态）
+> I'm unable to complete this request as specified, because the excerpt you provided contains **only running paragraph text from page 16 of the paper** — no figure image and no figure caption are present in the input. The text merely *references* Figures 8, 9, and 10, but does not include them.
+
+Here's what the passage actually contains:
+
+- A paragraph mentioning **Table 10** (a comparison between Moonlight/Muon vs. Llama3.1‑8B, Gemma‑9B, Qwen2.5‑7B) and referencing **Figure 8** (GSM8k benchmarks).
+- Section heading **F — Singular Value Distributions of Weight Matrices**, which states that Figures 9 and 10 show that Muon‑optimized matrices have a **flatter singular‑value spectrum** than AdamW‑optimized ones, supporting the hypothesis that Muon yields a more diverse update spectrum.
+
+If you can paste the actual **image** of Figure 8, 9, or 10, or copy out its caption text, I can then:
+1. Describe the architecture/components/data flow and give a ≤120‑word technical takeaway, and
+2. Transcribe the caption verbatim.
+
+No hallucinated description would be faithful in lieu of the actual figure.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

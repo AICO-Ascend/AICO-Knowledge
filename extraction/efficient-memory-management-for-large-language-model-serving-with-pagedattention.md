@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p01.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig01.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p01.png]]*
 > [!quote] caption
 > Left: Memory layout when serving an LLM with 13B parameters on NVIDIA A100. The parameters (gray) persist in GPU memory throughout serving. The memory for the KV cache (red) is (de)allocated per serving request. A small amount of memory (yellow) is used ephemerally for activation. Right: vLLM smooths out the rapid growth curve of KV cache memory seen in existing systems [31, 60], leading to a nota
 
@@ -32,7 +33,8 @@ tags: []
 > 【MiniMax 解读】PagedAttention 内存布局(Fig.1)：13B 模型在 A100-40G 上参数占 65%（26GB 常驻）、KV cache >30%（每请求动态）、激活小片。传统系统把每请求 KV 存成单连续张量→内部+外部碎片严重、batch 受限。PagedAttention 借 OS 虚拟内存分页：KV 切成固定块（如 16 token）存非连续物理显存，每请求 block table 映射逻辑→物理（类比页表）；请求间可共享物理块（并行采样/beam search/前缀共享）；碎片仅剩 sub-block 余量（~1 token vs GB 级）→近乎零 KV 浪费、吞吐 2-4x。架构核心图，KV-cache/serving 基石。
 
 ### Figure 2 (p.2) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p02.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig02.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p02.png]]*
 > [!quote] caption
 > Average percentage of memory wastes in different LLM serving systems during the experiment in §6.2. percentage of memory is used for other data, including ac- tivations – the ephemeral tensors created when evaluating the LLM. Since the model weights are constant and the ac- tivations only occupy a small fraction of the GPU memory, the way the KV cache is managed is critical in determining the maxi
 
@@ -59,7 +61,8 @@ The figure is a stacked bar chart titled along the y-axis "KV cache usage (%)" c
 Figure 2. Average percentage of memory wastes in different LLM serving systems during the experiment in §6.2.
 
 ### Figure 3 (p.4) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p04.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig03.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p04.png]]*
 > [!quote] caption
 > KV cache memory management in existing systems. Three types of memory wastes – reserved, internal fragmentation, and external fragmentation – exist that prevent other requests from fitting into the memory. The token in each memory slot represents its KV cache. Note the same tokens can have different KV cache when at different positions. 3
 
@@ -82,7 +85,8 @@ The figure is a horizontal memory-layout diagram illustrating how existing LLM s
 **Figure 3.** KV cache memory management in existing systems. Three types of memory wastes – reserved, internal fragmentation, and external fragmentation – exist that prevent other requests from fitting into the memory. The token in each memory slot represents its KV cache. Note the same tokens can have different KV cache when at different positions.
 
 ### Figure 4 (p.5) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p05.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig04.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p05.png]]*
 > [!quote] caption
 > vLLM system overview.
 
@@ -103,7 +107,8 @@ vLLM decouples the centralized **scheduler/KV-cache manager** from the per-GPU *
 *Figure 4. vLLM system overview.*
 
 ### Figure 5 (p.5) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p05.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig05.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p05.png]]*
 > [!quote] caption
 > Illustration of the PagedAttention algorithm, where the attention key and values vectors are stored as non-contiguous blocks in the memory. block size (𝐵). Denote the key block 𝐾𝑗= (𝑘(𝑗−1)𝐵+1, . . . ,𝑘𝑗𝐵) and value block 𝑉𝑗= (𝑣(𝑗−1)𝐵+1, . . . , 𝑣𝑗𝐵). The attention com- putation in Eq. 4 can be transformed into the following block- wise computation: 𝐴𝑖𝑗= exp(𝑞⊤ 𝑖𝐾𝑗/ √ 𝑑) Í⌈𝑖/𝐵⌉ 𝑡=1 exp(𝑞⊤ 𝑖𝐾𝑡1/ √ 𝑑
 
@@ -124,7 +129,8 @@ vLLM decouples the centralized **scheduler/KV-cache manager** from the per-GPU *
 *Figure 4. vLLM system overview.*
 
 ### Figure 6 (p.6) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p06.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig06.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p06.png]]*
 > [!quote] caption
 > Block table translation in vLLM. divides it into physical KV blocks (this is also done on CPU RAM for swapping; see §4.5). The KV block manager also maintains block tables—the mapping between logical and physical KV blocks of each request. Each block table entry records the corresponding physical blocks of a logical block and the number of filled positions. Separating logical and physical KV block
 
@@ -144,7 +150,8 @@ vLLM decouples the centralized **scheduler/KV-cache manager** from the per-GPU *
 *Figure 7. Storing the KV cache of two requests at the same time in vLLM.*
 
 ### Figure 7 (p.6) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p06.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig07.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p06.png]]*
 > [!quote] caption
 > Storing the KV cache of two requests at the same time in vLLM. requests and the latest tokens for generation phase requests) as one sequence and feeds it into the LLM. During LLM’s computation, vLLM uses the PagedAttention kernel to access the previous KV cache stored in the form of logical KV blocks and saves the newly generated KV cache into the physical KV blocks. Storing multiple tokens within
 
@@ -178,7 +185,8 @@ vLLM decouples the centralized **scheduler/KV-cache manager** from the per-GPU *
 **Caption (verbatim):** *Figure 9.* Beam search example.
 
 ### Figure 9 (p.7) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p07.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig09.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p07.png]]*
 > [!quote] caption
 > Beam search example. sample space. The algorithm relies on the beam width pa- rameter 𝑘, which determines the number of top candidates retained at every step. During decoding, beam search ex- pands each candidate sequence in the beam by considering all possible tokens, computes their respective probabilities us- ing the LLM, and retains the top-𝑘most probable sequences out of 𝑘· |𝑉| candidates, wh
 
@@ -192,7 +200,8 @@ vLLM decouples the centralized **scheduler/KV-cache manager** from the per-GPU *
 **Caption (verbatim):** *Figure 9.* Beam search example.
 
 ### Figure 10 (p.8) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p08.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig10.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p08.png]]*
 > [!quote] caption
 > Shared prompt example for machine translation.
 
@@ -212,7 +221,8 @@ vLLM decouples the centralized **scheduler/KV-cache manager** from the per-GPU *
 > Figure 10. Shared prompt example for machine translation. The examples are adopted from [5].
 
 ### Figure 11 (p.9) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p09.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig11.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p09.png]]*
 > [!quote] caption
 > Input and output length distributions of the (a)
 
@@ -228,7 +238,8 @@ vLLM decouples the centralized **scheduler/KV-cache manager** from the per-GPU *
 **Caption (verbatim):** "Figure 11. Input and output length distributions of the (a) ShareGPT and (b) Alpaca datasets."
 
 ### Figure 12 (p.10) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p10.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig12.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p10.png]]*
 > [!quote] caption
 > Single sequence generation with OPT models on the ShareGPT and Alpaca dataset
 
@@ -243,7 +254,8 @@ The figure is a 2×3 grid of line plots comparing five LLM serving systems (Fast
 "Figure 12. Single sequence generation with OPT models on the ShareGPT and Alpaca dataset"
 
 ### Figure 13 (p.10) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p10.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig13.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p10.png]]*
 > [!quote] caption
 > Average number of batched requests when serv- ing OPT-13B for the ShareGPT (2 reqs/s) and Alpaca (30 reqs/s) traces.
 
@@ -258,7 +270,8 @@ The figure is a 2×3 grid of line plots comparing five LLM serving systems (Fast
 "Figure 12. Single sequence generation with OPT models on the ShareGPT and Alpaca dataset"
 
 ### Figure 14 (p.11) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p11.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig14.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p11.png]]*
 > [!quote] caption
 > Parallel generation and beam search with OPT-13B on the Alpaca dataset.
 
@@ -281,7 +294,8 @@ The figure is a 2×3 grid of line plots comparing five LLM serving systems (Fast
 **Figure 14.** Parallel generation and beam search with OPT-13B on the Alpaca dataset.
 
 ### Figure 15 (p.11) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p11.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig15.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p11.png]]*
 > [!quote] caption
 > Average amount of memory saving from sharing KV blocks, when serving OPT-13B for the Alpaca trace.
 
@@ -304,7 +318,8 @@ The figure is a 2×3 grid of line plots comparing five LLM serving systems (Fast
 **Figure 14.** Parallel generation and beam search with OPT-13B on the Alpaca dataset.
 
 ### Figure 16 (p.12) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p12.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig16.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p12.png]]*
 > [!quote] caption
 > Translation workload where the input prompts share a common prefix. The prefix includes (a) 1 example with 80 tokens or (b) 5 examples with 341 tokens.
 
@@ -323,7 +338,8 @@ The figure contains two subplots:
 **Caption (verbatim):** "Figure 18. Ablation experiments."
 
 ### Figure 17 (p.12) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p12.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig17.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p12.png]]*
 > [!quote] caption
 > Performance on chatbot workload.
 
@@ -361,7 +377,8 @@ The figure contains two subplots:
 **Caption (verbatim):** "Figure 18. Ablation experiments."
 
 ### Figure 19 (p.13) ⭐深度解读
-![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p13.png]]
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig19.png]]
+*整页渲染: ![[assets/efficient-memory-management-for-large-language-model-serving-with-pagedattention-p13.png]]*
 > [!quote] caption
 > (a) Overhead of recomputation and swapping for different block sizes. (b) Performance when serving OPT-13B with the ShareGPT traces at the same request rate.
 
@@ -379,6 +396,20 @@ Recomputation and swapping exhibit complementary regimes: swapping suffers sever
 
 **Caption (verbatim):**
 "Figure 19. (a) Overhead of recomputation and swapping for different block sizes. (b) Performance when serving OPT-13B with the ShareGPT traces at the same request rate."
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.9) ⭐深度解读
+![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-tab01.png]]
+> [!quote] caption
+> Model sizes and server configurations.
+
+> [!tip] 表格解读（多模态）
+> **Description:** The "figure" provided is in fact **Table 1**, which lists the server-side resources required to host three model variants. Columns correspond to model sizes (**13B**, **66B**, **175B**) and rows enumerate hardware components: GPU count/type, total GPU memory, parameter footprint, KV-cache memory budget, and the maximum number of KV-cache slots the server can retain. There is no architectural diagram or data-flow arrow, so the "flow" is implicit: parameters are loaded once into GPU memory, residual memory is allocated to the KV cache that grows per request.
+
+**Key takeaway (≤120 words):** KV-cache memory scales super-linearly with model size — jumping from only **21 GB (66B)** to **264 GB (175B)**, a ~12× increase for a ~2.6× parameter increase. Counter-intuitively, the 66B model supports the *fewest* KV-cache slots (**9.7K**), because its smaller GPUs leave little room after parameters are loaded. The 175B deployment (8× A100-80 GB, 640 GB total) can hold **60.1K** slots — the highest throughput ceiling despite the biggest model.
+
+**Caption (verbatim):** "Table 1. Model sizes and server configurations."
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

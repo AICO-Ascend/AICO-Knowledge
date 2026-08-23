@@ -24,7 +24,8 @@ tags: [long-context]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.14) ⭐深度解读
-![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]]
+![[assets/crops/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-fig01.png]]
+*整页渲染: ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p14.png]]*
 > [!quote] caption
 > 2.4. Muon Optimizer
 

@@ -100,6 +100,7 @@ def extract_math(tex):
     out, seen = [], set()
     pats = [r"\\begin\{(%s)\*?\}(.*?)\\end\{\1\*?\}" % e for e in ENVS]
     pats.append(r"\\\[(.*?)\\\]")
+    pats.append(r"\$\$(.*?)\$\$")   # $$...$$ display math (hybridflow etc.)
     for pat in pats:
         for mm in re.finditer(pat, tex, re.S):
             if len(mm.groups()) == 2:

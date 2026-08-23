@@ -24,7 +24,8 @@ tags: [speculative]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p01.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig01.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p01.png]]*
 > [!quote] caption
 > Speedup ratio of Vicuna and LLaMA2-Chat inference latency on the MT-bench for greedy (temperature=0) settings. Speedup ratio of Medusa and Lookahead are copied from their original technical reports. With speculative sampling, there is a lack of suitable draft models to accelerate the 7B model. Employing a 7B model as the draft model for a 13B model results in slow speeds due to the high overhead o
 
@@ -40,7 +41,8 @@ This bar chart compares inference speedup ratios across six LLM backbones (Vicun
 Figure 1: Speedup ratio of Vicuna and LLaMA2-Chat inference latency on the MT-bench for greedy (temperature=0) settings. Speedup ratio of Medusa and Lookahead are copied from their original technical reports. With speculative sampling, there is a lack of suitable draft models to accelerate the 7B model. Employing a 7B model as the draft model for a 13B model results in slow speeds due to the high overhead of the 7B model, rendering it less efficient than vanilla autoregressive decoding. These scenarios are marked as N/A. In this paper, we only compare with speculative sampling based methods that do not need to finetune the backbone models, ensuring the output text distribution remains constant.
 
 ### Figure 2 (p.2) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p02.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig02.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p02.png]]*
 > [!quote] caption
 > Speedup ratio on the MT-bench for non-greedy (temperature=1) settings. Lookahead is confined to greedy decoding, and the non-greedy generation of Medusa does not guarantee lossless performance. Therefore, EAGLE is not compared with these methods. I 𝑓I 𝑝(am)=0.6 𝑝(always)=0.4 sampling am 𝑓am 𝑝(excited)=0.3 𝑝(ready)=0.7 sampling always 𝑓always 𝑝(begin)=0.8 𝑝(look)=0.2 𝑝always 𝑝I 𝑝am
 
@@ -48,7 +50,8 @@ Figure 1: Speedup ratio of Vicuna and LLaMA2-Chat inference latency on the MT-be
 > 【MiniMax 解读】EAGLE 架构图(Fig.4)：目标 LLM 产出第二顶层特征 f_t 与下一 token t_{t+1}；轻量 draft model 在特征层自回归，输入 f_t + 超前一拍的 t_{t+1}，预测 f_{t+1}，再经 LM head 得 draft token t_{t+2}。「特征+超前 token」消除采样下 f_{t+1} 的不确定性→接受率↑，Vicuna/LLaMA2-70B 上 2.68x。架构核心图。
 
 ### Figure 3 (p.2) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p02.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig03.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p02.png]]*
 > [!quote] caption
 > Uncertainty in feature sequences. The next fea- ture following fI is contingent on the sampling outcome and cannot be determined solely based on fI, where both “always” and “am” are possible to follow the token “I” and lead to two branches.
 
@@ -56,7 +59,8 @@ Figure 1: Speedup ratio of Vicuna and LLaMA2-Chat inference latency on the MT-be
 > 【MiniMax 解读】EAGLE 架构图(Fig.4)：目标 LLM 产出第二顶层特征 f_t 与下一 token t_{t+1}；轻量 draft model 在特征层自回归，输入 f_t + 超前一拍的 t_{t+1}，预测 f_{t+1}，再经 LM head 得 draft token t_{t+2}。「特征+超前 token」消除采样下 f_{t+1} 的不确定性→接受率↑，Vicuna/LLaMA2-70B 上 2.68x。架构核心图。
 
 ### Figure 4 (p.3) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p03.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig04.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p03.png]]*
 > [!quote] caption
 > Accuracy and speedup ratio of draft models based on tokens, features and feature&shifted-token at tempera- ture=0, tested on MT-bench with Vicuna 7B as the original LLM. Feature&shifted-token refers to using a feature se- quence and a token sequence advanced by one time step as inputs. achieved a speedup ratio of 2.7x-3.5x, doubled through- put, and theoretically guaranteed the preservation of the
 
@@ -84,7 +88,8 @@ The figure contains two side-by-side line plots tracking draft model performance
 > **Figure 4:** Accuracy and speedup ratio of draft models based on tokens, features and feature&shifted-token at temperature=0, tested on MT-bench with Vicuna 7B as the original LLM. Feature&shifted-token refers to using a feature sequence and a token sequence advanced by one time step as inputs.
 
 ### Figure 5 (p.4) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p04.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig05.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p04.png]]*
 > [!quote] caption
 > A comparison of the methods for drafting the fourth and fifth tokens, t4 and t5. t (represented by blue blocks) denotes tokens, and f (orange blocks) signifies the features, with subscripts indicating their positions in the se- quence. The red border indicates the predictions of the draft model. For simplicity, the n in the n-gram for Lookahead, as shown in the figure, has been set to 2.
 
@@ -104,7 +109,8 @@ Input tokens pass through the frozen Embedding layer, get concatenated with the 
 **Figure 6: Pipeline of EAGLE.** The upper section illustrates the computational process, while the lower section displays the corresponding generation results for each step. In the upper section, **green** blocks represent token embeddings, **or­ange** blocks represent features, **red** boxes indicate the predictions of the draft model, and **blue** modules with snowflake icons represent the use of target LLM parameters, which are not subject to training.
 
 ### Figure 6 (p.4) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p04.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig06.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p04.png]]*
 > [!quote] caption
 > Pipeline of EAGLE. The upper section illustrates the computational process, while the lower section displays the corresponding generation results for each step. In the upper section, green blocks represent token embeddings, or- ange blocks represent features, red boxes indicate the predic- tions of the draft model, and blue modules with snowflake icons represent the use of target LLM parameters, w
 
@@ -124,7 +130,8 @@ Input tokens pass through the frozen Embedding layer, get concatenated with the 
 **Figure 6: Pipeline of EAGLE.** The upper section illustrates the computational process, while the lower section displays the corresponding generation results for each step. In the upper section, **green** blocks represent token embeddings, **or­ange** blocks represent features, **red** boxes indicate the predictions of the draft model, and **blue** modules with snowflake icons represent the use of target LLM parameters, which are not subject to training.
 
 ### Figure 7 (p.7) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p07.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig07.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p07.png]]*
 > [!quote] caption
 > Speedup ratios of EAGLE with and without the use of tree attention. The evaluation dataset is MT-bench, with the temperature parameter set to 0.
 
@@ -147,7 +154,8 @@ Input tokens pass through the frozen Embedding layer, get concatenated with the 
 > Figure 7: Speedup ratios of EAGLE with and without the use of tree attention. The evaluation dataset is MT-bench, with the temperature parameter set to 0.
 
 ### Figure 8 (p.8) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p08.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig08.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p08.png]]*
 > [!quote] caption
 > Performance of draft models with varying inputs. The target LLM is Vicuna 7B, and the test dataset is MT-bench.
 
@@ -162,7 +170,8 @@ The figure is a 2×4 grid of line plots evaluating four draft-model input config
 "Figure 8: Performance of draft models with varying inputs. The target LLM is Vicuna 7B, and the test dataset is MT-bench. Speed refers to the walltime speedup ratio, τ denotes the average acceptance length, 0-α represents the acceptance rate with entirely precise inputs, 1-α indicates the acceptance rate when the input includes one imprecise feature, and T refers to the temperature."
 
 ### Figure 9 (p.12) ⭐深度解读
-![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p12.png]]
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig09.png]]
+*整页渲染: ![[assets/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-p12.png]]*
 > [!quote] caption
 > However, the optimal tree structure is likely context-dependent. For instance, as batch size increases and redundant computational resources decrease, a smaller tree might be preferable. Tuning the draft structure could potentially lead to improved performance. query query
 
@@ -180,6 +189,81 @@ The figure is a 2×4 grid of line plots evaluating four draft-model input config
 ## Caption (verbatim)
 
 > Figure 9: Structure of EAGLE's draft. The left side shows the draft structure when tree attention is employed, while the right side depicts the draft structure without the use of tree attention.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 2 (p.6) ⭐深度解读
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab02.png]]
+> [!quote] caption
+> Average acceptance length τ and acceptance rate α on MT-bench. T denotes temperature.
+
+> [!tip] 表格解读（多模态）
+> ## Description
+
+This is a **table (not a figure)** presenting benchmark results from speculative decoding experiments on MT-bench.
+
+**Components/Structure:**
+- **Setting:** All runs use temperature T=0 (greedy decoding).
+- **Rows:** Four language models — Vicuna 7B, Vicuna 13B, Vicuna 33B, and LLaMA2-Chat 7B.
+- **Columns:** Average acceptance length **τ**, followed by acceptance rates **α** at depths 0, 1, 2, 3, and 4.
+
+**Key Technical Takeaway (within 120 words):**
+
+The table evaluates speculative decoding efficiency across model scales. Within the Vicuna family, acceptance length **τ decreases with model size** (7B: 3.94 → 33B: 3.68), indicating larger target models are harder to predict and yield fewer accepted draft tokens. LLaMA2-Chat 7B achieves the lowest τ (3.62) despite its smaller size, suggesting **output style/distribution matters more than scale** for draft acceptance. Across all models, the 0-α (immediate) acceptance rate (0.74–0.79) is consistently higher than deeper-depth rates (0.66–0.73), confirming that **first-token predictions are most reliable**, while multi-step look-ahead offers diminishing marginal gains in acceptance.
+
+## Caption (Verbatim)
+
+**Table 2:** Average acceptance length τ and acceptance rate α on MT-bench. T denotes temperature.
+
+### Table 3 (p.6) ⭐深度解读
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab03.png]]
+> [!quote] caption
+> reveals that EAGLE achieved a 1.5x speedup with the Mixtral 8x7B Instruct model. This modest acceleration, compared to models like LLaMA, is due to a shorter average acceptance length and the complexity of accelerating MoE models via speculative sampling. MoE models typically require reading the wei
+
+> [!tip] 表格解读（多模态）
+> I'm unable to complete the requested task because the image does not contain a figure. It only contains a paragraph of body text from page 6 of a document discussing EAGLE's performance with the Mixtral 8x7B Instruct model.
+
+**Transcription of the visible text (verbatim):**
+
+"Table 3 reveals that EAGLE achieved a 1.5x speedup with the Mixtral 8x7B Instruct model. This modest acceleration, compared to models like LLaMA, is due to a shorter average acceptance length and the complexity of accelerating MoE models via speculative sampling. MoE models typically require reading the weights of only two experts per token"
+
+The text is cut off at the end of the page. If you intended to share a figure (e.g., the architecture diagram for EAGLE or a performance chart from Table 3), please re-upload it and I'll be happy to produce the architecture/components description, data flow explanation, and a key technical takeaway as requested.
+
+### Table 7 (p.8) ⭐深度解读
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab07.png]]
+> [!quote] caption
+> Speedup ratios at different batch sizes and through- put of EAGLE. The evaluation dataset is MT-bench, with the temperature parameter set to 0.
+
+> [!tip] 表格解读（多模态）
+> ## Main Figure: Architecture / Components / Data Flow
+
+The main visual is **Table 7**, presenting EAGLE's performance across two model backbones (Vicuna 7B and LLaMA2-Chat 70B) evaluated on MT-bench with temperature = 0.
+- **Components:** Rows = target LLM backbones; columns = inference batch sizes {1, 2, 3, 4} plus an end-to-end Throughput column.
+- **Data flow:** Latency speedup ratios (relative to a baseline) and aggregate throughput multipliers.
+
+**Key technical takeaway:** EAGLE sustains ~2.4–3.0× per-batch latency speedups that hold across batch sizes, while end-to-end serving throughput gains are ~2× (1.97× Vicuna 7B, 1.99× LLaMA2-Chat 70B)—showing that batching amortization slightly reduces relative gains, yet the method still nearly doubles real-world inference throughput.
+
+## Caption (Verbatim)
+
+**Table 7:** Speedup ratios at different batch sizes and throughput of EAGLE. The evaluation dataset is MT-bench, with the temperature parameter set to 0.
+
+### Table 8 (p.12) ⭐深度解读
+![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab08.png]]
+> [!quote] caption
+> displays the speedup ratio, average acceptance length τ and acceptance rate α of EAGLE on HumanEval, GSM8K, and Alpaca datasets.
+
+> [!tip] 表格解读（多模态）
+> I notice that the provided excerpt contains **no figure** — only a textual reference to "Table 8" and a page number. As a result, I cannot describe architecture, components, or data flow of a figure that isn't present.
+
+What I can transcribe verbatim from the excerpt is the following sentence (which is a body-text reference to a table, not a figure caption):
+
+> "Table 8 displays the speedup ratio, average acceptance length τ and acceptance rate α of EAGLE on HumanEval, GSM8K, and Alpaca datasets."
+
+And the page number shown at the bottom:
+
+> "12"
+
+If you intended to share the actual figure (e.g., a diagram of the EAGLE speculative-decoding architecture with its feature auto-regression / draft model / verification flow), please paste or upload the figure, and I'll happily provide the architecture description, data-flow summary, a one-key-takeaway (≤120 words), and a verbatim caption transcription.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -38,7 +38,8 @@ The page does **reference** two figures, but they are not present on this page:
 Because no figure or caption is actually rendered on the supplied image, I cannot describe its architecture/components/data flow or transcribe its caption verbatim. If you can share the page(s) containing Figure 2 or Figures 18/19, I'll provide the description and verbatim caption as requested.
 
 ### Figure 4 (p.8) ⭐深度解读
-![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p08.png]]
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig04.png]]
+*整页渲染: ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p08.png]]*
 > [!quote] caption
 > Step 1: The sender’s serving engine invokes XCCL’s send, passing the source buffer in the app data area (e.g., KV cache), an eventID (e.g., number of sends), the receiver NPU’s ID, and the number of AIV cores to use. XCCL launches a kernel on the sender NPU. The send kernel uses MTE2 to copy data from the app data area to each AIV’s unified buffer in parallel. Step 2: The send kernel then reads th
 
@@ -55,7 +56,8 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 > Figure 4 | **Distributed Send/Receive Workflow.** *We show two NPUs and the distributed memory transfer protocol. We only show memory-semantic-based transfer using MTE2/MTE3 while remote memory copies can also be performed using the DMA engine. We also have a zero-copy version in which the send and receive kernels directly manipulate the app data area.*
 
 ### Figure 8 (p.12) ⭐深度解读
-![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p12.png]]
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig08.png]]
+*整页渲染: ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p12.png]]*
 > [!quote] caption
 > Trade-off between MTE and DMA. To improve communication efficiency, we employ NPU-Direct Unified Remote Memory Access (URMA), a technique on Ascend NPUs similar to IBGDA on GPUs [15]. NPU-Direct URMA enables AIV cores to issue remote memory access requests directly to the DMA engine, bypassing both the host CPU and AI CPU as shown in §2.2. Although NPU-Direct URMA incurs higher startup latency com
 
@@ -71,7 +73,8 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 The page text *references* Figure 8, Figure 9, and Figure 10, but none of these figures are actually rendered on this page, and there is no caption to transcribe. If you'd like me to describe Figure 8 (the trampoline forward data flow) or Figures 9/10 (the redesigned FlowServe system) based on what the surrounding text describes, I can do that — but those visuals themselves are not present in the image you've shared. Could you share the page(s) where those figures actually appear?
 
 ### Figure 10 (p.12) ⭐深度解读
-![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p12.png]]
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig10.png]]
+*整页渲染: ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p12.png]]*
 > [!quote] caption
 > This redesign centers on three key components: • First, we introduce the Data Parallel (DP) group abstraction, inspired by SGLang [24].
 
@@ -87,7 +90,8 @@ The page text *references* Figure 8, Figure 9, and Figure 10, but none of these 
 The page text *references* Figure 8, Figure 9, and Figure 10, but none of these figures are actually rendered on this page, and there is no caption to transcribe. If you'd like me to describe Figure 8 (the trampoline forward data flow) or Figures 9/10 (the redesigned FlowServe system) based on what the surrounding text describes, I can do that — but those visuals themselves are not present in the image you've shared. Could you share the page(s) where those figures actually appear?
 
 ### Figure 12 (p.16) ⭐深度解读
-![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p16.png]]
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig12.png]]
+*整页渲染: ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p16.png]]*
 > [!quote] caption
 > Step 1: Collecting Expert Load Distribution. First, we collect data on expert loads across NPUs. We define expert load as the total number of tokens routed to each expert within a given time interval. Token count directly reflects both communication overhead (MoE-Dispatch and
 
@@ -111,7 +115,8 @@ All scale linearly, but MoE-Balanced closely tracks the uniform-load baseline, r
 Figure 11 | A Study of Expert Placement Load Balancing. (a) We show the expert load distribution of a DeepSeek-R1 layer under the ShareGPT workload. The distribution is highly skewed—20% of experts receive more than the average load, and the hottest expert sees 30× more tokens than the average. (b) The setup uses EP288 and 1K-token sequence length. MoE-Avg-Routing, which forces uniform load across all experts; MoE-Native, which uses the original token-to-expert assignment; and MoE-Balanced, which applies our EPLB to balance expert load.
 
 ### Figure 17 (p.22) ⭐深度解读
-![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p22.png]]
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig17.png]]
+*整页渲染: ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p22.png]]*
 > [!quote] caption
 > 1. A request first arrives at a randomly selected Job Executor (JE), which assigns it to a prefill
 

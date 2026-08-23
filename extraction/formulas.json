@@ -1980,5 +1980,55 @@
    "env": "align",
    "latex": "\\rho_c (c) = \\bigg(\\prod_{t \\in c} \\frac{\\pi^{\\text{megatron}}_\\theta(\\tau_t \\mid \\tau_{<t})}{\\pi^{\\text{megatron}}_{\\theta_{\\text{old}}}(\\tau_t \\mid \\tau_{<t})}\\bigg)^{\\frac{1}{|c|}}."
   }
+ ],
+ "beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl": [
+  {
+   "env": "equation",
+   "latex": "J(\\pi) = \\mathbb{E}\\left[\\sum_{t=0}^{\\infty} \\gamma^t R(s_t, a_t) \\bigg| a_t \\sim \\pi(s_t)\\right]"
+  },
+  {
+   "env": "align",
+   "latex": "\\mathcal J_{GRPO}(\\theta)=\\mathbb E_{x\\sim \\mathcal D,\\{\\tau_i\\}_{i=1}^G\\sim\\pi_{\\theta_{old}}(\\cdot|x)}\\Bigg[&\\frac{1}{G}\\sum_{i=1}^G\\frac{1}{\\sum_{t=0}^{T_i-1}|a^i_t|}\\sum_{t=0}^{T_i-1}\\sum_{j=1}^{|a_t^i|}\\min\\Bigg( \\frac{\\pi_\\theta(a_{t,j}^i|s_t,a_{t,<j}^i)}{\\pi_{\\theta_{old}}(a_{t,j}^i|s_t,a_{t,<j}^i)}\\hat A_{i},\\nonumber \\\\ &\\text{clip}\\Bigg(\\frac{\\pi_\\theta(a_{t,j}^i|s_t,a_{t,<j}^i)}{\\pi_{\\theta_{old}}(a_{t,j}^i|s_t,a_{t,<j}^i)},1-\\epsilon,1+\\epsilon\\Bigg)\\hat A_{i}\\Bigg) \\Bigg]"
+  }
+ ],
+ "cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion": [
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} {q}_{m+l} {k}_{m} &={(\\mathbb{R}^{d}_{\\Theta, m+l}q)}^{T}{(\\mathbb{R}^{d}_{\\Theta, m}k)}\\\\ &= \\sum_{i=0}^{d/2-1}({q_{[2i]}k_{[2i]}\\cos (m+l-m)\\theta_{i}}\\\\ & \\quad +{q_{[2i+1]}k_{[2i+1]}\\cos (m+l-m)\\theta_{i}}) \\\\ &= \\sum_{i=0}^{d/2-1}({q_{[2i]}k_{[2i]}+ {q_{[2i+1]}k_{[2i+1]}})\\cos l\\theta_{i}} \\\\ \\end{aligned}"
+  },
+  {
+   "env": "equation",
+   "latex": "q_{m}, k_{m}= \\begin{pmatrix} \\cos m\\theta & -\\sin m\\theta\\\\ \\sin m\\theta & \\cos m\\theta\\\\ \\end{pmatrix} \\{ \\begin{pmatrix} q_{[0]}\\\\ q_{[1]}\\\\ \\end{pmatrix}, \\begin{pmatrix} k_{[0]}\\\\ k_{[1]}\\\\ \\end{pmatrix} \\}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} {q}_{im} {k}_{j(m-n)} &= q_{[0]i}k_{[0]j}\\cos (m-m+n)\\theta\\\\ & \\quad +q_{[1]i}k_{[1]j}\\cos (m-m+n)\\theta \\\\ &= (q_{[0]i}k_{[0]j}+q_{[1]i}k_{[1]j})\\cos n\\theta \\\\ \\end{aligned}"
+  }
+ ],
+ "cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation": [
+  {
+   "env": "equation",
+   "latex": "r = \\begin{cases} -1 & \\text{if correctness check fails} \\\\ 3 & \\text{if } b(t, t_{\\text{eager}}) \\land b(t, t_{\\text{compile}}) \\\\ 2 & \\text{if } b(t, t_{\\text{eager}}) \\\\ 1 & \\text{otherwise} \\end{cases}"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\text{RFT}}(\\theta) = -\\mathbb{E}_{\\tau \\sim \\mathcal{D'}} \\left[ \\sum_{t=1}^{T} \\log \\pi_\\theta(a_t \\mid s_t, a_{<t}) \\right],"
+  },
+  {
+   "env": "equation",
+   "latex": "V_t^{\\text{targ}} = V_\\phi(s_t) + \\hat{A}_t, \\quad \\text{where} \\quad \\hat{A}_t = \\sum_{l=0}^{T-1-t} (\\gamma\\lambda)^l \\delta_{t+l},"
+  },
+  {
+   "env": "equation",
+   "latex": "\\mathcal{L}_{\\text{VP}}(\\phi) = \\frac{1}{2} \\mathbb{E}_{\\tau \\sim \\mathcal{D}} \\left[ \\frac{1}{T} \\sum_{t=0}^{T-1} \\left( V_\\phi(s_t) - V_t^{\\text{targ}} \\right)^2 \\right],"
+  },
+  {
+   "env": "equation",
+   "latex": "\\begin{aligned} \\mathcal{L}^{\\text{CLIP}}(\\theta) = \\mathbb{E}_{\\tau \\sim \\mathcal{D}} &\\bigg[ \\frac{1}{T} \\sum_{t=0}^{T-1} \\min \\big( \\rho_t(\\theta)\\hat{A}_t, \\\\ & \\text{clip}(\\rho_t(\\theta), 1-\\epsilon_{\\text{lower}}, 1+\\epsilon_{\\text{higher}})\\hat{A}_t \\big) \\bigg] \\end{aligned}"
+  },
+  {
+   "env": "display",
+   "latex": "\\sum_j \\frac{x_i \\cdot w_j^T}{2} = x_i \\cdot \\left(\\sum_j w_j^T\\right) / 2,"
+  }
  ]
 }

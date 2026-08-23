@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p01.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig01.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p01.png]]*
 > [!quote] caption
 > Overview of the Agentic Learning Ecosystem (ALE) and ROME Performance. 1[cs.AI] 12 Mar 2026
 
@@ -39,7 +40,8 @@ Empirical scaling is striking: ROME's accuracy climbs from 41.80% (initial) to 8
 Figure 1: Overview of the Agentic Learning Ecosystem (ALE) and ROME Performance.
 
 ### Figure 2 (p.4) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p04.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig02.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p04.png]]*
 > [!quote] caption
 > The overview of agentic RL ecosystem (a) and its training pipeline (b). technical stack, ALE is also a call to reframe the community’s priorities. In complex agentic settings, the central challenge is no longer merely data scale or curation quality, but the co-design of training infrastructure, executable environments, and evaluation protocols. We hope this work catalyzes collaborative efforts tow
 
@@ -62,7 +64,8 @@ Figure 2: The overview of agentic RL ecosystem (a) and its training pipeline (b)
 (b) Agentic RL training pipeline.
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p05.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig03.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p05.png]]*
 > [!quote] caption
 > ROLL Architecture. (a) ROLL pipelines LLM generation, environment interaction, and reward phases at trajectory-level granularity. Training is also decoupled via a sample buffer using an asyn- chronous ratio to manage staleness. (b) ROLL multiplexes a dynamic GPU pool by shrinking rollout resources for bursty training and expanding them back during demand peaks. coordinates heterogeneous workers an
 
@@ -78,7 +81,8 @@ Figure 3 shows two complementary views of ROLL. **Panel (a)** illustrates fine-g
 Figure 3: ROLL Architecture. (a) ROLL pipelines LLM generation, environment interaction, and reward phases at trajectory-level granularity. Training is also decoupled via a sample buffer using an asynchronous ratio to manage staleness. (b) ROLL multiplexes a dynamic GPU pool by shrinking rollout resources for bursty training and expanding them back during demand peaks.
 
 ### Figure 4 (p.6) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p06.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig04.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p06.png]]*
 > [!quote] caption
 > ROCK System Architecture.
 
@@ -111,7 +115,8 @@ ROCK's central design insight is **decoupling sandbox execution from orchestrati
 > Figure 4: ROCK System Architecture.
 
 ### Figure 5 (p.8) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p08.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig05.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p08.png]]*
 > [!quote] caption
 > The overview of iFlow CLI architecture and execution. these requests already contain the complete historical context, fully orchestrated by the iFlow CLI. The proxy then forwards these requests to the appropriate inference service — be it ROLL inference workers during training or an external API (e.g., GPT, Gemini) during deployment. The native mode achieves a clean separation. ROLL is simplified 
 
@@ -134,7 +139,8 @@ The diagram illustrates iFlow CLI as an orchestrator-worker agent framework cent
 "Figure 5: The overview of iFlow CLI architecture and execution."
 
 ### Figure 6 (p.10) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p10.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig06.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p10.png]]*
 > [!quote] caption
 > Overview of data sources and composition pipelines for training agentic models, spanning code centric basic data and agentic data. 3
 
@@ -159,7 +165,8 @@ The figure presents a **two-pillar data pipeline** for training agentic models:
 The architecture decouples **code-centric reasoning signals** (task-aware supervision from real repos/PRs) from **agentic interaction signals** (multi-agent trajectories, tool use, safety red-teaming). A multi-stage filter (heuristic + LLM judge + execution simulator + expert inspection) gates both streams, ensuring trajectory-quality alignment. This dual-pillar composition enables the ROME model to jointly master static code reasoning and dynamic workflow-driven agency.
 
 ### Figure 7 (p.16) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p16.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig07.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p16.png]]*
 > [!quote] caption
 > Overview of ROME’s Training Pipeline. incidents. Finally, we generated corresponding golden trajectories devoid of general-security issues for subsequent post-training (e.g., SFT and RL). Our overarching objective was to instill robust security awareness such that, when confronted with tasks containing latent security pitfalls, the agent reliably selected safe action paths and proactively avoided 
 
@@ -181,7 +188,8 @@ The figure depicts a three-stage, left-to-right training pipeline:
 **Figure 7:** Overview of ROME's Training Pipeline.
 
 ### Figure 8 (p.20) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p20.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig08.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p20.png]]*
 > [!quote] caption
 > Overview of the Proposed Interaction-Perceptive Agentic Policy Optimization (IPA) training pipeline. sample efficiency(§3.2.4.4). An overview of our framework, including its key components and data flow, is depicted in Figure 8.
 
@@ -203,7 +211,8 @@ The figure (three panels) depicts the **IPA training pipeline**:
 > Figure 8: Overview of the Proposed **Interaction-Perceptive Agentic Policy Optimization** (**IPA**) training pipeline.
 
 ### Figure 9 (p.22) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p22.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig09.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p22.png]]*
 > [!quote] caption
 > Comparison of importance sampling strategies across token-level, chunk-level, and sentence- level granularities, where chunk-level aligns with the natural granularity of interactions.
 
@@ -225,7 +234,8 @@ Each chunk contains the sequence sᵢ, τᵢ₁, …, τᵢₕ, rᵢ, with "Inte
 **Figure 9:** Comparison of importance sampling strategies across token-level, chunk-level, and sentence-level granularities, where chunk-level aligns with the natural granularity of interactions.
 
 ### Figure 10 (p.23) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p23.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig10.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p23.png]]*
 > [!quote] caption
 > Comparison of Chunk-Level Optimization and baseline on a mini-set of the training data. Left:
 
@@ -250,7 +260,8 @@ Aligning temporal discounting to semantic chunk boundaries (rather than individu
 > Figure 10: Comparison of Chunk-Level Optimization and baseline on a mini-set of the training data. **Left:** Unclipped gradient norm for updates that reflects the stability of training. Our Chunk-Level Optimization exhibits more stable gradient norms, while baseline induces anomalous gradient fluctuations. **Middle:** Performance on training tasks. Owing to stable gradient updates and effective credit assignment, Chunk-Level Optimization consistently shows better performance than baseline. **Right:** Test-time success rate on validation tasks. Chunk-Level Optimization retain its superiority over baseline, demonstrating the generalization of our method.
 
 ### Figure 11 (p.24) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p24.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig11.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p24.png]]*
 > [!quote] caption
 > Illustration of the Chunk-Level Initialized Resampling Strategy (Sequential Rollback). Left: In challenging tasks, sampling high-quality trajectories from the beginning is difficult, severely limiting policy learning efficiency. Right: Sequential Rollback sampling strategy initiates rollouts from critical chunks, dramatically reducing the exploration burden and enabling the policy to rapidly acqui
 
@@ -270,7 +281,8 @@ The figure compares two rollout paradigms side-by-side, both sharing the same tr
 **Figure 11:** Illustration of the Chunk-Level Initialized Resampling Strategy (Sequential Rollback). **Left:** In challenging tasks, sampling high-quality trajectories from the beginning is difficult, severely limiting policy learning efficiency. **Right:** Sequential Rollback sampling strategy initiates rollouts from critical chunks, dramatically reducing the exploration burden and enabling the policy to rapidly acquire the key skills embedded in these crucial chunks. By progressively rolling back along the crucial chunks, it enables chunk-level curriculum learning for model to finally solve these challenging tasks.
 
 ### Figure 12 (p.25) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p25.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig12.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p25.png]]*
 > [!quote] caption
 > Performance of Sequential Rollback and baseline (naive sampling) on a challenging training task. Left: Average success rate during training, which reflects the percentage of positive signals in training batch. Sequential Rollback obviously brings more valuable rollouts compared to baseline (all failures). The drop of success rate indicates that the model has rolled back across a crucial chunk to t
 
@@ -292,7 +304,8 @@ The figure (Figure 12) consists of **three side-by-side line plots** comparing S
 **Figure 12:** Performance of Sequential Rollback and baseline (naive sampling) on a challenging training task. **Left:** Average success rate during training, which reflects the percentage of positive signals in training batch. Sequential Rollback obviously brings more valuable rollouts compared to baseline (all failures). The drop of success rate indicates that the model has rolled back across a crucial chunk of the crucial fork. **Middle:** Expert chunks used during training, which visually displays the progress of rolling back along the expert trajectory. **Right:** Average success rate on the challenging task during testing. In test-time, all trajectories are sampled from the initial state. The gap between two curves after step 75 indicates that sequential rollback enables effective learning on extremely hard tasks.
 
 ### Figure 13 (p.26) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p26.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig13.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p26.png]]*
 > [!quote] caption
 > Comparison of IPA with & without Chunk-Level Initialized Resampling (Parallelized Initial- ization) on a mini-set of the training data. Left: Average success rate on training tasks. The gap between curves in the early stage of training shows that the Chunk-Level Initialized Resampling brings much more diverse reward signals in training batches. Middle: Minimum success rate across train-tasks with 
 
@@ -312,7 +325,8 @@ The main figure consists of **three side-by-side line plots**, all sharing the x
 Figure 13: Comparison of IPA with & without Chunk-Level Initialized Resampling (Parallelized Initialization) on a mini-set of the training data. **Left:** Average success rate on training tasks. The gap between curves in the early stage of training shows that the Chunk-Level Initialized Resampling brings much more diverse reward signals in training batches. **Middle:** Minimum success rate across train-tasks with test-time setting (sampled from beginning). With Chunk-Level Resampling, IPA enables the train model to solve extremely hard tasks by learning in a chunk-level curriculum-like manner. **Right:** Average success rate at test-time. Benefiting from more valuable rollouts, Parallelized Initialization substantially improves the performance of IPA.
 
 ### Figure 14 (p.27) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p27.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig14.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p27.png]]*
 > [!quote] caption
 > Benchmark characterization and cross-benchmark comparison of Terminal Bench Pro against other benchmarks.
 
@@ -328,7 +342,8 @@ Figure 14 is a four-panel characterization comparing Terminal Bench Pro against 
 "Figure 14: Benchmark characterization and cross-benchmark comparison of Terminal Bench Pro against other benchmarks."
 
 ### Figure 15 (p.28) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p28.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig15.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p28.png]]*
 > [!quote] caption
 > Performance-parameter trade-offs in agentic tasks. Scores represent averages on general agentic and code agent benchmarks. Models with known parameters are shown as circles, while proprietary models with unknown parameters are depicted as diamonds (right side). Left: Total parameters versus overall performance. Right: Activated parameters versus overall performance. 2https://github.com/alibaba/ter
 
@@ -343,7 +358,8 @@ Figure 14 is a four-panel characterization comparing Terminal Bench Pro against 
 "Figure 15: Performance-parameter trade-offs in agentic tasks. Scores represent averages on general agentic and code agent benchmarks. Models with known parameters are shown as circles, while proprietary models with unknown parameters are depicted as diamonds (right side). **Left**: Total parameters versus overall performance. **Right**: Activated parameters versus overall performance."
 
 ### Figure 16 (p.34) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p34.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig16.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p34.png]]*
 > [!quote] caption
 > Pairwise win-rate matrix (%) on the 100-task real-world benchmark under 30-expert blinded majority voting. Each cell reports the percentage of tasks where the row model is judged better than the col- umn model; higher values (green) indicate stronger performance.
 
@@ -359,7 +375,8 @@ The main figure is a 5×5 pairwise win-rate heatmap comparing five models: ROME,
 Figure 16: Pairwise win-rate matrix (%) on the 100-task real-world benchmark under 30-expert blinded majority voting. Each cell reports the percentage of tasks where the row model is judged better than the column model; higher values (green) indicate stronger performance.
 
 ### Figure 17 (p.36) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p36.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig17.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p36.png]]*
 > [!quote] caption
 > Case study 1 screenshot examples: Sleep Management System Generation. 36
 
@@ -375,7 +392,8 @@ ROME produces a visually rich, themed dashboard with gradient backgrounds, KPI t
 Figure 17: Case study 1 screenshot examples: Sleep Management System Generation.
 
 ### Figure 18 (p.37) ⭐深度解读
-![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p37.png]]
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig18.png]]
+*整页渲染: ![[assets/let-it-flow-agentic-crafting-on-rock-and-roll-p37.png]]*
 > [!quote] caption
 > Case study 2 screenshot examples: Solar System Modeling. 37
 
@@ -396,6 +414,113 @@ The figure is a **5×3 comparative grid** (15 panels total) showing rendered out
 ## Caption (verbatim)
 
 **Figure 18: Case study 2 screenshot examples: Solar System Modeling.**
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 2 (p.29) ⭐深度解读
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab02.png]]
+> [!quote] caption
+> Performance on Terminal-Based Benchmarks (Large Models).
+
+> [!tip] 表格解读（多模态）
+> # Clarification
+
+The content you've shared does not contain a figure (no architecture diagram, components, or data-flow schematic). It contains **only**:
+
+1. A table caption
+2. A partial set of column headers (with the rightmost column truncated as "K…")
+
+No data rows, no rendered figure, and no benchmark scores are visible in the provided text. I can't responsibly invent an "architecture / components / data flow" description or a "key technical takeaway" when the underlying figure isn't present.
+
+---
+
+# Verbatim Transcription of What *Is* Provided
+
+**Caption (verbatim):**
+
+> Table 2: Performance on Terminal-Based Benchmarks (Large Models).
+
+**Table header row (verbatim, truncated as shown):**
+
+| ROME | Qwen3-Coder Plus | Qwen3-Coder 480B-A35B-Instruct | DeepSeek V3.1 | GLM-4.6 | K… |
+
+---
+
+# What I would need from you
+
+To fulfill your request, please share:
+
+- The **full table** (including all rows/values and the cut-off "K…" column), **or**
+- The actual **figure/image** you'd like described (architecture, pipeline, flowchart, plot, etc.), along with its caption.
+
+Once supplied, I'll provide the figure description (≤120 words), key technical takeaway, and a verbatim caption transcription.
+
+### Table 4 (p.30) ⭐深度解读
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab04.png]]
+> [!quote] caption
+> Performance on Tool-Use Benchmarks (Large Models).
+
+> [!tip] 表格解读（多模态）
+> **Note:** What you've shared is a table header (Table 4), not a figure showing an architecture with components or data flow. No diagram is included in your message, so I cannot describe architecture components or data flow.
+
+**What Table 4 shows:**
+The visible portion is only the table title and column headers comparing four large language models on tool-use benchmarks:
+- **Qwen3-Coder Plus**
+- **Qwen3-Coder 480B-A35B-Instrct**
+- **DeepSeek V3.1**
+- **GLM-4.6**
+
+The "ROME" column header appears to represent a benchmark or method (rows/values are not visible).
+
+**Key takeaway (insofar as can be inferred):** The table benchmarks the *ROME* tool-use evaluation against several large-scale open/closed coding LLMs, enabling comparison of agentic tool-calling capability across frontier models — though without visible scores, no quantitative conclusion can be drawn.
+
+**Caption (transcribed verbatim):**
+> Table 4: Performance on Tool-Use Benchmarks (Large Models).
+
+If you intended to share a figure (architecture diagram, pipeline schematic, etc.), the image did not come through — feel free to re-upload it.
+
+### Table 5 (p.31) ⭐深度解读
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab05.png]]
+> [!quote] caption
+> and Table 6 report the performance of ROME compared with a wide range of strong baselines, including both normal-scale and large-scale models. Additionally, ROME achieves performance com- parable to that of larger open-source agentic models across most benchmarks, as shown in Table 6 . Notably, our 
+
+> [!tip] 表格解读（多模态）
+> ## Main Figure Description
+
+**Note:** No figure is present in the provided content—only text passage referencing Tables 5 and 6. I'll describe what these tables convey based on the text:
+
+The referenced tables present benchmark performance comparisons, showing **ROME**'s scores across multiple agentic evaluation suites against normal-scale baselines (Qwen3-Coder-30B-A3B-Instruct, Devstral Small 2), larger open-source agentic models, and frontier systems (Gemini-2.5 Flash, GLM-4.5 Air, Kimi-K2). A second set highlights ShopAgent Single-Turn vs. Multi-Turn breakdowns.
+
+## Key Technical Takeaway
+
+ROME achieves an average score of 25.64%, substantially outperforming scale-matched peers (Qwen3-Coder-30B-A3B-Instruct: 15.69%, Devstral Small 2: 16.30%) while remaining competitive with much larger models like Kimi-K2 (1043B total / 32B active params). Its largest advantage appears on ShopAgent: 34.53% (Single-Turn) and 29.61% (Multi-Turn), suggesting strong long-horizon planning and adaptive interaction rather than sheer parameter count driving agentic competence. (98 words)
+
+## Caption Transcription
+
+**No figure caption is present in the provided text.** Only inline references to "Table 5 and Table 6" appear. Verbatim snippet:
+
+> "Table 5 and Table 6 report the performance of ROME compared with a wide range of strong baselines, including both normal-scale and large-scale models… as shown in Table 6."
+
+### Table 6 (p.31) ⭐深度解读
+![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab06.png]]
+> [!quote] caption
+> Performance on General-Agent Benchmarks (Large Models).
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+
+The image displays the header row of **Table 6**, which is a benchmark comparison table evaluating large language models on general-agent tasks. The visible components are:
+
+- **Column headers (model names):** ROME, Qwen3-Coder Plus, Qwen3-Coder 480B-A35B-Instruct, DeepSeek V3.1, GLM-4.6, and a partially visible "K..." column (likely cut off).
+- **Structure:** A standard tabular layout with vertical separators; only the header row is rendered — no numerical data, row labels, metric names, or result cells are visible in this excerpt.
+
+**Key technical takeaway:** Without the data rows and metric rows shown, no quantitative comparison can be drawn — the excerpt is insufficient to assess ROME's relative performance against the Qwen3-Coder, DeepSeek V3.1, or GLM-4.6 baselines.
+
+---
+
+**Caption (verbatim):**
+
+> *Table 6: Performance on General-Agent Benchmarks (Large Models).*
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

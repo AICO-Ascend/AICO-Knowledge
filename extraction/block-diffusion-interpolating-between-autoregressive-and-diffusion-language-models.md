@@ -24,7 +24,8 @@ tags: [speculative]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.2) ⭐深度解读
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p02.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig01.png]]
+*整页渲染: ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p02.png]]*
 > [!quote] caption
 > Block diffusion sequentially generates blocks of tokens by performing diffusion within each block and conditioning on previous blocks. By combining strength from autoregressive and diffusion models, block diffusion overcomes the limitations of both approaches by supporting variable-length, higher-quality generation and improving inference efficiency with KV caching and parallel sampling. network a
 
@@ -43,7 +44,8 @@ The figure compares three text generation paradigms side-by-side, each illustrat
 Figure 1: Block diffusion sequentially generates blocks of tokens by performing diffusion within each block and conditioning on previous blocks. By combining strength from autoregressive and diffusion models, block diffusion overcomes the limitations of both approaches by supporting variable-length, higher-quality generation and improving inference efficiency with KV caching and parallel sampling.
 
 ### Figure 2 (p.6) ⭐深度解读
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p06.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig02.png]]
+*整页渲染: ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p06.png]]*
 > [!quote] caption
 > Train NLLs for modeling the per-token likelihood on LM1B. Models are trained on 16B tokens. Training under the discrete diffusion NELBO, where half of the tokens in a batch are masked on average, has similar training variance to an AR model with a random batch size. so that Et∼U[0,1]q(xℓ t = m|xℓ) = 0.5. Thus, training on the diffusion objective involves estimating loss gradients with 2x fewer tok
 
@@ -59,7 +61,8 @@ The figure is a line plot titled "Train Negative Log-Likelihood (NLL) for Single
 "Figure 2: Train NLLs for modeling the per-token likelihood on LM1B. Models are trained on 16B tokens. Training under the discrete diffusion NELBO, where half of the tokens in a batch are masked on average, has similar training variance to an AR model with a random batch size."
 
 ### Figure 3 (p.21) ⭐深度解读
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p21.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig03.png]]
+*整页渲染: ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p21.png]]*
 > [!quote] caption
 > x1 t x2 t x3 t x1 x2 x3 x1 t x2 t x3 t x1 x2 x3
 
@@ -78,7 +81,8 @@ The figure visualizes a **6×6 specialized attention mask** for a block-diffusio
 **Figure 3: Example of Specialized Attention Mask**
 
 ### Figure 4 (p.22) ⭐深度解读
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p22.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig04.png]]
+*整页渲染: ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p22.png]]*
 > [!quote] caption
 > We can adapt the masking strategy from Fig. 3 to a FlexAttention compatible sparse masking function as above. This enables the creation of a customized JIT attention operation that uses significantly less memory with up to ≈5X speedup over the naive native scaled_dot_product_attention implementation in PyTorch (≥2.5) on a A5000 GPU with L = 1024 and batch size B = 16. 22
 
@@ -101,7 +105,8 @@ The figure presents a PyTorch `block_diff_mask` function implementing a FlexAtte
 "Figure 4: We can adapt the masking strategy from Fig. 3 to a FlexAttention compatible sparse masking function as above. This enables the creation of a customized JIT attention operation that uses significantly less memory with up to ≈5X speedup over the naive native scaled_dot_product_attention implementation in PyTorch (≥ 2.5) on a A5000 GPU with L = 1024 and batch size B = 16."
 
 ### Figure 5 (p.23) ⭐深度解读
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p23.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig05.png]]
+*整页渲染: ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p23.png]]*
 > [!quote] caption
 > Attention computation using FlexAttention with our proposed custom mask.
 
@@ -165,6 +170,196 @@ This is not a traditional architecture diagram — it is a qualitative-output fi
 
 **Caption (verbatim):**
 Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (trained with a context length of L = 1024). The generative perplexity of this sample under GPT2-Large is 10.6 and its entropy is 5.5.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.5) ⭐深度解读
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab01.png]]
+> [!quote] caption
+> Test perplexities for single- token generation (PPL; ↓ ) across 16B tokens on LM1B.
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+The displayed item is **Table 1** (not an architecture diagram), a four-row results table comparing perplexity (PPL ↓) on LM1B after 16B training tokens. It benchmarks four configurations:
+
+- **AR** (autoregressive baseline): **22.88**
+- **AR + random batch size**: 24.37 (degrades due to batching variance)
+- **BD3-LM** with L′ = 1 (block-diffusion, single-token block): **≤ 25.56**
+- **BD3-LM L′ = 1 + tuned schedule**: **22.88** (matches AR)
+
+The accompanying paragraph explains *why* — although block-diffusion with L′ = 1 is expectation-equivalent to the AR negative log-likelihood (Eq. 8 ≈ Eq. 1), the cross-entropy is only computed over **masked** tokens $\mathbf{x}_t^\ell = \mathbf{m}$, yielding a loss with higher variance than AR's full-token cross-entropy. A tuned noise schedule closes this ~3-point perplexity gap.
+
+**Key technical takeaway:** Block diffusion and AR are theoretically equivalent in expectation at L′ = 1, but block diffusion suffers from high *training variance* because its loss only sees masked tokens; a tuned sampling schedule is required to recover matching test perplexity (22.88) on LM1B.
+
+**Caption verbatim:**
+*Table 1: Test perplexities for single-token generation (PPL; ↓) across 16B tokens on LM1B.*
+
+### Table 2 (p.7) ⭐深度解读
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab02.png]]
+> [!quote] caption
+> Perplexities (PPLs; ↓ ) and variances of the NELBO Var X ,t [ L BD ( X ; θ )] (Var. NELBO; ↓ ). Models are trained on LM1B using a linear schedule for 65B tokens, then finetuned for 10B tokens.
+
+> [!tip] 表格解读（多模态）
+> **Description**
+
+The provided content is not a figure but **Table 2**, a numerical results table from an experimental study on language modeling. It has a hierarchical layout:
+
+- **Top-level grouping (4 columns):** four prior distributions — 𝒰[0,.5], 𝒰[.3,.8], 𝒰[.5,1], 𝒰[0,1].
+- **Second-level columns:** Perplexity (PPL) and Variance of NELBO (Var. NELBO) under each prior.
+- **Rows:** three values of the parameter **L′** (128, 16, 4), controlling the budget/size of a latent block.
+
+**Key technical takeaway:** There is a clear PPL ↔ variance trade-off with respect to L′. Larger L′ (128) yields the lowest estimator variance (e.g., **1.03** for 𝒰[0,.5]) but the worst PPL (31.72), whereas smaller L′ (4) achieves the best PPL (**29.16** under 𝒰[.5,1]) at the cost of much higher variance (8.28). The choice of prior interval also matters: the narrowest prior 𝒰[.5,1] paired with L′ = 4 gives the best-of-both on PPL with moderate variance. This indicates practitioners can tune L′ and the prior to balance sample efficiency and model quality depending on downstream priorities.
+
+**Caption (verbatim)**
+
+> Table 2: Perplexities (PPLs; ↓) and variances of the NELBO Var**ₓ,ₜ**[𝓛_BD(**X**; θ)] (Var. NELBO; ↓). Models are trained on LM1B using a linear schedule for 65B tokens, then finetuned for 10B tokens.
+
+### Table 3 (p.7) ⭐深度解读
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab03.png]]
+> [!quote] caption
+> Test perplexities (PPL; ↓ ) of mod- els trained for 65B tokens on LM1B. Best diffusion value is bolded.
+
+> [!tip] 表格解读（多模态）
+> There is no main figure on this page — only narrative text and **Table 3**. I'll describe the table and key takeaway instead.
+
+## Table 3 — Architecture / Data Flow (conceptual structure)
+
+**What's shown:** Perplexity (PPL ↓) on LM1B after 65B training tokens, grouped by model family:
+
+- **Autoregressive baseline:** Transformer-X Base (23.5) → Transformer (22.83)
+- **Diffusion baselines:** D3PM absorb (≤82.34), SEDD (≤32.68), MDLM (≤31.78)
+- **Block diffusion (BD3-LMs, the paper's proposal):** with block size L′ = 16 → ≤30.60; L′ = 8 → ≤29.83; L′ = 4 → ≤28.23 (bolded as best diffusion value)
+
+The table is a *column-organ chart* in spirit: one column for PPL, one column for method, rows sorted to make the Pareto improvement of BD3-LMs visually obvious.
+
+## Key Technical Takeaway
+
+BD3-LMs at small block sizes (L′ = 4) achieve 28.23 PPL on LM1B, beating both autoregressive Transformers (22.83) — wait, *approaching* them — and prior diffusion LMs (MDLM 31.78) by a clear margin, demonstrating that **block-wise diffusion bridges the gap between diffusion and autoregressive language modeling**.
+
+## Verbatim Caption
+
+> **Table 3:** Test perplexities (PPL; ↓) of models trained for 65B tokens on LM1B. Best diffusion value is bolded.
+
+### Table 4 (p.8) ⭐深度解读
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab04.png]]
+> [!quote] caption
+> Test perplexities (PPL; ↓ ) on OWT for models trained for 524B to- kens. Best diffusion value is bolded.
+
+> [!tip] 表格解读（多模态）
+> # Response
+
+I don't see a figure in the provided image — only two columns of body text and **Table 4**. Below I describe what is actually present (Table 4), then transcribe its caption verbatim.
+
+---
+
+## What is shown (Table 4)
+
+**Structure / components:**
+- A single-column **table** reporting test **perplexity (PPL)** on OpenWebText (OWT), with lower-is-better indicated by ↓.
+- Models grouped into two families:
+  - **Autoregressive / discrete diffusion baselines:** AR (Sahoo et al., 2024a), SEDD (Lou et al., 2024), MDLM (Sahoo et al., 2024a).
+  - **BD3-LMs** at three block sizes: L′ = 16, 8, 4.
+
+**Numeric content (PPL ≤):**
+| Method | PPL (↓) |
+|---|---|
+| AR | 17.54 |
+| SEDD | ≤ 24.10 |
+| MDLM | ≤ 22.98 |
+| BD3-LMs L′ = 16 | ≤ 22.27 |
+| BD3-LMs L′ = 8 | ≤ 21.68 |
+| BD3-LMs L′ = 4 | **≤ 20.73** |
+
+**Key takeaway (≤120 words):**
+> All BD3-LM variants outperform prior diffusion language models (MDLM and SEDD) on OWT after 524B tokens, with smaller block sizes monotonically improving perplexity: 22.27 → 21.68 → 20.73 at L′ = 16 / 8 / 4. The best BD3-LM (L′ = 4) reaches 20.73 PPL, still trailing the autoregressive baseline (17.54) but establishing a new state-of-the-art among discrete-diffusion LMs and corroborating the LM1B trend in Table 3.
+
+---
+
+## Caption (transcribed verbatim)
+
+**Table 4:** Test perplexities (PPL; ↓) on OWT for models trained for 524B tokens. Best diffusion value is bolded.
+
+### Table 5 (p.8) ⭐深度解读
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab05.png]]
+> [!quote] caption
+> Zero-shot validation perplexities ( ↓ ) of models trained for 524B tokens on OWT. All perplexities for diffusion models are upper bounds.
+
+> [!tip] 表格解读（多模态）
+> # Description
+
+**Note:** The provided image is a data table (Table 5), not an architecture/flow diagram — there are no components, modules, or data-flow arrows to describe. I will instead describe the table's content.
+
+**Table structure:**
+- **Columns (7 evaluation benchmarks):** PTB, Wikitext, LM1B, Lambada, AG News, Pubmed, Arxiv
+- **Rows (4 models):** AR (autoregressive), SEDD, MDLM, BD3-LM (L′=4)
+- **Cell values:** zero-shot validation perplexity (↓ lower is better); bold = best per column
+- **Constraint:** all diffusion-model values are reported as upper bounds; models trained on 524B tokens from OWT
+
+**Key technical takeaway:** Autoregressive (AR) modeling remains strongest on 4 of 7 benchmarks (PTB, Wikitext, LM1B, AG News), while discrete diffusion models (MDLM, BD3-LM) are competitive or superior on others (Lambada, Pubmed, Arxiv), suggesting diffusion-based LMs are viable on some domains but have not yet matched AR across the board — with caveat that diffusion perplexities are upper bounds. (≈75 words)
+
+---
+
+**Caption (verbatim):**
+
+> Table 5: Zero-shot validation perplexities (↓) of models trained for 524B tokens on OWT. All perplexities for diffusion models are upper bounds.
+
+### Table 6 (p.8) ⭐深度解读
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab06.png]]
+> [!quote] caption
+> Generation length statistics from sampling 500 documents from models trained on OWT.
+
+> [!tip] 表格解读（多模态）
+> I don't see a main figure with architecture/components/data flow in the provided image. The image contains two paragraphs of academic text and **Table 6** (a data table, not an architecture figure).
+
+Here's what is visible:
+
+**Table 6 content:**
+| | Median # tokens | Max # tokens |
+|---|---|---|
+| OWT train set | 717 | 131K |
+| AR | 4008 | 131K |
+| SEDD | 1021 | 1024 |
+| BD3-LM L′ = 16 | 798 | 9982 |
+
+**Key technical takeaway from the surrounding text (≤120 words):** BD3-LMs overcome the fixed-context-length limitation of prior diffusion language models (e.g., SEDD), generating sequences up to **≈10× longer** than SEDD while remaining competitive with autoregressive (AR) baselines on the OWT dataset. Unlike SSD-LM's Gaussian diffusion formulation, BD3-LM uses discrete diffusion with an efficient masked-sampler where the number of function evaluations (NFEs) is upper-bounded by the sequence length *L* (tokens are never remasked). This enables long-form generation without the heavy diffusion-step cost (≥40K NFEs) that Gaussian block-diffusion methods require.
+
+**Caption transcribed verbatim:**
+> Table 6: Generation length statistics from sampling 500 documents from models trained on OWT.
+
+If you intended to share a different figure (e.g., the BD3-LM architecture diagram), please re-upload it.
+
+### Table 7 (p.9) ⭐深度解读
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab07.png]]
+> [!quote] caption
+> Generative perplexity (Gen. PPL; ↓ ) and number of function evaluations (NFEs; ↓ ) of 300 samples of lengths L = 1024 , 2048 . All models are trained on OWT. AR, SEDD, MDLM, BD3-LMs use 110M parameters and are trained on 524B tokens, while SSD-LM uses 400M parameters and is pre-trained on 122B token
+
+> [!tip] 表格解读（多模态）
+> **Description (Table 7):**
+This results table benchmarks generative perplexity (Gen. PPL, lower is better) and number of function evaluations (NFEs, lower is better) across autoregressive (AR), standard diffusion (SEDD, MDLM), and block diffusion (SSD-LM, BD3-LMs) language models at sequence lengths L=1024 and L=2048. BD3-LMs dominate the diffusion category, with the smallest block size (L'=4) achieving the best scores (25.7 / 23.6) while using only 1K–2K NFEs—an order of magnitude fewer steps than SSD-LM's 40K–80K, yet with substantially lower perplexity.
+
+**Key takeaway:** Block-wise discrete diffusion matches autoregressive generation quality at diffusion-model step counts.
+
+---
+
+**Caption (verbatim):**
+
+*BD3-LMs achieve the best generative perplexities compared to previous diffusion methods. Relative to SSD-LM, our discrete approach yields samples with improved generative perplexity using an order of magnitude fewer generation steps. We also qualitatively examine samples taken from BD3-LM and baselines (AR, MDLM) trained on the OWT dataset; we report samples in Suppl. D. We observe that BD3-LM samples have higher coherence than MDLM samples and approach the quality of AR.*
+
+### Table 8 (p.9) ⭐深度解读
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab08.png]]
+> [!quote] caption
+> Effect of the noise schedule on like- lihood estimation. We finetune BD3-LMs on 3B tokens from LM1B and evaluate on a linear schedule. For clipped schedules, we compare optimal clipping for L ′ = 4 , 16 .
+
+> [!tip] 表格解读（多模态）
+> **Description of the main figure (Table 8):**
+
+The table is a 3-column results grid (Noise schedule / PPL / Var. NELBO) split into two block-size regimes, **L' = 4** (top) and **L' = 16** (bottom). Each block lists five noise schedules: two *clipped* uniforms (𝒰[0.45, 0.95] and 𝒰[0.3, 0.8]), a linear 𝒰[0,1], and auxiliary schedules (logarithmic, square-root, square, or cosine depending on regime). Best values per column are bolded. Data flow is implicit: schedules are applied during BD3-LM finetuning on 3B LM1B tokens, then evaluated under the linear schedule.
+
+**Key takeaway:** Clipped-uniform masking strictly dominates non-clipped schedules in both block-size regimes, yielding the lowest perplexity and lowest variance NELBO simultaneously — at small L'=4 favoring aggressive clipping 𝒰[0.45, 0.95], while at large L'=16 favoring tighter 𝒰[0.3, 0.8].
+
+**Caption (verbatim):**
+
+"Table 8: Effect of the noise schedule on likelihood estimation. We finetune BD3-LMs on 3B tokens from LM1B and evaluate on a linear schedule. For clipped schedules, we compare optimal clipping for L' = 4, 16."
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

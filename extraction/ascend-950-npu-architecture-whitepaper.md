@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 301 (p.12) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p12.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig301.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p12.png]]*
 > [!quote] caption
 > 昇腾950 芯片架构示意图
 
@@ -89,7 +90,8 @@ The figure depicts a three-column AI Core architecture under a top-level **Bus I
 - 图4-3 Cube Core 支持的数值精度示意
 
 ### Figure 403 (p.18) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p18.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig403.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p18.png]]*
 > [!quote] caption
 > Cube Core 支持的数值精度示意
 
@@ -105,7 +107,8 @@ The figure depicts a three-column AI Core architecture under a top-level **Bus I
 - 图4-3 Cube Core 支持的数值精度示意
 
 ### Figure 404 (p.19) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p19.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig404.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p19.png]]*
 > [!quote] caption
 > HiF8 数值精度
 
@@ -148,7 +151,8 @@ Dot = Denormal    | S | 0 | 0 | 0 | 0 | M | M | M |          E = [-22, -16]
 3. 最后通过特殊的浮点 Subnormal number 设计，将综合阶码范围从[-15, 15]提升到了[-22, 15]共 38 个阶码，接近 FP16 的 40 个综合阶码值表达。
 
 ### Figure 405 (p.21) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p21.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig405.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p21.png]]*
 > [!quote] caption
 > Vector Core 架构示意图
 
@@ -170,7 +174,8 @@ Both modes reuse the **same Vector Cache/Buffer banks and Vector Execution Unit*
 **Caption (verbatim):** 图4-5 Vector Core 架构示意图
 
 ### Figure 406 (p.22) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p22.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig406.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p22.png]]*
 > [!quote] caption
 > AI Core Cube-Vector 融合示意图
 
@@ -231,7 +236,8 @@ The new BufferID API replaces four flag operations per stage per iteration with 
 图4-8 昇腾950新同步机制代码示例
 
 ### Figure 409 (p.25) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p25.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig409.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p25.png]]*
 > [!quote] caption
 > 昇腾950 内存层次示意图
 
@@ -280,7 +286,8 @@ The Ascend 950 implements a **heterogeneous, multi-tier memory hierarchy** that 
 **图4-11 STARS2.0 架构示意图**
 
 ### Figure 411 (p.27) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p27.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig411.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p27.png]]*
 > [!quote] caption
 > STARS2.0 架构示意图
 
@@ -300,7 +307,8 @@ The Ascend 950 implements a **heterogeneous, multi-tier memory hierarchy** that 
 **图4-11 STARS2.0 架构示意图**
 
 ### Figure 412 (p.31) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p31.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig412.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p31.png]]*
 > [!quote] caption
 > URMA 异步访存通信的过程示意图
 
@@ -315,7 +323,8 @@ UMMU sits in the critical path on both sides, providing VA→PA address translat
 图4-12 URMA 异步访存通信的过程示意图
 
 ### Figure 413 (p.32) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p32.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig413.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p32.png]]*
 > [!quote] caption
 > UB Memory 同步访存语义地址通信过程示意图
 
@@ -414,7 +423,8 @@ Data flows from the System Bus down through the four-layer PCIe stack, out the x
 **Caption (verbatim):** 图4-16 PCIe 5.0 架构示意图
 
 ### Figure 417 (p.36) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p36.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig417.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p36.png]]*
 > [!quote] caption
 > 昇腾950 的一种超节点示意图
 
@@ -436,7 +446,8 @@ Ascend 950 chips leverage the **UB (Unified Bus) interconnect protocol** to comp
 > 图4-17 昇腾950的一种超节点示意图
 
 ### Figure 418 (p.36) ⭐深度解读
-![[assets/ascend-950-npu-architecture-whitepaper-p36.png]]
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig418.png]]
+*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p36.png]]*
 > [!quote] caption
 > 昇腾950 访问CPU 超大内存池示意图
 
@@ -511,6 +522,96 @@ The figure illustrates an Ascend super-node bridging the UB (Unified Bus) fabric
 
 ## Caption (verbatim)
 **图4-21 昇腾芯片支持以太网与以太世界互通示意图**
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 101 (p.5) ⭐深度解读
+![[assets/crops/ascend-950-npu-architecture-whitepaper-tab101.png]]
+> [!quote] caption
+> 关键术语
+
+> [!tip] 表格解读（多模态）
+> **Note:** The provided image is not a figure (architecture/components/data flow diagram) — it is a glossary table titled **表1-1 关键术语** (Table 1-1 Key Terms). There is no figure to describe for architecture or data flow. Below is the requested verbatim transcription of the caption and full table content.
+
+**Caption / Title (verbatim):**
+**表1-1 关键术语**
+
+**Column headers (verbatim):** 术语 | 描述
+
+**Content (verbatim):**
+
+| 术语 | 描述 |
+|---|---|
+| AIC | AI Cube Core。在 AI Core 分离架构下，一组 Cube Core 和 Vector Core 组合中的 Cube Core。 |
+| AIGC | Artificial Intelligence Generated Content，人工智能生成内容，指利用深度学习模型（如 GPT、Diffusion Models）自动生成文本、图像、音频、视频等内容的技术。 |
+| AIV | AI Vector Core。在 AI Core 分离架构下，一组 Cube Core 和 Vector Core 组合中的 Vector Core。 |
+| AI CPU | 芯片内的自研 ARM 架构 CPU 内核，在昇腾 950 芯片中指自研 Linx816 CPU Core。 |
+| AI Die | 昇腾 950PR 芯片和昇腾 950DT 芯片中的计算 Die。 |
+| CANN | Compute Architecture for Neural Networks，昇腾异构计算架构软件栈。 |
+| Clos | Clos 组网是一种基于多级交换的无阻塞网络架构，主要用于构建高性能、高扩展性的数据中心网络。其核心特点是通过多级互连和全连接拓扑实现任意节点间的无阻塞通信，同时支持水平扩展和成本优化。 |
+| CMO | Cache Maintenance Operations，通过 SDMA 实现的 L2 Cache 管理机制。 |
+| CTP | Compact Transport，Unified Bus 的轻量级传输层模式，借助下层协议共同提供可靠和拥塞控制的传输服务。 |
+| Device | Host-Device 架构的设备侧，本文指昇腾 950 系列 NPU 芯片。 |
+| Die | 芯片中具体的晶粒（Die）描述，一般一个芯片中集成一个或者多个 Die。 |
+
+### Table 301 (p.13) ⭐深度解读
+![[assets/crops/ascend-950-npu-architecture-whitepaper-tab301.png]]
+> [!quote] caption
+> 昇腾 950 系列芯片支持的主要规格
+
+> [!tip] 表格解读（多模态）
+> # Description of the Main Figure
+
+**Architecture/Components:** The table presents the **Ascend 950 series chip specifications**, organized as a comparison matrix between two variants — 昇腾950PR and 昇腾950DT. The AI Subsystem is the sole subsystem shown, broken down into core counts (Cube Core, Vector Core) and combined "Cube+Vector" compute performance across five precision tiers: MXFP4, HiF8/MXFP8/FP8, INT8, BF16/FP16, and TF32. A separate "Cube" row isolates matrix-only throughput at MXFP4 precision. Each cell lists multiple numeric values corresponding to sub-configurations of each chip variant.
+
+**Data Flow:** Rows = spec items → Columns = chip variants (PR vs. DT) → Values = performance metrics across precision formats.
+
+**Key Technical Takeaway:** The 昇腾950DT achieves ~12% higher peak compute than 950PR at the top tier (2007 vs. 1784 TFLOPS MXFP4), with INT8 throughput closely matching MXFP8 performance — indicating a balanced heterogeneous-precision AI accelerator design optimized for both training and inference workloads. (120 words)
+
+---
+
+## Verbatim Caption Transcription
+
+**表3-1 昇腾 950 系列芯片支持的主要规格**
+
+### Table 401 (p.20) ⭐深度解读
+![[assets/crops/ascend-950-npu-architecture-whitepaper-tab401.png]]
+> [!quote] caption
+> HiF8 特殊值编码
+
+> [!tip] 表格解读（多模态）
+> ## Description
+
+**Components/Structure:** The figure is a reference table (not an architecture diagram) listing four special floating-point values and their 8-bit HiF8 encodings across two columns: *特殊值* (Special Value) and *编码* (Encoding).
+
+**Data Flow / Encoding Layout:** Each encoding is an 8-bit word with color-coded bit fields:
+- **ZERO** = `00000000` (all bits zero)
+- **NAN** = `10000000` (only the sign bit set)
+- **+INF** = `01101111`
+- **-INF** = `11101111` (+INF with sign bit flipped)
+
+**Key Technical Takeaway:** HiF8 uses a non-IEEE-754 convention for NaN — it is signaled with the sign bit alone (`10000000`) rather than saturating the exponent and mantissa. Infinities share an identical exponent/mantissa pattern, distinguished solely by the sign bit, simplifying hardware comparison logic but requiring explicit handling for NaN propagation. (≈115 words)
+
+---
+
+**Caption (verbatim):**
+
+表4-1 HiF8 特殊值编码
+
+### Table 402 (p.25) ⭐深度解读
+![[assets/crops/ascend-950-npu-architecture-whitepaper-tab402.png]]
+> [!quote] caption
+> 昇腾 950 Memory 层次中主要 Memory 及其大小
+
+> [!tip] 表格解读（多模态）
+> **Architecture & Data Flow:**
+The schematic depicts Ascend 950's multi-die memory hierarchy. Each die (Die 0 / Die 1) contains AI Cores and AI CPUs:
+
+- **AI Core** = AIC (L1, L0A, L0B, L0C) + AIV (L1, Unified Buffer); connects upward to **L2 Cache**.
+- **AI CPU** = CPU L1 + CPU L2; connects upward to **L3 Cache**.
+- **L2 / L3 Cache** ↔ **Directory (Cache Coherence)** ↔ **Global Memory** (bidirectional).
+
+**Key takeaway (≤120 words):** Ascend 950 splits the memory hierarchy into two purpose-built paths: **L2 Cache** specifically accelerates AIC/AIV AI compute via high-bandwidth, low-latency data staging with on-chip DRAM, while **L3 Cache** serves general-purpose AI CPU compute. Local buffers (L1/L0A/L0B/L0C/UB) supply per-tile operands, and a hardware Directory maintains cross-die coherence before reaching Global Memory — enabling heterogeneous AI CPU + accelerator workloads on a unified memory space.
 
 ## 技术点深读（DEEP）
 

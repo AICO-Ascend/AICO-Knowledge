@@ -81,7 +81,10 @@ def save_caption(image_path, text):
     if assets not in p.parents:
         print("  [skip save] image not under extraction/assets/")
         return
-    key = f"extraction/assets/{p.name}"
+    # key = path relative to repo, preserving subdirs (crops/ etc.) — 2026-08-23 fix:
+    # previously f"extraction/assets/{p.name}" dropped the crops/ subdir, so crop
+    # captions landed under the wrong key and never matched the actual file.
+    key = str(p.relative_to(REPO))
     CAPTIONS.parent.mkdir(parents=True, exist_ok=True)
     # fcntl lock → safe to run 4-5 m3_caption.py --save in parallel (no clobbered JSON)
     with open(CAPTIONS, "a+") as fh:

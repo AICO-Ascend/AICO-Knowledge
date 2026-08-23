@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.7) ⭐深度解读
-![[assets/linear-optimal-topic-transport-for-document-similarity-p07.png]]
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-fig01.png]]
+*整页渲染: ![[assets/linear-optimal-topic-transport-for-document-similarity-p07.png]]*
 > [!quote] caption
 > k-NN classification performance across datasets affects mean test error in the CLASSIC dataset. 531
 
@@ -38,7 +39,8 @@ The figure is a **grouped bar chart** comparing 10 document representation/class
 *Figure 1: k-NN classification performance across datasets*
 
 ### Figure 2 (p.8) ⭐深度解读
-![[assets/linear-optimal-topic-transport-for-document-similarity-p08.png]]
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-fig02.png]]
+*整页渲染: ![[assets/linear-optimal-topic-transport-for-document-similarity-p08.png]]*
 > [!quote] caption
 > t-SNE on CLASSIC
 
@@ -50,6 +52,73 @@ Figure 2 presents a 2×2 grid of t-SNE scatter plots visualizing document embedd
 **Caption (verbatim):**
 
 Figure 2: t-SNE on CLASSIC
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.5) ⭐深度解读
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-tab01.png]]
+> [!quote] caption
+> Dataset statistics for evaluation
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+
+The image presents **Table 1** (titled *"Dataset statistics for evaluation"*), which tabulates five columns of metadata across six benchmark datasets used in the evaluation:
+
+- **Dataset** (row label, in small caps): BBCSPORT, TWITTER, OHSUMED, CLASSIC, REUTERS, AMAZON
+- **|D|** (number of documents): ranging from 737 (BBCSPORT) to 9,152 (OHSUMED)
+- **V** (vocabulary size): ranging from 1,205 (TWITTER) to 16,753 (AMAZON)
+- **Avg(w)** (average document length in words): ranging from 9.7 (TWITTER) to 116.5 (BBCSPORT)
+- **Classes** (number of target labels): ranging from 3 (TWITTER) to 10 (OHSUMED)
+
+**Key takeaway:** The benchmarks span diverse regimes—short social-media texts (TWITTER), long news articles (BBCSPORT), and multi-label medical text (OHSUMED)—ensuring evaluation is not skewed by one document length, domain, or class granularity.
+
+**Caption (verbatim):**
+> Table 1: Dataset statistics for evaluation
+
+### Table 2 (p.6) ⭐深度解读
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-tab02.png]]
+> [!quote] caption
+> Standardized throughput of LOTT and other methods, normalized relative to the throughput of HOTT.
+
+> [!tip] 表格解读（多模态）
+> **Note on the image:** The provided image contains only a table caption and the header row of Table 2 — no figure (chart, architecture diagram, or data plot) is visible. Below I describe what can be inferred from the table header structure, then provide a verbatim caption transcription.
+
+**Description of Table 2 (based on visible header):**
+
+- **Structure:** A tabular comparison with rows representing datasets and columns representing different methods/algorithms.
+- **Columns (Methods):** WMD20, HOFTT, HOTT, LOTT-1, LOTT-5, LOTT-10, LOTT-15 — suggesting WMD20 and HOFTT as baseline/competitor methods, HOTT as the reference baseline, and four LOTT variants differing by a parameter (likely tree depth or candidate count: 1, 5, 10, 15).
+- **Metric:** Standardized throughput, normalized relative to HOTT's throughput (so HOTT = 1.0 by construction).
+- **Key takeaway:** The LOTT family is being benchmarked against standard optimal transport baselines (WMD20, HOFTT) using HOTT as the reference; the multiple LOTT-k variants allow sensitivity analysis across a configuration knob.
+
+**Caption (verbatim):**
+> Table 2: Standardized throughput of LOTT and other methods, normalized relative to the throughput of HOTT.
+
+## 关键公式（原文截图，无 LaTeX 源 — 引用前请核对图片）
+
+### 公式截图 (p.2)
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq01.png]]
+> 原文文本线索：`matrix C = (cij) ∈Rn×m, where cij represents`
+
+### 公式截图 (p.2)
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq02.png]]
+> 原文文本线索：`γ = (γij) that redistributes mass from X to Y,`
+
+### 公式截图 (p.2)
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq03.png]]
+> 原文文本线索：`Γp,q = {γ ∈(R+)n×m : γ1m = µ, γT 1n = ν}.`
+
+### 公式截图 (p.3)
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq04.png]]
+> 原文文本线索：`Fσ(µ) = T µ`
+
+### 公式截图 (p.3)
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq05.png]]
+> 原文文本线索：`LOTT(dk1, dk2) = ∥Fσ( ¯dk1) −Fσ( ¯dk2)∥σ`
+
+### 公式截图 (p.4)
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq06.png]]
+> 原文文本线索：`LOT( ¯dk) = [z1, z2, . . . , z|T|] ∈R|T|d.`
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

@@ -24,7 +24,8 @@ tags: [speculative, training]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p01.png]]
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig01.png]]
+*整页渲染: ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p01.png]]*
 > [!quote] caption
 > Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target model, with the x-axis representing the data scale relative to ShareGPT.
 
@@ -50,7 +51,8 @@ The figure (Figure 1) contains **two vertically stacked line plots** comparing *
 > Figure 1: Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target model, with the x-axis representing the data scale relative to ShareGPT. The new architectural designs in EAGLE-3 enable an increasing scaling curve, which was never observed in the previous works.
 
 ### Figure 2 (p.2) ⭐深度解读
-![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]]
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig02.png]]
+*整页渲染: ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]]*
 > [!quote] caption
 > Speedup ratios of different methods at temperature=0. For the standard speculative sampling, Vicuna-13B uses Vicuna-68M as the draft model. In Table 1, we present comparisons with additional methods, but this figure only showcases a subset. Chat model’s evaluation dataset is MT-bench, and the reasoning model’s evaluation dataset is GSM8K. DeepSeek R1 LLaMA 8B refers to DeepSeek-R1-Distill-LLaMA 8B
 
@@ -58,7 +60,8 @@ The figure (Figure 1) contains **two vertically stacked line plots** comparing *
 > 【MiniMax 解读】EAGLE-3 加速比柱状图（temp=0）：在 Vicuna-13B/LLaMA-3.1-8B/3.3-70B/DeepSeek-R1-LLaMA-8B 上对比 Vanilla/SpecDec/Medusa/HASS/EAGLE/EAGLE-2/EAGLE-3，EAGLE-3 分别达 5.6x/4.4x/4.1x/5.0x，全面最优。适合做「EAGLE-3 性能优势」论据。
 
 ### Figure 3 (p.3) ⭐深度解读
-![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p03.png]]
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig03.png]]
+*整页渲染: ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p03.png]]*
 > [!quote] caption
 > Illustration of training-time test (the bottom part) and its comparison with other draft methods (the upper and middle parts). f denotes the feature, t denotes the token, and a represents the unconstrained vectors.
 
@@ -79,7 +82,8 @@ Figure 3 compares three draft-model architectures vertically:
 **Figure 3:** Illustration of **training-time test** (the bottom part) and its comparison with other draft methods (the upper and middle parts). *f* denotes the feature, *t* denotes the token, and *α* represents the unconstrained vectors. We use the hat to denote the predictions from models. All the methods shown in the figure use the token sequence from the previous time step, but for simplicity, this is not depicted in the figure. The input to EAGLE-3 is not actually *f*, but it is not shown in this figure. We will provide a detailed explanation in the following section.
 
 ### Figure 4 (p.2) ⭐深度解读
-![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]]
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png]]
+*整页渲染: ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p02.png]]*
 > [!quote] caption
 > We can address this issue by incorporating Step 1 into the training process (the bottom of Figure 3). Using this method, the benefits of increasing training data become more pronounced. We name this technique as training-time test. EAGLE and speculative sampling methods such as Medusa (Cai et al., 2024) reuse the top-layer fea- tures of the target model, specifically the features immediately befor
 
@@ -87,7 +91,8 @@ Figure 3 compares three draft-model architectures vertically:
 > 【MiniMax 解读】EAGLE-3 加速比柱状图（temp=0）：在 Vicuna-13B/LLaMA-3.1-8B/3.3-70B/DeepSeek-R1-LLaMA-8B 上对比 Vanilla/SpecDec/Medusa/HASS/EAGLE/EAGLE-2/EAGLE-3，EAGLE-3 分别达 5.6x/4.4x/4.1x/5.0x，全面最优。适合做「EAGLE-3 性能优势」论据。
 
 ### Figure 5 (p.4) ⭐深度解读
-![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p04.png]]
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig05.png]]
+*整页渲染: ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p04.png]]*
 > [!quote] caption
 > Diagram of the EAGLE-3 inference pipeline, illustrating the three steps of the draft model. l, m, and h represent the low, middle, and high-level features of the target model, respectively. e denotes the embedding. 3 EAGLE-3
 
@@ -103,7 +108,8 @@ EAGLE-3 injects low/middle/high-level features (l, m, h) and token embeddings (e
 Figure 5: Diagram of the EAGLE-3 inference pipeline, illustrating the three steps of the draft model. *l*, *m*, and *h* represent the low, middle, and high-level features of the target model, respectively. *e* denotes the embedding.
 
 ### Figure 6 (p.5) ⭐深度解读
-![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p05.png]]
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig06.png]]
+*整页渲染: ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p05.png]]*
 > [!quote] caption
 > All attention masks are diagonal, except when the original training data is used as the key. Using matrix multiplication in this case would result in significant computational waste, so we can use vector dot products to calculate the attention score only for the corresponding positions. HASS (Zhang et al., 2024) and EAGLE-3 both make similar modifications to the attention mecha- nism to simulate t
 
@@ -121,7 +127,8 @@ These textual mentions suggest Figure 6 likely illustrates:
 However, **I cannot transcribe a caption verbatim because no caption is visible on this page** — only the prose references to Figure 6. If you can share the page where Figure 6 itself appears (with its caption), I'd be happy to transcribe it exactly.
 
 ### Figure 7 (p.8) ⭐深度解读
-![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p08.png]]
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig07.png]]
+*整页渲染: ![[assets/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-p08.png]]*
 > [!quote] caption
 > Acceptance rate of EAGLE and EAGLE-3 on MT-bench, with the target model being LLaMA-
 
@@ -135,6 +142,49 @@ EAGLE-3 maintains a near-constant ~79% acceptance rate even as the number of cha
 
 **Caption (verbatim):**
 "Figure 7: Acceptance rate of EAGLE and EAGLE-3 on MT-bench, with the target model being LLaMA-Instruct 3.1 8B. Hereby, n-α refers to the acceptance rate when the input contains n estimated features, under the condition that the previous estimated tokens are all accepted by the target model."
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 2 (p.8) ⭐深度解读
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab02.png]]
+> [!quote] caption
+> Ablation study results with LLaMA-Instruct 3.1 8B as the target model. “Remove fea con” refers to the first improvement of EAGLE-3, which removes the feature prediction constraint. “Fused features” refers to the second improvement of EAGLE-3, where low, middle, and high-level feature fusion replaces
+
+> [!tip] 表格解读（多模态）
+> **Figure 7 — Description (≤120 words):**
+
+A line plot comparing the *acceptance rate* of two speculative-decoding models, **EAGLE** (red, circles) and **EAGLE-3** (blue, squares), as a function of speculative step depth `n-α` (0 to 7). Both curves are evaluated on MT-bench with LLaMA-Instruct 3.1 8B as the target model. The x-axis represents the number of previously-accepted estimated features feeding the next draft, while the y-axis shows the proportion of draft tokens the target model verifies positively. Visual flow: the EAGLE curve drops sharply from ~0.71 at step 0 to ~0.51 at step 6–7, whereas EAGLE-3 remains nearly flat at ~0.78–0.81 throughout. **Key takeaway:** combining multi-layer (low/mid/high) fused features with a relaxed prediction constraint in EAGLE-3 decouples acceptance from draft length, sustaining high acceptance (~0.79) even at deep speculation, while EAGLE degrades ~20 percentage points.
+
+**Caption verbatim:**
+
+Figure 7: Acceptance rate of EAGLE and EAGLE-3 on MT-bench, with the target model being LLaMA-Instruct 3.1 8B. Hereby, *n-α* refers to the acceptance rate when the input contains *n* estimated features, under the condition that the previous estimated tokens are all accepted by the target model.
+
+### Table 5 (p.8) ⭐深度解读
+![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab05.png]]
+> [!quote] caption
+> Throughput improvement under different batch sizes on A100 and LLaMA-Instruct 3.1 8B for the MT- Bench dataset, with vLLM without speculative sampling as the baseline (1.00x).
+
+> [!tip] 表格解读（多模态）
+> # Main Figure Description
+
+## Description of Main Figure (Table 5)
+
+**Type**: Table (not a figure with architecture)
+
+**Components**:
+- **Rows**: Two methods being evaluated — EAGLE and EAGLE-3
+- **Columns**: 8 different batch sizes (2, 4, 8, 16, 24, 32, 48, 56)
+- **Cell values**: Throughput improvement multipliers (e.g., 1.30x, 1.75x)
+- **Baseline**: vLLM without speculative sampling (1.00x)
+
+**Data flow/Pattern**: As batch size increases, throughput improvement decreases monotonically for both methods. EAGLE peaks at 1.30x (batch=2) and drops below baseline (0.71x) at batch=56. EAGLE-3 peaks at 1.75x and remains above baseline across all tested batch sizes.
+
+**Key Technical Takeaway (≤120 words)**:
+EAGLE-3 consistently outperforms vanilla EAGLE across all batch sizes, with the largest gap (0.79x higher) appearing at batch size 2 (1.75x vs. 1.30x). Critically, EAGLE-3 maintains a speedup even at batch size 56 (1.01x), while EAGLE degrades into a slowdown (0.71x). This demonstrates that EAGLE-3's enhanced draft model design is more robust to the diminishing returns of speculative decoding at high batch sizes, where parallel verification costs erode the benefits of single-batch speculation. The crossover point where EAGLE loses its advantage occurs around batch 32, whereas EAGLE-3 extends effective speculative sampling across the full batch-size spectrum.
+
+## Caption Transcription (Verbatim)
+
+"Table 5: Throughput improvement under different batch sizes on A100 and LLaMA-Instruct 3.1 8B for the MT-Bench dataset, with vLLM without speculative sampling as the baseline (1.00x)."
 
 ## 相关论文
 

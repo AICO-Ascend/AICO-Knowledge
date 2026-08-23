@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.4) ⭐深度解读
-![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p04.png]]
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig01.png]]
+*整页渲染: ![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p04.png]]*
 > [!quote] caption
 > 3.1
 
@@ -89,6 +90,127 @@ No figure caption is present on this page. The page's opening line reads:
 > where L_CE is cross-entropy on output tokens and L_a is the load-balancing loss."
 
 The only in-line figure references are: *"Figure 2"* (ragged-boundary attention mask) and *"Figure 9"* (plotted speedup T_FA = T_8 ).
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.9) ⭐深度解读
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab01.png]]
+> [!quote] caption
+> Statistics of the pretraining data.
+
+> [!tip] 表格解读（多模态）
+> # Description of the Main Figure/Table
+
+**Note:** The image does not contain an architectural diagram but rather **Table 1**, which summarizes the composition of the pretraining data.
+
+**Structure (table layout):**
+- **Columns:** Data Source | Ratio | Tokens (B)
+- **Rows (4 data sources + Total):**
+  1. Nemotron-CC [15] (English Web) — 50% — 500 B tokens
+  2. MAP-CC [5] (Chinese Web) — 25% — 250 B tokens
+  3. OpenCoder-Pretrain [10] — 15% — 150 B tokens
+  4. MegaMath-Web [19] — 10% — 100 B tokens
+  5. **Total** — 100% — 1,000 B tokens
+- **Data flow implied:** Tokens from four heterogeneous sources are mixed by fixed sampling ratio to form a unified 1T-token pretraining corpus.
+
+**Key takeaway:** The corpus balances general multilingual web text (English+Chinese, 75%) with domain-specific code (15%) and math (10%) data, yielding a total of ~1T tokens.
+
+---
+
+# Verbatim Caption
+
+**Table 1** Statistics of the pretraining data.
+
+| Data Source | Ratio | Tokens (B) |
+|---|---|---|
+| Nemotron-CC [15] (English Web) | 50% | 500 |
+| MAP-CC [5] (Chinese Web) | 25% | 250 |
+| OpenCoder-Pretrain [10] | 15% | 150 |
+| MegaMath-Web [19] | 10% | 100 |
+| Total | 100% | 1,000 |
+
+### Table 2 (p.15) ⭐深度解读
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab02.png]]
+> [!quote] caption
+> Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red .
+
+> [!tip] 表格解读（多模态）
+> **Note:** The image contains **Table 2** (a performance comparison), not an architecture/data-flow figure. I'll describe the table and provide a takeaway.
+
+---
+
+### Table Structure / Data Flow
+
+The table is a side-by-side benchmark comparison organized into **three stacked task groups**:
+
+1. **Commonsense / Reasoning (top block)** — 8 tasks (Commonsense QA, HellaSwag, Winogrande, OpenBookQA, PIQA, ARC Challenge, ARC Easy, MMLU)
+2. **Reading Comprehension / NLU (middle block)** — 2 tasks (BoolQ, RACE)
+3. **Multilingual / Chinese (bottom block)** — 2 tasks (C-Eval, CMMLU)
+
+Each row carries four cells: **Task**, **DLCM (Ours) score**, **Baseline score**, **Diff.** (color-coded green = gain, red = regression). Bold marks the higher of each pair. A final **Average** row aggregates overall gain (+2.69, green).
+
+### Key Technical Takeaway
+
+DLCM nets a +2.69 average zero-shot gain by winning on boundary-sensitive tasks (PIQA +2.42, OpenBookQA +3.00, C-Eval +1.71) but regresses on dense reading-style tasks (BoolQ −1.47, RACE −0.72), suggesting concept compression strengthens high-level semantic coherence at the cost of fine-grained token precision in mid-sequence regions.
+
+---
+
+### Caption (verbatim)
+
+**Table 2 Performance Comparison: DLCM vs. Baseline.** Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red.
+
+### Table 4 (p.17) ⭐深度解读
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab04.png]]
+> [!quote] caption
+> Ablation Study: Global Parser vs. Normal. Performance comparison on downstream tasks. Both models aim for a target compression ratio of R = 4 . The Global Parser achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.
+
+> [!tip] 表格解读（多模态）
+> **Description (Table 4 structure & key takeaway):**
+
+Table 4 is an ablation comparison matrix benchmarking a **Global Parser** model against a **Normal** baseline across six downstream reasoning benchmarks (ARC Challenge, ARC Easy, Commonsense QA, HellaSwag, OpenBookQA, PIQA), all evaluated under Accuracy. Each row reports the model's score; the bottom rows aggregate an average improvement (+2.1%) and the realized compression ratio (3.92 vs. 3.15, target R=4). Bolded cells indicate the per-task winner. Global Parser wins 5/6 tasks, with only OpenBookQA favoring Normal.
+
+**Key takeaway:** A globally-aware parsing strategy delivers a tighter realized compression ratio (3.92 ≈ target 4) *and* a +2.1% mean accuracy gain, showing that ratio fidelity and downstream utility are not in tension.
+
+**Caption (verbatim):**
+
+> **Table 4 Ablation Study: Global Parser vs. Normal.** Performance comparison on downstream tasks. Both models aim for a target compression ratio of R =4. The **Global Parser** achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.
+
+### Table 5 (p.18) ⭐深度解读
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab05.png]]
+> [!quote] caption
+> Average tokens per concept across content types and compression ratios. Values represent the actual granularity achieved for each target compression setting.
+
+> [!tip] 表格解读（多模态）
+> No figure is present in this image.
+
+The image shows only text content from page 18 of the paper:
+- **Table 5 caption** (top of page)
+- **Section 9: Conclusion** (the body text)
+- **Page number 18** (bottom)
+
+There is no main architecture diagram, figure, or visualization rendered in this image — only the textual conclusion discussing Dynamic Large Concept Models (DLCM) and the table caption referencing token granularity across content types/compression ratios.
+
+If you intended to share a figure (e.g., the DLCM architecture diagram showing token → concept hierarchy, or a results plot), the image content did not transmit successfully, or the correct file was not attached. Could you re-upload the figure you'd like described? Once provided, I can:
+
+1. Describe its architecture/components/data flow plus one key technical takeaway (≤120 words)
+2. Transcribe the caption verbatim
+
+### Table 6 (p.7) ⭐深度解读
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab06.png]]
+> [!quote] caption
+> provides detailed performance . To more intuitively analyze the performance trends, we have plotted the speedup ( T /T ) in Figure 9 .
+
+> [!tip] 表格解读（多模态）
+> **Description of Figure 2 (based on surrounding text, as the figure itself is not visible in the provided image):**
+
+The figure illustrates the **concept replication strategy** for efficient cross-attention. On the conceptual side, concepts c₁ and c₂ map to variable-length token groups (e.g., t_1 maps to c_1, while t_2, t_3 map to c₂), producing a "ragged" attention mask. The figure contrasts this with the replication strategy: each concept feature c_j is expanded along the token dimension (K' and V' via `expand(segment_lengths)`), aligning Key/Value length with Query length (L) so a standard L×L FlashAttention-Varlen kernel can replace an irregular L×M Flex Attention mask.
+
+**Key Technical Takeaway:** Concept replication converts variable-length concept-token mappings into a fixed self-attention shape, enabling hardware-optimal FlashAttention (VarLen) kernels instead of costly dynamic Flex Attention masks.
+
+**Caption (verbatim from the text):**
+> "As illustrated in Figure 2, when tokens **t**₋₁g belong to concept c₁, and tokens **t**₋₂, **t**₋₃g belong to c₂, the resulting attention mask effectively has a 'ragged' boundary."
+
+*Note: No standalone figure caption is shown in the provided image—only the in-text reference above. The figure itself is not rendered in the supplied content.*
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

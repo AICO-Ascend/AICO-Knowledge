@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.3) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p03.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig01.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p03.png]]*
 > [!quote] caption
 > Transformer architecture. The operations in the yellow boxes have large batch sizes and share model weight parameters across requests; hence, they are compute-bound. Operations in green boxes require loading a unique KV cache for each request; hence, they are memory-bound. The blue box represents network operations that perform synchronization between operations. • A comprehensive evaluation of Na
 
@@ -32,7 +33,8 @@ tags: []
 > 【MiniMax 解读】NanoFlow Transformer 流水(Fig.1)：算子分三类——compute-bound（W_O/K/V/up/down/gate 密集投影，跨请求共享权重、大 batch 摊权重载入）、memory-bound（prefill/decode attention，载每请求 KV、小 batch 避压 KV）、network-bound（AllGather/AllReduce，NVLink 同步）。device-stream 级算子融合：沿关键路径重排+协调度，单设备内只跨 CUDA stream 注入 micro-batch 状态→串行依赖转并行，吞吐 1.91x、达理论峰 68.5%。异构 batch 是关键。架构核心图。
 
 ### Figure 2 (p.5) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p05.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig02.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p05.png]]*
 > [!quote] caption
 > Comparison of network time and compute time. The closer to yellow, the more compute-bound the workload is, whereas the closer to blue indicates the workload is more network-bound. LMSYS-Chat Splitwise
 
@@ -48,7 +50,8 @@ tags: []
 > Figure 2: Comparison of network time and compute time. The closer to yellow, the more compute-bound the workload is, whereas the closer to blue indicates the workload is more network-bound.
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p05.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig03.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p05.png]]*
 > [!quote] caption
 > Comparison of compute time and memory time.
 
@@ -64,7 +67,8 @@ tags: []
 > Figure 2: Comparison of network time and compute time. The closer to yellow, the more compute-bound the workload is, whereas the closer to blue indicates the workload is more network-bound.
 
 ### Figure 4 (p.8) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p08.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig04.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p08.png]]*
 > [!quote] caption
 > Execution pipeline of existing systems. The green, yellow, and blue operations correspond to memory-, compute-, and network-bound operations. Operations in the previous and next layer are denoted by dotted borders. "WASTED" shows the stages in the pipeline where the most constrained resource, compute, is underutilized. Small operations (i.e. layernorm, activation, etc.) are omitted for simplicity.
 
@@ -80,7 +84,8 @@ Figure 4 illustrates the per-layer execution pipeline of existing LLM serving sy
 "Figure 4: Execution pipeline of existing systems. The green, yellow, and blue operations correspond to memory-, compute-, and network-bound operations. Operations in the previous and next layer are denoted by dotted borders. \"WASTED\" shows the stages in the pipeline where the most constrained resource, compute, is underutilized. Small operations (i.e. layernorm, activation, etc.) are omitted for simplicity."
 
 ### Figure 5 (p.8) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p08.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig05.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p08.png]]*
 > [!quote] caption
 > Interference characteristics between GEMM and GEMV kernels. The points on the x-axis correspond unique GEMM-GEMV implementation pairs. The y-axis denotes the GEMM and GEMV kernels’ normalized performance P. ferent implementations of overlapping kernels exponentially expand the profiling space, resulting in millions of possible configurations. This immense complexity makes exhaustive exploration in
 
@@ -96,7 +101,8 @@ Figure 4 illustrates the per-layer execution pipeline of existing LLM serving sy
 "Figure 4: Execution pipeline of existing systems. The green, yellow, and blue operations correspond to memory-, compute-, and network-bound operations. Operations in the previous and next layer are denoted by dotted borders. \"WASTED\" shows the stages in the pipeline where the most constrained resource, compute, is underutilized. Small operations (i.e. layernorm, activation, etc.) are omitted for simplicity."
 
 ### Figure 6 (p.11) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p11.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig06.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p11.png]]*
 > [!quote] caption
 > Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow. The solid background and shaded background represents input batch 0-768 and 768-2048, respectively. R stands for resource utilization. By overlapping the compute-, memory-, and network-intensive operations, NanoFlow increases compute utilization and improves the serving throughput. data size of the offload is balanced across i
 
@@ -118,7 +124,8 @@ Two batches are processed concurrently: solid-background cells represent input b
 Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow. The solid background and shaded background represents input batch 0-768 and 768-2048, respectively. R stands for resource utilization. By overlapping the compute-, memory-, and network-intensive operations, NanoFlow increases compute utilization and improves the serving throughput.
 
 ### Figure 7 (p.11) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p11.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig07.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p11.png]]*
 > [!quote] caption
 > Offline throughput comparison. NanoFlow outper- forms all baselines for all the workload settings. TP stands for the number of GPUs used with tensor parallelism. • How do the various techniques proposed in NanoFlow contribute to the end-to-end throughput? (§6.4) • What is the compute, memory and network resource usage pattern of NanoFlow? (§6.5) • How does NanoFlow improve performance when ap- pli
 
@@ -152,7 +159,8 @@ Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow
 **Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
 
 ### Figure 9 (p.13) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig09.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]*
 > [!quote] caption
 > Ablation study results for NanoFlow. Nano-batching and overlapping improves NanoFlow’s performance.
 
@@ -164,7 +172,8 @@ Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow
 **Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
 
 ### Figure 10 (p.13) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig10.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]*
 > [!quote] caption
 > While the non-overlapping baseline sequentially executes operations, which mostly uses only one resource at a given time, the NanoFlow instance can concurrently utilize multiple resources and achieves 68.5% average compute utilization. Due to kernel interfer- ence, NanoFlow provides lower than optimal compute usage.
 
@@ -176,7 +185,8 @@ Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow
 **Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
 
 ### Figure 11 (p.13) ⭐深度解读
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig11.png]]
+*整页渲染: ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]*
 > [!quote] caption
 > We find that
 
@@ -186,6 +196,68 @@ Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow
 **Key technical takeaway:** NanoFlow sustains a 200 ms/token latency budget under request loads 2–4× higher than vLLM/DeepSpeed-FastGen across all three real-world traces, demonstrating superior SLO-conforming throughput.
 
 **Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 2 (p.7) ⭐深度解读
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-tab02.png]]
+> [!quote] caption
+> Comparison of operation runtimes between cost model estimation and real-world measurements.
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+
+The table decomposes operation-level runtime into three resource channels: Compute (GFLOP), Memory Load (GB), and Network Usage (GB). For each operation (e.g., KQV, Proj, etc., with row "KQV" visible showing 27487.0 GFLOP, 10.5 GB memory load, 0 GB network), it breaks the estimated latency *T_est* into three additive sub-times—*T_comp*, *T_mem*, *T_net*—and compares their sum against a measured *Real Time* column. This enables a resource-bottleneck attribution (compute- vs. memory- vs. network-bound) per kernel.
+
+**Key takeaway:** The model predicts end-to-end runtime as a sum of independently estimated compute, memory, and network latency components, isolating which resource channel dominates each operation's wall-clock cost.
+
+**Caption (verbatim):**
+
+Table 2: Comparison of operation runtimes between cost model estimation and real-world measurements.
+
+### Table 3 (p.9) ⭐深度解读
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-tab03.png]]
+> [!quote] caption
+> Performance P of GEMV and network kernels with different resource utilization R .
+
+> [!tip] 表格解读（多模态）
+> ## Description
+
+**Architecture/Components**: The table is a 3×N lookup matrix translating *Resource Utilization* (R, columns 0→1) into *Performance* (P, values) for three kernel classes: **GEMM** (definitionally identity: P = R), **GEMV** (saturates early — R=0.2 already yields P=0.3, plateauing near R=0.9), and **Network** (steeper front-end: R=0.2 → P=0.5, capped at P=1 by R=0.9).
+
+**Data Flow**: An auto-search consumes the interference profile, queries this table to convert each co-located kernel's allocated R into achievable P, then selects combinations maximizing aggregate throughput. The red-highlighted row (R=0.2 → P=0.3) illustrates the GEMV row used to trade 0.2 units of GEMM performance for 0.3 units of GEMV.
+
+**Key Takeaway**: Across all evaluated GEMM shapes and 64 batch sizes, R-to-P translation is stable (σ < 5% of mean), so a single table universally parameterizes kernel trade-offs for subsequent search.
+
+## Caption (verbatim)
+
+*Table 3: Performance P of GEMV and network kernels with different resource utilization R.*
+
+### Table 4 (p.12) ⭐深度解读
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-tab04.png]]
+> [!quote] caption
+> The average and standard deviation of input and output lengths in the sampled datasets.
+
+> [!tip] 表格解读（多模态）
+> **Note:** No figure is present in the provided content — only paragraphs of paper text plus **Table 4**'s caption. There is no architecture diagram, component diagram, or data-flow figure to describe, so I cannot supply the requested figure summary without fabricating content. Below I transcribe exactly what appears verbatim.
+
+### Verbatim caption
+> **Table 4:** The average and standard deviation of input and output lengths in the sampled datasets.
+
+### Body text (verbatim, as supplied)
+> standard for data center-scale inference.
+>
+> **Baselines.** We consider three widely-used serving frameworks as baselines.
+>
+> vLLM⁶ [17, 52] is a state-of-the-art serving system delivering high throughput. vLLM implements pagedAttention for increasing GPU memory utilization, as well as the chunked prefill for higher GPU utilization.
+>
+> DeepSpeed-FastGen⁷ [13, 23] is a serving framework developed by Microsoft. It dynamically composes prefill with decode requests to ensure that the engine is operating in a high throughput regime. We vary the `max-ragged-batch-size` to tune the batch size for highest throughput.
+>
+> TensorRT-LLM⁸ [26, 27] is a high-performance LLM inference engine built upon NVIDIA's TensorRT SDK. We set `max-num-tokens` by calculating the maximum capacity for the KV-cache in the GPU memory. We also enable paged KV-cache and dynamic batching optimizations when compiling.
+>
+> **Datasets.** Splitwise [32] is a conversation trace collected from a real production environment at Microsoft, with a total of around 20000 requests. LMSYS-Chat-1M [56] is a large-scale dataset with 1 million real-world conversations from 25 different LLMs. ShareGPT [1] is a dataset with conversations collected from the ShareGPT API. We use the full trace from Splitwise and randomly sample 50,000 requests from ShareGPT and LMSYS-Chat-1M for our evaluation. Table 4 shows the average input length and output length in tokens for the sampled datasets we use.
+
+If you intended to share an actual figure image, please re-upload it and I'll provide the architecture/data-flow description plus the key technical takeaway as requested.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

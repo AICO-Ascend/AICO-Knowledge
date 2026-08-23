@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p01.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig01.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p01.png]]*
 > [!quote] caption
 > (Left) Asynchronous RL brings substantial improvements: Through RL training, our agent, ASearcher-Web-QwQ, obtains +15.0, +22.4, and +15.6 improvements on GAIA, xBench, and
 
@@ -44,7 +45,8 @@ DEPA's two-stage variant achieves higher aggregate scores than single-stage base
 **Note:** The page (arXiv:2508.07976v4) has severely overlapping/illegible glyphs in this figure region, so a clean verbatim transcription is not possible from the rendered image alone — most labels appear stacked and unreadable.
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p03.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig02.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p03.png]]*
 > [!quote] caption
 > Comparison between ASearcher and Search-R1. (Left) Search-R1 is only equipped with search tools and lacks web browsing capability. (Right) ASearcher utilizes a simple agent design with two basic tools including search and browsing tools, without relying on any external LLM. ASearcher is a comprehensive agent capable of both reasoning and summarizing lengthy web contents. Notably, both reasoning an
 
@@ -60,7 +62,8 @@ The figure contrasts two agent architectures for search-augmented QA. **Search-R
 Figure 2: Comparison between ASearcher and Search-R1. (Left) Search-R1 is only equipped with search tools and lacks web browsing capability. (Right) ASearcher utilizes a simple agent design with two basic tools including search and browsing tools, without relying on any external LLM. ASearcher is a comprehensive agent capable of both reasoning and summarizing lengthy web contents. Notably, both reasoning and summarization abilities are optimized through end-to-end RL training.
 
 ### Figure 3 (p.4) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p04.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig03.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p04.png]]*
 > [!quote] caption
 > A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) can identify the corrects articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, ASearcher-Web-QwQ, exhibits key behaviors featuring
 
@@ -80,7 +83,8 @@ The figure compares three systems on a complex GAIA multi-hop query (answer: "Mi
 **Figure 3:** A case study on a complex query from GAIA. **Search-R1-32B** is unable to break down the complex question and has severe hallucinations. **Search-o1 (QwQ)** can identify the correct articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, **ASearcher-Web-QwQ**, exhibits key behaviors featuring Search Intelligence: *uncertainty-aware reasoning* (list and examine candidate answers), *precise extraction* from noisy contents, *cross-document inference*, and *grounded verification*.
 
 ### Figure 4 (p.7) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p07.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig04.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p07.png]]*
 > [!quote] caption
 > Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, Injection and Fuzz. Through injection, the agent enriches the question by adding some external facts. Through Fuzz, the agent blurs certain information to increase uncertainty and difficulty. The related fact to the question are tracked during the synthesis process.
 
@@ -105,7 +109,8 @@ The figure compares three systems on a complex GAIA multi-hop query (answer: "Mi
 **Figure 4:** Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, *Injection* and *Fuzz*. Through *injection*, the agent enriches the question by adding some external facts. Through *Fuzz*, the agent blurs certain information to increase uncertainty and difficulty. The related fact to the question are tracked during the synthesis process. Each time the question is modified, a quality verification step is applied to ensure quality and difficulty of the synthetic questions.
 
 ### Figure 5 (p.7) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p07.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig05.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p07.png]]*
 > [!quote] caption
 > Statistics from our data synthesis process. (Left) The distribution of the number of supporting facts. (Middle) The distribution of the number of fuzz actions and injection actions. (Right) The accuracy distribution of QwQ-32B in answering the generated questions without using any tools. • The model finds a correct answer with only a few search turns (i.e., ≤1 turns).
 
@@ -130,7 +135,8 @@ The figure compares three systems on a complex GAIA multi-hop query (answer: "Mi
 **Figure 4:** Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, *Injection* and *Fuzz*. Through *injection*, the agent enriches the question by adding some external facts. Through *Fuzz*, the agent blurs certain information to increase uncertainty and difficulty. The related fact to the question are tracked during the synthesis process. Each time the question is modified, a quality verification step is applied to ensure quality and difficulty of the synthetic questions.
 
 ### Figure 6 (p.9) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p09.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig06.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p09.png]]*
 > [!quote] caption
 > (Left) Test scaling of ASearcher-Web-QwQ. Data points are obtained by enforcing different minimum turns.The accuracy is averaged over GAIA, xBench-DeepSearch, and Frames. (Middle)
 
@@ -150,7 +156,8 @@ Figure 6 is a three-panel empirical analysis of ASearcher-Web-QwQ supporting the
 "Figure 6: (Left) Test scaling of ASearcher-Web-QwQ. Data points are obtained by enforcing different minimum turns. The accuracy is averaged over GAIA, xBench-DeepSearch, and Frames. (Middle) Number of tool calls versus training steps. During training time, long trajectories require much more tool calls than short ones. (Right) Number of generated tokens versus training steps. The number of output tokens exhibits significant variance, with long trajectories exceeding short ones by up to two orders of magnitude."
 
 ### Figure 7 (p.10) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p10.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig07.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p10.png]]*
 > [!quote] caption
 > One-Step-off RL v.s. Fully Asynchronous RL. In batch generation systems, a batch should wait for the longest trajectory, leading to significant GPU idle time. In contrast, fully asynchronous RL achieves faster training than batch generation RL by fully decoupling training and trajectory generation, achieving near-full resource utilization for trajectory generation. example for batch generation RL 
 
@@ -172,7 +179,8 @@ The figure compares two RL training paradigms for agentic LLM systems:
 **Figure 7:** One-Step-off RL v.s. Fully Asynchronous RL. In batch generation systems, a batch should wait for the longest trajectory, leading to significant GPU idle time. In contrast, fully asynchronous RL achieves faster training than batch generation RL by fully decoupling training and trajectory generation, achieving near-full resource utilization for trajectory generation.
 
 ### Figure 8 (p.14) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p14.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig08.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p14.png]]*
 > [!quote] caption
 > Comparison of the performance of QwQ-32B agent before and after RL Training. training pipeline trains the agent to learn complex search strategies to perform precise searches, extract key information, and resolve conflict information.
 
@@ -188,7 +196,8 @@ Figure 8 contains two grouped bar charts comparing three variants of the QwQ-32B
 **Caption (verbatim):** Figure 8: Comparison of the performance of QwQ-32B agent before and after RL Training.
 
 ### Figure 9 (p.15) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p15.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig09.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p15.png]]*
 > [!quote] caption
 > Training Dynamics of ASearcher-Local-7B.
 
@@ -213,7 +222,8 @@ Subplot labels (verbatim):
 - (c) URL Accesses
 
 ### Figure 10 (p.15) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p15.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig10.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p15.png]]*
 > [!quote] caption
 > Training Dynamics of ASearcher-Local-14B. 15
 
@@ -238,7 +248,8 @@ Subplot labels (verbatim):
 - (c) URL Accesses
 
 ### Figure 11 (p.16) ⭐深度解读
-![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p16.png]]
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig11.png]]
+*整页渲染: ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p16.png]]*
 > [!quote] caption
 > Left: Word count of reflective keywords during training time. Right: Word count of keywords indicating explicit reference of external information. sophisticated prompt-based agents powered by Large Reasoning Models through offline RL [19], SFT on simulated trajectories with real-world web data [32, 17], and constructing challenging QAs for RL training. [34].
 
@@ -269,11 +280,15 @@ The diagram presents a three-column case study comparing agents on a complex mul
 
 Figure 12: A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) can identify the corrects articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, **ASearcher-Web-QwQ**, exhibits key behaviors featuring Search Intelligence: *uncertainty-aware reasoning* (list and examine candidate answers), *precise extraction from noisy contents, cross-document inference,* and *rigorous confirmation*.
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.10 `return J(π) = E`
-- p.11 `JGRP O(θ) = Ex∼D,{τi}G`
-- p.11 `i=1∼πθold(·|x)`
+$$
+J(\pi) = \mathbb{E}\left[\sum_{t=0}^{\infty} \gamma^t R(s_t, a_t) \bigg| a_t \sim \pi(s_t)\right]
+$$
+
+$$
+\mathcal J_{GRPO}(\theta)=\mathbb E_{x\sim \mathcal D,\{\tau_i\}_{i=1}^G\sim\pi_{\theta_{old}}(\cdot|x)}\Bigg[&\frac{1}{G}\sum_{i=1}^G\frac{1}{\sum_{t=0}^{T_i-1}|a^i_t|}\sum_{t=0}^{T_i-1}\sum_{j=1}^{|a_t^i|}\min\Bigg( \frac{\pi_\theta(a_{t,j}^i|s_t,a_{t,<j}^i)}{\pi_{\theta_{old}}(a_{t,j}^i|s_t,a_{t,<j}^i)}\hat A_{i},\nonumber \\ &\text{clip}\Bigg(\frac{\pi_\theta(a_{t,j}^i|s_t,a_{t,<j}^i)}{\pi_{\theta_{old}}(a_{t,j}^i|s_t,a_{t,<j}^i)},1-\epsilon,1+\epsilon\Bigg)\hat A_{i}\Bigg) \Bigg]
+$$
 
 ## 技术点深读（DEEP）
 

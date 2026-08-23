@@ -24,7 +24,8 @@ tags: [disaggregated-serving]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p01.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig01.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p01.png]]*
 > [!quote] caption
 > Yi-34B running on two A100 GPUs serving 128 requests from arxiv-summarisation trace. 1a highlights one of the many generation stalls lasting over several seconds in vLLM [53]. 1b shows the impact of increasing load on tail latency. Sarathi-Serve improves throughput while eliminating generation stalls. 1
 
@@ -45,7 +46,8 @@ By combining **chunked-prefills** (splitting prefill into near-uniform chunks) w
 > **Figure 1:** Yi-34B running on two A100 GPUs serving 128 requests from *arxiv-summarisation* trace. 1a highlights one of the many generation stalls lasting over several seconds in vLLM [53]. 1b shows the impact of increasing load on tail latency. Sarathi-Serve improves throughput while eliminating generation stalls.
 
 ### Figure 2 (p.2) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p02.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig02.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p02.png]]*
 > [!quote] caption
 > Current LLM serving systems involve a tradeoff be- tween throughput and latency depending on their scheduling policy. Prioritizing prefills optimizes throughput but sacrifices TBT (time-between-tokens) tail latency whereas prioritizing decodes has the opposite effect. Sarathi-Serve serves high throughput with low TBT latency via stall-free batching. (The figure is illustrative and actual values wi
 
@@ -67,7 +69,8 @@ Dashed trajectory lines connect the points, illustrating how prior approaches (O
 Figure 2: Current LLM serving systems involve a tradeoff between throughput and latency depending on their scheduling policy. Prioritizing prefills optimizes throughput but sacrifices TBT (time-between-tokens) tail latency whereas prioritizing decodes has the opposite effect. Sarathi-Serve serves high throughput with low TBT latency via stall-free batching. (The figure is illustrative and actual values will depend on the model and workload characteristics.)
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig03.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]*
 > [!quote] caption
 > Throughput of the prefill and decode phases with different batch sizes for Mistral-7B running on a single A100 GPU. We use prompt length of 1024 for both prefill and decode experiments. Note that different y-axis, showing pre- fills are much more efficient than decode. Further, note that batching boosts decode throughput almost linearly but has a marginal effect on prefill throughput.
 
@@ -89,7 +92,8 @@ Figure 2: Current LLM serving systems involve a tradeoff between throughput and 
 **Figure 4:** "Prefill and decode time with different input sizes for Mistral-7B running on single A100 GPU. Linear layers contribute to the majority of runtime in both prefill and decode phases. Due to the low arithmetic intensity in decode batches, the cost of linear operation for 1 decode token is nearly same as 128 prefill tokens."
 
 ### Figure 4 (p.5) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig04.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p05.png]]*
 > [!quote] caption
 > Prefill and decode time with different input sizes for Mistral-7B running on single A100 GPU. Linear layers contribute to the majority of runtime in both prefill and decode phases. Due to the low arithmetic intensity in decode batches, the cost of linear operation for 1 decode token is nearly same as 128 prefill tokens. into linear, attention and others, and shows their individual contributions. F
 
@@ -111,7 +115,8 @@ Figure 2: Current LLM serving systems involve a tradeoff between throughput and 
 **Figure 4:** "Prefill and decode time with different input sizes for Mistral-7B running on single A100 GPU. Linear layers contribute to the majority of runtime in both prefill and decode phases. Due to the low arithmetic intensity in decode batches, the cost of linear operation for 1 decode token is nearly same as 128 prefill tokens."
 
 ### Figure 5 (p.6) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig05.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]]*
 > [!quote] caption
 > Arithmetic intensity trend for LLaMA2-70B lin- ear operations with different number of token running on four A100s. Decode batches have low arithmetic intensity i.e., they are bottlenecked by memory fetch time, leading to low compute utilization. Prefill batches are compute bound with sub-optimal bandwidth utilization. Sarathi-Serve forms balanced batches by combining decodes and prefill chunks to
 
@@ -131,7 +136,8 @@ Figure 2: Current LLM serving systems involve a tradeoff between throughput and 
 "Figure 7: A generation stall occurs when one or more prefills are scheduled in between consecutive decode iterations of a request. A, B, C and D represent different requests. Subscript *d* represents a decode iteration, *p* represents a full prefill and *p0*, *p1* represent two chunked prefills of a given prompt. vLLM induces generation stalls by scheduling as many prefills as possible before resuming ongoing decodes. Despite supporting hybrid batches, Orca cannot mitigate generation stalls because the execution time of batches containing long prompts remains high. FasterTransformer is free of generation stalls as it finishes all ongoing decodes before scheduling a new prefill but compromises on throughput due to low decode batch size. In contrast, Sarathi-Serve generates a schedule that eliminates generation stalls yet delivers high throughput."
 
 ### Figure 6 (p.6) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig06.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]]*
 > [!quote] caption
 > Linear layer execution time as function of number of tokens in a batch for LLaMA2-70B on A100(s) with different tensor parallel degrees. When the number of tokens is small, execution time is dictated by the cost of fetching weights from HBM memory. Hence, execution time is largely stagnant in the 128-512 tokens range, especially for higher tensor parallel degrees. Once the number of tokens in the 
 
@@ -151,7 +157,8 @@ Figure 2: Current LLM serving systems involve a tradeoff between throughput and 
 "Figure 7: A generation stall occurs when one or more prefills are scheduled in between consecutive decode iterations of a request. A, B, C and D represent different requests. Subscript *d* represents a decode iteration, *p* represents a full prefill and *p0*, *p1* represent two chunked prefills of a given prompt. vLLM induces generation stalls by scheduling as many prefills as possible before resuming ongoing decodes. Despite supporting hybrid batches, Orca cannot mitigate generation stalls because the execution time of batches containing long prompts remains high. FasterTransformer is free of generation stalls as it finishes all ongoing decodes before scheduling a new prefill but compromises on throughput due to low decode batch size. In contrast, Sarathi-Serve generates a schedule that eliminates generation stalls yet delivers high throughput."
 
 ### Figure 7 (p.6) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig07.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p06.png]]*
 > [!quote] caption
 > A generation stall occurs when one or more prefills are scheduled in between consecutive decode iterations of a request. A, B, C and D represent different requests. Sub- script d represents a decode iteration, p represents a full prefill and p0, p1 represent two chunked prefills of a given prompt. vLLM induces generation stalls by scheduling as many pre- fills as possible before resuming ongoing d
 
@@ -171,7 +178,8 @@ Figure 2: Current LLM serving systems involve a tradeoff between throughput and 
 "Figure 7: A generation stall occurs when one or more prefills are scheduled in between consecutive decode iterations of a request. A, B, C and D represent different requests. Subscript *d* represents a decode iteration, *p* represents a full prefill and *p0*, *p1* represent two chunked prefills of a given prompt. vLLM induces generation stalls by scheduling as many prefills as possible before resuming ongoing decodes. Despite supporting hybrid batches, Orca cannot mitigate generation stalls because the execution time of batches containing long prompts remains high. FasterTransformer is free of generation stalls as it finishes all ongoing decodes before scheduling a new prefill but compromises on throughput due to low decode batch size. In contrast, Sarathi-Serve generates a schedule that eliminates generation stalls yet delivers high throughput."
 
 ### Figure 8 (p.7) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p07.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig08.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p07.png]]*
 > [!quote] caption
 > A 2-way pipeline parallel iteration-level schedule in Orca across 4 requests (A,B,C,D) shows the existence of pipeline bubbles due to non-uniform batch execution times.
 
@@ -193,7 +201,8 @@ Figure 2: Current LLM serving systems involve a tradeoff between throughput and 
 **Figure 8:** A 2-way pipeline parallel iteration-level schedule in Orca across 4 requests (A,B,C,D) shows the existence of pipeline bubbles due to non-uniform batch execution times. Sarathi-Serve is able to minimize these stalls by creating uniform-compute batches.
 
 ### Figure 9 (p.8) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p08.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig09.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p08.png]]*
 > [!quote] caption
 > The incremental cost of coalescing prefills with decode batches. We consider two batching schemes – (i) Decode +
 
@@ -209,7 +218,8 @@ Figure 9 is a comparative performance study structured as a 2×3 grid of bar cha
 Figure 9: The incremental cost of coalescing prefills with decode batches. We consider two batching schemes – (i) Decode + Full Prefill represents the hybrid batching of Orca wherein the entire prefill is executed in a single iteration along with ongoing decodes. (ii) Decode + Chunked Prefill represents Sarathi-Serve wherein prefills are chunked before being coalesced with ongoing decodes with a fixed token budget. Sarathi-Serve processes prefill tokens with much lower impact on the latency of decodes. Further, the relative impact of Sarathi-Serve on latency reduces with higher decode batch size and context lengths.
 
 ### Figure 10 (p.11) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p11.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig10.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p11.png]]*
 > [!quote] caption
 > Capacity (in queries per second) of Mistral-7B and
 
@@ -225,7 +235,8 @@ Key takeaway: Sarathi-Serve consistently beats Orca and vLLM under both strict a
 Figure 10: Capacity (in queries per second) of Mistral-7B and Yi-34B with different schedulers under strict (SLO-S) and relaxed (SLO-R) latency SLOs.
 
 ### Figure 11 (p.11) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p11.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig11.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p11.png]]*
 > [!quote] caption
 > Capacity of LLaMA2-70B and Falcon-180B (mod- els with pipeline parallelism) with different schedulers under strict (SLO-S) and relaxed (SLO-R) latency SLOs.
 
@@ -241,7 +252,8 @@ Key takeaway: Sarathi-Serve consistently beats Orca and vLLM under both strict a
 Figure 10: Capacity (in queries per second) of Mistral-7B and Yi-34B with different schedulers under strict (SLO-S) and relaxed (SLO-R) latency SLOs.
 
 ### Figure 12 (p.12) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p12.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig12.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p12.png]]*
 > [!quote] caption
 > Latency – Throughput tradeoff in vLLM and
 
@@ -271,7 +283,8 @@ Cross-node all-reduce communication inflates TP latency by ~2× versus pipeline 
 **Figure 13:** TP scales poorly across nodes. (a) Median TBT for decode-only batches: cross node TP increases median TBT by more than 2× compared to a 4-way TP within node and PP across nodes. (b) Capacity under strict (SLO-S) and relaxed (SLO-R) latency SLOs: Sarathi-Serve increases Falcon-180B's serving capacity by 4.3× and 3.6× over vLLM's TP-only and hybrid-parallel configurations under strict SLOs.
 
 ### Figure 13 (p.12) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p12.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig13.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p12.png]]*
 > [!quote] caption
 > TP scales poorly across nodes. (a) Median TBT for decode-only batches: cross node TP increases median TBT by more than 2× compared to a 4-way TP within node and PP across nodes. (b) Capacity under strict (SLO-S) and re- laxed (SLO-R) latency SLOs: Sarathi-Serve increases Falcon- 180B’s serving capacity by 4.3× and 3.6× over vLLM’s TP- only and hybrid-parallel configurations under strict SLOs.
 
@@ -301,7 +314,8 @@ Cross-node all-reduce communication inflates TP latency by ~2× versus pipeline 
 **Figure 13:** TP scales poorly across nodes. (a) Median TBT for decode-only batches: cross node TP increases median TBT by more than 2× compared to a 4-way TP within node and PP across nodes. (b) Capacity under strict (SLO-S) and relaxed (SLO-R) latency SLOs: Sarathi-Serve increases Falcon-180B's serving capacity by 4.3× and 3.6× over vLLM's TP-only and hybrid-parallel configurations under strict SLOs.
 
 ### Figure 14 (p.13) ⭐深度解读
-![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p13.png]]
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig14.png]]
+*整页渲染: ![[assets/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-p13.png]]*
 > [!quote] caption
 > Overhead of chunked-prefills in prefill computation for Yi-34B (TP-2) normalized to the cost of no-chunking, shown for various prompt lengths using chunk lengths of 512, 1024 and 2048.
 
@@ -316,6 +330,83 @@ Cross-node all-reduce communication inflates TP latency by ~2× versus pipeline 
 
 **Caption (verbatim):**
 *Figure 14: Overhead of chunked-prefills in prefill computation for Yi-34B (TP-2) normalized to the cost of no-chunking, shown for various prompt lengths using chunk lengths of 512, 1024 and 2048.*
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.10) ⭐深度解读
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab01.png]]
+> [!quote] caption
+> Models and GPU configurations (GQA: grouped- query attention, SW: sliding window).
+
+> [!tip] 表格解读（多模态）
+> ## Description & Technical Takeaway
+
+Note: No figure depicting architecture/components/data flow is visible in the provided input—only **Table 1** and its caption are shown. Below I describe the table that is present and offer a takeaway based on it.
+
+**Main figure (table) — components shown:**
+- **Rows:** two datasets — `openchat_sharegpt4` and `arxiv_summarization`
+- **Columns:** grouped under two families
+  1. *Prompt Tokens* — Median, P90, Std. deviation
+  2. *Output Tokens* — Median, P90, Std. deviation
+- **Data flow / reported values:**
+  - `openchat_sharegpt4`: prompt median = 1730, P90 = 5696, σ = 2088 | output median = 415, P90 = 834, σ = 101
+  - `arxiv_summarization`: prompt median = 7059, P90 = 12985, σ = 3638 | output median = 208, P90 = 371, σ = 265
+
+**Key technical takeaway (≈70 words):**
+arXiv prompts are roughly **4× longer in median** than ShareGPT prompts (7059 vs 1730) and **~2.3× more variable** (σ = 3638 vs 2088), while outputs are markedly shorter (median 208 vs 415). This asymmetry argues for **asymmetric KV-cache sizing and attention budgeting**—expanding capacity for the long, variable context phase while keeping the decoding phase compact.
+
+## Verbatim Caption Transcription
+
+> Table 1: Models and GPU configurations (GQA: grouped-query attention, SW: sliding window).
+
+### Table 2 (p.10) ⭐深度解读
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab02.png]]
+> [!quote] caption
+> Datasets used for evaluation.
+
+> [!tip] 表格解读（多模态）
+> **Note:** The provided content contains text and a data table (SLO targets per model), but **no architecture/system diagram** depicting components or data flow. I cannot describe a figure that isn't present. I'll describe what is actually visible and transcribe the available caption.
+
+**What is visible:**
+A small table listing four evaluated models (Mistral-7B, Yi-34B, LLaMA2-70B, Falcon-180B) against two SLO configurations — *relaxed SLO* and *strict SLO* — measured by **P99 TBT (s)** (Tail Token-Bound Time). Values range from 0.1 s (strict, 7B) up to 5 s (relaxed, 70B/180B).
+
+**Caption verbatim:**
+> Table 2: Datasets used for evaluation.
+
+**Key technical takeaway (from surrounding text, ≤120 words):**
+Sarathi-Serve is an LLM inference serving system that combines **chunked prefills** with **stall-free batching** atop **pipeline (PP)** and **tensor (TP)** parallelism, using NCCL for inter-GPU communication. It targets both loose and strict latency SLOs by tuning the per-step token budget (chunksize), which lets long prefill requests share a batch with active decode requests without stalling ongoing generations. Evaluation spans four models (7B–180B) and asks: maximum load under SLO, deployment trade-offs (TP vs. PP), chunked-prefill overhead, and the marginal benefit of stall-free batching in isolation vs. tandem use. This SLO table operationalizes that evaluation by fixing per-model tail-latency targets, enabling fair load comparisons across model scales.
+
+### Table 3 (p.10) ⭐深度解读
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab03.png]]
+> [!quote] caption
+> SLOs for different model configurations.
+
+> [!tip] 表格解读（多模态）
+> ## Figure Description
+
+**Architecture/Components/Data Flow:** Table 3 is a 4×3 matrix presenting the P99 Time-Between-Tokens (TBT) Service Level Objectives (in seconds) used to evaluate Sarathi-Serve across four LLM scales. The columns compare a *relaxed* SLO versus a *strict* SLO regime, while the rows stratify by model size: Mistral-7B (0.5 s / 0.1 s), Yi-34B (1 s / 0.2 s), LLaMA2-70B (5 s / 1 s), and Falcon-180B (5 s / 1 s).
+
+**Key Technical Takeaway:** Tolerance budgets scale roughly with model size — larger models (≥70B params) require ~10× looser token-latency targets than 7B models, reflecting their inherently slower per-token decode cost. Mistral-7B permits the tightest strict SLO (0.1 s), whereas both 70B and 180B models share an identical 1 s strict budget, suggesting TBT ceilings plateau for the largest configurations regardless of parameter count.
+
+## Caption (verbatim)
+
+**Table 3: SLOs for different model configurations.**
+
+### Table 4 (p.13) ⭐深度解读
+![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab04.png]]
+> [!quote] caption
+> TTFT and TBT latency measured in seconds for hybrid-batching and chunked-prefills used in isolation as well as when they are used in tandem, evaluated over 128 requests for Yi-34B running on two A100s with a token budget of 1024. By using both hybrid-batching and chunked-prefills , Sarathi-Serve is 
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+
+The main figure (Figure 14) is a grouped bar chart depicting the **overhead of chunked-prefills** in prefill computation for the Yi-34B model (TP-2). The x-axis shows prefill lengths (2K, 4K, 8K tokens), and the y-axis shows overhead normalized to the no-chunking baseline (range 0.00–1.50). Three chunk-size variants are compared per prefill length: 512 (orange, diagonal hatching), 1024 (teal, horizontal hatching), and 2048 (cream, diagonal hatching). Smaller chunks (512) consistently incur the highest overhead (~1.27–1.33×), 1024-chunks are intermediate (~1.18–1.23×), and 2048-chunks hover near parity (~0.97–1.02×). The data flow is straightforward: prompt → chunked prefill stages → comparison against non-chunked prefill.
+
+**Key takeaway:** Chunked-prefill overhead is small and bounded (<35%); using larger chunks (2048) nearly eliminates overhead, making chunked-prefills cost-effective for production serving.
+
+**Caption (verbatim):**
+
+Figure 14: Overhead of *chunked-prefills* in prefill computation for Yi-34B (TP-2) normalized to the cost of no-chunking, shown for various prompt lengths using chunk lengths of 512, 1024 and 2048.
 
 ## 相关论文
 

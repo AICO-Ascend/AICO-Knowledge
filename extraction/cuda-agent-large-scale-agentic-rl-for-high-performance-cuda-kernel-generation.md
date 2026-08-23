@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.3) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p03.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig01.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p03.png]]*
 > [!quote] caption
 > Overview of the three-stage data collection pipeline. We first crawl seed operators from PyTorch
 
@@ -46,7 +47,8 @@ The figure depicts a linear three-stage data collection pipeline, with arrows fl
 > **Figure 1** Overview of the three-stage data collection pipeline. We first crawl seed operators from PyTorch and Transformer libraries to build a repository of fundamental computational primitives. Next, an LLM performs combinatorial synthesis to generate fused, multi-operator tasks. Finally, a rubric-based filtering stage retains only executable, deterministic, non-trivial problems with reasonable workloads to ensure data quality and reliable evaluation.
 
 ### Figure 2 (p.4) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p04.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig02.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p04.png]]*
 > [!quote] caption
 > Overview of the agent loop.
 
@@ -61,7 +63,8 @@ A lightweight, file-based scaffolding (SKILL.md + workdir) lets an LLM agent ite
 Figure 2 Overview of the agent loop.
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p05.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig03.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p05.png]]*
 > [!quote] caption
 > Overview of training pipeline. Following a single-turn RL warm-up stage, the sampled trajectories are
 
@@ -80,7 +83,8 @@ The figure depicts a three-stage training pipeline for building a CUDA agent, pa
 "Figure 3 Overview of training pipeline. Following a single-turn RL warm-up stage, the sampled trajectories are used to initialize actor model and critic model before agentic RL stage."
 
 ### Figure 4 (p.10) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p10.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig04.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p10.png]]*
 > [!quote] caption
 > Ablation: RFT. Removing RFT causes training reward to collapse. The concurrent increase in actor entropy
 
@@ -98,7 +102,8 @@ The page presents two ablation figures evaluating stability components of a PPO-
 **Figure 5** Ablation: Value Pretraining. Without Value Pretraining, the critic fails to learn a meaningful value function, as reflected by low explained variance. This leads to inefficient exploration, manifested as excessively long interaction trajectories.
 
 ### Figure 5 (p.10) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p10.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig05.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p10.png]]*
 > [!quote] caption
 > Ablation: Value Pretraining. Without Value Pretraining, the critic fails to learn a meaningful value
 
@@ -116,7 +121,8 @@ The page presents two ablation figures evaluating stability components of a PPO-
 **Figure 5** Ablation: Value Pretraining. Without Value Pretraining, the critic fails to learn a meaningful value function, as reflected by low explained variance. This leads to inefficient exploration, manifested as excessively long interaction trajectories.
 
 ### Figure 6 (p.13) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p13.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig06.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p13.png]]*
 > [!quote] caption
 > Examples of operator classes in our training data.
 
@@ -133,7 +139,8 @@ The page presents two ablation figures evaluating stability components of a PPO-
 "Figure 7: Distribution of the maximum AST similarity between each training sample and all evaluation samples."
 
 ### Figure 7 (p.13) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p13.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig07.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p13.png]]*
 > [!quote] caption
 > Distribution of the maximum AST similarity between each training sample and all evaluation samples.
 
@@ -150,7 +157,8 @@ The page presents two ablation figures evaluating stability components of a PPO-
 "Figure 7: Distribution of the maximum AST similarity between each training sample and all evaluation samples."
 
 ### Figure 8 (p.22) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p22.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig08.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p22.png]]*
 > [!quote] caption
 > Reference operator for diagonal matmul (Case D.2).
 
@@ -176,7 +184,8 @@ The figure displays a PyTorch reference operator implementation (~35 lines) for 
 **Figure 8** Reference operator for diagonal matmul (Case D.2).
 
 ### Figure 9 (p.23) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p23.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig09.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p23.png]]*
 > [!quote] caption
 > Diagonal matmul kernel implementation (Case D.2).
 
@@ -190,7 +199,8 @@ The figure displays a PyTorch reference operator implementation (~35 lines) for 
 - *Figure 10* Custom operator for diagonal matmul (Case D.2).
 
 ### Figure 10 (p.23) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p23.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig10.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p23.png]]*
 > [!quote] caption
 > Custom operator for diagonal matmul (Case D.2).
 
@@ -204,7 +214,8 @@ The figure displays a PyTorch reference operator implementation (~35 lines) for 
 - *Figure 10* Custom operator for diagonal matmul (Case D.2).
 
 ### Figure 11 (p.25) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p25.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig11.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p25.png]]*
 > [!quote] caption
 > Reference operator for matrix multiplication, division, summation, and scaling (Case D.3).
 
@@ -242,7 +253,8 @@ The figure shows a two-stage fused CUDA implementation (`fused_sum_dot_launcher`
 Figure 12: Fused sum-then-dot-product kernel implementation (Case D.3).
 
 ### Figure 13 (p.27) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p27.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig13.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p27.png]]*
 > [!quote] caption
 > Custom operator for matrix multiplication, division, summation, and scaling (Case D.3).
 
@@ -278,7 +290,8 @@ The figure presents a PyTorch implementation of a ResNet BasicBlock reference op
 Figure 14 Reference operator for Resnet BasicBlock (Case D.4).
 
 ### Figure 17 (p.30) ⭐深度解读
-![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p30.png]]
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig17.png]]
+*整页渲染: ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p30.png]]*
 > [!quote] caption
 > Fused add-relu kernel implementation (Case D.4).
 
@@ -325,13 +338,81 @@ The block performs inference-time **BN-folding**, absorbing each BatchNorm's γ/
 **Caption (verbatim):**
 Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 表格（裁剪图 + caption，可直接插入报告）
 
-- p.6 `LRFT(θ) = −Eτ∼D′`
-- p.6 `where τ = (s0, s1, . . . , sT −1) denotes a filtered CUDA agent trajectory, πθ is the policy parameterized by θ,`
-- p.7 `and δt = rt + γVϕ(st+1) −Vϕ(st) is the temporal difference error with Vϕ(sT ) = 0. We set γ = 1 and λ = 0.95`
-- p.7 `LCLIP(θ) = Eτ∼D`
-- p.7 `where ρt(θ) =`
+### Table 1 (p.7) ⭐深度解读
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-tab01.png]]
+> [!quote] caption
+> Main Results on KernelBench. We report Pass Rate, Faster Rate (percentage of kernels faster than baseline), and Geometric Mean Speed-up. Metrics are reported relative to both PyTorch Eager and PyTorch Compile baselines. Overall metrics are weighted by the number of problems in each level (Level 1: 1
+
+> [!tip] 表格解读（多模态）
+> ## Description
+
+**Structure:** Table 1 benchmarks six models on KernelBench, organized by difficulty subset (Overall, Level 1, Level 2, Level 3). Each row pairs a model with five result columns: Pass Rate, Faster Rate, and Geometric-Mean Speed-up, each split against two baselines (PyTorch Eager, PyTorch Compile).
+
+**Components / data flow:** Subset rows → model entries → metric columns → bold marks best performance. Overall metrics are weighted by problem count per level.
+
+**Key takeaway:** CUDA Agent dominates every column and every level—Overall Pass Rate 98.8% (vs. 95.2% for Claude Opus 4.5) and 2.60× Geomean Speed-up vs. Eager—though the margin shrinks at Level 3 (94.0% vs. 88.0%), showing hardest kernel synthesis remains the bottleneck for automated CUDA generation.
+
+## Caption (verbatim)
+
+**Table 1** Main Results on KernelBench. We report Pass Rate, Faster Rate (percentage of kernels faster than baseline), and Geometric Mean Speed-up. Metrics are reported relative to both PyTorch Eager and PyTorch Compile baselines. Overall metrics are weighted by the number of problems in each level (Level 1: 100, Level 2: 100, Level 3: 50). **Bold** indicates the best performance.
+
+### Table 2 (p.8) ⭐深度解读
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-tab02.png]]
+> [!quote] caption
+> Ablation Study. Comparison between the full model and leave-one-out variants under agent loop evaluation . We analyze the contributions of (1) the agent loop, (2) robust reward design, (3) RFT, and (4) Value Pretraining. For variants without RFT or Value Pretraining, we report results from the final
+
+> [!tip] 表格解读（多模态）
+> **Description (≈115 words):**
+
+The table presents a **leave-one-out ablation** of the **CUDA Agent** under agent-loop evaluation, with each row dropping one component while keeping the others. The **components** analyzed are: (1) Agent Loop, (2) Robust Reward, (3) RFT, and (4) Value Pretraining. The **data flow** is metric-nested: Pass Rate (correctness) → Faster Rate vs. Eager & Compile (win-rate) → Speed-up geomean ×. The **headline signal is the agent loop**: removing it crashes pass rate from 98.8% → 77.1% and reverses speed-ups into regressions (0.89× / 0.69×). All other ablations stay above 95%, indicating robustness/reward and RFT/Value Pretraining are incremental refinements atop a critical agentic search loop.
+
+**Caption (verbatim):**
+
+Table 2 Ablation Study. Comparison between the full model and leave-one-out variants under agent loop evaluation. We analyze the contributions of (1) the agent loop, (2) robust reward design, (3) RFT, and (4) Value Pretraining. For variants without RFT or Value Pretraining, we report results from the final validation step before training collapse.
+
+### Table 3 (p.14) ⭐深度解读
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-tab03.png]]
+> [!quote] caption
+> Composition of the final training dataset
+
+> [!tip] 表格解读（多模态）
+> **Description of the Main Figure (Table 3):**
+
+The figure is a two-column tabulation titled "Composition of the final training dataset," pairing *Operator category* with *Proportion*. It enumerates six operator-class categories stratified by composition depth: depth-1 through depth-5 composite classes built from `torch` primitives, plus a standalone `transformers` operator class. The values are 3.40%, 83.77%, 7.62%, 2.80%, 1.23%, and 1.18% respectively, summing to 100%. There is no explicit data-flow or architectural diagram — the "components" are categories (torch ×k, transformers), and the "data" is their normalized prevalence.
+
+**Key Technical Takeaway:** The distribution is heavily concentrated at depth-2 (`torch` ×2 = 83.77%), indicating the curators chose to anchor training on moderately complex two-operator compositions while keeping shallow (×1), deeper (×3–×5), and out-of-distribution `transformers` modules as minority categories.
+
+**Caption (verbatim transcription):**
+
+> *Final Dataset Composition.* Table 3 summarizes the composition of the final training dataset after data synthesis and filtering. The majority of training samples are composite operator classes constructed by sequentially stacking between one and five operator classes from the `torch` library. We report the distribution of composite operators by composition depth, where a *k*-op composition denotes an operator class formed by composing *k* primitive operator classes. In addition, the dataset includes a set of operator classes directly taken from the `transformers` library, which are included as standalone operators and are not involved in compositional construction. This distribution reflects a deliberate balance between simple operators, moderately complex compositions, and higher-level `transformers` modules.
+
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
+
+$$
+r = \begin{cases} -1 & \text{if correctness check fails} \\ 3 & \text{if } b(t, t_{\text{eager}}) \land b(t, t_{\text{compile}}) \\ 2 & \text{if } b(t, t_{\text{eager}}) \\ 1 & \text{otherwise} \end{cases}
+$$
+
+$$
+\mathcal{L}_{\text{RFT}}(\theta) = -\mathbb{E}_{\tau \sim \mathcal{D'}} \left[ \sum_{t=1}^{T} \log \pi_\theta(a_t \mid s_t, a_{<t}) \right],
+$$
+
+$$
+V_t^{\text{targ}} = V_\phi(s_t) + \hat{A}_t, \quad \text{where} \quad \hat{A}_t = \sum_{l=0}^{T-1-t} (\gamma\lambda)^l \delta_{t+l},
+$$
+
+$$
+\mathcal{L}_{\text{VP}}(\phi) = \frac{1}{2} \mathbb{E}_{\tau \sim \mathcal{D}} \left[ \frac{1}{T} \sum_{t=0}^{T-1} \left( V_\phi(s_t) - V_t^{\text{targ}} \right)^2 \right],
+$$
+
+$$
+\begin{aligned} \mathcal{L}^{\text{CLIP}}(\theta) = \mathbb{E}_{\tau \sim \mathcal{D}} &\bigg[ \frac{1}{T} \sum_{t=0}^{T-1} \min \big( \rho_t(\theta)\hat{A}_t, \\ & \text{clip}(\rho_t(\theta), 1-\epsilon_{\text{lower}}, 1+\epsilon_{\text{higher}})\hat{A}_t \big) \bigg] \end{aligned}
+$$
+
+$$
+\sum_j \frac{x_i \cdot w_j^T}{2} = x_i \cdot \left(\sum_j w_j^T\right) / 2,
+$$
 
 ## 技术点深读（DEEP）
 

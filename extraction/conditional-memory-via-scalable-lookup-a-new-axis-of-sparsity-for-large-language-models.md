@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 2 (p.6) ⭐深度解读
-![[assets/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-p06.png]]
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig02.png]]
+*整页渲染: ![[assets/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-p06.png]]*
 > [!quote] caption
 > During training, to accommodate large-scale embedding tables, we employ standard model parallelism by sharding the tables across available GPUs. An All-to-All communication primitive is used to gather active rows in the forward pass and dispatch gradients in the backward pass, enabling the total memory capacity to scale linearly with the number of accelerators.
 
@@ -44,7 +45,8 @@ The page mentions *"as illustrated in Figure 2"* when discussing Engram's traini
 If you can share the page containing Figure 2 itself, I can describe its specific architecture/components/data flow and transcribe the caption verbatim.
 
 ### Figure 5 (p.16) ⭐深度解读
-![[assets/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-p16.png]]
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig05.png]]
+*整页渲染: ![[assets/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-p16.png]]*
 > [!quote] caption
 > We find that three components yield the most significant gains: (i) branch- specific fusion within the multi-branch backbone, (ii) context-aware gating, and (iii) tokenizer compression. Removing any of these causes the largest regressions in validation loss. Specifically, for the “w/o multi branch” ablation, we retain the mHC backbone structure but replace the branch-specific gating with a single 
 
@@ -58,7 +60,8 @@ If you can share the page containing Figure 2 itself, I can describe its specifi
 **Caption transcription:** No caption is rendered on this page — only inline prose referring to it ("dark blue 'Layer Sweep' curve in Figure 5"; "markers in Figure 5").
 
 ### Figure 7 (p.18) ⭐深度解读
-![[assets/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-p18.png]]
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig07.png]]
+*整页渲染: ![[assets/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-p18.png]]*
 > [!quote] caption
 > The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static patterns. In English, we observe strong activations on multi-token named entities (e.g., “Alexander the Great”, “the Milky Way”) and formulaic phrases (e.g., “By the way”, “Princess of Wales”). This behavior generalizes effectively across languages. In
 
@@ -85,6 +88,102 @@ If you intended to ask about Table 4 instead of a figure, here is a brief summar
 **Table 4 (≤120 words):** The table compares inference throughput (tokens/s) across two backbone sizes (4B-Dense and 8B-Dense) under Baseline vs. +100B Engram (CPU Offload) configurations on NVIDIA H800, with 512 sequences and Uniform(100, 1024) sequence length. 4B-Dense drops from 9,031.62 → 8,858.28 tok/s, and 8B-Dense from 6,315.52 → 6,140.02 tok/s. **Key takeaway:** Offloading a 100B-parameter embedding table incurs at most a ~2.8% throughput penalty on the 8B backbone, demonstrating that early dense blocks' compute intensity masks retrieval latency and that effective communication scales with *activated slots*, not total embedding size — a conservative baseline since all retrievals go over PCIe without HBM caching.
 
 Please share Figure 7 (or the intended figure) and I'll describe its architecture/components/data flow as requested.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.9) ⭐深度解读
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab01.png]]
+> [!quote] caption
+> | Pre-training performance comparison between dense, MoE, and Engram models . All models are trained for 262B tokens and are matched in activated parameters (3.8B). Engram-27B is iso-parameters with MoE-27B by reallocating parameters from routed experts (72 → 55) to a 5.7B-parameter Engram memory. E
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+This is a benchmark comparison table (Table 1) evaluating four pre-trained language model variants — **Dense-4B**, **MoE-27B** (2 shared + 72 routed experts, top-6), **Engram-27B** (2 shared + 55 routed experts + 5.7B Engram memory), and **Engram-40B** (same routing + 18.5B Engram memory) — all matched at 3.8B activated parameters and trained on 262B tokens. Rows are grouped into **Language Modeling** (Pile loss, Validation loss) and **Knowledge & Reasoning** (MMLU family, CMMLU, ARC, TriviaQA, BBH, HellaSwag, PIQA, WinoGrande, etc.). Engram-27B (bolded as best in most rows) outperforms MoE-27B on nearly every task, and Engram-40B extends these gains further.
+
+**Key takeaway:** Reallocating routed-expert parameters into an Engram memory improves pre-training quality uniformly over an iso-activation MoE, with monotonic gains as memory scales from 5.7B → 18.5B (≈120 words).
+
+**Caption (verbatim):**
+"Table 1 | Pre-training performance comparison between dense, MoE, and Engram models. All models are trained for 262B tokens and are matched in activated parameters (3.8B). Engram-27B is iso-parameters with MoE-27B by reallocating parameters from routed experts (72 → 55) to a 5.7B-parameter Engram memory. Engram-40B further increases Engram memory (18.5B parameters) while keeping the activated-parameter budget fixed. Full training-time benchmark trajectories are reported in Appendix B."
+
+### Table 2 (p.11) ⭐深度解读
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab02.png]]
+> [!quote] caption
+> | Long-context performance comparison. Parenthetical values (e.g. (50k, 1.62) ) denote the pre-training steps and the corresponding loss prior to the long-context extension. Two key findings: (1) With only 82% of the pre-training FLOPs (41k vs. 50k), Engram-27B matches the baseline’s LongPPL ( Fang 
+
+> [!tip] 表格解读（多模态）
+> **Main figure (Table 2 — a results comparison table, not a diagram) — structure & key takeaway (≤120 words):**
+
+The table contrasts MoE-27B against three Engram-27B checkpoints (41k / 46k / 50k pre-training steps) on 32k-token context evaluation, split into two metric blocks: **LongPPL** (Perplexity ↓ on Book, Paper, Code, L-CoT) and **RULER** (NIAH accuracy ↑ on S/MK/MV/MQ plus Other Tasks ↑ on VT, CWE, FWE, QA). Each row's parenthetical lists (pretraining steps, pre-extension loss). Bold marks best, underline marks second-best.
+
+**Key takeaway:** Engram-27B is Pareto-superior. With only 82% of pre-training FLOPs (41k vs 50k), it *matches* MoE-27B's LongPPL and *beats* it on most RULER tasks (notably +9.5 on MQ, +26.6 on FWE, +9.5 on QA). At iso-FLOPs (50k), Engram dominates every metric.
+
+**Transcribed data table:**
+
+| Model | Book ↓ | Paper ↓ | Code ↓ | L-CoT ↓ | NIAH S ↑ | NIAH MK ↑ | NIAH MV ↑ | NIAH MQ ↑ | VT ↑ | CWE ↑ | FWE ↑ | QA ↑ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| MoE-27B (50k, 1.63) | 4.38 | 2.91 | 2.49 | 14.16 | **100.0** | 88.0 | 92.7 | 84.2 | 77.0 | 4.5 | 73.0 | 34.5 |
+| Engram-27B (41k, 1.66) | 4.37 | 2.92 | 2.50 | 14.26 | 99.6 | 88.3 | 93.0 | 89.5 | 83.2 | 3.8 | 99.6 | 44.0 |
+| Engram-27B (46k, 1.63) | 4.19 | 2.84 | 2.45 | 13.59 | 97.6 | 89.0 | 95.5 | 97.0 | 87.2 | 4.3 | 98.6 | 37.5 |
+| Engram-27B (50k, 1.62) | **4.14** | **2.82** | **2.44** | **13.41** | 99.3 | 89.3 | 96.5 | 97.0 | 89.0 | 5.9 | 99.3 | 40.5 |
+
+*Bold values retained from the source; second-best positions (per the "underline" convention) are: Book 4.19, Paper 2.84, Code 2.45, L-CoT 13.59, NIAH MK 89.0, NIAH MV 95.5, NIAH MQ 97.0, VT 87.2, CWE 4.5, FWE 98.6, QA 37.5.*
+
+**Caption (transcribed verbatim):**
+
+Table 2 | **Long-context performance comparison**. Parenthetical values (e.g. (50k, 1.62)) denote the pre-training steps and the corresponding loss prior to the long-context extension. Two key findings: (1) With only 82% of the pre-training FLOPs (41k vs. 50k), Engram-27B matches the baseline's LongPPL (Fang et al.) performance while achieving significantly higher accuracy on RULER (Hsieh et al.); (2) Under both iso-pretraining-loss (46k) and iso-pretraining-FLOPs (50k) settings, Engram-27B substantially outperforms the baseline across all metrics. **Bold** indicates the best and <u>underline</u> the second.
+
+### Table 4 (p.18) ⭐深度解读
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab04.png]]
+> [!quote] caption
+> | End-to-end Inference Throughput . We measure infernece throughput with a 100B- parameter Engram layer entirely offloaded to host memory.
+
+> [!tip] 表格解读（多模态）
+> **Figure description:**
+The figure is **Table 4**, a structured "Experimental Setup" table with two columns. It lists three configuration rows: **Hardware** (NVIDIA H800), **Workload** (512 Sequences), and **Sequence Length** (Uniform(100, 1024)). A partial horizontal rule at the bottom indicates the table continues with throughput results below the visible crop.
+
+**Key technical takeaway:**
+Offloading a 100B-parameter Engram layer entirely to host (CPU) memory still permits measurement of end-to-end inference throughput, suggesting the architecture is designed to evaluate memory-efficient inference without requiring the full parameter set resident on GPU.
+
+**Caption transcribed verbatim:**
+Table 4 | End-to-end Inference Throughput. We measure inference throughput with a 100B-parameter Engram layer entirely offloaded to host memory.
+
+### Table 5 (p.33) ⭐深度解读
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab05.png]]
+> [!quote] caption
+> | Detailed model architecture information and training hyper parameters.
+
+> [!tip] 表格解读（多模态）
+> # Description of Table 5
+
+Based on the visible content, only the caption appears in the image; the actual table rows/columns are not rendered. The caption states this is **Table 5**, titled "Detailed model architecture information and training hyper parameters," and the page number 33 is shown at the bottom of the page.
+
+**Expected table structure** (typical for such a caption in ML papers):
+- **Components/columns**: Layer name → Layer type (Conv2d, Linear, BN, ReLU, etc.) → Output tensor shape → Kernel/stride/padding → Parameters
+- **Sections**: Backbone feature extractor → Neck → Detection/segmentation head; second mini-table for optimizer (SGD/Adam), learning rate, momentum, weight decay, batch size, epochs, augmentation settings.
+
+## One key technical takeaway
+
+A "detailed hyperparameter table" typically reveals the **training recipe that disproportionately drives results** — e.g., optimizer/learning-rate schedule, augmentation pipeline, and loss-weight assignments — which is often more impactful than architectural novelty. Reproducibility hinges on these values.
+
+## Caption (verbatim)
+
+> **Table 5 | Detailed model architecture information and training hyper parameters.**
+
+### Table 6 (p.35) ⭐深度解读
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab06.png]]
+> [!quote] caption
+> | The table illustrates Top-5 merged tokens by Tokenizer Compression and the overall compression ratio is 23.43% for our 128k tokenizer.
+
+> [!tip] 表格解读（多模态）
+> **Description**
+
+The figure is a tabular listing of the Top-5 most frequent merged tokens produced by a trained 128k subword tokenizer. Each row contains: (1) a rank index, (2) a token frequency count, and (3) the canonical token form followed by representative merged variants — typically a base character plus its whitespace-prefixed counterpart and accented/case variants (e.g., `'a'` merged with `'A'`, `'ㅁa'`, `'ㅁA'`, `'á'`, `'ã'`, etc.). The top token (163 occurrences) is whitespace `' '` merged with newlines, carriage returns, and tab/return combinations, indicating whitespace/punctuation dominates merges. Vowel tokens (`'a'`, `'o'`, `'e'`, `'i'`) follow at 54/40/35/30 counts respectively.
+
+**Key technical takeaway:** The tokenizer aggressively merges whitespace and casing/diacritic variants of the same underlying character, yielding a 23.43% compression ratio — a strong signal that the corpus is whitespace-heavy and that case/accent normalization at the subword level substantially reduces sequence length without losing semantic content.
+
+**Caption (verbatim):**
+
+> Table 6 | The table illustrates Top-5 merged tokens by *Tokenizer Compression* and the overall compression ratio is 23.43% for our 128k tokenizer.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

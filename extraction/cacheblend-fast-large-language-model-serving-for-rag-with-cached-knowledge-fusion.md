@@ -24,7 +24,8 @@ tags: [kv-cache]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.2) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p02.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig01.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p02.png]]*
 > [!quote] caption
 > Contrasting full KV recompute, prefix caching, full KV reuse, and CacheBlend’s selective KV recompute. full KV recompute (Figure 1(a)). Despite many optimizations, the delay and computation of prefill grow super-linearly with the input length, and can easily slow down the service, especially on long LLM inputs (e.g., in RAG) [11, 53, 60].
 
@@ -42,7 +43,8 @@ Four side-by-side panels contrast how an LLM processes a multi-chunk input ("Chu
 *"Figure 1. Contrasting full KV recompute, prefix caching, full KV reuse, and CacheBlend's selective KV recompute."*
 
 ### Figure 2 (p.4) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p04.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig02.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p04.png]]*
 > [!quote] caption
 > Generation quality improves as more text chunks are retrieved. and fetch top-k relevant chunks from the database, based on the least L2 distance between the embeddings of the query and the chunk respectively. Figure 2 shows the generation quality, measured using a standard F1-score metric, with an increasing number of selected text chunks. We can see that the quality improves significantly as more
 
@@ -62,7 +64,8 @@ The figure is a three-panel illustration of an RAG-style LLM pipeline with two r
 *Figure 3. An illustrative example of an LLM input with two text chunks prepended to a query. Full KV recompute (b), without reusing KV cache, is slow but gives the correct answer. Full KV reuse (c), however, gives the wrong answer as it neglects cross-attention between the chunks (Figure 4).*
 
 ### Figure 3 (p.4) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p04.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig03.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p04.png]]*
 > [!quote] caption
 > An illustrative example of an LLM input with two text chunks prepended to a query. Full KV recompute (b), with- out reusing KV cache, is slow but gives the correct answer. Full KV reuse (c), however, gives the wrong answer as it neglects cross-attention between the chunks (Figure 4). uses this KV cache to generate the answer, it will start to ramble and not produce the right answer.
 
@@ -82,7 +85,8 @@ The figure is a three-panel illustration of an RAG-style LLM pipeline with two r
 *Figure 3. An illustrative example of an LLM input with two text chunks prepended to a query. Full KV recompute (b), without reusing KV cache, is slow but gives the correct answer. Full KV reuse (c), however, gives the wrong answer as it neglects cross-attention between the chunks (Figure 4).*
 
 ### Figure 4 (p.5) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p05.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig04.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p05.png]]*
 > [!quote] caption
 > Contrasting the attention matrices of (a) full KV recompute and (b) full KV reuse. The yellow boxes highlight the cross-attention. The right-hand side plots show the resulting forward attention matrices whose discrepancies are a result of the different cross-attention between the two methods. 4
 
@@ -100,7 +104,8 @@ Figure 4 presents two rows comparing attention matrix behavior under two KV cach
 *"Figure 4. Contrasting the attention matrices of (a) full KV recompute and (b) full KV reuse. The yellow boxes highlight the cross-attention. The right-hand side plots show the resulting forward attention matrices whose discrepancies are a result of the different cross-attention between the two methods."*
 
 ### Figure 5 (p.6) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p06.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig05.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p06.png]]*
 > [!quote] caption
 > Illustrated contrast between (a) full KV recompute and (b) selective KV recompute on one layer. 0 10 20 30 40 50
 
@@ -115,7 +120,8 @@ The figure contrasts two KV-cache recomputation strategies in a transformer laye
 *Figure 5. Illustrated contrast between (a) full KV recompute and (b) selective KV recompute on one layer.*
 
 ### Figure 6 (p.6) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p06.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig06.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p06.png]]*
 > [!quote] caption
 > Attention deviation reduces as we recompute the KV of more tokens on each layer. Importantly, the biggest drop in attention deviation results from recomputing the KV of the tokens with the highest KV deviation (i.e., HKVD tokens). on layer 𝑖, so that the attention matrix includes attention between selected tokens and all other tokens. • Finally, it runs the same attention module to produce the inp
 
@@ -130,7 +136,8 @@ The figure contrasts two KV-cache recomputation strategies in a transformer laye
 *Figure 5. Illustrated contrast between (a) full KV recompute and (b) selective KV recompute on one layer.*
 
 ### Figure 7 (p.7) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig07.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]*
 > [!quote] caption
 > Distribution of KV deviation of different tokens on one layer. 5 vs. 6 12 vs. 13 21 vs. 22 31 vs. 32
 
@@ -145,7 +152,8 @@ The diagram depicts a layer-wise pipeline (Layer 1 → Layer 2 → Layer 3 → �
 "Figure 9. CACHEBLEND selects the HKVD (high KV deviation) tokens of one layer by computing KV deviation of only the HKVD tokens selected from the previous layer and selecting the tokens among them with high KV deviation."
 
 ### Figure 8 (p.7) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig08.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]*
 > [!quote] caption
 > Rank correlation of the KV deviation per token be- tween two consecutive layers. expensive and defeats the purpose of selective KV recom- pute. Instead, we observe that the HKVD tokens on different layers are not independent:
 
@@ -160,7 +168,8 @@ The diagram depicts a layer-wise pipeline (Layer 1 → Layer 2 → Layer 3 → �
 "Figure 9. CACHEBLEND selects the HKVD (high KV deviation) tokens of one layer by computing KV deviation of only the HKVD tokens selected from the previous layer and selecting the tokens among them with high KV deviation."
 
 ### Figure 9 (p.7) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig09.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p07.png]]*
 > [!quote] caption
 > CacheBlend selects the HKVD (high KV deviation) tokens of one layer by computing KV deviation of only the HKVD tokens selected from the previous layer and selecting the tokens among them with high KV deviation.
 
@@ -197,7 +206,8 @@ CacheBlend exploits **pipelining of KV loading and selective recomputation** so 
 **Figure 10.** *(a) Smartly picking the recompute ratio will not incur an extra delay. (b) Smartly picking storage device(s) to store KVs saves cost while not increasing delay.*
 
 ### Figure 11 (p.9) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p09.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig11.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p09.png]]*
 > [!quote] caption
 > CacheBlend system (green stared) in light of LLM context augmented generation for a single request. CacheBlend uses text provided by the retriever, interacts with the storage device(s), and provides KV cache on top of LLM inference engines.
 
@@ -229,7 +239,8 @@ CacheBlend exploits **pipelining of KV loading and selective recomputation** so 
 **Figure 11.** *CacheBlend system (green stared) in light of LLM context augmented generation for a single request. CacheBlend uses text provided by the retriever, interacts with the storage device(s), and provides KV cache on top of LLM inference engines.*
 
 ### Figure 12 (p.10) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p10.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig12.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p10.png]]*
 > [!quote] caption
 > CacheBlend reduces TTFT by 2.2-3.3× compared to full KV recompute with negligible quality drop across four datasets and three models.
 
@@ -252,7 +263,8 @@ The figure is a **4×3 grid of scatter plots** comparing four caching/decoding s
 **Caption (verbatim):** *CacheBlend reduces TTFT by 2.2-3.3× compared to full KV recompute with negligible quality drop across four datasets and three models.*
 
 ### Figure 13 (p.10) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p10.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig13.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p10.png]]*
 > [!quote] caption
 > Generation quality of CacheBlend with Yi-34B vs MapReduce and MapRerank. 7
 
@@ -275,7 +287,8 @@ The figure is a **4×3 grid of scatter plots** comparing four caching/decoding s
 **Caption (verbatim):** *CacheBlend reduces TTFT by 2.2-3.3× compared to full KV recompute with negligible quality drop across four datasets and three models.*
 
 ### Figure 14 (p.11) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p11.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig14.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p11.png]]*
 > [!quote] caption
 > CacheBlend achieves lower TTFT with higher throughput in RAG scenarios compared with baselines of similar quality. 3 6 9 12 (a) Number of chunks
 
@@ -292,7 +305,8 @@ Figure 14 is a 2×3 grid of line plots benchmarking TTFT (Time-To-First-Token, y
 - **Figure 15.** *CACHEBLEND* outperforms baseline with varying chunk numbers, chunk lengths, and batch sizes.
 
 ### Figure 15 (p.11) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p11.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig15.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p11.png]]*
 > [!quote] caption
 > CacheBlend outperforms baseline with varying chunk numbers, chunk lengths, and batch sizes. • SAMSum [25]: This dataset comprises multiple pairs of dialogues and summaries, and requires the LLM to output a summary to a new dialogue. It is intended to test the few-shot learning ability of language models and contains 200 test cases. • MultiNews [20]: This dataset consists of news articles and human
 
@@ -309,7 +323,8 @@ Figure 14 is a 2×3 grid of line plots benchmarking TTFT (Time-To-First-Token, y
 - **Figure 15.** *CACHEBLEND* outperforms baseline with varying chunk numbers, chunk lengths, and batch sizes.
 
 ### Figure 16 (p.8) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p08.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig16.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p08.png]]*
 > [!quote] caption
 > This means that even if the storage device is a fast device (ex. CPU RAM), the delay will be lower-bounded by the minimal recomputation to guarantee quality.
 
@@ -331,7 +346,8 @@ CacheBlend exploits **pipelining of KV loading and selective recomputation** so 
 **Figure 10.** *(a) Smartly picking the recompute ratio will not incur an extra delay. (b) Smartly picking storage device(s) to store KVs saves cost while not increasing delay.*
 
 ### Figure 17 (p.12) ⭐深度解读
-![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p12.png]]
+![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig17.png]]
+*整页渲染: ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p12.png]]*
 > [!quote] caption
 > CacheBlend’s outperforms baselines when using RAM and slower disks
 
@@ -345,10 +361,19 @@ Four side-by-side scatter plots compare quality score (F1-Score for 2WikiMQA/Mus
 **Caption (verbatim):**
 Figure 16. *CACHEBLEND* has minimal loss in quality compared with full KV recompute, with 5%–18% selective recompute ratio, with Yi-34B.
 
-## 关键公式（启发式抽取，引用前请核对原文页码）
+## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
-- p.8 `5𝑇𝑟𝑒𝑐𝑜𝑚𝑝𝑢𝑡𝑒(𝑟%, 𝐿𝐿𝑀, 𝐿) = 𝑟% × 𝑃𝑟𝑒𝑓𝑖𝑙𝑙(𝐿𝐿𝑀, 𝐿). 𝑃𝑟𝑒𝑓𝑖𝑙𝑙(𝐿𝐿𝑀, 𝐿) is`
-- p.16 `is the rotary matrix with hyperparameter Θ ∈{𝜃𝑖= 10000−2𝑖𝑑,𝑖∈`
+$$
+\begin{aligned} {q}_{m+l} {k}_{m} &={(\mathbb{R}^{d}_{\Theta, m+l}q)}^{T}{(\mathbb{R}^{d}_{\Theta, m}k)}\\ &= \sum_{i=0}^{d/2-1}({q_{[2i]}k_{[2i]}\cos (m+l-m)\theta_{i}}\\ & \quad +{q_{[2i+1]}k_{[2i+1]}\cos (m+l-m)\theta_{i}}) \\ &= \sum_{i=0}^{d/2-1}({q_{[2i]}k_{[2i]}+ {q_{[2i+1]}k_{[2i+1]}})\cos l\theta_{i}} \\ \end{aligned}
+$$
+
+$$
+q_{m}, k_{m}= \begin{pmatrix} \cos m\theta & -\sin m\theta\\ \sin m\theta & \cos m\theta\\ \end{pmatrix} \{ \begin{pmatrix} q_{[0]}\\ q_{[1]}\\ \end{pmatrix}, \begin{pmatrix} k_{[0]}\\ k_{[1]}\\ \end{pmatrix} \}
+$$
+
+$$
+\begin{aligned} {q}_{im} {k}_{j(m-n)} &= q_{[0]i}k_{[0]j}\cos (m-m+n)\theta\\ & \quad +q_{[1]i}k_{[1]j}\cos (m-m+n)\theta \\ &= (q_{[0]i}k_{[0]j}+q_{[1]i}k_{[1]j})\cos n\theta \\ \end{aligned}
+$$
 
 ## 相关论文
 

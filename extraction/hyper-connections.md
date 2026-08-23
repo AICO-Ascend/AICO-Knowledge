@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/hyper-connections-p01.png]]
+![[assets/crops/hyper-connections-fig01.png]]
+*整页渲染: ![[assets/hyper-connections-p01.png]]*
 > [!quote] caption
 > The performance of the baseline model OLMoE-1B-7B and the model with hyper- connections, OLMoE-1B-7B-DHC×4. (1) and (2) show the training loss (0.99 EMA smoothed) and the C4-en validation loss, respectively. Our method converges 1.8 times faster compared to the baseline and maintains a significant advantage at the 500B tokens. (3) and (4) show the accuracy curves on HellaSwag and ARC-Challenge, de
 
@@ -46,7 +47,8 @@ Annotations mark a "×1.8" convergence-speedup gap at ~0.027 / 0.028 loss. Light
 "Figure 1: The performance of the baseline model `OLMoE-1B-7B` and the model with hyper-connections, `OLMoE-1B-7B-DHC×4`. (1) and (2) show the training loss (0.99 EMA smoothed) and the C4-en validation loss, respectively. Our method converges 1.8 times faster compared to the baseline and maintains a significant advantage at the 500B tokens. (3) and (4) show the accuracy curves on `HellaSwag` and `ARC-Challenge`, demonstrating the superior performance of the `OLMoE-1B-7B-DHC×4` model."
 
 ### Figure 2 (p.2) ⭐深度解读
-![[assets/hyper-connections-p02.png]]
+![[assets/crops/hyper-connections-fig02.png]]
+*整页渲染: ![[assets/hyper-connections-p02.png]]*
 > [!quote] caption
 > Hyper-connections (HC) with an expansion rate of n = 2. (a) Residual connections. (b) Hyper-connections: β1, β2, α0,0, α0,1, α1,0, α1,1, α2,1, and α2,2 are learnable scalars or scalars predicted by the network , depending on the specific HC version. These connections enable lateral information exchange and vertical integration of features across depths. The Transformer with HC is shown in Fig. 17.
 
@@ -70,7 +72,8 @@ Annotations mark a "×1.8" convergence-speedup gap at ~0.027 / 0.028 loss. Light
 Figure 2: **Hyper-connections (HC) with an expansion rate of** n = 2. (a) Residual connections. (b) Hyper-connections: β₁, β₂, α₀,₀, α₀,₁, α₁,₀, α₁,₁, α₂,₁, and α₂,₂ are learnable scalars or scalars predicted by the network , depending on the specific HC version. These connections enable lateral information exchange and vertical integration of features across depths. The Transformer with HC is shown in Fig. 17. They can be decoupled into depth-connections and width-connections. (c) Depth-connections perform a weighted sum between the layer output and the hidden vector h₁. (d) Width-connections allow information exchange between the hidden vectors h₁ and h₂.
 
 ### Figure 3 (p.2) ⭐深度解读
-![[assets/hyper-connections-p02.png]]
+![[assets/crops/hyper-connections-fig03.png]]
+*整页渲染: ![[assets/hyper-connections-p02.png]]*
 > [!quote] caption
 > Cosine similarity be- tween the input of the current and the previous layers for the OLMo-1B models (Groeneveld et al., 2024). The curve represents the median of similarity, while the shaded area indicates the range be- tween the 5th and 95th percentiles.
 
@@ -94,7 +97,8 @@ Figure 2: **Hyper-connections (HC) with an expansion rate of** n = 2. (a) Residu
 Figure 2: **Hyper-connections (HC) with an expansion rate of** n = 2. (a) Residual connections. (b) Hyper-connections: β₁, β₂, α₀,₀, α₀,₁, α₁,₀, α₁,₁, α₂,₁, and α₂,₂ are learnable scalars or scalars predicted by the network , depending on the specific HC version. These connections enable lateral information exchange and vertical integration of features across depths. The Transformer with HC is shown in Fig. 17. They can be decoupled into depth-connections and width-connections. (c) Depth-connections perform a weighted sum between the layer output and the hidden vector h₁. (d) Width-connections allow information exchange between the hidden vectors h₁ and h₂.
 
 ### Figure 4 (p.5) ⭐深度解读
-![[assets/hyper-connections-p05.png]]
+![[assets/crops/hyper-connections-fig04.png]]
+*整页渲染: ![[assets/hyper-connections-p05.png]]*
 > [!quote] caption
 > Sequential and parallel arrangements of hyper-connections with n = 2.
 
@@ -119,7 +123,8 @@ Figure 4 illustrates two hyper-connection topologies with expansion rate n = 2, 
 > Figure 4: Sequential and parallel arrangements of hyper-connections with n = 2.
 
 ### Figure 5 (p.6) ⭐深度解读
-![[assets/hyper-connections-p06.png]]
+![[assets/crops/hyper-connections-fig05.png]]
+*整页渲染: ![[assets/hyper-connections-p06.png]]*
 > [!quote] caption
 > Comparison of training loss curves for different expansion rate. The left subfigure includes models with dynamic hyper-connections (DHC) at various expansion rates, while the right subfigure shows the effect of omitting the tanh function. Both subfigures illustrate how increasing the expansion rate leads to improved training loss performance over 500B tokens. Results are smoothed using an exponent
 
@@ -140,7 +145,8 @@ Figure 4 illustrates two hyper-connection topologies with expansion rate n = 2, 
 > **Figure 5:** Comparison of training loss curves for different expansion rate. The left subfigure includes models with dynamic hyper-connections (DHC) at various expansion rates, while the right subfigure shows the effect of omitting the tanh function. Both subfigures illustrate how increasing the expansion rate leads to improved training loss performance over 500B tokens. Results are smoothed using an exponential moving average with a coefficient of 0.99.
 
 ### Figure 6 (p.8) ⭐深度解读
-![[assets/hyper-connections-p08.png]]
+![[assets/crops/hyper-connections-fig06.png]]
+*整页渲染: ![[assets/hyper-connections-p08.png]]*
 > [!quote] caption
 > (1) and (2) Training loss (0.99 EMA smoothed) and C4-en validation loss for OLMo-7B and OLMo-7B-DHC×4 models. (3) and (4) Accuracy curves on hellaswag and sciq, demonstrating the superior performance of the OLMo-7B-DHC×4 model.
 
@@ -155,7 +161,8 @@ Figure 4 illustrates two hyper-connection topologies with expansion rate n = 2, 
 "Figure 6: (1) and (2) Training loss (0.99 EMA smoothed) and C4-en validation loss for `OLMo-7B` and `OLMo-7B-DHC×4` models. (3) and (4) Accuracy curves on `hellaswag` and `sciq`, demonstrating the superior performance of the `OLMo-7B-DHC×4` model."
 
 ### Figure 7 (p.9) ⭐深度解读
-![[assets/hyper-connections-p09.png]]
+![[assets/crops/hyper-connections-fig07.png]]
+*整页渲染: ![[assets/hyper-connections-p09.png]]*
 > [!quote] caption
 > Visualization of connection matrices for hyper-connections and various related baseline methods. The attention layers, which have odd ids, are marked with green tick marks.
 
@@ -171,7 +178,8 @@ Hyper-connections learn a much richer, sparser, and more selective routing patte
 "Figure 7: Visualization of connection matrices for hyper-connections and various related baseline methods. The attention layers, which have odd ids, are marked with green tick marks."
 
 ### Figure 8 (p.14) ⭐深度解读
-![[assets/hyper-connections-p14.png]]
+![[assets/crops/hyper-connections-fig08.png]]
+*整页渲染: ![[assets/hyper-connections-p14.png]]*
 > [!quote] caption
 > Comparison between transformers with hyper-connections and that with residual connec- tions. 14
 
@@ -195,7 +203,8 @@ The streams are then re-combined via additive nodes, yielding two outputs `hᴸ�
 **Figure 8:** Comparison between transformers with hyper-connections and that with residual connections.
 
 ### Figure 9 (p.17) ⭐深度解读
-![[assets/hyper-connections-p17.png]]
+![[assets/crops/hyper-connections-fig09.png]]
+*整页渲染: ![[assets/hyper-connections-p17.png]]*
 > [!quote] caption
 > Loss curves in V3 validation sets and accuracy curves on downstream tasks for OLMoE-1B7B and OLMoE-1B7B-DHC×4 models. 17
 
@@ -207,7 +216,8 @@ The figure is a 7-row × 4-column grid of line plots comparing two MoE (Mixture-
 Figure 9: Loss curves in V3 validation sets and accuracy curves on downstream tasks for `OLMoE-1B7B` and `OLMoE-1B7B-DHC×4` models.
 
 ### Figure 10 (p.18) ⭐深度解读
-![[assets/hyper-connections-p18.png]]
+![[assets/crops/hyper-connections-fig10.png]]
+*整页渲染: ![[assets/hyper-connections-p18.png]]*
 > [!quote] caption
 > Loss curves in V3 validation set and accuracy curves on downstream tasks for OLMo-7B and OLMo-7B-DHC×4 models. 18
 
@@ -222,7 +232,8 @@ The figure is a 6×3 grid of line plots comparing two 7B-scale language models �
 Figure 10: Loss curves in V3 validation set and accuracy curves on downstream tasks for `OLMo-7B` and `OLMo-7B-DHC×4` models.
 
 ### Figure 11 (p.20) ⭐深度解读
-![[assets/hyper-connections-p20.png]]
+![[assets/crops/hyper-connections-fig11.png]]
+*整页渲染: ![[assets/hyper-connections-p20.png]]*
 > [!quote] caption
 > Training loss curves of ViT/16-Large and ViT/16-Large-DHC×2, smoothed using an
 
@@ -242,7 +253,8 @@ Both curves descend smoothly from ~1.8 to ~0.25, with the DHC variant tracking s
 "Figure 11: Training loss curves of ViT/16-Large and ViT/16-Large-DHC×2, smoothed using an Exponential Moving Average (EMA) with a decay rate of 0.999. The gain from Hyper-Connections decreases as training progresses, likely due to pass over the same dataset across many epochs, resulting in diminishing returns from the additional capacity provided by Hyper-Connections."
 
 ### Figure 12 (p.21) ⭐深度解读
-![[assets/hyper-connections-p21.png]]
+![[assets/crops/hyper-connections-fig12.png]]
+*整页渲染: ![[assets/hyper-connections-p21.png]]*
 > [!quote] caption
 > Distribution of weights of last DHC in ViT-Base/16-DHC×2 model. F MORE VISUALIZATION AND ANALYSIS
 
@@ -256,7 +268,8 @@ The figure is a grid of frequency histograms (7 rows × 3 columns) visualizing t
 Figure 12: Distribution of weights of last DHC in ViT-Base/16-DHC×2 model.
 
 ### Figure 13 (p.22) ⭐深度解读
-![[assets/hyper-connections-p22.png]]
+![[assets/crops/hyper-connections-fig13.png]]
+*整页渲染: ![[assets/hyper-connections-p22.png]]*
 > [!quote] caption
 > Visualization of unfolded connection matrix.
 
@@ -272,7 +285,8 @@ The figure comprises two rows of five triangular heatmaps (Figure 13a and 13b), 
 Figure 13: **Visualization of unfolded connection matrix.** Matrices from left to right are **C⁽⁰⁾**(Connections for {**h₀ʲ**}ⱼ₌₀^{L+1}), **C⁽ⁱ⁾** (Connections for {**hᵢʲ**}ⱼ₌₀^{L+1}) for *i* ∈ {1, 2, 3, 4}. The attention layers, which have odd ids, are marked with green tick marks. (a) Connection matrix for DHC model. (b) Connection matrix for SHC model.
 
 ### Figure 14 (p.23) ⭐深度解读
-![[assets/hyper-connections-p23.png]]
+![[assets/crops/hyper-connections-fig14.png]]
+*整页渲染: ![[assets/hyper-connections-p23.png]]*
 > [!quote] caption
 > Comparison of unfolded connection matrices for OLMo-1B-DHC×1, OLMo-1B-DHC×2 and OLMo-1B-DHC×4 model.
 
@@ -287,7 +301,8 @@ The figure presents three triangular heatmaps (a, b, c) visualizing unfolded int
 Figure 14: Comparison of unfolded connection matrices for OLMo-1B-DHC×1, OLMo-1B-DHC×2 and OLMo-1B-DHC×4 model.
 
 ### Figure 15 (p.31) ⭐深度解读
-![[assets/hyper-connections-p31.png]]
+![[assets/crops/hyper-connections-fig15.png]]
+*整页渲染: ![[assets/hyper-connections-p31.png]]*
 > [!quote] caption
 > Training loss curves of related works, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99. 31
 
@@ -303,7 +318,8 @@ The figure is a line chart titled "Training Loss" comparing five OLMo-1B archite
 Figure 15: Training loss curves of related works, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99.
 
 ### Figure 16 (p.32) ⭐深度解读
-![[assets/hyper-connections-p32.png]]
+![[assets/crops/hyper-connections-fig16.png]]
+*整页渲染: ![[assets/hyper-connections-p32.png]]*
 > [!quote] caption
 > Training loss curves of DHC with tanh over 500 billion tokens, smoothed using
 
@@ -323,7 +339,8 @@ Two line plots showing training loss curves. **Components:** Each plot compares 
 > Figure 17: Training loss curves of DHC without `tanh` over 500 billion tokens, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99.
 
 ### Figure 17 (p.32) ⭐深度解读
-![[assets/hyper-connections-p32.png]]
+![[assets/crops/hyper-connections-fig17.png]]
+*整页渲染: ![[assets/hyper-connections-p32.png]]*
 > [!quote] caption
 > Training loss curves of DHC without tanh over 500 billion tokens, smoothed using
 
@@ -343,7 +360,8 @@ Two line plots showing training loss curves. **Components:** Each plot compares 
 > Figure 17: Training loss curves of DHC without `tanh` over 500 billion tokens, smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99.
 
 ### Figure 18 (p.33) ⭐深度解读
-![[assets/hyper-connections-p33.png]]
+![[assets/crops/hyper-connections-fig18.png]]
+*整页渲染: ![[assets/hyper-connections-p33.png]]*
 > [!quote] caption
 > Training loss curves comparied with parallel transformer blocks (PTB), smoothed using
 
@@ -363,6 +381,189 @@ All curves descend monotonically with characteristic loss spikes (likely learnin
 
 **Caption (verbatim):**
 "Figure 18: Training loss curves compared with parallel transformer blocks (PTB), smoothed using Exponential Moving Average (EMA) with a decay rate of 0.99."
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.6) ⭐深度解读
+![[assets/crops/hyper-connections-tab01.png]]
+> [!quote] caption
+> Ablation study on expansion rates n with training on 500 B tokens.
+
+> [!tip] 表格解读（多模态）
+> ## Description (102 words)
+
+The figure presents two side-by-side line plots comparing **training loss vs. tokens (100–500 B)** for OLMo-1B variants. The **left subfigure** compares the OLMo-1B-baseline (red) against four Dynamic Hyper-Connections (DHC) variants at expansion rates ×1, ×2, ×4, and ×8. The **right subfigure** replays the same five configurations but with the tanh activation omitted ("W/O tanh"). All curves decay monotonically with characteristic step-downs near 250 B and 350 B tokens, smoothed via an exponential moving average (α = 0.99).
+
+**Key technical takeaway:** Increasing the DHC expansion rate consistently lowers training loss, with DHC×8 yielding the best loss in both subfigures, while removing tanh slightly degrades performance yet preserves the same monotonic expansion-rate ordering.
+
+---
+
+## Caption (verbatim, with cut-off portions)
+
+> …re 5: Comparison of training loss curves for different expansion rate. The left subfigure includ[…]
+> …dels with dynamic hyper-connections (DHC) at various expansion rates, while the right subfig[…]
+> …s the effect of omitting the tanh function. Both subfigures illustrate how increasing the expan[…]
+> …leads to improved training loss performance over 500B tokens. Results are smoothed usin[…]
+> …nential moving average with a coefficient of 0.99.
+
+*(Also visible below: "Table 1: Ablation study on expansion rates n with training on 500 B tokens.")*
+
+### Table 2 (p.7) ⭐深度解读
+![[assets/crops/hyper-connections-tab02.png]]
+> [!quote] caption
+> Ablation study on static and dynamic hyper-connections with training on 500 B tokens.
+
+> [!tip] 表格解读（多模态）
+> # Main Figure / System Description
+
+**Note:** No figure image is visible in the provided excerpt — only the ablation study text and a table caption. The description below is reconstructed from the text, which references **Fig. 5 (training-loss curves)** and **Table 2 (SHC vs. DHC ablation)**.
+
+### Architecture / Components / Data Flow (inferred)
+- **Hyper-Connection (HC) layer** wraps residual connections; each layer produces *n* residual streams (expansion rate *n*).
+- **Dynamic HC (DHC):** stream mixing weights *α* (with **tanh** non-linearity) are learned per layer per stream from current activations → input-dependent routing.
+- **Static HC (SHC):** the same *α* mixing but weights are fixed/learned independent of input.
+- Default config: *n = 4*, tanh activated, suffix **-DHC**.
+- Forward flow: input → split into *n* streams → layer computes output → DHC module generates α → tanh(α) re-weights and aggregates *n* stream outputs → next block.
+
+### Key Technical Takeaway
+Dynamic Hyper-Connections with *n = 4* deliver the best accuracy–efficiency trade-off: at *n = 4* DHC substantially outperforms SHC and the baseline, while pushing *n* beyond 4 (to *n = 8*) yields marginal gains. Crucially, DHC training losses *monotonically decrease* without the loss spikes seen in baseline runs, indicating improved optimization stability — and the additional parameter/FLOPs overhead is negligible.
+
+### Verbatim Caption
+**Table 2:** Ablation study on static and dynamic hyper-connections with training on 500 B tokens.
+
+### Table 7 (p.15) ⭐深度解读
+![[assets/crops/hyper-connections-tab07.png]]
+> [!quote] caption
+> Comparison of number of parameters.
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+
+This is **Table 7**, a four-column comparison table titled *"Comparison of number of parameters."* It benchmarks the parameter overhead of adding HC (Hierarchical Compression) modules — specifically **SHC** and **DHC** variants at ×2 and ×4 scales — onto three base language models: **OLMo-1B**, **OLMo-7B**, and the Mixture-of-Experts **OLMoE-1B-7B**. The columns report (1) HC-specific parameter count in billions, (2) total model parameters in billions, and (3) the resulting percentage increase (△ rate) versus the unmodified baseline. Baselines (OLMo-1B, OLMo-7B, OLMoE-1B-7B) have no HC params and no rate change. The full model sizes range from ~1.18B to ~6.92B parameters.
+
+**Key Technical Takeaway (≤120 words):**
+
+The HC modules introduce an **extremely lightweight parameter overhead**, with the largest relative increase being only **+0.03349%** (OLMo-1B-DHC×4). Notably, DHC adds more params than SHC at the same scale (e.g., 0.000394B vs 0.0000077B at ×4), and scaling factor ×4 roughly doubles the overhead compared to ×2. The HC param cost grows negligibly relative to total model size, especially for larger architectures like OLMo-7B (+0.02286%) and OLMoE-1B-7B (+0.00570%). This confirms HC's design philosophy: achieving representational gains via minimal architectural expansion rather than brute-force parameter scaling.
+
+**Verbatim Caption:**
+
+*Table 7: Comparison of number of parameters.*
+
+### Table 8 (p.16) ⭐深度解读
+![[assets/crops/hyper-connections-tab08.png]]
+> [!quote] caption
+> FLOPs per token in forward pass.
+
+> [!tip] 表格解读（多模态）
+> The image presents a comparative data table (not an architecture diagram), which I'll describe as requested.
+
+**Architecture/Components/Data Flow:** Table 8 is structured as a 4-column matrix — *Method*, *HC FLOPs (G)*, *Total FLOPs (G)*, and *Total FLOPs Δ rate (%)* — with two horizontal rules separating three model groups: OLMo-1B (5 baseline/HC variants), OLMo-7B (2 rows), and OLMoE-1B-7B Mixture-of-Experts (2 rows). Data flows left→right, isolating the HC module's standalone FLOP cost from the model's total per-token forward-pass cost. Below the table, a "Memory Footprint" paragraph details activation-memory equations.
+
+**Key Technical Takeaway:** Adding HC layers (expansion rate up to ×4) increases total per-token FLOPs by at most +0.208% (OLMoE-1B-7B-DHC×4) and only +0.147% on the 7B model — confirming HC introduces negligible computational overhead while its memory cost can be amortized by discarding/recomputing hidden states, leaving practical training/inference cost effectively unchanged.
+
+**Caption (verbatim):** *Table 8: FLOPs per token in forward pass.*
+
+### Table 9 (p.16) ⭐深度解读
+![[assets/crops/hyper-connections-tab09.png]]
+> [!quote] caption
+> Measured Memory Footprint on 8 GPUs.
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+The table (Table 9) benchmarks measured GPU memory of baseline OLMo models against their SHC and DHC variants on 8 GPUs, organized into three model families: dense OLMo-1B (micro-batch 16,384), dense OLMo-7B (micro-batch 2,048), and MoE OLMoE-1B-7B (micro-batch 4,096). Columns report Method, Memory (GB), relative Memory Δ Rate (%), and per-GPU micro-batch size. OLMo-1B grows 41.11 → 51.85 GB with SHC×4 (+26.0%) and to 51.86 GB with DHC×4 (+26.1%); OLMo-7B rises +28.28% under DHC×4, whereas the MoE OLMoE-1B-7B incurs only +9.7%. **Key takeaway:** DHC×4 overhead is roughly 3× lower in the Mixture-of-Experts variant (~10%) than in dense OLMo models (~26–28%), showing that this technique scales more favorably when expert routing amortizes the extra hidden-state tensors.
+
+**Caption (verbatim):**
+Table 9: Measured Memory Footprint on 8 GPUs.
+
+### Table 10 (p.19) ⭐深度解读
+![[assets/crops/hyper-connections-tab10.png]]
+> [!quote] caption
+> Benchmarking class-conditional image generation on ImageNet 256 × 256, with cfg=1.50. NP , P , and R are short for Numerical Precision, Precision, and Recall, respectively.
+
+> [!tip] 表格解读（多模态）
+> **Description of Main Figure (Table 10):**
+
+Table 10 is a benchmarking comparison grid evaluating four DiT (Diffusion Transformer) variants on class-conditional ImageNet generation (256×256, cfg=1.50). Rows enumerate model configurations: DiT-XL/2 (FP32 baseline, 675M), DiT-XL/2 (FP16 + QK-Norm, 675M), DiT-1B/2 (FP16 + QK-Norm, 983M), and DiT-XL/2-SHC×2 (FP16 + QK-Norm, 675M). Columns report hyperparameters—NP, QK-Norm usage, parameter count—and quality metrics: FID↓, sFID↓, IS↑, Precision↑, Recall↑. Arrows denote whether higher or lower is better.
+
+**Key Takeaway:** DiT-XL/2-SHC×2 (675M) matches or beats the larger DiT-1B/2 (983M) on FID/sFID/IS with same precision and QK-Norm—showing hyper-connections recover ~50% more parameters' worth of performance for free.
+
+**Caption (verbatim):**
+
+Table 10: Benchmarking class-conditional image generation on ImageNet 256×256, with cfg=1.50. NP, P, and R are short for Numerical Precision, Precision, and Recall, respectively.
+
+### Table 11 (p.19) ⭐深度解读
+![[assets/crops/hyper-connections-tab11.png]]
+> [!quote] caption
+> Accuracy on ImageNet. ViT*/16 refers to the results reported by (Dosovitskiy et al., 2020), whereas ViT/16 denotes our re-implemented baseline. SHC and DHC indicate that residual connections are replaced with static and dynamic hyper-connections, respectively.
+
+> [!tip] 表格解读（多模态）
+> **Description (98 words):**
+This results table compares ImageNet top-1 accuracy across Vision Transformer variants under two model scales (Base: 85M params; Large: 307M params). Four configurations are evaluated: ViT*/16 (reference at 384×224), and ViT/16, ViT/16-SHC×2, ViT/16-DHC×2 at 224×224, where the latter two replace residual connections with static and dynamic hyper-connections, respectively. Key finding: dynamic hyper-connections (DHC×2) yield the largest gains, pushing the Large model to 79.94% (bolded) — exceeding both the re-implemented baseline (77.25%) and even the higher-resolution ViT*/16 reference (76.53%). SHC provides intermediate gains (78.38%), suggesting input-dependent connectivity scaling benefits from learned, dynamic routing.
+
+**Caption (verbatim transcription):**
+Table 11: Accuracy on ImageNet. **ViT**/16 refers to the results reported by (Dosovitskiy et al., 2020), whereas ViT/16 denotes our re-implemented baseline. SHC and DHC indicate that residual connections are replaced with static and dynamic hyper-connections, respectively.
+
+### Table 12 (p.20) ⭐深度解读
+![[assets/crops/hyper-connections-tab12.png]]
+> [!quote] caption
+> Training hyperparameters for ViT.
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+The figure is a two-column hyperparameter configuration table for Vision Transformer (ViT) training, listing 10 key settings. The left column enumerates training components (optimizer, scheduler, regularization, augmentation, precision), while the right column specifies their values: a relatively high learning rate (0.003), large batch size (4096), cosine annealing schedule with 10k-step linear warmup, Mixup augmentation (α=0.2), 300 epochs, AdamW optimizer with standard β values and ε=1e−8, gradient clipping at 1.0, strong weight decay (0.3), dropout 0.1, and bf16 mixed-precision training.
+
+**Key takeaway:** The combination of large batch size (4096), high weight decay (0.3), aggressive Mixup (α=0.2), and bf16 precision indicates a recipe optimized for stable, large-scale ViT training where regularization compensates for the high-capacity model.
+
+**Caption (verbatim):**
+Table 12: Training hyperparameters for ViT.
+
+### Table 13 (p.30) ⭐深度解读
+![[assets/crops/hyper-connections-tab13.png]]
+> [!quote] caption
+> OLMo’s default configuration was evaluated using multiple metrics. Perplexity (PPL) and loss were used for the V2 and V3 Validation Sets, while zero-shot testing was applied to the Downstream Benchmarks. However, the grey benchmarks were excluded from our analysis due to the instability of their per
+
+> [!tip] 表格解读（多模态）
+> **Note:** No figure is present in the provided content—only a table caption (Table 13) under the section heading "Validation Sets and Downstream Tasks." I'll describe what the described table conveys and transcribe its caption verbatim.
+
+**Description of Table 13 (as conveyed by the caption):**
+
+**Components / Data Flow:**
+- **Subject:** OLMo's default configuration.
+- **Evaluation stream — Validation Sets (V2 and V3):** Metrics used = **Perplexity (PPL)** and **loss**.
+- **Evaluation stream — Downstream Benchmarks:** Metric used = **zero-shot testing**.
+- **Filtered subset:** Grey benchmarks were excluded from analysis.
+
+**Key Technical Takeaway (≤120 words):**
+The table operationalizes a two-pronged evaluation pipeline for OLMo: intrinsic quality is measured on held-out validation corpora via PPL and loss (V2/V3), while task generalization is gauged through zero-shot benchmark scores. Crucially, the authors flag instability in certain downstream indicators—termed "grey benchmarks"—and deliberately drop them, acknowledging that single-shot metric noise could undermine conclusions. This distinction reinforces a best practice: separate intrinsic (likelihood-based) measures from extrinsic (task-based) ones, and disclose any benchmarking artifacts that compromise reproducibility. Result robustness hinges less on which metric scores highest and more on which metrics are trustworthy signals of progress.
+
+**Caption (verbatim):**
+"Table 13: OLMo's default configuration was evaluated using multiple metrics. Perplexity (PPL) and loss were used for the V2 and V3 Validation Sets, while zero-shot testing was applied to the Downstream Benchmarks. However, the grey benchmarks were excluded from our analysis due to the instability of their performance indicators."
+
+### Table 14 (p.31) ⭐深度解读
+![[assets/crops/hyper-connections-tab14.png]]
+> [!quote] caption
+> Downstream Benchmarks for OLMoE.
+
+> [!tip] 表格解读（多模态）
+> **Main figure description:**
+
+This is not an architecture/data-flow figure but rather **Table 14**, a single-column reference table listing 12 downstream NLP evaluation benchmarks used to assess the OLMoE model. Each row pairs a lowercase task name (e.g., `piqa`, `hellaswag`, `winogrande`, `openbook_qa`, `sciq`, `arc_easy`, `arc_challenage`, `copa`, `boolq`, `commonsense_qa`, `social_iqa`, `mmlu`) with its original citation (e.g., Bisk et al., 2020; Zellers et al., 2019; Hendrycks et al., 2021). The set spans commonsense reasoning (PIQA, HellaSwag, WinoGrande, SocialIQA), science QA (OpenBookQA, SciQ, ARC-Easy/Challenge), reading comprehension (BoolQ), causal reasoning (COPA), and broad knowledge (MMLU, CommonsenseQA).
+
+**Key technical takeaway:** OLMoE is evaluated across a *diverse mix* of ~12 standardized reasoning and knowledge benchmarks rather than a narrow suite, allowing broad generalization claims; notably, "ARC-Challenge" is misspelled as `arc_challenage` in the table.
+
+**Caption transcribed verbatim:**
+
+> **Table 14: Downstream Benchmarks for OLMoE.**
+
+### Table 15 (p.33) ⭐深度解读
+![[assets/crops/hyper-connections-tab15.png]]
+> [!quote] caption
+> Results on downstream benchmarks for 1B models.
+
+> [!tip] 表格解读（多模态）
+> **Description:** This is a single-row results table (Table 15) evaluating the OLMo-1B model across seven standard downstream NLP benchmarks, presented as numerical scores with an averaged column. The columns list the model name on the left, followed by benchmark tasks (arc_easy, copa, hellaswag, openbook_qa, piqa, sciq, winogrande), and conclude with an "avg." summary column on the right. The single data row reports OLMo-1B's scores: 56.8 / 76.0 / 56.1 / 33.8 / 74.4 / 85.1 / 55.6, averaging 62.5. There is no architectural diagram or data-flow component — it is purely a benchmark comparison table. **Key takeaway:** OLMo-1B achieves a mean score of 62.5 across reasoning, commonsense, and question-answering tasks, with strongest performance on sciq (85.1) and weakest on openbook_qa (33.8), indicating uneven task generalization at the 1B-parameter scale.
+
+**Caption (verbatim):** Table 15: Results on downstream benchmarks for 1B models.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

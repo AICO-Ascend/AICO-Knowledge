@@ -24,7 +24,8 @@ tags: [rl]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.3) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig01.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]]*
 > [!quote] caption
 > Dataflow graph of 3 RLHF algorithms [19, 43, 55].
 
@@ -41,7 +42,8 @@ tags: [rl]
 "Figure 2. Programming model used in RLHF systems. (a) Existing RLHF systems adopt the multi-controller paradigm. (b) HybridFlow utilizes a hybrid programming model: the single-controller coordinates models; each model uses multi-controller paradigm in distributed computation. Inactive node in grey represents operation not executed at this time."
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig02.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p03.png]]*
 > [!quote] caption
 > Programming model used in RLHF systems. (a)
 
@@ -58,7 +60,8 @@ tags: [rl]
 "Figure 2. Programming model used in RLHF systems. (a) Existing RLHF systems adopt the multi-controller paradigm. (b) HybridFlow utilizes a hybrid programming model: the single-controller coordinates models; each model uses multi-controller paradigm in distributed computation. Inactive node in grey represents operation not executed at this time."
 
 ### Figure 3 (p.4) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p04.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig03.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p04.png]]*
 > [!quote] caption
 > Dataflow execution given a model placement plan.
 
@@ -77,7 +80,8 @@ tags: [rl]
 Figure 3. Dataflow execution given a model placement plan. Blocks with numbers represent GPUs. In dashed boxes, the models are placed on different sets of devices and can be concurrently computed. Reference model (blue) and reward model (green) are colocated on the same set of GPUs and executed sequentially.
 
 ### Figure 4 (p.6) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig04.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]]*
 > [!quote] caption
 > Architecture of HybridFlow. 3D-HybridEngine and Auto-Mapping algorithm. The hybrid programming model includes a set of hierarchical APIs to enable flexible expression of the RLHF dataflow and effi- cient computation of models in the dataflow (§4). The 3D-
 
@@ -102,7 +106,8 @@ The 3D-HybridEngine lets the same actor model toggle between **training and gene
 **Figure 4. Architecture of HybridFlow.**
 
 ### Figure 5 (p.6) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig05.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p06.png]]*
 > [!quote] caption
 > An illustration of hierarchical APIs. (a) Model with 3D parallel configuration, resource allocation, and 3DParallelWorker initialization. (b) Asynchronous data re- sharding between two models with collect and distribute functions in 3D_PROTO. devices, it facilitates distributed model weight initialization and establishes 3D parallel groups for each model. A parallel group includes a set of GPUs to
 
@@ -127,7 +132,8 @@ The 3D-HybridEngine lets the same actor model toggle between **training and gene
 **Figure 4. Architecture of HybridFlow.**
 
 ### Figure 6 (p.7) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p07.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig06.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p07.png]]*
 > [!quote] caption
 > Implementation of PPO [55], ReMax [43], and Safe- RLHF [19]. Users can adapt to different RLHF algorithms by simply adding or deleting a few lines of code. our programming model, HybridFlow is flexible in support- ing diverse distributed execution patterns without any code change of the RLHF algorithm (Figure 6).
 
@@ -148,7 +154,8 @@ The 3D-HybridEngine lets the same actor model toggle between **training and gene
 **Figure 6.** Implementation of SPU [55], ReMax [43], and Safe-RLHF [19]. Users can adapt to different RLHF algorithms by simply adding or deleting a few lines of code.
 
 ### Figure 7 (p.8) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig07.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]]*
 > [!quote] caption
 > 3D-HybridEngine workflow in one RLHF iteration. 4 GPUs are used for actor training and generation. 1-2-2 (𝑝-𝑡-𝑑) parallel groups are used in training and 1-1-2-2 (𝑝𝑔- 𝑡𝑔-𝑑𝑔-𝑑) parallel groups are used in generation. 5 3D-HybridEngine
 
@@ -162,7 +169,8 @@ The figure compares two strategies for resharding actor-model weights across 2 m
 **Caption (verbatim):** Figure 8. Model weights resharding. 2 machines each with 4 GPUs are used for actor training and generation.
 
 ### Figure 8 (p.8) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig08.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p08.png]]*
 > [!quote] caption
 > Model weights resharding. 2 machines each with 4 GPUs are used for actor training and generation. model parameters updated in iteration 𝑖(step 1○in Figure 7), for generation within each micro DP group. Then, the batch of prompts are loaded to each model replica (step 2○), which generates responses (Generation stage of RLHF). Following this, 3D-HybridEngine performs an all-gather operation on the g
 
@@ -176,7 +184,8 @@ The figure compares two strategies for resharding actor-model weights across 2 m
 **Caption (verbatim):** Figure 8. Model weights resharding. 2 machines each with 4 GPUs are used for actor training and generation.
 
 ### Figure 9 (p.11) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig09.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]*
 > [!quote] caption
 > PPO throughput. Numbers in parentheses are HybridFlow speedups compared with baselines. 8 16 32 64 128 # of GPUs 0 1 2 3
 
@@ -242,7 +251,8 @@ The figure compares two strategies for resharding actor-model weights across 2 m
 **Figure 11.** Safe-RLHF throughput. Numbers in the parentheses are HybridFlow speedups compared with the baselines
 
 ### Figure 12 (p.12) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig12.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]]*
 > [!quote] caption
 > Throughput of HybridFlow under different placements 32 64 96 128 # of GPUs
 
@@ -259,7 +269,8 @@ The figure compares two strategies for resharding actor-model weights across 2 m
 > *Figure 12.* Throughput of HybridFlow under different placements
 
 ### Figure 13 (p.12) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig13.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p12.png]]*
 > [!quote] caption
 > Placement comparison under 13B actor and reference policy & 70B critic and reward model.
 
@@ -276,7 +287,8 @@ The figure compares two strategies for resharding actor-model weights across 2 m
 > *Figure 12.* Throughput of HybridFlow under different placements
 
 ### Figure 14 (p.13) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig14.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]*
 > [!quote] caption
 > Transition time between actor training and generation.
 
@@ -308,7 +320,8 @@ The figure consists of four grouped bar charts comparing transition time (second
 **Figure 14.** Transition time between actor training and generation.
 
 ### Figure 16 (p.13) ⭐深度解读
-![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig16.png]]
+*整页渲染: ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p13.png]]*
 > [!quote] caption
 > Runtime of device mapping algorithm. The model size and # of GPUs are simultaneously scaled.
 
@@ -322,6 +335,38 @@ The figure consists of four grouped bar charts comparing transition time (second
 **Caption (verbatim):**
 
 **Figure 14.** Transition time between actor training and generation.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 2 (p.9) ⭐深度解读
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-tab02.png]]
+> [!quote] caption
+> Transition overhead between training & generation
+
+> [!tip] 表格解读（多模态）
+> ## Description
+
+The main figure shown is **Table 2**, which compares **transition overhead between training & generation** across three systems: **DS-Chat**, **HybridFlow-V**, and **HybridFlow**. The table presents three metrics:
+
+- **Communication Volume (Comm. Vol):** DS-Chat uses `(t_pd−1)/t_pd · M`; HybridFlow-V uses `(tp−1)/tp · M`; HybridFlow uses `(tp−t_g p_g)/(t_g p_g · tp) · M`.
+- **Peak Memory (Peak Mem.):** DS-Chat and HybridFlow-V both require full `M`; HybridFlow needs only `1/(t_g p_g) · M`.
+- **Redundancy:** DS-Chat has `(1/t_pd) M`; HybridFlow-V has `(1/tp) M`; HybridFlow achieves **0**.
+
+**Key technical takeaway:** HybridFlow's novel generation-stage parallel grouping (forming TP/PP groups by selecting ranks at intervals of `1/t_g` and `p/p_g`, then constructing micro-DP groups along TP/PP dimensions) enables weight overlap between training and generation on each device — eliminating reshard redundancy and shrinking peak memory by a factor of `t_g p_g`.
+
+## Caption (verbatim)
+
+> **Table 2.** Transition overhead between training & generation
+
+## 关键公式（原文截图，无 LaTeX 源 — 引用前请核对图片）
+
+### 公式截图 (p.7)
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-eq01.png]]
+> 原文文本线索：`critic_metrics = critic.update_critic(batch, loss_func=algo_type)`
+
+### 公式截图 (p.8)
+![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-eq02.png]]
+> 原文文本线索：`𝑁𝑎=𝑝×𝑡×𝑑=𝑝𝑔×𝑡𝑔×𝑑𝑔×𝑑such that 𝑑𝑔=`
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

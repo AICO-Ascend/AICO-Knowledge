@@ -24,7 +24,8 @@ tags: [speculative]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.4) ⭐深度解读
-![[assets/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-p04.png]]
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig01.png]]
+*整页渲染: ![[assets/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-p04.png]]*
 > [!quote] caption
 > Recall from Equation 1 that the per-token latency of speculative decoding is 𝐿= (𝑇draft + 𝑇verify)/𝜏. Autoregressive drafters achieve high 𝜏but pay 𝑇draft ∝𝛾; parallel drafters collapse 𝑇draft to a single pass but sacrifice 𝜏because each position is predicted independently. Meanwhile, fixed-length verification wastes 𝑇verify on low-confidence suffix tokens that are almost certain to be rejected. D
 
@@ -51,6 +52,28 @@ DSpark decouples *draft latency* (parallel backbone) from *draft quality* (seque
 
 ## Caption (verbatim)
 The caption for Figure 1 is **not present** on this page — the text only says *"The overview of DSpark is shown in Figure 1."* A fuller caption would appear on the page containing the figure itself, which is not included in the image you shared. If you can provide the page with the actual figure, I can transcribe the caption verbatim.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.11) ⭐深度解读
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-tab01.png]]
+> [!quote] caption
+> presents a counter-intuitive observation: the parallel drafter (DFlash) and the semi- autoregressive drafter (DSpark) often yield longer accepted lengths than the fully autoregressive drafter (Eagle3). This finding contrasts with the standard expectation that step-by-step autore- gression produces h
+
+> [!tip] 表格解读（多模态）
+> # Response
+
+I cannot complete this request as posed. The excerpt you've provided contains only body text discussing a prior finding (referenced as "Table 1") and introducing a methodology for analyzing speculative decoding behavior. It does **not** include:
+
+- Any figure (with architecture, components, or data flow), or
+- Any figure caption to transcribe verbatim.
+
+What the text *does* describe (paraphrased):
+
+1. **Observation:** Parallel (DFlash) and semi-autoregressive (DSpark) drafters sometimes accept longer token spans than a fully autoregressive drafter (Eagle3), contradicting the usual assumption that step-by-step autoregression yields higher-quality drafts.
+2. **Methodology introduced:** Using Qwen3-4B as the target model on benchmarks from §4.1, the authors track *position-wise conditional acceptance* during actual speculative decoding rollouts, where the denominator at draft position *k* is restricted only to rollout instances where preceding positions *are* accepted.
+
+If you can share the figure image and its caption text, I'd be happy to produce the architecture/flow description and the verbatim transcription you requested.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -24,7 +24,8 @@ tags: [training, architecture]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p01.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig01.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p01.png]]*
 > [!quote] caption
 > Trend of sizes of state-of-the-art Natural Language Pro- cessing (NLP) models with time. The number of floating-point op- erations to train these models is increasing at an exponential rate.
 
@@ -42,7 +43,8 @@ State-of-the-art NLP model parameter counts have grown roughly three orders of m
 Figure 1: Trend of sizes of state-of-the-art Natural Language Processing (NLP) models with time. The number of floating-point operations to train these models is increasing at an exponential rate.
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p03.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig02.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p03.png]]*
 > [!quote] caption
 > Combination of tensor and pipeline model parallelism (MP) used in this work for transformer-based models.
 
@@ -66,7 +68,8 @@ Interleaved scheduling reduces the pipeline bubble by assigning multiple model c
 **Figure 4:** Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleaved timeline).
 
 ### Figure 3 (p.3) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p03.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig03.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p03.png]]*
 > [!quote] caption
 > GPipe pipeline schedule with forward passes (blue) for all microbatches (represented by numbers) followed by backward passes (green). The gray area represents the pipeline bubble. For simplicity, we assume that the backward pass takes twice as long as the forward pass. The efficiency of the pipeline schedule does not depend on this factor. Each batch in this example consists of 8 microbatches, and
 
@@ -90,7 +93,8 @@ Interleaved scheduling reduces the pipeline bubble by assigning multiple model c
 **Figure 4:** Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleaved timeline).
 
 ### Figure 4 (p.3) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p03.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig04.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p03.png]]*
 > [!quote] caption
 > Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleav
 
@@ -114,7 +118,8 @@ Interleaved scheduling reduces the pipeline bubble by assigning multiple model c
 **Figure 4:** Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleaved timeline).
 
 ### Figure 5 (p.5) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p05.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig05.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p05.png]]*
 > [!quote] caption
 > Blocks of transformer model partitioned with tensor model parallelism (figures borrowed from Megatron [40]). 𝑓and 𝑔 are conjugate. 𝑓is the identity operator in the forward pass and all- reduce in the backward pass, while 𝑔is the reverse. relevant for the pipeline bubble size. We qualitatively describe how communication time behaves and present cost models for amount of communication; however, we d
 
@@ -140,7 +145,8 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 *(Sub-labels within the figure: "(a) MLP." and "(b) Self-Attention.")*
 
 ### Figure 6 (p.5) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p05.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig06.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p05.png]]*
 > [!quote] caption
 > Fraction of time spent idling due to pipeline flush (pipeline bubble size) versus data-parallel size (𝑑), for different numbers of GPUs (𝑛) and ratio of batch size to microbatch size (𝑏′ = 𝐵/𝑏).
 
@@ -166,7 +172,8 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 *(Sub-labels within the figure: "(a) MLP." and "(b) Self-Attention.")*
 
 ### Figure 7 (p.6) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p06.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig07.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p06.png]]*
 > [!quote] caption
 > Per-GPU throughput versus microbatch size for a GPT model with a billion parameters (128 attention heads, hidden size of 4096, 4 transformer layers).
 
@@ -187,7 +194,8 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 *Figure 7: Per-GPU throughput versus microbatch size for a GPT model with a billion parameters (128 attention heads, hidden size of 4096, 4 transformer layers).*
 
 ### Figure 8 (p.6) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p06.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig08.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p06.png]]*
 > [!quote] caption
 > Behavior of normalized estimated throughput (time com- puted as 𝑡= (𝑏′/𝑏+ 𝑝−1) ·  𝑡𝑓(𝑏) + 𝑡𝑏(𝑏)) with respect to the mi- crobatch size 𝑏for the same GPT model from Figure 7.
 
@@ -208,7 +216,8 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 *Figure 7: Per-GPU throughput versus microbatch size for a GPT model with a billion parameters (128 attention heads, hidden size of 4096, 4 transformer layers).*
 
 ### Figure 9 (p.7) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p07.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig09.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p07.png]]*
 > [!quote] caption
 > Scatter/gather communication optimization. Light blue blocks are layers in the first pipeline stage, and dark blue blocks are layers in the second pipeline stage. Without the scatter/gather optimization, the same tensor is sent redundantly over inter-node
 
@@ -228,7 +237,8 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 **Figure 9:** Scatter/gather communication optimization. Light blue blocks are layers in the first pipeline stage, and dark blue blocks are layers in the second pipeline stage. Without the scatter/gather optimization, the same tensor is sent redundantly over inter-node InfiniBand links. Instead, at the sender, we can scatter the tensor into smaller chunks, reducing the sizes of tensors sent over InfiniBand links. The final tensor can then be rematerialized at the receiver using a gather operation.
 
 ### Figure 10 (p.8) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p08.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig10.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p08.png]]*
 > [!quote] caption
 > Throughput per GPU of PTD-P and ZeRO-3 for two differ- ent GPT models (the 175B GPT-3 model is shown with dotted lines, and the 530B model is shown with solid lines). Global batch sizes are fixed and ZeRO-3 is used without any model parallelism.
 
@@ -246,7 +256,8 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 **Figure 10:** Throughput per GPU of PTD-P and ZeRO-3 for two different GPT models (the 175B GPT-3 model is shown with dotted lines, and the 530B model is shown with solid lines). Global batch sizes are fixed and ZeRO-3 is used without any model parallelism.
 
 ### Figure 11 (p.9) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p09.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig11.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p09.png]]*
 > [!quote] caption
 > Throughput per GPU of pipeline parallelism using two different batch sizes in a weak-scaling experiment setup (model size increases with the pipeline-parallel size). 12 24 36 48 60
 
@@ -265,7 +276,8 @@ The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200
 > Figure 11: Throughput per GPU of pipeline parallelism using two different batch sizes in a weak-scaling experiment setup (model size increases with the pipeline-parallel size).
 
 ### Figure 12 (p.9) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p09.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig12.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p09.png]]*
 > [!quote] caption
 > Throughput per GPU of interleaved and non-interleaved schedules for a GPT model (175 billion parameters) on 96 GPUs. and a microbatch size of 1. As we increase the number of pipeline stages, we also increase the size of the model by proportionally increasing the number of layers in the model, e.g., with a pipeline- parallel size of 1, we use a model with 3 transformer layers and 15 billion paramet
 
@@ -284,7 +296,8 @@ The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200
 > Figure 11: Throughput per GPU of pipeline parallelism using two different batch sizes in a weak-scaling experiment setup (model size increases with the pipeline-parallel size).
 
 ### Figure 13 (p.9) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p09.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig13.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p09.png]]*
 > [!quote] caption
 > Throughput per GPU of various parallel configurations that combine pipeline and tensor model parallelism using a GPT model with 162.2 billion parameters and 64 A100 GPUs.
 
@@ -303,7 +316,8 @@ The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200
 > Figure 11: Throughput per GPU of pipeline parallelism using two different batch sizes in a weak-scaling experiment setup (model size increases with the pipeline-parallel size).
 
 ### Figure 14 (p.10) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p10.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig14.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p10.png]]*
 > [!quote] caption
 > Throughput per GPU of various parallel configurations that combine data and pipeline model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, mi- crobatch size of 1, and 64 A100 GPUs. (2, 32) (4, 16) (8, 8) (16, 4) (32, 2) (Tensor-parallel size, Data-parallel size) 0 50 100 150 200
 
@@ -329,7 +343,8 @@ The page contains three line charts measuring **Achieved teraFLOP/s per GPU** fo
 *Figure 16: Throughput per GPU of a (t, p) = (8, 8) parallel configuration for different microbatch sizes on a GPT model with 91 billion parameters, for two different batch sizes using 64 A100 GPUs.*
 
 ### Figure 15 (p.10) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p10.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig15.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p10.png]]*
 > [!quote] caption
 > Throughput per GPU of various parallel configurations that combine data and tensor model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, microbatch size of 1, and 64 A100 GPUs. 1 2 4 8
 
@@ -355,7 +370,8 @@ The page contains three line charts measuring **Achieved teraFLOP/s per GPU** fo
 *Figure 16: Throughput per GPU of a (t, p) = (8, 8) parallel configuration for different microbatch sizes on a GPT model with 91 billion parameters, for two different batch sizes using 64 A100 GPUs.*
 
 ### Figure 16 (p.10) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p10.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig16.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p10.png]]*
 > [!quote] caption
 > Throughput per GPU of a (𝑡, 𝑝) = (8, 8) parallel configura- tion for different microbatch sizes on a GPT model with 91 billion parameters, for two different batch sizes using 64 A100 GPUs. importance of using both tensor and pipeline model parallelism in conjunction to train a 161-billion-parameter GPT model (32 trans- former layers to support pipeline-parallel size of 32, 128 attention heads, hid
 
@@ -381,7 +397,8 @@ The page contains three line charts measuring **Achieved teraFLOP/s per GPU** fo
 *Figure 16: Throughput per GPU of a (t, p) = (8, 8) parallel configuration for different microbatch sizes on a GPT model with 91 billion parameters, for two different batch sizes using 64 A100 GPUs.*
 
 ### Figure 17 (p.11) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig17.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]]*
 > [!quote] caption
 > Throughput (in sequences per second) with and without activation recomputation for a GPT model with 145 billion param- eters using 128 A100 GPUs ((𝑡, 𝑝) = (8, 16)). 12 24 36 48 60
 
@@ -405,7 +422,8 @@ Two line-chart performance comparisons from the Megatron-LM paper:
 **Figure 18:** Throughput per GPU with and without the scatter/gather optimization for a GPT model with 175 billion parameters using 96 A100 GPUs and the interleaved schedule.
 
 ### Figure 18 (p.11) ⭐深度解读
-![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]]
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig18.png]]
+*整页渲染: ![[assets/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-p11.png]]*
 > [!quote] caption
 > Throughput per GPU with and without the scatter/gather optimization for a GPT model with 175 billion parameters using 96 A100 GPUs and the interleaved schedule.
 
@@ -427,6 +445,50 @@ Two line-chart performance comparisons from the Megatron-LM paper:
 **Figure 17:** Throughput (in sequences per second) with and without activation recomputation for a GPT model with 145 billion parameters using 128 A100 GPUs ((*t*, *p*) = (8, 16)).
 
 **Figure 18:** Throughput per GPU with and without the scatter/gather optimization for a GPT model with 175 billion parameters using 96 A100 GPUs and the interleaved schedule.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.8) ⭐深度解读
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab01.png]]
+> [!quote] caption
+> Weak-scaling throughput for GPT models ranging from 1 billion to 1 trillion parameters.
+
+> [!tip] 表格解读（多模态）
+> ## Figure Description
+
+**Components & Data Flow:** The line chart plots **achieved teraFLOP/s per GPU** (y-axis, 50–200) against **number of GPUs** (x-axis, weak-scaling regime) for several GPT model sizes. Four series compare two partitioning strategies: **ZeRO-3** (blue: 175B dashed-circles, 530B solid-diamonds) and a parallel/PDS-style scheme (orange: solid squares and dashed triangles). Each line traces throughput as GPUs are added alongside parameter count growth from 1B → 1T.
+
+**Key Takeaway:** ZeRO-3 throughput **degrades sharply with scale** (175B drops from ~145 → ~50 TFLOP/s/GPU), while the parallel strategy sustains **~150–170 TFLOP/s/GPU** across the same range — i.e., roughly **3× higher efficiency** at large model sizes, demonstrating better compute utilization under weak scaling.
+
+*(104 words)*
+
+---
+
+## Caption (verbatim)
+
+> **Table 1:** Weak-scaling throughput for GPT models ranging from 1 billion to 1 trillion parameters.
+
+### Table 2 (p.9) ⭐深度解读
+![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab02.png]]
+> [!quote] caption
+> Comparison of PTD Parallelism to ZeRO-3 (without model paralllelism). The 530-billion-parameter GPT model did not fit on 560 GPUs when using a microbatch size of 4 with ZeRO-3, so we increased the number of GPUs used to 640 and global batch size to 2560 to provide a throughput estimate (relevant row
+
+> [!tip] 表格解读（多模态）
+> ## Figure Description
+
+The figure (Table 2) presents two side-by-side line plots benchmarking **PTD Parallelism vs. ZeRO-3** (without model parallelism) on a 530B-parameter GPT model, measuring **Achieved teraFLOP/s per GPU**.
+
+**Components:**
+- **Y-axis (both plots):** Achieved throughput in teraFLOP/s per GPU (range 0–200).
+- **Left plot:** X-axis sweeps values 1, 2, 4, 8 (likely data-parallel degree); compares **Batch size 8** (blue) vs. **Batch size 128** (orange).
+- **Right plot:** X-axis shows DP×MP-style tuples (2,32), (4,16), (8,8), (16,4), (32,2); compares **Batch size 32** (blue) vs. **Batch size 128** (orange).
+- Each series uses markers (circles/diamonds) connected by lines.
+
+**Key technical takeaway:** PTD Parallelism (orange) sustains ~150–175 teraFLOP/s/GPU across all configurations, while ZeRO-3 (blue) degrades sharply as the data-parallel dimension grows — dropping below 100 teraFLOP/s/GPU at degree 8 — demonstrating PTD's superior scalability at large batch sizes.
+
+## Caption (verbatim)
+
+> **Table 2:** Comparison of PTD Parallelism to ZeRO-3 (without model parallelism). The 530-billion-parameter GPT model did not fit on 560 GPUs when using a microbatch size of 4 with ZeRO-3, so we increased the number of GPUs used to 640 and global batch size to 2560 to provide a throughput estimate (relevant row marked in table with a *).
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

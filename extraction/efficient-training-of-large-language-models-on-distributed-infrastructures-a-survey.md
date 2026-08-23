@@ -24,7 +24,8 @@ tags: [training]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.2) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p02.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig01.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p02.png]]*
 > [!quote] caption
 > Overall structure of this survey.
 
@@ -47,7 +48,8 @@ tags: [training]
 **Fig. 1: Overall structure of this survey.**
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p03.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig02.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p03.png]]*
 > [!quote] caption
 > A typical Transformer layer contains an Attention
 
@@ -58,7 +60,8 @@ tags: [training]
 "Fig. 2: A typical Transformer layer contains an Attention block and a Feed-Forward Network (FFN) block."
 
 ### Figure 3 (p.4) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p04.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig03.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p04.png]]*
 > [!quote] caption
 > Infrastructure overview for distributed LLM training.
 
@@ -73,7 +76,8 @@ The diagram depicts a hierarchical distributed LLM training infrastructure. Four
 > Fig. 3: Infrastructure overview for distributed LLM training.
 
 ### Figure 4 (p.5) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p05.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig04.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p05.png]]*
 > [!quote] caption
 > Studies on infrastructure optimizations for distributed LLM training.
 
@@ -93,7 +97,8 @@ The figure is a hierarchical taxonomy titled "Infrastructure for LLM Training" w
 Fig. 4: Studies on infrastructure optimizations for distributed LLM training.
 
 ### Figure 5 (p.6) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p06.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig05.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p06.png]]*
 > [!quote] caption
 > Five chip-to-chip topologies: tree topology, cube-mesh topology, switch-based fully-connected topology, P2P-based
 
@@ -114,7 +119,8 @@ The figure illustrates **five chip-to-chip interconnect topologies** used in acc
 "Fig. 5: Five chip-to-chip topologies: tree topology, cube-mesh topology, switch-based fully-connected topology, P2P-based fully-connected topology, and 2D-torus topology."
 
 ### Figure 6 (p.7) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p07.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig06.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p07.png]]*
 > [!quote] caption
 > Four typical network topologies in large-scale GPU clusters: Clos topology, Dragonfly+ topology, rail-optimization
 
@@ -130,7 +136,8 @@ The figure compares four GPU cluster network topologies built from three switch 
 Fig. 6: Four typical network topologies in large-scale GPU clusters: Clos topology, Dragonfly+ topology, rail-optimization topology, and rail-only topology.
 
 ### Figure 7 (p.10) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p10.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig07.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p10.png]]*
 > [!quote] caption
 > Studies on parallelism schemes for distributed LLM training.
 
@@ -152,7 +159,8 @@ Each leaf node enumerates representative systems/papers by citation number, form
 **Fig. 7:** Studies on parallelism schemes for distributed LLM training.
 
 ### Figure 8 (p.12) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p12.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig08.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p12.png]]*
 > [!quote] caption
 > An example of 3D-parallelism with data parallelism, tensor parallelism, and pipeline parallelism.
 
@@ -174,7 +182,8 @@ Each leaf node enumerates representative systems/papers by citation number, form
 **Fig. 8:** An example of 3D-parallelism with data parallelism, tensor parallelism, and pipeline parallelism.
 
 ### Figure 9 (p.14) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p14.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig09.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p14.png]]*
 > [!quote] caption
 > Expert parallelism. The dotted line highlights the
 
@@ -189,7 +198,8 @@ The figure illustrates **Expert Parallelism** across *N* devices (only Device 1 
 > Fig. 9: Expert parallelism. The dotted line highlights the MoE components within the transformer model, where each device maintains one expert for expert parallelism and collaborate based on All-to-All communication.
 
 ### Figure 10 (p.17) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p17.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig10.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p17.png]]*
 > [!quote] caption
 > An example of RLHF. Inference process: 1 The
 
@@ -204,7 +214,8 @@ The diagram depicts an RLHF (Reinforcement Learning from Human Feedback) pipelin
 "Fig. 10: An example of RLHF. **Inference process:** ① The actor model generates a response from a given query. ② The critic model, reward model, and reference model use the query and response pairs to generate the value, score, and KL divergence required for training through inference. **Training process:** ③ The actor model and critic model use the data collected in the inference process to update their weights through gradient descent."
 
 ### Figure 11 (p.19) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p19.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig11.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p19.png]]*
 > [!quote] caption
 > Studies on computation optimizations for distributed LLM training.
 
@@ -223,7 +234,8 @@ The hierarchical tree diagram, labeled "Computational Optimizations for LLM Trai
 Fig. 11: Studies on computation optimizations for distributed LLM training.
 
 ### Figure 12 (p.21) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p21.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig12.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p21.png]]*
 > [!quote] caption
 > Studies on memory optimizations for distributed LLM training.
 
@@ -244,7 +256,8 @@ The figure is a hierarchical taxonomy diagram titled *"Memory Optimizations for 
 Fig. 12: Studies on memory optimizations for distributed LLM training.
 
 ### Figure 13 (p.25) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p25.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig13.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p25.png]]*
 > [!quote] caption
 > Communication traffic heatmap for InternLM-2
 
@@ -268,7 +281,8 @@ Fig. 12: Studies on memory optimizations for distributed LLM training.
 Fig. 13: Communication traffic heatmap for InternLM-2 102B pre-training using 128 GPUs during a single iteration, with tensor parallelism (TP) size 8, pipeline parallelism (PP) size 4, data parallelism (DP) size 4 and ZeRO stage 1 (ZeRO-1) size 4. The prioritization of topology arrangement is TP >DP/ZeRO-1 >PP. There are four different data traffic loads: ① the AllReduce of TP; ②③ ReduceScatter/AllGather of DP/ZeRO-1; ④ Send/Recv of PP. The communication for TP utilizes the fully-connected topology of NVSwitch, resulting in sixteen dense square traffic patterns along the diagonals in the diagram, with each pattern representing a node. The cross-node communication traffic for DP and ZeRO-1 are shown in the diagram as six symmetric diagonal lines within the four 32×32 rectangular topologies. It is important to note that DP/ZeRO-1 also involves intra-node communication traffic, which accumulates into the same heatmap grid as TP. Due to its relatively small communication volume, PP forms two yellow lines on the heatmap at coordinates ((32, 0), (128, 96)) and ((0, 32), (96, 128)). (In this diagram, all communications use the ring-based collective algorithm)
 
 ### Figure 14 (p.26) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p26.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig14.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p26.png]]*
 > [!quote] caption
 > Studies on communication optimizations for distributed LLM training.
 
@@ -288,7 +302,8 @@ Each leaf lists concrete systems/methods with reference numbers.
 **Caption (verbatim):** "Fig. 14: Studies on communication optimizations for distributed LLM training."
 
 ### Figure 15 (p.29) ⭐深度解读
-![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p29.png]]
+![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig15.png]]
+*整页渲染: ![[assets/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-p29.png]]*
 > [!quote] caption
 > Studies on fault tolerance techniques for distributed LLM training.
 

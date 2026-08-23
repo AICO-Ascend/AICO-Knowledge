@@ -184,7 +184,7 @@ def extract_formulas(doc, max_keep=15):
                 return out
     return out
 
-def write_paper_md(num, meta, doc, full_text, figs, fig_paths, mm, related=None, formulas=None):
+def write_paper_md(num, meta, doc, full_text, figs, fig_paths, mm, related=None, formulas=None, vis=None):
     slug=meta["slug"]
     authors=extract_authors(doc[0].get_text())
     tags=slugify_topic(meta["title"])
@@ -215,22 +215,54 @@ def write_paper_md(num, meta, doc, full_text, figs, fig_paths, mm, related=None,
     m.append("## 图表（原文 caption + 页码）")
     if not figs:
         m.append("_未检测到带 caption 的 figure_")
+    vfigs = {f["num"]: f for f in (vis or {}).get("figures", [])}
     for f in figs:
         rel=fig_paths.get(f["page"])
+        crop=vfigs.get(f["num"], {}).get("path")
+        disp = crop or rel   # 优先裁剪单图（报告可直接插入），回退整页渲染
         # minimax deep caption keyed by png relative path (assets/...)
-        mmkey=rel[7:] if rel and rel.startswith("assets/") else None
-        mmcap=mm.get(rel) or (mm.get("extraction/"+rel) if rel else None)
+        mmcap=(mm.get(crop) or mm.get("extraction/"+crop) if crop else None) \
+              or (mm.get(rel) or mm.get("extraction/"+rel) if rel else None)
         has_mm = bool(mmcap)
         m.append("")
         m.append(f"### Figure {f['num']} (p.{f['page']}){' ⭐深度解读' if has_mm else ''}")
-        if rel:
-            m.append(f"![[{rel}]]")
+        if disp:
+            m.append(f"![[{disp}]]")
+            if crop and rel:
+                m.append(f"*整页渲染: ![[{rel}]]*")
         m.append(f'> [!quote] caption')
         m.append(f'> {f["caption"]}')
         if has_mm:
             m.append("")
             m.append(f"> [!tip] 技术解读（多模态）")
             m.append(f"> {mmcap}")
+    # 表格作为图（extract_visuals.py 裁剪，M3 解读）
+    vtabs = (vis or {}).get("tables", [])
+    if vtabs:
+        m.append("")
+        m.append("## 表格（裁剪图 + caption，可直接插入报告）")
+        for t in vtabs:
+            tc = mm.get(t["path"]) or mm.get("extraction/"+t["path"])
+            m.append("")
+            m.append(f"### Table {t['num']} (p.{t['page']}){' ⭐深度解读' if tc else ''}")
+            m.append(f"![[{t['path']}]]")
+            if t.get("caption"):
+                m.append(f"> [!quote] caption")
+                m.append(f"> {t['caption']}")
+            if tc:
+                m.append("")
+                m.append(f"> [!tip] 表格解读（多模态）")
+                m.append(f"> {tc}")
+    # 无 LaTeX 源论文：公式以原文图片形式记录
+    veqs = (vis or {}).get("formulas", [])
+    if veqs and not (formulas and any("latex" in fo for fo in formulas)):
+        m.append("")
+        m.append("## 关键公式（原文截图，无 LaTeX 源 — 引用前请核对图片）")
+        for e in veqs:
+            m.append("")
+            m.append(f"### 公式截图 (p.{e['page']})")
+            m.append(f"![[{e['path']}]]")
+            m.append(f"> 原文文本线索：`{e['text'][:120]}`")
     m.append("")
     if formulas:
         if any("latex" in fo for fo in formulas):
@@ -295,6 +327,10 @@ def main():
         related_map[n]=[(s,t) for _,s,t in scored[:6]]
     figures_catalog=[]  # for master index
     manifest=[]
+    vis_all={}
+    vpath=OUT/"visuals.json"
+    if vpath.exists():
+        vis_all=json.loads(vpath.read_text(encoding="utf-8"))
     for num,meta in sorted(info.items(),key=lambda x:int(x[0])):
         slug=meta["slug"]; pdf=PAPERS/f"{slug}.pdf"
         if not pdf.exists():
@@ -306,11 +342,15 @@ def main():
             fig_paths=render_figure_pages(doc,slug,figs)
             formulas=latex_formulas.get(slug) or extract_formulas(doc)
             nch=write_paper_md(num,meta,doc,full_text,figs,fig_paths,mm,
-                               related=related_map.get(num),formulas=formulas)
+                               related=related_map.get(num),formulas=formulas,
+                               vis=vis_all.get(slug))
             for f in figs:
+                vfig={vf["num"]:vf for vf in vis_all.get(slug,{}).get("figures",[])}.get(f["num"],{})
+                crop=vfig.get("path","")
                 figures_catalog.append({"num":num,"title":meta["title"],"slug":slug,
                     "fig":f["num"],"page":f["page"],"caption":f["caption"],
-                    "img":fig_paths.get(f["page"],""),"tags":slugify_topic(meta["title"])})
+                    "img":crop or fig_paths.get(f["page"],""),
+                    "page_img":fig_paths.get(f["page"],""),"tags":slugify_topic(meta["title"])})
             manifest.append({"num":int(num),"title":meta["title"],"slug":slug,
                 "date":meta["date"],"arxiv":meta["abs"],"pdf_url":meta["pdf"],
                 "tags":ptags[num],"pages":doc.page_count,"figs":len(figs),
@@ -354,15 +394,22 @@ def main():
     # ⭐ Featured: MiniMax deep-captioned figures (dedupe by PNG)
     featured=[]
     seen_png=set()
+    def _mmkey(f):
+        for k in (f.get("img",""), f.get("page_img","")):
+            if not k: continue
+            if "extraction/"+k in mm or k in mm:
+                return ("extraction/"+k) if "extraction/"+k in mm else k
+        return None
     for f in figures_catalog:
-        if f["img"] and ("extraction/"+f["img"] in mm or f["img"] in mm) and f["img"] not in seen_png:
-            seen_png.add(f["img"]); featured.append(f)
+        mk=_mmkey(f)
+        if mk and f["img"] not in seen_png:
+            seen_png.add(f["img"]); featured.append((f,mk))
     b.append(f"共 {len(figures_catalog)} 张图，来自 {len({f['num'] for f in figures_catalog})} 篇论文；其中 ⭐{len(featured)} 张已深度解读。")
     b.append("")
     if featured:
         b.append("## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）"); b.append("")
-        for f in featured:
-            interp=mm.get("extraction/"+f["img"]) or mm.get(f["img"]) or ""
+        for f,mk in featured:
+            interp=mm.get(mk,"")
             b.append(f"### {f['title'][:60]} — Fig.{f['fig']} (p.{f['page']})")
             b.append(f"![[{f['img']}]]")
             b.append(f"> [!tip] {interp}")
@@ -376,7 +423,7 @@ def main():
     for t in sorted(by_tag):
         b.append(f"### {t} ({len(by_tag[t])})"); b.append("")
         for f in by_tag[t]:
-            star="⭐ " if (f["img"] and ("extraction/"+f["img"] in mm or f["img"] in mm)) else ""
+            star="⭐ " if _mmkey(f) else ""
             b.append(f"- {star}![[{f['img']}]] — **{f['title'][:50]}** Fig.{f['fig']} (p.{f['page']}): {f['caption'][:80]}…  `[[{f['slug']}]]`")
         b.append("")
     b.append("## 按论文"); b.append("")
@@ -384,7 +431,7 @@ def main():
         fs=[f for f in figures_catalog if f["num"]==num]
         b.append(f"### #{num} {fs[0]['title'][:60]}"); b.append("")
         for f in fs:
-            star="⭐ " if (f["img"] and ("extraction/"+f["img"] in mm or f["img"] in mm)) else ""
+            star="⭐ " if _mmkey(f) else ""
             b.append(f"- {star}Fig.{f['fig']} (p.{f['page']}) ![[{f['img']}]]")
             b.append(f"  - {f['caption'][:200]}")
         b.append("")

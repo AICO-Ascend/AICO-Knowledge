@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/attention-residuals-p01.png]]
+![[assets/crops/attention-residuals-fig01.png]]
+*整页渲染: ![[assets/attention-residuals-p01.png]]*
 > [!quote] caption
 > Overview of Attention Residuals. (a) Standard Residuals: standard residual connections with uniform additive accumulation. (b) Full AttnRes: each layer selectively aggregates all previous layer outputs via learned attention weights. (c) Block AttnRes: layers are grouped into blocks, reducing memory from O(Ld) to O(Nd).[cs.CL] 16 Mar 2026
 
@@ -56,7 +57,8 @@ Figure 2 presents two PyTorch functions implementing Block Attention Residuals. 
 Figure 2: PyTorch-style pseudo code for Block Attention Residuals. block_attn_res computes softmax attention over block representations using a learned pseudo-query w_l; forward is a single-layer pass that maintains partial_block (b_n^i, intra-block residual) and blocks ({b_0, …, b_{n−1}}, inter-block history).
 
 ### Figure 3 (p.6) ⭐深度解读
-![[assets/attention-residuals-p06.png]]
+![[assets/crops/attention-residuals-fig03.png]]
+*整页渲染: ![[assets/attention-residuals-p06.png]]*
 > [!quote] caption
 > Cache-based pipeline communication example with 4 physical ranks and 2 virtual stages per rank, where hatched boxes denote end of AttnRes blocks. Numbers indicate micro-batch indices. Each rank caches previously received blocks; stage transitions only transmit incremental blocks (+[b1, b2]) instead of the full history. naïve implementation. During inference, repeated access to accumulated block re
 
@@ -79,7 +81,8 @@ The diagram illustrates a **cache-based pipeline communication scheme** for dist
 **Figure 3:** Cache-based pipeline communication example with 4 physical ranks and 2 virtual stages per rank, where hatched boxes denote end of AttnRes blocks. Numbers indicate micro-batch indices. Each rank caches previously received blocks; stage transitions only transmit incremental blocks (+ [b₁, b₂]) instead of the full history.
 
 ### Figure 4 (p.9) ⭐深度解读
-![[assets/attention-residuals-p09.png]]
+![[assets/crops/attention-residuals-fig04.png]]
+*整页渲染: ![[assets/attention-residuals-p09.png]]*
 > [!quote] caption
 > Scaling law curves for Attention Residuals. Both Full and Block AttnRes consistently outperform the baseline across all scales. Block AttnRes closely tracks Full AttnRes, recovering most of the gain at the largest scale. PFLOP/s-days, Block AttnRes reaches 1.692 versus the Baseline’s 1.714, equivalent to a 1.25× compute advantage.
 
@@ -109,7 +112,8 @@ The diagram illustrates a **cache-based pipeline communication scheme** for dist
 > Figure 4: Scaling law curves for Attention Residuals. Both Full and Block AttnRes consistently outperform the baseline across all scales. Block AttnRes closely tracks Full AttnRes, recovering most of the gain at the largest scale.
 
 ### Figure 5 (p.10) ⭐深度解读
-![[assets/attention-residuals-p10.png]]
+![[assets/crops/attention-residuals-fig05.png]]
+*整页渲染: ![[assets/attention-residuals-p10.png]]*
 > [!quote] caption
 > Training dynamics of Baseline and Block AttnRes. (a) Validation loss during training. (b) Each transformer block’s output magnitude at the end of training. (c) Each transformer block’s gradient magnitude.
 
@@ -125,7 +129,8 @@ Figure 5 is a 3-panel comparison of a Baseline (blue) vs. Block AttnRes (red) tr
 Figure 5: Training dynamics of Baseline and Block AttnRes. **(a)** Validation loss during training. **(b)** Each transformer block's output magnitude at the end of training. **(c)** Each transformer block's gradient magnitude.
 
 ### Figure 6 (p.11) ⭐深度解读
-![[assets/attention-residuals-p11.png]]
+![[assets/crops/attention-residuals-fig06.png]]
+*整页渲染: ![[assets/attention-residuals-p11.png]]*
 > [!quote] caption
 > Effect of block size on validation loss (16-layer model). • Language understanding and reasoning: MMLU [13], MMLU-Pro Hard [55], GPQA-Diamond [41], BBH [48], ARC-Challenge [6], HellaSwag [65], and TriviaQA [21]. • Reasoning (Code and Math): GSM8K [7], MGSM [44], Math [25], CMath [14], HumanEval [5], and MBPP [1]. • Chinese language understanding: CMMLU [26] and C-Eval [19].
 
@@ -140,7 +145,8 @@ Figure 6 is a line chart plotting **validation loss (y-axis, ~1.735–1.770)** a
 "Figure 6: Effect of block size on validation loss (16-layer model)."
 
 ### Figure 7 (p.12) ⭐深度解读
-![[assets/attention-residuals-p12.png]]
+![[assets/crops/attention-residuals-fig07.png]]
+*整页渲染: ![[assets/attention-residuals-p12.png]]*
 > [!quote] caption
 > Architecture sweep under fixed compute (≈6.5 × 1019 FLOPs, ≈2.3 × 108 active parameters). Each cell reports validation loss for a (dmodel/Lb, H/Lb) configuration, where Lb = L/2 is the number of Transformer blocks; the star marks the optimum.
 
@@ -156,7 +162,8 @@ The figure presents two side-by-side heatmaps comparing validation loss across a
 > Figure 7: Architecture sweep under fixed compute (≈ 6.5 × 10¹⁹ FLOPs, ≈ 2.3 × 10⁸ active parameters). Each cell reports validation loss for a (d_model/L_b, H/L_b) configuration, where L_b = L/2 is the number of Transformer blocks; the star marks the optimum.
 
 ### Figure 8 (p.13) ⭐深度解读
-![[assets/attention-residuals-p13.png]]
+![[assets/crops/attention-residuals-fig08.png]]
+*整页渲染: ![[assets/attention-residuals-p13.png]]*
 > [!quote] caption
 > Depth-wise attention weight distributions for a 16-head model with full (top) and block (bottom) Attention Residuals, averaged over tokens. The model has 16 attention and 16 MLP layers. Each row shows how the lth attention (left) or MLP (right) layer distributes weight over previous sources. Diagonal dominance indicates locality remains the primary information pathway, while persistent weights on 
 
@@ -178,7 +185,8 @@ The figure presents a 2×2 grid of heatmaps visualizing the **learned attention 
 **Figure 8:** Depth-wise attention weight distributions for a 16-head model with full (top) and block (bottom) Attention Residuals, averaged over tokens. The model has 16 attention and 16 MLP layers. Each row shows how the *l*th attention (left) or MLP (right) layer distributes weight over previous sources. Diagonal dominance indicates locality remains the primary information pathway, while persistent weights on source 0 (embedding) and occasional off-diagonal concentrations reveal learned skip connections. Block attention (*N* = 8) recovers the essential structure with sharper, more decisive weight distributions.
 
 ### Figure 9 (p.15) ⭐深度解读
-![[assets/attention-residuals-p15.png]]
+![[assets/crops/attention-residuals-fig09.png]]
+*整页渲染: ![[assets/attention-residuals-p15.png]]*
 > [!quote] caption
 > Depth mixing matrices M for four residual variants (L=4; Block AttnRes uses block size S=2). Highway is shown with scalar gates for clarity. AttnRes panels show unnormalized ϕ scores; background colors group entries that share the same source (Full AttnRes) or the same source block (Block AttnRes). • Standard residual [12], hl = hl−1 + fl−1(hl−1). Expanding gives hl = Pl−1 i=0 vi, so Mi→l = 1 for 
 
@@ -192,6 +200,82 @@ The figure presents four depth mixing matrices **M** (L=4) representing how each
 **Caption (verbatim):**
 
 Figure 9: Depth mixing matrices **M** for four residual variants (*L*=4; Block AttnRes uses block size *S*=2). Highway is shown with scalar gates for clarity. AttnRes panels show unnormalized φ scores; background colors group entries that share the same source (Full AttnRes) or the same source block (Block AttnRes).
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.8) ⭐深度解读
+![[assets/crops/attention-residuals-tab01.png]]
+> [!quote] caption
+> Memory access cost per token per layer incurred by the residual mechanism under each scheme. The internal I/O of the layer function f l is excluded. For AttnRes, both Full and Block variants use the two-phase inference schedule described in Appendix B ; amortized costs are averaged over N layers wit
+
+> [!tip] 表格解读（多模态）
+> **Note:** The page provided contains no figure—only running prose and the caption/header for **Table 1** (a tabular numerical comparison, not a diagram). Accordingly, I cannot describe an architecture, components, or data flow that is not shown. Below I describe what *is* present, structured as requested, and transcribe the caption exactly.
+
+**Description of Table 1 (only artifact shown):** A small numerical table comparing per-token, per-layer memory-access cost (reads/writes in units of *d*, the hidden dimension) across residual-mechanism schemes. Columns correspond to baselines and the proposed *AttnRes* scheme in two variants (Full / Block); rows cover a Phase-1 / Phase-2 split plus an amortized total. **Key takeaway:** by batching residual operations across an *N*-layer block, AttnRes amortizes reads to ≈(N/S + 3)*d* with only 2*d* writes—substantially below (m)HC-style residual generalizations, yielding <2% inference-latency overhead in practice.
+
+**Caption verbatim:**
+> Table 1: Memory access cost per token per layer incurred by the residual mechanism under each scheme. The internal I/O of the layer function *f<sub>l</sub>* is excluded. For AttnRes, both Full and Block variants use the two-phase inference schedule described in Appendix B; amortized costs are averaged over *N* layers within a block. Typical values: *L*=128, *N*=8, *S*=*L*/*N*=16, *m*=4.
+
+### Table 2 (p.9) ⭐深度解读
+![[assets/crops/attention-residuals-tab02.png]]
+> [!quote] caption
+> Baseline vs Block AttnRes ( N = 8 ) vs Full AttnRes vs mHC(-lite) [ 64 ]: Model configurations, Hyperparameters, and Validation Loss.
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+
+The figure is a results table (Table 2) rather than an architectural diagram, so I'll describe its structure and data:
+
+- **Columns / components:** Three header groups — (1) model configuration: # Act. Params, Tokens, L_b, H, d_model, d_ff, lr, batch size; (2) Val. Loss, split into four variants: Baseline, Block AttnRes, Full AttnRes, mHC(-lite).
+- **Rows:** Five model scales (194M → 528M activated parameters), each a different size where depth (L_b), heads (H), width (d_model, d_ff), batch size, and tokens grow monotonically while learning rate decays from 2.99×10⁻³ to 2.02×10⁻³.
+- **Data flow:** Each row compares validation loss across the four methods at matched scale; bold cells mark the best loss per row.
+- **Key takeaway:** Full AttnRes wins four of five scales (lowest loss across 194M–528M), with mHC(-lite) marginally best only at 241M, suggesting AttnRes is the most consistently competitive residual design across model sizes.
+
+**Caption (verbatim):**
+
+*Table 2: Baseline vs Block AttnRes (N = 8) vs Full AttnRes vs mHC(-lite) [64]: Model configurations, Hyperparameters, and Validation Loss.*
+
+### Table 3 (p.10) ⭐深度解读
+![[assets/crops/attention-residuals-tab03.png]]
+> [!quote] caption
+> Performance comparison of AttnRes with the baseline, both after the same pre-training recipe. Best per-row results are bolded .
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+This table benchmarks AttnRes against a baseline across 15 downstream tasks organized into three categories: *General* (MMLU, MMLU-Pro, GPQA-Diamond, BBH, ARC-Challenge, HellaSwag, TriviaQA), *Math & Code* (GSM8K, MGSM, Math, CMath, HumanEval, MBPP), and *Chinese* (CMMLU, C-Eval). Each row reports both models' scores, with the best per-row value bolded. **Key takeaway:** Under identical pre-training, AttnRes matches or beats the baseline on virtually every benchmark—notably +7.5 on GPQA-Diamond, +3.1 on HumanEval, +2.9 on C-Eval—with only MMLU-Pro tied. Consistent gains across reasoning, math, code, and Chinese benchmarks suggest AttnRes is a drop-in architectural upgrade requiring no recipe change.
+
+**Caption (verbatim):**
+Table 3: Performance comparison of AttnRes with the baseline, both after the same pre-training recipe. Best per-row results are **bolded**.
+
+### Table 4 (p.11) ⭐深度解读
+![[assets/crops/attention-residuals-tab04.png]]
+> [!quote] caption
+> Ablation on key components of AttnRes (16-layer model).
+
+> [!tip] 表格解读（多模态）
+> ## Description of Main Figure (Figure 6)
+
+**Architecture/Components:** A line plot showing validation loss (y-axis, range ~1.735–1.770) versus block size *S* (x-axis: 32, 16, 8, 4, 2) on a 16-layer model. It overlays three references: a horizontal gray dashed line for the **Baseline** (1.766), a horizontal red dashed line for the **Full AttnRes** (1.737), and a solid red curve for **Block AttnRes** with annotated points (1.757 → 1.753 → 1.748 → 1.746 → 1.746).
+
+**Data flow:** The curve traces how loss evolves as residual-attention communication between layers becomes finer-grained (smaller S = more frequent cross-layer mixing).
+
+**Key technical takeaway:** Block AttnRes loss decreases monotonically as block size shrinks, plateauing near *S*=4–2 at 1.746—approaching but not matching Full AttnRes (1.737), while substantially beating the 1.766 baseline. This indicates that deeper cross-layer information flow within a 16-layer model is critical, and very fine blocking yields diminishing returns compared to full dense mixing.
+
+## Caption (verbatim)
+
+**Figure 6:** Effect of block size on validation loss (16-layer model).
+
+### Table 5 (p.14) ⭐深度解读
+![[assets/crops/attention-residuals-tab05.png]]
+> [!quote] caption
+> Comparison of residual update mechanisms. Weight : whether the mixing coefficients are architecture-fixed, learned-static (fixed after training), or input-dependent (dynamic). Source : which earlier representations layer l can access. Normalization is omitted from most formulas for clarity.
+
+> [!tip] 表格解读（多模态）
+> **Description (≈115 words):**
+Table 5 is a taxonomic comparison of residual update mechanisms, structured into three logical groupings separated by horizontal rules: (1) **Single-state recurrence**, where layer *l* receives only **h**_{l−1} (Residual, ReZero, LayerScale, Highway, DeepNorm, KEEL); (2) **Multi-state recurrence**, where layer *l* receives *m* parallel streams (SiameseNorm uses 2 streams; HC/mHC uses *m* streams; DDL uses *d_v* streams, operating on outer products **k**_l **v**_l^⊤); and (3) **Cross-layer access**, where *l* can read arbitrary prior outputs [**h**_1, …, **h**_{l−1}] through concatenation or weighted sums (DenseNet, DenseFormer, MRLA). Four columns—Method, Update rule, Weight (Fixed / Static / Dynamic), Source—encode the data flow and gating behavior. **Key takeaway:** methods are principally differentiated along two axes—*which* prior representations are reachable and *whether* their mixing coefficients are architecture-fixed, learned-static, or input-dynamically modulated.
+
+**Caption (verbatim):**
+Table 5: Comparison of residual update mechanisms. *Weight*: whether the mixing coefficients are architecture-fixed, learned-static (fixed after training), or input-dependent (dynamic). *Source*: which earlier representations layer *l* can access. Normalization is omitted from most formulas for clarity.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

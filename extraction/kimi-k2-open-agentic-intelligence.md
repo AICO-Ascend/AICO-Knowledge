@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p01.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig01.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p01.png]]*
 > [!quote] caption
 > Kimi K2 main results.2 1https://huggingface.co/moonshotai/Kimi-K2-Instruct 2All models evaluated above are non-thinking models. For SWE-bench Multilingual, we evaluated only Claude 4 Sonnet because the cost of Claude 4 Opus was prohibitive.[cs.LG] 3 Feb 2026
 
@@ -45,7 +46,8 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 **Figure 1: Kimi K2 main results.**²
 
 ### Figure 2 (p.4) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p04.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig02.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p04.png]]*
 > [!quote] caption
 > Left: During a mid-scale training run, attention logits rapidly exceed 1000, which could lead to potential numerical instabilities and even training divergence. Right: Maximum logits for Kimi K2 with MuonClip and t = 100 over the entire training run. The max logits rapidly increase to the capped value of 100, and only decay to a stable range after approximately 30% of the training steps, demonstra
 
@@ -68,7 +70,8 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 > Figure 2: Left: During a mid-scale training run, attention logits rapidly exceed 1000, which could lead to potential numerical instabilities and even training divergence. Right: Maximum logits for Kimi K2 with MuonClip and t = 100 over the entire training run. The max logits rapidly increase to the capped value of 100, and only decay to a stable range after approximately 30% of the training steps, demonstrating the effective regulation effect of QK-Clip.
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p05.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig03.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p05.png]]*
 > [!quote] caption
 > Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity. A key advancement in the pre-training data of Kimi K2 over Kimi K1.5 is the introduction of a synthetic data generation strategy to increase token utility. Specifically, a carefully designed rephrasing p
 
@@ -93,7 +96,8 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 > **Figure 3:** Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity.
 
 ### Figure 4 (p.5) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p05.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig04.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p05.png]]*
 > [!quote] caption
 > • Fidelity verification: To ensure consistency between original and rewritten content, we perform fidelity checks that compare the semantic alignment of each rephrased passage with its source. This serves as an initial quality control step prior to training.
 
@@ -118,7 +122,8 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 > **Figure 3:** Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity.
 
 ### Figure 5 (p.7) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p07.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig05.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p07.png]]*
 > [!quote] caption
 > Sparsity Scaling Law. Increasing sparsity leads to improved model performance. We fixed the number of activated experts to 8 and the number of shared experts to 1, and varied the total number of experts, resulting in models with different sparsity levels. 10 11
 
@@ -133,7 +138,8 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 "Figure 5: Sparsity Scaling Law. Increasing sparsity leads to improved model performance. We fixed the number of activated experts to 8 and the number of shared experts to 1, and varied the total number of experts, resulting in models with different sparsity levels."
 
 ### Figure 6 (p.7) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p07.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig06.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p07.png]]*
 > [!quote] caption
 > Scaling curves for models with number of atten- tion heads equals to number of layers and their counter- parts with doubled attention heads. Doubling the number of attention heads leads to a reduction in validation loss of approximately 0:5% to 1:2%.
 
@@ -148,7 +154,8 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 "Figure 5: Sparsity Scaling Law. Increasing sparsity leads to improved model performance. We fixed the number of activated experts to 8 and the number of shared experts to 1, and varied the total number of experts, resulting in models with different sparsity levels."
 
 ### Figure 7 (p.8) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p08.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig07.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p08.png]]*
 > [!quote] caption
 > Computation, communication and offloading overlapped in different PP phases.
 
@@ -172,7 +179,8 @@ Kimi K2's training scheduler achieves near-full hardware utilization by overlapp
 **Figure 7:** Computation, communication and offloading overlapped in different PP phases.
 
 ### Figure 8 (p.10) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p10.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig08.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p10.png]]*
 > [!quote] caption
 > Data synthesis pipeline for tool use. (a) Tool specs are from both real-world tools and LLMs; agents and tasks are the generated from the tool repo. (b) Multi-agent pipeline to generate and filter trajectories with tool calling. (a) t-SNE visualization of real MCP tools, colored by their original source categories (b) t-SNE visualization of synthetic tools, colored by pre-defined domain categories
 
@@ -189,7 +197,8 @@ Kimi K2's training scheduler achieves near-full hardware utilization by overlapp
 Figure 8: Data synthesis pipeline for tool use. (a) Tool specs are from both real-world tools and LLMs; agents and tasks are the generated from the tool repo. (b) Multi-agent pipeline to generate and filter trajectories with tool calling.
 
 ### Figure 9 (p.10) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p10.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig09.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p10.png]]*
 > [!quote] caption
 > t-SNE visualizations of tool embeddings. (a) Real-world MCP tools exhibit natural clustering based on their original source categories. (b) Synthetic tools are organized into pre-defined domain categories, providing systematic coverage of the tool space. Together, they ensure comprehensive representation across different tool functionalities.
 
@@ -262,7 +271,8 @@ The referenced figure (Figure 12) compares training loss curves between two smal
 > Figure 12: Applying QK-Clip to Muon in a small-scale setting with an aggressive threshold (t = 30) has negligible impact on loss, indicating that it is a safe and effective method for constraining attention logits.
 
 ### Figure 13 (p.32) ⭐深度解读
-![[assets/kimi-k2-open-agentic-intelligence-p32.png]]
+![[assets/crops/kimi-k2-open-agentic-intelligence-fig13.png]]
+*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p32.png]]*
 > [!quote] caption
 > pipeline for RL weight update
 
@@ -284,6 +294,118 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 ## Caption (verbatim)
 
 **Figure 13:** pipeline for RL weight update
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.5) ⭐深度解读
+![[assets/crops/kimi-k2-open-agentic-intelligence-tab01.png]]
+> [!quote] caption
+> SimpleQA Accuracy under three rephrasing-epoch configurations
+
+> [!tip] 表格解读（多模态）
+> **Description & Key Takeaway (≈120 words):**
+
+The table is an ablation-style results grid comparing SimpleQA accuracy across three training configurations, varying two hyperparameters: the number of data rephrasings (# Rephrasings) and training epochs (# Epochs). Three configurations are shown:
+
+1. **0 rephrasings (raw wiki-text), 10 epochs → 23.76**
+2. **1 rephrasing, 10 epochs → 27.39**
+3. **10 rephrasings, 1 epoch → 28.94**
+
+**Key takeaway:** Rephrasing the training data once yields a substantial +3.63-point jump over raw wiki-text, and scaling to 10 rephrasings with a single epoch further raises accuracy to 28.94—indicating that *diversification of training-text surface forms is more impactful than additional training epochs on the same raw text*.
+
+**Caption (verbatim):**
+
+Table 1: SimpleQA Accuracy under three rephrasing-epoch configurations
+
+### Table 2 (p.6) ⭐深度解读
+![[assets/crops/kimi-k2-open-agentic-intelligence-tab02.png]]
+> [!quote] caption
+> Architectural comparison between Kimi K2 and DeepSeek-V3
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+
+The table compares the architectures of two MoE (Mixture-of-Experts) language models, Kimi K2 and DeepSeek-V3, across nine structural dimensions: layer count, total/activated parameters, total experts, experts-per-token, shared experts, attention heads, dense layers, and expert grouping.
+
+**Data flow / structure:** Both models are 61-layer sparse transformers. At inference, only ~8 routed experts (+1 shared expert) are activated per token from the full expert pool. DeepSeek-V3 groups its 256 experts; Kimi K2 uses 384 ungrouped experts, processed through 64 attention heads with just 1 dense layer.
+
+**Key technical takeaway:**
+Kimi K2 achieves ~1.55× total capacity (1.04T vs 671B, +54%) without increasing activated parameters, by adding more fine-grained experts (384 vs 256) and removing expert grouping, at the cost of fewer attention heads and dense layers.
+
+**Caption (verbatim):**
+"Table 2: Architectural comparison between Kimi K2 and DeepSeek-V3"
+
+### Table 3 (p.16) ⭐深度解读
+![[assets/crops/kimi-k2-open-agentic-intelligence-tab03.png]]
+> [!quote] caption
+> Performance comparison of Kimi-K2-Instruct against leading open-source and proprietary models across diverse tasks. Bold denotes the global SOTA; underlined bold indicates the best open-source result. Data points marked with * are taken directly from the model’s technical report or blog.
+
+> [!tip] 表格解读（多模态）
+> **Note:** The image provided contains only the document header and the caption for Table 3 — no actual figure, architecture diagram, or data-flow illustration is visible. I cannot describe components that are not shown.
+
+**Caption transcription (verbatim):**
+
+Table 3: Performance comparison of Kimi-K2-Instruct against leading open-source and proprietary models across diverse tasks. **Bold** denotes the global SOTA; <u>**underlined bold**</u> indicates the best open-source result. Data points marked with * are taken directly from the model's technical report or blog.
+
+### Table 4 (p.17) ⭐深度解读
+![[assets/crops/kimi-k2-open-agentic-intelligence-tab04.png]]
+> [!quote] caption
+> presents a comprehensive comparison of Kimi-K2-Base against leading open-source foundation models across diverse evaluation benchmarks. The results demonstrate that Kimi-K2-Base achieves state-of-the-art performance across the majority of evaluated tasks, establishing it as a leading foundation mode
+
+> [!tip] 表格解读（多模态）
+> **Note:** The provided image contains only text content (a section describing Kimi-K2 evaluation methodology, benchmarks, baselines, and configurations) — there is no architectural figure with components or data flow visible. Below I describe the textual content structure and transcribe it verbatim.
+
+**Structure overview:** The passage is organized hierarchically as Section 4.2 (Pre-training Evaluations) → 4.2.1 (Evaluation Settings) → 4.2.2 (Evaluation Results). It enumerates *Benchmarks* (grouped into general, coding, math, Chinese-language), *Baselines* (DeepSeek-V3-Base, Qwen2.5-72B-Base, Llama 4-Maverick), and *Evaluation Configurations* (perplexity-based vs. generation-based protocols). A key takeaway: the evaluation pipeline splits tasks by metric type (perplexity vs. generation) and averages across 8 runs for high-variance benchmarks like GPQA-Diamond, all run through an internal LM-Harness-derived framework for consistency.
+
+**Verbatim transcription:**
+
+**General Capabilities** Kimi-K2-Instruct exhibits strong, balanced performance across general knowledge, math, instruction following, and long-context tasks. It surpasses open-source peers on SimpleQA (31.0%), MMLU (89.5%) and MMLU-Redux (92.7%), and leads all models on instruction benchmarks (IFEval: 89.8%, Multi-Challenge: 54.1%). In math and STEM, it achieves top-tier scores (AIME 2024: 69.6%, GPQA-Diamond: 75.1%), and remains competitive on long-context factuality and retrieval (DROP: 93.5%, MRCR: 55.0%). These results position Kimi-K2-Instruct as a well-rounded and capable generalist across both short- and long-context settings.
+
+**Open-Ended Evaluation** On the LMSYS Arena leaderboard (July 17, 2025), Kimi-K2-Instruct ranks as the top-1 open-source model and 5th overall based on over 3,000 user votes. This real-world preference signal—across diverse, blind prompts—underscores Kimi-K2's strengths in generating high-quality responses on open-ended tasks.
+
+**4.2 Pre-training Evaluations**
+
+**4.2.1 Evaluation Settings**
+
+**Benchmarks** We evaluate Kimi-K2-Base across diverse capability areas. For general capabilities, we assess on MMLU [24], MMLU-Pro [77], MMLU-Redux [18], BBH [68], TriviaQA [35], SuperGPQA [14], SimpleQA [79], HellaSwag [89], AGIEval [90], GPQA-Diamond [62], ARC-Challenge [9], and WinoGrande [63]. For coding capabilities, we employ EvalPlus [46] (averaging HumanEval [8], MBPP [1], HumanEval+, and MBPP+), LiveCodeBench v6 [32], and CRUXEval [19]. For mathematical reasoning, we utilize GSM8K [10], GSM8K-Platinum [75], MATH [25], and CMATH [80]. For Chinese language capabilities, we evaluate on C-Eval [30], CMMLU [41], and CSimpleQA [23].
+
+**Baselines** We benchmark against leading open-source foundation models: DeepSeek-V3-Base [11], Qwen2.5-72B-Base [60] (Note that Qwen3-235B-A22B-Base is not open-sourced, and the largest open-sourced base model in the Qwen series is Qwen2.5-72B-Base), and Llama 4-Maverick [71] (Llama 4-Behemoth is also not open-sourced). All models are evaluated under identical configurations to ensure fair comparison.
+
+**Evaluation Configurations** We employ perplexity-based evaluation for MMLU, MMLU-Redux, GPQA-Diamond, HellaSwag, ARC-Challenge, C-Eval, and CMMLU. Generation-based evaluation is used for MMLU-Pro, SuperGPQA, TriviaQA, BBH, CSimpleQA, MATH, CMATH, GSM8K, GSM8K-Platinum, CRUXEval, LiveCodeBench, and EvalPlus. To mitigate the high variance inherent to GPQA-Diamond, we report the mean score across eight independent runs. All evaluations are conducted using our internal framework derived from LM-Harness-Evaluation [4], ensuring consistent settings across all models.
+
+**4.2.2 Evaluation Results**
+
+Table 4 presents a comprehensive comparison of Kimi-K2-Base against leading open-source foundation models across diverse evaluation benchmarks. The results demonstrate that Kimi-K2-Base achieves state-of-the-art performance across the majority of evaluated tasks, establishing it as a leading foundation model in the open-source landscape.
+
+### Table 5 (p.19) ⭐深度解读
+![[assets/crops/kimi-k2-open-agentic-intelligence-tab05.png]]
+> [!quote] caption
+> Enabled Plugins and Strategies
+
+> [!tip] 表格解读（多模态）
+> The image provided does not contain a main figure—only the caption header "Table 5: Enabled Plugins and Strategies" is visible, without any underlying figure data, architecture diagram, or data flow illustration.
+
+**Caption transcription (verbatim):**
+
+"Table 5: Enabled Plugins and Strategies"
+
+No further content (figure, table body, or technical detail) is shown in the provided image, so I cannot describe architecture, components, data flow, or extract a technical takeaway. If you intended to share a different image (e.g., the figure associated with Table 5 or a different figure from the Kimi K2 technical report), please re-upload it and I'll provide the requested analysis.
+
+### Table 6 (p.19) ⭐深度解读
+![[assets/crops/kimi-k2-open-agentic-intelligence-tab06.png]]
+> [!quote] caption
+> presents the passing rates of different models under various plugin–strategy combinations.
+
+> [!tip] 表格解读（多模态）
+> **Description**
+
+This is *Table 5*, a two-column categorical matrix rather than a schematic diagram. The left column lists the **plugin taxonomy** organized into five risk domains — Harmful (graphic content, harassment, self-harm, etc.), Criminal (weapons, cybercrime, drug violations), Misinformation (hallucination, political/religious bias, unsafe advice), Privacy (PII exposure in APIs, session data, social engineering), and Security (prompt extraction, malicious code, ASCII smuggling, reasoning DoS). The right column enumerates the four adversarial **strategies** applied on top: Basic, Prompt Injection, Iterative Jailbreak, and Crescendo. There is no visual data flow shown; the implicit flow is *{Risk Plugin} × {Attack Strategy} → adversarial prompt → target model*.
+
+**Key takeaway**: Safety testing is structured as a 5-domain × 4-strategy Cartesian product, enabling systematic coverage of both **content hazards** (harm/crime) and **interaction hazards** (privacy/security) under progressively escalating jailbreak tactics.
+
+**Caption (verbatim):**
+
+Table 5: Enabled Plugins and Strategies
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

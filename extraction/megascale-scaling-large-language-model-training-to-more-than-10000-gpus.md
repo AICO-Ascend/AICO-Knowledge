@@ -24,7 +24,8 @@ tags: [training]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.2) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p02.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig01.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p02.png]]*
 > [!quote] caption
 > Data parallel training with ZeRO2. dependencies that contribute to stability issues. We develop a robust training framework to automate fault localization and recovery. We design heartbeat messages encapsulating various forms of information to facilitate real-time anomaly detection and provide early warnings. We implement a suite of diagnostic tests to identify nodes causing disruptions. We optimi
 
@@ -47,7 +48,8 @@ ZeRO2 eliminates memory redundancy in data-parallel training by partitioning gra
 Figure 1: Data parallel training with ZeRO2.
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig02.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p03.png]]*
 > [!quote] caption
 > Interleaved 1F1B pipeline. update the model. Instead of duplicating model states (like the optimizer states, gradients, and parameters), Zero Redun- dancy Optimizer (ZeRO) [11] shards these states across every data-parallel process. As a result, the traditional all-reduce operations that aggregate gradients are decomposed into sep- arate reduce-scatter and all-gather operations. This is because ev
 
@@ -65,7 +67,8 @@ Figure 1: Data parallel training with ZeRO2.
 > **Figure 2: Interleaved 1F1B pipeline.**
 
 ### Figure 3 (p.4) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig03.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]]*
 > [!quote] caption
 > Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB). with a large receptive field created by stacking layers of such windowed attention. This enables faster training without com- promising the accuracy. LAMB optimizer. Efficient training at a large scale is often hindered by batch size constraints. Particularly, increasing the ba
 
@@ -89,7 +92,8 @@ The figure compares three transformer-block designs for hiding communication in 
 **Figure 3: Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB).**
 
 ### Figure 4 (p.4) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig04.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p04.png]]*
 > [!quote] caption
 > The cool-down phase can be viewed as the inverse of the warm-up phase, allowing for the inverse application of the same technique. As for the steady phase, both the forward and backward computation are independent of adjacent communication operations. Taking the backward as an example, as shown in the right part of
 
@@ -113,7 +117,8 @@ The figure compares three transformer-block designs for hiding communication in 
 **Figure 3: Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB).**
 
 ### Figure 5 (p.6) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p06.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig05.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p06.png]]*
 > [!quote] caption
 > Robust training workflow. interval and help recover the transmission more quickly when the link flapping period is short. 4
 
@@ -128,7 +133,8 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 "Figure 5: Robust training workflow."
 
 ### Figure 6 (p.8) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p08.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig06.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p08.png]]*
 > [!quote] caption
 > Inconsistent MFU observed in large-scale training. Differ- ent colors denote distinct executions of the same training job. mitigates the bandwidth constraints of HDFS, leading to a substantial reduction in the recovery time. 5
 
@@ -150,7 +156,8 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 **Figure 7:** Performance heat-map. The color denotes the running time of the code segments on a rank. The figure also shows the 3D visualization feature, where rank 20 has been selected and the dependency across different parallelism dimensions become visible.
 
 ### Figure 7 (p.8) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p08.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig07.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p08.png]]*
 > [!quote] caption
 > We gather latency data of the computation phase (forward and backward) across devices and average the latency across steps. The aggregated data is visualized host 0 0 1 2 3 host 3 12 13 14 15 host 6 24 25 26 27 host 9 36 37 38 39 host 4 16 17 18 19 host 7 28 29 30 31 host 10 40 41 42 43 host 5 20 21 22 23 host 8 32 33 34 35 host 11 44 45 46 47 host 1 4 5 6 7 host 2 8 9 10 11 DP Comm TP Comm PP Com
 
@@ -172,7 +179,8 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 **Figure 7:** Performance heat-map. The color denotes the running time of the code segments on a rank. The figure also shows the 3D visualization feature, where rank 20 has been selected and the dependency across different parallelism dimensions become visible.
 
 ### Figure 8 (p.9) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p09.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig08.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p09.png]]*
 > [!quote] caption
 > The trace shows events collected in a pipeline group on a unified timeline. Dependencies become visible when an event is selected.
 
@@ -187,7 +195,8 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 "Figure 8: The trace shows events collected in a pipeline group on a unified timeline. Dependencies become visible when an event is selected."
 
 ### Figure 9 (p.10) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p10.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig09.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p10.png]]*
 > [!quote] caption
 > Weak-scaling training performance of Megatron-LM and
 
@@ -208,7 +217,8 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 **Figure 9:** Weak-scaling training performance of Megatron-LM and MegaScale on the 530B model, where the batch size is scaled proportionally with the number of GPUs.
 
 ### Figure 10 (p.11) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p11.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig10.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p11.png]]*
 > [!quote] caption
 > The training loss curves in microbenchmark experiments.
 
@@ -232,7 +242,8 @@ MegaScale sustains smooth convergence across **100+ restarts** at >10K-GPU scale
 > Figure 11: The normalized training loss curve of a real production run on more than 10,000 GPUs for several weeks. This run trains a model with hundreds of billions of parameters on multi-trillion tokens. Different colors indicate training restarts. MegaScale repairs and recovers the training process for over 100 times in presence of failures.
 
 ### Figure 11 (p.11) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p11.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig11.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p11.png]]*
 > [!quote] caption
 > The normalized training loss curve of a real production run on more than 10,000 GPUs for several weeks. This run trains a model with hundreds of billions of parameters on multi-trillion tokens. Different colors indicate training restarts. MegaScale repairs and recovers the training process for over 100 times in presence of failures.
 
@@ -256,7 +267,8 @@ MegaScale sustains smooth convergence across **100+ restarts** at >10K-GPU scale
 > Figure 11: The normalized training loss curve of a real production run on more than 10,000 GPUs for several weeks. This run trains a model with hundreds of billions of parameters on multi-trillion tokens. Different colors indicate training restarts. MegaScale repairs and recovers the training process for over 100 times in presence of failures.
 
 ### Figure 12 (p.12) ⭐深度解读
-![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p12.png]]
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig12.png]]
+*整页渲染: ![[assets/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-p12.png]]*
 > [!quote] caption
 > The MFU becomes stable after addressing the stragglers and problematic code segments. Different colors represent different training trials with the same setup. executing diagnostic tests is less than 10 minutes. Moreover, the system can catch up to the training progress prior to the crash within 15 minutes from the latest checkpoints, maintain- ing over 90% effective training time rate, which is c
 
@@ -281,6 +293,40 @@ After diagnosing and removing computational stragglers plus garbage-collection�
 # Caption (verbatim)
 
 > Figure 12: The MFU becomes stable after addressing the stragglers and problematic code segments. Different colors represent different training trials with the same setup.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 2 (p.10) ⭐深度解读
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab02.png]]
+> [!quote] caption
+> Strong-scaling training performance for the 175B model. We set the batch size to 6144 when training with 3072 to 12288 GPUs. For 256 to 1024 GPUs, we decrease the batch size to 768 due to GPU memory limit. We report the training time required for training 300B tokens here. The number in parentheses 
+
+> [!tip] 表格解读（多模态）
+> **Description (≤120 words):**
+
+The figure is a grouped bar chart plotting **Model FLOPs Utilization (MFU, %)** on the y-axis against **#GPUs** (2240, 4480, 11200) on the x-axis, comparing two systems: **Megatron-LM** (gray hatched bars) versus **MegaScale** (red hatched bars). Data labels sit atop each bar. Across all three GPU counts, MegaScale consistently delivers ~5–6 percentage points higher MFU than Megatron-LM, and unlike Megatron-LM (which slightly degrades from 49.20% → 48.80% → 48.20%), MegaScale stays flat at ~54%.
+
+**Key takeaway:** MegaScale's optimizations preserve near-constant MFU as GPU count grows — demonstrating strong-scaling efficiency that Megatron-LM lacks.
+
+**Caption (verbatim):**
+
+Table 2: Strong-scaling training performance for the 175B model. We set the batch size to 6144 when training with 3072 to 12288 GPUs. For 256 to 1024 GPUs, we decrease the batch size to 768 due to GPU memory limit. We report the training time required for training 300B tokens here. The number in parenthesis in the MFU column represents the speedup of MegaScale compared to Megatron-LM.
+
+### Table 3 (p.11) ⭐深度解读
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab03.png]]
+> [!quote] caption
+> MFU improvement breakdown when training the 175B model with 256 GPUs and batch size 256.
+
+> [!tip] 表格解读（多模态）
+> **Caption Verbatim (the only caption present in the provided text):**
+
+"Table 3: MFU improvement breakdown when training the 175B model with 256 GPUs and batch size 256."
+
+---
+
+**Note:** The passage does not contain a description or caption of an actual figure. It references **Figure 10a** (convergence comparison — MegaScale with parallel transformer block + sliding window attention vs. baseline) and **Figure 10b** (effect of LAMB optimizer vs. ADAM with 4× larger batch size), but only provides a Table 3 caption. Without the figure itself or its caption text, I cannot describe an "architecture/components/data flow" diagram or its specific caption.
+
+If you can share the figure's caption text (e.g., "Figure 10: ...") or an image of the figure, I'd be happy to provide the requested architecture description and verbatim transcription.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -24,7 +24,8 @@ tags: [moe, training]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.9) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p09.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig01.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p09.png]]*
 > [!quote] caption
 > Data flow through an MoE layer: Route, Dispatch, Compute, and Combine stages.
 
@@ -43,7 +44,8 @@ The diagram depicts a four-stage forward pipeline flanked by a pre-norm on the l
 **Caption (verbatim):** *Figure 1: Data flow through an MoE layer: Route, Dispatch, Compute, and Combine stages.*
 
 ### Figure 2 (p.10) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p10.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig02.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p10.png]]*
 > [!quote] caption
 > Router architecture: linear projection, score function, top-𝑘selection, and load balancing. combine_postprocess (backward).
 
@@ -67,7 +69,8 @@ A separate **Load-Balancing Mechanisms** module attaches auxiliary signals: an *
 **Figure 2:** Router architecture: linear projection, score function, top-k-selection, and load balancing.
 
 ### Figure 3 (p.13) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p13.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig03.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p13.png]]*
 > [!quote] caption
 > Dense Model vs MoE Model parameter/compute scaling.
 
@@ -93,7 +96,8 @@ The figure is a **log-log scatter plot** comparing LLMs on two axes:
 **Figure 3:** Dense Model vs MoE Model parameter/compute scaling.
 
 ### Figure 4 (p.15) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p15.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig04.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p15.png]]*
 > [!quote] caption
 > Expert Parallelism (EP) distributes experts across GPUs. The all-to-all communication dispatches tokens to their assigned experts and combines results.
 
@@ -109,7 +113,8 @@ The figure illustrates **Expert Parallelism (EP)** for Mixture-of-Experts (MoE) 
 > **Figure 4:** Expert Parallelism (EP) distributes experts across GPUs. The all-to-all communication dispatches tokens to their assigned experts and combines results.
 
 ### Figure 5 (p.17) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p17.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig05.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p17.png]]*
 > [!quote] caption
 > Parallelism mappings: traditional constraints vs. MoE Parallel Folding decoupling.
 
@@ -137,7 +142,8 @@ Traditional parallelism forces **EP ≤ DP** because MoE inherits the attention'
 > **Figure 5: Parallelism mappings: traditional constraints vs. MoE Parallel Folding decoupling.**
 
 ### Figure 6 (p.18) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p18.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig06.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p18.png]]*
 > [!quote] caption
 > Parallel Folding: decoupled attention and MoE parallelism mappings.
 
@@ -154,7 +160,8 @@ Parallel Folding lets attention and MoE layers use *different* optimal parallel 
 > Figure 6: Parallel Folding: decoupled attention and MoE parallelism mappings.
 
 ### Figure 7 (p.22) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p22.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig07.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p22.png]]*
 > [!quote] caption
 > Memory-Efficient Permutation.
 
@@ -167,7 +174,8 @@ Figure 7 contrasts two MoE expert-block forward passes. The *Baseline* (left) ru
 **Caption (verbatim):** *Figure 7: Memory-Efficient Permutation.*
 
 ### Figure 8 (p.23) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p23.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig08.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p23.png]]*
 > [!quote] caption
 > Selective Recomputation.
 
@@ -197,7 +205,8 @@ Selective recomputation targets only memory-intensive yet compute-cheap operatio
 **Figure 8:** Selective Recomputation.
 
 ### Figure 9 (p.24) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p24.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig09.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p24.png]]*
 > [!quote] caption
 > Fine-grained activation offloading: stream overlap for forward and backward passes.
 
@@ -218,7 +227,8 @@ Selective recomputation targets only memory-intensive yet compute-cheap operatio
 **Figure 9: Fine-grained activation offloading: stream overlap for forward and backward passes.**
 
 ### Figure 10 (p.26) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p26.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig10.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p26.png]]*
 > [!quote] caption
 > Fine-grained offloading and recomputation: complementary memory optimization strategies. optimization target. Megatron-Core provides two techniques: precision-aware optimization that reduces storage requirements, and CPU offloading that moves inactive state off-GPU.
 
@@ -234,7 +244,8 @@ The diagram depicts a transformer + MoE block split into two parallel computatio
 Figure 10: Fine-grained offloading and recomputation: complementary memory optimization strategies.
 
 ### Figure 11 (p.28) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig11.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]]*
 > [!quote] caption
 > Comparison of sharding strategies: (a) FSDP2 shards each parameter uniformly; (b) Megatron-FSDP flattens per-module and shards non-uniformly, aligning with communication buffers.
 
@@ -254,7 +265,8 @@ Figure 10: Fine-grained offloading and recomputation: complementary memory optim
 **Figure 11:** Comparison of sharding strategies: (a) FSDP2 shards each parameter uniformly; (b) Megatron-FSDP flattens per-module and shards non-uniformly, aligning with communication buffers.
 
 ### Figure 12 (p.28) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig12.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p28.png]]*
 > [!quote] caption
 > Persistent double-buffer design: two pre-allocated buffers are cycled across FSDP collectives, eliminating allocation overhead and enabling NCCL User Buffer Registration.
 
@@ -274,7 +286,8 @@ Figure 10: Fine-grained offloading and recomputation: complementary memory optim
 **Figure 11:** Comparison of sharding strategies: (a) FSDP2 shards each parameter uniformly; (b) Megatron-FSDP flattens per-module and shards non-uniformly, aligning with communication buffers.
 
 ### Figure 13 (p.30) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p30.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig13.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p30.png]]*
 > [!quote] caption
 > Expert parallelism across 4 GPUs with 4 experts.
 
@@ -296,7 +309,8 @@ Standard NCCL all-to-all underutilizes bandwidth for fine-grained MoE workloads,
 **Figure 13: Expert parallelism across 4 GPUs with 4 experts.**
 
 ### Figure 14 (p.31) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig14.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]]*
 > [!quote] caption
 > The dispatch kernel design of HybridEP.
 
@@ -313,7 +327,8 @@ By using an RDMA warp group to perform a same-index cross-node exchange *before*
 Figure 14: The dispatch kernel design of HybridEP.
 
 ### Figure 15 (p.31) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig15.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p31.png]]*
 > [!quote] caption
 > The combine kernel design of HybridEP.
 
@@ -330,7 +345,8 @@ By using an RDMA warp group to perform a same-index cross-node exchange *before*
 Figure 14: The dispatch kernel design of HybridEP.
 
 ### Figure 16 (p.32) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p32.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig16.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p32.png]]*
 > [!quote] caption
 > Merged FWD-FWD Timeline with all-to-all Overlapping.
 
@@ -353,7 +369,8 @@ Merging two forward passes doubles peak activation memory (2× overhead) and off
 **Figure 16:** Merged FWD-FWD Timeline with all-to-all Overlapping.
 
 ### Figure 17 (p.33) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p33.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig17.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p33.png]]*
 > [!quote] caption
 > Merged FWD-BWD Timeline with all-to-all Overlapping.
 
@@ -373,7 +390,8 @@ Merged FWD-BWD overlaps all-to-all communication with compute using two CUDA str
 > Figure 17: Merged FWD-BWD Timeline with all-to-all Overlapping.
 
 ### Figure 18 (p.34) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p34.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig18.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p34.png]]*
 > [!quote] caption
 > EP all-to-all communication overlap strategies: baseline vs. 1F1B with W/D split.
 
@@ -387,7 +405,8 @@ The figure (whose image area appears blank in this rendering) compares two Exper
 > Figure 18: EP all-to-all communication overlap strategies: baseline vs. 1F1B with W/D split.
 
 ### Figure 19 (p.35) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p35.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig19.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p35.png]]*
 > [!quote] caption
 > Interleaved PP Timeline with all-to-all Overlapping.
 
@@ -404,7 +423,8 @@ What I can transcribe verbatim is the caption:
 If you can re-share the image with the figure rendered, or provide the figure on a separate page, I'd be glad to give a precise description of its architecture/components/data flow and the key technical takeaway.
 
 ### Figure 20 (p.37) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p37.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig20.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p37.png]]*
 > [!quote] caption
 > The pipeline for permute fusion in the training process. • Preprocessing: Permutation is fundamentally a data transfer process that requires tokens to be stored consecutively in the buffer corresponding to each expert. The purpose of the preprocessing step is to generate an offset map (Row ID map in figure 20), which indicates the offset of each token in the input and output buffers. This ensures 
 
@@ -423,7 +443,8 @@ The figure is not visually rendered in the provided page (only its caption appea
 *"Figure 20: The pipeline for permute fusion in the training process."*
 
 ### Figure 21 (p.38) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p38.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig21.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p38.png]]*
 > [!quote] caption
 > The workflow of the router fusion. • Computation of MoE auxiliary loss: Building on step 2, the auxiliary loss computation is fused into a single kernel.
 
@@ -437,7 +458,8 @@ The figure area on the page appears blank/unrendered in the visible scan, with o
 Figure 21: The workflow of the router fusion.
 
 ### Figure 22 (p.39) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig22.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]]*
 > [!quote] caption
 > Traditional execution (top) versus CUDA Graph execution (bottom).
 
@@ -464,7 +486,8 @@ CUDA Graphs capture a workload into a single replayable graph, eliminating per-o
 > Figure 23: Full versus layer-wise CUDA Graphs in one training iteration (three layers, two microbatches).
 
 ### Figure 23 (p.39) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig23.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p39.png]]*
 > [!quote] caption
 > Full versus layer-wise CUDA Graphs in one training iteration (three layers, two microbatches).
 
@@ -491,7 +514,8 @@ CUDA Graphs capture a workload into a single replayable graph, eliminating per-o
 > Figure 23: Full versus layer-wise CUDA Graphs in one training iteration (three layers, two microbatches).
 
 ### Figure 24 (p.40) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p40.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig24.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p40.png]]*
 > [!quote] caption
 > Partial CUDA Graphs capture static components (attention, shared experts, router, preprocessing) while leaving dynamic expert computation outside the graph.
 
@@ -508,7 +532,8 @@ Partial CUDA Graphs sidestep the static-shape constraint of full CUDA Graphs in 
 Figure 24: Partial CUDA Graphs capture static components (attention, shared experts, router, preprocessing) while leaving dynamic expert computation outside the graph.
 
 ### Figure 25 (p.41) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p41.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig25.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p41.png]]*
 > [!quote] caption
 > Transformer layer forward pass: without (upper) and with (lower) partial CUDA Graphs. CPU overhead is largely eliminated for static components.
 
@@ -529,7 +554,8 @@ By partitioning each MoE layer into static "scopes" (attn + router + EP preproce
 *Figure 25: Transformer layer forward pass: without (upper) and with (lower) partial CUDA Graphs. CPU overhead is largely eliminated for static components.*
 
 ### Figure 26 (p.42) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p42.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig26.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p42.png]]*
 > [!quote] caption
 > Why Pipeline Parallelism prevents CUDA Graphs from being shared across microbatches. With PP (top): Execution is interleaved—multiple forward passes run before any backward pass. If microbatches share a graph, F_mb1 overwrites saved context of F_mb0 before B_mb0 uses it, causing memory corruption. Each microbatch needs its own graph (𝐿× 𝑀× 2 graphs total). Without PP (bottom): Execution is sequent
 
@@ -551,7 +577,8 @@ By partitioning each MoE layer into static "scopes" (attn + router + EP preproce
 > **Figure 26:** Why Pipeline Parallelism prevents CUDA Graphs from being shared across microbatches. **With PP** (top): Execution is interleaved—multiple forward passes run before any backward pass. If microbatches share a graph, F_mb1 overwrites saved context of F_mb0 before B_mb0 uses it, causing memory corruption. Each microbatch needs its own graph (L·M·2 graphs total). **Without PP** (bottom): Execution is sequential—each microbatch completes (forward+backward) before the next starts. Context is consumed before being overwritten, so microbatches can safely share graphs (only L·2 graphs total).
 
 ### Figure 27 (p.45) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p45.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig27.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p45.png]]*
 > [!quote] caption
 > ECHO workflow for forward and backward passes. The planner generates routing and hot expert maps. Expert Dispatch clones hot expert weights to spare slots; Expert Gradient Dispatch reduces gradients back to home experts.
 
@@ -576,7 +603,8 @@ ECHO turns worst-case expert load into near-typical load by cloning only the hot
 > **Figure 27:** ECHO workflow for forward and backward passes. The planner generates routing and hot expert maps. Expert Dispatch clones hot expert weights to spare slots; Expert Gradient Dispatch reduces gradients back to home experts.
 
 ### Figure 28 (p.46) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig28.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]]*
 > [!quote] caption
 > Memory layout comparison across three execution modes. Left: Eager mode allocates memory dynamically based on actual usage. Middle: Baseline static shape requires worst-case sized buffers for each layer independently, causing severe fragmentation when actual usage is lower. Right: Paged Stashing uses a single worst-case tmp buffer shared across layers for computation, while a paged stashing buffer
 
@@ -597,7 +625,8 @@ ECHO turns worst-case expert load into near-typical load by cloning only the hot
 **Figure 28:** Memory layout comparison across three execution modes. **Left:** Eager mode allocates memory dynamically based on actual usage. **Middle:** Baseline static shape requires worst-case sized buffers for each layer independently, causing severe fragmentation when actual usage is lower. **Right**: Paged Stashing uses a single worst-case tmp buffer shared across layers for computation, while a paged stashing buffer stores only the actual tokens, significantly reducing total memory footprint.
 
 ### Figure 29 (p.46) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig29.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p46.png]]*
 > [!quote] caption
 > Paged Stashing stream overlap. Forward pass: After Layer N computes, its activations are stashed (copied from tmp buffer to paged stashing buffer) on a dedicated Pack stream while Layer N+1 computes on the main Compute stream—the stash is completely overlapped. Backward pass: Activations for Layer N are pre-fetched (reloaded from stashing buffer to tmp buffer) on the Unpack stream before Layer N b
 
@@ -618,7 +647,8 @@ ECHO turns worst-case expert load into near-typical load by cloning only the hot
 **Figure 28:** Memory layout comparison across three execution modes. **Left:** Eager mode allocates memory dynamically based on actual usage. **Middle:** Baseline static shape requires worst-case sized buffers for each layer independently, causing severe fragmentation when actual usage is lower. **Right**: Paged Stashing uses a single worst-case tmp buffer shared across layers for computation, while a paged stashing buffer stores only the actual tokens, significantly reducing total memory footprint.
 
 ### Figure 30 (p.50) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p50.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig30.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p50.png]]*
 > [!quote] caption
 > FP8 training recipes: Per-Tensor Scaling, Blockwise FP8, and MXFP8. A reduced-precision training recipe consists of: • Data format. There are two types of FP8 format: E4M3 and E5M2 [71, 74]. Usually there are two combinations used in training: ∘E4M3: Inputs, weights, and gradients are all quantized in the E4M3 format. ∘Hybrid: Inputs and weights are quantized in E4M3, while gradients are quantized
 
@@ -662,7 +692,8 @@ The figure presents a 2×2 grid comparing FP8 linear-layer computation recipes a
 > **Figure 31:** The computation of a linear layer with various FP8 recipes. Note the differences in quantization granularity and tensor layout requirements across platforms.
 
 ### Figure 32 (p.53) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p53.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig32.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p53.png]]*
 > [!quote] caption
 > FP8 primary weight quantization scheme for blockwise scaling.
 
@@ -678,7 +709,8 @@ Blockwise scaling enables finer-grained quantization granularity than tensor-lev
 "Figure 32: FP8 primary weight quantization scheme for blockwise scaling."
 
 ### Figure 33 (p.54) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p54.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig33.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p54.png]]*
 > [!quote] caption
 > FP8 primary weight quantization scheme for delayed scaling and per-tensor current scaling.
 
@@ -698,7 +730,8 @@ The figure (which appears as a large blank area in the rendered page, with only 
 **Figure 33: FP8 primary weight quantization scheme for delayed scaling and per-tensor current scaling.**
 
 ### Figure 34 (p.57) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p57.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig34.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p57.png]]*
 > [!quote] caption
 > SDPA exhibits 𝑂(𝑠2) complexity, while MoE and the remaining attention operations exhibit 𝑂(𝑠) complexity. Therefore, SDPA dominates the computation at longer sequence lengths.
 
@@ -719,7 +752,8 @@ SDPA scales quadratically (Θ(n²)) in sequence length while MoE and other atten
 > Figure 34: SDPA exhibits Θ(n²) complexity, while MoE and the remaining attention operations exhibit Θ(n) complexity. Therefore, SDPA dominates the computation at longer sequence lengths.
 
 ### Figure 35 (p.59) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p59.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig35.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p59.png]]*
 > [!quote] caption
 > Communication and computation patterns of TP and two types of CP.
 
@@ -741,7 +775,8 @@ SDPA scales quadratically (Θ(n²)) in sequence length while MoE and other atten
 > *Figure 35: Communication and computation patterns of TP and two types of CP.*
 
 ### Figure 36 (p.61) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig36.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]*
 > [!quote] caption
 > Unpacked vs. Packed sequences.
 
@@ -760,7 +795,8 @@ The figure illustrates three sub-panels comparing partitioning strategies for th
 > Figure 38: Dynamic Context Parallelism for Packed Sequences.
 
 ### Figure 37 (p.61) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig37.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]*
 > [!quote] caption
 > Compute imbalance in causal attention over packed sequences. are partitioned and which CP communication group is used by attention operators, without requiring any parameter redistribution or optimizer-state migration. Therefore, Dynamic-CP provides a practical form of dynamic parallelism for variable-length training with minimal framework overhead. Related work, including
 
@@ -779,7 +815,8 @@ The figure illustrates three sub-panels comparing partitioning strategies for th
 > Figure 38: Dynamic Context Parallelism for Packed Sequences.
 
 ### Figure 38 (p.61) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig38.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p61.png]]*
 > [!quote] caption
 > Dynamic Context Parallelism for Packed Sequences.
 
@@ -798,7 +835,8 @@ The figure illustrates three sub-panels comparing partitioning strategies for th
 > Figure 38: Dynamic Context Parallelism for Packed Sequences.
 
 ### Figure 39 (p.64) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p64.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig39.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p64.png]]*
 > [!quote] caption
 > Load balancing strategies in Megatron-Core MoE.
 
@@ -820,7 +858,8 @@ Droppable mode provides **predictable memory bounds** during early training when
 "Figure 39: Load balancing strategies in Megatron-Core MoE."
 
 ### Figure 40 (p.65) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p65.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig40.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p65.png]]*
 > [!quote] caption
 > Shared expert architecture in Megatron-Core MoE. The shared expert processes all tokens while routed experts process only their assigned tokens. When overlap is enabled, shared expert computation runs in parallel with the token dispatch/combine communication, hiding its latency. FLOP and per parameter. The architecture has been adopted by NVIDIA’s Nemotron-3 Super and Ultra models.
 
@@ -844,7 +883,8 @@ The two outputs are summed to produce the MoE layer's final activation.
 > **Figure 40:** Shared expert architecture in Megatron-Core MoE. The shared expert processes *all* tokens while routed experts process only their assigned tokens. When overlap is enabled, shared expert computation runs in parallel with the token dispatch/combine communication, hiding its latency.
 
 ### Figure 41 (p.66) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p66.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig41.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p66.png]]*
 > [!quote] caption
 > Flexible Pipeline Parallel Placement. 66
 
@@ -869,7 +909,8 @@ The two outputs are summed to produce the MoE layer's final activation.
 **Figure 41: Flexible Pipeline Parallel Placement.**
 
 ### Figure 42 (p.67) ⭐深度解读
-![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p67.png]]
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig42.png]]
+*整页渲染: ![[assets/scalable-training-of-mixture-of-experts-models-with-megatron-core-p67.png]]*
 > [!quote] caption
 > An example of granular upcycling a dense layer into E2G2T2 fine-grained MoE. E2G2T2 denotes 4 experts, top 2, with half intermediate size. (1) We shard MLP weights in the intermediate dimension (4ℎ→2ℎ) then duplicate the shards. (2) We initialize half the router weights then duplicate them. This ensures Top2 always selects one of each MLP shard so MoE output is the same as the dense model at the s
 
@@ -890,6 +931,311 @@ The shard-then-duplicate scheme guarantees that the upcycled MoE's output is *bi
 ## Caption (verbatim)
 
 **Figure 42:** An example of granular upcycling a dense layer into E2G2T2 fine-grained MoE. E2G2T2 denotes 4 experts, top 2, with half intermediate size. (1) We shard MLP weights in the intermediate dimension (H/2) then duplicate the shards. (2) We initialize half the router weights then duplicate them. This ensures Top2 always selects one of each MLP shard so MoE output is the same as the dense model at the start of training.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.11) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab01.png]]
+> [!quote] caption
+> MoE component to process group mapping.
+
+> [!tip] 表格解读（多模态）
+> **Description**
+
+The figure (Table 1) defines how each Mixture-of-Experts (MoE) component — experts, routing/gating, and token-dispatch logic — is assigned to a distinct process group under a hybrid parallelism scheme. Architecturally, attention blocks live on one configuration (tensor-parallel, TP=4 in the example) while the MoE block is carved into its own process group using Expert Tensor Parallelism (ETP=1) plus a higher Expert Parallelism (EP) degree. Data flows: tokens → attention (TP-sharded) → router scores experts → tokens dispatched across EP shards → intra-expert computation (ETP) → outputs merged back into the global stream.
+
+**Key takeaway:** *Parallel Folding* decouples the parallelism axes of attention and MoE so each layer family is independently tuned for its compute/communication profile.
+
+**Caption (verbatim):**
+"Table 1: MoE component to process group mapping."
+
+### Table 2 (p.15) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab02.png]]
+> [!quote] caption
+> Contrasting parallelism requirements of attention and MoE layers within a single Transformer block.
+
+> [!tip] 表格解读（多模态）
+> **Figure description:**
+
+The diagram illustrates Expert Parallelism (EP) data flow. A token sequence [T0]…[Tn] enters a **Router**, which directs tokens via **All-to-All Dispatch** to four GPUs. With EP=4, 8 Experts Total, 2 Experts per GPU: GPU 0 holds {E0, E1}, GPU 1 {E2, E3}, GPU 2 {E4, E5}, GPU 3 {E6, E7}. Each GPU processes its assigned tokens through its local experts, then results are merged via **All-to-All Combine** back into the original token order [T0]…[Tn].
+
+**Key takeaway:** All-to-all communication volume remains *constant* as expert count grows—only GPU count changes—while grouping tokens from many sources per expert boosts GEMM compute intensity.
+
+**Caption (verbatim):**
+
+> Figure 4: Expert Parallelism (EP) distributes experts across GPUs. The all-to-all communication dispatches tokens to their assigned experts and combines results.
+
+### Table 5 (p.25) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab05.png]]
+> [!quote] caption
+> Memory and throughput impact of fine-grained activation offloading.
+
+> [!tip] 表格解读（多模态）
+> **Description (≈120 words):**
+
+The table compares two LLMs—**DeepSeek-V3 full** (TP1PP8EP32VPP4, MXFP8) and **Qwen3-235B** (TP2→TP1 + EP16→EP64)—across four columns: *Baseline* (memory & throughput), *+Offload* (memory & throughput), *Mem Δ*, and *Throughput Δ*.
+
+- **DeepSeek-V3 full**: 169 GB → 151 GB (**−10.7%** memory), 945 → 930 TF/s (**−1.6%** throughput).
+- **Qwen3-235B**: 172 → 175 GB (**+1.7%** memory), 800 → 920 TF/s (**+15.0%** throughput).
+
+**Key takeaway:** Fine-grained activation offloading's benefit is workload-dependent—DeepSeek-V3 trades negligible throughput for double-digit memory savings, while Qwen3-235B gains 15% throughput at the cost of a marginal 1.7% memory increase, indicating offloading can be tuned toward either memory recovery or compute acceleration depending on the parallelization configuration.
+
+**Caption (verbatim):**
+"Table 5: Memory and throughput impact of fine-grained activation offloading."
+
+### Table 6 (p.29) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab06.png]]
+> [!quote] caption
+> summarizes the memory optimization techniques described in this section and their primary targets.
+
+> [!tip] 表格解读（多模态）
+> **Note:** No actual figure image was included in the prompt — only text from a section on memory optimization in distributed training. My description below is reconstructed from the textual context describing the overlap mechanism.
+
+**Architecture / Components / Data Flow:**
+The figure likely depicts a pipeline of transformer layers arranged across model-parallel ranks, where each layer performs a forward pass, then backward pass (with activation recomputation). AllReduce of parameter gradients and ReduceScatter of sharded gradients are scheduled to overlap with backward computation of subsequent layers, while AllGather of parameters overlaps with forward computation of the next layer.
+
+**Key Technical Takeaway (≤120 words):**
+Increasing the micro-batch size enlarges the computation window available to hide collective communication (AllGather, ReduceScatter, AllReduce) behind forward/backward kernels, improving pipeline efficiency on tensor-parallel ranks. However, this comes at the cost of higher activation memory, since more micro-batches' activations (or their recomputed versions) must reside on the device simultaneously. The trade-off is exposed to users via the `overlap_param_gather` and `overlap_grad_reduce` flags, letting practitioners tune the compute–communication overlap based on their memory budget and per-GPU compute throughput. Roughly: bigger micro-batches ⇒ more overlap opportunity ⇒ better scaling, but bounded by HBM capacity.
+
+**Caption transcribed verbatim (the only caption-like text provided):**
+
+"4.1.8. Summary
+
+Table 6 summarizes the memory optimization techniques described in this section and their primary targets."
+
+(No figure caption was present in the supplied excerpt — only the Section 4.1.8 heading and its lead sentence referring to Table 6.)
+
+### Table 7 (p.32) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab07.png]]
+> [!quote] caption
+> EP Scaling Performance for HybridEP and all-to-all (in µs).
+
+> [!tip] 表格解读（多模态）
+> **Description of the Main Figure (Table 7):**
+
+This table presents a **performance benchmark comparison** of two expert-parallel communication strategies—**HybridEP** vs. **all-to-all**—measured on two GPU platforms (**NVIDIA GB200** and **H100**) across four **EP sizes** (8, 16, 32, 64). The data flow shows latency (in microseconds) for two MoE collective operations: **dispatch** and **combine**, organized as EP size × communication method × hardware. Both operations grow with EP size, but HybridEP grows gracefully while all-to-all inflates sharply, particularly on H100.
+
+**Key Technical Takeaway:** HybridEP demonstrates **dramatically better scalability than pure all-to-all**—on H100 at EP=64, HybridEP achieves ~4398–4626 µs versus all-to-all's ~8727–9164 µs (≈2× speedup), with the gap widening as EP size grows, confirming HybridEP's superior communication efficiency at scale.
+
+**Verbatim Caption:**
+"Table 7: EP Scaling Performance for HybridEP and all-to-all (in μs)."
+
+### Table 9 (p.58) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab09.png]]
+> [!quote] caption
+> SDPA performance in cuDNN for DeepSeek-V3.
+
+> [!tip] 表格解读（多模态）
+> **Description**
+
+The figure is a benchmark table (Table 9) comparing cuDNN-implemented Scaled Dot-Product Attention (SDPA) for DeepSeek-V3 across two NVIDIA GPU platforms (Hopper, Blackwell) at two sequence lengths (4096, 16384), reporting forward- and backward-pass throughput in TFLOPS. **Key technical takeaway:** Blackwell delivers roughly 2.4–2.7× the forward TFLOPS and ~2.5× the backward TFLOPS of Hopper at every sequence length tested; longer sequences (16384) push forward throughput higher on both platforms—most strikingly on Blackwell (1324 → 1698 TFLOPS, ≈28% jump)—indicating that Blackwell's larger scale-up factors compound with the cuDNN SDPA kernel's sequence-length scaling. *(≈80 words)*
+
+**Caption (verbatim):**
+
+> Table 9: SDPA performance in cuDNN for DeepSeek-V3.
+
+### Table 10 (p.66) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab10.png]]
+> [!quote] caption
+> Layer distribution for DeepSeek-V3 with flexible asymmetric VPP (PP = 16 , VPP = 2 ).
+
+> [!tip] 表格解读（多模态）
+> ## Figure Description
+
+The figure presents **Table 10: Layer distribution for DeepSeek-V3 with flexible asymmetric VPP (PP = 16, VPP = 2)** and the corresponding pipeline layout diagram.
+
+**Architecture / Components:**
+- 16 Pipeline Parallel (PP) ranks, each split into two VPP ranks (VPP rank 0 and VPP rank 1).
+- **PP rank 0 (VPP rank 0)** hosts the embedding layer plus 3 decoder layers; its VPP rank 1 holds 2 decoder layers.
+- **PP ranks 1–13** are symmetric: 2 decoders in each VPP rank (MoE Decoder blocks).
+- **PP rank 14** holds 2 decoders on VPP rank 0 and the **MTP (Multi-Token Prediction)** module on VPP rank 1.
+- **PP rank 15** holds 2 decoders on VPP rank 0 and the **loss** computation on VPP rank 1.
+
+**Data flow:** Tokens flow sequentially across PP ranks (0 → 15), with each rank's two VPP sub-ranks processing micro-batches staggered to hide latency (pipeline-bubble suppression).
+
+**Key Technical Takeaway (≈50 words):**
+Asymmetric VPP breaks the uniform-layer assumption of traditional pipeline parallelism by permitting unequal layer assignments across VPP sub-ranks—placing the embedding, MTP, and loss stages on lighter sub-ranks while distributing uniform 2-layer decoder blocks on the rest, achieving fine-grained load balancing and latency hiding for heterogeneous architectures. (49 words)
+
+## Caption (Verbatim)
+
+> Table 10: Layer distribution for DeepSeek-V3 with flexible asymmetric VPP (PP = 16, VPP = 2).
+
+### Table 11 (p.69) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab11.png]]
+> [!quote] caption
+> Unified throughput benchmarks (per-GPU figures) for two mixture-of-experts models on NVIDIA GB300, GB200, and H100. All configurations use force-balanced routing. The Dtype column specifies the FP8
+
+> [!tip] 表格解读（多模态）
+> The table benchmarks two mixture-of-experts models (DeepSeek-V3 and Qwen3‑235B) across three NVIDIA platforms (Blackwell GB300/GB200 and Hopper H100) under force‑balanced routing. Each row maps a Model+System+GPU‑count+sequence‑length+dtype configuration (MXFP8, BF16, or FP8‑BLK) to per‑GPU TensorFLOP throughput (Per‑GPU TF) and per‑GPU token throughput (Tokens/s/GPU). Key takeaway: Blackwell's MXFP8 microscaling on GB300 delivers roughly 3.3× higher per‑GPU TF (1,233 vs 368) and tokens/s (4,730 vs 1,412) than H100's blockwise FP8 on DeepSeek‑V3, and MXFP8 also yields ~22% speedup over BF16 on the same GB200 platform.
+
+**Verbatim caption:**
+"Table 11: Unified throughput benchmarks (per-GPU figures) for two mixture-of-experts models on NVIDIA GB300, GB200, and H100. All configurations use force-balanced routing. The Dtype column specifies the FP8 recipe: FP8-BLK denotes blockwise FP8 on Hopper, and MXFP8 denotes microscaling FP8 on Blackwell."
+
+### Table 12 (p.70) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab12.png]]
+> [!quote] caption
+> Impact of parallelism strategies on memory and communication. 𝑑 = parallelism degree. † Requires
+
+> [!tip] 表格解读（多模态）
+> **Description:** Table 12 compares five parallelism strategies (TP, EP, PP, CP, DP) across four dimensions: peak activation memory, weight memory, optimizer states, and per-layer communication cost. TP achieves the strongest activation, weight, and optimizer memory scaling (all 1/d) but pays the highest communication cost. EP, PP, and CP offer medium communication with varied memory profiles (e.g., PP activation can exceed 1 with VPP; CP/DP keep weights full but shard optimizer states via ZeRO-style sharding). **Key takeaway:** No single strategy dominates — TP minimizes per-device memory but maximizes comms, while DP minimizes comms but requires full weight replication, motivating hybrid schemes like 3D/4D parallelism to balance memory and communication overhead.
+
+**Caption (verbatim):**
+"Table 12: Impact of parallelism strategies on memory and communication. *d* = parallelism degree. †Requires distributed optimizer (--use-distributed-optimizer)."
+
+### Table 13 (p.72) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab13.png]]
+> [!quote] caption
+> Memory bottleneck solutions.
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+The main element is Table 13, a structured lookup table enumerating memory-bottleneck mitigations for large-model training. It contains four columns — **Optimization**, **Overhead**, **Config**, **Reference** — across five rows of techniques (FP8 Training, Selective Recomputation, Precision-Aware Optimizer, Activation Offloading, Optimizer Offloading). The "Overhead" column is the decision axis: three entries flagged *Low* (computation-recompute / precision tricks, all in-GPU) precede two *Medium* entries (host/offload-based). The "Config" column maps each optimization to a corresponding CLI flag (e.g., `--fp8-format`, `--recompute-granularity`, `--offload-optimizer-states`), and the "Reference" column back-links each row to a numbered subsection (§4.1.3–§4.1.6). Below the table, prose introduces *Communication Bottleneck (Communication Wall)* with its diagnostic symptom and points forward to Table 14 — forming a "diagnose → consult table → apply config" workflow.
+
+**Key Takeaway (≤120 words):**
+The table's central design principle is **cost-tiered memory relief**: practitioners should first attempt *Low-overhead* in-device optimizations (FP8 formats, selective recomputation, precision-aware optimizer states) before falling back to *Medium-overhead* offloading of activations or optimizer states to host memory. Every technique is gated by a single CLI flag, enabling incremental, composable tuning tied to §§4.1.3–4.1.6 of the paper — a clean "try cheap, then expensive" escalation strategy for memory-constrained training.
+
+**Caption (verbatim transcription):**
+"Table 13: Memory bottleneck solutions."
+
+### Table 14 (p.72) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab14.png]]
+> [!quote] caption
+> Communication bottleneck solutions.
+
+> [!tip] 表格解读（多模态）
+> ## Main Figure Description
+
+The table ("Table 14") presents communication bottleneck solutions for distributed training, organized into three columns:
+
+**Columns:** Communication Type | Config (command-line flag) | Reference
+
+**Rows (five entries):**
+1. **DP gradient reduce and param gather** → `--overlap-grad-reduce --overlap-param-gather` → —
+2. **TP communication** → `--tp-comm-overlap` → —
+3. **EP dispatcher** → `--moe-token-dispatcher-type` → §4.2.2
+4. **EP all-to-all hiding** → `--overlap-moe-expert-parallel-comm` → §4.2.3
+5. **PP send/recv** → `--pipeline-model-parallel-layout` → §7.5
+
+**Architecture/Components:** The figure maps five parallelism strategies (DP = Data Parallel, TP = Tensor Parallel, EP = Expert Parallel for MoE, PP = Pipeline Parallel) to their corresponding configuration flags that mitigate communication overhead.
+
+**Key Technical Takeaway:** Overlap-based optimizations dominate the solution space—four of five flags (`overlap-*`, `tp-comm-overlap`, `pipeline-model-parallel-layout`) hide communication latency by running collectives concurrently with computation, rather than reducing raw communication volume.
+
+## Caption (verbatim)
+
+**Table 14:** Communication bottleneck solutions.
+
+### Table 15 (p.73) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab15.png]]
+> [!quote] caption
+> CPU overhead bottleneck solutions.
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+
+Table 15 presents a three-column reference table titled "GPU overhead bottleneck solutions," with columns for **Optimization**, **Config**, and **Reference**. It enumerates three mitigations targeting GPU-launch overhead: (1) disabling Python's garbage collector via `--manual-gc --manual-gc-interval 10` (no citation), (2) reducing kernel launches by decreasing tensor parallelism or increasing micro-batch size (no citation), and (3) enabling CUDA Graphs via `--cuda-graph-impl transformer_engine` (cited §4.3.6). Below the table, the surrounding text introduces the **Computation Bottleneck (Compute Efficiency Wall)**, where GPU kernels underutilize hardware—typically owing to small GEMMs in fine-grained MoE architectures—with the diagnostic symptom of low GPU SM utilization absent communication or CPU stalls, and remedies via batching/fusion/lower-precision kernels (Table 16).
+
+**Key takeaway:** GPU underutilization often stems from launch Python-side overhead, not hardware saturation; toggling manual GC, tuning TP/MBS, and activating CUDA Graphs recover SM occupancy.
+
+**Caption (verbatim):**
+
+Table 15: GPU overhead bottleneck solutions.
+
+### Table 16 (p.73) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab16.png]]
+> [!quote] caption
+> Computation bottleneck solutions.
+
+> [!tip] 表格解读（多模态）
+> The image does not contain a diagram or architecture figure—instead, it presents **Table 16** ("Computation bottleneck solutions") as the main visual element, followed by an Example paragraph and a Summary subsection (9.1.4).
+
+**Table 16 — Description:** A three-column reference table mapping each computation-bottleneck optimization to its CLI flags and document section: (1) Grouped GEMM → `--moe-grouped-gemm` (§4.3.2); (2) Kernel fusions → `--moe-router-fusion --moe-permute-fusion` (§4.3.2); (3) FP8 precision → `--fp8-format --fp8-recipe` (§5). The data flow implied: profile compute-bound kernels → select an MoE-grouped-GEMM path, fuse the router/permute epilogues into one kernel, or drop to FP8 GEMMs.
+
+**Key technical takeaway:** "the same model on different hardware can require entirely different optimization strategies" — on NVL8 (cross-node EP), all-to-all communication dominates (~30–50% of step time), whereas on NVL72 (intra-NVLink EP), enabling FP8 unmasks CPU/host-side launch latency as the new ceiling.
+
+**Caption (verbatim):**
+"Table 16: Computation bottleneck solutions."
+
+### Table 17 (p.74) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab17.png]]
+> [!quote] caption
+> DeepSeek-V3 final optimized configurations on GB200 and H100. † Parallel Folding is used; TP
+
+> [!tip] 表格解读（多模态）
+> **Description (architecture/components/data flow + key takeaway):**
+
+This table is a side-by-side comparison of two final optimized training configurations for the DeepSeek-V3 MoE model, deployed on two GPU clusters. The "architecture/components" are seven configuration axes: hardware scale (256×GB200 vs 1024×H100), 3D parallelism (TP/PP/EP with VPP), batch geometry (GBS/MBS/SeqLen), numerics (MXFP8 vs FP8-Blockwise), MoE token dispatcher (HybridEP vs DeepEP), activation recompute targets, and kernel-launch/runtime features (CUDA Graphs, EP all-to-all overlap). The "data flow" implication: GB200 uses TP=1 across dense modules with larger EP=64 for experts, while H100 uses TP=2/PP=8/EP=64, funneling identical sequence batches (8192/1/4096) through different precision/dispatcher pipelines.
+
+**Key technical takeaway:** GB200 delivers **1048 TFLOPS/GPU — ~2.85× the 368 TFLOPS/GPU of H100** — enabled by higher per-GPU FLOPS, MXFP8 precision, narrower recompute scope, and CUDA Graphs. H100 compensates by enabling EP all-to-all overlap, since VPP=4 and SeqLen=4096 are shared across both platforms.
+
+**Verbatim caption:**
+
+Table 17: DeepSeek-V3 final optimized configurations on GB200 and H100. †Parallel Folding is used; TP applies to the non-MoE modules only, expert TP is always 1.
+
+### Table 18 (p.74) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab18.png]]
+> [!quote] caption
+> DeepSeek-V3 optimization summary by platform.
+
+> [!tip] 表格解读（多模态）
+> **Description of the main figure:**
+
+The image displays a table titled "Table 18: DeepSeek-V3 optimization summary by platform," which organizes optimization dimensions for the DeepSeek-V3 model across two hardware platforms. The table is structured with three columns: a "Category" column on the left for grouping optimization types (such as attention, MoE routing, communication, or kernel-level optimizations), and two data columns labeled "GB200" and "H100" to compare the specific optimizations applied on each platform. The header row is visible, but the body of the table is not shown in the cropped image.
+
+**Key technical takeaway:** DeepSeek-V3 employs platform-specific optimizations, with distinct kernel/operator choices tailored to NVIDIA's GB200 versus H100 architectures, indicating that achieving peak efficiency requires GPU-generation-aware tuning rather than a single unified implementation.
+
+**Verbatim caption:**
+Table 18: DeepSeek-V3 optimization summary by platform.
+
+### Table 19 (p.86) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab19.png]]
+> [!quote] caption
+> summarizes the notation used throughout this report.
+
+> [!tip] 表格解读（多模态）
+> No figure is present in the provided image. The content shown is only a section heading and a single descriptive sentence:
+
+**Heading:** "A. Notation Reference"
+**Body text:** "Table 19 summarizes the notation used throughout this report."
+
+This appears to be introductory text from an appendix section that references a separate table (Table 19), but neither the table itself nor any architectural diagram, component diagram, or data-flow illustration is included in the image. There is no caption to transcribe verbatim either.
+
+If you intended to share a specific figure (e.g., a model architecture diagram or pipeline schematic), it may not have uploaded correctly. Please try uploading the figure again, and I'll be happy to describe its architecture, components, data flow, and key technical takeaway as requested.
+
+### Table 20 (p.87) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab20.png]]
+> [!quote] caption
+> Parallelism and training configuration details for benchmark entries reported in Table 11 .
+
+> [!tip] 表格解读（多模态）
+> **Description (≈93 words):**
+
+Table 20 catalogs nine distributed-training configurations for DeepSeek-V3 and Qwen3-235B across NVIDIA GB300, GB200, and H100 clusters. Each row pairs a *Configuration* column (hardware × GPU count × sequence length × numeric format × achieved TF throughput) with a *Hyper-parameters* column listing parallelism axes—TP (tensor), PP/CPP (pipeline, virtual pipeline), CP (context), EP (expert), VPP (virtual-pipeline stage), and MBS/GBS (micro/global batch sizes)—with values given as an ASCII-formatted sequence. **Key takeaway:** MXFP8/FP8‑BLK numerics lift throughput ~35–44% over BF16 at identical scale (DeepSeek‑V3 on GB200: 1048–1233 TF vs 857 TF), and extending to 128k tokens simply adds CP=4 while preserving ~1,150 TF on GB300.
+
+**Caption (verbatim):**
+
+Table 20: Parallelism and training configuration details for benchmark entries reported in Table 11.
+
+## 关键公式（原文截图，无 LaTeX 源 — 引用前请核对图片）
+
+### 公式截图 (p.9)
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq01.png]]
+> 原文文本线索：`(𝑝𝑖= 𝜎(𝑙𝑖)/ ∑︀`
+
+### 公式截图 (p.16)
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq02.png]]
+> 原文文本线索：`World Size = TP × CP × PP × DP,`
+
+### 公式截图 (p.16)
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq03.png]]
+> 原文文本线索：`at minimum. Since EP ⊆DP, requesting EP=8 forces DP ≥8. Combined with CP=8 for long sequences, the`
+
+### 公式截图 (p.17)
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq04.png]]
+> 原文文本线索：`• Traditional: EP ≤DP = 8, so maximum EP is 8.`
+
+### 公式截图 (p.64)
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq05.png]]
+> 原文文本线索：`output(x) = 𝑊↑·`
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

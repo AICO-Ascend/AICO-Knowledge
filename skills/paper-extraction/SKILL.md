@@ -19,12 +19,14 @@ Proven on `AICO-knowledge` (61 papers). Portable: scripts derive repo root from 
 ```bash
 cd /mnt/project/g00952465/AICO-knowledge
 python3 skills/paper-extraction/parse_moonlight_bib.py     # 可选 dry-run：看 .bib 解析出几条
-python3 skills/paper-extraction/sync_from_source.py --push
+python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条命令（2026-08-23 起）
 ```
 
-**自动完成**：解析源表 → 与 `papers_effective.md` 模糊 diff（Jaccard≥0.6 同篇）→ 新标题 arxiv 解析（title-search scrape，相似度≥0.8 自动采纳）→ HEAD 查大小 → `chunk_dl` 分块下载（256KB/15 重试）→ 页数体检（失败重试 1 次）→ abs 页抓摘要 → 追加索引行+下载清单+头部计数 → `extract_phase1.py`（图/相关论文/MOC/papers.json）→ `eprint_formulas.py`（LaTeX 公式，失败冷却 3 天）→ 写 `extraction/sync_report.md` → commit+push（token 取 `AICO_GITCODE_TOKEN` 或 `~/.config/aico/gitcode_token`，推完抹除 push URL）。
+**`full_pipeline.py --push` 自动完成 8 步**：① sync_from_source（源表 diff→arxiv 解析→下载体检→索引追加）→ ② extract_phase1（文本+图表+MOC+manifest）→ ③ **extract_visuals（图/表/公式区域裁剪成单图** `assets/crops/`，报告可直接插入）→ ④ **新增裁剪自动走 MiniMax-M3 批量解读**（只补 minimax_captions.json 缺失项）→ ⑤ eprint_formulas（LaTeX 源，无网自动跳过）→ ⑥ extract_phase1 再合并 → ⑦ 深读队列（新增论文全要素深读交夜间 cron）→ ⑧ token-safe commit+push（推完抹 push URL token）。
 
-**幂等**：随时重跑安全；无新增时 ~30s 完成。
+旧的 `sync_from_source.py --push` 仍可用（只到入库+萃取，不管图表裁剪/解读）。
+
+**幂等**：随时重跑安全；无新增时 ~1-2 分钟完成（裁剪/M3/eprint 无目标即跳过）。
 
 ## 🔁 可移植性 / 换模型 / 一次搞定
 
@@ -70,8 +72,11 @@ python3 skills/paper-extraction/sync_from_source.py --push
 ├── archive/                     # raw provenance (paper_source_moonlight.bib = 用户唯一要维护的文件，BibTeX 导出)
 ├── skills/paper-extraction/     # THIS skill + scripts
 │   ├── SKILL.md                 #   本文件
-│   ├── sync_from_source.py      #   ⭐ 一键同步编排（日常入口）
-│   ├── extract_phase1.py        #   深度萃取（文本+图+相关论文+MOC+manifest，merge 解读+公式）
+│   ├── full_pipeline.py         #   ⭐ 全链路一条命令（sync→extract→crops→M3→formulas→push）
+│   ├── sync_from_source.py      #   一键同步编排（入库+萃取，full_pipeline 的 step 1）
+│   ├── extract_phase1.py        #   深度萃取（文本+图+相关论文+MOC+manifest，merge 解读+公式+裁剪图）
+│   ├── extract_visuals.py       #   图/表/公式区域裁剪成单图（assets/crops/，报告可直接插入）
+│   ├── render_kb_graph.py       #   知识图谱+覆盖统计+流水线图（docs/images/，README 嵌入）
 │   ├── eprint_formulas.py       #   arxiv e-print LaTeX 公式抽取
 │   ├── chunk_download.py        #   分块续传下载（jobs 文件/命令行驱动）
 │   ├── verify_pdfs.py           #   PDF 体检（截断/损坏/缺失/孤儿）

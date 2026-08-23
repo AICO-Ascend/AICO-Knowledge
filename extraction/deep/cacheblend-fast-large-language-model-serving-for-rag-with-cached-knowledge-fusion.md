@@ -17,6 +17,22 @@ CacheBlend 攻击的就是这一个精确挑战（§1, §4 Goal）：**当 LLM �
 
 ### 1. Selective KV recompute（选择性 KV 重算）——核心机制
 **机制**（§4.2, Figure 5 p.5）：不做传统整段 prefill，而是逐层处理。Figure 5（M3：两面板对比，(a) full recompute 中 layer-i 输入经 Q_i→K_i→Attn Matrix→×V_i 产下一层输入；(b) selective recompute 在同一 Q×K→Attn→×V 流水上，仅对两个被选 token 重算（深色 Re-computed），其余 token 直接用预存 KV（浅色 Re-used），两条流水线结构完全相同，差别仅在重算范围）说明这是对原 transformer 流水的最小侵入式改造。每一层 i：(a) 对输入加 mask，缩减到该层被选中的 token 子集；(b) 仅对选中 token 计算 Q_i、K_i、V_i；(c) 用未选中 token 的预计算 KV cache 条目"扩展"K_i、V_i，使 attention matrix 仍覆盖"选中 token × 全部 token"；(d) 跑同一个 attention module 产出下一层输入。
+
+步骤 (c) 中预计算 K 条目携带有旧位置编码，直接拼接会错位——CacheBlend 的 **positional recovery**（§4 脚注 3，Appendix A Definition 1）将每个复用 chunk 的 K 向量乘以其新绝对位置 m 对应的 RoPE 旋转矩阵，RoPE 对每对维度 [2i, 2i+1] 独立施加 2D 旋转：
+
+$$q_{m}, k_{m}= \begin{pmatrix} \cos m\theta & -\sin m\theta\\ \sin m\theta & \cos m\theta\\ \end{pmatrix} \{ \begin{pmatrix} q_{[0]}\\ q_{[1]}\\ \end{pmatrix}, \begin{pmatrix} k_{[0]}\\ k_{[1]}\\ \end{pmatrix} \}$$
+
+该乘法只执行一次、开销可忽略（§4 脚注 3: "this correction is done simply by multiplying the K vector by a rotation matrix... This step has negligible overhead"）。
+
+重旋转之所以在数学上成立，依据是 RoPE 的**相对位置不变性**（Appendix A, Proposition A.1）。先在 2D 情形：位置 m 的 key 与位置 m-n 的 query 的点积化简后只含相对偏移 n——
+
+$$\begin{aligned} {q}_{im} {k}_{j(m-n)} &= q_{[0]i}k_{[0]j}\cos (m-m+n)\theta\\ & \quad +q_{[1]i}k_{[1]j}\cos (m-m+n)\theta \\ &= (q_{[0]i}k_{[0]j}+q_{[1]i}k_{[1]j})\cos n\theta \\ \end{aligned}$$
+
+推广到 d 维（对 d/2 个维度对求和），位置 m+l 的 query 与位置 m 的 key 的 attention score 推导为（Appendix A, Eq. (1)）：
+
+$$\begin{aligned} {q}_{m+l} {k}_{m} &={(\mathbb{R}^{d}_{\Theta, m+l}q)}^{T}{(\mathbb{R}^{d}_{\Theta, m}k)}\\ &= \sum_{i=0}^{d/2-1}({q_{[2i]}k_{[2i]}\cos (m+l-m)\theta_{i}}\\ & \quad +{q_{[2i+1]}k_{[2i+1]}\cos (m+l-m)\theta_{i}}) \\ &= \sum_{i=0}^{d/2-1}({q_{[2i]}k_{[2i]}+ {q_{[2i+1]}k_{[2i+1]}})\cos l\theta_{i}} \\ \end{aligned}$$
+
+即 attention score 只依赖相对距离 l 而与绝对位置 m 无关（Proposition A.1: "The attention score only depends on the relative distance l rather than the absolute position m"）——因此把复用 chunk 的 K 重旋转到其在拼接输入中的新绝对位置后，selective recompute 的 attention 计算与 full prefill 的位置语义严格一致，这正是 cache fuse 步骤合法性的数学基础。
 **效果**（§4.2 末）：计算开销正比于选中 token 数——若每层重算 r% 的 token，总开销即为 full prefill 的 r%。§1 给出经验值："an update fraction of less than 15% can typically generate same-quality responses"。
 
 ### 2. HKVD token 选择 + 渐进式过滤（cross-attention 稀疏性利用）

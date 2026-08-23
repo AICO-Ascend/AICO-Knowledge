@@ -24,7 +24,8 @@ tags: [kv-cache, disaggregated-serving]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.2) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig01.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p02.png]]*
 > [!quote] caption
 > Mooncake Architecture. remote location will prolong the TTFT, and a large batch size will lead to a larger TBT. Thus, the utilization of both these throughput-oriented optimizations may lead to violations of latency-related SLOs.
 
@@ -47,7 +48,8 @@ tags: [kv-cache, disaggregated-serving]
 > **Figure 1: Mooncake Architecture.**
 
 ### Figure 2 (p.4) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p04.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig02.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p04.png]]*
 > [!quote] caption
 > Normalized throughput and latency of prefill and decoding stages with different sequence lengths or batch sizes for the dummy LLaMA2-70B model. the computational complexity of attention networks scales quadratically with input length while the complexity of MLP scales linearly, computation time in the prefill stage generally increases superlinearly with input length, as shown in the left part of F
 
@@ -55,7 +57,8 @@ tags: [kv-cache, disaggregated-serving]
 > 【MiniMax 解读】Mooncake 解耦式 KVCache 服务架构：prefill（compute-bound，注意力二次复杂度）与 decode（memory-bound，自回归批处理）分到独立节点池。核心是 disaggregated KVCache 层，池化 CPU/DRAM/SSD/RDMA 资源→跨节点 cache 复用、减冗余计算；调度器做 early rejection + SLO 准入(TTFT/TBT)+负载均衡。把计算阶段与 KVCache 存储解耦→弹性扩展、严 SLO 下更高吞吐。架构核心图。
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p05.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig03.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p05.png]]*
 > [!quote] caption
 > The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.
 
@@ -75,7 +78,8 @@ tags: [kv-cache, disaggregated-serving]
 **Figure 3:** The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.
 
 ### Figure 4 (p.6) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p06.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig04.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p06.png]]*
 > [!quote] caption
 > Workflow of inference instances. ( ) For prefill instances, the load and store operations of the KVCache layer are performed layer-by-layer and in parallel with the prefill computation to mitigate transmission overhead (see §5.2). (y ) For decoding instances, asynchronous loading is performed concurrently with GPU decoding to prevent GPU idle time. 4) Decoding: After all the KVCache is received i
 
@@ -85,7 +89,8 @@ tags: [kv-cache, disaggregated-serving]
 Figure 4 depicts two parallel workflow pipelines for LLM inference. The left side shows **prefill instances**, organized into two stacked stages where the upper stage handles KVCache load/store operations (e.g., 56789... entries) and the lower stage runs the prefill computation (e.g., AB+C'/C'FIB computations) concurrently — both progressing layer-by-layer. The right side shows **decoding instances**, similarly split: the upper stage (≤22'*+,-# buffer) receives asynchronously loaded data while the lower stage performs GPU decoding (e.g., ?6@/,'AB+C). A transfer arrow at the bottom (6:9!'"#$%&&'(5.$+3'. ) connects the prefill output to the decoding input, representing KVCache handoff. **Key takeaway:** Prefill uses *layer-by-layer parallelism* between compute and KVCache transfer to hide transmission latency, while decoding uses *async loading* to keep the GPU saturated — both are overlap strategies targeting different bottlenecks.
 
 ### Figure 5 (p.6) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p06.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig05.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p06.png]]*
 > [!quote] caption
 > Input and output length distributions in the request trace. 4
 
@@ -95,7 +100,8 @@ Figure 4 depicts two parallel workflow pipelines for LLM inference. The left sid
 Figure 4 depicts two parallel workflow pipelines for LLM inference. The left side shows **prefill instances**, organized into two stacked stages where the upper stage handles KVCache load/store operations (e.g., 56789... entries) and the lower stage runs the prefill computation (e.g., AB+C'/C'FIB computations) concurrently — both progressing layer-by-layer. The right side shows **decoding instances**, similarly split: the upper stage (≤22'*+,-# buffer) receives asynchronously loaded data while the lower stage performs GPU decoding (e.g., ?6@/,'AB+C). A transfer arrow at the bottom (6:9!'"#$%&&'(5.$+3'. ) connects the prefill output to the decoding input, representing KVCache handoff. **Key takeaway:** Prefill uses *layer-by-layer parallelism* between compute and KVCache transfer to hide transmission latency, while decoding uses *async loading* to keep the GPU saturated — both are overlap strategies targeting different bottlenecks.
 
 ### Figure 6 (p.7) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p07.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig06.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p07.png]]*
 > [!quote] caption
 > CDF (Cumulative Distribution
 
@@ -115,7 +121,8 @@ Figure 4 depicts two parallel workflow pipelines for LLM inference. The left sid
 *Figure 6: CDF (Cumulative Distribution Function) of the block hit count in the request trace.*
 
 ### Figure 7 (p.9) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p09.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig07.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p09.png]]*
 > [!quote] caption
 > Latency of storing KVCache of different request lengths (Layer-wise latency refers to the difference in latency between Layer-wise Prefill and Prefill without storing KVCache).
 
@@ -130,7 +137,8 @@ The figure is a grouped bar chart comparing two KVCache-storing strategies acros
 Figure 7: Latency of storing KVCache of different request lengths (Layer-wise latency refers to the difference in latency between Layer-wise Prefill and Prefill without storing KVCache).
 
 ### Figure 8 (p.11) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p11.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig08.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p11.png]]*
 > [!quote] caption
 > The prefill scheduling experiment in the Mooncake cluster.
 
@@ -152,7 +160,8 @@ Triangular markers (▲) denote the mean. The plot clearly shows that cache-awar
 > *Figure 8: The prefill scheduling experiment in the Mooncake cluster.*
 
 ### Figure 9 (p.13) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p13.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig09.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p13.png]]*
 > [!quote] caption
 > The load of prefill and decoding instances over 20 minutes, before using the prediction- based early rejection.
 
@@ -168,7 +177,8 @@ Figure 9 is a time-series line chart spanning a 20-minute window (x-axis: 0:00 �
 Figure 9: The load of prefill and decoding instances over 20 minutes, before using the prediction-based early rejection.
 
 ### Figure 10 (p.14) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p14.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig10.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p14.png]]*
 > [!quote] caption
 > Instance load when applying Early Rejection and Early Rejection Based on Prediction. conditions where resources are scarce and accurate predictions are necessary, making request-level predictions particularly difficult.
 
@@ -186,7 +196,8 @@ The figure contrasts two load-management strategies across four sequential time 
 **Caption (verbatim):** Figure 10: Instance load when applying Early Rejection and Early Rejection Based on Prediction.
 
 ### Figure 11 (p.16) ⭐深度解读
-![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]]
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig11.png]]
+*整页渲染: ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]]*
 > [!quote] caption
 > End-to-end experiments of Mooncake and vLLM on the ArXiv Summarization and L-Eval datasets instances. In real-world clusters, the demand for prefill and decoding instances generally remains stable over certain periods, with only minor temporary imbalances. Thus, the proportion of prefill and decoding instances can be preset. Future research will explore more flexible deployment and conversion meth
 
@@ -244,6 +255,56 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 ## Caption (verbatim)
 
 > Figure 13: Request TTFT and TBT distributions of Mooncake and vLLM under real workloads
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.8) ⭐深度解读
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-tab01.png]]
+> [!quote] caption
+> Cache hit rates under different cache policies and capacities.
+
+> [!tip] 表格解读（多模态）
+> **Description of the Main Figure (Table 1):**
+
+**Architecture/Components/Data Flow:** Table 1 presents a comparative evaluation matrix of cache hit rate performance across two dimensions:
+- **Rows (Cache Policies):** Three eviction strategies — LRUCache (Least Recently Used), LFUCache (Least Frequently Used), and LengthAwareCache (length-aware eviction).
+- **Columns (Block Capacity):** A descending capacity gradient from Inf (unbounded) → 100000 → 50000 → 30000 → 10000 → 1000, simulating cache pressure scenarios.
+
+**Key Technical Takeaway:** All three policies yield near-identical hit rates (~0.51) at unbounded capacity, but diverge under tight capacity (1000 blocks), where LRUCache outperforms LFUCache and LengthAwareCache (0.30 vs. 0.30, with intermediate advantages at 10000 blocks: 0.40 vs. 0.35). This indicates eviction strategy becomes critical only under memory pressure, with recency-based heuristics holding a slight edge at extreme constraints.
+
+**Caption (verbatim):** "Table 1: Cache hit rates under different cache policies and capacities."
+
+### Table 2 (p.15) ⭐深度解读
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-tab02.png]]
+> [!quote] caption
+> Datasets used in the end-to-end experiment.
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+This table (Table 2) is a comparison matrix summarizing four datasets used in an end-to-end experiment for LLM inference/serving. Its **components** are the dataset names plus four evaluation dimensions: Avg Input Length, Avg Output Length, Cache Ratio, and Arrival Pattern. The **data flow** is implicitly a workload characterization—each row profiles a distinct request distribution, ranging from short-output summarization (ArXiv, L-Eval) to synthetic multi-length sweeps (Simulated Data) and timestamp-driven production traces (Real Data).
+
+**Key technical takeaway:** The benchmark deliberately spans divergent regimes—input lengths from ~8K to 128K tokens, cache hit-ratios from ~0% to >80%, and both stochastic (Poisson) and bursty (timestamp-based) arrivals—to stress-test the system across compute-, memory-, and I/O-bound regimes within a single evaluation harness.
+
+**Caption (verbatim):**
+Table 2: Datasets used in the end-to-end experiment.
+
+### Table 3 (p.17) ⭐深度解读
+![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-tab03.png]]
+> [!quote] caption
+> Number of requests rejected by the system under the overloaded-scenario experiment.
+
+> [!tip] 表格解读（多模态）
+> ## Figure Description
+
+**Architecture/Components:** The figure is a comparative data table (Table 3) presenting experimental results across three request-handling strategies evaluated under an overloaded-scenario workload. The columns represent distinct system configurations: a **Baseline** (no early-rejection mechanism), an **Early Rejection** policy (rules-based admission control), and an **Early Rejection based on Prediction** (ML/forecasting-driven admission control). The single metric row quantifies the absolute count of requests rejected by each approach.
+
+**Data Flow:** Workload → system admission controller (variant-specific) → rejection counter → tabular aggregation.
+
+**Key Technical Takeaway:** Predictive early rejection achieves the lowest rejection count (3589 vs. Baseline's 4183, ~14% reduction) while outperforming naive early rejection (3771), demonstrating that forecasting-driven admission control is more selective than rule-based gating.
+
+## Caption (Verbatim)
+
+> **Table 3:** Number of requests rejected by the system under the overloaded-scenario experiment.
 
 ## 相关论文
 

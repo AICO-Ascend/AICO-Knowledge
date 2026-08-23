@@ -24,7 +24,8 @@ tags: [disaggregated-serving]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p01.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig01.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p01.png]]*
 > [!quote] caption
 > Example two-stage pipeline parallel schedule. (a)
 
@@ -42,7 +43,8 @@ The figure compares two GPU pipeline-parallel schedules across GPU1 and GPU2 ove
 "Figure 1: **Example two-stage pipeline parallel schedule.** (a) In prior solutions like Orca [48], pipeline bubbles are common due to varying prompt and decode compute times. Further, decodes are highly inefficient (decode *cost-per-token* is order-of-magnitude higher than Prefill). (b) SARATHI significantly reduces pipeline bubbles and enables more efficient *piggybacked decodes*."
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p03.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig02.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p03.png]]*
 > [!quote] caption
 > High-level architecture of a decoder block. sequence length of each request (i.e., the number of input tokens in the given query), and H is the model’s embedding size (e.g., 5120 for LLaMA-13B).
 
@@ -50,7 +52,8 @@ The figure compares two GPU pipeline-parallel schedules across GPU1 and GPU2 ove
 > 【MiniMax 解读】SARATHI chunked-prefill：把 prompt 切成等长 prefill chunk（匹配流水级算力），在途 decode 请求 piggyback 到每个 prefill chunk 上→单次前向混合 prefill+decode token。解耦长 prefill 与 decode 延迟：每个流水级跑统一 hybrid-phase 步、消除 prefill-decode bubble、打满 GPU。更高单卡利用率+decode 吞吐+更大 batch。架构核心图。
 
 ### Figure 3 (p.4) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p04.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig03.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p04.png]]*
 > [!quote] caption
 > Per-token prefill and decode time with different batch sizes (sequence length = 1024) for LLaMa-13B on A6000 GPU. Prefill saturates GPU compute even at batch size of 1 and results in almost constant per-token time across batch sizes. Decode under-utilizes GPU compute and costs as much as 200× prefill for batch size 1. The incremental cost of linear operators for decode is almost zero as batch size
 
@@ -108,7 +111,8 @@ Prefill is *compute-bound* (high arithmetic intensity, saturates ≈180 tokens/m
 **Figure 4b:** (b) Arithmetic intensity with 1K sequence length (per-request).
 
 ### Figure 5 (p.5) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p05.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig05.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p05.png]]*
 > [!quote] caption
 > Pipeline bubbles in LLM inference A 2-way PP iteration-level schedule [48] across 4 requests (A,B,C,D) shows the existence of pipeline bubbles due to non-uniform batch execution times. set of layers; compared to TP which shards each layer across the participating GPUs. As discussed in §2.3, compared to TP, PP has a much better compute-communication ratio and does not require expensive interconnect
 
@@ -124,7 +128,8 @@ The diagram shows a 2-way Pipeline Parallel (PP) LLM inference schedule with two
 "Figure 5: Pipeline bubbles in LLM inference A 2-way PP iteration-level schedule [48] across 4 requests (A,B,C,D) shows the existence of pipeline bubbles due to non-uniform batch execution times."
 
 ### Figure 6 (p.6) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p06.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig06.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p06.png]]*
 > [!quote] caption
 > Example of how attention mask is set across dif- ferent chunk prefill iterations in SARATHI (q and k represent “query" and “key" tokens, respectively). The attention mask for v (“values") is set similarly.
 
@@ -147,7 +152,8 @@ Figure 6 illustrates SARATHI's chunked-prefill attention masking across three su
 "Figure 6: Example of how attention mask is set across different chunk prefill iterations in SARATHI (q and k represent 'query' and 'key' tokens, respectively). The attention mask for v ('values') is set similarly."
 
 ### Figure 7 (p.7) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p07.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig07.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p07.png]]*
 > [!quote] caption
 > The effect of tile quantization on the runtime of one iteration of LLaMA-13B on A6000 GPU. maximal batching with that of the baseline scheme that com- putes prefill and decode iterations separately. With baseline batching, a decode-only iteration spends 12.49 milliseconds per token. In contrast, per-token decode time is only 1.2 mil- liseconds with decode-maximal batching. This shows that pig- gyb
 
@@ -170,7 +176,8 @@ The data flow is: input tokens → (preproj + postproj attention block) + ffn bl
 > Figure 7: The effect of tile quantization on the runtime of one iteration of LLaMA-13B on A6000 GPU.
 
 ### Figure 8 (p.9) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p09.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig08.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p09.png]]*
 > [!quote] caption
 > Decode-only speedup with SARATHI on an A6000 GPU with LLaMA-13B (chunk size = 256).
 
@@ -219,7 +226,8 @@ SARATHI (blue) consistently outperforms the baseline (orange) across all configu
 **Figure 10:** Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU with varying sequence lengths and batch sizes, using prefill chunk sizes of 256 (top half) and 512 (bottom half). Orange and blue bars represent baseline and SARATHI, respectively.
 
 ### Figure 10 (p.10) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p10.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig10.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p10.png]]*
 > [!quote] caption
 > Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU with varying sequence lengths and batch sizes, using prefill chunk sizes of 256 (top half) and 512 (bottom half). Orange and blue bars represent baseline and SARATHI, respectively. for sequence length of 1K as shown in Figure 9a. Using the chunk size of 512 for sequence length=1K at batch size of 18 also provides sign
 
@@ -243,7 +251,8 @@ SARATHI (blue) consistently outperforms the baseline (orange) across all configu
 **Figure 10:** Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU with varying sequence lengths and batch sizes, using prefill chunk sizes of 256 (top half) and 512 (bottom half). Orange and blue bars represent baseline and SARATHI, respectively.
 
 ### Figure 11 (p.11) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p11.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig11.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p11.png]]*
 > [!quote] caption
 > Comparison with iteration-level scheduler Orca for LLaMa 13B on A6000 GPU. configuration of sequence length and chunk size, we show the effect of varying batch sizes. Further, for each run, we also show the runtime across different operations i.e., preproj, attention, postproj, and ffn.
 
@@ -261,7 +270,8 @@ Figure 11: Comparison with iteration-level scheduler Orca for LLaMa 13B on A6000
 (b) Varying P:D ratio (sequence length=1K, batch size=18).
 
 ### Figure 12 (p.12) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p12.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig12.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p12.png]]*
 > [!quote] caption
 > Impact of SARATHI on pipeline bubbles (top) and request completion times (bottom) for GPT-3 deployed on DGX A100(s) in simulation. the effect of variable sequence lengths on request latencies.
 
@@ -281,7 +291,8 @@ Figure 11: Comparison with iteration-level scheduler Orca for LLaMa 13B on A6000
 Figure 12: Impact of S𝖠𝗋𝖺𝗍𝗁𝗂 on pipeline bubbles (top) and request completion times (bottom) for GPT-3 deployed on DGX A100(s) in simulation.
 
 ### Figure 13 (p.13) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p13.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig13.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p13.png]]*
 > [!quote] caption
 > Ablation study: Effect of varying the chunk size on different components of the system for LLaMa 13B on A6000 GPU. measure the time to compute the prefill phase for various se- quence lengths using the full sequence at once - this represents our baseline prefill performance. For each long sequence, we then compute the prefill with chunked-prefills and compare its end-to-end runtime with the baseli
 
@@ -294,6 +305,85 @@ Despite a 5× prefill slow-down at chunk size 64, end-to-end throughput nearly m
 
 **Caption (verbatim):**
 Figure 13: **Ablation study:** Effect of varying the chunk size on different components of the system for LLaMa 13B on A6000 GPU.
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.3) ⭐深度解读
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-tab01.png]]
+> [!quote] caption
+> shows the shapes of input, output, and weight ten- sors of the various operations. Each transformer block first computes self-attention on a given input X . Typically, multi- head attention is used, but we consider only one head for simplicity of exposition. A linear transformation preproj over X (u
+
+> [!tip] 表格解读（多模态）
+> I don't see an attached figure or its caption in your message — only a text passage describing transformer block operations and tensor shapes. Without the image itself, I can only work from the surrounding prose.
+
+**Based on the text alone, here is what the figure likely illustrates:**
+
+A single transformer block's data flow (prefill phase):
+
+- **preproj**: Input $X$ $[B,L,H]$ → combined matmul with $W$ $[H,3H]$ → split into $Q, K, V$ each $[B,L,H]$
+- **attn**: $Q, K, V$ → $Y$ $[B,L,H]$
+- **postproj**: $Y$ × $W_o$ $[H,H]$ → $Z$ $[B,L,H]$
+- **ffn_ln1**: $Z$ × $W_1$ $[H,H_2]$ → $[B,L,H_2]$
+- **ffn_ln2**: $[B,L,H_2]$ × $W_2$ $[H_2,H]$ → $[B,L,H]$
+
+**Key technical takeaway:** In the decode phase, the input collapses to $[B,1,H]$, and per-token $K,V$ tensors $[1,H]$ are stored in a GPU **KV cache** to avoid recomputing them at every autoregressive step.
+
+Could you re-attach the figure and its caption? I'll then provide the precise description and verbatim transcription you asked for.
+
+### Table 2 (p.7) ⭐深度解读
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-tab02.png]]
+> [!quote] caption
+> Per-token prefill and decode time (in ms) For LLaMA-13B on A6000 GPU, the rows show operation times for 1) prefill-only requests of prompt size 1024 of batch size 4, 2) decode-only batch size of 4 with sequence length 1024, and c) a mixed batch of a single 1021 prefills and 3 decodes. Decode-maximal
+
+> [!tip] 表格解读（多模态）
+> **Note:** The provided content contains Table 2's caption and surrounding methodological text, not an actual figure. I'll describe the system architecture (SARATHI) implied by the text and transcribe the caption verbatim.
+
+**Architecture / Components / Data Flow (SARATHI):**
+SARATHI splits prefill requests into chunks sized to fill GPU memory alongside decode batches. Resources are bounded by GPU memory $M_G$, model weight memory $M_S$, and per-token KV cache $m_{kv}$, yielding max batch $B = \lfloor (M_G - M_S) / (L * m_{kv}) \rfloor$. A prefill chunk piggybacks up to $B-1$ decodes. Linear layers are fused across prefill+decode tokens into one matrix-matrix multiplication; attention is computed separately for the prefill chunk and the decode batch.
+
+**Key Technical Takeaway:** Decode-maximal batching converts decoding from memory-bound (dominated by weight fetches) to compute-bound by fusing decode tokens with prefill tokens, so model weights load once and serve both phases—reducing decode time per token by ~10×.
+
+**Caption (verbatim):**
+"Table 2: Per-token prefill and decode time (in ms) For LLaMA-13B on A6000 GPU, the rows show operation times for 1) prefill-only requests of prompt size 1024 of batch size 4, 2) decode-only batch size of 4 with sequence length 1024, and c) a mixed batch of a single 1021 prefills and 3 decodes. Decode-maximal batching reduces the decode time per token by an order of magnitude."
+
+### Table 3 (p.8) ⭐深度解读
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-tab03.png]]
+> [!quote] caption
+> Models, GPUs, and mode of evaluation.
+
+> [!tip] 表格解读（多模态）
+> **Note:** The image provided is a text excerpt from Section 5 (Evaluation) that references Table 3, rather than an actual architectural figure. Below I describe the referenced table and transcribe its caption.
+
+**Description of Table 3 (referenced content):** The table catalogs the models, GPUs, and evaluation modes used to benchmark SARATHI. It supports multiple LLM configurations scaled from LLaMA-13B (40 layers, 5120 hidden) and LLaMA-33B (60 layers, 6656 hidden) up to GPT-3 (96 layers, 12288 hidden), evaluated across different GPU setups. Single-GPU setups use physical deployment while large-scale experiments use profile-driven simulation. The Section 5 questions follow: (1) throughput impact across P:D ratios/batch sizes, (2) comparison vs. Orca's iteration-level scheduling, (3) effect on GPU bubbles in pipeline parallelism, (4) overheads of chunked-prefills.
+
+**Key Technical Takeaway:** SARATHI's evaluation covers decoders, end-to-end LLM throughput, and pipeline-parallel GPU bubbles, with chunked-prefills overhead measurement enabling fair comparison against Orca-style scheduling.
+
+**Caption (verbatim):**
+Table 3: Models, GPUs, and mode of evaluation.
+
+### Table 4 (p.9) ⭐深度解读
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-tab04.png]]
+> [!quote] caption
+> Peak throughput gains with S ARATHI for different se- quence lengths with two different model-GPU combinations (chunk size = 256).
+
+> [!tip] 表格解读（多模态）
+> **Note:** No figure was provided in the input — only a table caption and an accompanying methodological paragraph. I can therefore transcribe the caption verbatim but cannot describe a figure's architecture, components, or data flow without seeing the actual visual.
+
+---
+
+**Caption transcription (verbatim):**
+
+> Table 4: Peak throughput gains with SARATHI for different sequence lengths with two different model-GPU combinations (chunk size = 256).
+
+---
+
+**Informal readout of the context paragraph (for orientation only — not part of the caption):**
+
+The text describes a measurement methodology for SARATHI: for a batch containing *p + d* tokens — where *p* is the prefill chunk size and *d* is the decode batch size, with decodes pig­gybacked on prefill — the authors take the runtime difference between a *decode-maximal* batch and a *prefill-only* batch of size *p*. That time delta is attributed to the marginal decode cost of *d* requests, yielding a per-token decode time estimate.
+
+**Key technical takeaway (≤120 words):**
+
+SARATHI decouples prefill and decode by splitting prefill into fixed-size chunks (here *p* = 256) and fusing decode tokens with each chunk, avoiding the decode phase being serialized behind a long prefill. Because chunks are bounded, each forward pass also serves a *decode-maximal* batch of pending requests, so GPU compute stays saturated and decode latency stays predictable. Table 4 reports the resulting peak throughput lift across two model-GPU pairs and varying sequence lengths — i.e., how much more tokens/sec the system delivers versus a naive split-phase baseline. The chunk size is the main knob.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

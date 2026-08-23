@@ -24,7 +24,8 @@ tags: [disaggregated-serving]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.2) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p02.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig01.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p02.png]]*
 > [!quote] caption
 > System architecture: An interpreter executes language primitives with optimized runtime.
 
@@ -32,7 +33,8 @@ tags: [disaggregated-serving]
 > 【MiniMax 解读】SGLang 系统架构(Fig.1)：Python 嵌入式前端+高性能 runtime，流式 interpreter 提交原语(extend/gen/fork)异步执行并保留依赖。RadixAttention 用 LRU 基数树缓存 KV，跨请求共享前缀自动复用中间注意力态。Frontiers&Dependencies 跟踪就绪原语+数据依赖→批独立操作、重叠执行藏延迟。DSL+radix-cache+依赖调度统一，比 vLLM/Guidance/LMQL 快至 6.4x。架构核心图。
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p03.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig02.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p03.png]]*
 > [!quote] caption
 > The implementation of a multi-dimensional essay judge in SGLang utilizes the branch-solve-merge prompting technique [40]. Primitives provided by SGLang are shown in red. 2
 
@@ -40,7 +42,8 @@ tags: [disaggregated-serving]
 > 这张图展示了一段使用SGLang实现多维度文章评判器的Python代码示例，通过分支-求解-合并（branch-solve-merge）提示技术来评估一篇关于图像的文章，从清晰度、原创性和证据性等多个维度并行评判，并附有关于编程模型、语言原语和执行模式的文字说明。
 
 ### Figure 3 (p.5) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p05.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig03.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p05.png]]*
 > [!quote] caption
 > Examples of RadixAttention operations with an LRU eviction policy, illustrated across nine time points. The figure demonstrates the dynamic evolution of the radix tree in response to various requests. These requests include two chat sessions, a batch of few-shot learning inquiries, and a self-consistency sampling. Each tree edge carries a label denoting a substring or a sequence of tokens. The nod
 
@@ -73,7 +76,8 @@ tags: [disaggregated-serving]
 ---
 
 ### Figure 4 (p.6) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p06.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig04.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p06.png]]*
 > [!quote] caption
 > The decoding process of normal and compressed FSMs (the underscore _ means a space). requests by matched prefix length and prioritize requests with longer matched prefixes instead of using a first-come, first-served schedule. Alg. 1 (Appendix) shows the pseudo-code for cache-aware scheduling with contiguous batching. The algorithm uses longest-shared-prefix-first order. In more latency-sensitive s
 
@@ -120,7 +124,8 @@ tags: [disaggregated-serving]
 > （脚注 2）：In practice, the computation is not the same as what is described in the proof of Theorem 3.1 because the unpredictable number of output tokens can cause the recomputation of the KV cache.
 
 ### Figure 5 (p.7) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p07.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig05.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p07.png]]*
 > [!quote] caption
 > Normalized throughput on Llama-7B models. Higher is better. pattern: s += context + "name:" + gen("name", stop="\n") + "job:" + gen("job", stop="\n"). Naively, the two gen primitives correspond to two API calls, meaning that the user needs to pay for the input token fee on the context twice. In SGLang, we can enable speculative execution on the first call and let it continue the generation of a fe
 
@@ -177,7 +182,8 @@ MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought�
 > **Figure 5: Normalized throughput on Llama-7B models. Higher is better.**
 
 ### Figure 6 (p.8) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p08.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig06.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p08.png]]*
 > [!quote] caption
 > Normalized latency on Llama-7B models. Lower is better. MMLU
 
@@ -250,7 +256,8 @@ MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought�
 > MMLU | ReAct Agents | Generate Agents | Tree of Thought | Skeleton of Thought | LLM Judge | HellaSwag | JSON Decoding | Multi-Turn Chat (short) | Multi-Turn Chat (long) | DSPy RAG Pipeline
 
 ### Figure 7 (p.8) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p08.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig07.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p08.png]]*
 > [!quote] caption
 > Normalized throughput on Mixtral-8x7B models with tensor parallelism. Higher is better. result from KV cache reuse, the exploitation of parallelism within a single program, and faster constrained decoding. Next, we explain the reasons for the speedup in each benchmark.
 
@@ -323,7 +330,8 @@ MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought�
 > MMLU | ReAct Agents | Generate Agents | Tree of Thought | Skeleton of Thought | LLM Judge | HellaSwag | JSON Decoding | Multi-Turn Chat (short) | Multi-Turn Chat (long) | DSPy RAG Pipeline
 
 ### Figure 8 (p.9) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p09.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig08.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p09.png]]*
 > [!quote] caption
 > (a)(b) Cache hit rate ablation study. (c) RadixAttention ablation study.
 
@@ -382,7 +390,8 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 - **压缩FSM**：批量复用是性能关键，per-request预处理会回退2.4×
 
 ### Figure 9 (p.14) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p14.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig09.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p14.png]]*
 > [!quote] caption
 > KV cache sharing examples. Blue boxes represent shareable prompt parts, green boxes indicate non-shareable parts and yellow boxes mark non-shareable model outputs. Shareable elements include few-shot learning examples, questions in self-consistency [53], chat history in multi-turn chat, and search history in tree-of-thought [56]. A
 
@@ -436,7 +445,8 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 - (d) Question → Search History → Branch 1.1 / Branch 1.1.1 / Branch 1.1.1.1 / Branch 1.2 / Branch 1.2.1 / Branch 2 / Branch 2.1 / Branch 2.1.1 / Branch 2.2 / Branch 2.2.1
 
 ### Figure 10 (p.17) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p17.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig10.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p17.png]]*
 > [!quote] caption
 > Example of how regex is converted into FSM and how FSM guides the decoding process.
 
@@ -544,7 +554,8 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 > 图 11：使用 Compressed FSM 解码与使用普通 FSM 解码的对比：左侧子图描绘每次前向传播中的解码过程，右侧子图解释各输出结果的来源构成。
 
 ### Figure 12 (p.19) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p19.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig12.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p19.png]]*
 > [!quote] caption
 > Normalized throughput on Llama-2-70B models with tensor parallelism. Higher is better. MMLU
 
@@ -615,7 +626,8 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 **Figure 13**: "Achieved cache hit rate and optimal cache hit rate on various benchmarks."**
 
 ### Figure 13 (p.19) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p19.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig13.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p19.png]]*
 > [!quote] caption
 > Achieved cache hit rate and optimal cache hit rate on various benchmarks. opportunities for more compilation optimizations, as we can rewrite the graph and perform more static planning. D.1
 
@@ -686,7 +698,8 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 **Figure 13**: "Achieved cache hit rate and optimal cache hit rate on various benchmarks."**
 
 ### Figure 14 (p.20) ⭐深度解读
-![[assets/sglang-efficient-execution-of-structured-language-model-programs-p20.png]]
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig14.png]]
+*整页渲染: ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p20.png]]*
 > [!quote] caption
 > An SGLang program and its corresponding dataflow graph.
 

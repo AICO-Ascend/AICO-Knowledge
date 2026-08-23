@@ -24,7 +24,8 @@ tags: [kv-cache]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.2) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p02.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig01.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p02.png]]*
 > [!quote] caption
 > Autoregressive generation, at each step the new token (orange) attends to all prior tokens (cyan). Without caching, keys and values for every past token would be recomputed from scratch at each step. The KV cache avoids this by storing and reusing them.
 
@@ -40,7 +41,8 @@ The figure illustrates **autoregressive token generation** across two decoding s
 > Figure 1: Autoregressive generation, at each step the new token (orange) attends to all prior tokens (cyan). Without caching, keys and values for every past token would be recomputed from scratch at each step. The KV cache avoids this by storing and reusing them.
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p03.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig02.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p03.png]]*
 > [!quote] caption
 > Data-flow of the KV cache within a single transformer layer. Input token xt fans into three projections; Kt and Vt are appended to their respective caches (teal); Qt attends over the full caches to produce output ot. Cache size grows as O(T) per head per layer.
 
@@ -58,7 +60,8 @@ $$o_t = \text{softmax}\!\left(\tfrac{Q_t \mathbf{K}_c^{\top}}{\sqrt{d_k}}\right)
 **Figure 2:** Data-flow of the KV cache within a single transformer layer. Input token x_t fans into three projections; K_t and V_t are appended to their respective caches (teal); Q_t attends over the full caches to produce output o_t. Cache size grows as O(T) per head per layer.
 
 ### Figure 3 (p.3) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p03.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig03.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p03.png]]*
 > [!quote] caption
 > KV cache memory as a function of context length for three LLaMA-2 model variants under fp16 precision.
 
@@ -76,7 +79,8 @@ $$o_t = \text{softmax}\!\left(\tfrac{Q_t \mathbf{K}_c^{\top}}{\sqrt{d_k}}\right)
 **Figure 2:** Data-flow of the KV cache within a single transformer layer. Input token x_t fans into three projections; K_t and V_t are appended to their respective caches (teal); Q_t attends over the full caches to produce output o_t. Cache size grows as O(T) per head per layer.
 
 ### Figure 4 (p.4) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p04.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig04.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p04.png]]*
 > [!quote] caption
 > Causal self-attention weight matrix for “The apple tastes sweet.” visualised with the Viridis colormap (dark purple = low, yellow = high). Gray cells are causally masked future tokens. Each row sums to 1 (post-softmax).
 
@@ -92,7 +96,8 @@ The figure is a 4×4 causal self-attention weight matrix for the sentence "The a
 Figure 4: Causal self-attention weight matrix for "The apple tastes sweet." visualised with the Viridis colormap (dark purple = low, yellow = high). Gray cells are causally masked future tokens. Each row sums to 1 (post-softmax). Query "sweet" concentrates 65% of its attention on "apple", demonstrating that KV entries carry highly non-uniform importance, the core premise of attention-score-driven eviction methods such as H₂O and SnapKV.
 
 ### Figure 5 (p.5) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p05.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig05.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p05.png]]*
 > [!quote] caption
 > Taxonomy of KV cache optimization techniques surveyed in this paper, organized into five major categories.
 
@@ -114,7 +119,8 @@ Figure 4: Causal self-attention weight matrix for "The apple tastes sweet." visu
 **Figure 5:** Taxonomy of KV cache optimization techniques surveyed in this paper, organized into five major categories.
 
 ### Figure 6 (p.6) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p06.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig06.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p06.png]]*
 > [!quote] caption
 > Upper plots illustrate symbolic plots of an attention map deploying different KV cache policies in LLM generation. Lower right: contrasts their accuracy-memory trade-off. Left: the overview of H2O framework [1]. A key challenge in eviction-based methods is identifying which tokens carry long-range importance. One approach tracks accumulated attention scores and treats high-scoring tokens as essent
 
@@ -132,7 +138,8 @@ The figure combines three components to illustrate KV cache optimization strateg
 **Key Technical Takeaway:** H₂O's hybrid retention policy (heavy-hitters + recent tokens) outperforms static strided/local patterns, preserving accuracy at high compression ratios where purely static schemes fail.
 
 ### Figure 7 (p.7) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p07.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig07.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p07.png]]*
 > [!quote] caption
 > The graph shows the simplified workflow of SnapKV, where the orange area represents the cluster of features per head selected by SnapKV. These features are then used to form new Key-Value pairs concatenated with the features in the observation window. Together, the selected prefix and observation windows constitute the new KV cache utilized for the generation. [2].
 
@@ -153,7 +160,8 @@ The figure combines three components to illustrate KV cache optimization strateg
 **Figure 7:** The graph shows the simplified workflow of SnapKV, where the orange area represents the cluster of features per head selected by SnapKV. These features are then used to form new Key-Value pairs concatenated with the features in the observation window. Together, the selected prefix and observation windows constitute the new KV cache utilized for the generation. [2].
 
 ### Figure 8 (p.9) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p09.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig08.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p09.png]]*
 > [!quote] caption
 > Definition of per-token and per-channel quantization. X ∈Rlprompt×d is the key/value cache, where lprompt is the number of tokens and d is the number of channels. zX is the zero-point, and sX is the scaling factor.. [5]. whose magnitudes are very large”; whereas for value cache, “there is no obvious outlier pattern”. Based on this insight, KIVI applies per-channel quantization for keys and per-tok
 
@@ -174,7 +182,8 @@ By replacing the full-rank projection **W** with a low-rank factorization **A·B
 **Figure 9:** Palu's low-rank projection method for KV-cache reduction. A weight matrix **W** of linear projection is decomposed into two low-rank matrices. Input **X** is down-projected to a latent representation **H**, which is cached. **Y** can be reconstructed from **H** using the up-projection matrix **B**. [19].
 
 ### Figure 9 (p.9) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p09.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig09.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p09.png]]*
 > [!quote] caption
 > Palu’s low-rank projection method for KV-cache reduction. A weight matrix W of linear projection is decomposed into two low-rank matrices. Input X is down-projected to a latent representation H, which is cached. Y can be reconstructed from H using the up-projection matrix B. [19]. 9
 
@@ -195,7 +204,8 @@ By replacing the full-rank projection **W** with a low-rank factorization **A·B
 **Figure 9:** Palu's low-rank projection method for KV-cache reduction. A weight matrix **W** of linear projection is decomposed into two low-rank matrices. Input **X** is down-projected to a latent representation **H**, which is cached. **Y** can be reconstructed from **H** using the up-projection matrix **B**. [19].
 
 ### Figure 10 (p.11) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p11.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig10.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p11.png]]*
 > [!quote] caption
 > vLLM system overview [22]. 11
 
@@ -208,7 +218,8 @@ By replacing the full-rank projection **W** with a low-rank factorization **A·B
 > Figure 10: vLLM system overview [22].
 
 ### Figure 11 (p.12) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p12.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig11.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p12.png]]*
 > [!quote] caption
 > Operation flow of the prefetching module of InfiniGen. [23]. A layer-wise KV cache management strategy is proposed in LayerKV [24]. The core concept is to split KV cache by layers, keeping only a subset of layers on the GPU during the prefill stage while offloading some layers to CPU memory to reduce Time to First Token (TTFT). Prefill time refers to the time for the GPU to compute the first token
 
@@ -226,7 +237,8 @@ Decoupling "which tokens matter" (offline skewing + on-GPU partial index generat
 Figure 11: Operation flow of the prefetching module of InfiniGen. [23].
 
 ### Figure 12 (p.15) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p15.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig12.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p15.png]]*
 > [!quote] caption
 > Standard linear attention (top) vs. loglinear attention (bottom). The input consists of query, key, and value vectors [30]. at nearby keys and averages their value; while Linear Attention is alike global linear regression because it fits a global straight line for all data. Based on such observation, the authors proposed Local Linear Attention, which is similar to local linear regression. This ena
 
@@ -247,7 +259,8 @@ Log-Linear Attention replaces linear attention's flat, single-path recurrence wi
 **Figure 12:** Standard linear attention (top) vs. loglinear attention (bottom). The input consists of query, key, and value vectors [30].
 
 ### Figure 13 (p.17) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p17.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig13.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p17.png]]*
 > [!quote] caption
 > During Pre-filling, ShadowKV offloads the value cache to the CPU while maintaining a low-rank key cache, landmarks, and outliers on the GPU. During decoding, it employs landmarks for sparse attention. [35].
 
@@ -268,7 +281,8 @@ ShadowKV exploits the **low-rank structure of pre-RoPE keys** to keep compressed
 "Figure 13: During Pre-filling, ShadowKV offloads the value cache to the CPU while maintaining a low-rank key cache, landmarks, and outliers on the GPU. During decoding, it employs landmarks for sparse attention. [35]."
 
 ### Figure 14 (p.17) ⭐深度解读
-![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p17.png]]
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig14.png]]
+*整页渲染: ![[assets/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-p17.png]]*
 > [!quote] caption
 > System overview of TailorKV. Offline identification categorizes the layers into quantization-friendly and sparsity-friendly. For quantization-friendly layers, we employ aggressive static quantization. For sparsity-friendly layers, we dynamically retrieve Top-K tokens. Critical current query and critical key cache represent the outliers in the query and key cache, respectively. [36]. A sparsity-awa
 
@@ -287,6 +301,89 @@ ShadowKV exploits the **low-rank structure of pre-RoPE keys** to keep compressed
 
 **Caption (verbatim):**
 "Figure 13: During Pre-filling, ShadowKV offloads the value cache to the CPU while maintaining a low-rank key cache, landmarks, and outliers on the GPU. During decoding, it employs landmarks for sparse attention. [35]."
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 2 (p.8) ⭐深度解读
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab02.png]]
+> [!quote] caption
+> Summary of KV Cache eviction techniques
+
+> [!tip] 表格解读（多模态）
+> **Note:** The image presents a *table* (Table 2), not a figure with architecture/data flow.
+
+**Description:**
+This table summarizes KV Cache eviction techniques used in LLM inference optimization. It is organized into four columns — Method, Mechanism, Phase, and Overview — and contains a single entry for the H₂O method. The Method column names the technique (H₂O); the Mechanism column specifies its eviction strategy (removing the top-K noncritical tokens); the Phase column indicates when it operates (during decoding); and the Overview column provides a high-level summary of its design goal (balancing retention of Heavy-Hitter tokens with recent tokens).
+
+**Key Technical Takeaway:**
+H₂O is a decoding-phase eviction policy that selectively drops the top-K least-important tokens from the KV cache, preserving only Heavy-Hitter (frequently-attended) tokens plus recent context — exploiting the observation that attention mass concentrates on a small subset of tokens.
+
+**Caption (verbatim):**
+> Table 2: Summary of KV Cache eviction techniques
+
+### Table 3 (p.10) ⭐深度解读
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab03.png]]
+> [!quote] caption
+> Cache Compression Methods Comparison Table
+
+> [!tip] 表格解读（多模态）
+> **Main Figure / Table Description (Table 3 — Cache Compression Methods Comparison)**
+
+The table compares two families of KV-cache compression techniques for LLM inference:
+
+- **PALU (Low-Rank Projection)**: Decomposes projection matrix *W* via SVD into *A* (4096×r) and *B* (r×128). Input *X* is multiplied by *A* to produce a compact latent *H* (cached in place of KV); *H* is later reconstructed into the full KV by multiplying with *B*. Reconstruction matrix *B* is fused into other weight matrices offline (Matrix Fusion) to avoid runtime overhead; RoPE-based keys bypass fusion and are reconstructed via a custom GPU kernel. Group-Head Low-Rank Decomposition (G-LRD) balances joint vs. per-head decomposition for accuracy/cost.
+- **KVQuant (Ultra-Low-Bit Quantization)**: Combines (1) Per-Channel Key Quantization, (2) Pre-RoPE Quantization, (3) Sensitivity-Weighted Non-Uniform Quantization (tailored levels for outliers), and (4) Per-Vector Dense-and-Sparse Quantization (≈1% outliers stored in higher precision).
+- *Data flow*: Token *X* → projection/quantization → compressed cache (*H* or quantized KV) → on-demand reconstruction → attention.
+
+**Key Technical Takeaway:** KV-cache compression splits into *projection-based* (PALU: train-free, offline fusion, RoPE handled by a custom GPU kernel) and *quantization-based* (KVQuant: aggressive bit reduction via per-channel, pre-RoPE, non-uniform, and outlier-aware schemes), enabling million-token context inference.
+
+**Caption (verbatim):** *Table 3: Cache Compression Methods Comparison Table*
+
+### Table 4 (p.13) ⭐深度解读
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab04.png]]
+> [!quote] caption
+> Hybrid Memory Solutions Comparison Table
+
+> [!tip] 表格解读（多模态）
+> **Description:** The main figure is a comparison table (no architectural diagram is present) structured as a four-column matrix evaluating seven hybrid memory solutions for LLM KV-cache offloading (Paged Attention, InfiniGen, LayerKV, INF2, KVPR, Oneiros, CLO). Columns capture: *Method*, *Offload destination* (mostly CPU DRAM; INF2 uniquely targets Host Memory + NVMe CSDs), *Mechanism* (e.g., paging, speculation, layer-wise scheduling, parameter remapping, head-wise approximate caching), and *Key optimization* (fragmentation reduction, PCIe bandwidth utilization, TTFT minimization, multi-tenant reclaim). The accompanying prose details Oneiros's parameter-remapping flow and CLO's query-similarity–guided KV reuse pipeline.
+
+**Key technical takeaway:** GPU memory pressure in autoregressive LLM inference is mitigated by offloading KV caches—and even remapped inactive-model parameters—to CPU memory, hiding PCIe transfer latency behind ongoing layer-by-layer compute via prefetching, similarity-based reuse, or asynchronous overlap. (118 words)
+
+**Caption (verbatim):** "Table 4: Hybrid Memory Solutions Comparison Table"
+
+### Table 5 (p.16) ⭐深度解读
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab05.png]]
+> [!quote] caption
+> Attention Variants – Mechanisms, Complexities, and Features
+
+> [!tip] 表格解读（多模态）
+> **Note:** The provided content contains only the paper title and a table caption — no actual figure image or detailed figure description is included. Below I transcribe what's available and offer a brief inference based on the caption title.
+
+**Description (inferred from "Table 5: Attention Variants – Mechanisms, Complexities, and Features"):**
+
+The table likely compares multiple attention mechanisms used in LLM inference — including variants such as Multi-Head Attention (MHA), Multi-Query Attention (MQA), and Grouped-Query Attention (GQA). Columns would typically detail each variant's structural mechanism (shared vs. separate key/value projections), computational/memory complexity (e.g., KV cache size relative to hidden dimension and number of heads), and qualitative features such as quality trade-offs, inference speedup, and compatibility with KV cache optimization.
+
+**Key technical takeaway:** Attention variants trade off KV cache memory against model quality — reducing distinct KV heads (MQA/GQA) shrinks cache footprint and improves inference throughput with minimal quality loss, making them core enablers for scalable KV cache optimization.
+
+**Caption (verbatim transcription):**
+
+> Table 5: Attention Variants – Mechanisms, Complexities, and Features
+
+If you can share the actual figure or the full table contents, I can produce a more precise description and detailed technical analysis.
+
+### Table 6 (p.18) ⭐深度解读
+![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab06.png]]
+> [!quote] caption
+> Comparison of KV Cache Optimization Techniques
+
+> [!tip] 表格解读（多模态）
+> **Description:**
+
+The table compares two KV cache optimization techniques for large language model inference, structured with four columns—Technique, Memory, Speedups, and Accuracy loss—against two rows of methods (H₂O and SnapKV). Each cell quantifies the efficiency gains and the resulting accuracy trade-offs, where reductions in memory correspond to throughput/latency improvements while accuracy loss remains comparable to a baseline.
+
+**Key takeaway:** Both H₂O and SnapKV compress the KV cache to free memory and accelerate decoding, but H₂O delivers a stronger throughput boost (up to 29× vs. SnapKV's 3.6×) at the cost of more aggressive eviction, while SnapKV offers a steadier trade-off with smaller accuracy loss.
+
+**Caption (verbatim):** Table 6: Comparison of KV Cache Optimization Techniques
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

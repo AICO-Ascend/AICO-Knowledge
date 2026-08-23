@@ -24,7 +24,8 @@ tags: [multimodal]
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.1) ⭐深度解读
-![[assets/kimi-vl-technical-report-p01.png]]
+![[assets/crops/kimi-vl-technical-report-fig01.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p01.png]]*
 > [!quote] caption
 > Comparison between Kimi-VL-Thinking-2506 and frontier open-source VLMs, including short-thinking VLMs (e.g. Gemma-3 series, Qwen2.5-VL series) and long-thinking VLMs (QVQ-72B/Max-Preview), on MathVision benchmark. Our model achieves strong multimodal reasoning with just 2.8B LLM activated parameters.
 
@@ -34,7 +35,8 @@ tags: [multimodal]
 The figure is a 2D scatter plot comparing VLMs on the MathVision benchmark. Markers are differentiated by model family and thinking mode: stars represent the Kimi-VL family (the dark star sits at the top-left of the plot, indicating a strong score with low x-axis cost, while the lighter star sits lower-left). Green/olive ✕ marks denote long-thinking VLMs (QVQ-72B/Max-Preview), clustered on the right side. Solid circles (gray, purple, dark blue, red) represent short-thinking open-source VLMs (Gemma-3, Qwen2.5-VL), connected by dashed trend lines that slope upward from lower-left toward the upper-right, illustrating a positive scaling relationship between the two plotted metrics. The Kimi-VL-Thinking star stands clearly above the trend line, demonstrating superior efficiency—strong reasoning performance at substantially lower activated parameters than competing long-thinking VLMs.
 
 ### Figure 2 (p.2) ⭐深度解读
-![[assets/kimi-vl-technical-report-p02.png]]
+![[assets/crops/kimi-vl-technical-report-fig02.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p02.png]]*
 > [!quote] caption
 > Highlights of Kimi-VL performance for a wide range of benchmarks like, general benchmarks (MMMU, MMBench), OCR (InfoVQA), multi-image (BLINK), long video (LongVideoBench, Video-MME), long document (MMLongBench-Doc), and agent (ScreenSpot-Pro and OSWorld). Detailed results are presented in Table 3. 1
 
@@ -52,7 +54,8 @@ Despite only 2.8B activated parameters, Kimi-VL-A3B matches or surpasses open-so
 Figure 2: Highlights of **Kimi-VL** performance for a wide range of benchmarks like, general benchmarks (MMMU, MMBench), OCR (InfoVQA), multi-image (**BLINK**), long video (LongVideoBench, Video-MME), long document (MMLongBench-Doc), and agent (ScreenSpot-Pro and OSWorld). Detailed results are presented in Table 3.
 
 ### Figure 3 (p.3) ⭐深度解读
-![[assets/kimi-vl-technical-report-p03.png]]
+![[assets/crops/kimi-vl-technical-report-fig03.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p03.png]]*
 > [!quote] caption
 > The model architecture of Kimi-VL and Kimi-VL-Thinking, consisting of a MoonViT that allows native- resolution images, an MLP projector, and a Mixture-of-Experts (MoE) language decoder. 1) Kimi-VL is smart: it has comparable text ability against efficient pure-text LLMs; without long thinking, Kimi-VL is already competitive in multimodal reasoning and multi-turn agent benchmarks, e.g., MMMU, MathV
 
@@ -68,7 +71,8 @@ The figure illustrates the three-stage Kimi-VL architecture. **Inputs** (bottom)
 > Figure 3: The model architecture of Kimi-VL and Kimi-VL-Thinking, consisting of a MoonViT that allows native-resolution images, an MLP projector, and a Mixture-of-Experts (MoE) language decoder.
 
 ### Figure 4 (p.4) ⭐深度解读
-![[assets/kimi-vl-technical-report-p04.png]]
+![[assets/crops/kimi-vl-technical-report-fig04.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p04.png]]*
 > [!quote] caption
 > The pre-training stages of Kimi-VL consume a total of 4.4T tokens after text-only pre-training of its language model. To preserve text abilities, all stages that update the language model are joint training stages. preprocessing operations enable MoonViT to share the same core computation operators and optimization as a language model, such as the variable-length sequence attention mechanism suppo
 
@@ -84,7 +88,8 @@ The diagram shows a left-to-right pipeline of Kimi-VL's pre-training stages. Sta
 > Figure 4: The pre-training stages of Kimi-VL consume a total of 4.4T tokens after text-only pre-training of its language model. To preserve text abilities, all stages that update the language model are joint training stages.
 
 ### Figure 5 (p.6) ⭐深度解读
-![[assets/kimi-vl-technical-report-p06.png]]
+![[assets/crops/kimi-vl-technical-report-fig05.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p06.png]]*
 > [!quote] caption
 > The post-training stages of Kimi-VL and Kimi-VL-Thinking, including two stages of joint SFT in 32K and 128K context, and further long-CoT SFT and RL stages to activate and enhance long thinking abilities. to 800,000. The joint long-context stage is conducted in two sub-stages, where each one extends the model’s context length by four times. For data composition, we filter and upsample the ratio of
 
@@ -106,7 +111,8 @@ Arrows connect the stages: the first transition yields **Kimi-VL**; the second p
 > Figure 5: The post-training stages of Kimi-VL and Kimi-VL-Thinking, including two stages of joint SFT in 32K and 128K context, and further long-CoT SFT and RL stages to activate and enhance long thinking abilities.
 
 ### Figure 6 (p.8) ⭐深度解读
-![[assets/kimi-vl-technical-report-p08.png]]
+![[assets/crops/kimi-vl-technical-report-fig06.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p08.png]]*
 > [!quote] caption
 > Manuscript reasoning visualization. Kimi-VL-Thinking demonstrates the ability to perform historical and scientific inference by analyzing handwritten manuscripts step by step. In this example, our model identifies the author as Albert Einstein based on handwriting style, content analysis, and language cues. It reasons that the manuscripts relate to gravitational field equations, consistent with Ei
 
@@ -123,7 +129,8 @@ The figure illustrates multimodal test-time reasoning where the model fuses visu
 Figure 6: Manuscript reasoning visualization. Kimi-VL-Thinking demonstrates the ability to perform historical and scientific inference by analyzing handwritten manuscripts step by step. In this example, our model identifies the author as Albert Einstein based on handwriting style, content analysis, and language cues. It reasons that the manuscripts relate to gravitational field equations, consistent with Einstein's contributions to general relativity.
 
 ### Figure 7 (p.12) ⭐深度解读
-![[assets/kimi-vl-technical-report-p12.png]]
+![[assets/crops/kimi-vl-technical-report-fig07.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p12.png]]*
 > [!quote] caption
 > Kimi-VL exhibits strong visual reasoning capabilities by grounding visual content in spatial, contextual, and cultural knowledge. It accurately identifies matching urban locations based on structural and layout features, interprets scenes from video games like Cyberpunk 2077 using stylistic cues, and recognizes real-world landmarks such as the
 
@@ -151,7 +158,8 @@ Despite its compact size, Kimi-VL demonstrates **structured, multi-step visual r
 **Figure 7:** Kimi-VL exhibits strong visual reasoning capabilities by grounding visual content in spatial, contextual, and cultural knowledge. It accurately identifies matching urban locations based on structural and layout features, interprets scenes from video games like Cyberpunk 2077 using stylistic cues, and recognizes real-world landmarks such as the Rogers Centre in Toronto.
 
 ### Figure 8 (p.13) ⭐深度解读
-![[assets/kimi-vl-technical-report-p13.png]]
+![[assets/crops/kimi-vl-technical-report-fig08.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p13.png]]*
 > [!quote] caption
 > Kimi-VL demonstrates its capability to perform symbolic reasoning and geometric inference by solving a circle geometry problem step by step. The model analyzes given conditions, applies geometric theorems such as the inscribed angle theorem and properties of triangle angles, and accurately derives the target angle. presented in visual contexts. On the more challenging MathVision benchmark, due to 
 
@@ -178,7 +186,8 @@ The figure illustrates a two-panel visualization of Kimi-VL's geometric reasonin
 "Figure 8: Kimi-VL demonstrates its capability to perform symbolic reasoning and geometric inference by solving a circle geometry problem step by step. The model analyzes given conditions, applies geometric theorems such as the inscribed angle theorem and properties of triangle angles, and accurately derives the target angle."
 
 ### Figure 9 (p.14) ⭐深度解读
-![[assets/kimi-vl-technical-report-p14.png]]
+![[assets/crops/kimi-vl-technical-report-fig09.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p14.png]]*
 > [!quote] caption
 > Diverse OCR visualization. Kimi-VL demonstrates strong OCR capabilities across varied content types, including structured financial tables, complex mathematical formulas, and handwritten Chinese text. The model accurately parses tabular data into markdown, converts formulas to LaTeX, and transcribes handwritten paragraphs with contextual understanding, showcasing its versatility in multimodal text
 
@@ -196,7 +205,8 @@ The figure illustrates a two-panel visualization of Kimi-VL's geometric reasonin
 "Figure 9: Diverse OCR visualization. Kimi-VL demonstrates strong OCR capabilities across varied content types, including structured financial tables, complex mathematical formulas, and handwritten Chinese text. The model accurately parses tabular data into markdown, converts formulas to LaTeX, and transcribes handwritten paragraphs with contextual understanding, showcasing its versatility in multimodal text extraction and interpretation."
 
 ### Figure 10 (p.15) ⭐深度解读
-![[assets/kimi-vl-technical-report-p15.png]]
+![[assets/crops/kimi-vl-technical-report-fig10.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p15.png]]*
 > [!quote] caption
 > Kimi-VL is capable of following multi-step reasoning processes to complete complex GUI tasks. In this example, it successfully enables the “Do Not Track” feature in the Chrome browser to enhance online privacy. The agent interprets each screen, identifies relevant UI elements, and performs the appropriate actions sequentially with clear thoughts, actions, and API calls. 15
 
@@ -219,7 +229,8 @@ Kimi-VL operates as a **screen-grounded, thought-action agent loop**, where each
 Figure 10: Kimi-VL is capable of following multi-step reasoning processes to complete complex GUI tasks. In this example, it successfully enables the "Do Not Track" feature in the Chrome browser to enhance online privacy. The agent interprets each screen, identifies relevant UI elements, and performs the appropriate actions sequentially with clear thoughts, actions, and API calls.
 
 ### Figure 11 (p.16) ⭐深度解读
-![[assets/kimi-vl-technical-report-p16.png]]
+![[assets/crops/kimi-vl-technical-report-fig11.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p16.png]]*
 > [!quote] caption
 > Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along with fine-grained natural language descriptions for each scene.†
 
@@ -243,7 +254,8 @@ Figure 10: Kimi-VL is capable of following multi-step reasoning processes to com
 Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along with fine-grained natural language descriptions for each scene.†
 
 ### Figure 12 (p.17) ⭐深度解读
-![[assets/kimi-vl-technical-report-p17.png]]
+![[assets/crops/kimi-vl-technical-report-fig12.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p17.png]]*
 > [!quote] caption
 > Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional video content by analyzing frame sequences and extracting conceptual progression over time. In this case, the model identifies a deepening of the traditional saying “Teach a man to fish, and you feed him for a lifetime” into a more nuanced idea: “Teach h
 
@@ -265,7 +277,8 @@ Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segment
 > Figure 12: Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional video content by analyzing frame sequences and extracting conceptual progression over time. In this case, the model identifies a deepening of the traditional saying "Teach a man to fish, and you feed him for a lifetime" into a more nuanced idea: "Teach him the taste of fish and make him hungry."
 
 ### Figure 13 (p.16) ⭐深度解读
-![[assets/kimi-vl-technical-report-p16.png]]
+![[assets/crops/kimi-vl-technical-report-fig13.png]]
+*整页渲染: ![[assets/kimi-vl-technical-report-p16.png]]*
 > [!quote] caption
 > Specifically, increasing the max thinking token length at inference time consistently improves test-time accuracy across all three 16
 
@@ -287,6 +300,93 @@ Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segment
 ## Caption (verbatim)
 
 Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along with fine-grained natural language descriptions for each scene.†
+
+## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.5) ⭐深度解读
+![[assets/crops/kimi-vl-technical-report-tab01.png]]
+> [!quote] caption
+> Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.
+
+> [!tip] 表格解读（多模态）
+> ## Figure Description
+
+I'm unable to describe a main figure because **no figure is present in the content you've shared**. The input only contains a page header ("Kimi-VL Technical Report" with an "H" logo) and the caption text for Table 1. No image, diagram, architecture illustration, or table data has been provided for me to analyze.
+
+If you'd like me to:
+- **Describe a figure**, please attach or paste the actual image/diagram.
+- **Reconstruct Table 1** based on the caption alone, I'd need the underlying data rows (data composition values, token volumes, sequence lengths, and trainable components per stage), which are not included in your message.
+
+Once you share the figure or table content, I can provide the architecture/components/data flow summary and key technical takeaway within the ≤120-word limit you've requested.
+
+## Verbatim Caption Transcription
+
+> **Table 1:** Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.
+
+### Table 2 (p.5) ⭐深度解读
+![[assets/crops/kimi-vl-technical-report-tab02.png]]
+> [!quote] caption
+> Needle-in-a-Haystack (NIAH) test on text/video haystacks, where needles are uniformly distributed at various positions within the haystack. We report recall accuracy across different haystack lengths up to 131,072 tokens (128K).
+
+> [!tip] 表格解读（多模态）
+> ## Description of the Main Figure (Table 2)
+
+**Table type:** Results table from the NIAH benchmark.
+
+**Components shown:**
+- **Columns:** Seven haystack-length buckets, ranging from very short up to 131,072 tokens (128K). *(Note: the length labels in the original render as garbled glyphs such as "0:", ":Þ", "ÞÞ" — these are encoding artifacts for the length values.)*
+- **Rows:** Two retrieval conditions — *- text haystack* and *- video haystack*.
+- **Cells:** Recall accuracy (%, all 100.0) for the first six lengths; the final (128K) bucket drops to **87.0 (text)** and **91.7 (video)**.
+
+**Data flow / interpretation:** A needle is inserted at uniformly random positions inside contexts of growing length, and the model is queried; near-perfect recall is preserved through ~64K–96K tokens, then degrades sharply at the longest context, with video tokens showing slightly better retention than pure text.
+
+**Key technical takeaway (≤120 words):** MoonViT/MoE retains **100% needle recall up to ~64–96K tokens** for both text- and video-encoded haystacks, demonstrating effective long-context retrieval. Beyond ~96K, recall degrades — but the video tokenizer retains more information at the 128K ceiling (91.7 vs. 87.0), suggesting the visual tokenization scheme compresses context more losslessly than raw text tokens at extreme lengths. This implies that for ultra-long-context retrieval, the multimodal/vision-based token path is more robust, a non-trivial property for RAG and long-video reasoning.
+
+### Table 3 (p.10) ⭐深度解读
+![[assets/crops/kimi-vl-technical-report-tab03.png]]
+> [!quote] caption
+> presents a comprehensive evaluation of Kimi-VL against state-of-the-art vision-language models across multiple benchmarks. Although having a more parameter-efficient architecture (2.8B+0.4B activated parameters) compared to larger models such as GPT-4o, Llama-3.2-11B-Inst. and Gemma3-12B-IT, Kimi-VL
+
+> [!tip] 表格解读（多模态）
+> **Important note:** No figure image was attached to your request — only the page-text excerpt (which references Table 3, not a figure) and a footnote. Without the actual figure, I cannot describe its architecture/components/data flow or transcribe its caption verbatim.
+
+**What can be inferred from the provided text:**
+
+- **Architecture (from text, not from a figure):** Kimi-VL uses a **Mixture-of-Experts (MoE)** design similar to **DeepSeek-VL2**, with **2.8B + 0.4B activated parameters** out of **16B total** parameters.
+- **Key technical takeaway (from text):** Despite activating ~38% fewer parameters than DeepSeek-VL2 (2.8B vs 4.5B activated; 16B vs 28B total), Kimi-VL outperforms it on most benchmarks and beats Qwen2.5-VL-7B (actually 8.3B) on **19 of 24 benchmarks** — demonstrating that MoE sparsification preserves or improves multimodal performance at lower active compute.
+
+**Verbatim transcription of the provided caption (footnote):**
+> *GPT-4o and GPT-4o-mini results use Omniparser without UIA, according to Bonatti et al. 2024.
+
+If you'd like to upload the actual Figure 3 / Kimi-VL architecture diagram, I can then describe it and transcribe its caption exactly.
+
+### Table 4 (p.17) ⭐深度解读
+![[assets/crops/kimi-vl-technical-report-tab04.png]]
+> [!quote] caption
+> Performance of Kimi-VL-Thinking and Kimi-VL-Thinking-2506 on multimodal reasoning benchmarks. The metrics evaluated include MathVista (mini), MMMU (val), MMMU-Pro (average), MathVision (full) and VideoMMMU, with results expressed in Pass@1. The Kimi-VL-Thinking-2506 performs well in most cases, show
+
+> [!tip] 表格解读（多模态）
+> **Description (no figure present — only a table caption is shown):** What appears in the image is text-only: a caption for **Table 4**, which is a performance-comparison table. No architecture diagram, component schematic, or data-flow diagram is rendered, so architectural components and data flow cannot be described. Based on the caption alone, the table contrasts two model variants—**Kimi-VL-Thinking** and **Kimi-VL-Thinking-2506**—across five multimodal reasoning benchmarks (MathVista-mini, MMMU-val, MMMU-Pro avg, MathVision full, VideoMMMU) using Pass@1 as the metric. **Key takeaway:** the "-2506" (timestamped/iterated) variant consistently outperforms the baseline on most benchmarks, suggesting that the "thinking" enhancement scales and generalizes across diverse multimodal domains (math, multimodal understanding, video).
+
+**Caption (verbatim):**
+
+> Table 4: Performance of Kimi-VL-Thinking and Kimi-VL-Thinking-2506 on multimodal reasoning benchmarks. The metrics evaluated include MathVista (mini), MMMU (val), MMMU-Pro (average), MathVision (full) and VideoMMMU, with results expressed in Pass@1. The Kimi-VL-Thinking-2506 performs well in most cases, showcasing the enhanced reasoning and processing capabilities of the *"thinking"* variant across different domains and scales.
+
+### Table 5 (p.18) ⭐深度解读
+![[assets/crops/kimi-vl-technical-report-tab05.png]]
+> [!quote] caption
+> Performance of Kimi-VL-A3B-Thinking-2506 on multimodal benchmarks that do not require extensive reasoning.
+
+> [!tip] 表格解读（多模态）
+> ## Figure 13 Description
+
+**Architecture/Components:** Three side-by-side scatter plots share the same axes — Test Time Accuracy (%) on the y-axis vs. Max Thinking Length (k tokens, 1–16k range) on the x-axis. Each panel represents a different multimodal reasoning benchmark (left: MathVision; middle: MathVista; right: MMMU), with discrete data points annotated by percentage values.
+
+**Key Technical Takeaway:** Longer chain-of-thought budgets yield benchmark-dependent returns: on **MathVision** and **MMMU**, accuracy scales monotonically with thinking length (e.g., MathVision rises 18.7% → 36.8% across 1k–16k tokens), indicating the model genuinely leverages extended reasoning. In contrast, **MathVista** saturates near 4k tokens (≈70.9%), suggesting its reasoning depth is already captured within a short budget — additional compute yields diminishing returns.
+
+## Caption (Verbatim)
+
+**Figure 13:** Test-time accuracy when scaling the max thinking token length of our **Kimi-VL-Thinking** model.
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

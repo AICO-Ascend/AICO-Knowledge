@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 1 (p.8) ⭐深度解读
-![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p08.png]]
+![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig01.png]]
+*整页渲染: ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p08.png]]*
 > [!quote] caption
 > 6.2.1 ARCHITECTURE
 
@@ -44,7 +45,8 @@ tags: []
 If you can share the page containing Figure 1 itself, I'd be happy to give a precise architectural description and verbatim caption.
 
 ### Figure 2 (p.10) ⭐深度解读
-![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p10.png]]
+![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig02.png]]
+*整页渲染: ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p10.png]]*
 > [!quote] caption
 > Left: learning curves for cart-pole task, using generalized advantage estimation with varying values of λ at γ = 0.99. The fastest policy improvement is obtain by intermediate values of λ in the range [0.92, 0.98]. Right: performance after 20 iterations of policy optimization, as γ and λ are varied. White means higher reward. The best results are obtained at intermediate values of both. 0 100 200 
 
@@ -60,7 +62,8 @@ If you can share the page containing Figure 1 itself, I'd be happy to give a pre
 *Figure 3:* Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algorithm. Right: learning curves for 3D quadrupedal locomotion, averaged across five runs.
 
 ### Figure 3 (p.10) ⭐深度解读
-![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p10.png]]
+![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig03.png]]
+*整页渲染: ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p10.png]]*
 > [!quote] caption
 > Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algo- rithm. Right: learning curves for 3D quadrupedal locomotion, averaged across ﬁve runs.
 
@@ -76,7 +79,8 @@ If you can share the page containing Figure 1 itself, I'd be happy to give a pre
 *Figure 3:* Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algorithm. Right: learning curves for 3D quadrupedal locomotion, averaged across five runs.
 
 ### Figure 4 (p.11) ⭐深度解读
-![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p11.png]]
+![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig04.png]]
+*整页渲染: ![[assets/high-dimensional-continuous-control-using-generalized-advantage-estimation-p11.png]]*
 > [!quote] caption
 > (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up. 7 DISCUSSION
 
