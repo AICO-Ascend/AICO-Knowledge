@@ -30,19 +30,18 @@ tags: []
 > 6.2.1 ARCHITECTURE
 
 > [!tip] 技术解读（多模态）
-> **Note:** The image provided shows only the **text page (page 8)** of an ICLR 2016 paper (Section 6: Policy Optimization Algorithm & Experimental Setup). No figure is visible on this page — the figure referenced as "Figure 1" (robot models mentioned in §6.2) does not appear in the supplied image. Therefore, no caption can be transcribed.
+> **Description:**
 
-**What the text tells us about Figure 1 (inferred from context):**
-- **Content:** Robot models for three 3D locomotion tasks
-- **Components (referenced):**
-  1. **Biped** — for bipedal locomotion
-  2. **Quadruped** — for quadrupedal locomotion
-  3. **Biped** (dynamically standing up from supine position)
-- **Data/role in paper:** Illustrates the MuJoCo simulation environments used to evaluate the TRPO-based policy-gradient variant
+The figure presents a side-by-side comparison of two simulated agents in a physics-based 3D environment (checkerboard-floored scene, MuJoCo-style). 
 
-**Key technical takeaway (from §6.1–6.2.1):** The policy update θ_{i+1} is computed using advantage estimates derived from the *old* value function V_{ϕ_i} (not the updated V_{ϕ_{i+1}}), avoiding bias — a critical detail also discussed by Schulman et al. (2015).
+**Left panel:** A bipedal humanoid torso with two legs, rendered in an upright T-pose, shown in a standard reference configuration. **Right panel:** A quadrupedal/arachnid-like creature with a central body and four radiating limbs, shown in a crouched/grounded pose.
 
-If you can share the page containing Figure 1 itself, I'd be happy to give a precise architectural description and verbatim caption.
+**Bottom strips (data flow / temporal sequence):** Below each main render is a timeline of five smaller snapshots showing learned motion primitives — a walking gait for the humanoid (sequential forward-stepping frames) and a crawling/locomotion gait for the quadruped (sequential reaching/contact frames). The arrows imply temporal progression from left → right.
+
+**Key technical takeaway:** The figure illustrates that a single learned policy framework can generalize across morphologically distinct embodiments (biped vs. quadruped), producing stable cyclic locomotion gaits purely from physics simulation without hand-engineered controllers.
+
+**Caption (verbatim):**
+*No caption text is rendered within the figure itself; only image panels are shown.*
 
 ### Figure 2 (p.10) ⭐深度解读
 ![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig02.png]]

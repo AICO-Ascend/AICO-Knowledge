@@ -98,23 +98,21 @@ The figure compares three transformer-block designs for hiding communication in 
 > The cool-down phase can be viewed as the inverse of the warm-up phase, allowing for the inverse application of the same technique. As for the steady phase, both the forward and backward computation are independent of adjacent communication operations. Taking the backward as an example, as shown in the right part of
 
 > [!tip] 技术解读（多模态）
-> ## Figure 3 Description
+> **Figure Description (≈110 words)**
 
-**Architecture / Components / Data Flow**
+This diagram illustrates a **pipeline-parallel deep learning training schedule**, decomposed into a *Warm-up Phase* (left) and a *Steady Phase* (right) across two consecutive pipeline stages (`stage i` and `stage i+1`). Each horizontal dashed line represents a **stream** (a sub-batch / micro-batch), with solid arrows denoting **forward (FWD)** and **backward (BWD)** computation dependencies. Inter-stage communication is captured by **Send (S)** and **Receive (R)** operations attached to the streams. A large gray downward arrow at the top highlights **Communication Overlap**, showing how gradient/activation transfers are scheduled concurrently with computation. The warm-up phase fills the pipeline (only forward passes plus S/R ops), while the steady phase interleaves FWD/BWD blocks so that backward passes overlap with the sends from the next stage.
 
-The figure compares three transformer-block designs for hiding communication in 3D parallelism:
+**Key Takeaway:** Backward computation is deliberately overlapped with the *Send* of activations/gradients, hiding communication latency behind compute—a core optimization in pipelined distributed training.
 
-- **(a) PTB with SP + TP (baseline):** LayerNorm → **All-Gather** (SP) → QKV *ColParaLinear* ‖ *ColParaLinear* (TP) → Self-Attention → *RowParaLinear* ‖ *RowParaLinear* → **Reduce-Scatter** → LayerNorm. SP and TP regions are explicitly delineated.
+---
 
-- **(b) Fuse communication into Linears:** Same logical flow, but the All-Gather is folded into a fused *ColParaLinear-with-AG*, and the Reduce-Scatter is folded into a fused *RowParaLinear-with-RS*, removing the standalone comm nodes.
+**Caption (transcribed verbatim):**
 
-- **(c) Overlap communication with GEMM:** Two CUDA streams (S0 = kernel, S1 = comm). *Top* — input chunks A0…AN are copied on S1 while A×W GEMM runs on S0, producing B0…BN. *Bottom* — output chunks C0…CN are reduce-scattered on S1 concurrently with B×W GEMM on S0. Legend distinguishes kernel (pink) vs. comm (green) regions.
-
-**Key Technical Takeaway (≈55 words):** By fusing all-gather/reduce-scatter into the linear layers and issuing them on a separate CUDA stream, MegaScale overlaps collective communication with the GEMM kernel on the critical path, hiding inter-rank latency without altering the tensor-parallel math—reducing SP/TP overhead to near-zero.
-
-## Caption (verbatim)
-
-**Figure 3: Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB).**
+> *Communication Overlap*
+> stage i | stage i+ 1
+> Warm-up Phase | Steady Phase
+>
+> **Legend:** S — Send | R — Receive | --- Stream → Dependency | FWD — Forward | BWD — Backward
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig05.png]]

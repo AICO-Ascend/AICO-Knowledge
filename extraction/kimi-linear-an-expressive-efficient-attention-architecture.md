@@ -65,14 +65,21 @@ The figure is a line plot comparing kernel execution time (ms, y-axis, 0–64) a
 > Neural Parameterization
 
 > [!tip] 技术解读（多模态）
-> **Main Figure (Figure 2) — Description:**
+> ## Description
 
-The figure is a line plot comparing kernel execution time (ms, y-axis, 0–64) against input length (x-axis, 2K→64K) for two attention implementations: **DPLR** (teal dashed line) and **KDA (ours)** (solid blue line). Both curves start near 0 ms at 2K. DPLR grows approximately exponentially, climbing steeply past ~48 ms by 64K. KDA remains nearly flat across 2K–32K (~0–8 ms) and only rises to ~30 ms at 64K, consistently sitting below DPLR. Conditions: batch size = 1, 16 heads.
+The figure depicts a hybrid MoE–transformer with two block types (residual-wrapped):
+- **Top block (1×):** Norm → **MLA** (Multi-Latent Attention) → Norm → **MoE** FFN.
+- **Bottom block (N×):** Norm → **KDA** (Kimi Delta Attention) → Norm → **MoE** FFN.
 
-**Key Technical Takeaway:** KDA eliminates the second-level chunk matmuls of DPLR (Equation 9) by binding decay variables **a**, **b** into **k**, dropping four chunk matmuls to two and yielding ~2× kernel speedup, with the gap widening at long sequences (64K).
+**MoE expansion (top right):** parallel **Shared Experts** (always-on, indices 1…N_s) and **Routed Experts** (selected by a learned Router with top-k gating, indices 1…N_r). Shared outputs and gated routed outputs are summed at the top.
 
-**Caption (verbatim):**
-> Figure 2: Execution time of kernels for varying input lengths, with a uniform batch size of 1 and 16 heads.
+**KDA expansion (bottom right):** input is projected through five parallel branches — two Linear+Conv (+L2-norm) paths and three delta-net-style paths with sigmoid gates — feeding a fused **Kimi Delta Attention** op, followed by Norm → gated Linear projection.
+
+**Key takeaway (≤120 words):** KDA is a linear-time attention using parallel value branches (conv + delta-rule paths) that fuse into a single kernel, replacing standard softmax attention for most layers while MLA handles a single global-context pass — paired with a shared+routed MoE FFN for capacity at fixed FLOPs.
+
+## Caption (verbatim)
+
+*No caption text is present in the provided image — the figure consists only of the architectural diagram with labels (1×, N×, MoE, Norm, MLA, KDA, Shared Expert, Routed Expert, Router, Kimi Delta Attention, Linear, Conv, L2, σ).*
 
 ### Figure 4 (p.7) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig04.png]]

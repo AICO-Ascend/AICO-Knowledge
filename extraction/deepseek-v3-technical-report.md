@@ -30,18 +30,22 @@ tags: []
 > It employs a bidirectional pipeline scheduling, which feeds micro-batches from both ends of the pipeline simultaneously and a significant portion of communications can be fully overlapped. This overlap also ensures that, as the model further scales up, as long as we maintain a constant computation-to-communication ratio, we can still employ fine-grained experts across nodes while achieving a near-
 
 > [!tip] 技术解读（多模态）
-> ## Figure 4 Description
+> **Description (≤120 words):**
 
-The diagram is a **two-row timeline** (time →) showing how forward and backward pipeline chunks are interleaved at the sub-operator level:
+The figure depicts a pipeline-parallel training schedule (GPipe/1F1B style) across **8 devices** processing **10 micro-batches** (numbered 0–9) over time. Each row is a device; each colored cell is a time-step operation:
 
-- **Computation row** (top): sequences of ATTN and MLP operators. Each forward/backward chunk is split into *Forward* (F), *Backward-for-input* (B), and *Backward-for-weights* (W) sub-pieces — boundaries between adjacent forward and backward chunks are *not* aligned.
-- **Communication row** (bottom): DISPATCH (pre-MLP all-to-all), COMBINE (post-MLP all-to-all), and a central PP (pipeline-parallel) block.
+- **Orange** = Forward pass
+- **Green** = Backward (activation gradients, "input")
+- **Blue** = Backward (weight gradients)
+- **Orange/Green split** = Overlapped forward & backward
 
-**Key takeaway:** By mis-aligning the chunk boundaries and rearranging sub-operators, DualPipe hides the all-to-all and PP communication entirely behind on-streaming GPU SMs executing computation — eliminating the 1:1 compute-to-communicate bottleneck of cross-node MoE training.
+Devices enter the pipeline staggered (warm-up phase, top-left triangular blank region), then enter a **steady state** where each device alternates one forward and one backward of successive micro-batches, with a symmetric drain phase at the bottom-right.
 
-## Caption (verbatim)
+**Key takeaway:** Staggering micro-batch launches fills the pipeline and overlaps forward/backward computation, eliminating per-stage idle "bubbles" and keeping every device busy after warm-up — at the cost of holding multiple in-flight activations (memory pressure).
 
-**Figure 4** | Overlapping strategy for a pair of individual forward and backward chunks (the boundaries of the transformer blocks are not aligned). Orange denotes forward, green denotes "backward for input", blue denotes "backward for weights", purple denotes PP communication, and red denotes barriers. Both all-to-all and PP communication can be fully hidden.
+**Caption (verbatim):**
+
+*[No textual caption is present in the image; only in-figure labels: "Device 0" – "Device 7", "Time →", and the legend: "Forward | Backward | Backward for input | Backward for weights | Overlapped forward & Backward".]*
 
 ### Figure 6 (p.15) ⭐深度解读
 ![[assets/crops/deepseek-v3-technical-report-fig06.png]]
@@ -65,17 +69,27 @@ Figure 6 | The overall mixed precision framework with FP8 data format. For clari
 > 48
 
 > [!tip] 技术解读（多模态）
-> **No figure is visible on this page.**
+> **Main Figure Description (≤120 words):**
 
-The provided image (page 48) contains only text from an academic paper — specifically, the tail of a paragraph about MoE model divergence, a section heading ("C. Expert Specialization Patterns of the 16B Aux-Loss-Based and Aux-Loss-Free Models"), and an introductory paragraph that *references* Figure 10, but the figure itself is not rendered on this page.
+The figure presents ablation studies for low-precision training, comparing BF16 vs FP8 loss curves on two model scales: 16B and 230B DeepSeek-V2. Each subplot contains:
+- **Main curves**: Loss (y-axis) vs Tokens/B (x-axis), with blue (BF16) and red (FP8) lines that closely overlap throughout training.
+- **Inset (zoomed difference plot)**: Highlights the residual loss difference between BF16 and FP8 over a selected token range, showing fluctuations around zero.
 
-**What the text tells us about the referenced figure (Figure 10):**
-- It compares two 16B-parameter MoE models: an auxiliary-loss-based baseline vs. an auxiliary-loss-free variant.
-- It plots **expert load** (per-layer) measured on the Pile test set.
-- Data flow conceptually: Pile test tokens → MoE layers → router assigns tokens to experts → expert-activation counts aggregated per layer → visualized.
-- **Key takeaway:** Removing the auxiliary load-balancing loss yields *greater expert specialization* (more skewed / concentrated expert usage) across all layers.
+**Data flow/architecture**: Both plots compare training trajectories at two scales (16B and 230B parameters), validating FP8 against the BF16 baseline.
 
-If you can share the image of Figure 10 itself, I can describe its specific architecture (e.g., layer-by-layer heatmap, bar chart, distribution plot) and transcribe its actual caption verbatim.
+**Key technical takeaway**: FP8 and BF16 training yield essentially indistinguishable loss curves on both 16B and 230B DeepSeek-V2 models. The difference insets fluctuate around zero without systematic drift, demonstrating that FP8 low-precision training preserves model quality at scale and is a viable drop-in replacement for BF16, enabling substantial efficiency gains without performance loss.
+
+**Caption (verbatim):**
+
+"B. Ablation Studies for Low-Precision Training"
+
+"BF16 v.s. FP8 on 16B DeepSeek-V2"
+
+"BF16 v.s. FP8 on 230B DeepSeek-V2"
+
+Axis labels: "Loss" (y-axis), "Tokens/B" (x-axis)
+
+Legend: "BF16", "FP8"
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 

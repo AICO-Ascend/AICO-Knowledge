@@ -30,16 +30,20 @@ tags: []
 > One major feature of LayerNorm that is widely regarded as contributions to the stabilization is its re-centering invariance property: the summed inputs after LayerNorm remain intact when the inputs or weight matrix is shifted by some amount of noise. We argue that this mean normalization does not reduce the variance of hidden states or model gradients, and hypothesize that it has little impact on 
 
 > [!tip] 技术解读（多模态）
-> # Description
+> **Description (≤120 words):**
 
-**No figure is visible on the provided page.** The image shows only the first page (title page) of the paper "Root Mean Square Layer Normalization" (Zhang & Sennrich, NeurIPS 2019, arXiv:1910.07467v1), containing the title, authors (Biao Zhang¹, Rico Sennrich²·¹), affiliations (University of Edinburgh; University of Zurich), abstract, and the opening paragraphs of Section 1 (Introduction). No diagram, plot, or figure is rendered in the supplied image.
+The figure consists of two side-by-side line plots comparing training dynamics of two model variants: a "Baseline" (blue) and "LayerNorm" (orange).
 
-The only in-text reference to a figure in this page is:
-> "…the efficiency gain from faster and more stable training (in terms of number of training steps) is counter-balanced by an increased computational cost per training step, which diminishes the net efficiency, as shown in **Figure 1**."
+- **Plot (a):** Loss vs. Training Step (×100), x-axis 0–100, y-axis ~4–10. At step ~30 (×100), the Baseline reaches loss 7.0 while LayerNorm reaches 5.4.
+- **Plot (b):** Loss vs. Training Time (minutes), x-axis 0–160, y-axis ~4–10. At ~35–40 min, the Baseline is at 7.0 while LayerNorm is at 5.9.
 
-# Caption Transcription
+Both curves share the same legend style; dashed vertical guide lines mark the annotated comparison points, and red dots highlight the specific loss values.
 
-There is **no figure caption to transcribe**, as no figure appears on this page. The caption for Figure 1 is not present in the provided excerpt.
+**Key technical takeaway:** Applying LayerNorm yields a substantially lower training loss than the Baseline at both the same number of steps and the same wall-clock time, indicating faster convergence per step and improved per-minute throughput.
+
+**Caption (verbatim):**
+
+(a) Training loss vs. training steps. (b) Training loss vs. training time.
 
 ### Figure 2 (p.6) ⭐深度解读
 ![[assets/crops/root-mean-square-layer-normalization-fig02.png]]

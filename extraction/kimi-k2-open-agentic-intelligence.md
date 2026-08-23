@@ -102,24 +102,21 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 > • Fidelity verification: To ensure consistency between original and rewritten content, we perform fidelity checks that compare the semantic alignment of each rephrased passage with its source. This serves as an initial quality control step prior to training.
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> **Architecture Description**
 
-**Type:** A 2D line plot (training loss curve), though the data series itself is not rendered/visible in this rendering — only the axis frame is shown.
+The figure depicts a multi-stage streaming/pipelined processing architecture organized into two parallel recompute lanes plus a third (bottom) lane. Data flow proceeds as follows:
 
-**Axes / components:**
-- **X-axis:** "Tokens (Trillion)" — ranging 0 to 16, in increments of 2.
-- **Y-axis:** "Loss" — ranging 1.3 to 2.0, in increments of 0.1.
-- **Plot area:** Empty (no curve, markers, or annotations drawn).
+- A blue top-left **"Full Input / Impulse"** block feeds three green **"Partial Input"** buffers in parallel.
+- Each Partial Input is routed into a purple **"Recompute Module"**, which forwards results to a green **"Partial Output"** buffer.
+- An **"Auto Resume"** control line loops each Partial Output forward into the next stage and ultimately up into a blue top-right **"Extract / Count Output"** block.
+- A second top-left **"Enabled/Trigger"** block gates the entire pipeline.
 
-**Intended content (per caption):** A raw, per-step training loss trajectory across the full ~15+ trillion-token pretraining run of Kimi K2.
+**Key Technical Takeaway (≈110 words):**
+The design decouples a large input into partial slices, processes them through independent recompute modules, and uses an **auto-resume** feedback path to chain outputs into a final extraction stage. This yields a fault-tolerant, streaming architecture where partial failures can be recovered via recomputation without re-feeding the full input, and where downstream aggregation (count/output) is decoupled from upstream latency — a useful pattern for incremental or resumable signal-processing pipelines.
 
-**Key technical takeaway:** Loss should decrease smoothly from ~2.0 toward ~1.3 across the 0–15T token span with no spikes, indicating exceptional training stability — a non-trivial result at trillion-token scale.
+**Caption (verbatim transcription):**
 
----
-
-## Caption (verbatim)
-
-> **Figure 3:** Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity.
+> `WRNHQV` · `VSOLW IXOO LQVXW H[WUDFW` · `LPXOVW KHU` · `FRQW W RXWSXW H[WUDFW` · `WRNHQV` · `SDUWLDO LQVXW` · `UH]XOWH PR` · `SDUWLDO RXWSXW` · `DXWR UH]XH` (repeated for both lanes)
 
 ### Figure 5 (p.7) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig05.png]]

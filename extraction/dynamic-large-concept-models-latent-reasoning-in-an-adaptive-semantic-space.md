@@ -30,33 +30,15 @@ tags: []
 > 3.1
 
 > [!tip] 技术解读（多模态）
-> # Note on Figure Availability
+> **Description**
 
-The image provided shows **page 4 of the paper containing only text** (sections 2.2 and 3.1 with equations). **Figure 1 itself is not visible** in the supplied image — it is only referenced ("The overall architecture is illustrated in Figure 1"). Without seeing the actual figure, I cannot transcribe its caption verbatim. Below I reconstruct the architecture from the in-text description and equations (Eqs. 1–4):
+The figure depicts a chunked-compression architecture for efficient transformer inference. **Panel (a)** shows the overall pipeline: input tokens are segmented and pooled into compressed chunks (C₁–C₄), fed through an Encoder whose KV outputs are consumed by a Decoder. **Panel (b)** details boundary detection, where consecutive tokens are merged into a chunk when their similarity metric exceeds a threshold τᵢ, with each token assigned to a chunk. **Panel (c)** illustrates decoder cross-attention, in which query tokens q₁–q₅ selectively attend to only the relevant compressed chunks (here, positions 1, 3, and 4) rather than the full token sequence. **Key takeaway:** boundary-aware pooling shrinks the effective sequence length, reducing KV-cache memory and attention FLOPs while preserving retrieval-relevant granularity for long-context inference.
 
-## Architecture Description (from §3.1)
+**Caption verbatim**
 
-**Four-stage data flow:**
-1. **Encoding (H = E(X))** — extracts fine-grained token representations from input X.
-2. **Dynamic Segmentation (C = S(H))** — detects semantic boundaries and pools tokens into variable-length concept chunks.
-3. **Concept-Level Reasoning (Z = M(C))** — performs deep computation on the compressed concept sequence.
-4. **Token-Level Decoding (Y = D(H, Z))** — reconstructs token predictions by attending to both original token states H and reasoned concepts Z.
-
-**Key takeaway:** DCLM is a *decoder-only* adaptation of H-Net's hierarchical concept reasoning — boundaries are learned end-to-end (no fixed sentence priors), and token decoding is conditioned jointly on raw token encodings **and** compressed concept representations, enabling adaptive compute allocation in standard autoregressive LLMs.
-
-## Verbatim Transcription
-
-**Caption:** *Not visible in the provided image.*
-
-**Equations from §3.1 (verbatim):**
-| Equation | Label | Number |
-|---|---|---|
-| H = E(X) | (Encoding) | (1) |
-| C = S(H) | (Segmentation & Pooling) | (2) |
-| Z = M(C) | (Concept Reasoning) | (3) |
-| Y = D(H, Z) | (Decoding) | (4) |
-
-If you can share the page containing Figure 1, I can provide the actual caption transcription.
+(a) Overview Architecture
+(b) Boundary Detection & Pooling
+(c) Decoder Cross-Attention
 
 ### Figure 9 (p.7) ⭐深度解读
 ![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p07.png]]

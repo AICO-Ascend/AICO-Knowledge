@@ -283,23 +283,17 @@ Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segment
 > Specifically, increasing the max thinking token length at inference time consistently improves test-time accuracy across all three 16
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> # Figure Description
 
-**Layout:** The figure has a two-column side-by-side prompt/response format.
+**Components / Layout:** Three side-by-side scatter plots, each plotting **Test Time Accuracy (%)** (y-axis) against **Max Thinking Length (k tokens)** (x-axis, with discrete points at 1, 2, 4, 8, 16). The benchmarks shown are **MathVision** (left, y ≈ 16–38%), **MathVista** (middle, y ≈ 66–72%), and **MMMU** (right, y ≈ 48–62%). Each point is annotated with its exact percentage value rather than connected by lines.
 
-**Left panel (Prompt):** A user instruction asking the model to split a video into scenes with start time, end time, and detailed descriptions.
+**Data flow:** The variable being swept is a single inference-time hyperparameter (thinking budget in tokens), and the metric reported is downstream benchmark accuracy — so the figure is a *scaling/ablation* study on compute at inference.
 
-**Right panel (Response):** A structured list of segmented scenes, each containing:
-- **Timestamp range** (e.g., `00:00:00 – 00:00:15`)
-- **Natural language scene description** detailing content (people, actions, environment, mood, camera movement, lighting)
+**Key Technical Takeaway:** All three benchmarks show **monotonic accuracy gains as thinking length grows, but with strongly diminishing returns**: MathVision jumps +18.1 pp from 1k→16k tokens, MathVista only +4.6 pp (and even dips at 8k), and MMMU gains +12.5 pp. This indicates that longer chain-of-thought budgets help hardest reasoning tasks (MathVision) most, while saturated benchmarks (MathVista) yield marginal benefit.
 
-**Data flow:** Input prompt → model segments the video at natural boundaries → outputs ordered (timestamp, caption) pairs covering the full duration (~11 minutes), with fine-grained granularity (~15–35 second windows).
+# Caption (verbatim)
 
-**Key technical takeaway:** Kimi-VL demonstrates temporal understanding by jointly performing *scene boundary detection* and *dense captioning*, producing structured, timestamp-anchaled descriptions that enable long-form video comprehension without requiring pre-extracted frames or external segmenters.
-
-## Caption (verbatim)
-
-Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along with fine-grained natural language descriptions for each scene.†
+No standalone caption is printed; the in-figure text reads: **"MathVision | MathVista | MMMU"** (panel titles), with axes **"Max Thinking Length (k tokens)"** and **"Test Time Accuracy (%)"**.
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 

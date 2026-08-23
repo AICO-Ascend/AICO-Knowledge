@@ -224,15 +224,21 @@ Figure 9: The incremental cost of coalescing prefills with decode batches. We co
 > Capacity (in queries per second) of Mistral-7B and
 
 > [!tip] 技术解读（多模态）
-> **Figure 10 — Capacity comparison across schedulers**
+> # Description
 
-Components: Grouped bar chart with three schedulers (Orca, vLLM, Sarathi-Serve) compared per model under two SLO regimes — strict (SLO-S) and relaxed (SLO-R). Two sub-panels show results on two workloads: (a) *openchat_sharegpt4* and (b) *arxiv_summarization*. Models evaluated are Mistral-7B and Yi-34B. Y-axis is Max Capacity (queries/sec).
+I do not see a figure (diagram, architecture, or visualization) in the provided image. The content shown is a **text section** from a research paper, specifically Section 5.1 "Capacity Evaluation," containing prose discussion about experimental methodology. There is no architecture, component diagram, or data flow illustration present to describe — only references to external figures (e.g., "Table 3") that are not visible here.
 
-Key takeaway: Sarathi-Serve consistently beats Orca and vLLM under both strict and relaxed SLOs across both datasets — most notably 4.00× over Orca on Yi-34B/openchat_sharegpt4 under strict SLO, enabled by its adaptive token-budget chunked prefill that mitigates latency violations from long prompts.
+**Key technical takeaway** (from the visible text): The paper defines two SLO regimes on **P99 TTFT** (Time-To-First-Token) — *strict* (for interactive applications, individual-token latency constraints matter) and *relaxed* (for offline/batch workloads where only end-to-end completion time matters). The strict SLO threshold is set at **25× the decode-step execution time** with a 4k-token prefill, 32-batch size, and no prefill interference.
 
-**Caption (verbatim):**
+---
 
-Figure 10: Capacity (in queries per second) of Mistral-7B and Yi-34B with different schedulers under strict (SLO-S) and relaxed (SLO-R) latency SLOs.
+# Verbatim Transcription
+
+> **5.1 Capacity Evaluation**
+>
+> We evaluate Sarathi-Serve, Orca and ... and both datasets under two differ... *relaxed* and *strict*. Similar to Pate... the intrinsic performance limitation... pair, we define the SLO on P99 T... 25× the execution time of a decod... (with prefill length of 4k and 32 b... any prefill interference for the s... respectively. **Table 3** shows a sum... thresholds. Note that the *strict* S... target desired for interactive appl... the other hand, the *relaxed* confi... systems where the complete sequen... be generated within a predictabl... constraints on individual tokens is ... experiments, we ensure that the ma... i.e., the queuing delay does not bl... seconds on median scheduling del...
+
+*(Note: The image is cropped on the right side, so many lines are truncated mid-sentence. Ellipses [...] indicate cut-off text.)*
 
 ### Figure 11 (p.11) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig11.png]]

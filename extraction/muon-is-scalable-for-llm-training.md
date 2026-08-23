@@ -123,19 +123,34 @@ The figure consists of **three side-by-side scatter/line plots** displaying loss
 > D
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description
+> ## Description
 
-The figure consists of **three side-by-side scatter/line plots** displaying loss landscapes across FLOPs budgets (five levels: 1.1e+20, 1.9e+20, 3.9e+20, 5.7e+20, 1.0e+21, color-coded purple→yellow):
+The figure is a Python code snippet implementing a **MoE (Mixture-of-Experts) gate scaling factor calculator**. The architecture has three logical blocks:
 
-1. **Loss vs. Train Tokens** (log-scale x-axis): Loss decreases monotonically with more tokens; larger FLOPs budgets achieve lower final loss.
-2. **Loss vs. Learning Rate**: Bowl-shaped (U) curves, each with a distinct minimum identifying the optimal learning rate per FLOPs budget.
-3. **Loss vs. Batch Size**: Loss rises with batch size (200–900), with larger budgets consistently achieving lower loss across the range.
+1. **Activation** — `sigmoid(x)` converts raw logits into probabilities.
+2. **Mock routing simulation** — a loop generates `num_experts` Gaussian-distributed logits, sorts their sigmoid outputs in descending order, keeps the top-`k`, and renormalizes them so the chosen weights sum to 1.
+3. **Scaling factor aggregation** — for each trial, the factor `1 / √(Σ pᵢ²)` is computed (inverse of the ℓ2 norm of the routing weights), then averaged over `iter_times` Monte-Carlo trials.
 
-**Key takeaway:** Across all three hyper-parameters, higher FLOPs budgets consistently dominate lower ones (lower loss everywhere), confirming that the optimal hyper-parameters scale predictably with compute—enabling reliable extrapolation to larger training runs.
+**Data flow:** `num_experts → random logits → sigmoid → sort desc → top-k slice → renormalize → norm → accumulate → mean`.
 
-## Verbatim Caption
+### Key Technical Takeaway (≤120 words)
 
-**Figure 5: Optimization Landscapes for Scaling Law Hyper-parameters Across FLOPs Budgets**
+The returned `factor = 1 / ‖p‖₂` compensates for the **norm collapse** caused by top-k renormalization: because `topk < num_experts`, the chosen weights are scaled up so they still sum to 1, which inflates their ℓ2 norm above `1/√topk`. Dividing by this norm restores a per-token contribution of roughly unit scale, stabilizing training in sparse MoE layers (analogous to the scaling used in Switch Transformer / GShard style gating). Monte-Carlo averaging over many random logits yields an expected value usable as a constant hyperparameter at inference time.
+
+### Caption (verbatim transcription)
+
+```
+"""Calculate the gate scaling factor for MoE.
+
+Args:
+    num_experts (int): The number of experts.
+    topk (int): The number of experts to select.
+    iter_timers (int): The number of iterations.
+
+Returns:
+    float: The gate scaling factor.
+"""
+```
 
 ### Figure 7 (p.17) ⭐深度解读
 ![[assets/crops/muon-is-scalable-for-llm-training-fig07.png]]

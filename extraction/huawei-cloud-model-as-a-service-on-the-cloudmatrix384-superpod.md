@@ -62,15 +62,13 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 > Trade-off between MTE and DMA. To improve communication efficiency, we employ NPU-Direct Unified Remote Memory Access (URMA), a technique on Ascend NPUs similar to IBGDA on GPUs [15]. NPU-Direct URMA enables AIV cores to issue remote memory access requests directly to the DMA engine, bypassing both the host CPU and AI CPU as shown in §2.2. Although NPU-Direct URMA incurs higher startup latency com
 
 > [!tip] 技术解读（多模态）
-> I don't see an actual figure displayed on this page. Page 12 consists entirely of body text from a research paper, containing the following sections:
+> **Description**
 
-- Continuation of a discussion on expert/attention NPU provisioning (mentioning DeepSeek-R1/V3 with 288 experts)
-- **Trampoline Forward** — describes a two-stage routing scheme (references Figure 8)
-- **Trade-off between MTE and DMA** — discusses NPU-Direct URMA
-- **Performance** — A2E/E2A latency results (172 μs / 193 μs)
-- **Section 4: Scalable Serving System at SuperPod-scale**, with subsection **4.1 Overview** introducing FlowServe (references Figure 9 and Figure 10)
+The figure contrasts two data-flow patterns (A2E and E2A) between stacked Attention NPUs (top) and Experts NPUs (bottom), each containing DMA, AIV, and Mem (holding *meta* and *data*). In **A2E** (left), metadata is pushed downward first (① Update Meta), loaded into the Expert's AIV (②), then Attention pulls data from the Expert (③ Pull), with cross-expert data movement (④) and a combined update (⑤). In **E2A** (right), data flows directly between Experts (①), while only small metadata is pushed up to Attention (②) before the large data payload follows (③→④). 
 
-The page text *references* Figure 8, Figure 9, and Figure 10, but none of these figures are actually rendered on this page, and there is no caption to transcribe. If you'd like me to describe Figure 8 (the trampoline forward data flow) or Figures 9/10 (the redesigned FlowServe system) based on what the surrounding text describes, I can do that — but those visuals themselves are not present in the image you've shared. Could you share the page(s) where those figures actually appear?
+**Key takeaway:** A2E is bandwidth-heavy because it pulls full data up-then-down to coordinate; E2A keeps data local among Experts and only ships lightweight metadata to Attention, drastically reducing cross-module traffic.
+
+**Caption (verbatim):** *A2E* and *E2A*
 
 ### Figure 10 (p.12) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig10.png]]
@@ -79,15 +77,27 @@ The page text *references* Figure 8, Figure 9, and Figure 10, but none of these 
 > This redesign centers on three key components: • First, we introduce the Data Parallel (DP) group abstraction, inspired by SGLang [24].
 
 > [!tip] 技术解读（多模态）
-> I don't see an actual figure displayed on this page. Page 12 consists entirely of body text from a research paper, containing the following sections:
+> ## Description (≤120 words)
 
-- Continuation of a discussion on expert/attention NPU provisioning (mentioning DeepSeek-R1/V3 with 288 experts)
-- **Trampoline Forward** — describes a two-stage routing scheme (references Figure 8)
-- **Trade-off between MTE and DMA** — discusses NPU-Direct URMA
-- **Performance** — A2E/E2A latency results (172 μs / 193 μs)
-- **Section 4: Scalable Serving System at SuperPod-scale**, with subsection **4.1 Overview** introducing FlowServe (references Figure 9 and Figure 10)
+The figure depicts a **multi-die pipeline** for a transformer layer with Mixture-of-Experts (MoE), spanning N+1 dies (Die 0 … Die N), each handling a token batch in parallel. Tokens flow left-to-right through eight sequential stages: **MLAPrologue → MLA → All2All → O → Gating → Dispatch → MoE → Combine**, then proceed to the next layer. Two **Global Sync** barriers (red dashed ovals) align dies — one after All2All/Dispatch, and one after Combine — before downstream layers consume outputs. Four optimization levers are annotated: **DP-LB** smooths MLA latency, **MoE-LB** smooths expert latency, **Proactive GC** mitigates CPU stragglers, and **MTP + Dynamic MicroBatch** boosts compute efficiency.
 
-The page text *references* Figure 8, Figure 9, and Figure 10, but none of these figures are actually rendered on this page, and there is no caption to transcribe. If you'd like me to describe Figure 8 (the trampoline forward data flow) or Figures 9/10 (the redesigned FlowServe system) based on what the surrounding text describes, I can do that — but those visuals themselves are not present in the image you've shared. Could you share the page(s) where those figures actually appear?
+**Key takeaway:** Cross-die load balancing (DP-LB + MoE-LB) at the two global sync points is the critical mechanism for keeping the heterogeneous pipeline balanced, since MLA and MoE stages are the dominant sources of latency variance across dies.
+
+## Caption / Annotation Text (verbatim)
+
+> **Key Technique 1:** Use **DP-LB** to reduce MLA latency variation
+>
+> **Key Technique 2:** Use **MoE-LB** to reduce MoE Latency variation
+>
+> Die 0 · Die 1 · Die 2 · Die 3 · … · Die *N*−1 · Die *N*
+>
+> MLAPrologue | MLA | All2All | O | Gating | Dispatch | MoE | Combine → Next Layer
+>
+> *Global Sync* (×2)
+>
+> **Key Technique 3:** Use **Proactive GC** to reduce CPU stragglers
+>
+> **Key Technique 4:** Use **MTP** and **Dynamic MicroBatch** to improve overall computing efficiency
 
 ### Figure 12 (p.16) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig12.png]]
@@ -96,23 +106,21 @@ The page text *references* Figure 8, Figure 9, and Figure 10, but none of these 
 > Step 1: Collecting Expert Load Distribution. First, we collect data on expert loads across NPUs. We define expert load as the total number of tokens routed to each expert within a given time interval. Token count directly reflects both communication overhead (MoE-Dispatch and
 
 > [!tip] 技术解读（多模态）
-> **Description (Figure 11):**
+> **Main Figure Description:**
 
-Figure 11 contains two sub-plots evaluating Expert Placement Load Balancing (EPLB):
+The figure illustrates an **Expert Parallel Load Balancing (EPLB) system** for DeepSeek-style MoE inference, organized in two halves:
 
-**(a) Expert Load Skew:** A CDF of per-expert hit probability for a DeepSeek-R1 MoE layer under ShareGPT workload. The curve rises sharply near 0% and saturates near 1.0, with a red dashed line marking the equilibrium (~0.35%) hit probability. Most experts sit far below equilibrium, while a small tail of "hot" experts absorb disproportionate token traffic.
+**Top — Control Plane (numbered 1–4):**
+1. **Expert Stats** (database) — collects per-token expert usage statistics
+2. **EPLB Algorithm** — computes optimal expert placement
+3. **Expert Reconfig.** — plans redistribution
+4. **Logical-Physical Expert Map** — table mapping tokens (Token 1–4) to expert IDs
 
-**(b) Latency vs. Batch Size:** Three routing strategies compared across batch sizes 8–192 on EP288:
-- **MoE-Native** (blue): original token-to-expert assignment — highest latency (~150 µs at BS=192).
-- **MoE-Balanced** (orange): EPLB replica placement — near-optimal.
-- **MoE-Avg-Routing** (green): idealized uniform load — lower bound.
+**Bottom — Data Plane (two NPU Dies):** Each die runs the pipeline MLA → Gating → Collect → LB → Dispatch, hosting a subset of Experts (e.g., {0,1} on left, {1,255} on right). Blue arrows pipe stats back to the database; red arrows push the load-balancer plan into each die's LB; green dashed arrows route token-to-expert dispatch via the map.
 
-All scale linearly, but MoE-Balanced closely tracks the uniform-load baseline, recovering ~30% latency vs. Native.
+**Key Technical Takeaway:** EPLB decouples *logical* expert IDs from *physical* NPU placement, enabling runtime rebalancing based on live token-expert statistics — mitigating MoE load imbalance across dies without model retraining.
 
-**Key Takeaway:** EPLB mitigates straggler effects caused by skewed expert activation (30× token concentration) by replicating hot experts and using precomputed dispatch maps, achieving near-uniform-load latency without disturbing the natural router.
-
-**Caption (verbatim):**
-Figure 11 | A Study of Expert Placement Load Balancing. (a) We show the expert load distribution of a DeepSeek-R1 layer under the ShareGPT workload. The distribution is highly skewed—20% of experts receive more than the average load, and the hottest expert sees 30× more tokens than the average. (b) The setup uses EP288 and 1K-token sequence length. MoE-Avg-Routing, which forces uniform load across all experts; MoE-Native, which uses the original token-to-expert assignment; and MoE-Balanced, which applies our EPLB to balance expert load.
+**Caption (verbatim):** *Expert Parallel (up to 288 for DeepSeek Models)*
 
 ### Figure 17 (p.22) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig17.png]]

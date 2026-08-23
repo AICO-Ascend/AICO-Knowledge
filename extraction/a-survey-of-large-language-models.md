@@ -30,9 +30,17 @@ tags: []
 > As discussed before, language model is not a new tech- nical concept specially for LLMs, but has evolved with the advance of artificial intelligence over the decades. Early lan- guage models mainly aim to model and generate text data, while latest language models (e.g., GPT-4) focus on complex task solving. From language modeling to task solving, it is an important leap in scientific thinking, whi
 
 > [!tip] 技术解读（多模态）
-> No figure is visible on this page. Page 3 contains only two columns of body text from the survey (introducing LLMs vs. PLMs, referencing Figure 1 and Figure 2 elsewhere), along with three footnotes. The actual figures (Figure 1 — arXiv submission trends; Figure 2 — four-generation evolution of language models) are not rendered in the image you provided, so I cannot describe their architecture/components/data flow or transcribe a caption verbatim.
+> **Figure description:**
 
-If you can share the page containing the figure, I can provide the requested description.
+The figure consists of two side-by-side line plots tracking the temporal growth of two search queries.
+
+- **(a) Query="Language Model"** — a blue exponential curve spanning 2018–2023 (y-axis 0–10,000). Labeled data points include GPT-1, BERT, GPT-2, T5, GPT-3, Codex, InstructGPT, ChatGPT, LLaMA, and GPT-4, each marking the release date of a landmark model. Growth accelerates sharply after 2022.
+- **(b) Query="Large Language Model"** — an orange exponential curve spanning ~2020–2023 (y-axis 0–1,750). Labeled points include T5, GPT-3, Codex, InstructGPT, ChatGPT (highlighted with a blue star), LLaMA, and GPT-4.
+
+**Key technical takeaway:** Both queries exhibit near-exponential growth, but "Language Model" has a longer historical tail (2018+), while "Large Language Model" shows a steeper, more recent surge—suggesting public interest pivoted from general language modeling toward the scaled-up LLM paradigm following GPT-3/ChatGPT.
+
+**Caption (verbatim):**
+(a) Query="Language Model"   (b) Query="Large Language Model"
 
 ### Figure 3 (p.99) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig03.png]]
@@ -41,20 +49,21 @@ If you can share the page containing the figure, I can provide the requested des
 > – Section 4: add LLM-based data filtering and selec- tion methods in Section 4.1.2; update Section 4.2.1, “Emergent Architectures” to include more discus- sions about SSM-based architectures; add Table 6 to compare parallelism and complexity of different architectures. – Section 5: add latest discussion about instruction quality improvement and instruction selection in
 
 > [!tip] 技术解读（多模态）
-> I'm unable to complete this request as described. The image you've provided (page 99 of what appears to be a survey paper on Large Language Models) contains **only text content** — specifically:
+> ## Figure Description
 
-- A chronological list of updates to various sections of the paper
-- An **Acknowledgments** section
-- Lists of contributions (experiments and tips)
-- The very beginning of a **References** section (starting with reference [1], Bengio et al.)
+**Architecture/Layout:** The figure is a curved arc-shaped timeline depicting the evolution of large language models (LLMs) from **2019 through 2026**. Major year markers (2019, 2022, 2023, 2024, 2025 split into sub-periods 1–6, 7–11, 12, and 2026) anchor a black curved axis. Each year has a vertical column of model entries, each accompanied by the issuing organization's logo (Google, OpenAI, Meta, Mistral, DeepSeek, Baidu, Anthropic, Alibaba, Zhipu, Moonshot, xAI, Meta, etc.). A beige tag labeled **"Publicly Available"** sits in the top-right corner, serving as a qualifier for the listed models.
 
-There is **no figure, diagram, or illustration** present on this page, and consequently no caption to transcribe. The text does mention "Figure 3" being updated with new LLMs, but the figure itself is not shown on this page.
+**Data Flow:** No data flow — this is a categorical chronological visualization, not a system diagram. Models are grouped by release year rather than by capability, architecture, or benchmark.
 
-If you'd like, I could instead:
-1. Summarize the main textual content of this page (e.g., the update history, acknowledgments, or contributor lists)
-2. Describe a different page that actually contains a figure from this paper
+**Key Technical Takeaway (≤120 words):** The figure illustrates the **explosive acceleration of LLM releases**, transitioning from sparse single-digit model counts in 2019–2022 (T5, GPT-3, ChatGPT) to dense multi-vendor clustering by 2024–2025, where open-weights ecosystems (DeepSeek, Mistral, Qwen, LLaMA, GLM, Gemma) rival proprietary frontier models (GPT-4o/5.x, Claude 4.5, Gemini 3.0, Grok 4.1). The emergence of reasoning-focused models (o3, DeepSeek-R1, Kimi K1.5) and trillion-parameter open models (Ring-1T/Ling-1T, MiniMax M2) in 2025 signals a paradigm shift toward **reasoning-capable, openly distributed** foundation models.
 
-Please let me know how you'd like to proceed, or share the page containing the figure you'd like described.
+## Caption (Verbatim)
+
+No caption is printed on the figure itself. The only explicit textual annotation present is the in-figure tag:
+
+> **Publicly Available**
+
+If this tag is interpreted as the figure's caption, then that is the verbatim caption. Otherwise, the figure has no caption.
 
 ### Figure 4 (p.7) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig04.png]]
@@ -63,17 +72,15 @@ Please let me know how you'd like to proceed, or share the page containing the f
 > The basic principle underlying GPT models is to compress the world knowledge into the decoder-only
 
 > [!tip] 技术解读（多模态）
-> I cannot complete this request accurately because **no figure is visible on this page**. 
+> # Figure Description
 
-The provided image shows page 7 of a survey paper on LLMs, which contains only text content:
-- Discussion of RLHF (reinforcement learning with human feedback) and InstructGPT
-- "Tools manipulation" subsection
-- Section 2.2 "Technical Evolution of GPT-series Models"
-- Subsections on "Early Explorations," "GPT-1," "GPT-2," and "Capacity Leap"
+The diagram is a horizontal evolution timeline (2018.06–2023.09) of OpenAI's GPT family. The **main track** flows left-to-right: GPT-1 → GPT-2 → GPT-3 → Codex → GPT-3.5 → GPT-4, with ChatGPT branching upward from GPT-3.5 and a dashed loop back to GPT-3.5. Each node carries a release date and a capability label (e.g., "decoder-only architecture / generative pre-training," "in-context learning / exploring scaling limits," "strong reasoning ability"). A **sub-branch from GPT-3.5** traces the alignment track: code-davinci-002 → text-davinci-002 (+instruction) → text-davinci-003 (+RLHF) → gpt-3.5-turbo (+chat). GPT-4 spawns two variants: GPT-4 Turbo and GPT-4 Turbo with vision.
 
-The text *references* "Figure 4" (described as a schematic diagram depicting the technological evolution of GPT-series models), but **Figure 4 itself is not included in the image you provided**. There is also no visible caption on this page to transcribe verbatim.
+**Key technical takeaway:** GPT progress combined three orthogonal levers — decoder-only pre-training, parameter/context scaling, and post-hoc alignment via instruction tuning + RLHF — turning a single base model into a product line spanning code, chat, and multimodal reasoning.
 
-To complete your request, I would need an image containing the actual figure and its caption. If you can share the page containing Figure 4, I can then describe its architecture/components/data flow, provide a technical takeaway, and transcribe the caption.
+# Caption (verbatim)
+
+No caption text is present in the figure. The only textual content consists of the "**OpenAI**" logo (top-left) and the in-diagram node labels and capability descriptors listed above.
 
 ### Figure 5 (p.12) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig05.png]]
@@ -99,14 +106,24 @@ Fig. 5: An evolutionary graph of the research work conducted on LLaMA. Due to th
 > Filtering and Selection. To remove low-quality data from the collected corpus, existing work generally adopts two ap- proaches, namely classifier-based and heuristic-based. The former approach trains a selection classifier based on high- quality texts and leverages it to identify and filter out low- quality data. Typically, these methods train a binary classi- fier using positive instances that ar
 
 > [!tip] 技术解读（多模态）
-> # Response
+> ## Description (≤120 words)
 
-**No figure is visible on the provided page.** The page contains only body text discussing data sources (scientific text, code) and data preprocessing techniques (filtering and selection, de-duplication, privacy reduction) for LLM pre-training. The text *references* "Figure 7" as illustrating "A typical pipeline of preprocessing the pre-training data for LLMs," but the figure itself does not appear on this page — it would likely be on a separate page in the original document.
+The figure depicts a **six-stage data preprocessing pipeline** for pre-training large language models, flowing left-to-right via blue chevron arrows:
 
-**Caption (transcribed verbatim from in-text reference):**
-> "A typical pipeline of preprocessing the pre-training data for LLMs has been illustrated in Figure 7."
+1. **Raw Corpus** — heterogeneous sources (web, books, GitHub, etc.)
+2. **Filtering & Selection** — language, metric, statistic, keyword filters
+3. **De-duplication** — at sentence, document, and set levels
+4. **Privacy Reduction** — PII detection and removal
+5. **Tokenization** — existing tokenizers, SentencePiece, or Byte-level BPE
+6. **Ready to pre-train** — output token IDs stored in databases
 
-If you can provide the page containing the actual figure, I'd be happy to describe its architecture, components, data flow, and identify a key technical takeaway for you.
+A running example sentence ("Alice is writing a paper about LLMs.") is transformed at each stage to illustrate each operation concretely.
+
+**Key takeaway:** Each stage progressively reduces noise, redundancy, and risk while preserving semantic content — emphasizing that **data quality, not model architecture, is often the dominant determinant of pre-training performance**.
+
+## Caption (verbatim)
+
+The figure as provided contains **no caption text**. Only the inline stage labels (Raw Corpus; Filtering & Selection; De-duplication; Privacy Reduction; Tokenization; Ready to pre-train!) and bullet items within each stage are visible — there is no figure title, footnote, or source attribution rendered in the image.
 
 ### Figure 8 (p.20) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig08.png]]
@@ -139,22 +156,25 @@ Effective LLM pre-training requires orchestrating two coupled dimensions: a **da
 > Encoder-decoder Architecture. The vanilla Transformer model is built on the encoder-decoder architecture [22], which consists of two stacks of Transformer blocks as the encoder and decoder, respectively. The encoder adopts stacked multi-head self-attention layers to encode the input sequence for generating its latent representations, while the decoder performs cross-attention on these representa- 
 
 > [!tip] 技术解读（多模态）
-> I'm unable to complete this request as described because **there is no figure visible on this page**. 
+> **Figure description (≤120 words):**
 
-The page (numbered 22) contains only text content from what appears to be a survey paper on Large Language Models (likely "A Survey of Large Language Models" by Zhao et al.). The text explicitly references "Figure 9" in the context of categorizing LLM architectures into three types (encoder-decoder, causal decoder, and prefix decoder), but the actual figure is not displayed on this page.
+The figure compares three transformer attention patterns via three 6×6 masks over the input "A Survey of Large Language Models," split into a 3-token source (blue) and 3-token target (green), with a yellow cell marking the final predicted token and gray cells denoting masked (disallowed) attention.
 
-**What the page contains instead:**
+- **Causal Decoder:** Strict lower-triangular mask — every token attends only to itself and prior tokens in a single unified stream.
+- **Prefix Decoder:** Bidirectional attention over the prefix block, then causal attention over the remaining tokens (lower-triangular with a filled upper-left square).
+- **Encoder-Decoder:** Fully bidirectional encoder over the source (filled blue square), while the decoder uses causal self-attention plus full cross-attention to all encoder tokens.
 
-**Section 4.2.1 – Typical Architectures**, which discusses:
-- **Encoder-decoder Architecture** – e.g., T5, BART, Flan-T5
-- **Causal Decoder Architecture** – e.g., GPT-series, OPT, BLOOM, Gopher (unidirectional attention mask)
-- **Prefix Decoder Architecture** – non-causal decoder with bidirectional prefix + unidirectional generation (e.g., GLM-130B, U-PaLM)
-- **Mixture-of-Experts (MoE)** – sparse activation for parameter scaling (e.g., Switch Transformer, GLaM)
-- **Emergent Architectures** – State Space Models (SSMs) like Mamba, RWKV, RetNet, Hyena, designed to overcome Transformer's quadratic complexity
+**Key takeaway:** The three architectures differ only in *which* attention positions are masked; encoder-decoder generalizes the prefix-decoder by separating the bidirectional source processing into an independent encoder stack.
 
-**Key technical takeaway from the text:** The three mainstream LLM architectures differ primarily in their **attention masking strategies** — causal decoders use strict unidirectional masks, prefix decoders allow bidirectional attention over the input prefix only, and encoder-decoders process input/output through separate stacks with cross-attention. These masking choices have cascading effects on pre-training efficiency, in-context learning ability, and downstream task performance.
+**Verbatim caption text present in figure:**
 
-If you intended to share an image of the actual figure, it didn't come through in your message.
+"Causal Decoder" | "Prefix Decoder" | "Encoder-Decoder"
+
+Axis labels: "Decoder" (left panel), "Decoder" (middle panel), "Encoder" / "Decoder" (right panel, both rows)
+
+Column/row tokens: "A", "Survey", "of", "Large", "Language", "Models"
+
+(No narrative figure caption is printed on the image.)
 
 ### Figure 13 (p.43) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig13.png]]
@@ -163,19 +183,17 @@ If you intended to share an image of the actual figure, it didn't come through i
 > Adapter Tuning. Adapter tuning incorporates small neural network modules (called adapter) into the Transformer mod- els [406]. To implement the adapter module, a bottleneck architecture has been proposed in [406, 407], which first compresses the original feature vector into a smaller di- mension (followed by a nonlinear transformation) and then recovers it to the original dimension. The adapter mo
 
 > [!tip] 技术解读（多模态）
-> **Note:** The provided page contains only the textual description of Figure 13 (referenced in §5.3.1). The actual figure illustration and its caption are not present in this page excerpt — only the body text describing the four methods. The following description is reconstructed from the textual explanation of Figure 13.
+> **Description**
 
-**Description of Figure 13 (as described in text):**
-Figure 13 illustrates four parameter-efficient fine-tuning (PEFT) methods for Transformer language models, with the original model weights frozen (shown in gray) and only small trainable components updated (shown in color):
+The figure compares four parameter-efficient fine-tuning (PEFT) methods for transformer models. (a) **Adapter Tuning** inserts small bottleneck "Adapter" modules after each MHA and FFN block within every layer. (b) **Prefix Tuning** prepends learned "Prefix" vectors to the key/value inputs at every layer. (c) **Prompt Tuning** prepends a single learned "Prompt" only at the input, which is then propagated through all N layers. (d) **Low-Rank Adaptation (LoRA)** injects trainable low-rank matrices (W_up, W_down) in parallel with the frozen weights of each layer, with outputs merged back.
 
-1. **Adapter Tuning** — Small bottleneck neural modules (down-project → nonlinearity → up-project) inserted *serially* after each Transformer sub-layer (attention & FFN), or placed *in parallel* alongside them.
-2. **Prefix Tuning** — Trainable prefix vectors prepended to the keys/values at every Transformer layer (layer-wise).
-3. **Prompt Tuning** — Trainable soft prompts attached only at the **input embedding layer** (input-level).
-4. **LoRA (Low-Rank Adaptation)** — Low-rank decomposition ΔW = AB inserted alongside frozen weight matrices in each dense layer, with rank k ≪ min(m, n).
+**Key Technical Takeaway**
 
-**Key technical takeaway:** All four methods freeze the pre-trained backbone and inject a tiny number of trainable parameters at different architectural granularities (sub-layer, layer-wise, input-only, or weight-level), trading a small accuracy gap for dramatically reduced storage — one backbone can serve many tasks via small task-specific modules.
+All four methods keep the pretrained backbone frozen and learn only small auxiliary parameters, but they differ in *where* and *how often* trainable parameters are injected — adapters and LoRA modify internal representations per layer, while prefix/prompt tuning prepends context at the input side — trading expressiveness against parameter count.
 
-**Verbatim caption transcription:** *Not visible on this page.* The page text states only: "The illustration of these four methods are shown in Figure 13." The actual figure caption (e.g., "Figure 13: Overview of four parameter-efficient fine-tuning methods…") would appear on the page containing the illustration, which is not included in the provided excerpt.
+**Caption (verbatim)**
+
+(a) Adapter Tuning   (b) Prefix Tuning   (c) Prompt Tuning   (d) Low-Rank Adaptation
 
 ### Figure 16 (p.54) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig16.png]]

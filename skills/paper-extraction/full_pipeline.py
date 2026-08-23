@@ -46,14 +46,33 @@ def uncaptioned_crops():
     cap_path = OUT / "minimax_captions.json"
     cap = json.loads(cap_path.read_text()) if cap_path.exists() else {}
     keys = set(cap) | {k.replace("extraction/", "") for k in cap}
+    # fig crops inherit their page-level caption (same content) — only caption a
+    # fig crop when its page PNG was never captioned (e.g. new paper whose pages
+    # weren't M3-read yet). visuals.json maps crop -> page number.
+    vis_path = OUT / "visuals.json"
+    vis = json.loads(vis_path.read_text()) if vis_path.exists() else {}
+    def page_captioned(slug, page):
+        for k in (f"extraction/assets/{slug}-p{page:02d}.png",
+                  f"assets/{slug}-p{page:02d}.png"):
+            if k in keys:
+                return True
+        return False
+    fig_has_page_cap = set()
+    for slug, v in vis.items():
+        for f in v.get("figures", []):
+            if page_captioned(slug, f["page"]):
+                fig_has_page_cap.add(f"{slug}-fig{f['num']:02d}.png")
     imgs = []
     for pat in ("assets/crops/*-tab*.png", "assets/crops/*-eq*.png",
                 "assets/crops/*-fig*.png"):
         for p in sorted(OUT.glob(pat)):
             rel = str(p.relative_to(REPO))
             rel2 = str(p.relative_to(OUT))
-            if rel not in keys and rel2 not in keys:
-                imgs.append(rel)
+            if rel in keys or rel2 in keys:
+                continue
+            if "-fig" in p.name and p.name in fig_has_page_cap:
+                continue  # inherits page caption
+            imgs.append(rel)
     return imgs
 
 

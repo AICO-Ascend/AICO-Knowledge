@@ -48,23 +48,15 @@ Figure 1: The Pareto frontier of recent models regarding activated parameters an
 > With all the results shown, we make the following observations:
 
 > [!tip] 技术解读（多模态）
-> **Note:** This page contains two tables (Table 4 and Table 5) plus discussion text — there is no diagram/figure on this page. I'll treat Table 4 as the main visual.
+> **Figure description**
 
-## Description of Table 4 (Accelerator Specifications)
+The figure consists of two side-by-side grouped bar charts comparing *theoretical decoding cost* (y-axis) across five deployment hardware setups — H800, H20, A800, 910B, and AFD (x-axis) — for four models differentiated by color/hatch: DSv3 (blue, diagonal), Qwen3 MoE (green, diagonal), Qwen3 32B (red, horizontal), and Step-3 (cyan, solid). The left panel reports cost at 8K context, the right at 32K context; y-axis scales differ accordingly (≈0–0.20 vs ≈0–0.75). Each cluster contains four bars, one per model, allowing direct cross-model comparison per hardware.
 
-**Layout:** A 5-row × 6-column grid comparing four accelerators (NVIDIA H800, H20, A800, Ascend 910B) across: hourly price, BF16/FP16 FLOPs, FP8 FLOPs, memory bandwidth, and compute-to-bandwidth (roofline) ratio.
+**Key takeaway**
+Step-3 achieves the lowest decoding cost across every hardware setup at both context lengths, with AFD consistently being the most cost-efficient deployment — demonstrating favorable efficiency–performance trade-offs for MoE inference.
 
-**Key data flow / insight:**
-- **H800**: $2/hr, 9.89×10¹⁴ BF16 FLOPs, 3.35×10¹² B/s → ratio **591** (heavily compute-bound, FP8-capable)
-- **H20**: $0.8/hr, 1.48×10¹⁴ FLOPs, 4.00×10¹² B/s → ratio **74** (memory-bound, cheap but slow)
-- **A800**: $0.75/hr, 3.12×10¹⁴ FLOPs, ratio **156** (no FP8)
-- **Ascend 910B**: $0.67*/hr, 2.80×10¹⁴ FLOPs, ratio **175**
-
-**Key technical takeaway:** The H800's roofline ratio (~591) is ~4× higher than the A800/910B, meaning attention layers (which dominate decoding cost at 8K+ context) suffer a multi-fold slowdown on weaker hardware — driving Observation 4 ("hardware friendliness") and motivating the cost analysis in Table 5.
-
-## Verbatim Caption (Table 4)
-
-> **Table 4:** Comparison of accelerator specifications. *We do not have publicly available 910B pricing. We estimate its price proportionally based on its FLOPs and A800's. As far as we know, there are multiple versions of 910B. We show the weakest and (presumably) most affordable one that we know.
+**Caption (transcribed verbatim)**
+"number of activated parameters: DSv3 37B, Qwen3 MoE 22B, Qwen3 32B, MM M1 46B, ERNIE 4.5 47B, Pangu Pro MoE 16.5B and Step-3 38B."
 
 ### Figure 3 (p.6) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig03.png]]
@@ -73,23 +65,19 @@ Figure 1: The Pareto frontier of recent models regarding activated parameters an
 > Second, the time spent on each layer will be largely unbal- anced – when running with long context, the full GQA layers consume much more time than the linear attention layers. This may not be a problem for single-node inference deployment, 6
 
 > [!tip] 技术解读（多模态）
-> **Note:** This page contains two tables (Table 4 and Table 5) plus discussion text — there is no diagram/figure on this page. I'll treat Table 4 as the main visual.
+> ## Figure Description (≤120 words)
 
-## Description of Table 4 (Accelerator Specifications)
+**Layout:** Two side-by-side line plots share the x-axis "Context length (K tokens)" with tick values 8, 32, 128.
 
-**Layout:** A 5-row × 6-column grid comparing four accelerators (NVIDIA H800, H20, A800, Ascend 910B) across: hourly price, BF16/FP16 FLOPs, FP8 FLOPs, memory bandwidth, and compute-to-bandwidth (roofline) ratio.
+**Left panel — KV cache size (GB):** Three curves (Llama 4 M blue dashed, MM M1 orange dashed, Step-3 green solid) rise roughly linearly. Step-3 consistently sits lowest (~0.4 → ~4.1 GB), MM M1 is mid (~1.0 → ~5.9 GB), and Llama 4 M is highest (~1.0 → ~7.1 GB).
 
-**Key data flow / insight:**
-- **H800**: $2/hr, 9.89×10¹⁴ BF16 FLOPs, 3.35×10¹² B/s → ratio **591** (heavily compute-bound, FP8-capable)
-- **H20**: $0.8/hr, 1.48×10¹⁴ FLOPs, 4.00×10¹² B/s → ratio **74** (memory-bound, cheap but slow)
-- **A800**: $0.75/hr, 3.12×10¹⁴ FLOPs, ratio **156** (no FP8)
-- **Ascend 910B**: $0.67*/hr, 2.80×10¹⁴ FLOPs, ratio **175**
+**Right panel — Theoretical cost on H800 (USD):** Same three series, same ordering. Step-3 ranges ~$0.06–$0.70, MM M1 ~$0.18–$1.02, Llama 4 M ~$0.18–$1.10.
 
-**Key technical takeaway:** The H800's roofline ratio (~591) is ~4× higher than the A800/910B, meaning attention layers (which dominate decoding cost at 8K+ context) suffer a multi-fold slowdown on weaker hardware — driving Observation 4 ("hardware friendliness") and motivating the cost analysis in Table 5.
+**Key takeaway:** Step-3 cuts KV-cache memory by ~40–45% versus Llama 4 M at long contexts, translating directly to lower H800 inference cost with the gap widening as context grows.
 
-## Verbatim Caption (Table 4)
+## Caption (verbatim)
 
-> **Table 4:** Comparison of accelerator specifications. *We do not have publicly available 910B pricing. We estimate its price proportionally based on its FLOPs and A800's. As far as we know, there are multiple versions of 910B. We show the weakest and (presumably) most affordable one that we know.
+*No caption text is present in the supplied image — only panel-axis titles and legends are visible.*
 
 ### Figure 4 (p.8) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig04.png]]

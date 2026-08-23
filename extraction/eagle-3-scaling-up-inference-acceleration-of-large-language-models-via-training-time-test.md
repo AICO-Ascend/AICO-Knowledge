@@ -114,17 +114,20 @@ Figure 5: Diagram of the EAGLE-3 inference pipeline, illustrating the three step
 > All attention masks are diagonal, except when the original training data is used as the key. Using matrix multiplication in this case would result in significant computational waste, so we can use vector dot products to calculate the attention score only for the corresponding positions. HASS (Zhang et al., 2024) and EAGLE-3 both make similar modifications to the attention mecha- nism to simulate t
 
 > [!tip] 技术解读（多模态）
-> I don't see an actual figure or figure caption displayed on this page. The page contains only body text from the paper, which references **Figure 6** in several places:
+> ## Description
 
-1. *"the attention mask needs to be adjusted accordingly, as shown in the top-right corner of Figure 6"*
-2. *"As shown in Figure 6, the original training data is a sequence of length 3, 'How can I'"*
+The figure depicts a **chunked/segmented causal attention** computation across three stages, flowing left-to-right via a blue arrow:
 
-These textual mentions suggest Figure 6 likely illustrates:
-- The draft model architecture (Transformer decoder layer with FC reduction, single-layer decoder producing output *a*)
-- Attention mask patterns — specifically a standard lower-triangular matrix vs. an adjusted mask reflecting tree-like contextual relationships among sampled tokens like "are"/"we"/"do" relative to prefix tokens "how"/"can"/"I"
-- A data flow where target-model features (g_how, g_can, g_I) are concatenated with embeddings (e_I, e_do), dimensionality-reduced via FC to *k*, and fed into the decoder
+1. **Stage 1 (top-left):** Queries {How, can, I} attend to Keys {How, can, I} in a 3×3 lower-triangular mask (red ✓ marks).
+2. **Branching tree (middle):** The key stream extends downward to {are, we, do}, forming a hierarchical prefix tree.
+3. **Stage 2 (top-right):** Queries {are, we, do} attend to the 6-key prefix {How…do} in a 3×6 causal mask.
+4. **Stage 3 (bottom-right):** Queries {you, help, it} (yellow) attend to the full 9-key sequence in a 3×9 causal mask, with the expanded tree shown bottom-left.
 
-However, **I cannot transcribe a caption verbatim because no caption is visible on this page** — only the prose references to Figure 6. If you can share the page where Figure 6 itself appears (with its caption), I'd be happy to transcribe it exactly.
+**Key technical takeaway:** Each query chunk attends only to its own segment plus a bounded prefix of prior tokens, achieving **linear-time causal attention** by avoiding full-sequence key lookups while preserving strict autoregressive masking. (~90 words)
+
+## Caption (verbatim)
+
+The image contains **no textual caption** — only inline axis labels ("Key", "Query") and token cells. No overall title or figure caption is present to transcribe.
 
 ### Figure 7 (p.8) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig07.png]]

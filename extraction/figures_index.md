@@ -74,7 +74,22 @@ MEDUSA eliminates the separate draft model required by speculative decoding by a
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.2 (p.3)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig02.png]]
-> [!tip] 【MiniMax 解读】MEDUSA 框架：在 LLM 最后隐藏层挂多个轻量解码头，第 k 个头预测 t+k+1 位 token，单次前向并行产出多候选；候选组织成树，用 tree attention 掩掩码保证因果正确，一次前向验证多分支、接受最长有效续写。无需独立 draft model，2-3x 加速，兼容分布式 serving。架构核心图。
+> [!tip] **Architecture / Data Flow**
+
+The figure illustrates a **tree-structured speculative decoding scheme** (Medusa-style). Components:
+- A **Root** node branches to **Head 1** (pink tokens: "It", "I"), which feeds **Head 2** (orange tokens: "is", "the", "is"), which in turn connects to a third subtree (green tokens: "is", "the").
+- A horizontal **Key** strip at the top lists all candidate tokens in sequence.
+- The central **grid (Tree Mask)** marks (✔) which Key positions each Query position may attend to, producing a hierarchical / diagonal pattern.
+
+**Data flow:** Each head predicts future-position tokens in parallel, forming a tree of draft continuations; the mask constrains attention so causality is preserved.
+
+**Key technical takeaway (≤120 words total):**
+The tree mask lets the model **verify multiple candidate continuations in one forward pass** while still enforcing a strict causal (ancestor-only) attention pattern — turning sequential drafting into a single parallel pass.
+
+---
+
+**Caption (verbatim):**
+*No figure caption is visible in the provided image — the right-hand column contains only surrounding paper paragraph text (e.g., "resources and the specific requirements…", "2.2.1. MEDUSA-1: FROZEN BACKBONE…"), not a caption for the figure.*
 *caption: Remarkably, similar ideas have also been explored in independent works like Miao et al. (2023); Spector & Re (2023), where they follow a bottom-up app… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.3 (p.7)
@@ -519,17 +534,20 @@ Figure 5: Diagram of the EAGLE-3 inference pipeline, illustrating the three step
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.6 (p.5)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig06.png]]
-> [!tip] I don't see an actual figure or figure caption displayed on this page. The page contains only body text from the paper, which references **Figure 6** in several places:
+> [!tip] ## Description
 
-1. *"the attention mask needs to be adjusted accordingly, as shown in the top-right corner of Figure 6"*
-2. *"As shown in Figure 6, the original training data is a sequence of length 3, 'How can I'"*
+The figure depicts a **chunked/segmented causal attention** computation across three stages, flowing left-to-right via a blue arrow:
 
-These textual mentions suggest Figure 6 likely illustrates:
-- The draft model architecture (Transformer decoder layer with FC reduction, single-layer decoder producing output *a*)
-- Attention mask patterns — specifically a standard lower-triangular matrix vs. an adjusted mask reflecting tree-like contextual relationships among sampled tokens like "are"/"we"/"do" relative to prefix tokens "how"/"can"/"I"
-- A data flow where target-model features (g_how, g_can, g_I) are concatenated with embeddings (e_I, e_do), dimensionality-reduced via FC to *k*, and fed into the decoder
+1. **Stage 1 (top-left):** Queries {How, can, I} attend to Keys {How, can, I} in a 3×3 lower-triangular mask (red ✓ marks).
+2. **Branching tree (middle):** The key stream extends downward to {are, we, do}, forming a hierarchical prefix tree.
+3. **Stage 2 (top-right):** Queries {are, we, do} attend to the 6-key prefix {How…do} in a 3×6 causal mask.
+4. **Stage 3 (bottom-right):** Queries {you, help, it} (yellow) attend to the full 9-key sequence in a 3×9 causal mask, with the expanded tree shown bottom-left.
 
-However, **I cannot transcribe a caption verbatim because no caption is visible on this page** — only the prose references to Figure 6. If you can share the page where Figure 6 itself appears (with its caption), I'd be happy to transcribe it exactly.
+**Key technical takeaway:** Each query chunk attends only to its own segment plus a bounded prefix of prior tokens, achieving **linear-time causal attention** by avoiding full-sequence key lookups while preserving strict autoregressive masking. (~90 words)
+
+## Caption (verbatim)
+
+The image contains **no textual caption** — only inline axis labels ("Key", "Query") and token cells. No overall title or figure caption is present to transcribe.
 *caption: All attention masks are diagonal, except when the original training data is used as the key. Using matrix multiplication in this case would result in … ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.7 (p.8)
@@ -983,28 +1001,21 @@ Figure 3. Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.
 
 ### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.1 (p.4)
 ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig01.png]]
-> [!tip] # Figure Description
+> [!tip] **Architecture / Components / Data Flow**
 
-I should note that **Figure 1 itself is not visible** in the image you provided — only the surrounding page text is shown. However, based on the text on this page, I can reconstruct what Figure 1 (the DSpark overview) depicts:
+The figure depicts a three-stage speculative-style decoding pipeline with hardware-aware prefix scheduling:
 
-## Architecture / Components / Data Flow (inferred)
+1. **Draft stage (1):** A *Target Model* consumes input tokens **A, B, C** and emits the first real output token **D**.
+2. **Parallel candidate generation (2):** Token **D**, plus three `Mask` placeholders, are fed in parallel into a *Parallel Block* producing **Logits**. These logits are scanned by a *Sequential Block* that emits candidate tokens **E, F, G, H** with confidence scores **C₁…C₄**. A *Hardware-Aware Prefix Scheduler* then partitions the prefix into **Keep** (E, F, G) and **Drop** (H, low confidence) buckets.
+3. **Verification / next round (3):** The kept prefix [D, E, F, G] is replayed through the *Target Model*, which validates them (E, F ✓; G ✗ — replaced by **G\***) and proceeds to the **next round**.
 
-**Per-token latency model (from Eq. 1):**
-$$L = (T_{\text{draft}} + T_{\text{verify}})/\tau$$
+**Key technical takeaway**
 
-DSpark addresses two bottlenecks with two complementary components:
+Prefix scheduling decouples *candidate generation* (cheap, parallel, mask-filled) from *candidate acceptance* (target-model-verified, hardware-budgeted), allowing only high-confidence tokens to consume verification compute.
 
-1. **Semi-autoregressive generation (Sec. 3.1)** — A parallel backbone handles bulk draft computation (keeping $T_{\text{draft}}$ nearly independent of block size $\gamma$), followed by a lightweight sequential block that injects dependency among draft tokens, raising acceptance probability $\tau$ cheaply.
+**Caption (verbatim transcription of all figure text)**
 
-2. **Confidence-scheduled verification (Sec. 3.2)** — A confidence head estimates per-position acceptance probabilities; a hardware-aware scheduler prunes low-confidence suffix tokens, cutting redundant $T_{\text{verify}}$ cost.
-
-**Data flow:** Target model hidden states → DFlash-style context projection → draft model → confidence head → scheduler → trimmed verification set.
-
-## Key Takeaway
-DSpark decouples *draft latency* (parallel backbone) from *draft quality* (sequential dependency injection) and prunes verification by confidence — jointly attacking the $T_{\text{draft}} \propto \gamma$ and wasted-$T_{\text{verify}}$ inefficiencies of speculative decoding.
-
-## Caption (verbatim)
-The caption for Figure 1 is **not present** on this page — the text only says *"The overview of DSpark is shown in Figure 1."* A fuller caption would appear on the page containing the figure itself, which is not included in the image you shared. If you can provide the page with the actual figure, I can transcribe the caption verbatim.
+> ❶ Target Model — A, B, C → D → **❷** Parallel Block (D | Mask | Mask | Mask) → Logits → Sequential Block → E, F, G, H with confidences C₁, C₂, C₃, C₄ → Hardware-Aware Prefix Scheduler → **Keep** | **Drop** → **❸** Target Model inputs {D, E, F (✓), G (✗)} → outputs {E, F, G\*} → **next round**
 *caption: Recall from Equation 1 that the per-token latency of speculative decoding is 𝐿= (𝑇draft + 𝑇verify)/𝜏. Autoregressive drafters achieve high 𝜏but pay 𝑇d… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
 
 ### JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin — Fig.1 (p.2)
@@ -3256,21 +3267,21 @@ The visible plots show **learning curves** for prompt/RL optimization experiment
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.16 (p.30)
 ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig16.png]]
-> [!tip] **Figure description (inferred from captions):**
+> [!tip] ## Main Figure Description
 
-**Figure 16** — A grouped bar/box plot showing the *generalization gap* (final test-set score minus best validation score) for several prompt-optimization methods, broken down by optimizer. It contrasts prior work (Wan et al., 2024), where exemplar-based optimizers generalized best, against the new finding that instructions from *reflective prompt evolution* also generalize strongly.
+The image contains **no figure** — only section headings and descriptive text from what appears to be an academic paper's appendix. No architecture, components, or data flow can be described, since no visual/diagrammatic content is present in the provided image.
 
-**Figure 17** — Two side-by-side scatter plots, (a) GPT-4.1 Mini and (b) Qwen3 8B, plotting *final aggregate benchmark score* (y-axis) against *aggregate prompt token count* (x-axis) for each optimizer (GEPA vs. MIPROv2, etc.). Each point is one optimized system.
+## Key Technical Takeaway
 
-**Key technical takeaway:** GEPA yields prompts that are **<33 % the size of MIPROv2's** while achieving **higher accuracy**, and its tokens are spent on *instructions* rather than few-shot exemplars—demonstrating that reflective, instruction-style optimization is more token-efficient and generalizes better on modern instruction-following LLMs.
+N/A — no figure content is available to extract a technical insight from.
 
----
+## Caption Transcription (verbatim)
 
-**Caption (verbatim, Figure 16):**
-> Figure 16: Generalization gaps for different optimization methods. Following Wan et al. (2024), we visualize the generalization gap (i.e., the difference between final test set performance and the best achieved validation performance) for different optimizers. While Wan et al. (2024) previously observed that exemplars tend to generalize better, our results suggest that instructions generated by reflective prompt evolution can achieve stronger generalization as well as improved overall performance. We hypothesize this difference may be due to the improving capabilities of the underlying LLMs, as more recent models are both better at adhering to instructions and capable of reflecting on their outputs.
-
-**Caption (verbatim, Figure 17):**
-> Figure 17: These plots visualize the final aggregate scores against the aggregate prompt size (across all benchmarks) of the final optimized system for each optimizer. It can be seen that GEPA consistently produces prompts that are around less than 33% of the size of MIPROv2's prompts, while getting higher performance. Most of GEPA's prompt tokens are used for providing instructions, whereas most of MIPROv2's prompt tokens pertain to few-shot examples.
+> **G Performance vs. Budget (Rollouts) Curves**
+>
+> Figures 12, 13, 14, 15 show the full Performance-vs-Rollout curves for all the optimizers across all benchmarks.
+>
+> **H Generalization Gap**
 *caption: Generalization gaps for different optimization methods. Following Wan et al. (2024), we visualize the generalization gap (i.e., the difference between… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.17 (p.30)
@@ -3506,7 +3517,23 @@ The figure compares two GPU pipeline-parallel schedules across GPU1 and GPU2 ove
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.2 (p.3)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig02.png]]
-> [!tip] 【MiniMax 解读】SARATHI chunked-prefill：把 prompt 切成等长 prefill chunk（匹配流水级算力），在途 decode 请求 piggyback 到每个 prefill chunk 上→单次前向混合 prefill+decode token。解耦长 prefill 与 decode 延迟：每个流水级跑统一 hybrid-phase 步、消除 prefill-decode bubble、打满 GPU。更高单卡利用率+decode 吞吐+更大 batch。架构核心图。
+> [!tip] # Response
+
+**Note:** The image provided does not contain a figure—it shows only the beginning of Section 2 ("Background") and the heading for Section 2.1 ("The Transformer architecture"), along with introductory text whose right edge is clipped. There is no architecture diagram, components, or data flow visible to describe, and no figure caption is present in the image.
+
+**Verbatim transcription of the visible text:**
+
+> **2 Background**
+>
+> We first give an overview of the transforme[r]
+> followed by a brief discussion of the two ph[ases of]
+> inference, and pipeline parallelism.
+>
+> **2.1 The Transformer architecture**
+
+(Bracketed portions are inferred from the cut-off text; words such as "architecture," "ases of," etc. are not fully shown in the image.)
+
+If you intended to share a figure (e.g., the Transformer architecture diagram referenced in Section 2.1), please re-upload it and I'll provide the architecture/components/data-flow description and verbatim caption transcription you requested.
 *caption: High-level architecture of a decoder block. sequence length of each request (i.e., the number of input tokens in the given query), and H is the model’… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.3 (p.4)
@@ -3882,15 +3909,21 @@ Figure 9: The incremental cost of coalescing prefills with decode batches. We co
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.10 (p.11)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig10.png]]
-> [!tip] **Figure 10 — Capacity comparison across schedulers**
+> [!tip] # Description
 
-Components: Grouped bar chart with three schedulers (Orca, vLLM, Sarathi-Serve) compared per model under two SLO regimes — strict (SLO-S) and relaxed (SLO-R). Two sub-panels show results on two workloads: (a) *openchat_sharegpt4* and (b) *arxiv_summarization*. Models evaluated are Mistral-7B and Yi-34B. Y-axis is Max Capacity (queries/sec).
+I do not see a figure (diagram, architecture, or visualization) in the provided image. The content shown is a **text section** from a research paper, specifically Section 5.1 "Capacity Evaluation," containing prose discussion about experimental methodology. There is no architecture, component diagram, or data flow illustration present to describe — only references to external figures (e.g., "Table 3") that are not visible here.
 
-Key takeaway: Sarathi-Serve consistently beats Orca and vLLM under both strict and relaxed SLOs across both datasets — most notably 4.00× over Orca on Yi-34B/openchat_sharegpt4 under strict SLO, enabled by its adaptive token-budget chunked prefill that mitigates latency violations from long prompts.
+**Key technical takeaway** (from the visible text): The paper defines two SLO regimes on **P99 TTFT** (Time-To-First-Token) — *strict* (for interactive applications, individual-token latency constraints matter) and *relaxed* (for offline/batch workloads where only end-to-end completion time matters). The strict SLO threshold is set at **25× the decode-step execution time** with a 4k-token prefill, 32-batch size, and no prefill interference.
 
-**Caption (verbatim):**
+---
 
-Figure 10: Capacity (in queries per second) of Mistral-7B and Yi-34B with different schedulers under strict (SLO-S) and relaxed (SLO-R) latency SLOs.
+# Verbatim Transcription
+
+> **5.1 Capacity Evaluation**
+>
+> We evaluate Sarathi-Serve, Orca and ... and both datasets under two differ... *relaxed* and *strict*. Similar to Pate... the intrinsic performance limitation... pair, we define the SLO on P99 T... 25× the execution time of a decod... (with prefill length of 4k and 32 b... any prefill interference for the s... respectively. **Table 3** shows a sum... thresholds. Note that the *strict* S... target desired for interactive appl... the other hand, the *relaxed* confi... systems where the complete sequen... be generated within a predictabl... constraints on individual tokens is ... experiments, we ensure that the ma... i.e., the queuing delay does not bl... seconds on median scheduling del...
+
+*(Note: The image is cropped on the right side, so many lines are truncated mid-sentence. Ellipses [...] indicate cut-off text.)*
 *caption: Capacity (in queries per second) of Mistral-7B and… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.11 (p.11)
@@ -3976,32 +4009,20 @@ Cross-node all-reduce communication inflates TP latency by ~2× versus pipeline 
 
 ### DeepSeek-V4: Towards Highly Efficient Million-Token Context  — Fig.1 (p.14)
 ![[assets/crops/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-fig01.png]]
-> [!tip] **1) 架构/组件/数据流描述（≤150字）**
+> [!tip] ## Description of the Main Figure
 
-算法流程：梯度计算 → 动量累积（Nesterov） → 混合Newton-Schulz正交化（10步：8步快速收敛+2步稳定） → 更新矩阵RMS重缩放（复用AdamW超参） → 权重衰减更新。双优化器策略：嵌入层、预测头、RMSNorm、mHC门控与静态偏置保留AdamW，其余模块统一用Muon。注意力侧通过对Q与KV做RMSNorm，使logits不再爆炸，从而弃用QK-Clip。
+The figure is a composite plot from a DeepSeek technical report illustrating **test-time scaling behavior**:
 
-**2) 关键技术要点**
+- **Left panel (bar chart):** Grouped bar chart comparing four model variants (hatched blue, dark gray, medium gray, light gray) across ~9 task categories. Brackets underneath cluster the categories into two groups, with a vertical dashed reference line separating them. The y-axis appears to represent task performance/accuracy.
+- **Right panels (two stacked area-style charts):** Each shows compute-vs-performance scaling curves with a dashed reference line, a solid blue trend line, and a wide blue shaded envelope. A semi-transparent rectangular band marks a highlighted compute/performance regime, and a vertical double-arrow annotates the gain span. Legends (dashed, solid blue) appear in the upper-left of each subplot.
 
-混合Newton-Schulz双阶段系数策略：前8步用 *(3.4445, 4.7750, 2.0315)* 快速把奇异值推向1，后2步切换为 *(2, 1.5, 0.5)* 精细稳定到1，兼顾收敛速度与数值精度。
+**Key technical takeaway:** The new model variants (likely V3.x → V4) close the gap to the dashed upper-bound baseline across most benchmarks while exhibiting a steeper test-time compute scaling slope, indicating that additional inference compute yields disproportionately larger performance gains.
 
-**3) Caption 逐字转录**
+## Verbatim Caption Transcription
 
-```
-Algorithm 1  Muon Optimizer for DeepSeek-V4
+> "making long-horizon tasks and further test-time scaling more feasible. The model checkpoints are available at https://huggingface.co/collections/deepseek-ai/deepseek-v4."
 
-Require: Learning rate η, momentum β, weight decay ω, update rescaling factor W
- 1: for each training step B do
- 2:    for each logically independent weight, matrix R^(l,n) do
- 3:       G = ∇_B L_B, B ← B                              Compute gradients
- 4:       "M_B = β·"M_B + B                                 Accumulate momentum buffer
- 5:       O_B = HybridNewtonSchulz("M_B, β, B)             Nesterov trick and hybrid Newton-Schulz
- 6:       $B = $O_B / max(||·||,<,,"·W                     Rescale the update RMS
- 7:       θ_B = θ_B − η·1"·[θ_B − ω·[$_B                   Perform weight decay and update
- 8:    end for
- 9: end for
-```
-
-（注：原图中第6–7行部分符号（带 "*""[]""$" 等字形）疑似 PDF 字体渲染异常；其中 `1""·` 应为 `1ᵀ·`（转置），`||·||<,,"` 应为更新矩阵的谱范数 `||·||_σ`，`[$_B` 应为 `θ_B` 的旧值项的标量系数。具体数学符号请以原文 PDF 为准。）
+*(Note: This appears to be the trailing portion of the figure's caption; the preceding sentence was not captured in the provided image crop.)*
 *caption: 2.4. Muon Optimizer… ｜ 论文 [[deepseek-v4-towards-highly-efficient-million-token-context-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeek-V4: Towards Highly Efficient Million-Token Context  — Fig.5 (p.15)
@@ -4216,23 +4237,17 @@ Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segment
 
 ### KIMI-VL TECHNICAL REPORT — Fig.13 (p.16)
 ![[assets/crops/kimi-vl-technical-report-fig13.png]]
-> [!tip] ## Figure Description
+> [!tip] # Figure Description
 
-**Layout:** The figure has a two-column side-by-side prompt/response format.
+**Components / Layout:** Three side-by-side scatter plots, each plotting **Test Time Accuracy (%)** (y-axis) against **Max Thinking Length (k tokens)** (x-axis, with discrete points at 1, 2, 4, 8, 16). The benchmarks shown are **MathVision** (left, y ≈ 16–38%), **MathVista** (middle, y ≈ 66–72%), and **MMMU** (right, y ≈ 48–62%). Each point is annotated with its exact percentage value rather than connected by lines.
 
-**Left panel (Prompt):** A user instruction asking the model to split a video into scenes with start time, end time, and detailed descriptions.
+**Data flow:** The variable being swept is a single inference-time hyperparameter (thinking budget in tokens), and the metric reported is downstream benchmark accuracy — so the figure is a *scaling/ablation* study on compute at inference.
 
-**Right panel (Response):** A structured list of segmented scenes, each containing:
-- **Timestamp range** (e.g., `00:00:00 – 00:00:15`)
-- **Natural language scene description** detailing content (people, actions, environment, mood, camera movement, lighting)
+**Key Technical Takeaway:** All three benchmarks show **monotonic accuracy gains as thinking length grows, but with strongly diminishing returns**: MathVision jumps +18.1 pp from 1k→16k tokens, MathVista only +4.6 pp (and even dips at 8k), and MMMU gains +12.5 pp. This indicates that longer chain-of-thought budgets help hardest reasoning tasks (MathVision) most, while saturated benchmarks (MathVista) yield marginal benefit.
 
-**Data flow:** Input prompt → model segments the video at natural boundaries → outputs ordered (timestamp, caption) pairs covering the full duration (~11 minutes), with fine-grained granularity (~15–35 second windows).
+# Caption (verbatim)
 
-**Key technical takeaway:** Kimi-VL demonstrates temporal understanding by jointly performing *scene boundary detection* and *dense captioning*, producing structured, timestamp-anchaled descriptions that enable long-form video comprehension without requiring pre-extracted frames or external segmenters.
-
-## Caption (verbatim)
-
-Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along with fine-grained natural language descriptions for each scene.†
+No standalone caption is printed; the in-figure text reads: **"MathVision | MathVista | MMMU"** (panel titles), with axes **"Max Thinking Length (k tokens)"** and **"Test Time Accuracy (%)"**.
 *caption: Specifically, increasing the max thinking token length at inference time consistently improves test-time accuracy across all three 16… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.1 (p.1)
@@ -4344,19 +4359,18 @@ The figure consists of **two side-by-side line plots** comparing model accuracy 
 
 ### High-Dimensional Continuous Control Using Generalized Advant — Fig.1 (p.8)
 ![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig01.png]]
-> [!tip] **Note:** The image provided shows only the **text page (page 8)** of an ICLR 2016 paper (Section 6: Policy Optimization Algorithm & Experimental Setup). No figure is visible on this page — the figure referenced as "Figure 1" (robot models mentioned in §6.2) does not appear in the supplied image. Therefore, no caption can be transcribed.
+> [!tip] **Description:**
 
-**What the text tells us about Figure 1 (inferred from context):**
-- **Content:** Robot models for three 3D locomotion tasks
-- **Components (referenced):**
-  1. **Biped** — for bipedal locomotion
-  2. **Quadruped** — for quadrupedal locomotion
-  3. **Biped** (dynamically standing up from supine position)
-- **Data/role in paper:** Illustrates the MuJoCo simulation environments used to evaluate the TRPO-based policy-gradient variant
+The figure presents a side-by-side comparison of two simulated agents in a physics-based 3D environment (checkerboard-floored scene, MuJoCo-style). 
 
-**Key technical takeaway (from §6.1–6.2.1):** The policy update θ_{i+1} is computed using advantage estimates derived from the *old* value function V_{ϕ_i} (not the updated V_{ϕ_{i+1}}), avoiding bias — a critical detail also discussed by Schulman et al. (2015).
+**Left panel:** A bipedal humanoid torso with two legs, rendered in an upright T-pose, shown in a standard reference configuration. **Right panel:** A quadrupedal/arachnid-like creature with a central body and four radiating limbs, shown in a crouched/grounded pose.
 
-If you can share the page containing Figure 1 itself, I'd be happy to give a precise architectural description and verbatim caption.
+**Bottom strips (data flow / temporal sequence):** Below each main render is a timeline of five smaller snapshots showing learned motion primitives — a walking gait for the humanoid (sequential forward-stepping frames) and a crawling/locomotion gait for the quadruped (sequential reaching/contact frames). The arrows imply temporal progression from left → right.
+
+**Key technical takeaway:** The figure illustrates that a single learned policy framework can generalize across morphologically distinct embodiments (biped vs. quadruped), producing stable cyclic locomotion gaits purely from physics simulation without hand-engineered controllers.
+
+**Caption (verbatim):**
+*No caption text is rendered within the figure itself; only image panels are shown.*
 *caption: 6.2.1 ARCHITECTURE… ｜ 论文 [[high-dimensional-continuous-control-using-generalized-advantage-estimation]] ｜ arxiv 见 MD 元信息*
 
 ### High-Dimensional Continuous Control Using Generalized Advant — Fig.2 (p.10)
@@ -4467,24 +4481,21 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.4 (p.5)
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig04.png]]
-> [!tip] ## Figure Description
+> [!tip] **Architecture Description**
 
-**Type:** A 2D line plot (training loss curve), though the data series itself is not rendered/visible in this rendering — only the axis frame is shown.
+The figure depicts a multi-stage streaming/pipelined processing architecture organized into two parallel recompute lanes plus a third (bottom) lane. Data flow proceeds as follows:
 
-**Axes / components:**
-- **X-axis:** "Tokens (Trillion)" — ranging 0 to 16, in increments of 2.
-- **Y-axis:** "Loss" — ranging 1.3 to 2.0, in increments of 0.1.
-- **Plot area:** Empty (no curve, markers, or annotations drawn).
+- A blue top-left **"Full Input / Impulse"** block feeds three green **"Partial Input"** buffers in parallel.
+- Each Partial Input is routed into a purple **"Recompute Module"**, which forwards results to a green **"Partial Output"** buffer.
+- An **"Auto Resume"** control line loops each Partial Output forward into the next stage and ultimately up into a blue top-right **"Extract / Count Output"** block.
+- A second top-left **"Enabled/Trigger"** block gates the entire pipeline.
 
-**Intended content (per caption):** A raw, per-step training loss trajectory across the full ~15+ trillion-token pretraining run of Kimi K2.
+**Key Technical Takeaway (≈110 words):**
+The design decouples a large input into partial slices, processes them through independent recompute modules, and uses an **auto-resume** feedback path to chain outputs into a final extraction stage. This yields a fault-tolerant, streaming architecture where partial failures can be recovered via recomputation without re-feeding the full input, and where downstream aggregation (count/output) is decoupled from upstream latency — a useful pattern for incremental or resumable signal-processing pipelines.
 
-**Key technical takeaway:** Loss should decrease smoothly from ~2.0 toward ~1.3 across the 0–15T token span with no spikes, indicating exceptional training stability — a non-trivial result at trillion-token scale.
+**Caption (verbatim transcription):**
 
----
-
-## Caption (verbatim)
-
-> **Figure 3:** Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity.
+> `WRNHQV` · `VSOLW IXOO LQVXW H[WUDFW` · `LPXOVW KHU` · `FRQW W RXWSXW H[WUDFW` · `WRNHQV` · `SDUWLDO LQVXW` · `UH]XOWH PR` · `SDUWLDO RXWSXW` · `DXWR UH]XH` (repeated for both lanes)
 *caption: • Fidelity verification: To ensure consistency between original and rewritten content, we perform fidelity checks that compare the semantic alignment … ｜ 论文 [[kimi-k2-open-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.5 (p.7)
@@ -5063,33 +5074,15 @@ DHRD's polygon consistently encloses the baseline's and closely tracks or exceed
 
 ### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.1 (p.4)
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig01.png]]
-> [!tip] # Note on Figure Availability
+> [!tip] **Description**
 
-The image provided shows **page 4 of the paper containing only text** (sections 2.2 and 3.1 with equations). **Figure 1 itself is not visible** in the supplied image — it is only referenced ("The overall architecture is illustrated in Figure 1"). Without seeing the actual figure, I cannot transcribe its caption verbatim. Below I reconstruct the architecture from the in-text description and equations (Eqs. 1–4):
+The figure depicts a chunked-compression architecture for efficient transformer inference. **Panel (a)** shows the overall pipeline: input tokens are segmented and pooled into compressed chunks (C₁–C₄), fed through an Encoder whose KV outputs are consumed by a Decoder. **Panel (b)** details boundary detection, where consecutive tokens are merged into a chunk when their similarity metric exceeds a threshold τᵢ, with each token assigned to a chunk. **Panel (c)** illustrates decoder cross-attention, in which query tokens q₁–q₅ selectively attend to only the relevant compressed chunks (here, positions 1, 3, and 4) rather than the full token sequence. **Key takeaway:** boundary-aware pooling shrinks the effective sequence length, reducing KV-cache memory and attention FLOPs while preserving retrieval-relevant granularity for long-context inference.
 
-## Architecture Description (from §3.1)
+**Caption verbatim**
 
-**Four-stage data flow:**
-1. **Encoding (H = E(X))** — extracts fine-grained token representations from input X.
-2. **Dynamic Segmentation (C = S(H))** — detects semantic boundaries and pools tokens into variable-length concept chunks.
-3. **Concept-Level Reasoning (Z = M(C))** — performs deep computation on the compressed concept sequence.
-4. **Token-Level Decoding (Y = D(H, Z))** — reconstructs token predictions by attending to both original token states H and reasoned concepts Z.
-
-**Key takeaway:** DCLM is a *decoder-only* adaptation of H-Net's hierarchical concept reasoning — boundaries are learned end-to-end (no fixed sentence priors), and token decoding is conditioned jointly on raw token encodings **and** compressed concept representations, enabling adaptive compute allocation in standard autoregressive LLMs.
-
-## Verbatim Transcription
-
-**Caption:** *Not visible in the provided image.*
-
-**Equations from §3.1 (verbatim):**
-| Equation | Label | Number |
-|---|---|---|
-| H = E(X) | (Encoding) | (1) |
-| C = S(H) | (Segmentation & Pooling) | (2) |
-| Z = M(C) | (Concept Reasoning) | (3) |
-| Y = D(H, Z) | (Decoding) | (4) |
-
-If you can share the page containing Figure 1, I can provide the actual caption transcription.
+(a) Overview Architecture
+(b) Boundary Detection & Pooling
+(c) Decoder Cross-Attention
 *caption: 3.1… ｜ 论文 [[dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space]] ｜ arxiv 见 MD 元信息*
 
 ### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.9 (p.7)
@@ -5168,24 +5161,18 @@ Figure 3. Dataflow execution given a model placement plan. Blocks with numbers r
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.4 (p.6)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig04.png]]
-> [!tip] # Main Figure: HybridFlow Architecture (Figure 4)
+> [!tip] I'm unable to complete this task as requested. The image you've provided contains **only text** from a research paper (Section 2.5 "Design Considerations" and the start of Section 3 "HybridFlow Overview"). 
 
-## Description
-The figure depicts a **layered architecture** of HybridFlow from bottom to top:
+While the text references "Figure 2(b)" — mentioning that it illustrates a hierarchical hybrid programming model that decouples intra-node distributed computation from inter-node data transfer — the actual figure itself is **not visible** in the image you shared.
 
-- **Physical Devices** (base) — underlying GPU/HW
-- **Resource Pool (§4)** — virtualized device abstraction
-- **Auto Mapping (§6)** — splits into Model Placement + Device Allocation, which maps models to GPUs according to given cluster configurations
-- **ParallelWorker (§4)** — the orchestration layer containing Transfer Protocol (§4), LLM Training Engine, 3D-HybridEngine (§5), and LLM Generation Engine
-- **User Input** (top) — RLHF dataflow graph, Model Config, Device Config
+To help you accurately, could you please:
+- Re-upload the image showing **Figure 2** itself, or
+- Share the page/region where the figure appears
 
-**Data flow:** user inputs (dataflow + model/device configs) → Auto Mapping places models onto the Resource Pool → ParallelWorker dispatches training/generation via the 3D-HybridEngine, coordinating transfers between stages.
+Once I can see the figure, I can describe its components, data flow, key technical takeaway, and transcribe the caption verbatim.
 
-## Key Technical Takeaway
-The 3D-HybridEngine lets the same actor model toggle between **training and generation** with different 3D-parallel configurations while maintaining **zero memory redundancy** and minimal communication overhead across stages — the core innovation enabling efficient RLHF pipelines.
-
-## Verbatim Caption
-**Figure 4. Architecture of HybridFlow.**
+**What I can extract from the visible text about the figure's claimed content:**
+> The figure depicts a hybrid programming model combining single-controller (used at the inter-node level for orchestrating data transfer across the few RLHF dataflow nodes) and multi-controller (used intra-node for low-latency operator dispatching to accelerators) paradigms — decoupling local model computation from inter-node communication.
 *caption: Architecture of HybridFlow. 3D-HybridEngine and Auto-Mapping algorithm. The hybrid programming model includes a set of hierarchical APIs to enable fle… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.5 (p.6)
@@ -6075,56 +6062,66 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 
 ### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.2 (p.6)
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig02.png]]
-> [!tip] I notice the figure you're asking about (Figure 2) is **referenced in the text but not actually displayed on this page**. The provided image contains only text content from page 6 of the paper — specifically:
+> [!tip] **Architecture & Data Flow**
 
-- The tail of Section 2.4 (ending with the retrieval modulation formula **u**ₜ⁽ᵐ⁾ = αₜ⁽ᵐ⁾ · (**W**_V **e**_ₜ))
-- Section 2.5 "System Efficiency: Decoupling Compute and Memory"
-- Section 3 "Scaling Laws and Sparsity Allocation"
+**(a) Training:** Input IDs → Vocab Embedding → Transformer Block → stack of {Engram → Attention → MoE} layers, each with residual connections. Two parallel Engram stacks are connected via an **All2All** link (likely for Mixture-of-Experts/expert routing across devices).
 
-The page mentions *"as illustrated in Figure 2"* when discussing Engram's training/inference optimization strategies, but the figure itself is not rendered in the image you shared.
+**(b) Inference:** Same logical layout — Vocab Embedding → alternating *Transformer Block* and *Transformer Block with Engram* — but the Engram parameters are **offloaded to host memory** (cylinder labeled "Offloaded Engram / Memory Hierarchy") and pulled into device memory only when a layer needs them (dashed arrows), separating **on-device computation** from **on-host communication**.
 
-**What I can infer about Figure 2 from the text** (≤120 words):
+**Key Technical Takeaway (≤120 words):**
+Engrams act as auxiliary, non-attention modules that fuse token-level memorization with contextual processing. During training, they sit alongside Attention+MoE with All2All expert routing; during inference, the large Engram lookup tables are offloaded to host memory and streamed on demand, so the device only holds the active layers. This decouples *capacity* (host-side memory hierarchy) from *compute* (device-side stack), enabling much larger embedding/memorization capacity without inflating on-device footprint or breaking the trained topology.
 
-> Figure 2 illustrates Engram's specialized optimization strategies for training and inference. For training, it depicts standard model parallelism with sharded embedding tables across GPUs using an All-to-All communication primitive (gathering active rows forward, dispatching gradients backward), enabling linear memory scaling with accelerators. For inference, it shows a prefetch-and-overlap strategy: since memory indices are known beforehand, embeddings are asynchronously fetched from host memory via PCIe while preceding backbone layers compute (acting as a latency buffer). The figure likely also conveys layer-placement tradeoffs and the multi-level cache hierarchy (HBM → Host DRAM → NVMe SSD) motivated by the Zipfian distribution of N-gram access patterns.
-
-If you can share the page containing Figure 2 itself, I can describe its specific architecture/components/data flow and transcribe the caption verbatim.
+**Caption (verbatim):**
+**(a) Engram at training**    **(b) Engram at inference**
 *caption: During training, to accommodate large-scale embedding tables, we employ standard model parallelism by sharding the tables across available GPUs. An Al… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.5 (p.16)
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig05.png]]
-> [!tip] No figure is visible on this page (p. 16). The page consists entirely of prose that *references* a figure (Figure 5) but does not display it. Below I describe what the text tells us about that figure, and note that no caption is present to transcribe.
+> [!tip] ## Main Figure Description
 
-**Figure 5 (described from text only):**
-- **Components / data flow:** Validation Loss curves and markers from structural ablations of an Engram-augmented backbone. A horizontal **dashed orange line** marks the 3B MoE baseline (Val Loss = 1.808). A **dark blue "Layer Sweep" curve** plots Val Loss vs. insertion layer (1→12) for a consolidated 1.6B Engram module. Additional **marker points** encode single-component ablations relative to a reference configuration (Engram @ Layers 2 & 6, {2,3}-grams, 1.6B params).
-- **Key technical takeaway:** There is a depth trade-off in Engram injection — early placement offloads local pattern reconstruction but suffers weak gating (insufficient contextualization); later placement gains context but loses offloading benefit. **Layer 2 is optimal under a single-injection budget (1.770)**, and splitting the same 1.6B budget across **Layers 2 + 6 is best overall (1.768)**, reconciling early offloading with late contextual gating.
+**Architecture/Components:**
+The chart compares validation loss across two reference baselines — a **3B MoE baseline** (top, orange dashed, ≈1.808) and a **3B MoE + 1.6B Engram** hybrid (bottom, green dashed, ≈1.768) — against a layer-sweep curve (navy) of the same hybrid architecture inserted at layers 1–12. The right side reports ablation variants (w/o multi-branch, w/o token compression, w/o gating, +4-gram, w/o short-conv) as scatter markers. The y-axis is broken between ~1.785 and ~1.805 to highlight the narrow operating range.
 
-**Caption transcription:** No caption is rendered on this page — only inline prose referring to it ("dark blue 'Layer Sweep' curve in Figure 5"; "markers in Figure 5").
+**Key Technical Takeaway (≤120 words):**
+Inserting a 1.6B-parameter Engram memory module alongside a 3B MoE backbone yields a consistent validation-loss reduction (~0.04 nats) regardless of injection depth, with **early-to-mid layers (1–2) producing the best results** (~1.770). Loss degrades monotonically as the module is pushed deeper, confirming that **memory benefits compound most when placed near the embedding/input layers** rather than deeper in the stack. All ablations underperform the full hybrid, indicating that multi-branch routing, token compression, gating, and short-conv components are jointly necessary for optimal performance.
+
+## Verbatim Caption / Text Transcription
+
+*No explicit figure caption is present in the image. Transcribing all visible text elements verbatim:*
+
+- **Y-axis label:** Validation Loss
+- **X-axis label:** Layer Index / Ablation Variations
+- **Top reference line annotation:** "3B MoE Baseline"
+- **Bottom reference line annotation:** "3B MoE + 1.6B Engram"
+- **Legend entry:** "3B MoE + 1.6B Engram (Layer Sweep)"
+- **Ablation markers (right side):** "w/o multi branch", "w/o token compress", "w/o gating", "+ 4-gram", "w/o short conv"
 *caption: We find that three components yield the most significant gains: (i) branch- specific fusion within the multi-branch backbone, (ii) context-aware gatin… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.7 (p.18)
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig07.png]]
-> [!tip] I need to flag an issue with your request: **there is no main figure (architecture diagram, components, or data-flow visualization) on this page.** The visible content consists of:
+> [!tip] # Figure Description
 
-1. **Table 4** — a numerical data table (not an architecture figure)
-2. **Running prose text** — including a section heading "6.5. Case Study: Gating Visualization"
-3. **Footnote 2**
-4. A reference to **"Figure 7"** in the text, but Figure 7 itself is not rendered on this page
+**Architecture/Components/Data Flow:**
+The figure is a **token-level heatmap** showing five example sentences (three English, two Chinese), each preceded by a `<bos>` (beginning-of-sequence) token. A vertical colorbar on the left maps values from 0.0 (white) → 1.0 (deep red). Each sentence is rendered as a horizontal row where individual tokens (subwords for English, characters for Chinese) are shaded according to an importance/selection score. Darker red tokens correspond to higher scores; lighter/near-white tokens correspond to lower scores.
 
-The page primarily presents Table 4's throughput data and discusses gating-visualization results that *would* appear in Figure 7, but that figure is not included here.
+Visually, semantically rich or "key concept" tokens (e.g., *Alexander, the Great, Bucephalus, Milky Way, Diana, Princess of Wales, 造纸术, 指南针, 张仲景, 医圣, 伤寒杂病论*) are highlighted in deep red, while function words and punctuation (*could, of, the, , , .*) fade toward white. The same `<bos>` marker consistently carries moderate emphasis.
 
----
+**Data Flow:** raw text → tokenization (BPE/word-piece for English, character-level for Chinese) → per-token scalar scoring model → rendered as a color-graded token strip, evaluated across multiple languages to demonstrate cross-lingual behavior.
 
-**Caption verbatim (Table 4):**
+**Key Technical Takeaway (≤120 words):**
+The visualization demonstrates that the underlying scoring mechanism produces **language-agnostic, semantically aligned token importance** — content-bearing words (named entities, domain-specific terms) are consistently up-weighted while function tokens and punctuation are suppressed, regardless of whether the input is English or Chinese. Notably, subword fragments (e.g., *B / uce / phalus*) each receive partial weight, indicating that importance is distributed across the tokenizer's segmentation rather than at the word level. The uniform treatment of `<bos>` and parallel behavior across scripts suggests the method generalizes without language-specific retraining.
 
-> **Table 4 | End-to-end Inference Throughput.** We measure inference throughput with a 100B-parameter Engram layer entirely offloaded to host memory.
+# Verbatim Caption / In-Image Text
 
----
+There is no descriptive figure caption printed in the image. The only textual elements present are:
 
-If you intended to ask about Table 4 instead of a figure, here is a brief summary within your word budget:
-
-**Table 4 (≤120 words):** The table compares inference throughput (tokens/s) across two backbone sizes (4B-Dense and 8B-Dense) under Baseline vs. +100B Engram (CPU Offload) configurations on NVIDIA H800, with 512 sequences and Uniform(100, 1024) sequence length. 4B-Dense drops from 9,031.62 → 8,858.28 tok/s, and 8B-Dense from 6,315.52 → 6,140.02 tok/s. **Key takeaway:** Offloading a 100B-parameter embedding table incurs at most a ~2.8% throughput penalty on the 8B backbone, demonstrating that early dense blocks' compute intensity masks retrieval latency and that effective communication scales with *activated slots*, not total embedding size — a conservative baseline since all retrievals go over PCIe without HBM caching.
-
-Please share Figure 7 (or the intended figure) and I'll describe its architecture/components/data flow as requested.
+- Colorbar tick label (top): `1.0`
+- Colorbar tick label (bottom): `0.0`
+- Row 1: `<bos> Only Alexander the Great could tame the horse B uce phal us .`
+- Row 2: `<bos> By the way , I am a fan of the Milky Way .`
+- Row 3: `<bos> This study analyzes the media impact of Diana , Princess of Wales .`
+- Row 4: `<bos> 中国 四大 发明 包括 ： 造纸 术 、 指南 针 、 火药 和 印刷 术 。`
+- Row 5: `<bos> 东汉 末年 名医 张仲景 ， 因其 卓越 的 贡献 被 后世 尊 为 ' 医圣 ' ， 并 著名 有 传世 巨 作 《 伤寒 杂病 论 》。`
 *caption: The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static pa… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.1 (p.1)
@@ -6292,16 +6289,20 @@ Figure 2: t-SNE on CLASSIC
 
 ### Root Mean Square Layer Normalization — Fig.1 (p.1)
 ![[assets/crops/root-mean-square-layer-normalization-fig01.png]]
-> [!tip] # Description
+> [!tip] **Description (≤120 words):**
 
-**No figure is visible on the provided page.** The image shows only the first page (title page) of the paper "Root Mean Square Layer Normalization" (Zhang & Sennrich, NeurIPS 2019, arXiv:1910.07467v1), containing the title, authors (Biao Zhang¹, Rico Sennrich²·¹), affiliations (University of Edinburgh; University of Zurich), abstract, and the opening paragraphs of Section 1 (Introduction). No diagram, plot, or figure is rendered in the supplied image.
+The figure consists of two side-by-side line plots comparing training dynamics of two model variants: a "Baseline" (blue) and "LayerNorm" (orange).
 
-The only in-text reference to a figure in this page is:
-> "…the efficiency gain from faster and more stable training (in terms of number of training steps) is counter-balanced by an increased computational cost per training step, which diminishes the net efficiency, as shown in **Figure 1**."
+- **Plot (a):** Loss vs. Training Step (×100), x-axis 0–100, y-axis ~4–10. At step ~30 (×100), the Baseline reaches loss 7.0 while LayerNorm reaches 5.4.
+- **Plot (b):** Loss vs. Training Time (minutes), x-axis 0–160, y-axis ~4–10. At ~35–40 min, the Baseline is at 7.0 while LayerNorm is at 5.9.
 
-# Caption Transcription
+Both curves share the same legend style; dashed vertical guide lines mark the annotated comparison points, and red dots highlight the specific loss values.
 
-There is **no figure caption to transcribe**, as no figure appears on this page. The caption for Figure 1 is not present in the provided excerpt.
+**Key technical takeaway:** Applying LayerNorm yields a substantially lower training loss than the Baseline at both the same number of steps and the same wall-clock time, indicating faster convergence per step and improved per-minute throughput.
+
+**Caption (verbatim):**
+
+(a) Training loss vs. training steps. (b) Training loss vs. training time.
 *caption: One major feature of LayerNorm that is widely regarded as contributions to the stabilization is its re-centering invariance property: the summed input… ｜ 论文 [[root-mean-square-layer-normalization]] ｜ arxiv 见 MD 元信息*
 
 ### Root Mean Square Layer Normalization — Fig.2 (p.6)
@@ -6508,18 +6509,22 @@ Qwen2.5-VL's core innovation is **native-resolution vision encoding combined wit
 
 ### DeepSeek-V3 Technical Report — Fig.5 (p.12)
 ![[assets/crops/deepseek-v3-technical-report-fig05.png]]
-> [!tip] ## Figure 4 Description
+> [!tip] **Description (≤120 words):**
 
-The diagram is a **two-row timeline** (time →) showing how forward and backward pipeline chunks are interleaved at the sub-operator level:
+The figure depicts a pipeline-parallel training schedule (GPipe/1F1B style) across **8 devices** processing **10 micro-batches** (numbered 0–9) over time. Each row is a device; each colored cell is a time-step operation:
 
-- **Computation row** (top): sequences of ATTN and MLP operators. Each forward/backward chunk is split into *Forward* (F), *Backward-for-input* (B), and *Backward-for-weights* (W) sub-pieces — boundaries between adjacent forward and backward chunks are *not* aligned.
-- **Communication row** (bottom): DISPATCH (pre-MLP all-to-all), COMBINE (post-MLP all-to-all), and a central PP (pipeline-parallel) block.
+- **Orange** = Forward pass
+- **Green** = Backward (activation gradients, "input")
+- **Blue** = Backward (weight gradients)
+- **Orange/Green split** = Overlapped forward & backward
 
-**Key takeaway:** By mis-aligning the chunk boundaries and rearranging sub-operators, DualPipe hides the all-to-all and PP communication entirely behind on-streaming GPU SMs executing computation — eliminating the 1:1 compute-to-communicate bottleneck of cross-node MoE training.
+Devices enter the pipeline staggered (warm-up phase, top-left triangular blank region), then enter a **steady state** where each device alternates one forward and one backward of successive micro-batches, with a symmetric drain phase at the bottom-right.
 
-## Caption (verbatim)
+**Key takeaway:** Staggering micro-batch launches fills the pipeline and overlaps forward/backward computation, eliminating per-stage idle "bubbles" and keeping every device busy after warm-up — at the cost of holding multiple in-flight activations (memory pressure).
 
-**Figure 4** | Overlapping strategy for a pair of individual forward and backward chunks (the boundaries of the transformer blocks are not aligned). Orange denotes forward, green denotes "backward for input", blue denotes "backward for weights", purple denotes PP communication, and red denotes barriers. Both all-to-all and PP communication can be fully hidden.
+**Caption (verbatim):**
+
+*[No textual caption is present in the image; only in-figure labels: "Device 0" – "Device 7", "Time →", and the legend: "Forward | Backward | Backward for input | Backward for weights | Overlapped forward & Backward".]*
 *caption: It employs a bidirectional pipeline scheduling, which feeds micro-batches from both ends of the pipeline simultaneously and a significant portion of c… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeek-V3 Technical Report — Fig.6 (p.15)
@@ -6535,17 +6540,27 @@ Figure 6 | The overall mixed precision framework with FP8 data format. For clari
 
 ### DeepSeek-V3 Technical Report — Fig.10 (p.48)
 ![[assets/crops/deepseek-v3-technical-report-fig10.png]]
-> [!tip] **No figure is visible on this page.**
+> [!tip] **Main Figure Description (≤120 words):**
 
-The provided image (page 48) contains only text from an academic paper — specifically, the tail of a paragraph about MoE model divergence, a section heading ("C. Expert Specialization Patterns of the 16B Aux-Loss-Based and Aux-Loss-Free Models"), and an introductory paragraph that *references* Figure 10, but the figure itself is not rendered on this page.
+The figure presents ablation studies for low-precision training, comparing BF16 vs FP8 loss curves on two model scales: 16B and 230B DeepSeek-V2. Each subplot contains:
+- **Main curves**: Loss (y-axis) vs Tokens/B (x-axis), with blue (BF16) and red (FP8) lines that closely overlap throughout training.
+- **Inset (zoomed difference plot)**: Highlights the residual loss difference between BF16 and FP8 over a selected token range, showing fluctuations around zero.
 
-**What the text tells us about the referenced figure (Figure 10):**
-- It compares two 16B-parameter MoE models: an auxiliary-loss-based baseline vs. an auxiliary-loss-free variant.
-- It plots **expert load** (per-layer) measured on the Pile test set.
-- Data flow conceptually: Pile test tokens → MoE layers → router assigns tokens to experts → expert-activation counts aggregated per layer → visualized.
-- **Key takeaway:** Removing the auxiliary load-balancing loss yields *greater expert specialization* (more skewed / concentrated expert usage) across all layers.
+**Data flow/architecture**: Both plots compare training trajectories at two scales (16B and 230B parameters), validating FP8 against the BF16 baseline.
 
-If you can share the image of Figure 10 itself, I can describe its specific architecture (e.g., layer-by-layer heatmap, bar chart, distribution plot) and transcribe its actual caption verbatim.
+**Key technical takeaway**: FP8 and BF16 training yield essentially indistinguishable loss curves on both 16B and 230B DeepSeek-V2 models. The difference insets fluctuate around zero without systematic drift, demonstrating that FP8 low-precision training preserves model quality at scale and is a viable drop-in replacement for BF16, enabling substantial efficiency gains without performance loss.
+
+**Caption (verbatim):**
+
+"B. Ablation Studies for Low-Precision Training"
+
+"BF16 v.s. FP8 on 16B DeepSeek-V2"
+
+"BF16 v.s. FP8 on 230B DeepSeek-V2"
+
+Axis labels: "Loss" (y-axis), "Tokens/B" (x-axis)
+
+Legend: "BF16", "FP8"
 *caption: 48… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.1 (p.1)
@@ -6564,44 +6579,32 @@ Figure 1: The Pareto frontier of recent models regarding activated parameters an
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.2 (p.6)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig02.png]]
-> [!tip] **Note:** This page contains two tables (Table 4 and Table 5) plus discussion text — there is no diagram/figure on this page. I'll treat Table 4 as the main visual.
+> [!tip] **Figure description**
 
-## Description of Table 4 (Accelerator Specifications)
+The figure consists of two side-by-side grouped bar charts comparing *theoretical decoding cost* (y-axis) across five deployment hardware setups — H800, H20, A800, 910B, and AFD (x-axis) — for four models differentiated by color/hatch: DSv3 (blue, diagonal), Qwen3 MoE (green, diagonal), Qwen3 32B (red, horizontal), and Step-3 (cyan, solid). The left panel reports cost at 8K context, the right at 32K context; y-axis scales differ accordingly (≈0–0.20 vs ≈0–0.75). Each cluster contains four bars, one per model, allowing direct cross-model comparison per hardware.
 
-**Layout:** A 5-row × 6-column grid comparing four accelerators (NVIDIA H800, H20, A800, Ascend 910B) across: hourly price, BF16/FP16 FLOPs, FP8 FLOPs, memory bandwidth, and compute-to-bandwidth (roofline) ratio.
+**Key takeaway**
+Step-3 achieves the lowest decoding cost across every hardware setup at both context lengths, with AFD consistently being the most cost-efficient deployment — demonstrating favorable efficiency–performance trade-offs for MoE inference.
 
-**Key data flow / insight:**
-- **H800**: $2/hr, 9.89×10¹⁴ BF16 FLOPs, 3.35×10¹² B/s → ratio **591** (heavily compute-bound, FP8-capable)
-- **H20**: $0.8/hr, 1.48×10¹⁴ FLOPs, 4.00×10¹² B/s → ratio **74** (memory-bound, cheap but slow)
-- **A800**: $0.75/hr, 3.12×10¹⁴ FLOPs, ratio **156** (no FP8)
-- **Ascend 910B**: $0.67*/hr, 2.80×10¹⁴ FLOPs, ratio **175**
-
-**Key technical takeaway:** The H800's roofline ratio (~591) is ~4× higher than the A800/910B, meaning attention layers (which dominate decoding cost at 8K+ context) suffer a multi-fold slowdown on weaker hardware — driving Observation 4 ("hardware friendliness") and motivating the cost analysis in Table 5.
-
-## Verbatim Caption (Table 4)
-
-> **Table 4:** Comparison of accelerator specifications. *We do not have publicly available 910B pricing. We estimate its price proportionally based on its FLOPs and A800's. As far as we know, there are multiple versions of 910B. We show the weakest and (presumably) most affordable one that we know.
+**Caption (transcribed verbatim)**
+"number of activated parameters: DSv3 37B, Qwen3 MoE 22B, Qwen3 32B, MM M1 46B, ERNIE 4.5 47B, Pangu Pro MoE 16.5B and Step-3 38B."
 *caption: With all the results shown, we make the following observations:… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.3 (p.6)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig03.png]]
-> [!tip] **Note:** This page contains two tables (Table 4 and Table 5) plus discussion text — there is no diagram/figure on this page. I'll treat Table 4 as the main visual.
+> [!tip] ## Figure Description (≤120 words)
 
-## Description of Table 4 (Accelerator Specifications)
+**Layout:** Two side-by-side line plots share the x-axis "Context length (K tokens)" with tick values 8, 32, 128.
 
-**Layout:** A 5-row × 6-column grid comparing four accelerators (NVIDIA H800, H20, A800, Ascend 910B) across: hourly price, BF16/FP16 FLOPs, FP8 FLOPs, memory bandwidth, and compute-to-bandwidth (roofline) ratio.
+**Left panel — KV cache size (GB):** Three curves (Llama 4 M blue dashed, MM M1 orange dashed, Step-3 green solid) rise roughly linearly. Step-3 consistently sits lowest (~0.4 → ~4.1 GB), MM M1 is mid (~1.0 → ~5.9 GB), and Llama 4 M is highest (~1.0 → ~7.1 GB).
 
-**Key data flow / insight:**
-- **H800**: $2/hr, 9.89×10¹⁴ BF16 FLOPs, 3.35×10¹² B/s → ratio **591** (heavily compute-bound, FP8-capable)
-- **H20**: $0.8/hr, 1.48×10¹⁴ FLOPs, 4.00×10¹² B/s → ratio **74** (memory-bound, cheap but slow)
-- **A800**: $0.75/hr, 3.12×10¹⁴ FLOPs, ratio **156** (no FP8)
-- **Ascend 910B**: $0.67*/hr, 2.80×10¹⁴ FLOPs, ratio **175**
+**Right panel — Theoretical cost on H800 (USD):** Same three series, same ordering. Step-3 ranges ~$0.06–$0.70, MM M1 ~$0.18–$1.02, Llama 4 M ~$0.18–$1.10.
 
-**Key technical takeaway:** The H800's roofline ratio (~591) is ~4× higher than the A800/910B, meaning attention layers (which dominate decoding cost at 8K+ context) suffer a multi-fold slowdown on weaker hardware — driving Observation 4 ("hardware friendliness") and motivating the cost analysis in Table 5.
+**Key takeaway:** Step-3 cuts KV-cache memory by ~40–45% versus Llama 4 M at long contexts, translating directly to lower H800 inference cost with the gap widening as context grows.
 
-## Verbatim Caption (Table 4)
+## Caption (verbatim)
 
-> **Table 4:** Comparison of accelerator specifications. *We do not have publicly available 910B pricing. We estimate its price proportionally based on its FLOPs and A800's. As far as we know, there are multiple versions of 910B. We show the weakest and (presumably) most affordable one that we know.
+*No caption text is present in the supplied image — only panel-axis titles and legends are visible.*
 *caption: Second, the time spent on each layer will be largely unbal- anced – when running with long context, the full GQA layers consume much more time than th… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.4 (p.8)
@@ -7847,23 +7850,21 @@ The figure compares three transformer-block designs for hiding communication in 
 
 ### MegaScale: Scaling Large Language Model Training to More Tha — Fig.4 (p.4)
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig04.png]]
-> [!tip] ## Figure 3 Description
+> [!tip] **Figure Description (≈110 words)**
 
-**Architecture / Components / Data Flow**
+This diagram illustrates a **pipeline-parallel deep learning training schedule**, decomposed into a *Warm-up Phase* (left) and a *Steady Phase* (right) across two consecutive pipeline stages (`stage i` and `stage i+1`). Each horizontal dashed line represents a **stream** (a sub-batch / micro-batch), with solid arrows denoting **forward (FWD)** and **backward (BWD)** computation dependencies. Inter-stage communication is captured by **Send (S)** and **Receive (R)** operations attached to the streams. A large gray downward arrow at the top highlights **Communication Overlap**, showing how gradient/activation transfers are scheduled concurrently with computation. The warm-up phase fills the pipeline (only forward passes plus S/R ops), while the steady phase interleaves FWD/BWD blocks so that backward passes overlap with the sends from the next stage.
 
-The figure compares three transformer-block designs for hiding communication in 3D parallelism:
+**Key Takeaway:** Backward computation is deliberately overlapped with the *Send* of activations/gradients, hiding communication latency behind compute—a core optimization in pipelined distributed training.
 
-- **(a) PTB with SP + TP (baseline):** LayerNorm → **All-Gather** (SP) → QKV *ColParaLinear* ‖ *ColParaLinear* (TP) → Self-Attention → *RowParaLinear* ‖ *RowParaLinear* → **Reduce-Scatter** → LayerNorm. SP and TP regions are explicitly delineated.
+---
 
-- **(b) Fuse communication into Linears:** Same logical flow, but the All-Gather is folded into a fused *ColParaLinear-with-AG*, and the Reduce-Scatter is folded into a fused *RowParaLinear-with-RS*, removing the standalone comm nodes.
+**Caption (transcribed verbatim):**
 
-- **(c) Overlap communication with GEMM:** Two CUDA streams (S0 = kernel, S1 = comm). *Top* — input chunks A0…AN are copied on S1 while A×W GEMM runs on S0, producing B0…BN. *Bottom* — output chunks C0…CN are reduce-scattered on S1 concurrently with B×W GEMM on S0. Legend distinguishes kernel (pink) vs. comm (green) regions.
-
-**Key Technical Takeaway (≈55 words):** By fusing all-gather/reduce-scatter into the linear layers and issuing them on a separate CUDA stream, MegaScale overlaps collective communication with the GEMM kernel on the critical path, hiding inter-rank latency without altering the tensor-parallel math—reducing SP/TP overhead to near-zero.
-
-## Caption (verbatim)
-
-**Figure 3: Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB).**
+> *Communication Overlap*
+> stage i | stage i+ 1
+> Warm-up Phase | Steady Phase
+>
+> **Legend:** S — Send | R — Receive | --- Stream → Dependency | FWD — Forward | BWD — Backward
 *caption: The cool-down phase can be viewed as the inverse of the warm-up phase, allowing for the inverse application of the same technique. As for the steady p… ｜ 论文 [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] ｜ arxiv 见 MD 元信息*
 
 ### MegaScale: Scaling Large Language Model Training to More Tha — Fig.5 (p.6)
@@ -9215,7 +9216,34 @@ Recomputation and swapping exhibit complementary regimes: swapping suffers sever
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.1 (p.1)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig01.png]]
-> [!tip] No figure is visible on this page — it is the title page of the paper "DEFT: Decoding with Flash Tree-Attention for Efficient Tree-structured LLM Inference," containing only the title, author affiliations, abstract, and the opening of the Introduction. The text references "Figure 1" (illustrating tree-structured LLM applications such as self-consistency, few-shot prompting, multi-step reasoning, and speculative decoding) and "Table 1" (showing token volume differences), but neither the figure nor its caption appears in the provided image, so I cannot describe the figure's architecture/components/data flow or transcribe its caption verbatim.
+> [!tip] **Main figure description:**
+
+The figure contrasts **sequence-based decoding** (linear Prompt→Generation) with **tree-based decoding**, illustrating four patterns where shared prefixes enable KV-cache reuse:
+
+1. **Self-consistency** — one prompt *P* branches into generations *G₁, G₂*
+2. **Few-shot prompting** — shared examples prefix separate *P₁→G₁*, *P₂→G₂* branches
+3. **Multi-step reasoning (Tree-of-thoughts)** — *P* plus *Search History* fans out into multiple *P/G* pairs
+4. **Multi-model/head coordination (Speculative decoding)** — draft model emits a 1-token tree (*t0–t4*); verifier accepts (t0, t2, t4), rejects others, and keeps only verified KV cache for the next step
+
+A legend codes **shareable KV cache** (blue), **non-shareable prompt** (green), and **non-shareable generation** (yellow).
+
+**Key technical takeaway (≤120 words):** Tree-structured LLM decoding exposes massive prefix-sharing opportunities, but existing memory-efficient attention kernels (e.g., FlashDecoding) are optimized for linear sequences and lack prefix-awareness, causing shared KV blocks to be reloaded redundantly. Additionally, naive node-wise KV splitting produces severe load imbalance — root nodes may hold thousands of tokens while speculative-decoding leaves hold only one — degrading GPU utilization. The figure motivates a **prefix-aware, load-balanced tree-attention** algorithm that treats shared prefixes as a unified cache while partitioning workloads to equalize chunk sizes.
+
+**Caption (verbatim transcription of all figure text):**
+
+*Sequence-based decoding* — Prompt 1 / Generation 1 / Prompt 2 / Generation 2
+
+*Notations* — shareable KV cache / non-shareable prompt / non-shareable generation
+
+*Tree-based decoding*
+
+1) Self-consistency — Prompt → P, G₁, G₂
+
+2) Few-shot prompting — Few-shot examples → P₁, G₁ / P₂, G₂
+
+3) Multi-step reasoning, (e.g., Tree-of-thoughts) — Prompt P → P₁, G₁, P₂, G₂, Search History → P₁.₁, G₁.₁ / P₁.₂, G₁.₂, Search History → P₂.₁, G₂.₁ / P₂.₂, G₂.₂
+
+4) Multi-model/head coordination (e.g. Speculative decoding) — Draft models /heads → 1 token tree generation (t0, t1, t2, t3, t4) → 2. verify → 3. keep KV cache; Prompt P → Step 1(G₁), Step history, Step 2(G₂) [t0, t2, t4], Step history, Step 3(G₃); Current Step
 *caption: Usually, these applications produce substantially more tokens than traditional ones, to provide large space for tree search (Graves, 2012; Lu et al., … ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.2 (p.5)
@@ -9368,14 +9396,21 @@ To obtain the accurate final attention, partial attentions from QKV groups with 
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.11 (p.21)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig11.png]]
-> [!tip] **Figure Description (Table 11: Notations)**
+> [!tip] **Description (≤120 words):**
 
-This table defines the mathematical notations used throughout the DEFT (Decoding with Flash Tree-attention) paper for analyzing tree-decoding IO complexity. It catalogs variables spanning tree topology (leaf nodes *l_n*, node count *#node*, per-node token length *n_i*, root-to-leaf path length *N_i*, and total tree length *N_tree*), attention kernel parameters (*d_head*, scale factor *s_c* = √*d_head*), and a derived metric *F_s* — the prefix-sharing factor — quantifying KV-cache reuse across branches.
+The figure compares three Tree Attention schemes. **Vanilla Tree Attention** (left) operates within group G₀, containing queries Q_a and Q_b over KV blocks KV₀–KV₂, with a Dilated Causal Mask (DCM) using M-markers to drive both Q-Guided and KV-Guided grouping. **Tree Attention-Medusa** (middle) simplifies within group G_i using a single Q_bi × KV_bi pair (dims m×n) and a uniform DCM rectangle. **Tree Attention-SpecInfer** (right) splits into groups G₀ and G₁, replacing the dense DCM with per-query Q-Binary Compatibility Masks (Q-BCM): "1 1 0" for Q_a and "1 0 1" for Q_b. Top annotation indicates GEMM tiling (Q → m×k, KV → k×n). A bottom arrow labeled "Q-Guided Grouping" connects Vanilla → SpecInfer.
 
-**Key Technical Takeaway:** The shared-prefix factor *F_s* = (Σ N_i) / N_tree captures how tree-structured speculative decoding amortizes KV-cache IO across multiple query branches; tree-topology-aware schemes (DEFT) leverage *F_s* to reduce HBM accesses, whereas sequence-based methods incur *F_s* times the KV-cache IO overhead since they cannot exploit branch sharing.
+**Key takeaway:** SpecInfer's Q-BCM replaces Medusa's binary compatibility mask with a query-specific bitmask, enabling finer-grained, per-query KV routing while preserving GEMM tiling compatibility.
 
-**Caption (verbatim):**
-Table 11: **Notations**.
+**Caption verbatim:**
+
+The image contains no standalone caption text; the visible annotations are:
+
+> "GEMM (tile the Q and KV tensor) — e.g., tile Q to block with size mxk, tile KV to block with size kxn"
+> "Vanilla Tree Attention | Tree Attention-Medusa | Tree Attention-SpecInfer"
+> "G₀ / G_i / G_0 / G_1", "Q_a, Q_b, Q_bi", "KV₀, KV₁, KV₂, KV_bi"
+> "Masked: M", "DCM:", "Q-BCM: 1 1 0 for Q_a", "Q-BCM: 1 0 1 for Q_b"
+> "Q-Guided Grouping", "KV-Guided Grouping"
 *caption: When the number of leaf nodes/queries ln is sufficiently large, the IO cost of partial results might become comparable to that of the KV cache. For in… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.12 (p.23)
@@ -9591,20 +9626,29 @@ Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.10 (p.13)
 ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig10.png]]
-> [!tip] **Description:** Figure 8 is a latency-comparison plot with three side-by-side sub-panels—(a) Splitwise, (b) LMSYS-Chat-1M, and (c) ShareGPT—each plotting **request rate (req/s)** on the x-axis against **normalized latency in ms/token** on the y-axis. Four serving systems are overlaid: vLLM, DeepSpeed-FastGen, TensorRT-LLM, and NanoFlow (the authors' system, shown in red). A red dashed horizontal line marks the ~200 ms/token SLO threshold. The baselines' latency curves rise steeply and cross the SLO line at low request rates (≈6–17 req/s), while NanoFlow stays flat under the SLO threshold up to 17–32 req/s before escalating.
+> [!tip] **Description:**
 
-**Key technical takeaway:** NanoFlow sustains a 200 ms/token latency budget under request loads 2–4× higher than vLLM/DeepSpeed-FastGen across all three real-world traces, demonstrating superior SLO-conforming throughput.
+The figure presents two side-by-side panels comparing resource utilization over a ~3000 µs window, each containing three stacked time-series subplots measuring **Compute** (yellow), **Memory** (green), and **Network** (blue) usage as percentages.
 
-**Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
+- **Panel (a) — Non-overlap pipeline:** Resources are utilized serially with clear isolation. Compute spikes (~70%, ~55%, ~87%) dominate certain windows, Memory shows an early burst to ~80% then stays low, and Network has distinct isolated bursts (~60%, ~75%, ~40%) — each resource peaks when others are idle.
+- **Panel (b) — NanoFlow:** The same three resources exhibit interleaved, overlapping utilization. Compute stays active across most of the timeline at varying levels (~30–90%), Memory sustains moderate usage peaking around ~70%, and Network shows distributed micro-bursts, indicating concurrent execution.
+
+**Key takeaway:** NanoFlow overlaps compute, memory, and network operations in time, eliminating idle gaps and sustaining higher aggregate utilization, whereas the non-overlap pipeline leaves resources sequentially idle. (107 words)
+
+**Caption (verbatim):**
+
+(a) Non-overlap pipeline resource usage
+
+(b) NanoFlow resource usage
 *caption: While the non-overlapping baseline sequentially executes operations, which mostly uses only one resource at a given time, the NanoFlow instance can co… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.11 (p.13)
 ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig11.png]]
-> [!tip] **Description:** Figure 8 is a latency-comparison plot with three side-by-side sub-panels—(a) Splitwise, (b) LMSYS-Chat-1M, and (c) ShareGPT—each plotting **request rate (req/s)** on the x-axis against **normalized latency in ms/token** on the y-axis. Four serving systems are overlaid: vLLM, DeepSpeed-FastGen, TensorRT-LLM, and NanoFlow (the authors' system, shown in red). A red dashed horizontal line marks the ~200 ms/token SLO threshold. The baselines' latency curves rise steeply and cross the SLO line at low request rates (≈6–17 req/s), while NanoFlow stays flat under the SLO threshold up to 17–32 req/s before escalating.
+> [!tip] **Figure description (≈110 words):**
+The bar chart compares normalized per-GPU throughput (%) between two LLM serving systems—vLLM (blue) and NanoFlow (orange)—across five models: Llama-3-70B, Qwen2-72B, Deepseek-67B, Mixtral-8x7B, and Llama-3-8B. Absolute throughput values are annotated inside each bar (e.g., 593 vs. 1306 for Llama-3-70B). A red dashed horizontal line at 100% marks the "Optimal" baseline. NanoFlow consistently outperforms vLLM, with the largest absolute gap on Mixtral-8x7B (997 → 5188 tokens). **Key takeaway:** NanoFlow roughly doubles per-GPU throughput versus vLLM on dense models and achieves >5× improvement on the sparse MoE model, indicating that NanoFlow's optimizations are particularly effective for expert-routing workloads.
 
-**Key technical takeaway:** NanoFlow sustains a 200 ms/token latency budget under request loads 2–4× higher than vLLM/DeepSpeed-FastGen across all three real-world traces, demonstrating superior SLO-conforming throughput.
-
-**Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
+**Caption verbatim:**
+*No standalone caption is present in the image. Visible text labels are: legend "vLLM / NanoFlow"; axis label "Normalized Per-GPU Throughput (%)"; reference line "Optimal"; bar value annotations (e.g., "70.6%", "32.0%", "1306", "593", "12756", "5187"); and x-axis model names (Llama-3-70B, Qwen2-72B, Deepseek-67B, Mixtral-8x7B, Llama-3-8B).*
 *caption: We find that… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### Gated Delta Networks: Improving Mamba2 with Delta Rule — Fig.1 (p.7)
@@ -10148,42 +10192,49 @@ The figure presents two side-by-side bar charts comparing three inference config
 
 ### A Survey of Large Language Models — Fig.1 (p.3)
 ![[assets/crops/a-survey-of-large-language-models-fig01.png]]
-> [!tip] No figure is visible on this page. Page 3 contains only two columns of body text from the survey (introducing LLMs vs. PLMs, referencing Figure 1 and Figure 2 elsewhere), along with three footnotes. The actual figures (Figure 1 — arXiv submission trends; Figure 2 — four-generation evolution of language models) are not rendered in the image you provided, so I cannot describe their architecture/components/data flow or transcribe a caption verbatim.
+> [!tip] **Figure description:**
 
-If you can share the page containing the figure, I can provide the requested description.
+The figure consists of two side-by-side line plots tracking the temporal growth of two search queries.
+
+- **(a) Query="Language Model"** — a blue exponential curve spanning 2018–2023 (y-axis 0–10,000). Labeled data points include GPT-1, BERT, GPT-2, T5, GPT-3, Codex, InstructGPT, ChatGPT, LLaMA, and GPT-4, each marking the release date of a landmark model. Growth accelerates sharply after 2022.
+- **(b) Query="Large Language Model"** — an orange exponential curve spanning ~2020–2023 (y-axis 0–1,750). Labeled points include T5, GPT-3, Codex, InstructGPT, ChatGPT (highlighted with a blue star), LLaMA, and GPT-4.
+
+**Key technical takeaway:** Both queries exhibit near-exponential growth, but "Language Model" has a longer historical tail (2018+), while "Large Language Model" shows a steeper, more recent surge—suggesting public interest pivoted from general language modeling toward the scaled-up LLM paradigm following GPT-3/ChatGPT.
+
+**Caption (verbatim):**
+(a) Query="Language Model"   (b) Query="Large Language Model"
 *caption: As discussed before, language model is not a new tech- nical concept specially for LLMs, but has evolved with the advance of artificial intelligence o… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.3 (p.99)
 ![[assets/crops/a-survey-of-large-language-models-fig03.png]]
-> [!tip] I'm unable to complete this request as described. The image you've provided (page 99 of what appears to be a survey paper on Large Language Models) contains **only text content** — specifically:
+> [!tip] ## Figure Description
 
-- A chronological list of updates to various sections of the paper
-- An **Acknowledgments** section
-- Lists of contributions (experiments and tips)
-- The very beginning of a **References** section (starting with reference [1], Bengio et al.)
+**Architecture/Layout:** The figure is a curved arc-shaped timeline depicting the evolution of large language models (LLMs) from **2019 through 2026**. Major year markers (2019, 2022, 2023, 2024, 2025 split into sub-periods 1–6, 7–11, 12, and 2026) anchor a black curved axis. Each year has a vertical column of model entries, each accompanied by the issuing organization's logo (Google, OpenAI, Meta, Mistral, DeepSeek, Baidu, Anthropic, Alibaba, Zhipu, Moonshot, xAI, Meta, etc.). A beige tag labeled **"Publicly Available"** sits in the top-right corner, serving as a qualifier for the listed models.
 
-There is **no figure, diagram, or illustration** present on this page, and consequently no caption to transcribe. The text does mention "Figure 3" being updated with new LLMs, but the figure itself is not shown on this page.
+**Data Flow:** No data flow — this is a categorical chronological visualization, not a system diagram. Models are grouped by release year rather than by capability, architecture, or benchmark.
 
-If you'd like, I could instead:
-1. Summarize the main textual content of this page (e.g., the update history, acknowledgments, or contributor lists)
-2. Describe a different page that actually contains a figure from this paper
+**Key Technical Takeaway (≤120 words):** The figure illustrates the **explosive acceleration of LLM releases**, transitioning from sparse single-digit model counts in 2019–2022 (T5, GPT-3, ChatGPT) to dense multi-vendor clustering by 2024–2025, where open-weights ecosystems (DeepSeek, Mistral, Qwen, LLaMA, GLM, Gemma) rival proprietary frontier models (GPT-4o/5.x, Claude 4.5, Gemini 3.0, Grok 4.1). The emergence of reasoning-focused models (o3, DeepSeek-R1, Kimi K1.5) and trillion-parameter open models (Ring-1T/Ling-1T, MiniMax M2) in 2025 signals a paradigm shift toward **reasoning-capable, openly distributed** foundation models.
 
-Please let me know how you'd like to proceed, or share the page containing the figure you'd like described.
+## Caption (Verbatim)
+
+No caption is printed on the figure itself. The only explicit textual annotation present is the in-figure tag:
+
+> **Publicly Available**
+
+If this tag is interpreted as the figure's caption, then that is the verbatim caption. Otherwise, the figure has no caption.
 *caption: – Section 4: add LLM-based data filtering and selec- tion methods in Section 4.1.2; update Section 4.2.1, “Emergent Architectures” to include more dis… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.4 (p.7)
 ![[assets/crops/a-survey-of-large-language-models-fig04.png]]
-> [!tip] I cannot complete this request accurately because **no figure is visible on this page**. 
+> [!tip] # Figure Description
 
-The provided image shows page 7 of a survey paper on LLMs, which contains only text content:
-- Discussion of RLHF (reinforcement learning with human feedback) and InstructGPT
-- "Tools manipulation" subsection
-- Section 2.2 "Technical Evolution of GPT-series Models"
-- Subsections on "Early Explorations," "GPT-1," "GPT-2," and "Capacity Leap"
+The diagram is a horizontal evolution timeline (2018.06–2023.09) of OpenAI's GPT family. The **main track** flows left-to-right: GPT-1 → GPT-2 → GPT-3 → Codex → GPT-3.5 → GPT-4, with ChatGPT branching upward from GPT-3.5 and a dashed loop back to GPT-3.5. Each node carries a release date and a capability label (e.g., "decoder-only architecture / generative pre-training," "in-context learning / exploring scaling limits," "strong reasoning ability"). A **sub-branch from GPT-3.5** traces the alignment track: code-davinci-002 → text-davinci-002 (+instruction) → text-davinci-003 (+RLHF) → gpt-3.5-turbo (+chat). GPT-4 spawns two variants: GPT-4 Turbo and GPT-4 Turbo with vision.
 
-The text *references* "Figure 4" (described as a schematic diagram depicting the technological evolution of GPT-series models), but **Figure 4 itself is not included in the image you provided**. There is also no visible caption on this page to transcribe verbatim.
+**Key technical takeaway:** GPT progress combined three orthogonal levers — decoder-only pre-training, parameter/context scaling, and post-hoc alignment via instruction tuning + RLHF — turning a single base model into a product line spanning code, chat, and multimodal reasoning.
 
-To complete your request, I would need an image containing the actual figure and its caption. If you can share the page containing Figure 4, I can then describe its architecture/components/data flow, provide a technical takeaway, and transcribe the caption.
+# Caption (verbatim)
+
+No caption text is present in the figure. The only textual content consists of the "**OpenAI**" logo (top-left) and the in-diagram node labels and capability descriptors listed above.
 *caption: The basic principle underlying GPT models is to compress the world knowledge into the decoder-only… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.5 (p.12)
@@ -10201,14 +10252,24 @@ Fig. 5: An evolutionary graph of the research work conducted on LLaMA. Due to th
 
 ### A Survey of Large Language Models — Fig.7 (p.18)
 ![[assets/crops/a-survey-of-large-language-models-fig07.png]]
-> [!tip] # Response
+> [!tip] ## Description (≤120 words)
 
-**No figure is visible on the provided page.** The page contains only body text discussing data sources (scientific text, code) and data preprocessing techniques (filtering and selection, de-duplication, privacy reduction) for LLM pre-training. The text *references* "Figure 7" as illustrating "A typical pipeline of preprocessing the pre-training data for LLMs," but the figure itself does not appear on this page — it would likely be on a separate page in the original document.
+The figure depicts a **six-stage data preprocessing pipeline** for pre-training large language models, flowing left-to-right via blue chevron arrows:
 
-**Caption (transcribed verbatim from in-text reference):**
-> "A typical pipeline of preprocessing the pre-training data for LLMs has been illustrated in Figure 7."
+1. **Raw Corpus** — heterogeneous sources (web, books, GitHub, etc.)
+2. **Filtering & Selection** — language, metric, statistic, keyword filters
+3. **De-duplication** — at sentence, document, and set levels
+4. **Privacy Reduction** — PII detection and removal
+5. **Tokenization** — existing tokenizers, SentencePiece, or Byte-level BPE
+6. **Ready to pre-train** — output token IDs stored in databases
 
-If you can provide the page containing the actual figure, I'd be happy to describe its architecture, components, data flow, and identify a key technical takeaway for you.
+A running example sentence ("Alice is writing a paper about LLMs.") is transformed at each stage to illustrate each operation concretely.
+
+**Key takeaway:** Each stage progressively reduces noise, redundancy, and risk while preserving semantic content — emphasizing that **data quality, not model architecture, is often the dominant determinant of pre-training performance**.
+
+## Caption (verbatim)
+
+The figure as provided contains **no caption text**. Only the inline stage labels (Raw Corpus; Filtering & Selection; De-duplication; Privacy Reduction; Tokenization; Ready to pre-train!) and bullet items within each stage are visible — there is no figure title, footnote, or source attribution rendered in the image.
 *caption: Filtering and Selection. To remove low-quality data from the collected corpus, existing work generally adopts two ap- proaches, namely classifier-base… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.8 (p.20)
@@ -10233,39 +10294,40 @@ Effective LLM pre-training requires orchestrating two coupled dimensions: a **da
 
 ### A Survey of Large Language Models — Fig.9 (p.22)
 ![[assets/crops/a-survey-of-large-language-models-fig09.png]]
-> [!tip] I'm unable to complete this request as described because **there is no figure visible on this page**. 
+> [!tip] **Figure description (≤120 words):**
 
-The page (numbered 22) contains only text content from what appears to be a survey paper on Large Language Models (likely "A Survey of Large Language Models" by Zhao et al.). The text explicitly references "Figure 9" in the context of categorizing LLM architectures into three types (encoder-decoder, causal decoder, and prefix decoder), but the actual figure is not displayed on this page.
+The figure compares three transformer attention patterns via three 6×6 masks over the input "A Survey of Large Language Models," split into a 3-token source (blue) and 3-token target (green), with a yellow cell marking the final predicted token and gray cells denoting masked (disallowed) attention.
 
-**What the page contains instead:**
+- **Causal Decoder:** Strict lower-triangular mask — every token attends only to itself and prior tokens in a single unified stream.
+- **Prefix Decoder:** Bidirectional attention over the prefix block, then causal attention over the remaining tokens (lower-triangular with a filled upper-left square).
+- **Encoder-Decoder:** Fully bidirectional encoder over the source (filled blue square), while the decoder uses causal self-attention plus full cross-attention to all encoder tokens.
 
-**Section 4.2.1 – Typical Architectures**, which discusses:
-- **Encoder-decoder Architecture** – e.g., T5, BART, Flan-T5
-- **Causal Decoder Architecture** – e.g., GPT-series, OPT, BLOOM, Gopher (unidirectional attention mask)
-- **Prefix Decoder Architecture** – non-causal decoder with bidirectional prefix + unidirectional generation (e.g., GLM-130B, U-PaLM)
-- **Mixture-of-Experts (MoE)** – sparse activation for parameter scaling (e.g., Switch Transformer, GLaM)
-- **Emergent Architectures** – State Space Models (SSMs) like Mamba, RWKV, RetNet, Hyena, designed to overcome Transformer's quadratic complexity
+**Key takeaway:** The three architectures differ only in *which* attention positions are masked; encoder-decoder generalizes the prefix-decoder by separating the bidirectional source processing into an independent encoder stack.
 
-**Key technical takeaway from the text:** The three mainstream LLM architectures differ primarily in their **attention masking strategies** — causal decoders use strict unidirectional masks, prefix decoders allow bidirectional attention over the input prefix only, and encoder-decoders process input/output through separate stacks with cross-attention. These masking choices have cascading effects on pre-training efficiency, in-context learning ability, and downstream task performance.
+**Verbatim caption text present in figure:**
 
-If you intended to share an image of the actual figure, it didn't come through in your message.
+"Causal Decoder" | "Prefix Decoder" | "Encoder-Decoder"
+
+Axis labels: "Decoder" (left panel), "Decoder" (middle panel), "Encoder" / "Decoder" (right panel, both rows)
+
+Column/row tokens: "A", "Survey", "of", "Large", "Language", "Models"
+
+(No narrative figure caption is printed on the image.)
 *caption: Encoder-decoder Architecture. The vanilla Transformer model is built on the encoder-decoder architecture [22], which consists of two stacks of Transfo… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.13 (p.43)
 ![[assets/crops/a-survey-of-large-language-models-fig13.png]]
-> [!tip] **Note:** The provided page contains only the textual description of Figure 13 (referenced in §5.3.1). The actual figure illustration and its caption are not present in this page excerpt — only the body text describing the four methods. The following description is reconstructed from the textual explanation of Figure 13.
+> [!tip] **Description**
 
-**Description of Figure 13 (as described in text):**
-Figure 13 illustrates four parameter-efficient fine-tuning (PEFT) methods for Transformer language models, with the original model weights frozen (shown in gray) and only small trainable components updated (shown in color):
+The figure compares four parameter-efficient fine-tuning (PEFT) methods for transformer models. (a) **Adapter Tuning** inserts small bottleneck "Adapter" modules after each MHA and FFN block within every layer. (b) **Prefix Tuning** prepends learned "Prefix" vectors to the key/value inputs at every layer. (c) **Prompt Tuning** prepends a single learned "Prompt" only at the input, which is then propagated through all N layers. (d) **Low-Rank Adaptation (LoRA)** injects trainable low-rank matrices (W_up, W_down) in parallel with the frozen weights of each layer, with outputs merged back.
 
-1. **Adapter Tuning** — Small bottleneck neural modules (down-project → nonlinearity → up-project) inserted *serially* after each Transformer sub-layer (attention & FFN), or placed *in parallel* alongside them.
-2. **Prefix Tuning** — Trainable prefix vectors prepended to the keys/values at every Transformer layer (layer-wise).
-3. **Prompt Tuning** — Trainable soft prompts attached only at the **input embedding layer** (input-level).
-4. **LoRA (Low-Rank Adaptation)** — Low-rank decomposition ΔW = AB inserted alongside frozen weight matrices in each dense layer, with rank k ≪ min(m, n).
+**Key Technical Takeaway**
 
-**Key technical takeaway:** All four methods freeze the pre-trained backbone and inject a tiny number of trainable parameters at different architectural granularities (sub-layer, layer-wise, input-only, or weight-level), trading a small accuracy gap for dramatically reduced storage — one backbone can serve many tasks via small task-specific modules.
+All four methods keep the pretrained backbone frozen and learn only small auxiliary parameters, but they differ in *where* and *how often* trainable parameters are injected — adapters and LoRA modify internal representations per layer, while prefix/prompt tuning prepends context at the input side — trading expressiveness against parameter count.
 
-**Verbatim caption transcription:** *Not visible on this page.* The page text states only: "The illustration of these four methods are shown in Figure 13." The actual figure caption (e.g., "Figure 13: Overview of four parameter-efficient fine-tuning methods…") would appear on the page containing the illustration, which is not included in the provided excerpt.
+**Caption (verbatim)**
+
+(a) Adapter Tuning   (b) Prefix Tuning   (c) Prompt Tuning   (d) Low-Rank Adaptation
 *caption: Adapter Tuning. Adapter tuning incorporates small neural network modules (called adapter) into the Transformer mod- els [406]. To implement the adapte… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.16 (p.54)
@@ -10559,14 +10621,21 @@ The figure is a line plot comparing kernel execution time (ms, y-axis, 0–64) a
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.3 (p.5)
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig03.png]]
-> [!tip] **Main Figure (Figure 2) — Description:**
+> [!tip] ## Description
 
-The figure is a line plot comparing kernel execution time (ms, y-axis, 0–64) against input length (x-axis, 2K→64K) for two attention implementations: **DPLR** (teal dashed line) and **KDA (ours)** (solid blue line). Both curves start near 0 ms at 2K. DPLR grows approximately exponentially, climbing steeply past ~48 ms by 64K. KDA remains nearly flat across 2K–32K (~0–8 ms) and only rises to ~30 ms at 64K, consistently sitting below DPLR. Conditions: batch size = 1, 16 heads.
+The figure depicts a hybrid MoE–transformer with two block types (residual-wrapped):
+- **Top block (1×):** Norm → **MLA** (Multi-Latent Attention) → Norm → **MoE** FFN.
+- **Bottom block (N×):** Norm → **KDA** (Kimi Delta Attention) → Norm → **MoE** FFN.
 
-**Key Technical Takeaway:** KDA eliminates the second-level chunk matmuls of DPLR (Equation 9) by binding decay variables **a**, **b** into **k**, dropping four chunk matmuls to two and yielding ~2× kernel speedup, with the gap widening at long sequences (64K).
+**MoE expansion (top right):** parallel **Shared Experts** (always-on, indices 1…N_s) and **Routed Experts** (selected by a learned Router with top-k gating, indices 1…N_r). Shared outputs and gated routed outputs are summed at the top.
 
-**Caption (verbatim):**
-> Figure 2: Execution time of kernels for varying input lengths, with a uniform batch size of 1 and 16 heads.
+**KDA expansion (bottom right):** input is projected through five parallel branches — two Linear+Conv (+L2-norm) paths and three delta-net-style paths with sigmoid gates — feeding a fused **Kimi Delta Attention** op, followed by Norm → gated Linear projection.
+
+**Key takeaway (≤120 words):** KDA is a linear-time attention using parallel value branches (conv + delta-rule paths) that fuse into a single kernel, replacing standard softmax attention for most layers while MLA handles a single global-context pass — paired with a shared+routed MoE FFN for capacity at fixed FLOPs.
+
+## Caption (verbatim)
+
+*No caption text is present in the provided image — the figure consists only of the architectural diagram with labels (1×, N×, MoE, Norm, MLA, KDA, Shared Expert, Routed Expert, Router, Kimi Delta Attention, Linear, Conv, L2, σ).*
 *caption: Neural Parameterization… ｜ 论文 [[kimi-linear-an-expressive-efficient-attention-architecture]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.4 (p.7)
@@ -10709,19 +10778,34 @@ The figure consists of **three side-by-side scatter/line plots** displaying loss
 
 ### Muon is Scalable for LLM Training — Fig.6 (p.15)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig06.png]]
-> [!tip] ## Main Figure Description
+> [!tip] ## Description
 
-The figure consists of **three side-by-side scatter/line plots** displaying loss landscapes across FLOPs budgets (five levels: 1.1e+20, 1.9e+20, 3.9e+20, 5.7e+20, 1.0e+21, color-coded purple→yellow):
+The figure is a Python code snippet implementing a **MoE (Mixture-of-Experts) gate scaling factor calculator**. The architecture has three logical blocks:
 
-1. **Loss vs. Train Tokens** (log-scale x-axis): Loss decreases monotonically with more tokens; larger FLOPs budgets achieve lower final loss.
-2. **Loss vs. Learning Rate**: Bowl-shaped (U) curves, each with a distinct minimum identifying the optimal learning rate per FLOPs budget.
-3. **Loss vs. Batch Size**: Loss rises with batch size (200–900), with larger budgets consistently achieving lower loss across the range.
+1. **Activation** — `sigmoid(x)` converts raw logits into probabilities.
+2. **Mock routing simulation** — a loop generates `num_experts` Gaussian-distributed logits, sorts their sigmoid outputs in descending order, keeps the top-`k`, and renormalizes them so the chosen weights sum to 1.
+3. **Scaling factor aggregation** — for each trial, the factor `1 / √(Σ pᵢ²)` is computed (inverse of the ℓ2 norm of the routing weights), then averaged over `iter_times` Monte-Carlo trials.
 
-**Key takeaway:** Across all three hyper-parameters, higher FLOPs budgets consistently dominate lower ones (lower loss everywhere), confirming that the optimal hyper-parameters scale predictably with compute—enabling reliable extrapolation to larger training runs.
+**Data flow:** `num_experts → random logits → sigmoid → sort desc → top-k slice → renormalize → norm → accumulate → mean`.
 
-## Verbatim Caption
+### Key Technical Takeaway (≤120 words)
 
-**Figure 5: Optimization Landscapes for Scaling Law Hyper-parameters Across FLOPs Budgets**
+The returned `factor = 1 / ‖p‖₂` compensates for the **norm collapse** caused by top-k renormalization: because `topk < num_experts`, the chosen weights are scaled up so they still sum to 1, which inflates their ℓ2 norm above `1/√topk`. Dividing by this norm restores a per-token contribution of roughly unit scale, stabilizing training in sparse MoE layers (analogous to the scaling used in Switch Transformer / GShard style gating). Monte-Carlo averaging over many random logits yields an expected value usable as a constant hyperparameter at inference time.
+
+### Caption (verbatim transcription)
+
+```
+"""Calculate the gate scaling factor for MoE.
+
+Args:
+    num_experts (int): The number of experts.
+    topk (int): The number of experts to select.
+    iter_timers (int): The number of iterations.
+
+Returns:
+    float: The gate scaling factor.
+"""
+```
 *caption: D… ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.7 (p.17)
@@ -10952,49 +11036,57 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 
 ### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.8 (p.12)
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig08.png]]
-> [!tip] I don't see an actual figure displayed on this page. Page 12 consists entirely of body text from a research paper, containing the following sections:
+> [!tip] **Description**
 
-- Continuation of a discussion on expert/attention NPU provisioning (mentioning DeepSeek-R1/V3 with 288 experts)
-- **Trampoline Forward** — describes a two-stage routing scheme (references Figure 8)
-- **Trade-off between MTE and DMA** — discusses NPU-Direct URMA
-- **Performance** — A2E/E2A latency results (172 μs / 193 μs)
-- **Section 4: Scalable Serving System at SuperPod-scale**, with subsection **4.1 Overview** introducing FlowServe (references Figure 9 and Figure 10)
+The figure contrasts two data-flow patterns (A2E and E2A) between stacked Attention NPUs (top) and Experts NPUs (bottom), each containing DMA, AIV, and Mem (holding *meta* and *data*). In **A2E** (left), metadata is pushed downward first (① Update Meta), loaded into the Expert's AIV (②), then Attention pulls data from the Expert (③ Pull), with cross-expert data movement (④) and a combined update (⑤). In **E2A** (right), data flows directly between Experts (①), while only small metadata is pushed up to Attention (②) before the large data payload follows (③→④). 
 
-The page text *references* Figure 8, Figure 9, and Figure 10, but none of these figures are actually rendered on this page, and there is no caption to transcribe. If you'd like me to describe Figure 8 (the trampoline forward data flow) or Figures 9/10 (the redesigned FlowServe system) based on what the surrounding text describes, I can do that — but those visuals themselves are not present in the image you've shared. Could you share the page(s) where those figures actually appear?
+**Key takeaway:** A2E is bandwidth-heavy because it pulls full data up-then-down to coordinate; E2A keeps data local among Experts and only ships lightweight metadata to Attention, drastically reducing cross-module traffic.
+
+**Caption (verbatim):** *A2E* and *E2A*
 *caption: Trade-off between MTE and DMA. To improve communication efficiency, we employ NPU-Direct Unified Remote Memory Access (URMA), a technique on Ascend NP… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
 
 ### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.10 (p.12)
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig10.png]]
-> [!tip] I don't see an actual figure displayed on this page. Page 12 consists entirely of body text from a research paper, containing the following sections:
+> [!tip] ## Description (≤120 words)
 
-- Continuation of a discussion on expert/attention NPU provisioning (mentioning DeepSeek-R1/V3 with 288 experts)
-- **Trampoline Forward** — describes a two-stage routing scheme (references Figure 8)
-- **Trade-off between MTE and DMA** — discusses NPU-Direct URMA
-- **Performance** — A2E/E2A latency results (172 μs / 193 μs)
-- **Section 4: Scalable Serving System at SuperPod-scale**, with subsection **4.1 Overview** introducing FlowServe (references Figure 9 and Figure 10)
+The figure depicts a **multi-die pipeline** for a transformer layer with Mixture-of-Experts (MoE), spanning N+1 dies (Die 0 … Die N), each handling a token batch in parallel. Tokens flow left-to-right through eight sequential stages: **MLAPrologue → MLA → All2All → O → Gating → Dispatch → MoE → Combine**, then proceed to the next layer. Two **Global Sync** barriers (red dashed ovals) align dies — one after All2All/Dispatch, and one after Combine — before downstream layers consume outputs. Four optimization levers are annotated: **DP-LB** smooths MLA latency, **MoE-LB** smooths expert latency, **Proactive GC** mitigates CPU stragglers, and **MTP + Dynamic MicroBatch** boosts compute efficiency.
 
-The page text *references* Figure 8, Figure 9, and Figure 10, but none of these figures are actually rendered on this page, and there is no caption to transcribe. If you'd like me to describe Figure 8 (the trampoline forward data flow) or Figures 9/10 (the redesigned FlowServe system) based on what the surrounding text describes, I can do that — but those visuals themselves are not present in the image you've shared. Could you share the page(s) where those figures actually appear?
+**Key takeaway:** Cross-die load balancing (DP-LB + MoE-LB) at the two global sync points is the critical mechanism for keeping the heterogeneous pipeline balanced, since MLA and MoE stages are the dominant sources of latency variance across dies.
+
+## Caption / Annotation Text (verbatim)
+
+> **Key Technique 1:** Use **DP-LB** to reduce MLA latency variation
+>
+> **Key Technique 2:** Use **MoE-LB** to reduce MoE Latency variation
+>
+> Die 0 · Die 1 · Die 2 · Die 3 · … · Die *N*−1 · Die *N*
+>
+> MLAPrologue | MLA | All2All | O | Gating | Dispatch | MoE | Combine → Next Layer
+>
+> *Global Sync* (×2)
+>
+> **Key Technique 3:** Use **Proactive GC** to reduce CPU stragglers
+>
+> **Key Technique 4:** Use **MTP** and **Dynamic MicroBatch** to improve overall computing efficiency
 *caption: This redesign centers on three key components: • First, we introduce the Data Parallel (DP) group abstraction, inspired by SGLang [24].… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
 
 ### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.12 (p.16)
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig12.png]]
-> [!tip] **Description (Figure 11):**
+> [!tip] **Main Figure Description:**
 
-Figure 11 contains two sub-plots evaluating Expert Placement Load Balancing (EPLB):
+The figure illustrates an **Expert Parallel Load Balancing (EPLB) system** for DeepSeek-style MoE inference, organized in two halves:
 
-**(a) Expert Load Skew:** A CDF of per-expert hit probability for a DeepSeek-R1 MoE layer under ShareGPT workload. The curve rises sharply near 0% and saturates near 1.0, with a red dashed line marking the equilibrium (~0.35%) hit probability. Most experts sit far below equilibrium, while a small tail of "hot" experts absorb disproportionate token traffic.
+**Top — Control Plane (numbered 1–4):**
+1. **Expert Stats** (database) — collects per-token expert usage statistics
+2. **EPLB Algorithm** — computes optimal expert placement
+3. **Expert Reconfig.** — plans redistribution
+4. **Logical-Physical Expert Map** — table mapping tokens (Token 1–4) to expert IDs
 
-**(b) Latency vs. Batch Size:** Three routing strategies compared across batch sizes 8–192 on EP288:
-- **MoE-Native** (blue): original token-to-expert assignment — highest latency (~150 µs at BS=192).
-- **MoE-Balanced** (orange): EPLB replica placement — near-optimal.
-- **MoE-Avg-Routing** (green): idealized uniform load — lower bound.
+**Bottom — Data Plane (two NPU Dies):** Each die runs the pipeline MLA → Gating → Collect → LB → Dispatch, hosting a subset of Experts (e.g., {0,1} on left, {1,255} on right). Blue arrows pipe stats back to the database; red arrows push the load-balancer plan into each die's LB; green dashed arrows route token-to-expert dispatch via the map.
 
-All scale linearly, but MoE-Balanced closely tracks the uniform-load baseline, recovering ~30% latency vs. Native.
+**Key Technical Takeaway:** EPLB decouples *logical* expert IDs from *physical* NPU placement, enabling runtime rebalancing based on live token-expert statistics — mitigating MoE load imbalance across dies without model retraining.
 
-**Key Takeaway:** EPLB mitigates straggler effects caused by skewed expert activation (30× token concentration) by replicating hot experts and using precomputed dispatch maps, achieving near-uniform-load latency without disturbing the natural router.
-
-**Caption (verbatim):**
-Figure 11 | A Study of Expert Placement Load Balancing. (a) We show the expert load distribution of a DeepSeek-R1 layer under the ShareGPT workload. The distribution is highly skewed—20% of experts receive more than the average load, and the hottest expert sees 30× more tokens than the average. (b) The setup uses EP288 and 1K-token sequence length. MoE-Avg-Routing, which forces uniform load across all experts; MoE-Native, which uses the original token-to-expert assignment; and MoE-Balanced, which applies our EPLB to balance expert load.
+**Caption (verbatim):** *Expert Parallel (up to 288 for DeepSeek Models)*
 *caption: Step 1: Collecting Expert Load Distribution. First, we collect data on expert loads across NPUs. We define expert load as the total number of tokens r… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
 
 ### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.17 (p.22)

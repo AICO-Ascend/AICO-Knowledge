@@ -30,28 +30,21 @@ tags: [speculative]
 > Recall from Equation 1 that the per-token latency of speculative decoding is 𝐿= (𝑇draft + 𝑇verify)/𝜏. Autoregressive drafters achieve high 𝜏but pay 𝑇draft ∝𝛾; parallel drafters collapse 𝑇draft to a single pass but sacrifice 𝜏because each position is predicted independently. Meanwhile, fixed-length verification wastes 𝑇verify on low-confidence suffix tokens that are almost certain to be rejected. D
 
 > [!tip] 技术解读（多模态）
-> # Figure Description
+> **Architecture / Components / Data Flow**
 
-I should note that **Figure 1 itself is not visible** in the image you provided — only the surrounding page text is shown. However, based on the text on this page, I can reconstruct what Figure 1 (the DSpark overview) depicts:
+The figure depicts a three-stage speculative-style decoding pipeline with hardware-aware prefix scheduling:
 
-## Architecture / Components / Data Flow (inferred)
+1. **Draft stage (1):** A *Target Model* consumes input tokens **A, B, C** and emits the first real output token **D**.
+2. **Parallel candidate generation (2):** Token **D**, plus three `Mask` placeholders, are fed in parallel into a *Parallel Block* producing **Logits**. These logits are scanned by a *Sequential Block* that emits candidate tokens **E, F, G, H** with confidence scores **C₁…C₄**. A *Hardware-Aware Prefix Scheduler* then partitions the prefix into **Keep** (E, F, G) and **Drop** (H, low confidence) buckets.
+3. **Verification / next round (3):** The kept prefix [D, E, F, G] is replayed through the *Target Model*, which validates them (E, F ✓; G ✗ — replaced by **G\***) and proceeds to the **next round**.
 
-**Per-token latency model (from Eq. 1):**
-$$L = (T_{\text{draft}} + T_{\text{verify}})/\tau$$
+**Key technical takeaway**
 
-DSpark addresses two bottlenecks with two complementary components:
+Prefix scheduling decouples *candidate generation* (cheap, parallel, mask-filled) from *candidate acceptance* (target-model-verified, hardware-budgeted), allowing only high-confidence tokens to consume verification compute.
 
-1. **Semi-autoregressive generation (Sec. 3.1)** — A parallel backbone handles bulk draft computation (keeping $T_{\text{draft}}$ nearly independent of block size $\gamma$), followed by a lightweight sequential block that injects dependency among draft tokens, raising acceptance probability $\tau$ cheaply.
+**Caption (verbatim transcription of all figure text)**
 
-2. **Confidence-scheduled verification (Sec. 3.2)** — A confidence head estimates per-position acceptance probabilities; a hardware-aware scheduler prunes low-confidence suffix tokens, cutting redundant $T_{\text{verify}}$ cost.
-
-**Data flow:** Target model hidden states → DFlash-style context projection → draft model → confidence head → scheduler → trimmed verification set.
-
-## Key Takeaway
-DSpark decouples *draft latency* (parallel backbone) from *draft quality* (sequential dependency injection) and prunes verification by confidence — jointly attacking the $T_{\text{draft}} \propto \gamma$ and wasted-$T_{\text{verify}}$ inefficiencies of speculative decoding.
-
-## Caption (verbatim)
-The caption for Figure 1 is **not present** on this page — the text only says *"The overview of DSpark is shown in Figure 1."* A fuller caption would appear on the page containing the figure itself, which is not included in the image you shared. If you can provide the page with the actual figure, I can transcribe the caption verbatim.
+> ❶ Target Model — A, B, C → D → **❷** Parallel Block (D | Mask | Mask | Mask) → Logits → Sequential Block → E, F, G, H with confidences C₁, C₂, C₃, C₄ → Hardware-Aware Prefix Scheduler → **Keep** | **Drop** → **❸** Target Model inputs {D, E, F (✓), G (✗)} → outputs {E, F, G\*} → **next round**
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 

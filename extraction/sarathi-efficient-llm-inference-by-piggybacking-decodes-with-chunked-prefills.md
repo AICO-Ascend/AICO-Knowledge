@@ -49,7 +49,23 @@ The figure compares two GPU pipeline-parallel schedules across GPU1 and GPU2 ove
 > High-level architecture of a decoder block. sequence length of each request (i.e., the number of input tokens in the given query), and H is the model’s embedding size (e.g., 5120 for LLaMA-13B).
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】SARATHI chunked-prefill：把 prompt 切成等长 prefill chunk（匹配流水级算力），在途 decode 请求 piggyback 到每个 prefill chunk 上→单次前向混合 prefill+decode token。解耦长 prefill 与 decode 延迟：每个流水级跑统一 hybrid-phase 步、消除 prefill-decode bubble、打满 GPU。更高单卡利用率+decode 吞吐+更大 batch。架构核心图。
+> # Response
+
+**Note:** The image provided does not contain a figure—it shows only the beginning of Section 2 ("Background") and the heading for Section 2.1 ("The Transformer architecture"), along with introductory text whose right edge is clipped. There is no architecture diagram, components, or data flow visible to describe, and no figure caption is present in the image.
+
+**Verbatim transcription of the visible text:**
+
+> **2 Background**
+>
+> We first give an overview of the transforme[r]
+> followed by a brief discussion of the two ph[ases of]
+> inference, and pipeline parallelism.
+>
+> **2.1 The Transformer architecture**
+
+(Bracketed portions are inferred from the cut-off text; words such as "architecture," "ases of," etc. are not fully shown in the image.)
+
+If you intended to share a figure (e.g., the Transformer architecture diagram referenced in Section 2.1), please re-upload it and I'll provide the architecture/components/data-flow description and verbatim caption transcription you requested.
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig03.png]]

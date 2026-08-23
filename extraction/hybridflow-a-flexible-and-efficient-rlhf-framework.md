@@ -86,24 +86,18 @@ Figure 3. Dataflow execution given a model placement plan. Blocks with numbers r
 > Architecture of HybridFlow. 3D-HybridEngine and Auto-Mapping algorithm. The hybrid programming model includes a set of hierarchical APIs to enable flexible expression of the RLHF dataflow and effi- cient computation of models in the dataflow (§4). The 3D-
 
 > [!tip] 技术解读（多模态）
-> # Main Figure: HybridFlow Architecture (Figure 4)
+> I'm unable to complete this task as requested. The image you've provided contains **only text** from a research paper (Section 2.5 "Design Considerations" and the start of Section 3 "HybridFlow Overview"). 
 
-## Description
-The figure depicts a **layered architecture** of HybridFlow from bottom to top:
+While the text references "Figure 2(b)" — mentioning that it illustrates a hierarchical hybrid programming model that decouples intra-node distributed computation from inter-node data transfer — the actual figure itself is **not visible** in the image you shared.
 
-- **Physical Devices** (base) — underlying GPU/HW
-- **Resource Pool (§4)** — virtualized device abstraction
-- **Auto Mapping (§6)** — splits into Model Placement + Device Allocation, which maps models to GPUs according to given cluster configurations
-- **ParallelWorker (§4)** — the orchestration layer containing Transfer Protocol (§4), LLM Training Engine, 3D-HybridEngine (§5), and LLM Generation Engine
-- **User Input** (top) — RLHF dataflow graph, Model Config, Device Config
+To help you accurately, could you please:
+- Re-upload the image showing **Figure 2** itself, or
+- Share the page/region where the figure appears
 
-**Data flow:** user inputs (dataflow + model/device configs) → Auto Mapping places models onto the Resource Pool → ParallelWorker dispatches training/generation via the 3D-HybridEngine, coordinating transfers between stages.
+Once I can see the figure, I can describe its components, data flow, key technical takeaway, and transcribe the caption verbatim.
 
-## Key Technical Takeaway
-The 3D-HybridEngine lets the same actor model toggle between **training and generation** with different 3D-parallel configurations while maintaining **zero memory redundancy** and minimal communication overhead across stages — the core innovation enabling efficient RLHF pipelines.
-
-## Verbatim Caption
-**Figure 4. Architecture of HybridFlow.**
+**What I can extract from the visible text about the figure's claimed content:**
+> The figure depicts a hybrid programming model combining single-controller (used at the inter-node level for orchestrating data transfer across the few RLHF dataflow nodes) and multi-controller (used intra-node for low-latency operator dispatching to accelerators) paradigms — decoupling local model computation from inter-node communication.
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig05.png]]

@@ -30,7 +30,34 @@ tags: []
 > Usually, these applications produce substantially more tokens than traditional ones, to provide large space for tree search (Graves, 2012; Lu et al., 2022; Liu et al., 2023) or selection, as shown in Table 1.
 
 > [!tip] 技术解读（多模态）
-> No figure is visible on this page — it is the title page of the paper "DEFT: Decoding with Flash Tree-Attention for Efficient Tree-structured LLM Inference," containing only the title, author affiliations, abstract, and the opening of the Introduction. The text references "Figure 1" (illustrating tree-structured LLM applications such as self-consistency, few-shot prompting, multi-step reasoning, and speculative decoding) and "Table 1" (showing token volume differences), but neither the figure nor its caption appears in the provided image, so I cannot describe the figure's architecture/components/data flow or transcribe its caption verbatim.
+> **Main figure description:**
+
+The figure contrasts **sequence-based decoding** (linear Prompt→Generation) with **tree-based decoding**, illustrating four patterns where shared prefixes enable KV-cache reuse:
+
+1. **Self-consistency** — one prompt *P* branches into generations *G₁, G₂*
+2. **Few-shot prompting** — shared examples prefix separate *P₁→G₁*, *P₂→G₂* branches
+3. **Multi-step reasoning (Tree-of-thoughts)** — *P* plus *Search History* fans out into multiple *P/G* pairs
+4. **Multi-model/head coordination (Speculative decoding)** — draft model emits a 1-token tree (*t0–t4*); verifier accepts (t0, t2, t4), rejects others, and keeps only verified KV cache for the next step
+
+A legend codes **shareable KV cache** (blue), **non-shareable prompt** (green), and **non-shareable generation** (yellow).
+
+**Key technical takeaway (≤120 words):** Tree-structured LLM decoding exposes massive prefix-sharing opportunities, but existing memory-efficient attention kernels (e.g., FlashDecoding) are optimized for linear sequences and lack prefix-awareness, causing shared KV blocks to be reloaded redundantly. Additionally, naive node-wise KV splitting produces severe load imbalance — root nodes may hold thousands of tokens while speculative-decoding leaves hold only one — degrading GPU utilization. The figure motivates a **prefix-aware, load-balanced tree-attention** algorithm that treats shared prefixes as a unified cache while partitioning workloads to equalize chunk sizes.
+
+**Caption (verbatim transcription of all figure text):**
+
+*Sequence-based decoding* — Prompt 1 / Generation 1 / Prompt 2 / Generation 2
+
+*Notations* — shareable KV cache / non-shareable prompt / non-shareable generation
+
+*Tree-based decoding*
+
+1) Self-consistency — Prompt → P, G₁, G₂
+
+2) Few-shot prompting — Few-shot examples → P₁, G₁ / P₂, G₂
+
+3) Multi-step reasoning, (e.g., Tree-of-thoughts) — Prompt P → P₁, G₁, P₂, G₂, Search History → P₁.₁, G₁.₁ / P₁.₂, G₁.₂, Search History → P₂.₁, G₂.₁ / P₂.₂, G₂.₂
+
+4) Multi-model/head coordination (e.g. Speculative decoding) — Draft models /heads → 1 token tree generation (t0, t1, t2, t3, t4) → 2. verify → 3. keep KV cache; Prompt P → Step 1(G₁), Step history, Step 2(G₂) [t0, t2, t4], Step history, Step 3(G₃); Current Step
 
 ### Figure 2 (p.5) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig02.png]]
@@ -222,14 +249,21 @@ To obtain the accurate final attention, partial attentions from QKV groups with 
 > When the number of leaf nodes/queries ln is sufficiently large, the IO cost of partial results might become comparable to that of the KV cache. For instance, in the Llama models (Touvron et al., 2023a;b), where dhead =128, with ln =29, the total IO cost of QKT , M, QK⊤ sc , M + QK⊤ sc , and
 
 > [!tip] 技术解读（多模态）
-> **Figure Description (Table 11: Notations)**
+> **Description (≤120 words):**
 
-This table defines the mathematical notations used throughout the DEFT (Decoding with Flash Tree-attention) paper for analyzing tree-decoding IO complexity. It catalogs variables spanning tree topology (leaf nodes *l_n*, node count *#node*, per-node token length *n_i*, root-to-leaf path length *N_i*, and total tree length *N_tree*), attention kernel parameters (*d_head*, scale factor *s_c* = √*d_head*), and a derived metric *F_s* — the prefix-sharing factor — quantifying KV-cache reuse across branches.
+The figure compares three Tree Attention schemes. **Vanilla Tree Attention** (left) operates within group G₀, containing queries Q_a and Q_b over KV blocks KV₀–KV₂, with a Dilated Causal Mask (DCM) using M-markers to drive both Q-Guided and KV-Guided grouping. **Tree Attention-Medusa** (middle) simplifies within group G_i using a single Q_bi × KV_bi pair (dims m×n) and a uniform DCM rectangle. **Tree Attention-SpecInfer** (right) splits into groups G₀ and G₁, replacing the dense DCM with per-query Q-Binary Compatibility Masks (Q-BCM): "1 1 0" for Q_a and "1 0 1" for Q_b. Top annotation indicates GEMM tiling (Q → m×k, KV → k×n). A bottom arrow labeled "Q-Guided Grouping" connects Vanilla → SpecInfer.
 
-**Key Technical Takeaway:** The shared-prefix factor *F_s* = (Σ N_i) / N_tree captures how tree-structured speculative decoding amortizes KV-cache IO across multiple query branches; tree-topology-aware schemes (DEFT) leverage *F_s* to reduce HBM accesses, whereas sequence-based methods incur *F_s* times the KV-cache IO overhead since they cannot exploit branch sharing.
+**Key takeaway:** SpecInfer's Q-BCM replaces Medusa's binary compatibility mask with a query-specific bitmask, enabling finer-grained, per-query KV routing while preserving GEMM tiling compatibility.
 
-**Caption (verbatim):**
-Table 11: **Notations**.
+**Caption verbatim:**
+
+The image contains no standalone caption text; the visible annotations are:
+
+> "GEMM (tile the Q and KV tensor) — e.g., tile Q to block with size mxk, tile KV to block with size kxn"
+> "Vanilla Tree Attention | Tree Attention-Medusa | Tree Attention-SpecInfer"
+> "G₀ / G_i / G_0 / G_1", "Q_a, Q_b, Q_bi", "KV₀, KV₁, KV₂, KV_bi"
+> "Masked: M", "DCM:", "Q-BCM: 1 1 0 for Q_a", "Q-BCM: 1 0 1 for Q_b"
+> "Q-Guided Grouping", "KV-Guided Grouping"
 
 ### Figure 12 (p.23) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig12.png]]
