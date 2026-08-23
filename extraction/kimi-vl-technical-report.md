@@ -260,21 +260,18 @@ Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segment
 > Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional video content by analyzing frame sequences and extracting conceptual progression over time. In this case, the model identifies a deepening of the traditional saying “Teach a man to fish, and you feed him for a lifetime” into a more nuanced idea: “Teach h
 
 > [!tip] 技术解读（多模态）
-> **Main Figure Description (Figure 12 — Long-Video Comprehension Demo)**
+> **Main Figure Description**
 
-**Architecture / Components / Data flow:**
-- **Input:** An hour-long instructional video course, sampled as a sequence of frames (visualized as a horizontal dotted timeline with frame markers, including "1#" anchors indicating positional reference within the video).
-- **Instruction prompt:** A textual query giving a Chinese proverb ("Give a man a fish…") and asking the model to identify a *further* requirement added by the author, then explain it.
-- **Model:** Kimi-VL performs multi-frame temporal reasoning over the extracted video frames, jointly grounding visual content and the textual instruction.
-- **Output (Response):** A natural-language interpretation stating the requirement is *"Teach him the taste of fish and make him hungry"* — a conceptual deepening of the original proverb about motivation/curiosity beyond mere skill transfer.
+This appears to be a multimodal instruction-following evaluation interface (likely a video-language model benchmark). **Architecture/Components:**
+- **Top panel (Instruction):** A textual prompt asking the model to interpret a Chinese proverb and identify an extended requirement from a lecture video.
+- **Middle panel (Video Context):** A 3×3 grid of sampled frames (timestamps 00:00 → 35:55) extracted from a presentation, showing a speaker and slide progression (the final frame displays "Thank you!" and Twitter handle @herbertzpl).
+- **Bottom panel (Response):** The model's generated answer.
+- **Data flow:** Text prompt + sampled video frames → VLM encoder → fused multimodal representation → decoder → textual response.
 
-**Key technical takeaway:** Kimi-VL moves beyond frame-level recognition to **long-horizon conceptual reasoning**, weaving sparse textual cues across hour-long video into a coherent abstraction — here, recovering an unstated motivational layer behind a teaching metaphor.
-
----
+**Key Technical Takeaway:** The figure illustrates *temporally-sparse frame sampling paired with long-context textual reasoning* — the model must infer a *non-explicit* slide content ("Teach him the taste of fish and make him hungry") from sparse visual cues and world knowledge, testing both visual grounding and inferential comprehension.
 
 **Caption (verbatim):**
-
-> Figure 12: Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional video content by analyzing frame sequences and extracting conceptual progression over time. In this case, the model identifies a deepening of the traditional saying "Teach a man to fish, and you feed him for a lifetime" into a more nuanced idea: "Teach him the taste of fish and make him hungry."
+"Instruction. There is an old Chinese saying: Give a man a fish, and you feed him for a day; teach a man to fish, and you feed him for a lifetime. In this representation, the author puts forward a further requirement. Find it then explain it in detail. 00:00 … 35:55. Response. The requirement is to 'Teach him the taste of fish and make him hungry.' This implies that in addition to teaching someone how to perform a task or acquire a skill, it is also important to inspire and motivate them to continue learning and improving on their own. By making them hungry for more knowledge or experience, they will be more likely to seek out new challenges and opportunities for growth, which can lead to greater success and fulfillment in the long run."
 
 ### Figure 13 (p.16) ⭐深度解读
 ![[assets/crops/kimi-vl-technical-report-fig13.png]]
@@ -360,11 +357,19 @@ If you'd like to upload the actual Figure 3 / Kimi-VL architecture diagram, I ca
 > Performance of Kimi-VL-Thinking and Kimi-VL-Thinking-2506 on multimodal reasoning benchmarks. The metrics evaluated include MathVista (mini), MMMU (val), MMMU-Pro (average), MathVision (full) and VideoMMMU, with results expressed in Pass@1. The Kimi-VL-Thinking-2506 performs well in most cases, show
 
 > [!tip] 表格解读（多模态）
-> **Description (no figure present — only a table caption is shown):** What appears in the image is text-only: a caption for **Table 4**, which is a performance-comparison table. No architecture diagram, component schematic, or data-flow diagram is rendered, so architectural components and data flow cannot be described. Based on the caption alone, the table contrasts two model variants—**Kimi-VL-Thinking** and **Kimi-VL-Thinking-2506**—across five multimodal reasoning benchmarks (MathVista-mini, MMMU-val, MMMU-Pro avg, MathVision full, VideoMMMU) using Pass@1 as the metric. **Key takeaway:** the "-2506" (timestamped/iterated) variant consistently outperforms the baseline on most benchmarks, suggesting that the "thinking" enhancement scales and generalizes across diverse multimodal domains (math, multimodal understanding, video).
+> **Description:**
 
-**Caption (verbatim):**
+This figure is a **benchmark comparison table** evaluating vision-language models across three multimodal reasoning benchmarks: MathVision (full), MathVista (mini), and MMMU (val), all measured via Pass@1. The leftmost "Non-Thinking Model" column shows GPT-4o-mini, while the "Thinking Model" group compares GPT-72B, Qwen2.5-VL-7B, Gemma-3-27B, o1-12B, QVQ-72B-1217 Preview, Kimi-k1.5, and Kimi-VL-Thinking-A3B. **Key takeaway:** Thinking-enabled models (e.g., Kimi-VL-A3B at 38.6 on MathVision, 74.9 on MathVista) generally outperform the non-thinking GPT-4o-mini baseline, but performance varies — GPT-72B underperforms on MathVista (56.7) and MMMU (60.0), indicating that chain-of-thought reasoning does not guarantee superior multimodal math/reasoning gains uniformly across model families.
 
-> Table 4: Performance of Kimi-VL-Thinking and Kimi-VL-Thinking-2506 on multimodal reasoning benchmarks. The metrics evaluated include MathVista (mini), MMMU (val), MMMU-Pro (average), MathVision (full) and VideoMMMU, with results expressed in Pass@1. The Kimi-VL-Thinking-2506 performs well in most cases, showcasing the enhanced reasoning and processing capabilities of the *"thinking"* variant across different domains and scales.
+**Caption (verbatim transcription of table):**
+
+| Benchmark (Metric) | Non-Thinking Model — GPT-4o-mini | GPT-72B | Qwen2.5-VL-7B | Gemma-3-27B | o1-12B | QVQ-72B-1217 Preview | Kimi-k1.5 | Kimi-VL-Thinking-A3B |
+|---|---|---|---|---|---|---|---|---|
+| MathVision (full) (Pass@1) | 30.4 | - | 38.1 | 25.1 | 35.5 | 32.1 | - | 35.9 |
+| MathVista (mini) (Pass@1) | 63.8 | 56.7 | 74.8 | 68.2 | 62.3 | 56.4 | 71.0 | 71.4 |
+| MMMU (val) (Pass@1) | 69.1 | 60.0 | 74.8 | 58.6 | 64.8 | 59.6 | 77.3 | 70.3 |
+
+*Note: A separate textual caption is not visible in the image; only the comparison table is present.*
 
 ### Table 5 (p.18) ⭐深度解读
 ![[assets/crops/kimi-vl-technical-report-tab05.png]]

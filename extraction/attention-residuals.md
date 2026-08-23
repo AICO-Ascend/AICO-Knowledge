@@ -43,7 +43,8 @@ The figure compares three residual-connection strategies in a stacked Transforme
 Figure 1: Overview of Attention Residuals. **(a)** Standard Residuals: standard residual connections with uniform additive accumulation. **(b)** Full AttnRes: each layer selectively aggregates all previous layer outputs via learned attention weights. **(c)** Block AttnRes: layers are grouped into blocks, reducing memory from O(Ld) to O(Nd).
 
 ### Figure 2 (p.5) ⭐深度解读
-![[assets/attention-residuals-p05.png]]
+![[assets/crops/attention-residuals-fig02.png]]
+*整页渲染: ![[assets/attention-residuals-p05.png]]*
 > [!quote] caption
 > PyTorch-style pseudo code for Block Attention Residuals. block_attn_res computes softmax attention over block representations using a learned pseudo-query wl; forward is a single-layer pass that maintains partial_block (bi n, intra-block residual) and blocks ([b0, . . . , bn−1], inter-block history).
 

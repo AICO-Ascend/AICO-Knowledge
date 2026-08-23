@@ -77,25 +77,29 @@ The figure presents a side-by-side comparison of two text panels. The top panel 
 > Figure 3: GEPA proposes a new candidate in every iteration by improving existing candidates using one of the two strategies (Reflective Prompt Mutation (Section 3) or System Aware Merge (Appendix D.1)), first evaluating them on a minibatch, and if improved, evaluating on a larger dataset. Instead of selecting the best performing candidate to mutate always, which can lead to a local-optimum, GEPA introduces Pareto-based candidate sampling (Section 3.1), which filters and samples from the list of best candidates per task, ensuring sufficient diversity. Overall, these design decisions allow GEPA to be highly sample-efficient while demonstrating strong generalization.
 
 ### Figure 4 (p.4) ⭐深度解读
-![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]]
+![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig04.png]]
+*整页渲染: ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]]*
 > [!quote] caption
 > GEPA receives the following inputs: A system  instan- tiated with simple prompts to be optimized, training dataset D train (consisting of task instances (x; m) as described in Section 2), the standard evaluation metric  for the task, a feedback function  f (introduced in
 
 > [!tip] 技术解读（多模态）
-> I'm unable to fulfill this request as stated because **no figure is visible in the image provided**. This page (page 4 of an ICLR 2026 paper) contains only running text. The two figures referenced in the text — "Figure 3" (described as an overview of GEPA) and "Figure 4" (described as the full GEPA algorithm) — are mentioned but not rendered in this particular image. Additionally, no caption text is present on this page that I can transcribe verbatim.
+> **Description:** The image displays a fragment of pseudocode (lines 12–21) implementing an iterative module-selection procedure. The control flow proceeds through a `while` loop that, at each iteration, evaluates a copy of a module *k* updated by module *j*, computes its average score on set *M* (before/after), and—if the score improves—adds the result to set *P* and module *k* to set *A*. A nested `for` loop then iterates over each (xᵢ; mᵢ) pair in *D_pareto*, updating the score *Sᵢ₀[i]*. The function terminates by returning the configuration that maximizes average score on *D_pareto*.
 
-What the page *does* contain, textually, is:
+**Key takeaway:** Improvement is gated by an "average score on *M*" test, while Pareto-front pairs are only *re-evaluated* (not selected) inside the inner loop—the actual return criterion depends on the optimized average.
 
-- **Formalization of a compound AI system** as ℳ = (M; C; X; Y), where:
-  - M = {M₁; …; M_{|M|}} — language modules (LLM subcomponents, each with prompts P_i and underlying weights X_i)
-  - C — control-flow logic orchestrating module invocation
-  - X, Y — global input/output schemas
-- **Two optimization formulations**:
-  - Eq. (1): joint prompt + weight optimization, max_h,θ E_{(x,m)~T} [μ(x; h; θ; m)]
-  - Eq. (2): budget-constrained variant, subject to ≤ B rollouts
-- **Introduction of GEPA** (Section 3), motivated by three principles: genetic prompt evolution, natural-language reflective feedback, and Pareto-based candidate selection.
-
-If you can share the actual figure page, I'd be glad to describe its architecture, data flow, key takeaway, and transcribe its caption.
+**Verbatim transcription:**
+```
+12:           Copy of ₀ᵏ w/ module j updated by ₀ʲ
+13:           , ₀ avg score on M (before, after)
+14:       if ₀ improved then
+15:           Add ₀ to P; Add k to A
+16:           for each (xᵢ; mᵢ) in D_pareto do
+17:               S ₀[i] ( ₀(xᵢ); mᵢ)
+18:           end for
+19:       end if
+20:   end while
+21:   return         maximizing average score on D_pareto
+```
 
 ### Figure 5 (p.7) ⭐深度解读
 ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p07.png]]
@@ -187,7 +191,8 @@ Below is a faithful transcription of the two captions visible on the page:
 If you can share the rendered figure (chart/graph), I'd be glad to describe its architecture, components, data flow, and key technical takeaway.
 
 ### Figure 9 (p.24) ⭐深度解读
-![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p24.png]]
+![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig09.png]]
+*整页渲染: ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p24.png]]*
 > [!quote] caption
 > Details of System Aware Merge. r represents a seeded stochastic sampler.
 

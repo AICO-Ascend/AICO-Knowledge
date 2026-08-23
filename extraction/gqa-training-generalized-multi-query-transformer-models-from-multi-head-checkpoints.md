@@ -61,7 +61,8 @@ The figure visually compares three transformer attention variants side-by-side, 
 Figure 2: Overview of grouped-query method. Multi-head attention has H query, key, and value heads. Multi-query attention shares single key and value heads across all query heads. Grouped-query attention instead shares single key and value heads for each *group* of query heads, interpolating between multi-head and multi-query attention.
 
 ### Figure 3 (p.3) ⭐深度解读
-![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p03.png]]
+![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig03.png]]
+*整页渲染: ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p03.png]]*
 > [!quote] caption
 > Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality and faster speed than MHA-Large, and GQA achieves even better performance with similar speed gains and comparable quality to MHA-XXL. Average perfor- mance on all tasks as a function of average inference time per sample for T5-Large and T5-XXL with multi- head attention, and 5% uptrained T5-XXL with MQA and GQA-8 attenti
 

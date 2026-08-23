@@ -128,7 +128,8 @@ The figure presents a PyTorch code snippet implementing attention via `torch.nn.
 Figure 5: Attention computation using FlexAttention with our proposed custom mask.
 
 ### Figure 6 (p.26) ⭐深度解读
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p26.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig06.png]]
+*整页渲染: ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p26.png]]*
 > [!quote] caption
 > Sample from MDLM (Sahoo et al., 2024a) of length L = 1024 and T = 5K diffusion steps.
 
@@ -144,7 +145,8 @@ This figure is **not an architecture diagram** but rather a **qualitative sample
 > **Figure 6:** Sample from MDLM (Sahoo et al., 2024a) of length *L* = 1024 and *T* = 5K diffusion steps. The generative perplexity of this sample under GPT2-Large is 69.26 and its entropy is 5.6.
 
 ### Figure 7 (p.27) ⭐深度解读
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p27.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig07.png]]
+*整页渲染: ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p27.png]]*
 > [!quote] caption
 > Sample from BD3-LM for block size L′ = 16 of length L = 2031 under T = 5K diffusion steps (trained with a context length of L = 1024). The generative perplexity of this sample under GPT2-Large is 24.3, and its entropy is 5.5. 27
 
@@ -157,7 +159,8 @@ This figure is **not an architecture diagram** but rather a **qualitative sample
 > Figure 7: Sample from BD3-LM for block size L' = 16 of length L = 2031 under T = 5K diffusion steps (trained with a context length of L = 1024). The generative perplexity of this sample under GPT2-Large is 24.3, and its entropy is 5.5.
 
 ### Figure 8 (p.28) ⭐深度解读
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p28.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig08.png]]
+*整页渲染: ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p28.png]]*
 > [!quote] caption
 > Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (trained with a context length of L = 1024). The generative perplexity of this sample under GPT2-Large is 10.6 and its entropy is 5.5. 28
 

@@ -498,25 +498,29 @@ The figure (Figure 1) contains **two vertically stacked line plots** comparing *
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.3 (p.3)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig03.png]]
-> [!tip] # Figure 3 Description
+> [!tip] **Architecture & Data Flow:**
+The figure compares three variants of a speculative decoding framework. **EAGLE** (top): a draft model takes feature sequence f₁…fₜ, predicts next feature f̂_{t+1} (supervised by feature loss *l*_fea) and passes through an LM head to predict token t̂_{t+2} (token loss *l*_token). At test (Step 2), predicted features are appended, but a train-test mismatch arises. **EAGLE + *l*_fea removal** (middle): drops feature loss, causing token-prediction failure (≠ at Step 2). **EAGLE-3** (bottom): introduces a "Training-time test" link that feeds predicted features back into Step 2 during training, eliminating distribution shift.
 
-**Architecture & Data Flow:**
-Figure 3 compares three draft-model architectures vertically:
+**Key takeaway:** EAGLE-3 resolves the train-test inconsistency of EAGLE by simulating the autoregressive draft rollout during training, restoring token-prediction accuracy without needing the feature loss.
 
-1. **EAGLE (top):** Predicts next-layer features (f_{t+1}≈f_{t+1}, loss l_fea) plus tokens (t̂_{t+2}≈t_{t+2}, loss l_token) during both training and test.
-2. **EAGLE + fea removal (middle):** Removes feature-prediction loss; draft model directly outputs unconstrained vectors â_t_{t+1}, then an LM head produces tokens.
-3. **EAGLE-3 (bottom):** Merges training and test into a unified pipeline that simulates multi-step generation. Step 1 takes (f_1…f_t), predicts â_t_{t+1} and t̂_{t+2}. A "training-time test" loop (red dashed arrow) feeds back to Step 2, which predicts t̂_{t+3}, enabling end-to-end multi-step supervision.
-
-**Key Takeaway:** EAGLE-3's training-time test architecture removes the feature-prediction constraint, allowing direct token prediction and richer use of multi-level target features for greater flexibility.
-
-# Caption (Verbatim)
-
-**Figure 3:** Illustration of **training-time test** (the bottom part) and its comparison with other draft methods (the upper and middle parts). *f* denotes the feature, *t* denotes the token, and *α* represents the unconstrained vectors. We use the hat to denote the predictions from models. All the methods shown in the figure use the token sequence from the previous time step, but for simplicity, this is not depicted in the figure. The input to EAGLE-3 is not actually *f*, but it is not shown in this figure. We will provide a detailed explanation in the following section.
+**Caption (verbatim):** The figure itself contains no printed caption text; labels are limited to "Training," "Test," "Training/Test," "Draft model," "LM head," "Step 1," "Step 2," "EAGLE," "EAGLE + *l*_fea removal," "EAGLE-3," and "Training-time test."
 *caption: Illustration of training-time test (the bottom part) and its comparison with other draft methods (the upper and middle parts). f denotes the feature, … ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.4 (p.2)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png]]
-> [!tip] 【MiniMax 解读】EAGLE-3 加速比柱状图（temp=0）：在 Vicuna-13B/LLaMA-3.1-8B/3.3-70B/DeepSeek-R1-LLaMA-8B 上对比 Vanilla/SpecDec/Medusa/HASS/EAGLE/EAGLE-2/EAGLE-3，EAGLE-3 分别达 5.6x/4.4x/4.1x/5.0x，全面最优。适合做「EAGLE-3 性能优势」论据。
+> [!tip] ## Figure Description
+
+**Components / data flow:** A 2D line plot comparing three model variants — **EAGLE** (red, circle markers), **EAGLE without fea pred** (yellow, circle markers), and **EAGLE-3** (blue, square markers) — across an x-axis with tick values {1, 2, 4, 8} (logarithmic spacing) and a y-axis labeled **"O-α"** ranging ~0.72–0.81.
+
+- **Red (EAGLE):** rises from ~0.756 → 0.778, then plateaus (~0.781–0.783).
+- **Yellow (no fea pred):** climbs steadily from ~0.750 to ~0.811 (highest curve overall).
+- **Blue (EAGLE-3):** starts lowest (~0.722), rises steeply, crosses EAGLE near x≈4, ends ~0.801.
+
+**Key technical takeaway:** EAGLE-3 underperforms EAGLE at low x but surpasses it once x≥4, while the feature-prediction ablation consistently yields the highest O-α, indicating that **EAGLE-3's gain at larger scales comes from components other than feature prediction**.
+
+## Caption (verbatim)
+
+*No caption text is present in the image. The only textual elements are the axis label "O-α", the x-axis tick labels "1, 2, 4, 8", and the legend entries "EAGLE", "EAGLE without fea pred", "EAGLE-3".*
 *caption: We can address this issue by incorporating Step 1 into the training process (the bottom of Figure 3). Using this method, the benefits of increasing tr… ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.5 (p.4)
@@ -901,7 +905,7 @@ Figure 5: Attention computation using FlexAttention with our proposed custom mas
 *caption: Attention computation using FlexAttention with our proposed custom mask.… ｜ 论文 [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.6 (p.26)
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p26.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig06.png]]
 > [!tip] ## Description
 
 This figure is **not an architecture diagram** but rather a **qualitative sample** illustrating the output of MDLM (Sahoo et al., 2024a), a masked diffusion language model. There is no architecture, component, or data-flow schematic — the "figure" is simply a rendered block of generated text wrapped between `<lendoftext>` sentinel tokens.
@@ -914,7 +918,7 @@ This figure is **not an architecture diagram** but rather a **qualitative sample
 *caption: Sample from MDLM (Sahoo et al., 2024a) of length L = 1024 and T = 5K diffusion steps.… ｜ 论文 [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.7 (p.27)
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p27.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig07.png]]
 > [!tip] **Figure description:** This figure is not an architecture diagram but a *sample generation* from BD3-LM, a block-wise discrete diffusion language model. It displays a single block of continuous narrative text (≈2,031 tokens) bounded by `<lendoftext>` end-of-document markers. The content is a coherent, multi-paragraph story about a girl traveling to Mexico, her mother being detained at a Bangkok airport on the way home, and broader commentary on Calais refugees — demonstrating that the model produces long, fluent, topic-consistent passages.
 
 **Key technical takeaway:** Despite being trained with a context length of only L = 1,024, BD3-LM generates sequences of length L = 2,031 (nearly 2× the training window) using only T = 5K diffusion steps with block size L' = 16, yielding coherent text with GPT2-Large generative perplexity 24.3 and entropy 5.5 — showing block diffusion can extrapolate beyond training context.
@@ -924,7 +928,7 @@ This figure is **not an architecture diagram** but rather a **qualitative sample
 *caption: Sample from BD3-LM for block size L′ = 16 of length L = 2031 under T = 5K diffusion steps (trained with a context length of L = 1024). The generative … ｜ 论文 [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.8 (p.28)
-![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p28.png]]
+![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig08.png]]
 > [!tip] **Description**
 
 This is not a traditional architecture diagram — it is a qualitative-output figure. The figure consists of a single boxed block of generated English text flanked by `<lendofftext>` sentinel tokens. The text is one long, unsegmented passage (~2,000 tokens) produced by an autoregressive language model; it drifts incoherently across multiple unrelated topics (an NFL game recap, a personal dispute over a tree in "Charlotte Gardens," architectural commentary on a building, and assorted trivia), with frequent name/topic confusions, fabricated quotes, and hallucinated entities. There are no labeled components, arrows, or data-flow stages — the "architecture" is implicit (AR transformer with context length 1024 producing a 2003-token sample, benchmarked against GPT2-Large, achieving perplexity 10.6 and entropy 5.5).
@@ -946,7 +950,22 @@ Figure 1. Speedup comparison between DFlash, EAGLE-3 against Autoregressive Deco
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.2 (p.4)
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig02.png]]
-> [!tip] 【MiniMax 解读】DFlash 设计：block-diffusion draft model 块内并行生成多 token（非逐 token 自回归）→低 draft 延迟；目标 LLM 先 prefill 产首 token 并取若干层隐藏态，concat 后过投影层融成 target context feature，注入每个 draft 层的 KV cache 并跨轮复用，持续提供上下文引导→接受长度随 draft 深度增长，无 token-embedding 稀释（优于 EAGLE 式输入融合）。架构核心图。
+> [!tip] ## Figure Description
+
+**Architecture:** The diagram depicts a **diffusion-based speculative decoding** pipeline. The prompt "Diffusion is good" enters the **Target Model** (top), producing *Fused Target Context Features* (blue) and a *Target Decode Token* (orange). Simultaneously, `<mask>` tokens are converted via **Target Embedding** into *Mask Tokens* (green). These streams are concatenated and processed sequentially through stacked **Draft Layers** (Layer 1, Layer 2, ...), each containing a **KV Cache**, **Bidirectional Attention**, and **MLP**. The final output passes through a **Target LM Head** to generate tokens *for speculative decoding*.
+
+**Key Takeaway:** Draft tokens leverage bidirectional attention over fused target context and prior decoded tokens (via KV cache), enabling parallel/non-autoregressive speculation rather than sequential left-to-right generation — accelerating inference while conditioning on full context.
+
+(112 words)
+
+## Verbatim Text Transcription
+
+> "Diffusion is good" → Target Model → (column of tokens)
+> Target Embedding → for `<mask> <mask> <mask>`
+> KV Cache | Draft Layer 1 | Bidirectional Attention | MLP
+> Draft Layer 2 → …
+> Target LM Head → for speculative decoding `<eos>`
+> Legend: ▢ Fused Target Context Feature | ▢ Target Decode Token | ▢ Mask Token
 *caption: DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s… ｜ 论文 [[dflash-block-diffusion-for-flash-speculative-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.3 (p.3)
@@ -964,15 +983,21 @@ Figure 3. Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.4 (p.5)
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig04.png]]
-> [!tip] ## Figure 4 Description
+> [!tip] ## Description
 
-**Architecture / Components:** The figure displays two attention-mask grids illustrating DFlash's training-time sparse attention. The left grid encodes the input sequence: prompt tokens *p* (blue), a contiguous block of clean response tokens *r* (yellow) used as anchors, and surrounding mask tokens *m* (green) for parallel prediction. Invisible tokens (white) sit between blocks. The right grid shows the resulting attention pattern: bidirectional attention *within* each block plus KV-injected target features, while attention *across* blocks is disallowed.
+**Architecture/components:** Two side-by-side token grids depict a context-extension scheme. The left panel "From Target Model" shows a triangular causal mask: blue *Target Context Features* fill positions p1–p4 and r1–r2, expanding rightward down each row, with white *Invisible Tokens* elsewhere. The right panel "Mask Blocks" shows a wider grid where each response token (r1, r2, r3) is followed by three `<m>` mask tokens. Yellow *Clean Tokens* anchor each block, green *Mask Tokens* populate the `<m>` positions, and the rest remain invisible.
 
-**Key technical takeaway:** By concatenating all blocks into a single sequence processed jointly under a sparse causal attention mask, DFlash trains multiple draft blocks in parallel within one forward/backward pass—achieving efficient joint training without inter-block information leakage.
+**Data flow:** Target context features (left) are aligned with corresponding clean-token-plus-mask-block sequences (right), so each response token is replicated as a "clean + masked" block to enrich supervision.
 
-## Caption (Verbatim)
+**Key takeaway (≤120 words):** The technique augments the target model's causal context by replicating each response token into a clean-anchor block followed by learned mask tokens. This expands the visible receptive field without breaking autoregressive causality, providing denser self-supervised signals across positions that would otherwise be invisible under strict causal masking — improving representation quality in masked-prediction-style training while maintaining compatibility with the target model's generation structure.
 
-**Figure 4. DFlash training attention.** The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens *p* and clean response tokens *r*. Within each masked block, a subset of clean response tokens (yellow) is randomly sampled as anchors, while mask tokens *m* (green) mark positions for parallel prediction. Invisible tokens (white) denote the attention mask, which enforces causal consistency and prevents inter-block information leakage during training.
+## Caption (verbatim transcription)
+
+> **From Target Model** &nbsp;&nbsp;&nbsp;&nbsp; **Mask Blocks**
+> 
+> p1 &nbsp; p2 &nbsp; p3 &nbsp; p4 &nbsp; r1 &nbsp; r2 &nbsp;&nbsp;&nbsp; … &nbsp;&nbsp;&nbsp; r1 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\> &nbsp; r2 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\> &nbsp; r3 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\>
+> 
+> Legend: ▢ Target Context Feature &nbsp;|&nbsp; ▢ Mask Token &nbsp;|&nbsp; ▢ Clean Token &nbsp;|&nbsp; ▢ Invisible Token
 *caption: DFlash training attention. The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens… ｜ 论文 [[dflash-block-diffusion-for-flash-speculative-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.5 (p.13)
@@ -1531,16 +1556,14 @@ The figure is a grouped bar chart comparing Kimi K2.5 (blue) against three basel
 *caption: Kimi K2.5 main results. 1… ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.2 (p.4)
-![[assets/kimi-k2-5-visual-agentic-intelligence-p04.png]]
-> [!tip] **Description (≈95 words):**
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png]]
+> [!tip] **Note:** The image provided contains only a block of body text from a paper — there is no actual figure (diagram/architecture) or figure caption shown. Below I describe the text content and provide a verbatim transcription.
 
-The figure presents two side-by-side line plots tracking vision RL training performance. The left panel (pink curve) shows MMMU Pro benchmark accuracy rising from ~0.71 to ~0.76 as RL flops scale up. The right panel (green curve) shows a second benchmark accuracy climbing from ~0.68 to ~0.78 with a similar upward trajectory. Both curves feature horizontal dashed baselines (likely upper-bound reference targets) and shaded confidence bands beneath the trajectories. The x-axis denotes RL FLOPs (compute scaling) while the y-axis shows accuracy.
+**Description of the text block (treating it as the main content shown):**
+The passage introduces a method called **zero-vision SFT** (Supervised Fine-Tuning). The pipeline conceptually works as follows: (1) start with abundant, diverse text-only SFT data; (2) during post-training, all visual/image manipulations are executed as **programmatic Python operations** rather than through pixel input; (3) this proxies "vision tool-use," letting the model perform pixel-level tasks (binarization, object sizing, counting) and ground tasks (localization, OCR). **Key takeaway:** Text-only SFT data is sufficient to elicit emergent visual reasoning capabilities in a model, by routing image operations through code.
 
-**Key technical takeaway:** Visual capabilities can emerge from a minimal zero-vision SFT checkpoint purely through extended RL compute scaling—suggesting that RL FLOPs, not extensive vision pre-training, are the critical driver of robust visual acquisition.
-
-**Caption (verbatim):**
-
-> Figure 2: Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve, demonstrating that zero-vision activation paired with long-running RL is sufficient for acquiring robust visual capabilities.
+**Verbatim transcription:**
+> An observation is that high-quality text SFT data are relatively abundant and diverse. We propose a novel approach, zero-vision SFT, that uses only text SFT data to activate the visual, agentic capabilities during post-training. In this approach, all image manipulations are proxied through programmatic operations in Python, effectively serving as a generalization of traditional vision tool-use. This "zero-vision" activation enables diverse reasoning behaviors, including pixel-level operations such as object size estimation via binarization and counting, and generalizes to visually grounded tasks such as object localization, counting, and OCR.
 *caption: Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve… ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.3 (p.5)
@@ -3053,21 +3076,24 @@ The figure presents a side-by-side comparison of two text panels. The top panel 
 *caption: GEPA proposes a new candidate in every iteration by improving existing candidates using one of the two strategies (Reflective Prompt Mutation (Section… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.4 (p.4)
-![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]]
-> [!tip] I'm unable to fulfill this request as stated because **no figure is visible in the image provided**. This page (page 4 of an ICLR 2026 paper) contains only running text. The two figures referenced in the text — "Figure 3" (described as an overview of GEPA) and "Figure 4" (described as the full GEPA algorithm) — are mentioned but not rendered in this particular image. Additionally, no caption text is present on this page that I can transcribe verbatim.
+![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig04.png]]
+> [!tip] **Description:** The image displays a fragment of pseudocode (lines 12–21) implementing an iterative module-selection procedure. The control flow proceeds through a `while` loop that, at each iteration, evaluates a copy of a module *k* updated by module *j*, computes its average score on set *M* (before/after), and—if the score improves—adds the result to set *P* and module *k* to set *A*. A nested `for` loop then iterates over each (xᵢ; mᵢ) pair in *D_pareto*, updating the score *Sᵢ₀[i]*. The function terminates by returning the configuration that maximizes average score on *D_pareto*.
 
-What the page *does* contain, textually, is:
+**Key takeaway:** Improvement is gated by an "average score on *M*" test, while Pareto-front pairs are only *re-evaluated* (not selected) inside the inner loop—the actual return criterion depends on the optimized average.
 
-- **Formalization of a compound AI system** as ℳ = (M; C; X; Y), where:
-  - M = {M₁; …; M_{|M|}} — language modules (LLM subcomponents, each with prompts P_i and underlying weights X_i)
-  - C — control-flow logic orchestrating module invocation
-  - X, Y — global input/output schemas
-- **Two optimization formulations**:
-  - Eq. (1): joint prompt + weight optimization, max_h,θ E_{(x,m)~T} [μ(x; h; θ; m)]
-  - Eq. (2): budget-constrained variant, subject to ≤ B rollouts
-- **Introduction of GEPA** (Section 3), motivated by three principles: genetic prompt evolution, natural-language reflective feedback, and Pareto-based candidate selection.
-
-If you can share the actual figure page, I'd be glad to describe its architecture, data flow, key takeaway, and transcribe its caption.
+**Verbatim transcription:**
+```
+12:           Copy of ₀ᵏ w/ module j updated by ₀ʲ
+13:           , ₀ avg score on M (before, after)
+14:       if ₀ improved then
+15:           Add ₀ to P; Add k to A
+16:           for each (xᵢ; mᵢ) in D_pareto do
+17:               S ₀[i] ( ₀(xᵢ); mᵢ)
+18:           end for
+19:       end if
+20:   end while
+21:   return         maximizing average score on D_pareto
+```
 *caption: GEPA receives the following inputs: A system  instan- tiated with simple prompts to be optimized, training dataset D train (consisting of task instan… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.5 (p.7)
@@ -3146,7 +3172,7 @@ If you can share the rendered figure (chart/graph), I'd be glad to describe its 
 *caption: GEPA with GPT-4o is able to iteratively refine and improve CUDA Kernel Code. The graphs shows fast p vs. rollouts plot for p=[0:5; 1], where the speed… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.9 (p.24)
-![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p24.png]]
+![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig09.png]]
 > [!tip] **Description of the main figure (Figure 9):**
 
 The figure shows two pseudocode algorithms for **System-Aware Merge**:
@@ -3664,7 +3690,7 @@ The data flow is: input tokens → (preproj + postproj attention block) + ffn bl
 *caption: Decode-only speedup with SARATHI on an A6000 GPU with LLaMA-13B (chunk size = 256).… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.9 (p.10)
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p10.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig09.png]]
 > [!tip] ## Figure Description
 
 The main figure (Figure 10) is a 2×3 grid of stacked bar charts comparing inference latency between baseline (orange) and SARATHI (blue). Each bar is decomposed into four operation components—**preproj** (hatched), **attn**, **postproj** (cross-hatched), and **ffn**—revealing where time is spent.
@@ -4218,21 +4244,18 @@ Figure 11: Video scene splitting. Kimi-VL processes a long-form video by segment
 
 ### KIMI-VL TECHNICAL REPORT — Fig.12 (p.17)
 ![[assets/crops/kimi-vl-technical-report-fig12.png]]
-> [!tip] **Main Figure Description (Figure 12 — Long-Video Comprehension Demo)**
+> [!tip] **Main Figure Description**
 
-**Architecture / Components / Data flow:**
-- **Input:** An hour-long instructional video course, sampled as a sequence of frames (visualized as a horizontal dotted timeline with frame markers, including "1#" anchors indicating positional reference within the video).
-- **Instruction prompt:** A textual query giving a Chinese proverb ("Give a man a fish…") and asking the model to identify a *further* requirement added by the author, then explain it.
-- **Model:** Kimi-VL performs multi-frame temporal reasoning over the extracted video frames, jointly grounding visual content and the textual instruction.
-- **Output (Response):** A natural-language interpretation stating the requirement is *"Teach him the taste of fish and make him hungry"* — a conceptual deepening of the original proverb about motivation/curiosity beyond mere skill transfer.
+This appears to be a multimodal instruction-following evaluation interface (likely a video-language model benchmark). **Architecture/Components:**
+- **Top panel (Instruction):** A textual prompt asking the model to interpret a Chinese proverb and identify an extended requirement from a lecture video.
+- **Middle panel (Video Context):** A 3×3 grid of sampled frames (timestamps 00:00 → 35:55) extracted from a presentation, showing a speaker and slide progression (the final frame displays "Thank you!" and Twitter handle @herbertzpl).
+- **Bottom panel (Response):** The model's generated answer.
+- **Data flow:** Text prompt + sampled video frames → VLM encoder → fused multimodal representation → decoder → textual response.
 
-**Key technical takeaway:** Kimi-VL moves beyond frame-level recognition to **long-horizon conceptual reasoning**, weaving sparse textual cues across hour-long video into a coherent abstraction — here, recovering an unstated motivational layer behind a teaching metaphor.
-
----
+**Key Technical Takeaway:** The figure illustrates *temporally-sparse frame sampling paired with long-context textual reasoning* — the model must infer a *non-explicit* slide content ("Teach him the taste of fish and make him hungry") from sparse visual cues and world knowledge, testing both visual grounding and inferential comprehension.
 
 **Caption (verbatim):**
-
-> Figure 12: Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional video content by analyzing frame sequences and extracting conceptual progression over time. In this case, the model identifies a deepening of the traditional saying "Teach a man to fish, and you feed him for a lifetime" into a more nuanced idea: "Teach him the taste of fish and make him hungry."
+"Instruction. There is an old Chinese saying: Give a man a fish, and you feed him for a day; teach a man to fish, and you feed him for a lifetime. In this representation, the author puts forward a further requirement. Find it then explain it in detail. 00:00 … 35:55. Response. The requirement is to 'Teach him the taste of fish and make him hungry.' This implies that in addition to teaching someone how to perform a task or acquire a skill, it is also important to inspire and motivate them to continue learning and improving on their own. By making them hungry for more knowledge or experience, they will be more likely to seek out new challenges and opportunities for growth, which can lead to greater success and fulfillment in the long run."
 *caption: Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional vide… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.13 (p.16)
@@ -6126,27 +6149,15 @@ There is no descriptive figure caption printed in the image. The only textual el
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.1 (p.1)
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig01.png]]
-> [!tip] ## Main Figure Description (Figure 1)
+> [!tip] **Description (≤120 words):**
 
-The figure presents three side-by-side diagrams comparing residual connection paradigms:
+The figure compares three residual connection schemes across three panels. **(a) Residual Connection**: input **x_l** passes through Layer **F**, with its output added (⊕) back to **x_l** via a skip connection to form **x_{l+1}**. **(b) Hyper-Connections (HC)**: expand this by inserting three learnable mapping modules — Pre Mapping (**H_l^pre**, input side), Post Mapping (**H_l^post**, output side), and Res Mapping (**H_l^res**, residual branch) — producing hidden states **h_l^in, h_l^out, h_l^post, h_l^res**. **(c) Manifold-Constrained HC (mHC)**: retains the same structure but projects each mapping onto a constrained manifold via **P_M^pre(·), P_M^post(·), P_M^res(·)** (green blocks). 
 
-**(a) Residual Connection:** Simplest form. Single stream: input `x_l` passes through Layer `F`, is added (⊕) with a skip connection, producing `x_{l+1}`.
+**Key takeaway:** mHC restricts hyper-connection weights to a manifold, stabilizing training and preserving signal magnitude compared to unconstrained HC, which can suffer from exploding/vanishing hidden states.
 
-**(b) Hyper-Connections (HC):** Expands the residual stream into multiple parallel vectors (`x_l` stack). Four learned linear mappings orchestrate the flow:
-- **Res Mapping** `H_l^res` → produces `h_l^res` (residual stream)
-- **Pre Mapping** `H_l^pre` → produces `h_l^in` (input to Layer F)
-- Layer `F` → produces `h_l^out`
-- **Post Mapping** `H_l^post` → produces `h_l^post`
-Outputs aggregated (⊕) into `x_{l+1}` stack.
+**Caption (verbatim):**
 
-**(c) Manifold-Constrained HC (mHC):** Identical topology to HC, but each mapping is replaced by a **manifold-projected** operator `P_M^res`, `P_M^pre`, `P_M^post` (shown in green). These constrain the matrices onto a specific geometric manifold, unlike the unconstrained `H_l` matrices in HC.
-
-**Key Technical Takeaway (≤120 words):**
-Standard residual connections preserve an *identity mapping* property essential for stable deep training. Hyper-Connections (HC) widen the residual stream with four unconstrained linear mappings (`H_l^res`, `H_l^pre`, `H_l^post`, etc.), boosting expressivity but breaking identity mapping—causing training instability, poor scalability, and memory overhead. **mHC solves this by wrapping each mapping with a manifold-projection operator `P_M(·)`**, restricting the matrices to a constrained subspace where the identity property is restored. The result: HC's capacity gains are retained while training stability and scalability are recovered, enabling effective large-scale training. In essence, mHC adds a *geometric inductive bias* to HC without altering its top-level data flow.
-
-## Caption (Verbatim)
-
-> Figure 1 | **Illustrations of Residual Connection Paradigms.** This figure compares the structural design of (a) standard Residual Connection, (b) Hyper-Connections (HC), and (c) our proposed **Manifold-Constrained Hyper-Connections (mHC)**. Unlike the unconstrained HC, *mHC* focuses on optimizing the residual connection space by projecting the matrices onto a constrained manifold to ensure stability.
+(a) Residual Connection   (b) Hyper-Connections (HC)   (c) Manifold-Constrained HC (*m*HC)
 *caption: Illustrations of Residual Connection Paradigms. This figure compares the structural… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.2 (p.7)
@@ -6183,38 +6194,38 @@ Figure 3 has two side-by-side log-scale plots of Amax Gain Magnitude (y-axis) vs
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.4 (p.12)
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig04.png]]
-> [!tip] # Main Figure Description
+> [!tip] ## Figure Description
 
-**Architecture/Components/Data Flow:**
-Figure 4 depicts a DualPipe-style timeline scheduling diagram with three parallel horizontal streams:
+The figure is a Gantt-style timeline showing a parallelized training schedule for a Mixture-of-Experts (MoE) transformer layer across **three concurrent streams**:
 
-1. **Normal Compute Stream** — Forward/backward MLP and Attention kernels (MLP(B), MLP(W), MLP(F), ATTN(B), ATTN(W), ATTN(F)) with a "Whole Stage Recompute (B)" block for backward recomputation, bracketed by residual-input/output markers (𝓕ᵖʳᵉ, �ᵖᵒˢᵗ,ʳᵉˢ for both Attention 𝓕ᴬ and MLP 𝓕ᴹ).
-2. **Communication Stream** — All-to-all ops (DISPATCH/COMBINE in F or B) interleaved with point-to-point pipeline-parallel sends/receives (PP Send Recv).
-3. **High Priority Compute Stream** — Hosts the small post-residual kernels (𝓕ᵖᵒˢᵗ,ʳᵉˢ) that must finish before the next pipeline stage begins.
+- **Normal Compute Stream** (top): Sequences MLP (B) → MLP (W) → MLP (F), then ATTN (B) → ATTN (W) → Whole Stage Recompute (B) → ATTN (F). Backward, weight-gradient, and forward blocks are arranged so recomputation precedes forward attention.
+- **Communication Stream** (middle): Interleaves expert-parallel ops (DISPATCH F/B, COMBINE F/B) with pipeline-parallel ops (PP Send/Recv F/B), overlapped against compute.
+- **High Priority Compute Stream** (bottom): Carries only the post-residual synchronization points (𝓕ᴹ_post,res (F/B)).
 
-**Key Takeaway:** By moving the residual-output kernels onto a dedicated high-priority compute stream, mHC hides the additional cost of hyper-connection residual recombination under otherwise idle communication bubbles, preserving DualPipe's overlap efficiency.
+Vertical hatched markers (𝓕ᴹ_pre, 𝓕ᴬ_pre, 𝓕ᴬ_post,res, 𝓕ᴹ_post,res) denote barrier/synchronization events between streams.
 
-# Caption (verbatim)
+**Key Technical Takeaway:** The schedule demonstrates *stream-level overlap* of MoE all-to-all communication (dispatch/combine) and PP point-to-point transfers with MLP/Attention kernels, exploiting CUDA multi-stream concurrency so that the heavier forward attention (with whole-stage recompute) is hidden behind collective communication.
 
-**Figure 4 | Communication-Computation Overlapping for *m*HC.** We extend the DualPipe schedule to handle the overhead introduced by *m*HC. Lengths of each block are illustrative only and do not represent actual duration. (F), (B), (W) refers to forward pass, backward pass, weight gradient computation, respectively. 𝓕ᴬ and 𝓕ᴹ represents kernels corresponded to Attention and MLP, respectively.
+## Caption (verbatim, transcribed from figure labels)
+
+*No standalone caption text is present in the figure; the figure consists only of the labeled timeline shown above with stream labels "Normal Compute Stream", "Communication Stream", "High Priority Compute Stream" and in-block labels: MLP (B), MLP (W), MLP (F), ATTN (B), ATTN (W), Whole Stage Recompute (B), ATTN (F), DISPATCH (F), DISPATCH (B), COMBINE (F), PP Send Recv (F), PP Send Recv (B), COMBINE (B), and barrier markers 𝓕ᴹ_pre (B), 𝓕ᴬ_post,res (B), 𝓕ᴬ_pre (B), 𝓕ᴬ_pre (F), 𝓕ᴬ_post,res (F), 𝓕ᴹ_pre (F), 𝓕ᴹ_post,res (F), 𝓕ᴹ_post,res (B).*
 *caption: Communication-Computation Overlapping for mHC. We extend the DualPipe… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.5 (p.12)
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig05.png]]
-> [!tip] # Main Figure Description
+> [!tip] **Figure Description:**
 
-**Architecture/Components/Data Flow:**
-Figure 4 depicts a DualPipe-style timeline scheduling diagram with three parallel horizontal streams:
+The figure presents a two-panel comparison of three reinforcement-learning methods—**Baseline** (gray), **HC** (light blue), and **mHC** (dark blue)—plotted over 10⁷ episodes on log-scale x-axes.
 
-1. **Normal Compute Stream** — Forward/backward MLP and Attention kernels (MLP(B), MLP(W), MLP(F), ATTN(B), ATTN(W), ATTN(F)) with a "Whole Stage Recompute (B)" block for backward recomputation, bracketed by residual-input/output markers (𝓕ᵖʳᵉ, �ᵖᵒˢᵗ,ʳᵉˢ for both Attention 𝓕ᴬ and MLP 𝓕ᴹ).
-2. **Communication Stream** — All-to-all ops (DISPATCH/COMBINE in F or B) interleaved with point-to-point pipeline-parallel sends/receives (PP Send Recv).
-3. **High Priority Compute Stream** — Hosts the small post-residual kernels (𝓕ᵖᵒˢᵗ,ʳᵉˢ) that must finish before the next pipeline stage begins.
+- **(a) Cumulative Regret:** Baseline remains flat at a high constant value, while both HC and mHC rise sub-linearly, with mHC consistently achieving the lowest cumulative regret throughout training.
+- **(b) Average Loss:** All three methods decrease, but HC exhibits high variance/noise; Baseline and mHC decay smoothly and nearly overlap, with mHC tracking Baseline closely while still outperforming HC.
 
-**Key Takeaway:** By moving the residual-output kernels onto a dedicated high-priority compute stream, mHC hides the additional cost of hyper-connection residual recombination under otherwise idle communication bubbles, preserving DualPipe's overlap efficiency.
+**Key takeaway (≤120 words):**
+The figure evaluates HC vs. mHC against a non-curriculum Baseline on a long-horizon task (10⁷ episodes). Both variants reduce cumulative regret relative to Baseline, but HC's loss curve is unstable. **mHC achieves the best of both worlds**: it matches Baseline's smooth, stable training dynamics while delivering lower cumulative regret than HC, indicating that the modification preserves exploration benefits of hierarchical curricula without destabilizing optimization.
 
-# Caption (verbatim)
+**Verbatim caption transcription:**
 
-**Figure 4 | Communication-Computation Overlapping for *m*HC.** We extend the DualPipe schedule to handle the overhead introduced by *m*HC. Lengths of each block are illustrative only and do not represent actual duration. (F), (B), (W) refers to forward pass, backward pass, weight gradient computation, respectively. 𝓕ᴬ and 𝓕ᴹ represents kernels corresponded to Attention and MLP, respectively.
+(a) Cumulative regret over episodes   (b) Average loss over episodes
 *caption: Training Stability of Manifold-Constrained Hyper-Connections (mHC). This figure… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.6 (p.13)
@@ -6421,7 +6432,7 @@ Figure 2: Overview of grouped-query method. Multi-head attention has H query, ke
 *caption: Overview of grouped-query method. Multi-head attention has H query, key, and value heads. Multi-query attention shares single key and value heads acro… ｜ 论文 [[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]] ｜ arxiv 见 MD 元信息*
 
 ### GQA: Training Generalized Multi-Query Transformer Models fro — Fig.3 (p.3)
-![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p03.png]]
+![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig03.png]]
 > [!tip] # Figure 3 Description
 
 **Architecture/Components:** A 2D scatter plot comparing four T5 model variants on a speed-vs-quality axis. X-axis: "Time per sample (ms)" (0 to ~1.5); Y-axis: "Performance" (46 to ~47.2). Four data points are plotted — **MHA-Large** (pink, lower-left, ~0.37 ms / 46.0), **MQA-XXL** (orange, ~0.24 ms / 46.6), **GQA-XXL** (blue, ~0.28 ms / 47.1), and **MHA-XXL** (pink, upper-right, ~1.51 ms / 47.2).
@@ -7611,22 +7622,28 @@ Figure 12 presents two stacked bar charts comparing the latency breakdown (%) of
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.1 (p.2)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig01.png]]
-> [!tip] **论文核心架构图分析**
+> [!tip] ## Description
 
-**1) 主要架构/组件/数据流描述**
+**Architecture & Data Flow:**
+The figure depicts a **KVCache-centric Conductor** system with three coordinated schedulers (left) managing four GPU instances arranged in a 2×2 layout. The top row holds **Prefill Instances** (GPU/VRAM with Local Chunked Prefill Scheduler + Paged KVCache) connected via PP/SP, while the bottom row holds **Decoding Instances** (GPU/VRAM with Paged KVCache + Local Scheduler). A shared middle layer — the **KVCache Pool** (CPU/DRAM/SSD-based Distributed KVCache Pools) — bridges prefill and decoding, with **RDMA-based Inter-node KVCache Transfer** (⊗) enabling cross-node cache movement. Three pools govern flow: **Prefill Pool** (Cache-aware Prefill Scheduler → maximize cache reuse), **KVCache Pool** (Balance Scheduler), and **Decoding Pool** (Load-balance Decoding Scheduler).
 
-该图为 **Mooncake 架构图**，展示了一种以 KVCache 为中心的 LLM 服务解耦架构：
+**Key Technical Takeaway:**
+The system separates stage-specific optimization goals — **Prefill maximizes cache reuse** (subject to TTFT SLO, minimum MFU, KVCache < DRAM), while **Decoding maximizes throughput** (subject to TBT SLO, KVCache < VRAM) — by decoupling scheduling across the prefill/decode boundary through a unified, RDMA-shared distributed KVCache pool.
 
-- **组件**：左侧为输入请求队列；中间区域包含多个 GPU 实例节点，分为 **prefill（预填充）节点**（上半部，含 KVCache 池 "3.450678"）和 **decoding（解码）节点**（下半部，含 KVCache 池）；中央为全局调度器（Conductor），负责调度决策。
-- **数据流**：请求首先被路由到 prefill 节点；prefill 计算产生的 KVCache（图中上方柱状图表示）通过高速互联被流式传输到对应的 decoding 节点；decoding 节点加载 KVCache 后进行连续批处理生成输出（右侧生成的文本序列 "!\"#$%..."）。箭头与乘号 ⊗ 标示预填充与解码节点间的 KVCache 流转与匹配关系。
+## Caption (verbatim transcription)
 
-**2) 关键技术要点**
+There is no separate numbered figure caption in the image. The in-figure annotations read verbatim:
 
-**基于 KVCache 的预填充-解码解耦（Disaggregation）：** 预填充（compute-bound）与解码（memory-bound）两种异构负载被分离到不同实例，KVCache 作为"一等公民"在实例间显式流转，全局 Conductor 综合考虑 TTFT/TBT SLO、KVCache 命中率、DRAM 容量与网络拥塞进行实例配对与调度优化，从而实现吞吐与时延的联合优化。**
-
-**3) 图注逐字转录**
-
-> **Figure 1: Mooncake Architecture.**
+> **KVCache-centric Conductor**
+> 
+> Prefill Pool / KVCache Pool / Decoding Pool
+> Cache-aware Prefill Scheduler → Prefill Instance → GPU/VRAM (Local Chunked Prefill Scheduler | Paged KVCache) ↕ CPU/DRAM/SSD (Distributed KVCache Pool) ↔ RDMA ⊗ Inter-node KVCache Transfer
+> KVCache Balance Scheduler ↔ Decoding Instance → GPU/VRAM (Paged KVCache | Local Scheduler) ↕ CPU/DRAM/SSD (Distributed KVCache Pool)
+> Load-balance Decoding Scheduler
+> 
+> **Prefill Stage Optimization Goal:** max Cache Reuse s.t. TTFT SLO, Minimum MFU, KVCache < DRAM
+> 
+> **Decoding Stage Optimization Goal:** max Throughput s.t. TBT SLO, KVCache < VRAM
 *caption: Mooncake Architecture. remote location will prolong the TTFT, and a large batch size will lead to a larger TBT. Thus, the utilization of both these th… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.2 (p.4)
@@ -7636,33 +7653,65 @@ Figure 12 presents two stacked bar charts comparing the latency breakdown (%) of
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.3 (p.5)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig03.png]]
-> [!tip] ## Description of Figure 3
+> [!tip] ## Main Figure Description
 
-**Architecture/Components:** Figure 3 depicts the KVCache pool residing in CPU memory. At the top, raw tokens (e.g., `)`, `7`, `*`, `6`, `#`, `$`, `8`, `+`, `%`) are shown being grouped into hash blocks. A dashed intermediate layer represents hash-chained block entries (e.g., `0*#$%&'!$+`, `1*#$%&'!0!2+`) connected via `9)4*+!` link pointers, forming a dedup chain. The lower portion shows paged memory regions (`!"###"$%"&'&`, `0*"/12)$%+,` etc.) storing both **prefix cache blocks** and **full cache blocks**, indexed by block IDs (`=...)6;<()*+#`, `;":20$#";<()*+#`).
+The figure illustrates a **prefix-cache-aware KV cache transfer** workflow across distributed LLM serving instances.
 
-**Data Flow:** Tokens → hash grouping → chained dedup blocks → split into prefix/full KVCache pages → distributed across multiple paged CPU memory pools with hash-based addressing.
+**Components & data flow:**
+- **Token blocks** (a–i) are hashed cumulatively (A=Hash(a), B=Hash(A+b), …, F=Hash(E+f)) to produce compact identifiers.
+- The hashed signatures are compared against an existing **Prefix Cache**; five blocks match (A–E) while the sixth mismatches (F).
+- A **Prefill Instance** initially loads/stores the full cache.
+- A **Messenger** reads the matched prefix cache and transfers only the **incremental cache blocks** (F–I) to another Messenger.
+- The receiving Messenger **writes** the prefix plus incremental blocks, and the **Decoding Instance** loads them — avoiding recomputation.
 
-**Key Technical Takeaway:** KVCache blocks are uniquely addressed by a composite hash of *content + prefix context*, enabling deduplication of identical token sequences across requests while preserving contextual locality for prefix reuse.
+**Key takeaway:** By hashing chained token blocks for prefix matching, only the divergent suffix (incremental blocks) is shipped over the network, slashing redundant prefill compute and inter-instance bandwidth for shared contexts.
 
----
+## Caption Transcription
 
-## Caption (verbatim)
-
-**Figure 3:** The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.
+No caption / figure number text is visible in the provided image — only in-figure labels (e.g., "Token Blocks," "Prefix Cache Blocks," "Incremental Cache Blocks," "Unallocated Cache Blocks," and the action arrows "Load/Store/Read/Write/Transfer KVCache") are present.
 *caption: The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.4 (p.6)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig04.png]]
-> [!tip] **Description (≤120 words):**
+> [!tip] ## Figure Description
 
-Figure 4 depicts two parallel workflow pipelines for LLM inference. The left side shows **prefill instances**, organized into two stacked stages where the upper stage handles KVCache load/store operations (e.g., 56789... entries) and the lower stage runs the prefill computation (e.g., AB+C'/C'FIB computations) concurrently — both progressing layer-by-layer. The right side shows **decoding instances**, similarly split: the upper stage (≤22'*+,-# buffer) receives asynchronously loaded data while the lower stage performs GPU decoding (e.g., ?6@/,'AB+C). A transfer arrow at the bottom (6:9!'"#$%&&'(5.$+3'. ) connects the prefill output to the decoding input, representing KVCache handoff. **Key takeaway:** Prefill uses *layer-by-layer parallelism* between compute and KVCache transfer to hide transmission latency, while decoding uses *async loading* to keep the GPU saturated — both are overlap strategies targeting different bottlenecks.
+The diagram illustrates a **disaggregated LLM inference architecture** with two instances:
+
+**Prefill Instance (left, blue):**
+- **CPU side:** holds *Prefix KVCache* and *Incremental KVCache* in host memory
+- **GPU side:** mirrors both caches in device memory
+- *Layer-wise Load and Store* moves tensors between CPU↔GPU
+- (s1) Reuses prefix cache; (s2) runs incremental prefill on the GPU; (s3) transfers the full/updated KVCache to the decoder
+
+**Decoding Instance (right, orange):**
+- Receives the transferred cache via *Async Load* (CPU→GPU)
+- (s4) Performs token decoding on the GPU using the assembled **Full KVCache**
+
+**Key takeaway:** Splitting prefill and decoding, combined with *layer-wise pipelined* CPU↔GPU cache movement and *asynchronous* transfer, overlaps data movement with compute, maximizing hardware utilization and throughput.
+
+## Caption Transcription (verbatim, as shown in figure)
+
+*(No standalone caption text is present; the in-figure labels read as follows)*
+
+- "**Prefill Instance**" / "**Decoding Instance**"
+- "GPU", "CPU"
+- "Prefix KVCache", "Incremental KVCache", "Full KVCache"
+- "(s1) KVCache Reuse", "s2: Incremental Prefill", "s3: KVCache Transfer", "s4: Decoding"
+- "Layer-wise Load and Store*", "Async Load†"
 *caption: Workflow of inference instances. ( ) For prefill instances, the load and store operations of the KVCache layer are performed layer-by-layer and in pa… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.5 (p.6)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig05.png]]
-> [!tip] **Description (≤120 words):**
+> [!tip] **Figure description (≤120 words):**
 
-Figure 4 depicts two parallel workflow pipelines for LLM inference. The left side shows **prefill instances**, organized into two stacked stages where the upper stage handles KVCache load/store operations (e.g., 56789... entries) and the lower stage runs the prefill computation (e.g., AB+C'/C'FIB computations) concurrently — both progressing layer-by-layer. The right side shows **decoding instances**, similarly split: the upper stage (≤22'*+,-# buffer) receives asynchronously loaded data while the lower stage performs GPU decoding (e.g., ?6@/,'AB+C). A transfer arrow at the bottom (6:9!'"#$%&&'(5.$+3'. ) connects the prefill output to the decoding input, representing KVCache handoff. **Key takeaway:** Prefill uses *layer-by-layer parallelism* between compute and KVCache transfer to hide transmission latency, while decoding uses *async loading* to keep the GPU saturated — both are overlap strategies targeting different bottlenecks.
+The figure consists of two side-by-side log-scale histograms characterizing sequence length distributions in a dataset.
+
+- **Left panel (blue):** *Input Length* on the x-axis (~0 to 120,000 tokens) versus *Frequency* on a log y-axis (~10⁰ to 10⁴). The distribution is heavily right-skewed, peaking near 5,000–10,000 tokens (~10⁴ samples) and decaying roughly monotonically across three orders of magnitude, with a sparse long tail extending to ~125,000.
+- **Right panel (green):** *Output Length* on the x-axis (~0 to 2,000 tokens) versus *Frequency* on a log y-axis (~10⁰ to 10⁴). It shows a bimodal pattern: a large spike at very short outputs (~1,000 tokens, ~1.5×10⁴ samples), a broad mode centered around 400–500 tokens (~10³), and an outlier spike near 2,000 tokens.
+
+**Key technical takeaway:** Inputs are ~10–50× longer than outputs, and output length is effectively bounded near 2,048 — suggesting a context-window truncation at the maximum generation length.
+
+**Caption (verbatim):** No caption text is rendered in the image; only axis labels ("Input Length", "Output Length", "Frequency") and tick values are present.
 *caption: Input and output length distributions in the request trace. 4… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.6 (p.7)
@@ -7728,17 +7777,23 @@ Figure 9: The load of prefill and decoding instances over 20 minutes, before usi
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.10 (p.14)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig10.png]]
-> [!tip] **Figure 10 — Description:**
+> [!tip] ## Figure Description
 
-The figure contrasts two load-management strategies across four sequential time steps, visualized as stacked bar charts of instance load on prefilling (top row) and decoding (bottom row) instances, each annotated with a dashed TBT-threshold line.
+The figure illustrates a four-stage scheduling/load-balancing process along a time axis, organized into two stacked rows tracking system loads.
 
-**(a) Early Rejection:** As load progresses, instances whose TBT exceeds the threshold are progressively rejected (star markers alternate empty/filled across steps), causing the decoding instance count to drop sharply.
+**Components & Layout:**
+- **Top row (Decoding Load):** Orange horizontal bars whose *width = request length* and *height = utilization* (0–1). A yellow dashed threshold line and a smooth yellow curve track utilization over time.
+- **Bottom row (Prefill Load):** Light-blue bars represent prefill requests; darker blue bars represent *newly added* prefill requests. A green dashed threshold and green curve track prefill utilization.
+- **Connectors:** Black arrows flow horizontally across each row (load evolution between stages); red arrows point vertically from decoding to prefill rows (cross-stage influence).
+- **Decisions:** Pink stars = "Accept," purple stars = "Reject."
 
-**(b) Early Rejection Based on Prediction:** Load is forecasted ahead of time using the prefill→uniform-decoding pipeline; far fewer rejections occur (mostly empty stars), keeping decoding instances stable.
+**Data Flow:** Stage 1 (low decode, high prefill → Accept) → Stage 2 (decode surges, prefill drops → Reject) → Stage 3 (decode drops, prefill rises → Accept) → Stage 4 (decode moderate, prefill low → Reject).
 
-**Key takeaway:** Prediction-driven rejection retains more decoding instances under overload because the system-level forecast (uniform decoding time *t_d*, prefiltered to remove requests that would already finish before *t*) prevents premature evictions that the reactive policy in (a) cannot avoid.
+**Key Technical Takeaway:** Accept/reject decisions are jointly driven by **both** decoding and prefill utilization thresholds; the scheduler must account for **cross-stage coupling** (vertical red arrows) where decoding load from a prior stage suppresses prefill acceptance in the next stage, preventing resource overcommitment.
 
-**Caption (verbatim):** Figure 10: Instance load when applying Early Rejection and Early Rejection Based on Prediction.
+## Caption (Verbatim Transcription)
+
+> "Length [bracket]; Utilization [bracket] — Legend: Prefill Request | Prefill Request (New Added) | Decoding Request — Y-axes: Decoding Load, Prefill Load — X-axis: Stage 1, Stage 2, Stage 3, Stage 4 — Time — Outcomes: Accept, Reject"
 *caption: Instance load when applying Early Rejection and Early Rejection Based on Prediction. conditions where resources are scarce and accurate predictions ar… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.11 (p.16)
@@ -8616,7 +8671,7 @@ The chart contrasts pure model-parallel scaling (small GPU counts, up to 8 GPUs 
 *caption: Model and model + data parallel weak scaling efﬁciency as a function of the number of GPUs. done by scaling the batch-size, however, this approach doe… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
 
 ### Megatron-LM: Training Multi-Billion Parameter Language Model — Fig.6 (p.7)
-![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]]
+![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig06.png]]
 > [!tip] ## Figure 6 Description
 
 **Architecture/Components/Data Flow:**
@@ -9607,12 +9662,13 @@ Figure 6: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow
 *caption: Offline throughput comparison. NanoFlow outper- forms all baselines for all the workload settings. TP stands for the number of GPUs used with tensor p… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.8 (p.13)
-![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
-> [!tip] **Description:** Figure 8 is a latency-comparison plot with three side-by-side sub-panels—(a) Splitwise, (b) LMSYS-Chat-1M, and (c) ShareGPT—each plotting **request rate (req/s)** on the x-axis against **normalized latency in ms/token** on the y-axis. Four serving systems are overlaid: vLLM, DeepSpeed-FastGen, TensorRT-LLM, and NanoFlow (the authors' system, shown in red). A red dashed horizontal line marks the ~200 ms/token SLO threshold. The baselines' latency curves rise steeply and cross the SLO line at low request rates (≈6–17 req/s), while NanoFlow stays flat under the SLO threshold up to 17–32 req/s before escalating.
+![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig08.png]]
+> [!tip] **No figure is present in the provided image.** The image shows only two columns of body text from what appears to be a research paper on LLM serving systems. Specifically, it contains:
 
-**Key technical takeaway:** NanoFlow sustains a 200 ms/token latency budget under request loads 2–4× higher than vLLM/DeepSpeed-FastGen across all three real-world traces, demonstrating superior SLO-conforming throughput.
+- **Left column:** Paragraphs describing two serving frameworks — *DeepSpeed-FastGen* (Microsoft's framework that composes prefill with decode requests, tuning `max-ragged-batch-size` for throughput) and *TensorRT-LLM* (NVIDIA's engine with `max-num-tokens` set by KV-cache capacity, plus paged KV-cache and dynamic batching).
+- **Right column:** Methodology text describing the *NanoFlow* latency evaluation — modeling request arrival intervals via an exponential distribution, generating 5-minute traces, measuring **normalized latency** (end-to-end latency ÷ output token length), and selecting an SLO of **200 ms** (typical human reading speed).
 
-**Caption (verbatim):** "Figure 8: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints."
+**Verdict:** I cannot describe a figure's architecture/components/data flow or transcribe a caption because no figure or caption exists in this image. If you intended to share a figure (e.g., a NanoFlow system architecture diagram, a normalized-latency vs. request-rate plot, or a table of datasets), please re-upload it and I'll be happy to provide the description and verbatim caption transcription as requested.
 *caption: Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher r… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.9 (p.13)
@@ -9689,7 +9745,7 @@ Gated DeltaNet-H1 and -H2 deliver the highest stable throughput (~50–54 K/s) a
 *caption: Training throughput comparison of 1.3B models on a single H100 GPU. standalone mixers: Samba outperforms Mamba, while Gated DeltaNet-H1 and -H2 outper… ｜ 论文 [[gated-delta-networks-improving-mamba2-with-delta-rule]] ｜ arxiv 见 MD 元信息*
 
 ### Parallel Scan on Ascend AI Accelerators — Fig.3 (p.3)
-![[assets/parallel-scan-on-ascend-ai-accelerators-p03.png]]
+![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig03.png]]
 > [!tip] 【MiniMax 解读】⭐Ascend 910B AI Core 架构(Fig.3)：单 AI Core = 1 个 AI Cube(AIC 矩阵乘引擎) + 2 个 AI Vector(AIV SIMD 核)，各有独立 Unified Buffer(UB) scratchpad，加 Memory Transfer Engine(MTE)+标量+控制块。AIC/AIV 共享全局 HBM/L2，Cube↔Vector 数据交换须走全局内存/L2（AIC 无直接写 AIV UB 的本地路径）。并行 scan：AIV 跑 element-wise/局部 scan + 解耦 look-back（在 UB 上），AIC 改作跨块前缀累积（矩阵乘式），MTE 编排块级 tile 传输。⭐结论：Ascend 非对称 Cube/Vector 划分 + UB 局部计算 + Cube↔Vector 仅全局通信→偏好 block-tiled、通信最小化的解耦 scan 设计，而非密集 GEMM 中心。直击昇腾线性注意力/SSM scan。
 *caption: 1 shows the Ascend architecture where the… ｜ 论文 [[parallel-scan-on-ascend-ai-accelerators]] ｜ arxiv 见 MD 元信息*
 
@@ -10882,7 +10938,7 @@ Figure 1: Overview of Attention Residuals. **(a)** Standard Residuals: standard 
 *caption: Overview of Attention Residuals. (a) Standard Residuals: standard residual connections with uniform additive accumulation. (b) Full AttnRes: each laye… ｜ 论文 [[attention-residuals]] ｜ arxiv 见 MD 元信息*
 
 ### Attention Residuals — Fig.2 (p.5)
-![[assets/attention-residuals-p05.png]]
+![[assets/crops/attention-residuals-fig02.png]]
 > [!tip] **Description (≤120 words):**
 
 Figure 2 presents two PyTorch functions implementing Block Attention Residuals. `block_attn_res` stacks previously-completed block tensors with the running intra-block partial sum, RMSNorm-normalizes them, then uses a single learned pseudo-query weight `proj` (no per-token queries) to compute softmax attention weights, producing a weighted sum `h`. `forward` runs a single transformer layer while maintaining two residual streams: a `partial_block` (intra-block running sum, reset every `block_size/2` layers) and a `blocks` list (inter-block history, emitted at block boundaries). `block_attn_res` is applied twice per layer — once before self-attention and once before the MLP — so the layer input mixes both histories. **Key takeaway:** collapsing attention sources from L hidden states to N block representations cuts attention memory from O(L) → O(N) and compute from O(L²) → O(N²), with N≈8 reportedly retaining most of Full AttnRes's benefit.
@@ -11866,7 +11922,7 @@ No standalone caption text is present beneath or within the figure. The visible 
 - ⭐ ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig06.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.6 (p.6): Example of how attention mask is set across dif- ferent chunk prefill iterations…  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
 - ⭐ ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig07.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.7 (p.7): The effect of tile quantization on the runtime of one iteration of LLaMA-13B on …  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
 - ⭐ ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig08.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.8 (p.9): Decode-only speedup with SARATHI on an A6000 GPU with LLaMA-13B (chunk size = 25…  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
-- ⭐ ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p10.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.9 (p.10): Normalized throughput (tokens/ms) for LLaMa 13B on A6000 GPU with different sequ…  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
+- ⭐ ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig09.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.9 (p.10): Normalized throughput (tokens/ms) for LLaMa 13B on A6000 GPU with different sequ…  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
 - ⭐ ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig10.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.10 (p.10): Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU…  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
 - ⭐ ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig11.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.11 (p.11): Comparison with iteration-level scheduler Orca for LLaMa 13B on A6000 GPU. confi…  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
 - ⭐ ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig12.png]] — **SARATHI: Efficient LLM Inference by Piggybacking D** Fig.12 (p.12): Impact of SARATHI on pipeline bubbles (top) and request completion times (bottom…  `[[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]]`
@@ -12040,7 +12096,7 @@ No standalone caption text is present beneath or within the figure. The visible 
 ### multimodal (46)
 
 - ⭐ ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig01.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.1 (p.1): Kimi K2.5 main results. 1…  `[[kimi-k2-5-visual-agentic-intelligence]]`
-- ⭐ ![[assets/kimi-k2-5-visual-agentic-intelligence-p04.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.2 (p.4): Vision RL training curves on vision benchmarks starting from minimal zero-vision…  `[[kimi-k2-5-visual-agentic-intelligence]]`
+- ⭐ ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.2 (p.4): Vision RL training curves on vision benchmarks starting from minimal zero-vision…  `[[kimi-k2-5-visual-agentic-intelligence]]`
 - ⭐ ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig03.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.3 (p.5): An agent swarm has a trainable orchestrator that dynamically creates specialized…  `[[kimi-k2-5-visual-agentic-intelligence]]`
 - ⭐ ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.4 (p.6): In our parallel-agent reinforcement learning environment, the training accuracy …  `[[kimi-k2-5-visual-agentic-intelligence]]`
 - ⭐ ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig05.png]] — **KIMI K2.5: VISUAL AGENTIC INTELLIGENCE** Fig.5 (p.10): Comparison of model performance and token usage for Kimi K2 Thinking following t…  `[[kimi-k2-5-visual-agentic-intelligence]]`
@@ -12091,12 +12147,12 @@ No standalone caption text is present beneath or within the figure. The visible 
 - ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig02.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig03.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.3 (p.5): GEPA proposes a new candidate in every iteration by improving existing candidate…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.4 (p.4): GEPA receives the following inputs: A system  instan- tiated with simple prompt…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
+- ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig04.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.4 (p.4): GEPA receives the following inputs: A system  instan- tiated with simple prompt…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p07.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.5 (p.7): GEPA’s reflective prompt mutation systematically incorporates task-specific nuan…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig06.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.6 (p.10): Comparing the impact of different candidate selection strategies. (Left) As can …  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig07.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.7 (p.13): GEPA with GPT-4o is able to generate kernels for AMD NPUs that achieve vector ut…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p13.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.8 (p.13): GEPA with GPT-4o is able to iteratively refine and improve CUDA Kernel Code. The…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
-- ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p24.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.9 (p.24): Details of System Aware Merge. r represents a seeded stochastic sampler.…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
+- ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig09.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.9 (p.24): Details of System Aware Merge. r represents a seeded stochastic sampler.…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p28.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.10 (p.28): Final test set performance for aggregate and individual benchmarks.…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p28.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.11 (p.28): This figure compares the learning behaviour of GEPA against GRPO with full-param…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig12.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.12 (p.29): Hotpot QA Bench: rollout vs. score for different models/settings. (a) GPT-4.1 Mi…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
@@ -12217,9 +12273,9 @@ No standalone caption text is present beneath or within the figure. The visible 
 - ⭐ ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig03.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.3 (p.21): x1 t x2 t x3 t x1 x2 x3 x1 t x2 t x3 t x1 x2 x3…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
 - ⭐ ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig04.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.4 (p.22): We can adapt the masking strategy from Fig. 3 to a FlexAttention compatible spar…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
 - ⭐ ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig05.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.5 (p.23): Attention computation using FlexAttention with our proposed custom mask.…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
-- ⭐ ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p26.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.6 (p.26): Sample from MDLM (Sahoo et al., 2024a) of length L = 1024 and T = 5K diffusion s…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
-- ⭐ ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p27.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.7 (p.27): Sample from BD3-LM for block size L′ = 16 of length L = 2031 under T = 5K diffus…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
-- ⭐ ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p28.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.8 (p.28): Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (trained with…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
+- ⭐ ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig06.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.6 (p.26): Sample from MDLM (Sahoo et al., 2024a) of length L = 1024 and T = 5K diffusion s…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
+- ⭐ ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig07.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.7 (p.27): Sample from BD3-LM for block size L′ = 16 of length L = 2031 under T = 5K diffus…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
+- ⭐ ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig08.png]] — **BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESS** Fig.8 (p.28): Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (trained with…  `[[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]]`
 - ⭐ ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig01.png]] — **DFlash: Block Diffusion for Flash Speculative Deco** Fig.1 (p.2): Speedup comparison between DFlash, EAGLE-3 against Autoregressive Decoding on Qw…  `[[dflash-block-diffusion-for-flash-speculative-decoding]]`
 - ⭐ ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig02.png]] — **DFlash: Block Diffusion for Flash Speculative Deco** Fig.2 (p.4): DFlash Inference Design. Hidden context features extracted from the target model…  `[[dflash-block-diffusion-for-flash-speculative-decoding]]`
 - ⭐ ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig03.png]] — **DFlash: Block Diffusion for Flash Speculative Deco** Fig.3 (p.3): Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.…  `[[dflash-block-diffusion-for-flash-speculative-decoding]]`
@@ -12329,7 +12385,7 @@ No standalone caption text is present beneath or within the figure. The visible 
 - ⭐ ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig07.png]] — **Search-R1: Training LLMs to Reason and Leverage Se** Fig.7 (p.19): We observe that a larger group size generally leads to faster convergence but ma…  `[[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]]`
 - ⭐ ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig01.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.1 (p.1): Overview of conversion from multi-head to multi-query attention. Key and value p…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
 - ⭐ ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig02.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.2 (p.2): Overview of grouped-query method. Multi-head attention has H query, key, and val…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
-- ⭐ ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p03.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.3 (p.3): Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality an…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
+- ⭐ ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig03.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.3 (p.3): Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality an…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
 - ⭐ ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig04.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.4 (p.4): Performance comparison of different check- point conversion methods for T5-Large…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
 - ⭐ ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig05.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.5 (p.4): Performance as a function of uptraining pro- portion for T5 XXL models with MQA …  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
 - ⭐ ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig06.png]] — **GQA: Training Generalized Multi-Query Transformer ** Fig.6 (p.4): Time per sample for GQA-XXL as a function of the number of GQA groups with input…  `[[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]]`
@@ -12376,7 +12432,7 @@ No standalone caption text is present beneath or within the figure. The visible 
 - ⭐ ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig03.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.3 (p.4): Blocks of Transformer with Model Parallelism. f and g are conjugate. f is an ide…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ⭐ ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig04.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.4 (p.5): Communication operations in a transformer layer. There are 4 total communication…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ⭐ ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig05.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.5 (p.6): Model and model + data parallel weak scaling efﬁciency as a function of the numb…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
-- ⭐ ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.6 (p.7): Validation set perplexity. All language models are trained for 300k iterations. …  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
+- ⭐ ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig06.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.6 (p.7): Validation set perplexity. All language models are trained for 300k iterations. …  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ⭐ ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig07.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.7 (p.8): Training loss for BERT model using the original architec- ture (a) and the rearr…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ⭐ ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig08.png]] — **Megatron-LM: Training Multi-Billion Parameter Lang** Fig.8 (p.12): Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel…  `[[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]]`
 - ⭐ ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig01.png]] — **Efficient Training of Large Language Models on Dis** Fig.1 (p.2): Overall structure of this survey.…  `[[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]]`
@@ -12534,11 +12590,11 @@ No standalone caption text is present beneath or within the figure. The visible 
   - We can adapt the masking strategy from Fig. 3 to a FlexAttention compatible sparse masking function as above. This enables the creation of a customized JIT attention operation that uses significantly 
 - ⭐ Fig.5 (p.23) ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig05.png]]
   - Attention computation using FlexAttention with our proposed custom mask.
-- ⭐ Fig.6 (p.26) ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p26.png]]
+- ⭐ Fig.6 (p.26) ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig06.png]]
   - Sample from MDLM (Sahoo et al., 2024a) of length L = 1024 and T = 5K diffusion steps.
-- ⭐ Fig.7 (p.27) ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p27.png]]
+- ⭐ Fig.7 (p.27) ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig07.png]]
   - Sample from BD3-LM for block size L′ = 16 of length L = 2031 under T = 5K diffusion steps (trained with a context length of L = 1024). The generative perplexity of this sample under GPT2-Large is 24.3
-- ⭐ Fig.8 (p.28) ![[assets/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-p28.png]]
+- ⭐ Fig.8 (p.28) ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig08.png]]
   - Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (trained with a context length of L = 1024). The generative perplexity of this sample under GPT2-Large is 10.6 and its entropy is 5.5
 
 ### #7 DFlash: Block Diffusion for Flash Speculative Decoding
@@ -12629,7 +12685,7 @@ No standalone caption text is present beneath or within the figure. The visible 
 
 - ⭐ Fig.1 (p.1) ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig01.png]]
   - Kimi K2.5 main results. 1
-- ⭐ Fig.2 (p.4) ![[assets/kimi-k2-5-visual-agentic-intelligence-p04.png]]
+- ⭐ Fig.2 (p.4) ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png]]
   - Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve, demonstrating that zero-vision activation paired
 - ⭐ Fig.3 (p.5) ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig03.png]]
   - An agent swarm has a trainable orchestrator that dynamically creates specialized frozen subagents and decomposes complex tasks into parallelizable subtasks for efficient distributed execution.
@@ -12816,7 +12872,7 @@ No standalone caption text is present beneath or within the figure. The visible 
   - This figure shows an example prompt generated by GEPA for the second-hop document retrieval to be performed in a multi-hop question-answer system, along with the seed prompt it started with. Appendix 
 - ⭐ Fig.3 (p.5) ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig03.png]]
   - GEPA proposes a new candidate in every iteration by improving existing candidates using one of the two strategies (Reflective Prompt Mutation (Section 3) or System Aware Merge (Appendix D.1)), first e
-- ⭐ Fig.4 (p.4) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p04.png]]
+- ⭐ Fig.4 (p.4) ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig04.png]]
   - GEPA receives the following inputs: A system  instan- tiated with simple prompts to be optimized, training dataset D train (consisting of task instances (x; m) as described in Section 2), the standar
 - ⭐ Fig.5 (p.7) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p07.png]]
   - GEPA’s reflective prompt mutation systematically incorporates task-specific nuances, leading to substantial improvements in performance. This figure visualizes the optimization trajectory taken by GEP
@@ -12826,7 +12882,7 @@ No standalone caption text is present beneath or within the figure. The visible 
   - GEPA with GPT-4o is able to generate kernels for AMD NPUs that achieve vector utilization rates as high as 70%, with a mean utilization score of 30.52%. In comparison, GPT-4o, even after up to 10 sequ
 - ⭐ Fig.8 (p.13) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p13.png]]
   - GEPA with GPT-4o is able to iteratively refine and improve CUDA Kernel Code. The graphs shows fast p vs. rollouts plot for p=[0:5; 1], where the speedup is calculated over Pytorch-eager. fast p is a m
-- ⭐ Fig.9 (p.24) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p24.png]]
+- ⭐ Fig.9 (p.24) ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig09.png]]
   - Details of System Aware Merge. r represents a seeded stochastic sampler.
 - ⭐ Fig.10 (p.28) ![[assets/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-p28.png]]
   - Final test set performance for aggregate and individual benchmarks.
@@ -12883,7 +12939,7 @@ No standalone caption text is present beneath or within the figure. The visible 
   - The effect of tile quantization on the runtime of one iteration of LLaMA-13B on A6000 GPU. maximal batching with that of the baseline scheme that com- putes prefill and decode iterations separately. W
 - ⭐ Fig.8 (p.9) ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig08.png]]
   - Decode-only speedup with SARATHI on an A6000 GPU with LLaMA-13B (chunk size = 256).
-- ⭐ Fig.9 (p.10) ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p10.png]]
+- ⭐ Fig.9 (p.10) ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig09.png]]
   - Normalized throughput (tokens/ms) for LLaMa 13B on A6000 GPU with different sequence lengths, P:D ratios, and chunk sizes. 2 4 6 8 10 12 14 16 18
 - ⭐ Fig.10 (p.10) ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig10.png]]
   - Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU with varying sequence lengths and batch sizes, using prefill chunk sizes of 256 (top half) and 512 (bottom half). Orang
@@ -13282,7 +13338,7 @@ No standalone caption text is present beneath or within the figure. The visible 
   - Overview of conversion from multi-head to multi-query attention. Key and value projection matri- ces from all heads are mean pooled into a single head.
 - ⭐ Fig.2 (p.2) ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig02.png]]
   - Overview of grouped-query method. Multi-head attention has H query, key, and value heads. Multi-query attention shares single key and value heads across all query heads. Grouped-query attention instea
-- ⭐ Fig.3 (p.3) ![[assets/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-p03.png]]
+- ⭐ Fig.3 (p.3) ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig03.png]]
   - Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality and faster speed than MHA-Large, and GQA achieves even better performance with similar speed gains and comparable quality 
 - ⭐ Fig.4 (p.4) ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig04.png]]
   - Performance comparison of different check- point conversion methods for T5-Large uptrained to MQA with proportion α = 0.05. ‘Mean’ mean-pools key and value heads, ‘First’ selects the first head and ‘R
@@ -13510,7 +13566,7 @@ No standalone caption text is present beneath or within the figure. The visible 
   - Communication operations in a transformer layer. There are 4 total communication operations in the forward and backward pass of a single model parallel transformer layer. contains a portion of the emb
 - ⭐ Fig.5 (p.6) ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig05.png]]
   - Model and model + data parallel weak scaling efﬁciency as a function of the number of GPUs. done by scaling the batch-size, however, this approach does not address training large models that do not ﬁt
-- ⭐ Fig.6 (p.7) ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]]
+- ⭐ Fig.6 (p.7) ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig06.png]]
   - Validation set perplexity. All language models are trained for 300k iterations. Larger language models converge notice- ably faster and converge to lower validation perplexities than their smaller cou
 - ⭐ Fig.7 (p.8) ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig07.png]]
   - Training loss for BERT model using the original architec- ture (a) and the rearranged architecture (b). Left ﬁgure shows the training loss for 336M and 752M BERT model. While the original architecture
@@ -13646,7 +13702,7 @@ No standalone caption text is present beneath or within the figure. The visible 
   - Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow. The solid background and shaded background represents input batch 0-768 and 768-2048, respectively. R stands for resource utiliz
 - ⭐ Fig.7 (p.11) ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig07.png]]
   - Offline throughput comparison. NanoFlow outper- forms all baselines for all the workload settings. TP stands for the number of GPUs used with tensor parallelism. • How do the various techniques propos
-- ⭐ Fig.8 (p.13) ![[assets/nanoflow-towards-optimal-large-language-model-serving-throughput-p13.png]]
+- ⭐ Fig.8 (p.13) ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig08.png]]
   - Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints.
 - ⭐ Fig.9 (p.13) ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig09.png]]
   - Ablation study results for NanoFlow. Nano-batching and overlapping improves NanoFlow’s performance.
@@ -13666,7 +13722,7 @@ No standalone caption text is present beneath or within the figure. The visible 
 
 ### #56 Parallel Scan on Ascend AI Accelerators
 
-- ⭐ Fig.3 (p.3) ![[assets/parallel-scan-on-ascend-ai-accelerators-p03.png]]
+- ⭐ Fig.3 (p.3) ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig03.png]]
   - 1 shows the Ascend architecture where the
 - ⭐ Fig.4 (p.4) ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig04.png]]
   - 1: Data path from an input tile xℓto an output tile yℓof the ScanU (Algorithm 4.1).
@@ -13851,7 +13907,7 @@ No standalone caption text is present beneath or within the figure. The visible 
 
 - ⭐ Fig.1 (p.1) ![[assets/crops/attention-residuals-fig01.png]]
   - Overview of Attention Residuals. (a) Standard Residuals: standard residual connections with uniform additive accumulation. (b) Full AttnRes: each layer selectively aggregates all previous layer output
-- ⭐ Fig.2 (p.5) ![[assets/attention-residuals-p05.png]]
+- ⭐ Fig.2 (p.5) ![[assets/crops/attention-residuals-fig02.png]]
   - PyTorch-style pseudo code for Block Attention Residuals. block_attn_res computes softmax attention over block representations using a learned pseudo-query wl; forward is a single-layer pass that maint
 - ⭐ Fig.3 (p.6) ![[assets/crops/attention-residuals-fig03.png]]
   - Cache-based pipeline communication example with 4 physical ranks and 2 virtual stages per rank, where hatched boxes denote end of AttnRes blocks. Numbers indicate micro-batch indices. Each rank caches

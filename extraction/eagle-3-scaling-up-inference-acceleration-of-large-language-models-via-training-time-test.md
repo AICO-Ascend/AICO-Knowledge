@@ -66,20 +66,12 @@ The figure (Figure 1) contains **two vertically stacked line plots** comparing *
 > Illustration of training-time test (the bottom part) and its comparison with other draft methods (the upper and middle parts). f denotes the feature, t denotes the token, and a represents the unconstrained vectors.
 
 > [!tip] 技术解读（多模态）
-> # Figure 3 Description
+> **Architecture & Data Flow:**
+The figure compares three variants of a speculative decoding framework. **EAGLE** (top): a draft model takes feature sequence f₁…fₜ, predicts next feature f̂_{t+1} (supervised by feature loss *l*_fea) and passes through an LM head to predict token t̂_{t+2} (token loss *l*_token). At test (Step 2), predicted features are appended, but a train-test mismatch arises. **EAGLE + *l*_fea removal** (middle): drops feature loss, causing token-prediction failure (≠ at Step 2). **EAGLE-3** (bottom): introduces a "Training-time test" link that feeds predicted features back into Step 2 during training, eliminating distribution shift.
 
-**Architecture & Data Flow:**
-Figure 3 compares three draft-model architectures vertically:
+**Key takeaway:** EAGLE-3 resolves the train-test inconsistency of EAGLE by simulating the autoregressive draft rollout during training, restoring token-prediction accuracy without needing the feature loss.
 
-1. **EAGLE (top):** Predicts next-layer features (f_{t+1}≈f_{t+1}, loss l_fea) plus tokens (t̂_{t+2}≈t_{t+2}, loss l_token) during both training and test.
-2. **EAGLE + fea removal (middle):** Removes feature-prediction loss; draft model directly outputs unconstrained vectors â_t_{t+1}, then an LM head produces tokens.
-3. **EAGLE-3 (bottom):** Merges training and test into a unified pipeline that simulates multi-step generation. Step 1 takes (f_1…f_t), predicts â_t_{t+1} and t̂_{t+2}. A "training-time test" loop (red dashed arrow) feeds back to Step 2, which predicts t̂_{t+3}, enabling end-to-end multi-step supervision.
-
-**Key Takeaway:** EAGLE-3's training-time test architecture removes the feature-prediction constraint, allowing direct token prediction and richer use of multi-level target features for greater flexibility.
-
-# Caption (Verbatim)
-
-**Figure 3:** Illustration of **training-time test** (the bottom part) and its comparison with other draft methods (the upper and middle parts). *f* denotes the feature, *t* denotes the token, and *α* represents the unconstrained vectors. We use the hat to denote the predictions from models. All the methods shown in the figure use the token sequence from the previous time step, but for simplicity, this is not depicted in the figure. The input to EAGLE-3 is not actually *f*, but it is not shown in this figure. We will provide a detailed explanation in the following section.
+**Caption (verbatim):** The figure itself contains no printed caption text; labels are limited to "Training," "Test," "Training/Test," "Draft model," "LM head," "Step 1," "Step 2," "EAGLE," "EAGLE + *l*_fea removal," "EAGLE-3," and "Training-time test."
 
 ### Figure 4 (p.2) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png]]
@@ -88,7 +80,19 @@ Figure 3 compares three draft-model architectures vertically:
 > We can address this issue by incorporating Step 1 into the training process (the bottom of Figure 3). Using this method, the benefits of increasing training data become more pronounced. We name this technique as training-time test. EAGLE and speculative sampling methods such as Medusa (Cai et al., 2024) reuse the top-layer fea- tures of the target model, specifically the features immediately befor
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】EAGLE-3 加速比柱状图（temp=0）：在 Vicuna-13B/LLaMA-3.1-8B/3.3-70B/DeepSeek-R1-LLaMA-8B 上对比 Vanilla/SpecDec/Medusa/HASS/EAGLE/EAGLE-2/EAGLE-3，EAGLE-3 分别达 5.6x/4.4x/4.1x/5.0x，全面最优。适合做「EAGLE-3 性能优势」论据。
+> ## Figure Description
+
+**Components / data flow:** A 2D line plot comparing three model variants — **EAGLE** (red, circle markers), **EAGLE without fea pred** (yellow, circle markers), and **EAGLE-3** (blue, square markers) — across an x-axis with tick values {1, 2, 4, 8} (logarithmic spacing) and a y-axis labeled **"O-α"** ranging ~0.72–0.81.
+
+- **Red (EAGLE):** rises from ~0.756 → 0.778, then plateaus (~0.781–0.783).
+- **Yellow (no fea pred):** climbs steadily from ~0.750 to ~0.811 (highest curve overall).
+- **Blue (EAGLE-3):** starts lowest (~0.722), rises steeply, crosses EAGLE near x≈4, ends ~0.801.
+
+**Key technical takeaway:** EAGLE-3 underperforms EAGLE at low x but surpasses it once x≥4, while the feature-prediction ablation consistently yields the highest O-α, indicating that **EAGLE-3's gain at larger scales comes from components other than feature prediction**.
+
+## Caption (verbatim)
+
+*No caption text is present in the image. The only textual elements are the axis label "O-α", the x-axis tick labels "1, 2, 4, 8", and the legend entries "EAGLE", "EAGLE without fea pred", "EAGLE-3".*
 
 ### Figure 5 (p.4) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig05.png]]

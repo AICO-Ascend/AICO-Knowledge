@@ -359,9 +359,14 @@
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq01.png"
    },
    {
+    "page": 16,
+    "text": "World Size = TP × CP × PP × DP,",
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq02.png"
+   },
+   {
     "page": 64,
     "text": "output(x) = 𝑊↑·",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq02.png"
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq03.png"
    }
   ]
  },
@@ -960,6 +965,24 @@
     "page": 23,
     "caption": "Attention computation using FlexAttention with our proposed custom mask.",
     "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig05.png"
+   },
+   {
+    "num": 6,
+    "page": 26,
+    "caption": "Sample from MDLM ( Sahoo et al. , 2024a ) of length L = 1024 and T = 5 K diffusion steps. The generative perplexity of this sample under GPT2-Large is 69.26 and its entropy is 5.6.",
+    "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig06.png"
+   },
+   {
+    "num": 7,
+    "page": 27,
+    "caption": "Sample from BD3-LM for block size L ′ = 16 of length L = 2031 under T = 5 K diffusion steps (trained with a context length of L = 1024 ). The generative perplexity of this sample under GPT2-Large is 24.3, and its entropy is 5.5.",
+    "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig07.png"
+   },
+   {
+    "num": 8,
+    "page": 28,
+    "caption": "Sample from an AR model ( Sahoo et al. , 2024a ) with length L = 2003 (trained with a context length of L = 1024 ). The generative perplexity of this sample under GPT2-Large is 10.6 and its entropy is 5.5.",
+    "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig08.png"
    }
   ],
   "tables": [
@@ -1465,6 +1488,12 @@
     "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig01.png"
    },
    {
+    "num": 2,
+    "page": 3,
+    "caption": "illustrates the RL training curves, where the starting points are obtained from zero-vision SFT. The results show that zero-vision SFT is sufficient for activating vision capabilities while ensuring generalization across modal- ities. This phenomenon is likely due to the joint pretraining of text an",
+    "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png"
+   },
+   {
     "num": 3,
     "page": 5,
     "caption": "An agent swarm has a trainable orchestrator that dynamically creates specialized frozen subagents and decomposes complex tasks into parallelizable subtasks for efficient distributed execution.",
@@ -1762,6 +1791,12 @@
     "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig03.png"
    },
    {
+    "num": 4,
+    "page": 6,
+    "caption": "( Left ) GEPA’s core algorithm for reflective prompt evolution. GEPA works iteratively, in each iteration, selecting some of the current candidates to evolve (line 7), executing the identified candidate on a minibatch of rollouts, while utilizing a special feedback function \u0016 f to gather module spec",
+    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig04.png"
+   },
+   {
     "num": 6,
     "page": 10,
     "caption": "Comparing the impact of different candidate selection strategies. (Left) As can be seen, selecting the best-performing candidate in every iteration led to a local-optima after one iteration, leading to subopti- mal search performance. (Right) On the other hand, using pareto-based candidate selection",
@@ -1772,6 +1807,12 @@
     "page": 13,
     "caption": "GEPA with GPT-4o is able to generate kernels for AMD NPUs that achieve vector utilization rates as high as 70%, with a mean utilization score of 30.52%. In comparison, GPT-4o, even after up to 10 sequential refinements with environment feedback, achieves an aggregate score of only 4.25%. When enhanc",
     "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig07.png"
+   },
+   {
+    "num": 9,
+    "page": 24,
+    "caption": "Details of System Aware Merge. r represents a seeded stochastic sampler.",
+    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig09.png"
    },
    {
     "num": 12,
@@ -1875,6 +1916,12 @@
     "page": 9,
     "caption": "Decode-only speedup with S ARATHI on an A6000 GPU with LLaMA-13B (chunk size = 256).",
     "path": "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig08.png"
+   },
+   {
+    "num": 9,
+    "page": 9,
+    "caption": "plots the results of our experiments. We find that the peak efficiency of our techniques occurs at different P : D ratios for different prefill chunk size and batch size scenar- ios. If C is the chunk size and B is the batch size, then we can show that this peak will occur when the decodes per- fect",
+    "path": "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig09.png"
    },
    {
     "num": 10,
@@ -3726,6 +3773,12 @@
     "path": "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig02.png"
    },
    {
+    "num": 3,
+    "page": 3,
+    "caption": "shows average performance over all datasets as a function of average inference time for MHA T5-Large and T5-XXL, and uptrained MQA and GQA- 8 XXL models with uptraining proportion α = 0 . 05 . We see that a larger up- trained MQA model provides a favorable trade- off relative to MHA models, with hig",
+    "path": "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig03.png"
+   },
+   {
     "num": 4,
     "page": 4,
     "caption": "Performance comparison of different check- point conversion methods for T5-Large uptrained to MQA with proportion α = 0 . 05 . ‘Mean’ mean-pools key and value heads, ‘First’ selects the first head and ‘Random’ initializes heads from scratch.",
@@ -4695,6 +4748,12 @@
     "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig05.png"
    },
    {
+    "num": 6,
+    "page": 7,
+    "caption": "shows validation perpelixity as a function of num- ber of iterations. As the model size increases, the validation perpelixity decreases and reaches a validation perplexity of 9.27 for the 8.3B model. We report the zero-shot evaluation of the trained models on the LAMBADA and WikiText103 datasets in ",
+    "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig06.png"
+   },
+   {
     "num": 7,
     "page": 8,
     "caption": "Training loss for BERT model using the original architec-",
@@ -5329,6 +5388,12 @@
     "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig07.png"
    },
    {
+    "num": 8,
+    "page": 12,
+    "caption": "demonstrates the normalized latency of the NanoFlow instance compared to baselines at various request rates. At lower rates, the NanoFlow instance has compara- ble but slightly higher latency, because NanoFlow targets throughput-oriented scenarios and therefore employs a large dense batch size.",
+    "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig08.png"
+   },
+   {
     "num": 9,
     "page": 13,
     "caption": "Ablation study results for NanoFlow. Nano-batching and overlapping improves NanoFlow’s performance.",
@@ -5420,6 +5485,12 @@
  },
  "parallel-scan-on-ascend-ai-accelerators": {
   "figures": [
+   {
+    "num": 3,
+    "page": 3,
+    "caption": "1 shows the Ascend architecture where the Cube and Vector units are separate cores. In the 910B architecture, data can only be exchanged using global memory and/or L2 cache.",
+    "path": "assets/crops/parallel-scan-on-ascend-ai-accelerators-fig03.png"
+   },
    {
     "num": 4,
     "page": 4,
@@ -6359,6 +6430,12 @@
     "path": "assets/crops/attention-residuals-fig01.png"
    },
    {
+    "num": 2,
+    "page": 5,
+    "caption": "PyTorch-style pseudo code for Block Attention Residuals. block_attn_res computes softmax attention over block representations using a learned pseudo-query w l ; forward is a single-layer pass that maintains partial_block ( b i",
+    "path": "assets/crops/attention-residuals-fig02.png"
+   },
+   {
     "num": 3,
     "page": 6,
     "caption": "Cache-based pipeline communication example with 4 physical ranks and 2 virtual stages per rank, where hatched boxes denote end of AttnRes blocks. Numbers indicate micro-batch indices. Each rank caches previously received blocks; stage transitions only transmit incremental blocks ( +[ b 1 , b 2 ] ) i",
@@ -6508,6 +6585,12 @@
     "page": 18,
     "caption": "An Overview of FlowServe’s MTP Execution Workflow.",
     "path": "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig13.png"
+   },
+   {
+    "num": 14,
+    "page": 19,
+    "caption": "summarizes our quantization approach, described in four key components:",
+    "path": "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig14.png"
    },
    {
     "num": 15,

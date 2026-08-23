@@ -138,7 +138,8 @@ The chart contrasts pure model-parallel scaling (small GPU counts, up to 8 GPUs 
 *"Figure 5. Model and model + data parallel weak scaling efficiency as a function of the number of GPUs."*
 
 ### Figure 6 (p.7) ⭐深度解读
-![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]]
+![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig06.png]]
+*整页渲染: ![[assets/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-p07.png]]*
 > [!quote] caption
 > Validation set perplexity. All language models are trained for 300k iterations. Larger language models converge notice- ably faster and converge to lower validation perplexities than their smaller counterparts.
 

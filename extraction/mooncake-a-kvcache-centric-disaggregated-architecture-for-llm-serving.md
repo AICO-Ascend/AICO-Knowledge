@@ -30,22 +30,28 @@ tags: [kv-cache, disaggregated-serving]
 > Mooncake Architecture. remote location will prolong the TTFT, and a large batch size will lead to a larger TBT. Thus, the utilization of both these throughput-oriented optimizations may lead to violations of latency-related SLOs.
 
 > [!tip] 技术解读（多模态）
-> **论文核心架构图分析**
+> ## Description
 
-**1) 主要架构/组件/数据流描述**
+**Architecture & Data Flow:**
+The figure depicts a **KVCache-centric Conductor** system with three coordinated schedulers (left) managing four GPU instances arranged in a 2×2 layout. The top row holds **Prefill Instances** (GPU/VRAM with Local Chunked Prefill Scheduler + Paged KVCache) connected via PP/SP, while the bottom row holds **Decoding Instances** (GPU/VRAM with Paged KVCache + Local Scheduler). A shared middle layer — the **KVCache Pool** (CPU/DRAM/SSD-based Distributed KVCache Pools) — bridges prefill and decoding, with **RDMA-based Inter-node KVCache Transfer** (⊗) enabling cross-node cache movement. Three pools govern flow: **Prefill Pool** (Cache-aware Prefill Scheduler → maximize cache reuse), **KVCache Pool** (Balance Scheduler), and **Decoding Pool** (Load-balance Decoding Scheduler).
 
-该图为 **Mooncake 架构图**，展示了一种以 KVCache 为中心的 LLM 服务解耦架构：
+**Key Technical Takeaway:**
+The system separates stage-specific optimization goals — **Prefill maximizes cache reuse** (subject to TTFT SLO, minimum MFU, KVCache < DRAM), while **Decoding maximizes throughput** (subject to TBT SLO, KVCache < VRAM) — by decoupling scheduling across the prefill/decode boundary through a unified, RDMA-shared distributed KVCache pool.
 
-- **组件**：左侧为输入请求队列；中间区域包含多个 GPU 实例节点，分为 **prefill（预填充）节点**（上半部，含 KVCache 池 "3.450678"）和 **decoding（解码）节点**（下半部，含 KVCache 池）；中央为全局调度器（Conductor），负责调度决策。
-- **数据流**：请求首先被路由到 prefill 节点；prefill 计算产生的 KVCache（图中上方柱状图表示）通过高速互联被流式传输到对应的 decoding 节点；decoding 节点加载 KVCache 后进行连续批处理生成输出（右侧生成的文本序列 "!\"#$%..."）。箭头与乘号 ⊗ 标示预填充与解码节点间的 KVCache 流转与匹配关系。
+## Caption (verbatim transcription)
 
-**2) 关键技术要点**
+There is no separate numbered figure caption in the image. The in-figure annotations read verbatim:
 
-**基于 KVCache 的预填充-解码解耦（Disaggregation）：** 预填充（compute-bound）与解码（memory-bound）两种异构负载被分离到不同实例，KVCache 作为"一等公民"在实例间显式流转，全局 Conductor 综合考虑 TTFT/TBT SLO、KVCache 命中率、DRAM 容量与网络拥塞进行实例配对与调度优化，从而实现吞吐与时延的联合优化。**
-
-**3) 图注逐字转录**
-
-> **Figure 1: Mooncake Architecture.**
+> **KVCache-centric Conductor**
+> 
+> Prefill Pool / KVCache Pool / Decoding Pool
+> Cache-aware Prefill Scheduler → Prefill Instance → GPU/VRAM (Local Chunked Prefill Scheduler | Paged KVCache) ↕ CPU/DRAM/SSD (Distributed KVCache Pool) ↔ RDMA ⊗ Inter-node KVCache Transfer
+> KVCache Balance Scheduler ↔ Decoding Instance → GPU/VRAM (Paged KVCache | Local Scheduler) ↕ CPU/DRAM/SSD (Distributed KVCache Pool)
+> Load-balance Decoding Scheduler
+> 
+> **Prefill Stage Optimization Goal:** max Cache Reuse s.t. TTFT SLO, Minimum MFU, KVCache < DRAM
+> 
+> **Decoding Stage Optimization Goal:** max Throughput s.t. TBT SLO, KVCache < VRAM
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig02.png]]
@@ -63,19 +69,22 @@ tags: [kv-cache, disaggregated-serving]
 > The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.
 
 > [!tip] 技术解读（多模态）
-> ## Description of Figure 3
+> ## Main Figure Description
 
-**Architecture/Components:** Figure 3 depicts the KVCache pool residing in CPU memory. At the top, raw tokens (e.g., `)`, `7`, `*`, `6`, `#`, `$`, `8`, `+`, `%`) are shown being grouped into hash blocks. A dashed intermediate layer represents hash-chained block entries (e.g., `0*#$%&'!$+`, `1*#$%&'!0!2+`) connected via `9)4*+!` link pointers, forming a dedup chain. The lower portion shows paged memory regions (`!"###"$%"&'&`, `0*"/12)$%+,` etc.) storing both **prefix cache blocks** and **full cache blocks**, indexed by block IDs (`=...)6;<()*+#`, `;":20$#";<()*+#`).
+The figure illustrates a **prefix-cache-aware KV cache transfer** workflow across distributed LLM serving instances.
 
-**Data Flow:** Tokens → hash grouping → chained dedup blocks → split into prefix/full KVCache pages → distributed across multiple paged CPU memory pools with hash-based addressing.
+**Components & data flow:**
+- **Token blocks** (a–i) are hashed cumulatively (A=Hash(a), B=Hash(A+b), …, F=Hash(E+f)) to produce compact identifiers.
+- The hashed signatures are compared against an existing **Prefix Cache**; five blocks match (A–E) while the sixth mismatches (F).
+- A **Prefill Instance** initially loads/stores the full cache.
+- A **Messenger** reads the matched prefix cache and transfers only the **incremental cache blocks** (F–I) to another Messenger.
+- The receiving Messenger **writes** the prefix plus incremental blocks, and the **Decoding Instance** loads them — avoiding recomputation.
 
-**Key Technical Takeaway:** KVCache blocks are uniquely addressed by a composite hash of *content + prefix context*, enabling deduplication of identical token sequences across requests while preserving contextual locality for prefix reuse.
+**Key takeaway:** By hashing chained token blocks for prefix matching, only the divergent suffix (incremental blocks) is shipped over the network, slashing redundant prefill compute and inter-instance bandwidth for shared contexts.
 
----
+## Caption Transcription
 
-## Caption (verbatim)
-
-**Figure 3:** The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.
+No caption / figure number text is visible in the provided image — only in-figure labels (e.g., "Token Blocks," "Prefix Cache Blocks," "Incremental Cache Blocks," "Unallocated Cache Blocks," and the action arrows "Load/Store/Read/Write/Transfer KVCache") are present.
 
 ### Figure 4 (p.6) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig04.png]]
@@ -84,9 +93,31 @@ tags: [kv-cache, disaggregated-serving]
 > Workflow of inference instances. ( ) For prefill instances, the load and store operations of the KVCache layer are performed layer-by-layer and in parallel with the prefill computation to mitigate transmission overhead (see §5.2). (y ) For decoding instances, asynchronous loading is performed concurrently with GPU decoding to prevent GPU idle time. 4) Decoding: After all the KVCache is received i
 
 > [!tip] 技术解读（多模态）
-> **Description (≤120 words):**
+> ## Figure Description
 
-Figure 4 depicts two parallel workflow pipelines for LLM inference. The left side shows **prefill instances**, organized into two stacked stages where the upper stage handles KVCache load/store operations (e.g., 56789... entries) and the lower stage runs the prefill computation (e.g., AB+C'/C'FIB computations) concurrently — both progressing layer-by-layer. The right side shows **decoding instances**, similarly split: the upper stage (≤22'*+,-# buffer) receives asynchronously loaded data while the lower stage performs GPU decoding (e.g., ?6@/,'AB+C). A transfer arrow at the bottom (6:9!'"#$%&&'(5.$+3'. ) connects the prefill output to the decoding input, representing KVCache handoff. **Key takeaway:** Prefill uses *layer-by-layer parallelism* between compute and KVCache transfer to hide transmission latency, while decoding uses *async loading* to keep the GPU saturated — both are overlap strategies targeting different bottlenecks.
+The diagram illustrates a **disaggregated LLM inference architecture** with two instances:
+
+**Prefill Instance (left, blue):**
+- **CPU side:** holds *Prefix KVCache* and *Incremental KVCache* in host memory
+- **GPU side:** mirrors both caches in device memory
+- *Layer-wise Load and Store* moves tensors between CPU↔GPU
+- (s1) Reuses prefix cache; (s2) runs incremental prefill on the GPU; (s3) transfers the full/updated KVCache to the decoder
+
+**Decoding Instance (right, orange):**
+- Receives the transferred cache via *Async Load* (CPU→GPU)
+- (s4) Performs token decoding on the GPU using the assembled **Full KVCache**
+
+**Key takeaway:** Splitting prefill and decoding, combined with *layer-wise pipelined* CPU↔GPU cache movement and *asynchronous* transfer, overlaps data movement with compute, maximizing hardware utilization and throughput.
+
+## Caption Transcription (verbatim, as shown in figure)
+
+*(No standalone caption text is present; the in-figure labels read as follows)*
+
+- "**Prefill Instance**" / "**Decoding Instance**"
+- "GPU", "CPU"
+- "Prefix KVCache", "Incremental KVCache", "Full KVCache"
+- "(s1) KVCache Reuse", "s2: Incremental Prefill", "s3: KVCache Transfer", "s4: Decoding"
+- "Layer-wise Load and Store*", "Async Load†"
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig05.png]]
@@ -95,9 +126,16 @@ Figure 4 depicts two parallel workflow pipelines for LLM inference. The left sid
 > Input and output length distributions in the request trace. 4
 
 > [!tip] 技术解读（多模态）
-> **Description (≤120 words):**
+> **Figure description (≤120 words):**
 
-Figure 4 depicts two parallel workflow pipelines for LLM inference. The left side shows **prefill instances**, organized into two stacked stages where the upper stage handles KVCache load/store operations (e.g., 56789... entries) and the lower stage runs the prefill computation (e.g., AB+C'/C'FIB computations) concurrently — both progressing layer-by-layer. The right side shows **decoding instances**, similarly split: the upper stage (≤22'*+,-# buffer) receives asynchronously loaded data while the lower stage performs GPU decoding (e.g., ?6@/,'AB+C). A transfer arrow at the bottom (6:9!'"#$%&&'(5.$+3'. ) connects the prefill output to the decoding input, representing KVCache handoff. **Key takeaway:** Prefill uses *layer-by-layer parallelism* between compute and KVCache transfer to hide transmission latency, while decoding uses *async loading* to keep the GPU saturated — both are overlap strategies targeting different bottlenecks.
+The figure consists of two side-by-side log-scale histograms characterizing sequence length distributions in a dataset.
+
+- **Left panel (blue):** *Input Length* on the x-axis (~0 to 120,000 tokens) versus *Frequency* on a log y-axis (~10⁰ to 10⁴). The distribution is heavily right-skewed, peaking near 5,000–10,000 tokens (~10⁴ samples) and decaying roughly monotonically across three orders of magnitude, with a sparse long tail extending to ~125,000.
+- **Right panel (green):** *Output Length* on the x-axis (~0 to 2,000 tokens) versus *Frequency* on a log y-axis (~10⁰ to 10⁴). It shows a bimodal pattern: a large spike at very short outputs (~1,000 tokens, ~1.5×10⁴ samples), a broad mode centered around 400–500 tokens (~10³), and an outlier spike near 2,000 tokens.
+
+**Key technical takeaway:** Inputs are ~10–50× longer than outputs, and output length is effectively bounded near 2,048 — suggesting a context-window truncation at the maximum generation length.
+
+**Caption (verbatim):** No caption text is rendered in the image; only axis labels ("Input Length", "Output Length", "Frequency") and tick values are present.
 
 ### Figure 6 (p.7) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig06.png]]
@@ -183,17 +221,23 @@ Figure 9: The load of prefill and decoding instances over 20 minutes, before usi
 > Instance load when applying Early Rejection and Early Rejection Based on Prediction. conditions where resources are scarce and accurate predictions are necessary, making request-level predictions particularly difficult.
 
 > [!tip] 技术解读（多模态）
-> **Figure 10 — Description:**
+> ## Figure Description
 
-The figure contrasts two load-management strategies across four sequential time steps, visualized as stacked bar charts of instance load on prefilling (top row) and decoding (bottom row) instances, each annotated with a dashed TBT-threshold line.
+The figure illustrates a four-stage scheduling/load-balancing process along a time axis, organized into two stacked rows tracking system loads.
 
-**(a) Early Rejection:** As load progresses, instances whose TBT exceeds the threshold are progressively rejected (star markers alternate empty/filled across steps), causing the decoding instance count to drop sharply.
+**Components & Layout:**
+- **Top row (Decoding Load):** Orange horizontal bars whose *width = request length* and *height = utilization* (0–1). A yellow dashed threshold line and a smooth yellow curve track utilization over time.
+- **Bottom row (Prefill Load):** Light-blue bars represent prefill requests; darker blue bars represent *newly added* prefill requests. A green dashed threshold and green curve track prefill utilization.
+- **Connectors:** Black arrows flow horizontally across each row (load evolution between stages); red arrows point vertically from decoding to prefill rows (cross-stage influence).
+- **Decisions:** Pink stars = "Accept," purple stars = "Reject."
 
-**(b) Early Rejection Based on Prediction:** Load is forecasted ahead of time using the prefill→uniform-decoding pipeline; far fewer rejections occur (mostly empty stars), keeping decoding instances stable.
+**Data Flow:** Stage 1 (low decode, high prefill → Accept) → Stage 2 (decode surges, prefill drops → Reject) → Stage 3 (decode drops, prefill rises → Accept) → Stage 4 (decode moderate, prefill low → Reject).
 
-**Key takeaway:** Prediction-driven rejection retains more decoding instances under overload because the system-level forecast (uniform decoding time *t_d*, prefiltered to remove requests that would already finish before *t*) prevents premature evictions that the reactive policy in (a) cannot avoid.
+**Key Technical Takeaway:** Accept/reject decisions are jointly driven by **both** decoding and prefill utilization thresholds; the scheduler must account for **cross-stage coupling** (vertical red arrows) where decoding load from a prior stage suppresses prefill acceptance in the next stage, preventing resource overcommitment.
 
-**Caption (verbatim):** Figure 10: Instance load when applying Early Rejection and Early Rejection Based on Prediction.
+## Caption (Verbatim Transcription)
+
+> "Length [bracket]; Utilization [bracket] — Legend: Prefill Request | Prefill Request (New Added) | Decoding Request — Y-axes: Decoding Load, Prefill Load — X-axis: Stage 1, Stage 2, Stage 3, Stage 4 — Time — Outcomes: Accept, Reject"
 
 ### Figure 11 (p.16) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig11.png]]

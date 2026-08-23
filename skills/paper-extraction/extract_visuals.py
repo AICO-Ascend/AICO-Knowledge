@@ -268,7 +268,12 @@ def process_paper(slug, dpi, latex_slugs):
                 gfx.append(r)
             elif b["type"] == 0:
                 t = block_text(b)
-                if 0 < len(t) <= LABEL_MAX_CHARS:
+                # short labels always count; LONGER blocks count only if table-like
+                # (multi-span cells) or digit-dense (numeric table figures such as
+                # a-survey Fig.10 whose cells are single-span lines — score=1)
+                digit_dense = t and sum(c.isdigit() for c in t) / len(t) > 0.2
+                if 0 < len(t) <= LABEL_MAX_CHARS or block_table_score(b) >= 2 \
+                        or (len(t) <= 400 and digit_dense):
                     gfx.append(r)
         for dr in page.get_drawings():
             r = dr["rect"]

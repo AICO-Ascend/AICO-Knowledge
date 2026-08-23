@@ -1221,8 +1221,12 @@ Table 20: Parallelism and training configuration details for benchmark entries r
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq01.png]]
 > 原文文本线索：`(𝑝𝑖= 𝜎(𝑙𝑖)/ ∑︀`
 
-### 公式截图 (p.64)
+### 公式截图 (p.16)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq02.png]]
+> 原文文本线索：`World Size = TP × CP × PP × DP,`
+
+### 公式截图 (p.64)
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq03.png]]
 > 原文文本线索：`output(x) = 𝑊↑·`
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）

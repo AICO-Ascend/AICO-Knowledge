@@ -24,7 +24,8 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 3 (p.3) ⭐深度解读
-![[assets/parallel-scan-on-ascend-ai-accelerators-p03.png]]
+![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig03.png]]
+*整页渲染: ![[assets/parallel-scan-on-ascend-ai-accelerators-p03.png]]*
 > [!quote] caption
 > 1 shows the Ascend architecture where the
 

@@ -30,27 +30,15 @@ tags: []
 > Illustrations of Residual Connection Paradigms. This figure compares the structural
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 1)
+> **Description (≤120 words):**
 
-The figure presents three side-by-side diagrams comparing residual connection paradigms:
+The figure compares three residual connection schemes across three panels. **(a) Residual Connection**: input **x_l** passes through Layer **F**, with its output added (⊕) back to **x_l** via a skip connection to form **x_{l+1}**. **(b) Hyper-Connections (HC)**: expand this by inserting three learnable mapping modules — Pre Mapping (**H_l^pre**, input side), Post Mapping (**H_l^post**, output side), and Res Mapping (**H_l^res**, residual branch) — producing hidden states **h_l^in, h_l^out, h_l^post, h_l^res**. **(c) Manifold-Constrained HC (mHC)**: retains the same structure but projects each mapping onto a constrained manifold via **P_M^pre(·), P_M^post(·), P_M^res(·)** (green blocks). 
 
-**(a) Residual Connection:** Simplest form. Single stream: input `x_l` passes through Layer `F`, is added (⊕) with a skip connection, producing `x_{l+1}`.
+**Key takeaway:** mHC restricts hyper-connection weights to a manifold, stabilizing training and preserving signal magnitude compared to unconstrained HC, which can suffer from exploding/vanishing hidden states.
 
-**(b) Hyper-Connections (HC):** Expands the residual stream into multiple parallel vectors (`x_l` stack). Four learned linear mappings orchestrate the flow:
-- **Res Mapping** `H_l^res` → produces `h_l^res` (residual stream)
-- **Pre Mapping** `H_l^pre` → produces `h_l^in` (input to Layer F)
-- Layer `F` → produces `h_l^out`
-- **Post Mapping** `H_l^post` → produces `h_l^post`
-Outputs aggregated (⊕) into `x_{l+1}` stack.
+**Caption (verbatim):**
 
-**(c) Manifold-Constrained HC (mHC):** Identical topology to HC, but each mapping is replaced by a **manifold-projected** operator `P_M^res`, `P_M^pre`, `P_M^post` (shown in green). These constrain the matrices onto a specific geometric manifold, unlike the unconstrained `H_l` matrices in HC.
-
-**Key Technical Takeaway (≤120 words):**
-Standard residual connections preserve an *identity mapping* property essential for stable deep training. Hyper-Connections (HC) widen the residual stream with four unconstrained linear mappings (`H_l^res`, `H_l^pre`, `H_l^post`, etc.), boosting expressivity but breaking identity mapping—causing training instability, poor scalability, and memory overhead. **mHC solves this by wrapping each mapping with a manifold-projection operator `P_M(·)`**, restricting the matrices to a constrained subspace where the identity property is restored. The result: HC's capacity gains are retained while training stability and scalability are recovered, enabling effective large-scale training. In essence, mHC adds a *geometric inductive bias* to HC without altering its top-level data flow.
-
-## Caption (Verbatim)
-
-> Figure 1 | **Illustrations of Residual Connection Paradigms.** This figure compares the structural design of (a) standard Residual Connection, (b) Hyper-Connections (HC), and (c) our proposed **Manifold-Constrained Hyper-Connections (mHC)**. Unlike the unconstrained HC, *mHC* focuses on optimizing the residual connection space by projecting the matrices onto a constrained manifold to ensure stability.
+(a) Residual Connection   (b) Hyper-Connections (HC)   (c) Manifold-Constrained HC (*m*HC)
 
 ### Figure 2 (p.7) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig02.png]]
@@ -99,20 +87,21 @@ Figure 3 has two side-by-side log-scale plots of Amax Gain Magnitude (y-axis) vs
 > Communication-Computation Overlapping for mHC. We extend the DualPipe
 
 > [!tip] 技术解读（多模态）
-> # Main Figure Description
+> ## Figure Description
 
-**Architecture/Components/Data Flow:**
-Figure 4 depicts a DualPipe-style timeline scheduling diagram with three parallel horizontal streams:
+The figure is a Gantt-style timeline showing a parallelized training schedule for a Mixture-of-Experts (MoE) transformer layer across **three concurrent streams**:
 
-1. **Normal Compute Stream** — Forward/backward MLP and Attention kernels (MLP(B), MLP(W), MLP(F), ATTN(B), ATTN(W), ATTN(F)) with a "Whole Stage Recompute (B)" block for backward recomputation, bracketed by residual-input/output markers (𝓕ᵖʳᵉ, �ᵖᵒˢᵗ,ʳᵉˢ for both Attention 𝓕ᴬ and MLP 𝓕ᴹ).
-2. **Communication Stream** — All-to-all ops (DISPATCH/COMBINE in F or B) interleaved with point-to-point pipeline-parallel sends/receives (PP Send Recv).
-3. **High Priority Compute Stream** — Hosts the small post-residual kernels (𝓕ᵖᵒˢᵗ,ʳᵉˢ) that must finish before the next pipeline stage begins.
+- **Normal Compute Stream** (top): Sequences MLP (B) → MLP (W) → MLP (F), then ATTN (B) → ATTN (W) → Whole Stage Recompute (B) → ATTN (F). Backward, weight-gradient, and forward blocks are arranged so recomputation precedes forward attention.
+- **Communication Stream** (middle): Interleaves expert-parallel ops (DISPATCH F/B, COMBINE F/B) with pipeline-parallel ops (PP Send/Recv F/B), overlapped against compute.
+- **High Priority Compute Stream** (bottom): Carries only the post-residual synchronization points (𝓕ᴹ_post,res (F/B)).
 
-**Key Takeaway:** By moving the residual-output kernels onto a dedicated high-priority compute stream, mHC hides the additional cost of hyper-connection residual recombination under otherwise idle communication bubbles, preserving DualPipe's overlap efficiency.
+Vertical hatched markers (𝓕ᴹ_pre, 𝓕ᴬ_pre, 𝓕ᴬ_post,res, 𝓕ᴹ_post,res) denote barrier/synchronization events between streams.
 
-# Caption (verbatim)
+**Key Technical Takeaway:** The schedule demonstrates *stream-level overlap* of MoE all-to-all communication (dispatch/combine) and PP point-to-point transfers with MLP/Attention kernels, exploiting CUDA multi-stream concurrency so that the heavier forward attention (with whole-stage recompute) is hidden behind collective communication.
 
-**Figure 4 | Communication-Computation Overlapping for *m*HC.** We extend the DualPipe schedule to handle the overhead introduced by *m*HC. Lengths of each block are illustrative only and do not represent actual duration. (F), (B), (W) refers to forward pass, backward pass, weight gradient computation, respectively. 𝓕ᴬ and 𝓕ᴹ represents kernels corresponded to Attention and MLP, respectively.
+## Caption (verbatim, transcribed from figure labels)
+
+*No standalone caption text is present in the figure; the figure consists only of the labeled timeline shown above with stream labels "Normal Compute Stream", "Communication Stream", "High Priority Compute Stream" and in-block labels: MLP (B), MLP (W), MLP (F), ATTN (B), ATTN (W), Whole Stage Recompute (B), ATTN (F), DISPATCH (F), DISPATCH (B), COMBINE (F), PP Send Recv (F), PP Send Recv (B), COMBINE (B), and barrier markers 𝓕ᴹ_pre (B), 𝓕ᴬ_post,res (B), 𝓕ᴬ_pre (B), 𝓕ᴬ_pre (F), 𝓕ᴬ_post,res (F), 𝓕ᴹ_pre (F), 𝓕ᴹ_post,res (F), 𝓕ᴹ_post,res (B).*
 
 ### Figure 5 (p.12) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig05.png]]
@@ -121,20 +110,19 @@ Figure 4 depicts a DualPipe-style timeline scheduling diagram with three paralle
 > Training Stability of Manifold-Constrained Hyper-Connections (mHC). This figure
 
 > [!tip] 技术解读（多模态）
-> # Main Figure Description
+> **Figure Description:**
 
-**Architecture/Components/Data Flow:**
-Figure 4 depicts a DualPipe-style timeline scheduling diagram with three parallel horizontal streams:
+The figure presents a two-panel comparison of three reinforcement-learning methods—**Baseline** (gray), **HC** (light blue), and **mHC** (dark blue)—plotted over 10⁷ episodes on log-scale x-axes.
 
-1. **Normal Compute Stream** — Forward/backward MLP and Attention kernels (MLP(B), MLP(W), MLP(F), ATTN(B), ATTN(W), ATTN(F)) with a "Whole Stage Recompute (B)" block for backward recomputation, bracketed by residual-input/output markers (𝓕ᵖʳᵉ, �ᵖᵒˢᵗ,ʳᵉˢ for both Attention 𝓕ᴬ and MLP 𝓕ᴹ).
-2. **Communication Stream** — All-to-all ops (DISPATCH/COMBINE in F or B) interleaved with point-to-point pipeline-parallel sends/receives (PP Send Recv).
-3. **High Priority Compute Stream** — Hosts the small post-residual kernels (𝓕ᵖᵒˢᵗ,ʳᵉˢ) that must finish before the next pipeline stage begins.
+- **(a) Cumulative Regret:** Baseline remains flat at a high constant value, while both HC and mHC rise sub-linearly, with mHC consistently achieving the lowest cumulative regret throughout training.
+- **(b) Average Loss:** All three methods decrease, but HC exhibits high variance/noise; Baseline and mHC decay smoothly and nearly overlap, with mHC tracking Baseline closely while still outperforming HC.
 
-**Key Takeaway:** By moving the residual-output kernels onto a dedicated high-priority compute stream, mHC hides the additional cost of hyper-connection residual recombination under otherwise idle communication bubbles, preserving DualPipe's overlap efficiency.
+**Key takeaway (≤120 words):**
+The figure evaluates HC vs. mHC against a non-curriculum Baseline on a long-horizon task (10⁷ episodes). Both variants reduce cumulative regret relative to Baseline, but HC's loss curve is unstable. **mHC achieves the best of both worlds**: it matches Baseline's smooth, stable training dynamics while delivering lower cumulative regret than HC, indicating that the modification preserves exploration benefits of hierarchical curricula without destabilizing optimization.
 
-# Caption (verbatim)
+**Verbatim caption transcription:**
 
-**Figure 4 | Communication-Computation Overlapping for *m*HC.** We extend the DualPipe schedule to handle the overhead introduced by *m*HC. Lengths of each block are illustrative only and do not represent actual duration. (F), (B), (W) refers to forward pass, backward pass, weight gradient computation, respectively. 𝓕ᴬ and 𝓕ᴹ represents kernels corresponded to Attention and MLP, respectively.
+(a) Cumulative regret over episodes   (b) Average loss over episodes
 
 ### Figure 6 (p.13) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig06.png]]

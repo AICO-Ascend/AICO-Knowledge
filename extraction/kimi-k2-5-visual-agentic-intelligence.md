@@ -41,20 +41,19 @@ The figure is a grouped bar chart comparing Kimi K2.5 (blue) against three basel
 **Figure 1: Kimi K2.5 main results.**
 
 ### Figure 2 (p.4) ⭐深度解读
-![[assets/kimi-k2-5-visual-agentic-intelligence-p04.png]]
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png]]
+*整页渲染: ![[assets/kimi-k2-5-visual-agentic-intelligence-p04.png]]*
 > [!quote] caption
 > Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve, demonstrating that zero-vision activation paired with long-running RL is sufficient for acquiring robust visual capabilities.
 
 > [!tip] 技术解读（多模态）
-> **Description (≈95 words):**
+> **Note:** The image provided contains only a block of body text from a paper — there is no actual figure (diagram/architecture) or figure caption shown. Below I describe the text content and provide a verbatim transcription.
 
-The figure presents two side-by-side line plots tracking vision RL training performance. The left panel (pink curve) shows MMMU Pro benchmark accuracy rising from ~0.71 to ~0.76 as RL flops scale up. The right panel (green curve) shows a second benchmark accuracy climbing from ~0.68 to ~0.78 with a similar upward trajectory. Both curves feature horizontal dashed baselines (likely upper-bound reference targets) and shaded confidence bands beneath the trajectories. The x-axis denotes RL FLOPs (compute scaling) while the y-axis shows accuracy.
+**Description of the text block (treating it as the main content shown):**
+The passage introduces a method called **zero-vision SFT** (Supervised Fine-Tuning). The pipeline conceptually works as follows: (1) start with abundant, diverse text-only SFT data; (2) during post-training, all visual/image manipulations are executed as **programmatic Python operations** rather than through pixel input; (3) this proxies "vision tool-use," letting the model perform pixel-level tasks (binarization, object sizing, counting) and ground tasks (localization, OCR). **Key takeaway:** Text-only SFT data is sufficient to elicit emergent visual reasoning capabilities in a model, by routing image operations through code.
 
-**Key technical takeaway:** Visual capabilities can emerge from a minimal zero-vision SFT checkpoint purely through extended RL compute scaling—suggesting that RL FLOPs, not extensive vision pre-training, are the critical driver of robust visual acquisition.
-
-**Caption (verbatim):**
-
-> Figure 2: Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve, demonstrating that zero-vision activation paired with long-running RL is sufficient for acquiring robust visual capabilities.
+**Verbatim transcription:**
+> An observation is that high-quality text SFT data are relatively abundant and diverse. We propose a novel approach, zero-vision SFT, that uses only text SFT data to activate the visual, agentic capabilities during post-training. In this approach, all image manipulations are proxied through programmatic operations in Python, effectively serving as a generalization of traditional vision tool-use. This "zero-vision" activation enables diverse reasoning behaviors, including pixel-level operations such as object size estimation via binarization and counting, and generalizes to visually grounded tasks such as object localization, counting, and OCR.
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig03.png]]

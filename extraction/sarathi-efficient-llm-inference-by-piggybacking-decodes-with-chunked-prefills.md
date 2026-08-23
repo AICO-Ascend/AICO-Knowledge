@@ -218,7 +218,8 @@ The data flow is: input tokens → (preproj + postproj attention block) + ffn bl
 **Figure 8:** Decode-only speedup with **S**ARATHI on an A6000 GPU with LLaMA-13B (chunk size = 256).
 
 ### Figure 9 (p.10) ⭐深度解读
-![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p10.png]]
+![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig09.png]]
+*整页渲染: ![[assets/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-p10.png]]*
 > [!quote] caption
 > Normalized throughput (tokens/ms) for LLaMa 13B on A6000 GPU with different sequence lengths, P:D ratios, and chunk sizes. 2 4 6 8 10 12 14 16 18
 

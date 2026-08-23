@@ -43,7 +43,22 @@ Figure 1. Speedup comparison between DFlash, EAGLE-3 against Autoregressive Deco
 > DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】DFlash 设计：block-diffusion draft model 块内并行生成多 token（非逐 token 自回归）→低 draft 延迟；目标 LLM 先 prefill 产首 token 并取若干层隐藏态，concat 后过投影层融成 target context feature，注入每个 draft 层的 KV cache 并跨轮复用，持续提供上下文引导→接受长度随 draft 深度增长，无 token-embedding 稀释（优于 EAGLE 式输入融合）。架构核心图。
+> ## Figure Description
+
+**Architecture:** The diagram depicts a **diffusion-based speculative decoding** pipeline. The prompt "Diffusion is good" enters the **Target Model** (top), producing *Fused Target Context Features* (blue) and a *Target Decode Token* (orange). Simultaneously, `<mask>` tokens are converted via **Target Embedding** into *Mask Tokens* (green). These streams are concatenated and processed sequentially through stacked **Draft Layers** (Layer 1, Layer 2, ...), each containing a **KV Cache**, **Bidirectional Attention**, and **MLP**. The final output passes through a **Target LM Head** to generate tokens *for speculative decoding*.
+
+**Key Takeaway:** Draft tokens leverage bidirectional attention over fused target context and prior decoded tokens (via KV cache), enabling parallel/non-autoregressive speculation rather than sequential left-to-right generation — accelerating inference while conditioning on full context.
+
+(112 words)
+
+## Verbatim Text Transcription
+
+> "Diffusion is good" → Target Model → (column of tokens)
+> Target Embedding → for `<mask> <mask> <mask>`
+> KV Cache | Draft Layer 1 | Bidirectional Attention | MLP
+> Draft Layer 2 → …
+> Target LM Head → for speculative decoding `<eos>`
+> Legend: ▢ Fused Target Context Feature | ▢ Target Decode Token | ▢ Mask Token
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig03.png]]
@@ -69,15 +84,21 @@ Figure 3. Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.
 > DFlash training attention. The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens p and clean response tokens r.
 
 > [!tip] 技术解读（多模态）
-> ## Figure 4 Description
+> ## Description
 
-**Architecture / Components:** The figure displays two attention-mask grids illustrating DFlash's training-time sparse attention. The left grid encodes the input sequence: prompt tokens *p* (blue), a contiguous block of clean response tokens *r* (yellow) used as anchors, and surrounding mask tokens *m* (green) for parallel prediction. Invisible tokens (white) sit between blocks. The right grid shows the resulting attention pattern: bidirectional attention *within* each block plus KV-injected target features, while attention *across* blocks is disallowed.
+**Architecture/components:** Two side-by-side token grids depict a context-extension scheme. The left panel "From Target Model" shows a triangular causal mask: blue *Target Context Features* fill positions p1–p4 and r1–r2, expanding rightward down each row, with white *Invisible Tokens* elsewhere. The right panel "Mask Blocks" shows a wider grid where each response token (r1, r2, r3) is followed by three `<m>` mask tokens. Yellow *Clean Tokens* anchor each block, green *Mask Tokens* populate the `<m>` positions, and the rest remain invisible.
 
-**Key technical takeaway:** By concatenating all blocks into a single sequence processed jointly under a sparse causal attention mask, DFlash trains multiple draft blocks in parallel within one forward/backward pass—achieving efficient joint training without inter-block information leakage.
+**Data flow:** Target context features (left) are aligned with corresponding clean-token-plus-mask-block sequences (right), so each response token is replicated as a "clean + masked" block to enrich supervision.
 
-## Caption (Verbatim)
+**Key takeaway (≤120 words):** The technique augments the target model's causal context by replicating each response token into a clean-anchor block followed by learned mask tokens. This expands the visible receptive field without breaking autoregressive causality, providing denser self-supervised signals across positions that would otherwise be invisible under strict causal masking — improving representation quality in masked-prediction-style training while maintaining compatibility with the target model's generation structure.
 
-**Figure 4. DFlash training attention.** The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens *p* and clean response tokens *r*. Within each masked block, a subset of clean response tokens (yellow) is randomly sampled as anchors, while mask tokens *m* (green) mark positions for parallel prediction. Invisible tokens (white) denote the attention mask, which enforces causal consistency and prevents inter-block information leakage during training.
+## Caption (verbatim transcription)
+
+> **From Target Model** &nbsp;&nbsp;&nbsp;&nbsp; **Mask Blocks**
+> 
+> p1 &nbsp; p2 &nbsp; p3 &nbsp; p4 &nbsp; r1 &nbsp; r2 &nbsp;&nbsp;&nbsp; … &nbsp;&nbsp;&nbsp; r1 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\> &nbsp; r2 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\> &nbsp; r3 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\>
+> 
+> Legend: ▢ Target Context Feature &nbsp;|&nbsp; ▢ Mask Token &nbsp;|&nbsp; ▢ Clean Token &nbsp;|&nbsp; ▢ Invisible Token
 
 ### Figure 5 (p.13) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig05.png]]
