@@ -403,6 +403,18 @@ Table 18 属附录 J "Evaluation Prompts and Settings"。图片仅显示 caption
 
 **论文作用**：作为通用能力评测的一环，与 MMLU、GPQA、MATH 等并列，补全 R1 在"可控生成"维度上的评估证据，支撑"RL 激发推理 + 冷启动提升综合表现"的整体结论。
 
+### Table 24 (p.72) ⭐深度解读
+![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png]]
+> [!quote] caption
+> j FRAMES (Factuality, Retrieval, And reasoning MEasurement Set) is a comprehensive
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】Table 24 展示 DeepSeek-R1 在 FRAMES 基准上的评测结果。该基准用于评估 RAG 系统核心组件，采用"Oracle Prompt"配置：每个测试提示包含问题及全部真实维基百科文章，免去 BM25 等外部检索环节，专门衡量模型对给定信息的推理与综合能力。
+
+**论证结论**：经 RL 激励后，R1 在长上下文事实推理与多源信息整合上具备较强能力，验证纯强化学习在事实性任务中的有效性。
+
+**链路作用**：该表属论文"通用能力评估"环节，与 GPQA、MMLU 等并列，用于多维度证明 R1 综合能力不仅限于数学/代码，在开放域事实推理任务上同样表现优异。
+
 ### Table 25 (p.73) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab25.png]]
 > [!quote] caption
@@ -416,6 +428,20 @@ Table 18 属附录 J "Evaluation Prompts and Settings"。图片仅显示 caption
 **核心对象与描述：** 该表对应 jArena-Hard 基准——一个源自 Chatbot Arena 众包平台的开放式评估集，强调编码与数学类开放问题；评分由评估模型（近似人类判断）给出，分数越高代表模型在实际场景中越受用户青睐。
 
 **论文中的作用：** 该表用于在 DeepSeek-R1 的整体实验链路中，将模型在"开放式人类偏好"维度上的表现与代码/数学等专项基准互补验证，作为衡量 RL 训练后模型通用开放域回答质量的关键证据。
+
+### Table 26 (p.74) ⭐深度解读
+![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab26.png]]
+> [!quote] caption
+> j AlpacaEval 2.0 is an open-ended evaluation dataset, similar in nature to ArenaHard, and leverages an LLM to assess model performance on subjective tasks. However, in contrast to
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+该表展示了 AlpacaEval 2.0 的评测流程样例：上方给出一条示例 prompt（"哪些著名演员在百老汇开启演艺生涯？"），下方给出 LLM-as-judge 的评估模板——通过 system 提示词设定裁判 LLM 的角色（"高效助手，基于响应质量选出最佳模型并形成排行榜"），再用 user 提示词要求其逐条比较各模型输出。
+
+论文借此论证的关键结论：AlpacaEval 2.0 与 ArenaHard 同属 LLM 主观评判式开放评测，但其 prompt 普遍难度较低，仅少量需要推理能力，因此更适合衡量模型的写作质量、指令遵循与人类偏好对齐，而非纯推理水平。
+
+在整体实验链路中，它与 ArenaHard 形成互补：前者侧重通用对话/写作偏好评测，后者侧重高难度推理评测，二者共同构成对 DeepSeek-R1 能力维度的全面评估。
 
 ### Table 27 (p.0) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab27.png]]

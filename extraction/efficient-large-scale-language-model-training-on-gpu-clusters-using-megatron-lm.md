@@ -281,7 +281,7 @@ tags: [training, architecture]
 ### Table 1 (p.8) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab01.png]]
 > [!quote] caption
-> shows the model configurations along with the achieved FLOP/s (both per GPU and aggregate over all GPUs). We see super- linear scaling to 3072 A100 GPUs (384 DGX A100 nodes), since GPU utilization improves as the models get larger (larger matrix multiplications) without significant increase in the c
+> Weak-scaling throughput for GPT models ranging from 1 billion to 1 trillion parameters.
 
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 1 图文联合解读**（注：图示区域为正文段落，表格本身未直接渲染，依据 caption 与正文描述重建其内容）

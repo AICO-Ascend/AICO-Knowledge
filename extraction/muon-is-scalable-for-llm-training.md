@@ -160,6 +160,18 @@ Muon 经 Newton–Schulz 正交化后，其训练得到的 FFN 权重矩阵奇�
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
+### Table 1 (p.6) ⭐深度解读
+![[assets/crops/muon-is-scalable-for-llm-training-tab01.png]]
+> [!quote] caption
+> Controlling Muon’s Update RMS Across Different Model Params
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**表1图文联合解读：**
+
+表1对比Baseline、Update Norm、Adjusted LR三种方法在训练loss、验证loss、查询权重RMS与MLP权重RMS上的表现：Update Norm将验证loss由2.812降至**2.789**，但MLP权重RMS从2.52e-2飙升至5.01e-2（约2倍），查询权重RMS也由3.586e-2升至4.918e-2，参数间RMS严重失衡；Adjusted LR在保持val loss=**2.789**的同时，将权重RMS拉回基线附近（3.496e-2 / 4.89e-2）。
+
+该表论证了Muon规模化训练的核心结论：直接归一化更新虽能降损，但会破坏不同参数类型的更新RMS平衡，需按参数类型（如attention/MLP）调整学习率以稳定权重规模——这是论文提出Moonlight模型参数级自适应预处理的关键实验支撑。
+
 ### Table 2 (p.7) ⭐深度解读
 ![[assets/crops/muon-is-scalable-for-llm-training-tab02.png]]
 > [!quote] caption

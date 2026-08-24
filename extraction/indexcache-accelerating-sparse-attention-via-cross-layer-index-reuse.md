@@ -116,7 +116,7 @@ Table 4 在 GLM-5（744B）模型上对比 Original DSA 与训练免费 IndexCac
 
 该表承接 Figure 4 关于层间索引高重叠率的发现，作为 744B 规模下的预实验，为 IndexCache 向超大模型的可扩展性提供了首个量化证据，支撑方法在大模型部署场景中的有效性。
 
-### Table 5 (p.17) ⭐深度解读
+### Table 5 (p.18) ⭐深度解读
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab05.png]]
 > [!quote] caption
 > Evaluation results of training-free similarity-based searched pattern.

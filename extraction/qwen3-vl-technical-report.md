@@ -144,6 +144,32 @@ Table 2将Qwen3-VL-235B-A22B的thinking与instruct双版本，与Gemini 2.5 Pro�
 
 3) **作用**：作为论文核心实验链路，验证"Thinking + 视觉扩展 + MoE稀疏化"三重叠加的可行性，为Qwen3-VL系列旗舰与轻量版本的能力差异提供量化锚点。
 
+### Table 9 (p.23) ⭐深度解读
+![[assets/crops/qwen3-vl-technical-report-tab09.png]]
+> [!quote] caption
+> Comparison among Qwen3-VL-2B (Instruct), Qwen3-VL-4B (Instruct), Qwen3-VL-8B (Instruct) and corresponding baselines.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+1) **核心对象与结构**：表格对比 Qwen3-VL-2B/4B/8B Instruct 与四款纯文本基线（Qwen3-1.7B/4B/8B/4B-Instruct-2507），覆盖知识（MMLU-Pro/Redux、GPQA、SuperGPQA）、推理（AIME-25、HMMT-25、LiveBench）、对齐（IFEval、Arena-Hard V2、Creative Writing v3、WritingBench）、代码代理（LiveCodeBench v6、BFCL-v3）与多语言（MultiIF、MMLU-ProX、INCLUDE、PolyMATH）共18个基准的具体得分。
+
+2) **关键技术结论**：论证多模态训练并未损害纯文本智能。VL 模型全面优于同尺寸文本基线，例如 MMLU-Pro 上 Qwen3-VL-4B 得 67.1，超过参数量更大的 Qwen3-8B（63.4）；Qwen3-VL-8B（71.6）更反超更新版的 Qwen3-4B-Instruct-2507（69.6），其余类别亦呈现稳定优势。
+
+3) **论文作用**：作为"视觉语言融合不损通用能力"的核心定量证据，支撑论文主张多模态路径兼具专业视觉理解与同阶最强文本能力的实验链条。
+
+### Table 10 (p.24) ⭐深度解读
+![[assets/crops/qwen3-vl-technical-report-tab10.png]]
+> [!quote] caption
+> Comparison among Qwen3-VL-2B (Thinking), Qwen3-VL-4B (Thinking), Qwen3-VL-8B (Thinking) and corresponding baselines.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】Table 10 对比 Qwen3-VL 2B/4B/8B Thinking 与同规模纯文本 Qwen3 基线（1.7B/4B/8B/4B-2507）在知识、推理、对齐、代理与多语5类共18项基准上的得分。
+
+核心发现：VL 模型全面领先同规模文本基线——知识 MMLU-Pro 8B 达 77.3 vs Qwen3-8B 74.6；推理 AIME-25 80.3 vs 67.3；对齐 Arena-Hard v2 51.1 vs 29.1（差距最大）；多语 MultiIF 75.1 vs 71.2。规模 2B→4B→8B 单调提升，4B VL 在多数任务上逼近 Qwen3-4B-2507。
+
+该表是论证"加入视觉能力未损害、反而增益语言/推理性能"的关键横向证据，支撑统一多模态架构的有效性结论。
+
 ### Table 11 (p.24) ⭐深度解读
 ![[assets/crops/qwen3-vl-technical-report-tab11.png]]
 > [!quote] caption

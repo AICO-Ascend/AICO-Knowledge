@@ -535,7 +535,7 @@
    },
    {
     "num": 5,
-    "page": 17,
+    "page": 18,
     "caption": "Evaluation results of training-free similarity-based searched pattern.",
     "path": "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab05.png"
    }
@@ -1594,6 +1594,12 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 3,
+    "caption": "Performance comparison across different vision-text joint-training strategies. Early fusion with a lower vision ratio yields better results given a fixed total vision-text token budget.",
+    "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-tab01.png"
+   },
+   {
     "num": 2,
     "page": 4,
     "caption": "Cross-Modal Transfer: Vision RL Improves Textual Knowledge Benchmark Before Vision-RL After Vision-RL Improvement",
@@ -1689,6 +1695,18 @@
     "page": 23,
     "caption": "Comparison among Qwen3-VL-32B (Thinking), Qwen3-VL-30B-A3B (Thinking), and corre- sponding baselines.",
     "path": "assets/crops/qwen3-vl-technical-report-tab08.png"
+   },
+   {
+    "num": 9,
+    "page": 23,
+    "caption": "Comparison among Qwen3-VL-2B (Instruct), Qwen3-VL-4B (Instruct), Qwen3-VL-8B (Instruct) and corresponding baselines.",
+    "path": "assets/crops/qwen3-vl-technical-report-tab09.png"
+   },
+   {
+    "num": 10,
+    "page": 24,
+    "caption": "Comparison among Qwen3-VL-2B (Thinking), Qwen3-VL-4B (Thinking), Qwen3-VL-8B (Thinking) and corresponding baselines.",
+    "path": "assets/crops/qwen3-vl-technical-report-tab10.png"
    },
    {
     "num": 11,
@@ -1877,6 +1895,12 @@
    }
   ],
   "tables": [
+   {
+    "num": 101,
+    "page": 5,
+    "caption": "关键术语",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-tab101.png"
+   },
    {
     "num": 301,
     "page": 13,
@@ -2723,6 +2747,12 @@
     "page": 31,
     "caption": "Downstream Benchmarks for OLMoE.",
     "path": "assets/crops/hyper-connections-tab14.png"
+   },
+   {
+    "num": 15,
+    "page": 33,
+    "caption": "Results on downstream benchmarks for 1B models.",
+    "path": "assets/crops/hyper-connections-tab15.png"
    }
   ],
   "formulas": []
@@ -3217,10 +3247,22 @@
     "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab01.png"
    },
    {
+    "num": 2,
+    "page": 12,
+    "caption": "Results with Local Knowledge Base.",
+    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab02.png"
+   },
+   {
     "num": 3,
     "page": 12,
     "caption": "Results with Web-based Search and Browsing.",
     "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab03.png"
+   },
+   {
+    "num": 4,
+    "page": 13,
+    "caption": "Results on GAIA, xBench-DeepSearch, and Frames. The results are evaluated with LLM- as-Judge. For baselines, we run the corresponding official codes for 4 seeds and report Avg@4 and Pass@4.",
+    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab04.png"
    },
    {
     "num": 5,
@@ -3453,10 +3495,22 @@
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab23.png"
    },
    {
+    "num": 24,
+    "page": 72,
+    "caption": "j FRAMES (Factuality, Retrieval, And reasoning MEasurement Set) is a comprehensive",
+    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png"
+   },
+   {
     "num": 25,
     "page": 73,
     "caption": "j Arena-Hard is an open-ended evaluation benchmark specifically designed to assess",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab25.png"
+   },
+   {
+    "num": 26,
+    "page": 74,
+    "caption": "j AlpacaEval 2.0 is an open-ended evaluation dataset, similar in nature to ArenaHard, and leverages an LLM to assess model performance on subjective tasks. However, in contrast to",
+    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab26.png"
    },
    {
     "num": 27,
@@ -3566,6 +3620,12 @@
     "page": 33,
     "caption": "Detailed model architecture information and training hyper parameters.",
     "path": "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab05.png"
+   },
+   {
+    "num": 6,
+    "page": 35,
+    "caption": "| The table illustrates Top-5 merged tokens by Tokenizer Compression and the overall compression ratio is 23.43% for our 128k tokenizer.",
+    "path": "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab06.png"
    }
   ],
   "formulas": []
@@ -3760,6 +3820,12 @@
     "page": 8,
     "caption": "Time in seconds per 0.1k training steps for the order-embedding model.",
     "path": "assets/crops/root-mean-square-layer-normalization-tab08.png"
+   },
+   {
+    "num": 9,
+    "page": 9,
+    "caption": "Training error rate for the ConvPool- CNN-C model.",
+    "path": "assets/crops/root-mean-square-layer-normalization-tab09.png"
    }
   ],
   "formulas": []
@@ -4278,6 +4344,12 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 7,
+    "caption": "Mean TTFT latency (in seconds) ( ↓ ) for varying video lengths at a fixed request rate of 1 request/sec. Results are averaged over 100 Video-MME samples. EPD achieves the lowest latency across all video lengths.",
+    "path": "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab01.png"
+   },
+   {
     "num": 2,
     "page": 8,
     "caption": "Comparison of the maximum number of images supported per request for various image resolutions across different models. Higher values are better; best values in each row are italicized.",
@@ -4722,7 +4794,7 @@
    {
     "num": 1,
     "page": 8,
-    "caption": "shows the model configurations along with the achieved FLOP/s (both per GPU and aggregate over all GPUs). We see super- linear scaling to 3072 A100 GPUs (384 DGX A100 nodes), since GPU utilization improves as the models get larger (larger matrix multiplications) without significant increase in the c",
+    "caption": "Weak-scaling throughput for GPT models ranging from 1 billion to 1 trillion parameters.",
     "path": "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab01.png"
    },
    {
@@ -5005,7 +5077,7 @@
    {
     "num": 13,
     "page": 25,
-    "caption": "Communication traffic heatmap for InternLM-2 102B pre-training using 128 GPUs during a single itera- tion, with tensor parallelism (TP) size 8, pipeline parallelism (PP) size 4, data parallelism (DP) size 4 and ZeRO stage 1 (ZeRO-1) size 4. The prioritization of topology arrange- ment is TP > DP/ZeR",
+    "caption": "Fig. 13: Communication traffic heatmap for InternLM-2 102B pre-training using 128 GPUs during a single iteration, with tensor parallelism (TP) size 8, pipeline parallelism (PP) size 4, data parallelism (DP) size 4 and ZeRO stage 1 (ZeRO-1) size 4. The prioritization of topology arrangement is TP >DP",
     "path": "assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig13.png"
    },
    {
@@ -5250,6 +5322,12 @@
     "page": 2,
     "caption": "Comparison of efficiency in sequence-based CoT (Wei et al., 2022) and tree-based ToT (Yao et al., 2023) decoding for a reasoning task. The task is sort- ing 128 numbers from Besta et al. (2023). The total gen- erated tokens of CoT is only 525 while 38 , 315 in ToT, resulting in inefficiency in end-t",
     "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab01.png"
+   },
+   {
+    "num": 2,
+    "page": 6,
+    "caption": "Comparison of QKV partitioning strategies for baselines (most of which are shown in Figure 3) and D E FT. For IO redundancy, significant issues are highlighted in red , while negligible ones are in blue . “Q” refers to queries, and “KV” refers to the KV cache. “DCM” stands for Dense Causal Mask (a m",
+    "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab02.png"
    },
    {
     "num": 3,
@@ -6076,7 +6154,7 @@
    },
    {
     "num": 10,
-    "page": 34,
+    "page": 35,
     "caption": "Results of instruction-tuning experiments (all in a single-turn conversation) based on the LLaMA (7B) and LLaMA (13B) model under the chat and QA setting. We employ four instruction improvement strategies on the Self- Instruct-52K dataset, i.e., enhancing the complexity ( w/ complexity ), increasing",
     "path": "assets/crops/a-survey-of-large-language-models-tab10.png"
    },
@@ -6323,6 +6401,12 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 8,
+    "caption": "Ablation study on the hybrid ratio of KDA to MLA attention and other key components. We list the training and validation perplexities (lower is better) for comparison. The best-performing model, used in our final experiments, is highlighted in gray.",
+    "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab01.png"
+   },
+   {
     "num": 2,
     "page": 9,
     "caption": "Model configurations and hyperparameters for scaling law experiments.",
@@ -6341,6 +6425,12 @@
     "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab04.png"
    },
    {
+    "num": 5,
+    "page": 12,
+    "caption": "Comparisons of Kimi Linear with MLA, GDN-H, and Kimi Linear (RoPE) across long-context benchmarks. The last column reports the overall average ( ↑ ). All models is trained on 1.4T tokens. Best per-column results are bolded .",
+    "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab05.png"
+   },
+   {
     "num": 6,
     "page": 14,
     "caption": "An overview of attention mechanisms in their mathematically equivalent recurrent ( o t ) and parallel ( O ) forms. We omitted the normalization term and β t to achieve a more concise representation. The function ϕ refers to the infinite-dimensional feature space corresponding to the exponential kern",
@@ -6357,6 +6447,12 @@
     "page": 0,
     "caption": "Performance of Kimi-Linear-Base and Moonlight-Base across diverse tasks.",
     "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab08.png"
+   },
+   {
+    "num": 9,
+    "page": 28,
+    "caption": "Performance of Kimi-Linear-Instruct and Moonlight-Instruct across diverse tasks.",
+    "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab09.png"
    }
   ],
   "formulas": []
@@ -6425,6 +6521,12 @@
    }
   ],
   "tables": [
+   {
+    "num": 1,
+    "page": 6,
+    "caption": "Controlling Muon’s Update RMS Across Different Model Params",
+    "path": "assets/crops/muon-is-scalable-for-llm-training-tab01.png"
+   },
    {
     "num": 2,
     "page": 7,
@@ -6949,6 +7051,12 @@
     "page": 5,
     "caption": "Experimental Results on math reasoning benchmarks(Accuracy %).",
     "path": "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab01.png"
+   },
+   {
+    "num": 2,
+    "page": 6,
+    "caption": "Experimental Results on SWE-Bench Verified (Accuracy %).",
+    "path": "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab02.png"
    },
    {
     "num": 3,

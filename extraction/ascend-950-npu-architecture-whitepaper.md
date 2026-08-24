@@ -359,6 +359,18 @@ tags: []
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
+### Table 101 (p.5) ⭐深度解读
+![[assets/crops/ascend-950-npu-architecture-whitepaper-tab101.png]]
+> [!quote] caption
+> 关键术语
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**表1-1「关键术语」图文解读**
+
+表1-1为两列结构的术语词表（术语/描述），按字母序收录AIC、AIGC、AIV、AI CPU、AI Die、CANN、Clos、CMO、CTP、Device、Die、DVPP共12条，每条均含具体量化定义：AIC/AIV明确AI Core分离架构下Cube Core与Vector Core组合的角色分工；AI CPU特指自研Linx816 ARM核；AI Die对应昇腾950PR/950DT芯片中的计算Die；CANN为异构计算架构软件栈；Clos为多级无阻塞数据中心网络；CMO经SDMA实现L2 Cache管理；CTP为Unified Bus轻量级传输；Device对应Host-Device架构的设备侧；DVPP含JPEG（JPEGD/JPEGE）与Video编解码模块。
+
+正文无显式引用。本表作全篇术语基线，统一了AI Core分离结构、Host-Device架构、异构软件栈、芯片型号等后续高频概念的定口径，是阅读架构详情、软件栈与编号规则的必备前置参照，保障全文表述一致性。
+
 ### Table 301 (p.13) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-tab301.png]]
 > [!quote] caption

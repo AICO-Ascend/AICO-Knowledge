@@ -154,6 +154,18 @@ tags: []
 
 在实验链路中，该表与 Figure 6（收敛曲线）、Table 7（R@K）共同构成"收敛行为→训练成本→测试精度"的完整证据链，**从计算开销维度**直观支撑 RMSNorm 以更低代价实现等效归一化的主张。
 
+### Table 9 (p.9) ⭐深度解读
+![[assets/crops/root-mean-square-layer-normalization-tab09.png]]
+> [!quote] caption
+> Training error rate for the ConvPool- CNN-C model.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+1）该表为ConvPool-CNN-C模型在0–200个训练epoch上的训练错误率曲线，对比Baseline、BatchNorm、LayerNorm、WeightNorm、RMSNorm、pRMSNorm共六种方法。错误率从初始约0.08单调下降，至约150 epoch后趋近收敛；Baseline（蓝线）下降最慢且全程最高，约150 epoch才接近其他曲线；BatchNorm、RMSNorm、pRMSNorm收敛最快且彼此几乎不可区分。
+
+3）该实验位于论文归一化方法对比链路中，与NLP/CNN主实验共同支撑核心论点：RMSNorm在大幅简化计算（去除均值中心化）的同时，仍可保持与BatchNorm、LayerNorm等成熟方法相当的训练性能，并显著优于无归一化基线。
+
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
 $$

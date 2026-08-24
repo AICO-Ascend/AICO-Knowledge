@@ -179,6 +179,14 @@ tags: [multimodal, disaggregated-serving]
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
+### Table 1 (p.7) ⭐深度解读
+![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab01.png]]
+> [!quote] caption
+> Mean TTFT latency (in seconds) ( ↓ ) for varying video lengths at a fixed request rate of 1 request/sec. Results are averaged over 100 Video-MME samples. EPD achieves the lowest latency across all video lengths.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】Table 1对比vLLM、DistServe、EPD三种方法在1 req/sec下、8/16/32/64帧视频的平均TTFT（秒）：vLLM为0.42/0.82/1.59/3.11秒，DistServe为0.42/0.81/1.54/3.08秒，二者性能相近且随帧数近似线性增长；EPD（ours）为0.24/0.30/0.49/1.00秒，全面领先，64帧时延迟仅约为对比方法的1/3。结合Figure 1论证，EPD通过编码–预填充分离架构消除了encoder与LLM prefill阶段的相互干扰（如LLM-4延迟E5），从而显著降低长视频的首token时延。该表为EPD解耦方法的有效性提供核心定量证据，是实验链路中方法验证的关键环节。
+
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab02.png]]
 > [!quote] caption

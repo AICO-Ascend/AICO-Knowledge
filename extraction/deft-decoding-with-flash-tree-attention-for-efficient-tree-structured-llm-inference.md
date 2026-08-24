@@ -294,6 +294,20 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 **作用**：该表作为关键动机实验，量化揭示树形推理中KV cache与partial attention（QK^T、softmax）的IO瓶颈，为本文提出的Flash Tree Attention（DeFT）方法提供必要性论证与效率基准。
 
+### Table 2 (p.6) ⭐深度解读
+![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab02.png]]
+> [!quote] caption
+> Comparison of QKV partitioning strategies for baselines (most of which are shown in Figure 3) and D E FT. For IO redundancy, significant issues are highlighted in red , while negligible ones are in blue . “Q” refers to queries, and “KV” refers to the KV cache. “DCM” stands for Dense Causal Mask (a m
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】图像未呈现完整Table 2，仅显示相关正文段落。结合caption与正文论述解读如下：
+
+**1) 核心对象与结构**：Table 2横向对比Vanilla Tree Attention、Flash-Attention、DEFT-Node等基线与DEFT的QKV分区策略，以"IO冗余"为核心量化指标（红色=严重冗余，蓝色=可忽略），列出Q、KV、Dense Causal Mask (DCM) 的加载次数与共享情况。
+
+**2) 关键技术结论**：论证Q-Guided Grouping（如Flash-Attention中KV₀被Q_a与Q_b分别加载两次）非prefix-aware，造成KV cache冗余读取；而DEFT采用KV-Guided Grouping，按节点KV聚合所有共享查询，实现prefix-aware分区，显著降低内存访问。
+
+**3) 论文链路作用**：承接§3.2对Vanilla Tree Attention低GPU利用率的不足分析，作为KV-Guided Grouping设计的关键实证依据，奠定DEFT"FlashAttention + prefix-aware partitioning"双核心优化的理论合理性。
+
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab03.png]]
 > [!quote] caption

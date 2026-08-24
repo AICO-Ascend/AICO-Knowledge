@@ -243,7 +243,7 @@ tags: []
 
 （图像与表格不匹配，未见有效表格内容，故按原文 caption 解读。）
 
-### Table 10 (p.34) ⭐深度解读
+### Table 10 (p.35) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab10.png]]
 > [!quote] caption
 > Results of instruction-tuning experiments (all in a single-turn conversation) based on the LLaMA (7B) and LLaMA (13B) model under the chat and QA setting. We employ four instruction improvement strategies on the Self- Instruct-52K dataset, i.e., enhancing the complexity ( w/ complexity ), increasing

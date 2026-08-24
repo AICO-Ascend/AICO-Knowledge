@@ -237,6 +237,14 @@ Kimi K2.5 augments its native visual perception with **external tool calls** to 
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
+### Table 1 (p.3) ⭐深度解读
+![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab01.png]]
+> [!quote] caption
+> Performance comparison across different vision-text joint-training strategies. Early fusion with a lower vision ratio yields better results given a fixed total vision-text token budget.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】该表比较固定视觉—文本总 token 预算下早期、中期、晚期视觉注入：注入点为0%、50%、80%，视觉/文本比为10/90%、20/80%、50/50%。早期方案在视觉知识、视觉推理、OCR、文本知识、代码上分别得25.8、43.8、65.7、45.5、24.8，除文本推理外整体优于中晚期（文本推理中期58.6，略高早期58.5）。该表作为训练策略消融，验证尽早、较低视觉占比融合更优，并为后续主模型确定训练配置。
+
 ### Table 2 (p.4) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab02.png]]
 > [!quote] caption

@@ -462,6 +462,22 @@ tags: []
 **3) 在论文整体链路中的作用**
 Table 14 属实验链路末端的"泛化性验证"环节：先以 OLMo-1B 证明 DHC 在稠密模型上的优势（Fig.14、Table 13 等），再以 OLMoE 证明其同样适用于稀疏专家架构，从而支撑"超连接是一种可即插即用的架构增强"这一核心论断。
 
+### Table 15 (p.33) ⭐深度解读
+![[assets/crops/hyper-connections-tab15.png]]
+> [!quote] caption
+> Results on downstream benchmarks for 1B models.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**表15图文联合解读**
+
+**1) 核心对象与数据**：以OLMo-1B（平均62.5）为基线，在7项下游任务（arc_easy/copa/hellaswag/openbook_qa/piqa/sciq/winogrande）上对比DHC/SHC变体在不同倍率n∈{1,2,4,8}及tanh/非trainable消融下的表现。最高分出现于**OLMo-1B-DHCx4 W/O tanh（64.4）**，较基线提升**+1.9**；DHCx4含tanh版本63.8次之。
+
+**2) 关键论证结论**：①DHC普遍优于基线，验证超连接架构的迁移增益；②n=4为性价比最优配置，继续增大n收益不增；③冻结W或B后DHC仍超越基线，证明残差映射的必要性。
+
+**3) 实验链路作用**：作为"下游任务泛化性"验证环节，与训练损失/困惑度分析互补，支撑论文关于超连接可作为残差连接即插即用替代的核心主张。
+
+（注：所附引用段落实为Figure 15训练曲线说明，与本表内容不对应。）
+
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
 $$

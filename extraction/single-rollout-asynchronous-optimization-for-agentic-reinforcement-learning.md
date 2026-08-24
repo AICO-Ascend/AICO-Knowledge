@@ -99,6 +99,20 @@ tags: [rl]
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】表1列出AIME2025、BeyondAIME、HMMT Nov 2025、IMOAnswerBench四个数学推理基准的准确率，对比闭源模型（Claude-Sonnet-4.5、GPT-5 High、GLM-4.7在AIME2025分别达87.0%/94.6%/95.7%）与Qwen3-30B-A3B的多种配置：原始模型调用python工具时表现极差（AIME仅14.6%），关闭工具后跃升至85.0%；SFT与GRPO分别将带工具配置提升至80.4%和84.2%（AIME）。该表构建基线参照系，与图1联合论证"SAO在四个推理与一个编码基准上全面超越Qwen3基线和GRPO"的核心技术结论，是论文实验验证链路中的对照基准表。
 
+### Table 2 (p.6) ⭐深度解读
+![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab02.png]]
+> [!quote] caption
+> Experimental Results on SWE-Bench Verified (Accuracy %).
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+Table 2对比Qwen3-30B-A3B在SWE-Bench Verified准确率：基线23.0%、+GRPO(w/ DIS) 27.0%、+SAO（本文）29.8%，SAO相对基线+6.8pp，相对GRPO再+2.8pp。底部曲线图补充AIME2025、BeyondAIME、HMMT-No三基准，SAO（紫）全程高于GRPO（蓝），与表2结论一致。
+
+**论证结论：** 单rollout+异步优化在异构长轨迹的agentic RL中显著优于同步GRPO，实现吞吐效率与最终精度的兼得。
+
+**链路作用：** Table 2与曲线共同构成SAO主体实证证据，配合图2异步调度示意图，从定性框架到SWE/数学多基准定量验证，形成"方法→结果"闭环，支撑全文"单轨迹即可训出更强agent"的核心论点。
+
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab03.png]]
 > [!quote] caption

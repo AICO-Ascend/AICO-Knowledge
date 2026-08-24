@@ -116,6 +116,20 @@ tags: []
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
+### Table 1 (p.8) ⭐深度解读
+![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab01.png]]
+> [!quote] caption
+> Ablation study on the hybrid ratio of KDA to MLA attention and other key components. We list the training and validation perplexities (lower is better) for comparison. The best-performing model, used in our final experiments, is highlighted in gray.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 1 图文联合解读：**
+
+Table 1 对比 5 种 KDA:MLA 混合比（0:1、1:1、3:1、7:1、15:1）的训练与验证困惑度。3:1（灰底高亮）取得训练 PPL 9.23、验证 PPL 5.65 的双优结果；纯 MLA（0:1）为 9.45/5.77，纯 KDA 过多（15:1）降至 9.34/5.82，整体呈倒 U 型分布。
+
+**技术结论：** 线性注意力 KDA 需略多于 MLA 但不能过度，3:1 为最佳配比，证明混合架构优于任一单组件，验证了 Kimi Linear 设计的合理性。
+
+**链路作用：** 作为核心消融依据，为最终模型结构选择提供经验支撑；与图 1 中 Pareto 最优性能（MMLU-Pro 51.0、RULER 84.3、3.98× 加速）衔接，构成"组件消融 → 架构定型 → 性能实证"的完整论证链。
+
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab02.png]]
 > [!quote] caption
@@ -139,6 +153,14 @@ tags: []
 
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】Table 4对比MLA、GDN-H、Kimi Linear（同1.4T token、同SFT）在12项短文指令基准的表现。Kimi Linear在General 6项中夺5冠（BBH 69.4、MMLU 77.0、MMLU-Pro 67.4、MMLU-Redux 80.3、GPQA-Diamond 62.1），仅LiveBench 45.2略输于GDN-H 46.4；Math & Code 6项再夺4冠（AIME 21.3、HMMT 12.5、PolyMath 43.6、LiveCodeBench 26.0），GDN-H仅MATH500 83.0领先，合计10/12胜出。论文据此论证：在同预训练+微调条件下，线性注意力的Kimi Linear可系统性击败全注意力MLA与混合GDN-H。该表承接图4合成任务对表达力的证明，将结论由受控实验推广至真实短文下游基准，是论文"理论→实用"证据链的关键环节。
+
+### Table 5 (p.12) ⭐深度解读
+![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab05.png]]
+> [!quote] caption
+> Comparisons of Kimi Linear with MLA, GDN-H, and Kimi Linear (RoPE) across long-context benchmarks. The last column reports the overall average ( ↑ ). All models is trained on 1.4T tokens. Best per-column results are bolded .
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】Table 5 在 8 个长上下文基准上对比 Kimi Linear、MLA、GDN-H、Kimi Linear(RoPE) 四种架构（均训于 1.4T tokens）：Kimi Linear 平均分 54.5 居首，分别超 MLA(52.2)、GDN-H(51.2)、RoPE 变体(51.8)，并在 RULER(84.3)、MRCR(29.6)、HELMET-ICL(90.0)、RepoQA(68.5)、Long Code Arena-Lib(37.1) 五项夺魁；MLA 仅在 LongBench V2、Frames、Commit 三项领先。原文借此验证"Kimi Linear 替换 MLA 后长程性能更优"的核心结论，与 Figure 5 缩放律曲线共同构成"架构设计→训练高效且长上下文更强"的闭环证据。
 
 ### Table 6 (p.14) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab06.png]]
@@ -173,6 +195,20 @@ tags: []
 > 【图文联合解读】**Table 8 图文解读**
 
 该表在相同激活参数（3B MoE）与训练量（5.7T tokens）条件下对比 Kimi-Linear-Base（48B 总参）与 Moonlight-Base（16B 总参）在 16 项基准上的表现。Kimi-Linear 在全部任务上均领先：通用类 TriviaQA 75.2 vs 66.2、MMLU-Pro 54.8 vs 42.4、WinoGrande 81.5 vs 74.6；数学类 MATH 58.5 vs 45.3、GSM8k 86.3 vs 77.2、CMATH 85.5 vs 79.6；代码类 CRUXEval-I-cot 61.0 vs 45.9、EvalPlus 64.9 vs 50.3；中文 C-Eval 83.3 vs 77.6、CSimpleQA 53.5 vs 34.7。原文借此论证新线性注意力架构在显著减少 KV 内存的同时不牺牲质量，且跨任务均稳定优于同等激活预算的标准 MoE 基线。该表是论文"效率–表达力等价"实验链路的关键支撑：在通用、数学、代码、中文多维度证明 Kimi-Linear 具备可扩展性与任务普适性。
+
+### Table 9 (p.28) ⭐深度解读
+![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab09.png]]
+> [!quote] caption
+> Performance of Kimi-Linear-Instruct and Moonlight-Instruct across diverse tasks.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+图片仅显示 Table 9 的局部——中文任务部分：在 C-Eval（5-shots）上，Kimi-Linear-Instruct 得 83.3，Moonlight-Instruct 得 77.6；在 CSimpleQA（5-shots）上，前者 53.5，后者 34.7。两列数值均显示 Kimi-Linear-Instruct 显著优于 Moonlight-Instruct，中文知识与推理任务差距分别达 5.7 与 18.8 分。
+
+**技术结论：** 该表用以证明 Kimi-Linear 采用线性注意力后，跨语言（含中文）的综合任务能力不仅未下降，反而优于同基座的 Moonlight，验证其在多样任务上的通用性与表达力。
+
+**作用：** 属于论文实验链路的综合评测环节，作为"多样化下游任务性能"的证据支撑核心主张——线性注意力架构在保持效率的同时不牺牲多任务表现。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

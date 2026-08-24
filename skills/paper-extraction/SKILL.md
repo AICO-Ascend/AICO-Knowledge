@@ -120,6 +120,12 @@ python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条
   - **below 模式也要链式 x 扩展**（行内引用锚点在单栏、通栏图被栏位 x 窗截断：longspec fig01/kimi-k3 fig06）；内容下界只认硬图形（sc=2 散文段会把 max_vis_y1 拖进正文）。
   - **LaTeXML SVG 的 CSS 变量**：`--ltx-fill-color/stroke-color` cairosvg 不认 var()，无 fill 元素继承根黑色 → 整图黑底（kimi-linear fig2）；`ar5iv_replace._resolve_ltx_css_vars` 展开变量再渲染。文字层在 SVG 子树外（HTML 绝对定位）的图 cairosvg 救不了 → 登记手工 PDF 区域裁剪进 ar5iv_crops.json（source 注明 manual-pdf-region）。
   - **黑图扫描先看 alpha**：透明 PNG convert('L') 透明处变黑，91%"黑图"可能是误报（kimi-k3 fig06/kimi-k2 fig03 均正常）。
+- **表格底纹与组合表头（2026-08-24 三轮沉淀，a-survey tab10/tab16 事故）**：
+  - **底纹判定页级化**：drawing 上有没有字决定它是不是表格底纹——`zones_with_text`：覆盖任一文字 span ≥60% 的 drawing = 单元格底纹（表格自身组成部分），永不排除；上面没字的才是图例/轴标记。按块判定会误杀邻行（色块常与相邻行块充气边缘相交）；按面积比/包含关系判定会被单元格 padding 和 10pt 越界打败。
+  - **并列单元格免证据**：同 y 带的 sc0 块是组合表头的并列单元格（a-survey tab10 六个表头单元格同带），逐个消耗 strong_ahead/edge 额度会在第二个单元格断行 → 同带直接收。
+  - **valid_table 接受强行少行表**：多列 sc0 表头 + ≥1 行 sc2 数据行（≥4 块）= 真表（specextend tab07 单行表）；纯散文采集全是 sc1 行过不了这条，防假表初衷不变。
+  - **采集窗 640pt**：三段堆叠子表（a-survey tab16 表体 500+pt）不被 420 窗砍尾；真正截断靠间距/节标题/caption/prose 闸。
+  - **边界案例走登记，不动全局**：gap 21pt 差 1pt 不过闸 + 节标题豁免双重边界（muon tab01 尾部两行节标题）——调全局规则收益不抵回归风险，手工区域裁剪登记 ar5iv_crops.json（manual-pdf-region）享 overlay 保护。
 
 ## 查询（任何工程）
 

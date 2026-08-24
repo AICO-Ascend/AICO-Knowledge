@@ -206,6 +206,14 @@ Table 1 展示的是数据合成智能体生成的合成问答样本示例。表
 **3) 在论文整体链路中的作用**
 Table 1 是数据合成流水线的可视化证据，向下承接 RL 训练所需的复杂长程搜索数据，为 ASearcher-Web-QwQ 在 GAIA/xBench 上 +15.0/+22.4 的性能跃升提供数据质量背书。
 
+### Table 2 (p.12) ⭐深度解读
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab02.png]]
+> [!quote] caption
+> Results with Local Knowledge Base.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】Table 2对比ASearcher-Local与基线在7B/14B两组、4多跳+3单跳QA上的F1/LasJ结果：ASearcher-Local-7B均值58.0/61.0、14B版59.7/63.6，均为各规模SOTA；多跳显著领先(2WikiMQA-F1=72.3/72.2、Musique-F1=34.4/35.6)，单跳与Search-R1-32B持平。论文借此论证：仅靠search+browsing双工具、无外部LLM的简洁agent经长程异步RL训练即可超越所有搜索增强基线，且7B即逼近32B对手(58.0 vs 58.7)。该表与Figure 2架构图呼应，作为封闭KB实验的核心性能基线，为后续开放Web实验奠基。
+
 ### Table 3 (p.12) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab03.png]]
 > [!quote] caption
@@ -221,6 +229,20 @@ Table 1 是数据合成流水线的可视化证据，向下承接 RL 训练所�
 **论证结论**：表3证明端到端异步RL在**开放Web（含噪声、动态页面）**环境中依然有效，Web版ASearcher在平均指标上接近甚至略超Local版本，验证了方法从封闭语料到真实网络的迁移能力。
 
 **整体作用**：与Figure 3的定性案例互补——图3展示复杂查询的行为优势，表3给出多基准量化证据，共同支撑"长视野异步RL+Web检索"的核心叙事。
+
+### Table 4 (p.13) ⭐深度解读
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab04.png]]
+> [!quote] caption
+> Results on GAIA, xBench-DeepSearch, and Frames. The results are evaluated with LLM- as-Judge. For baselines, we run the corresponding official codes for 4 seeds and report Avg@4 and Pass@4.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+1）**核心数据**：Table 4 在 GAIA、xBench-DeepSearch、Frames 三大搜索智能基准上对比 7B 与 14B/32B 两档基线（Search-R1、R1-Searcher、DeepResearcher、Simple DS 等），报告 Avg@4/Pass@4。绿色高亮的 ASearcher 系列表现最优：ASearcher-Web-14B 在 GAIA 达 76.1/80.7，Frames 达 36.6/33.7；ASearcher-Local-7B 在 GAIA 达 69.1/75.5，全面超越同规模基线。
+
+2）**关键结论**：验证 ASearcher 的大规模异步 RL 框架在长程、多轮检索推理任务上取得 SOTA，且 Web 检索设置普遍优于 Local 检索，说明真实搜索环境对性能增益关键。
+
+3）**链路作用**：与 Figure 4 数据合成管线形成闭环——"高质量长程 QA + 异步 RL" 为论文核心方法论，Table 4 是其在 GAIA/xBench/Frames 上的最终性能背书。
 
 ### Table 5 (p.14) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab05.png]]

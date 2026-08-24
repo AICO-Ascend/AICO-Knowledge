@@ -123,6 +123,20 @@ Table 2 对比 32k 长上下文下 MoE-27B 基线（50k 步, loss 1.63）与 Eng
 
 该表与Figure 5消融互证：mHC多分支融合、上下文门控、tokenizer压缩三大组件缺一不可，共同支撑Engram将"可扩展查找"确立为LLM稀疏性的新轴，并保证全文实验可复现。
 
+### Table 6 (p.35) ⭐深度解读
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab06.png]]
+> [!quote] caption
+> | The table illustrates Top-5 merged tokens by Tokenizer Compression and the overall compression ratio is 23.43% for our 128k tokenizer.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+1）该表展示了Tokenizer Compression方法在128k词表上合并频率最高的Top-5归一化token及其对应的原始token：排名第1为空格类`'□'`（163次合并），涵盖`\t`、`\n`、连续空格等空白变体；第2–5名依次为元音`'a'(54)`、`'o'(40)`、`'e'(35)`、`'i'(30)`，各合并大小写、前置空格及带变音符号的字符（如á/ä/ã/â、é/è/ê/ë等）。整体压缩率达23.43%。
+
+2）原文以此论证：压缩并非随机删除，而是优先合并高频冗余变体（空白与元音的大小写、空格前缀、变音符号），保留语义核心，验证方法的有效性与合理性。
+
+3）在论文中，该表为"可扩展查找的条件记忆"提供词表精简的实证依据，是支撑其新稀疏性轴心的关键实验证据之一。
+
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
 $$

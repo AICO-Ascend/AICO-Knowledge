@@ -337,8 +337,29 @@ def drawing_zones(drawings, page_area=1, blocks=()):
     return out
 
 
+def zones_with_text(zones, blocks):
+    """底纹色块判定：覆盖任一文字 span ≥60% 的 drawing = 表格单元格底纹
+    （色块上有字，是表格自身组成部分），永不视为污染；上面没字的才是
+    纯图形（图例 marker/轴元素）。页级判定——底纹常与相邻行块充气相交，
+    按块判定会误杀邻行（a-survey tab10/tab16 全表数据行被排除的根因）。"""
+    spans = [fitz.Rect(sp["bbox"]) for b in blocks if b["type"] == 0
+             for line in b.get("lines", []) for sp in line.get("spans", [])]
+    out = set()
+    for i, dr in enumerate(zones):
+        d = fitz.Rect(dr)
+        for sr in spans:
+            inter = sr & d
+            if not inter.is_empty and abs(inter) >= 0.6 * abs(sr):
+                out.add(i)
+                break
+    return out
+
+
 def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
-                         zones=()):
+                         zones=(), text_zones=()):
+    # 采集窗 ±640pt：堆叠子表（a-survey tab16 三段能力评测表 y91-592）
+    # 表体可超 500pt，420 窗会砍掉末段数据行；真正的截断靠间距/节标题/
+    # caption/prose 闸，不靠这个粗界
     """Consume table blocks from caption in given direction (+1 below, -1 above).
     Returns picked [(rect, block)] adjacent to the caption.
 
@@ -354,10 +375,10 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
         if b["type"] == 1:
             br = fitz.Rect(b["bbox"])
             if direction == +1:
-                if br.y0 < cap_rect.y1 - 2 or br.y0 > cap_rect.y1 + 420:
+                if br.y0 < cap_rect.y1 - 2 or br.y0 > cap_rect.y1 + 640:
                     continue
             else:
-                if br.y1 > cap_rect.y0 + 2 or br.y1 < cap_rect.y0 - 420:
+                if br.y1 > cap_rect.y0 + 2 or br.y1 < cap_rect.y0 - 640:
                     continue
             if br.x1 < x0 or br.x0 > x1 or br.width < 60 or br.height < 20:
                 continue
@@ -367,19 +388,26 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
             continue
         br = fitz.Rect(b["bbox"])
         if direction == +1:
-            if br.y0 < cap_rect.y1 - 2 or br.y0 > cap_rect.y1 + 420:
+            if br.y0 < cap_rect.y1 - 2 or br.y0 > cap_rect.y1 + 640:
                 continue
         else:
-            if br.y1 > cap_rect.y0 + 2 or br.y1 < cap_rect.y0 - 420:
+            if br.y1 > cap_rect.y0 + 2 or br.y1 < cap_rect.y0 - 640:
                 continue
         if br.x1 < x0 or br.x0 > x1:
             continue
         t = block_text(b)
         if not t or is_folio(br, t, page_h):
             continue
-        if zones and any(fitz.Rect(dr).intersects(br + (-8, -8, 8, 8))
-                         for dr in zones):
-            continue  # 与矢量绘制相交的文字（图例/轴标签），不是表格内容。
+        def _polluting(dr):
+            d = fitz.Rect(dr)
+            if d.height <= 3:
+                return False  # 表格横线（booktabs 横规），不是外来图形
+            if d.contains(br):
+                return False  # 行级底纹：文字坐在整行色块上
+            return d.intersects(br + (-8, -8, 8, 8))
+        if zones and any(_polluting(dr) for zi, dr in enumerate(zones)
+                         if zi not in text_zones):
+            continue  # 与无字矢量图形相交的文字（图例/轴标签），不是表格内容。
             # 用"块与绘制相交"而非"块在 zone bbox 内"：deepseek-v3 p13 的
             # 真表格行落在 Figure 5 zone 的 bbox 里但行上没有绘制
         cands.append((br, b, t))
@@ -408,6 +436,7 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
     edge_used = False   # 远端短表头/脚注吸收一次（deepseek-v3 tab5 的
                         # "Benchmark (Metric) # Shots..." 在表格远缘）
     prev_y = None       # 上一块的行进方向边缘 y
+    prev_br = None      # 上一拾取块（并列单元格 same_row 判定用）
     for i, (br, b, t) in enumerate(cands):
         # 间距闸：表格行是紧排的；与上一块间距 >22pt 且非强表格行 ⇒ 已离开
         # 表格（medusa tab1 与其上方 fig4 caption 之间有 23pt 断层，
@@ -437,17 +466,23 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
         need = 2 if len(picked) >= 3 else 1
         if wide_block and wordy and sc < 2 and not strong_ahead(i, need):
             break
+        # 与上一拾取块同 y 带的是并列单元格（多列组合表头：a-survey tab10
+        # 六个 sc0 表头单元格挤在 y125-146 同一带，逐个消耗 strong_ahead/
+        # edge 额度会在第二个单元格就断行）
+        same_row = prev_br is not None and br.y0 < prev_br.y1 - 2 \
+            and br.y1 > prev_br.y0 + 2
         if sc >= 1:
             picked.append((br, b))
-        elif len(t) <= 150 and (strong_ahead(i, 1) or not edge_used):
+        elif len(t) <= 150 and (strong_ahead(i, 1) or not edge_used or same_row):
             # 短 sc0 行：表格在后面继续 → 连接行（子表头）；
             # 否则作为远缘表头/脚注吸收一次
             picked.append((br, b))
-            if not strong_ahead(i, 1):
+            if not strong_ahead(i, 1) and not same_row:
                 edge_used = True
         else:
             break
         prev_y = br.y1 if direction == +1 else br.y0
+        prev_br = br
     return picked
 
 
@@ -686,6 +721,7 @@ def process_paper(slug, dpi, latex_slugs):
                     res["figures"].append(item)
             else:  # table: 方向判定 —— 紧贴 caption 的表格块在哪侧
                 zones = drawing_zones(page.get_drawings(), page.rect.width * page.rect.height, blocks)
+                t_zones = zones_with_text(zones, blocks) if zones else set()
                 if num in seen_tab:
                     continue
                 cols = page_columns(blocks, page.rect.width)
@@ -717,19 +753,19 @@ def process_paper(slug, dpi, latex_slugs):
                 # 堆叠表格 above=7>below=3 仍正确归属）。同分取上（caption-below）。
                 region = []
                 if above_adj and below_adj:
-                    ra = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones)
-                    rb = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones)
+                    ra = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones)
+                    rb = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones)
                     sa = sum(2 if b["type"] == 1 else block_table_score(b) for _, b in ra)
                     sb = sum(2 if b["type"] == 1 else block_table_score(b) for _, b in rb)
                     region = ra if sa >= sb else rb
                 elif above_adj:
-                    region = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones)
+                    region = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones)
                 elif below_adj:
-                    region = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones)
+                    region = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones)
                 if not region:
-                    region = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones)
+                    region = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones)
                     if not region:
-                        region = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones)
+                        region = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones)
                 # 表格有效性：区域里必须真有表格状内容（多单元格行/数字行/嵌入表图），
                 # 否则这块只是 caption+散文，宁可不裁也不产出假表格图（2026-08-24）
                 def valid_table(picked):
@@ -737,7 +773,13 @@ def process_paper(slug, dpi, latex_slugs):
                         return False
                     scores = [2 if b["type"] == 1 else block_table_score(b)
                               for _, b in picked]
-                    return sum(1 for s in scores if s >= 1) >= max(1, len(picked) // 2)
+                    # 多列组合表头全是 sc0 单元格（a-survey tab10：6 个表头
+                    # 单元格 + 4 行 sc2 数据行；specextend tab07：6 个表头
+                    # 单元格 + 1 行 sc2 数据行），过半校验会误杀真表 ——
+                    # 有 sc=2 强数据行且采到表头结构（≥4 块）同样是硬证据；
+                    # 纯散文采集全是 sc1 行，过不了这条（防假表的初衷不变）
+                    return sum(1 for s in scores if s >= 1) >= max(1, len(picked) // 2) \
+                        or (sum(1 for s in scores if s >= 2) >= 1 and len(picked) >= 4)
                 if not valid_table(region) and r.y0 < 100 and pno > 0:
                     # caption 顶页首、表体在上一页页尾（caption-below 被分页：
                     # scalable-moe tab19 "summarizes the notation" 推到下页顶）

@@ -615,5 +615,14 @@
   "page": 9,
   "caption": "Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lower gradient norms with fewer spikes, indicating more stable optimization.",
   "path": "assets/crops/kimi-k3-open-frontier-intelligence-fig06.png"
+ },
+ "assets/crops/muon-is-scalable-for-llm-training-tab01.png": {
+  "slug": "muon-is-scalable-for-llm-training",
+  "kind": "tab",
+  "num": 1,
+  "page": 6,
+  "caption": "Controlling Muon's Update RMS Across Different Model Params",
+  "path": "assets/crops/muon-is-scalable-for-llm-training-tab01.png",
+  "source": "manual-pdf-region (gap 21pt<22 闸+heading 豁免双重边界案例，全局规则不动)"
  }
 }
