@@ -775,5 +775,354 @@
   "page": 24,
   "caption": "Model configurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.",
   "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab10.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab10.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 10,
+  "page": 23,
+  "caption": "TABLE X: Comparison of Memory Management Techniques for KV Cache Optimization.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab10.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab12.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 12,
+  "page": 26,
+  "caption": "TABLE XII: Comparison of Hardware-aware Design Approaches for KV Cache Optimization.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab12.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab13.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 13,
+  "page": 28,
+  "caption": "TABLE XIII: Long-context Text Benchmarks.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab13.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab32.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 32,
+  "page": 78,
+  "caption": "An example of math evaluation, which applies to AIME, MATH, and CNMO. These benchmarks evaluate model performance on mathematical tasks.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab32.png"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab02.png": {
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "kind": "tab",
+  "num": 2,
+  "page": 15,
+  "caption": "Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red.",
+  "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab02.png"
+ },
+ "assets/crops/a-survey-of-large-language-models-tab05.png": {
+  "slug": "a-survey-of-large-language-models",
+  "kind": "tab",
+  "num": 5,
+  "page": 23,
+  "caption": "Model cards of several selected LLMs with public configuration details.",
+  "path": "assets/crops/a-survey-of-large-language-models-tab05.png",
+  "source": "manual-pdf-region (堆叠单元格块（整行单元格堆一个块）多 span 启发式全灭，walk 采到散文)"
+ },
+ "assets/crops/a-survey-of-large-language-models-tab11.png": {
+  "slug": "a-survey-of-large-language-models",
+  "kind": "tab",
+  "num": 11,
+  "page": 45,
+  "caption": "Typical LLM utilization methods and their key points for ICL, CoT, and planning.",
+  "path": "assets/crops/a-survey-of-large-language-models-tab11.png",
+  "source": "manual-pdf-region (同 tab05：堆叠单元格块 sc0，caption+表头即止)"
+ },
+ "assets/crops/a-survey-of-large-language-models-tab12.png": {
+  "slug": "a-survey-of-large-language-models",
+  "kind": "tab",
+  "num": 12,
+  "page": 47,
+  "caption": "A collection of useful tips for designing prompts collected from online notes and experiences from our authors.",
+  "path": "assets/crops/a-survey-of-large-language-models-tab12.png",
+  "source": "manual-pdf-region (同 tab05：长表体堆叠块被闸截断)"
+ },
+ "assets/crops/a-survey-of-large-language-models-tab18.png": {
+  "slug": "a-survey-of-large-language-models",
+  "kind": "tab",
+  "num": 18,
+  "page": 82,
+  "caption": "The activation memory consumption of each computation within the LLaMA model based on research work.",
+  "path": "assets/crops/a-survey-of-large-language-models-tab18.png",
+  "source": "manual-pdf-region (同 tab05：公式行 sc0 符号密)"
+ },
+ "assets/crops/deepseek-v3-technical-report-tab06.png": {
+  "slug": "deepseek-v3-technical-report",
+  "kind": "tab",
+  "num": 6,
+  "page": 31,
+  "caption": "Comparison between DeepSeek-V3 and other representative chat models.",
+  "path": "assets/crops/deepseek-v3-technical-report-tab06.png",
+  "source": "manual-pdf-region (行内引用 Table 6 presents 先于真 caption 占位采散文)"
+ },
+ "assets/crops/deepseek-v3-technical-report-fig01.png": {
+  "slug": "deepseek-v3-technical-report",
+  "kind": "fig",
+  "num": 1,
+  "page": 1,
+  "caption": "Benchmark performance of DeepSeek-V3 and its counterparts.",
+  "path": "assets/crops/deepseek-v3-technical-report-fig01.png",
+  "source": "manual-pdf-region (首页摘要末行卷入图区)"
+ },
+ "assets/crops/kimi-vl-technical-report-tab03.png": {
+  "slug": "kimi-vl-technical-report",
+  "kind": "tab",
+  "num": 3,
+  "page": 11,
+  "caption": "Performance of Kimi-VL against proprietary and open-source efficient VLMs.",
+  "path": "assets/crops/kimi-vl-technical-report-tab03.png",
+  "source": "manual-pdf-region (行内引用 Table 3 占位（p2），真表在 p11 整页)"
+ },
+ "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab01.png": {
+  "slug": "efficiently-serving-large-multimodal-models-using-epd-disaggregation",
+  "kind": "tab",
+  "num": 1,
+  "page": 7,
+  "caption": "Mean TTFT latency for varying video lengths at a fixed request rate.",
+  "path": "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab01.png",
+  "source": "manual-pdf-region (caption 在表下方，向上 walk 卷进 3 段散文)"
+ },
+ "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig03.png": {
+  "slug": "eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test",
+  "kind": "fig",
+  "num": 3,
+  "page": 3,
+  "caption": "Illustration of training-time test and its comparison with other draft methods.",
+  "path": "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig03.png",
+  "source": "manual-pdf-region (fig03/fig04 同页相邻，fig03 采集窗吞并 fig04 双图+caption+散文)"
+ },
+ "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png": {
+  "slug": "eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test",
+  "kind": "fig",
+  "num": 4,
+  "page": 3,
+  "caption": "Comparison of acceptance rates across different methods, with the x-axis representing the data scale relative to ShareGPT.",
+  "path": "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png",
+  "source": "manual-pdf-region (fig04 区域与 fig03 交叠且底部截断)"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab28.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 28,
+  "page": 76,
+  "caption": "C-EVAL evaluates a model’s breadth and depth of knowledge across 52 diverse academic disciplines, spanning humanities, social sciences, STEM (Science, Technology, Engineering, and Mathematics), and other professional fields (e.g., medicine, law). All question in C-Eval are Chinese.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab28.png"
+ },
+ "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig02.png": {
+  "slug": "dflash-block-diffusion-for-flash-speculative-decoding",
+  "kind": "fig",
+  "num": 2,
+  "page": 4,
+  "caption": "DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s Key-Value cache to enable conditional speculation.",
+  "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig02.png"
+ },
+ "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig04.png": {
+  "slug": "dflash-block-diffusion-for-flash-speculative-decoding",
+  "kind": "fig",
+  "num": 4,
+  "page": 5,
+  "caption": "DFlash training attention. The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens p and clean response tokens r. Within each masked block, a subset of clean response tokens (yellow) is randomly sampled as anchors, while mask tokens",
+  "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig04.png"
+ },
+ "assets/crops/kimi-k2-open-agentic-intelligence-fig04.png": {
+  "slug": "kimi-k2-open-agentic-intelligence",
+  "kind": "fig",
+  "num": 4,
+  "page": 6,
+  "caption": "Auto-regressive chunk-wise rephrasing pipeline for long input excerpts. The input is split into smaller chunks with preserved context, rewritten sequentially, and then concatenated into a full rewritten passage.",
+  "path": "assets/crops/kimi-k2-open-agentic-intelligence-fig04.png"
+ },
+ "assets/crops/kimi-vl-technical-report-fig09.png": {
+  "slug": "kimi-vl-technical-report",
+  "kind": "fig",
+  "num": 9,
+  "page": 14,
+  "caption": "Diverse OCR visualization. Kimi-VL demonstrates strong OCR capabilities across varied content types, including structured financial tables, complex mathematical formulas, and handwritten Chinese text. The model accurately parses tabular data into markdown, converts formulas to LaTeX, and transcribes",
+  "path": "assets/crops/kimi-vl-technical-report-fig09.png"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab03.png": {
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "kind": "tab",
+  "num": 3,
+  "page": 16,
+  "caption": "Architecture Configuration Details. A unified view of the parameter settings for Baseline (LLaMA-1.3B) and DLCM (2.3B). Values are presented as Baseline / Ours.",
+  "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab03.png"
+ },
+ "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig05.png": {
+  "slug": "nanoflow-towards-optimal-large-language-model-serving-throughput",
+  "kind": "fig",
+  "num": 5,
+  "page": 8,
+  "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig05.png",
+  "caption": "Figure 5: Interference characteristics between GEMM and\nGEMV kernels. The points on the x-axis corre",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig10.png": {
+  "slug": "sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills",
+  "kind": "fig",
+  "num": 10,
+  "page": 10,
+  "path": "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig10.png",
+  "caption": "Figure 10: Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU with var",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig01.png": {
+  "slug": "hybridflow-a-flexible-and-efficient-rlhf-framework",
+  "kind": "fig",
+  "num": 1,
+  "page": 3,
+  "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig01.png",
+  "caption": "Figure 1. Dataflow graph of 3 RLHF algorithms [19, 43, 55].\nStage 1○, 2○, 3○represent Generation, Pr",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig02.png": {
+  "slug": "hybridflow-a-flexible-and-efficient-rlhf-framework",
+  "kind": "fig",
+  "num": 2,
+  "page": 3,
+  "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig02.png",
+  "caption": "Figure 2. Programming model used in RLHF systems. (a)\nExisting RLHF systems adopt the multi-controll",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig08.png": {
+  "slug": "cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion",
+  "kind": "fig",
+  "num": 8,
+  "page": 7,
+  "path": "assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig08.png",
+  "caption": "Figure 8. Rank correlation of the KV deviation per token be-\ntween two consecutive layers.",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig03.png": {
+  "slug": "eagle-speculative-sampling-requires-rethinking-feature-uncertainty",
+  "kind": "fig",
+  "num": 3,
+  "page": 2,
+  "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig03.png",
+  "caption": "Figure 3: Uncertainty in feature sequences. The next fea-\nture following fI is contingent on the sam",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig05.png": {
+  "slug": "eagle-speculative-sampling-requires-rethinking-feature-uncertainty",
+  "kind": "fig",
+  "num": 5,
+  "page": 4,
+  "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig05.png",
+  "caption": "Figure 5: A comparison of the methods for drafting the\nfourth and fifth tokens, t4 and t5. t (repres",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig06.png": {
+  "slug": "eagle-speculative-sampling-requires-rethinking-feature-uncertainty",
+  "kind": "fig",
+  "num": 6,
+  "page": 4,
+  "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig06.png",
+  "caption": "Figure 6: Pipeline of EAGLE. The upper section illustrates\nthe computational process, while the lowe",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig05.png": {
+  "slug": "gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints",
+  "kind": "fig",
+  "num": 5,
+  "page": 4,
+  "path": "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig05.png",
+  "caption": "Figure 5: Performance as a function of uptraining pro-\nportion for T5 XXL models with MQA and GQA-8.",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab02.png": {
+  "slug": "gated-delta-networks-improving-mamba2-with-delta-rule",
+  "kind": "tab",
+  "num": 2,
+  "page": 5,
+  "path": "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab02.png",
+  "caption": "Table 2: Zero-shot performance comparison on S-NIAH benchmark suite for 1.3B models (see §4 for setu",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab03.png": {
+  "slug": "gated-delta-networks-improving-mamba2-with-delta-rule",
+  "kind": "tab",
+  "num": 3,
+  "page": 7,
+  "path": "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab03.png",
+  "caption": "Table 3: Performance comparison on language modeling and zero-shot common-sense reasoning.",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/root-mean-square-layer-normalization-fig06.png": {
+  "slug": "root-mean-square-layer-normalization",
+  "kind": "fig",
+  "num": 6,
+  "page": 8,
+  "path": "assets/crops/root-mean-square-layer-normalization-fig06.png",
+  "caption": "Figure 6 shows the R@K curve on validation set after\nevery 300 training steps, and Table 7 lists the",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab10.png": {
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "kind": "tab",
+  "num": 10,
+  "page": 26,
+  "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab10.png",
+  "caption": "Figure 10: Fine-grained offloading and recomputation: complementary memory optimization strategies.",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab01.png": {
+  "slug": "medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads",
+  "kind": "tab",
+  "num": 1,
+  "page": 2,
+  "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab01.png",
+  "caption": "Figure 1. MEDUSA introduces multiple heads on top of the last",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab02.png": {
+  "slug": "medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads",
+  "kind": "tab",
+  "num": 2,
+  "page": 4,
+  "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab02.png",
+  "caption": "Figure 2. We demonstrates the use of tree attention to process mul-",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig01.png": {
+  "slug": "eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees",
+  "kind": "fig",
+  "num": 1,
+  "page": 1,
+  "path": "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig01.png",
+  "caption": "Figure 1: Speedup ratios of different methods at tempera-\nture=1. For speculative sampling, the Vicu",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig07.png": {
+  "slug": "eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees",
+  "kind": "fig",
+  "num": 7,
+  "page": 5,
+  "path": "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig07.png",
+  "caption": "Figure 7: Illustration of EAGLE-2. The numbers beside the\nedges represent the confidence scores of t",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig01.png": {
+  "slug": "deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms",
+  "kind": "fig",
+  "num": 1,
+  "page": 1,
+  "path": "assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig01.png",
+  "caption": "Figure 1: Left: Conventional large multimodal models (LMMs) string all visual tokens into a\nsequence",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
+ },
+ "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig03.png": {
+  "slug": "efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm",
+  "kind": "fig",
+  "num": 3,
+  "page": 3,
+  "path": "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig03.png",
+  "caption": "Figure 3: GPipe pipeline schedule with forward passes (blue) for all microbatches (represented by nu",
+  "source": "manual-pdf-region (autofix converged, tight cluster for multi-figure page)"
  }
 }
