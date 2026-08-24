@@ -5,17 +5,13 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 685 张图，来自 68 篇论文；其中 ⭐658 张已深度解读。
+共 685 张图，来自 68 篇论文；其中 ⭐673 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
 ### IndexCache: Accelerating Sparse Attention via Cross-Layer In — Fig.1 (p.1)
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-该图为条形对比图，横轴列出5个基准（HLE、HLE w/ tools、SciCode、AIME25、IFBench），蓝/灰双柱对照 GLM-5 与 GLM-5+IndexCache：得分几乎持平（30.4/30.4、50.4/50.3、45.0/47.0、95.9/95.9、71.0/70.0），SciCode 略升，验证"性能无损"。
-
-原文借此论证：IndexCache 跨层复用 indexer，省去 50% 索引计算，端到端仍可获约 1.2× 加速，是支撑"稀疏注意力高效化"主张的关键实验锚点，位于论文开篇以快速建立方法的可信度与价值印象。
+> [!tip] 【图文联合解读】图1以柱状图对比GLM-5与加挂IndexCache（保留1/2索引器）在10项基准的得分：长上下文侧MRCR v2(71.1→72.3)、Graph Walks(92.7→90.8)、LongBench v2(64.5→66.0)、RULER(97.7→97.3)、AA-LCR(66.2→67.2)；推理侧HLE(30.4/30.4)、HLE w/tools(50.4→50.3)、SciCode(45.0→47.0)、AIME25(95.9/95.9)、IFBench(71.0→70.0)。原文据此得出核心结论：跨层索引复用削减50%索引器计算后，两类任务分差均≤2，性能近乎无损，并获约1.2×端到端加速。该图作为首篇首图，承担"精度无损换效率"的初始立证，为后续跨层缓存机制、Table 1的端到端推理解析与全文方法链奠定实验入口。
 *caption: Benchmark comparison between GLM-5 and GLM-5 + IndexCache. IndexCache removes 50% of indexer computations while maintaining comparable performance acr… ｜ 论文 [[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]] ｜ arxiv 见 MD 元信息*
 
 ### IndexCache: Accelerating Sparse Attention via Cross-Layer In — Fig.2 (p.3)
@@ -25,9 +21,13 @@
 
 ### IndexCache: Accelerating Sparse Attention via Cross-Layer In — Fig.3 (p.8)
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图3联合解读**
 
-图3以30B模型为对象，柱状图对比DSA基线与IndexCache在两种索引粒度（1/2 indexer、1/4 indexer）下的相对加速比。(a) Prefill阶段加速随上下文长度递增：10K时1/2与1/4索引器分别为121%/127%，200K时提升至142%/**182%**；(b) Decode阶段同样呈正相关，10K为115%/124%，60K达119%/更高值。原文借此论证：IndexCache通过跨层索引复用，在更长上下文与更稀疏的索引器配置下收益放大，证明其方法在prefill/decode全流程均稳定超越DSA基线，是论文"稀疏注意力高效加速"主张的核心定量证据。
+**核心对象与数据**：该图以三组柱状子图对比30B模型上IndexCache相对DSA基线（归一化100%）的加速比——(a) Prefill时间、(b) 单请求Decode吞吐、(c) 全量Decode吞吐，横轴为10K/60K/120K/200K四种上下文长度，纵轴为相对加速百分比，对比1/2与1/4索引器保留两种配置。量化看：1/4配置在200K时三场景分别达182%、148%、151%；1/2配置同条件亦达142%、126%、128%；加速比随上下文长度单调递增。
+
+**技术结论**：跨层索引复用可显著削减稀疏注意力计算与存储开销，且序列越长、索引器压缩越激进，收益越显著。
+
+**论文作用**：与Table 3精度结果互补，构成"效率—精度"实验闭环，支撑IndexCache作为DSA推理加速方案的实用价值论证。
 *caption: Relative speedup of IndexCache over the DSA baseline across three inference settings on the 30B model. DSA baseline is normalized to 100%.… ｜ 论文 [[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]] ｜ arxiv 见 MD 元信息*
 
 ### IndexCache: Accelerating Sparse Attention via Cross-Layer In — Fig.4 (p.16)
@@ -56,9 +56,11 @@
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig02.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示Medusa的树形注意力（Tree Attention）机制：左侧为候选树——根节点（Root）下挂Head1的两个token "It/I"，每个再分支出Head2的"is/./the"三选项，构成2×3共6条候选路径；右侧为对应的**Tree Mask矩阵**（8列Key对应候选序列，行对应Query），每行仅在与自身及祖先token对应的位置打勾（如查询"the"可关注"It/is/./the"），形成稀疏的因果掩码。
+图示Medusa候选树与Tree Mask的对应关系。左侧树结构自顶向下展开：Head 1产出2个候选（It/I）置于位置1-2；Head 2产出3个候选（is/'/the），分别置于位置2-4与位置5-7（第二层），颜色按Key行标识。右侧7×7 Tree Mask为稀疏下三角模式，每行候选仅勾选其前缀节点（如第4行仅勾选第1、4列），实现一次前向并行验证。
 
-原文据此论证：凭借MEDUSA多头输出天然的分层预测结构，自顶向下构建候选树，可使单次前向传播**并行验证多条续写**；该稀疏掩码是Medusa推测解码管线中实现批量验证的关键组件，相较Miao等自底向上合并草稿候选的方法，更契合多头预测的分叉特性，从而在保证准确性的同时显著加速推理。
+**原文论证：** 与Miao等、SpecTr自底向上合并draft候选不同，Medusa利用多头预测的结构性自顶向下建树，使Tree Attention能在一个forward pass中并行校验所有分支。
+
+**论文作用：** 该机制是Medusa加速的核心——将多head并行预测与Tree Attention结合，把串行自回归解码压缩为单次并行校验，为后续冻结backbone训练策略与吞吐加速实验提供基础。
 *caption: Remarkably, similar ideas have also been explored in independent works like Miao et al. (2023); Spector & Re (2023), where they follow a bottom-up app… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.3 (p.7)
@@ -145,44 +147,65 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.11 (p.19)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig11.png]]
-> [!tip] 【图文联合解读】**图11核心**：Llama-33B在A100-80GB-PCIe上的Roofline图，横轴算术强度1→10k FLOP/Byte，纵轴性能10G→100T FLOP/s；红虚线为312 TFLOP/s计算上限，蓝虚线为1935 GB/s带宽斜线（交叉点ridge）。六类算子（qkv/mlp、up·gate·down、qk·pv）分init（prefill）与ar（decode）两阶段。ar阶段点几乎全集中在强度~1、低于ridge的带宽受限区（10G–1T FLOP/s），远未触及计算上限。
+> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
 
-**论证结论**：LLM推理（尤其自回归decode）为memory-bound而非compute-bound，硬件算力大量闲置。
+该Roofline图横轴运算强度1→10k FLOP/Byte，纵轴10G→300T FLOP/s；蓝虚线1935 GB/s带宽上限，红虚线312 TFLOP/s算力上限。qk/pv ar（棕×）密集聚集于强度≈1、性能仅0.07–2T的强内存受限区；up/gate/down ar（红×）位于强度3–20、性能3–10T，同样受带宽制约；qkv mlp ar（橙×）与qk/pv init（紫×）位于强度30–100的过渡区；qkv mlp init（蓝×）、up/gate/down init（绿×）则集中于强度≥300、紧贴312 TFLOP/s的算力受限区。
 
-**论文作用**：为Medusa多head并行猜测与验证提供硬件动机——将decode批量化、提升算术强度，向compute-bound区域迁移，从而释放被浪费的算力、加速推理。
+**技术结论**：ar解码阶段qk/pv注意力算子严重受内存带宽瓶颈限制，几乎未触及A100算力上限。
+
+**论文作用**：作为硬件瓶颈量化证据，为Medusa多解码头方案提供动机——通过一次前向预测多token，提升ar阶段算术强度，突破带宽墙。
 *caption: Llama-33B operators on A100-80GB-PCIe. 1 10 100 1k 10k… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.12 (p.19)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig12.png]]
-> [!tip] 【图文联合解读】图12为Llama-7B在A40上的Roofline模型：横轴运算强度1→10k (FLOP/Byte)，纵轴性能10G→100T (FLOP/s)；蓝虚线为带宽上限696 GB/s，红虚线为算力上限149.7 TFLOP/s，绿竖线标示转折点（≈200）。图中标注六类算子（qkv、mlp、up/gate/down、qk/pv）在init与ar两阶段的位置：qk/pv的ar阶段落在强度≈1、性能仅10G–1T的强内存受限区，远低于带宽线；qkv/mlp矩阵运算则位于强度≈100、性能10T+的算力受限区。结合图11，本图量化说明ar解码阶段注意力算子严重受内存带宽制约，论证了Medusa多解码头方案通过单次前向预测多token、提升算术强度以突破该瓶颈的必要性。
+> [!tip] 【图文联合解读】图测的是 Llama‑7B 在 A40 上 QKV/MLP、up/gate/down、QK/PV 三组算子的 init/AR Roofline 点：强度约1–3000 FLOP/B，性能约0.04–130 TFLOP/s；带宽与算力屋顶分别为696 GB/s、149.7 TFLOP/s，拐点约215 FLOP/B。交点左侧的AR，尤其是强度约1的QK/PV（≤0.7 TFLOP/s），明显受带宽限制；高强度init算子则接近计算峰值，说明逐token瓶颈是访存。该图用于连接算子分析、Medusa多头并行提出候选并树式验证多token的动机，以及端到端加速实验。
 *caption: Llama-7B operators on A40. 19… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.13 (p.20)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig13.png]]
-> [!tip] 【图文联合解读】图13为Llama-13B在A40上的算子roofline图。横轴运算强度1–1000，纵轴性能10G–100T；红色虚线~150TF为A40算力峰值，蓝色虚线为带宽屋顶。数据分三簇：低强度(~1)棕色×约50G–700G，属显存受限；中强度橙色×约0.7–3T，处于过渡区；高强度(~100–200)紫色×达10–30T，逼近算力上限。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-原文论证：(1)基座LLM推理为memory-bound，受限于带宽屋顶；(2)Medusa新增多个解码头，将负载推向高强度区、靠近计算峰值，从而利用原本闲置的算力。
+1) 该图为 Llama-13B 在 A40 上的算子 Roofline 图，横轴运算强度(1–10k FLOP/Byte)，纵轴性能(10G–100T FLOP/s)；含 696 GB/s 内存带宽天花板(蓝虚线)、149.7 TFLOP/s 算力天花板(红虚线)及脊点 ≈200(绿虚线)；六类算子（qkv/mlp、up/gate/down、qk/pv 的 init 与 ar 版本)以散点分布。
 
-在论文中的作用：为"Medusa把负载由访存瓶颈推向算力饱和区"提供算子级roofline建模支撑，解释其多预测头并行解码的加速机理。
+2) AR(自回归)算子集中于 <200 FLOP/Byte 低强度区，贴带宽天花板运行，属 memory-bound；init(预填)算子位于高强度区(>1k)，贴算力天花板，属 compute-bound。
+
+3) 该图论证 AR 解码阶段 A40 算力严重富余，Medusa 多解码头可借此并行预测多 token 而不撞算力瓶颈，支撑论文"以空闲算力换访存带宽"的核心加速逻辑。
 *caption: Llama-13B operators on A40. 1 10 100 1k 10k… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.14 (p.20)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig14.png]]
-> [!tip] 【图文联合解读】图14为Llama-33B在A40上的Roofline模型：横轴为运算强度，纵轴为FLOP/s（对数刻度）。红色虚线标A40峰值算力约100T FLOP/s，蓝色斜线表示内存带宽天花板。橙色×簇集中于强度≈1、性能50G–1T FLOP/s（LayerNorm、attention等访存受限算子）；紫色×簇位于强度≈50–80、性能10–30T FLOP/s（GEMM等计算受限算子）。论文借此论证：访存受限算子远未触及算力峰值，是LLM推理瓶颈；Medusa多头并行预测可聚合访存受限运算、提升等效运算强度并向计算受限区迁移，为其加速框架提供硬件层动因。
+> [!tip] 【图文联合解读】**图14图文联合解读**
+
+图14为Llama-33B在A40上的Roofline模型：横轴为算术强度(FLOP/Byte, 对数1–10k)，纵轴为性能(FLOP/s, 对数10G–100T)，标出A40的696 GB/s带宽线(蓝虚)、149.7 TFLOP/s算力峰(红虚)及二者交点≈215 FLOP/Byte(绿竖虚线)。共绘制6类算子：qk/pv_ar(棕)位于强度≈1、性能仅50M–500M FLOP/s，严重memory-bound；qk/pv_init(紫)、qkv_mlp_ar(橙)、up_gate_down_ar(红)处于强度5–150、1–100T的过渡/带宽侧；仅qkv_mlp_init(蓝)与up_gate_down_init(绿)在强度>200处贴近149.7T上限，属compute-bound。
+
+**关键论证**：自回归解码阶段qk/pv等注意力算子被内存带宽锁死，单纯堆参数无法提升token吞吐；因此需借助Medusa多头并行预测+树形验证来掩盖该memory-bound延迟。
+
+**链路作用**：以硬件roofline量化瓶颈，为后续Medusa加速比与吞吐实验提供根因依据，串联"瓶颈分析→多头解码方案→实测加速"的论证闭环。
 *caption: Llama-33B operators on A40. 20… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.15 (p.21)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig15.png]]
-> [!tip] 【图文联合解读】**核心对象与结构**：Llama-7B 在 A6000 上的算子级 roofline 图。X 轴为算子强度 FLOP/Byte（1→10k，对数），Y 轴为性能 FLOP/s（10G→100T，对数）；红线 181 TFLOP/s 为算力天花板，蓝线 768 GB/s 为带宽上界，绿线约 270 处为岭点；×标记涵盖 qkv、mlp up/gate/down、qk/pv 等算子在 init（prefill）与 ar（decode）两种工作点。
+> [!tip] 【图文联合解读】**图15联合解读（Llama-7B Roofline on A6000）**
 
-**关键结论**：qk/pv 等注意力算子在两种阶段均落在左坡 ~1 FLOP/Byte、低性能 30G–700G 区，呈带宽受限；mlp up/gate/down 集中于高强度 50–300 FLOP/Byte 处逼近峰值；decode 阶段算子强度普遍低于岭点，整体深陷 memory-bound 区域。
+1) **核心对象与数据**：Roofline图，横轴为算术强度1–10k FLOP/Byte，纵轴性能10G–100T+ FLOP/s（log）；带宽上限768GB/s（蓝），算力上限181 TFLOP/s（红），拐点约在~200 FLOP/Byte附近。标注6类算子×两阶段：qkv/mlp、up/gate/down、qk/pv 的 init（prefill）与 ar（decode）。
 
-**论文作用**：以 roofline 量化论证 autoregressive decode 受带宽而非算力制约，多头并行验证不会加剧计算压力，为 Medusa 多解码头加速方案提供算子级理论与实验支撑。
+2) **关键技术结论**：
+- **init 阶段**（蓝/绿/紫）集中右侧算力受限区，性能≈100T FLOP/s，逼近181 TFLOP/s 峰值 → compute-bound；
+- **ar 阶段** qkv/mlp、up/gate/down（橙/红）贴带宽线 → memory-bound；
+- **qk/pv ar**（棕）强度仅~1 FLOP/Byte，性能仅0.1–1 TFLOP/s，严重欠载，是 decode 端最关键瓶颈。
+
+3) **在论文中的作用**：该图定量证明 LLM 自回归阶段受内存带宽而非算力限制，而多 head 并行预测（Medusa）可一次前向摊销 memory-bound 开销，是其加速方案的核心动机与硬件层依据。
 *caption: Llama-7B operators on A6000. 1 10 100 1k 10k… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.16 (p.21)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig16.png]]
-> [!tip] 【图文联合解读】该图是Llama-13B在A6000上的Roofline图：横轴运算强度1–10k FLOP/Byte、纵轴性能10G–100T FLOP/s（均对数），蓝虚线为768 GB/s带宽天花板，红虚线为181 TFLOP/s算力上限。算子（qkv、mlp、up/gate/down、qk/pv）以×标于init（prefill）和ar（decode）两工况。ar解码算子集中于~1 FLOP/Byte、性能仅40–700G FLOP/s，受带宽严重制约；init预填充算子沿斜线攀升至5–40T FLOP/s，已逼近算力上限。关键结论：自回归解码为内存瓶颈，单token串行访存浪费算力——这正是Medusa多头并行解码的实证动机：一次预测多token以摊薄权重加载开销、提升带宽利用率，构成论文"多解码头加速框架"的核心论证依据。
+> [!tip] 【图文联合解读】**图16联合解读：Llama-13B 在 A6000 上的 Roofline 算子画像**
+
+**1) 核心对象与数据：** 横轴为算子强度（FLOP/Byte, 1–10k 对数轴），纵轴为实测性能（FLOP/s, 10G–100T+）。蓝虚线为 A6000 显存带宽屋顶 768 GB/s，红虚线为算力屋顶 181 TFLOP/s，二者交点（绿色竖线）位于约 236 FLOP/Byte。图上标注 6 类算子 × 两阶段（init/ar）：qkv·mlp（蓝/橙）、up·gate·down（绿/红）、qk·pv（紫/棕）。
+
+**2) 关键结论：** init 阶段算子（qkv/mlp/up/gate/down）密集聚集于右侧 ~181 TFLOP/s 屋顶线，呈 compute-bound；而 ar 阶段 qk/pv（注意力）算子严重偏向左侧，强度仅 ~1 FLOP/Byte、实测仅 ~40 GFLOP/s，与屋顶存在 3–4 个数量级落差，暴露自回归解码中注意力访存瓶颈巨大。
+
+**3) 在论文中的作用：** 该 Roofline 为 Medusa 的多头投机解码提供量化动机——通过 tree attention 将多候选 token 的 qk/pv 批处理，等效提高注意力算子的算术强度，使其从 memory-bound 推向 compute-bound 区，从而释放 GPU 算力，支撑后续约 2× 吞吐加速的实验结论。
 *caption: Llama-13B operators on A6000. 21… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.17 (p.22)
@@ -209,24 +232,24 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.19 (p.24)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig19.png]]
-> [!tip] 【图文联合解读】**图19解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1）图为 Llama 33B 在序列长度 1024 下，注意力矩阵乘法（QK/PV 投影）的 Roofline 模型：横轴为算术强度（1–30+），纵轴为实测 FLOP/s（10G–100T+）。红色虚线为硬件峰值算力约 300T FLOP/s，蓝色虚线为显存带宽上限。灰色点（强度≈1）处于带宽受限区，仅达 100G–1T FLOP/s；橙色点（强度≈10）约 5–50T；紫色点（强度≈20–30）约 30–80T，整体均远低于算力峰值线。
+**1) 图示对象与数据：** Llama 33B 在 A100 80GB PCIe 上的 roofline 分析，横轴为 Operational Intensity（1–10k FLOP/Byte），纵轴为 Performance（10G–100+T FLOP/s）。蓝色虚线为内存带宽上界 1,935 GB/s，红色虚线为计算峰值 312 TFLOP/s，绿色竖线标示脊点。灰色点（ar 自回归 qk/pv）位于强度≈1、约1T FLOP/s；橙色到紫色 Medusa 候选数 16/32/48/64/80/96/112 的 qk/pv 点集中在强度 15–50、性能 5–80T FLOP/s 区间。
 
-2）该图论证：注意力层属 memory-bound，其瓶颈在于权重加载而非算力，因此通过多 token 投机解码可摊销访存开销、获得加速——为 Medusa 的核心动机提供硬件层面依据。
+**2) 关键技术结论：** 所有 Medusa qk/pv 注意力点均贴附在蓝色内存带宽线上，远低于 312 TFLOP/s 计算上限，且未越过脊点——表明即便候选数增至 112，qk/pv 注意力仍严格处于**带宽受限**区，其开销被显存带宽余量掩盖，不挤占计算资源。
 
-3）与 Fig.20（线性层分析）共同支撑论文"M 型推理应以减少访存为目标"的主张，奠定多解码头方法论的硬件合理性。
+**3) 在论文中的作用：** 与 MLP 层计算受限的图互补，从硬件 roofline 层面定量解释 Medusa 加速来源——注意力验证代价由带宽吸收、MLP 层靠更多 token/step 利用计算能力，构成核心实验证据链，支撑"多解码头几乎无额外计算开销"的关键设计论断。
 *caption: FLOP/s vs. Operational Intensity of attention matrix multiplication with sequence length 1024. 1 10 100 1k 10k… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.20 (p.24)
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig20.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 20）**
 
-1) 该图为 Llama 33B 在 A100 上 up/gate/down 线性层的 roofline 图。横轴 Operational Intensity 约 0.7–30+，纵轴 FLOP/s 从 10G 跨越至 100T 以上；灰色低候选数点紧贴蓝色带宽边界斜线（~1T→10T），橙色与紫色高候选数点在强度 ~20–30 处抬升至 ~20T–100T，向红色虚线代表的算力天花板（约 200T+）逼近。
+**核心对象与结构**：Llama 33B 在 A100 80GB PCIe 上线性层的 Roofline 模型。双对数坐标，横轴为运算强度（FLOP/Byte, ~0.5–10k），纵轴为实测 FLOP/s（10G–1000T）。蓝色虚线为内存带宽上界 1,935 GB/s，红色虚线为算力上界 312 TFLOP/s，绿色垂线约在 140–150 FLOP/Byte 标出山脊点。散点按 up/gate/down 在不同 SPEC（16/32/48/64/80/96/112）及 AR 模式采集。
 
-2) 原文以此论证：随 Medusa 接受候选数从 16 增至 112，每字节权重/KV 上执行的 FLOP 增多，kernel 由带宽受限区向右上方迁移；高候选时 MLP 线性层几近饱和 A100 Tensor Core（312 TFLOP/s 上限），说明额外投机验证是"免费算力"，可被线性层摊销利用。
+**技术结论**：SPEC≤48 的小规模线性层沿蓝色带宽斜线线性攀升，呈典型 memory-bound；SPEC≥64 后趋于饱和、逼近 312 TFLOP/s 红色极限，转为 compute-bound。该图以硬件实测定量划分了两类线性层的瓶颈区间。
 
-3) 与 Fig. 19（qk/pv 注意力仍处于带宽限以下）互补，从硬件 roofline 层面定量解释 Medusa 推理加速的来源——验证开销在 MLP 层被计算能力吸收，构成论文核心实验证据链。
+**在论文中的作用**：为 Medusa 多头并行预测提供理论支撑——Medusa head 等小线性层属 memory-bound，通过一次前向预测多 token 再批量验证，可显著压低访存次数，正是论文提升多步解码吞吐的核心动机。
 *caption: FLOP/s vs. Operational Intensity of Linear layers. 24… ｜ 论文 [[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]] ｜ arxiv 见 MD 元信息*
 
 ### MEDUSA: Simple LLM Inference Acceleration Framework with Mul — Fig.21 (p.26)
@@ -262,7 +285,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.1 (p.1)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig01.png]]
-> [!tip] 【图文联合解读】图含上下两幅折线图，以LLaMA-3.1-8B-Instruct为target、在MT-bench上对比EAGLE-2（红）与EAGLE-3（蓝），x轴为1/2/4/8×ShareGPT。上图Speedup：EAGLE-3由~3.7单调升至~4.4，EAGLE-2在~3.2处趋于饱和；下图Accept length：EAGLE-3由~5.2升至~6.1，EAGLE-2始终贴近~4.1。图用以论证：EAGLE-3的新架构打破了前作随数据增大迅速饱和的瓶颈，首次呈现持续上升的scaling law。作为开篇Figure，它奠定全文核心动机——更多训练数据带来更大加速收益，为后续架构设计、训练策略与实验验证提供支撑。
+> [!tip] 【图文联合解读】**图文联合解读**
+
+图1含两条子图：上图为**Speedup**、下图为**Accept length**，横轴均为训练数据相对ShareGPT的倍数（1/2/4/8×），评测任务为MT-bench，目标模型为LLaMA-3.1-8B-Instruct。红色EAGLE-2在两指标上几近饱和（speedup≈3.1→3.3，accept≈4.0→4.2），蓝色EAGLE-3则随数据量单调递增（speedup 3.7→4.4，accept length 5.2→6.1）。
+
+论文据此论证：**EAGLE-3的新架构突破了EAGLE-2因特征预测受限导致的数据扩展瓶颈**，首次在投机解码中观察到持续可扩展的scaling curve，而此前工作从未出现。
+
+作用上，该图作为开篇核心证据，定调全文研究动机——通过设计层面的创新解锁test-time training scaling能力，为后续方法细节、全模型/全任务加速比实验（Figure 2）以及与EAGLE、EAGLE-2的全面对比奠定前提。
 *caption: Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target model, with the x-axis representing the data scale relative to ShareGP… ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.2 (p.2)
@@ -272,53 +301,56 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.3 (p.3)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig03.png]]
-> [!tip] 【图文联合解读】**图3 联合解读**
+> [!tip] 【图文联合解读】**图3联合解读**
 
-1) **核心结构**：图分三层对比。上层EAGLE：训练Step1用真实特征f_t预测f̂_{t+1}、t̂_{t+2}（含l_fea、l_token双损失），测试Step2串行自回归f̂→t̂；中层EAGLE+l_fea去除版：改输出无约束向量â，仅l_token，但测试时t̂_{t+3}≉ t_{t+3}（红错号）暴露训练-测试失配；底层EAGLE-3（training-time test）：训练时把Step1预测的â_{t+1}回灌为Step2输入（红虚线箭头"Training-time test"），使训练/测试一致，Step2输出t̂_{t+3}≈t_{t+3}。
+1) **核心对象**：三幅上下对照的draft流程图。上为原EAGLE：Training时以特征序列$f_1\cdots f_t$输入Draft模型，Step1输出$\hat f_{t+1}$（$l_{fea}$），Step2经LM head输出$\hat t_{t+2}$（$l_{token}$）。中为EAGLE+$l_{fea}$去除：改用无约束向量$\hat a_{t+1}$，Test时$\hat t_{t+3}\neq t_{t+3}$（红字标错）。下为EAGLE-3：Training/Test均执行Step1→Step2自回归，并以红色虚线"Training-time test"将Step1预测$\hat a_{t+1}$回灌为Step2输入。
 
-2) **关键结论**：原文指出EAGLE训练用真特征、测试用预测特征，存在分布偏移；将Step1纳入训练循环后，模型学会在自身预测误差下仍保持稳定，使增加训练数据的收益更显著，验证了training-time test的必要性。
+2) **关键结论**：去掉特征预测会暴露train-test分布失配；将Step1纳入训练后，8×数据下α-α由~0.78升至~0.80、SP由~0.69升至~0.78，证明训练分布与测试对齐才能让数据规模转化为draft接受率增益。
 
-3) **论文作用**：作为EAGLE-3方法论核心图，奠定"训练模拟推理时自回归"原则，衔接后续消融与scaling实验，为EAGLE-3在更大数据/模型下的加速增益提供机制依据。
+3) **作用**：作为EAGLE-3的核心创新，支撑"scaling law"与相对EAGLE-2的1.4×延迟加速结论。
 *caption: Illustration of training-time test (the bottom part) and its comparison with other draft methods (the upper and middle parts). f denotes the feature, … ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.4 (p.2)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图4横轴为相对ShareGPT的训练数据规模（1/2/4/8倍），纵轴为接受率0-α，对比EAGLE、EAGLE-3及去掉特征预测的EAGLE三条曲线。EAGLE从约0.755升至0.784即饱和；EAGLE-3起点最低（≈0.722）但斜率最陡，于4倍处反超原EAGLE并达≈0.801；无特征预测版本始终居前（8倍≈0.812）。
-
-该图印证原文关键结论：原EAGLE对数据扩展几乎无感，而采用"training-time test"将Step 1融入训练后，数据扩展收益被显著放大，使EAGLE-3在大数据规模下超越基线。此图作为支撑"训练-测试一致性"核心设计的可扩展性证据，串联起方法动机与后续加速比的实验链。
+> [!tip] 【图文联合解读】图4左侧给出EAGLE训练/测试两阶段流程（特征f_t预测f̂_{t+1}，再经LM head预测token）；右侧两折线图横轴为ShareGPT 1×–8×数据量下的接受率：EAGLE（红）较平稳；无特征预测版（黄）左图升至≈0.81但右图仅≈0.2–0.3；EAGLE-3（蓝）起点最低但随数据增速最快，8×时反超达≈0.80/0.78。原文据此论证：将测试时推理结构（Step1特征预测）纳入训练（training-time test）可显著放大数据扩展收益，是EAGLE-3关键改进。该图与Figure 3方法图互补，配合Table 4吞吐数据共同构成"训练时测试"有效性的完整证据链。
 *caption: We can address this issue by incorporating Step 1 into the training process (the bottom of Figure 3). Using this method, the benefits of increasing tr… ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.5 (p.4)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心结构**：左为冻结的Target Model，经Embedding、两层Decoder Layer后输出低/中/高层特征 $l_{how}, m_{how}, l_{can}, m_{can}$（高层 $h$ 未在图中绘出）；右为Draft Model的三步流水线——① FC Layer融合目标特征 $g$ 与上下文embedding $e$；② Decoder Layer自回归展开序列；③ 仅LM Head扩展为多分支候选树（"can"/"I"/"do"）。
+该图展示EAGLE-3推理流水线的双塔结构：左侧为目标模型，自Embedding经多层Decoder依次输出低(l)、中(m)、高(h)三级特征及嵌入e；右侧为草稿模型的三步骤（①②③），每步通过FC层+Decoder层+LM Head自回归预测候选token（can/I/do/it），输入融合多级特征与token嵌入。
 
-2) **关键论证**：EAGLE-3通过**训练时测试**让Draft Model直接消费Target Model的**多层特征（l/m/h）**而非仅末层hidden state，并以三层架构（FC→Decoder→LM Head）实现"特征融合→序列自回归→树状并行候选"解耦，使草稿生成既保留目标模型语义信息、又获得高吞吐候选。
+该图论证的关键结论：相较EAGLE/EAGLE-2仅复用顶层特征，EAGLE-3同时融合低、中、高三级特征与嵌入，使小容量草稿模型更精准逼近大模型分布，提高投机解码接受率。
 
-3) **论文作用**：该图是EAGLE-3方法论的核心可视化，明确其相对EAGLE/EAGLE-2的**架构增量**（三层管线+多层级特征输入+训练时测试策略），为后续消融与加速比实验提供机制依据，是理解后续图6、图7 tree attention与训练流程的基础。
+在论文链路中，此图是方法部分的核心架构图，与Table 5的吞吐量加速实验相互印证，构成从"单层特征→多层特征+训练时测试"方法演进的关键可视化证据。
 *caption: Diagram of the EAGLE-3 inference pipeline, illustrating the three steps of the draft model. l, m, and h represent the low, middle, and high-level feat… ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.6 (p.5)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】## Figure 6 图文联合解读
 
-图示展示训练时测试的三个注意力因果mask：①原生训练步（3×3，token 为 How/can/I）为全下三角，每 query 关注全部前置 key；②两个模拟步（依次 3×6、3×9）随 draft token（蓝/黄色，与原句"How can I are we do…"等灰色训练 token 区分）注入，mask 由稠密退化为严格对角——仅 query=key 处标✓，其余置零。
+**1) 核心对象与结构：**
+图示三个下三角（causal）掩码矩阵，对应训练时测试的三个步骤：
+- **第一步**（左上，3×3）：原始训练步，Query/Key 均为真实 token "How/can/I"（灰色），构成标准下三角掩码；
+- **第二步**（右上，3×6）：模拟步 1，新增蓝色预测 token "are/we/do" 作为 Query，Key 扩展至 6 个；
+- **第三步**（右下，3×9）：模拟步 2，再追加黄色预测 token "you/help/it"，Key 扩展至 9 个；
+- 左侧两棵 token 树（蓝、黄分支）对应采样得到的扩展树状结构，红勾标记有效注意力位置。
 
-它论证：仅当 key 源自原始训练数据才需全下三角矩阵乘；模拟 draft 阶段用向量点积按位计算即可，避免对角化稀疏矩阵的算力浪费。该稀疏化改造与 HASS 类似，共同支撑 EAGLE-3 在训练—测试一致性模拟下训练 draft 模型，从而在推理时实现低开销的多 token 预测加速。
+**2) 关键技术结论：**
+所有掩码均保持下三角因果性；当 Query 为训练数据（灰色）时，注意力分数仅分布在原 token 位置，故可用 **向量点积**替代完整矩阵乘法以避免计算浪费；模拟 token 呈**对角线**稀疏模式，实现并行多 token 草稿训练。
+
+**3) 论文链路作用：**
+该图是 EAGLE-3 "训练时测试" 策略的可视化基石，阐明如何在一次前向中同时监督多个采样分支的注意力计算，使 head 模型能在一轮训练内学习多 token 预测，为后续 tree attention 推理加速（Fig 7）与加速比实验提供机制支撑。
 *caption: All attention masks are diagonal, except when the original training data is used as the key. Using matrix multiplication in this case would result in … ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.7 (p.8)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig07.png]]
-> [!tip] 【图文联合解读】**图7联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 7）**
 
-1）**核心对象与数据**：横轴为0-α至7-α（即在已接受前序token条件下，输入含n个估计特征后的接受率），纵轴为接受率。EAGLE（红）从0-α的≈0.71急剧衰减：1-α≈0.64、3-α≈0.57、6-α降至≈0.51，整体跌幅约20%；而EAGLE-3（蓝）始终稳定在0.78–0.81区间，几乎无衰减，6-α处反达峰值≈0.81。
+图7展示EAGLE（红）与EAGLE-3（蓝）在MT-bench上、目标模型LLaMA 3.1 8B下的token接受率，横轴0-α到7-α表示输入0–7个估计特征且前序token全被接受。量化对比：EAGLE-3全程稳定于0.78–0.81；EAGLE则由0-α的0.71骤降至6-α的0.51，呈明显衰减。
 
-2）**论证的关键结论**：随估计特征数n增加，传统EAGLE因仅依赖last-token特征而出现严重的接受率雪崩；EAGLE-3通过训练时即采用test-time多特征输入，使其在自投机多步生成中保持高且平稳的接受率，二者差距随n增大而显著扩大。
-
-3）**作用**：为EAGLE-3"训练-测试一致性"设计提供了直接定量证据，是论证其推理加速效果优于EAGLE的核心实验之一。
+原文借此论证关键结论：**多层级（低/中/高层）特征输入不损害EAGLE-3的接受率**，而EAGLE因额外特征带来性能下降。该图直接支撑三层管线+多特征融合的架构设计，承上启下，衔接方法论与后续图8加速比/吞吐评测，是EAGLE-3核心增量的关键实验证据。
 *caption: Acceptance rate of EAGLE and EAGLE-3 on MT-bench, with the target model being LLaMA-… ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.1 (p.1)
@@ -332,60 +364,69 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.2 (p.2)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig02.png]]
-> [!tip] 【图文联合解读】**图2解读（MT-bench，T=1）**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 2）**
 
-图2对比EAGLE、Speculative sampling、DistillSpec、Vanilla在Vicuna 7B/13B/33B与LLaMA2-Chat 7B/13B/70B共6个模型上的加速比。**EAGLE全模型稳定取得2.13x–2.68x加速**（7B最低2.13x，13B最高2.68x）；Speculative sampling仅在33B（1.03x）与70B（2.06x）有效，其余N/A；DistillSpec仅70B达1.84x，其余1.00x；Vanilla恒为1.00x基线。
+**1) 核心对象与数据**
+该柱状图展示了在 MT-bench 上 **temperature=1（非贪心采样）** 设置下，EAGLE 与 Speculative sampling（SS）、DistillSpec（DS）、Vanilla 在 6 个模型上的加速比。EAGLE 在 Vicuna 7B/13B/33B、LLaMA2-Chat 7B/13B/70B 上分别取得 **2.13× / 2.32× / 2.40× / 2.22× / 2.68× / 2.67×** 的稳定加速；SS 与 DS 仅在 Vicuna 33B（1.22×、1.09×）和 LLaMA2-Chat 70B（2.06×、1.84×）上有数据，其余模型标记为 N/A。
 
-原文借此论证：Lookahead仅支持贪心、Medusa非贪心不保无损，故排除比较；EAGLE基于特征不确定性的建模天然适配采样，在T=1下全模型均获显著无损加速，远超token级投机与蒸馏方法。
+**2) 关键论证结论**
+图中数据直接支撑三点：（a）EAGLE 在非贪心采样下仍保持 **2.1×–2.7×** 的无损加速，覆盖全部 6 个模型；（b）在两类基线可比的设置中，EAGLE 均 **显著优于** SS 与 DS；（c）Lookahead 受限于贪心解码、Medusa 在非贪心下不能保证无损，故被排除对比——这反衬出 EAGLE 在真实采样场景下的适用性优势。
 
-该图与表2（接受长度τ、接受率α）共同支撑论文核心论点——**重新思考特征不确定性是推进投机采样的关键**。
+**3) 在论文整体链路中的作用**
+该图属于实验核心证据之一，与 Table 2 的接受长度/接受率互补，共同证明 EAGLE 不仅在贪心设置（Fig.1）有效，在更具实用性的采样生成中同样具备 **普适性、无损性与稳定性**，是其"重新思考特征不确定性"方法主张的关键支撑。
 *caption: Speedup ratio on the MT-bench for non-greedy (temperature=1) settings. Lookahead is confined to greedy decoding, and the non-greedy generation of Medu… ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.3 (p.2)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig03.png]]
-> [!tip] 【图文联合解读】**图3联合解读**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-1) **核心结构**：以 token "I" 及其特征 $f_{\text{I}}$ 为根节点（$p_{\text{I}}$：am=0.6, always=0.4），经 sampling 分叉为两条支链——左支 "always"→$f_{\text{always}}$（$p_{\text{begin}}$=0.8, $p_{\text{look}}$=0.2），右支 "am"→$f_{\text{am}}$（$p_{\text{excited}}$=0.3, $p_{\text{ready}}$=0.7），量化展示同一前缀下的双分支概率分布。
+图示三条"token→feature→下一token预测分布"的链节：左"always"（f_always: p(begin)=0.8, p(look)=0.2）、中"I"（f_I: p(am)=0.6, p(always)=0.4）、右"am"（f_am: p(excited)=0.3, p(ready)=0.7）；两条红色虚线"采样"从f_I分别外延至左右两节，呈现分叉结构。
 
-2) **关键结论**：仅凭 $f_{\text{I}}$ 无法唯一确定下一特征；下一特征取决于 sampling 结果，由此引出"特征不确定性"概念，挑战 EAGLE 假设特征可确定下一 token 的前提。
+**技术结论**：f_I之后的下一特征取决于采样结果而非f_I本身，"always"与"am"均为合法后继，即自回归特征序列存在不可由前序特征唯一推断的内在不确定性。
 
-3) **论文作用**：作为动机图，揭示自回归特征预测受随机采样影响，为 EAGLE 必须重新思考特征不确定性、改进投机采样策略提供直观论据。
+**论文作用**：作为EAGLE的核心动机图，挑战先前工作将特征序列视为确定性链的假设，从而论证必须把特征不确定性纳入预测设计，这正是EAGLE重写特征预测头、显著提升推测解码接受长度与加速比（Table 3）的理论起点。
 *caption: Uncertainty in feature sequences. The next fea- ture following fI is contingent on the sampling outcome and cannot be determined solely based on fI, w… ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.4 (p.3)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig04.png]]
-> [!tip] 【图文联合解读】图示MT-bench上Vicuna 7B三种draft模型7轮Epoch的Speedup（左）与Acc（右）曲线：feature&shifted-token最优，Speedup从≈1.95升至≈2.75、Acc从≈0.62升至≈0.78；feature次之（≈1.85/0.65）；token最差且几乎停滞（≈1.5/0.30）。
+> [!tip] 【图文联合解读】**图4 联合解读：**
 
-技术结论：纯token或纯特征作draft输入时接受率受限，而"特征序列+超前1拍token序列"双输入消除了采样下f_{t+1}的不确定性，使接受率与加速比同时大幅提升。
+图4展示三类draft模型（token、feature、feature&shifted-token）在MT-bench/Vicuna 7B、temperature=0下，随训练epoch（1–7）变化的加速比（左）与预测准确率（右）。定量结果：feature&shifted-token加速比由≈2.0升至≈2.7，准确率由≈0.62升至≈0.78；feature居中（加速≈1.5→1.85，准确率≈0.55→0.65）；token最差（加速≈1.4→1.5，准确率仅≈0.25→0.30），三者差距随训练扩大。
 
-论文作用：在ablation层面定量验证EAGLE核心架构（f_t+t_{t+1}双输入）的设计必要性，支撑Vicuna/LLaMA2-70B上2.68×加速比的关键实验结论。
+该图论证EAGLE核心设计——draft模型同时输入特征序列与前移一步的token序列，显著优于纯token或纯特征方案，验证"特征不确定性须结合下一token联合建模"的关键假设。
+
+在论文方法链中，本图作为消融实验，为EAGLE架构合理性提供直接证据，并支撑后续在LLaMA2-Chat等更大模型上实现2.7×–3.5×加速（Table 4）的结论。
 *caption: Accuracy and speedup ratio of draft models based on tokens, features and feature&shifted-token at tempera- ture=0, tested on MT-bench with Vicuna 7B a… ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.5 (p.4)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig05.png]]
-> [!tip] 【图文联合解读】**图5图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图示四种推测解码生成 t₄、t₅ 的流程：①**Speculative Sampling** 调用小型 LLM 串行推理；②**Lookahead** 仅以单 token 做 2-Gram/Jacobi 匹配；③**Medusa** 多 Head 共享同一 f₂ 输入，draft 间无信息传递；④**EAGLE** 联合多 token embedding（t₂,t₃）与前序 feature（f₁,f₂），先自回归预测 f₃ 再得 t₄，下轮预测 f₃ 又作输入。
+图5横向对比四种草稿方法生成t4、t5的机制：Speculative Sampling以t1-t3送入小LLM输出t4，再以t1-t4输入得t5（纯token级）；Lookahead基于2-Gram+Jacobi迭代token；Medusa由特征f2经两个独立Head并行产出t4、t5；**EAGLE则将token(t2,t3)经Embedding层与特征(f1,f2)拼接，由自回归Head依次预测f3→t4、f4→t5**，实现"特征级自回归+token级解码"。
 
-对比揭示前三者局限：仅依赖 token（Lookahead/Spec.Sampling），或忽略 draft 间 feature 不确定性累积（Medusa 所有 head 共用同一 f）。EAGLE 通过"embedding + feature 自回归"兼顾 token 确定性与 feature 上下文性，直观论证其核心动机——**重新思考 feature 不确定性**，为后文 EAGLE 方法展开与实验对比奠定框架。
+作者借此论证：**不确定性主要源自特征而非token**，故在特征空间做自回归比直接预测token更准，从而支撑EAGLE"特征不确定性"的核心立论。该图作为方法论总览，与右侧树注意力多采样扩展，共同构成论文方法部分的视觉骨架，为后续Table 5的加速比实验提供机制层面的依据。
 *caption: A comparison of the methods for drafting the fourth and fifth tokens, t4 and t5. t (represented by blue blocks) denotes tokens, and f (orange blocks) … ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.6 (p.4)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig06.png]]
-> [!tip] 【图文联合解读】图6为EAGLE推测解码流水线。上部计算流：左侧Target LLM将"how can"经Embedding、Transformer Layers、LM Head得首token"can/I"；右侧Draft Model以"One Auto-regression Head"为核心，特征f（橙块）与嵌入e（绿块）联合输入，经Forward 1-3多层预测候选（红框：make/help、a/our等），蓝色雪花模块为冻结的目标LLM参数。下部展示对应生成树：Query"How can"采样得"I"，由FeatExtrapolator逐层外推为多层候选分支。
+> [!tip] 【图文联合解读】**注：** 所提供图片主体为Figure 5（四种drafting方法对比），右半部分含Figure 6（EAGLE管线）元素。解读如下：
 
-该图论证：草稿模型以"特征+嵌入"联合输入替代纯嵌入预测，可捕获更深层上下文；冻结目标LLM保证一致性；树状多token采样提升验证吞吐。作为方法总览，为核心论点"特征不确定性需重新思考"提供机制框架，支撑后续实验链路。
+**核心对象与结构：** 图右呈现EAGLE推断管线——target LLM前向1次（Embedding→Transformer→LM Head）采出"can/I"；Draft Model分Forward 1/2/3，每步将上一轮特征f（橙）与当前token embedding（绿）拼接，经单一Auto-regression Head预测下一特征f，再复用target LLM的LM Head（蓝色雪花模块）多次采样，形成五层候选树（make/help→a/our→with/you→the/your→to/feel）；下半对应"How can"查询下FeatExtrapolator逐层展开的实际生成树。
+
+**论证结论：** EAGLE在特征层（而非token层）自回归，并冻结复用目标LLM的Embedding与LM Head，使Draft仅需轻量Auto-regression Head即可一次前向生成多token候选，体现"重思考特征不确定性"的核心方法思想。
+
+**论文作用：** 作为3.1节方法总览图，与Figure 5方法对比共同支撑Table 6等关于MT-bench加速比与平均接受长度τ的实验分析。
 *caption: Pipeline of EAGLE. The upper section illustrates the computational process, while the lower section displays the corresponding generation results for … ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.7 (p.7)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig07.png]]
-> [!tip] 【图文联合解读】**图7联合解读：**
+> [!tip] 【图文联合解读】**Figure 7 图文联合解读**
 
-该图量化MT-bench（temp=0）下6个模型的加速比：EAGLE含tree attention为2.78x–3.07x，不含为2.27x–2.66x，Vanilla统一为1.00x。模型覆盖Vicuna 7B/13B/33B与LLaMA2-Chat 7B/13B/70B。
+**1) 核心数据**：在 MT-bench（temperature=0）上对比三种方案在 6 个 LLM（Vicuna 7B/13B/33B 与 LLaMA2-Chat 7B/13B/70B）上的加速比。EAGLE w/ tree attention（蓝）范围 **2.78×–3.07×**（最高 Vicuna 13B 的 3.07×、LLaMA2-Chat 13B 的 3.03×）；EAGLE w/o tree attention（绿）为 **2.27×–2.66×**；Vanilla（橙）统一为 1.00×。可见树注意力在每个模型上稳定额外贡献约 **0.30×–0.51×**。
 
-**技术结论：** tree attention在所有模型上稳定带来约0.4–0.5x的额外加速，是EAGLE不可或缺的工程组件；即便剥离该模块，EAGLE仍保持2倍以上加速。
+**2) 关键结论**：树注意力（tree attention）不是装饰性组件，而是 EAGLE 获得最高加速比的关键——它使所有 6 个模型、跨越 7B–70B 的不同规模均获得一致且显著的进一步提速，论证了"为投机解码构造层级/树形 KV 计算"这一设计取舍的正确性。
 
-**论文作用：** 作为消融实验，一方证明EAGLE核心的特征不确定性预测机制独立有效（无需tree attention亦显著超越Vanilla），另一方面量化tree attention对端到端加速的边际贡献，为"EAGLE+tree attention"完整方案提供实证支撑。
+**3) 在论文中的作用**：该图属于消融/组件贡献类实验，与 Table 7（不同 batch size、吞吐量下的加速比）共同支撑"EAGLE 各核心模块（特征不确定性预测 + 树注意力）均不可或缺"的主线，为论文方法论提供经验性证据。
 *caption: Speedup ratios of EAGLE with and without the use of tree attention. The evaluation dataset is MT-bench, with the temperature parameter set to 0.… ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.8 (p.8)
@@ -406,110 +447,121 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### EAGLE-2: Faster Inference of Language Models with Dynamic Dr — Fig.1 (p.1)
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig01.png]]
-> [!tip] 【图文联合解读】图1为temperature=1下四种LLM（Vicuna 7B/13B、LLaMA2-Chat 7B/13B）三种lossless加速方法的推理加速比柱状图。数据：Vicuna 7B为3.05x(EAGLE-2)/2.13x(EAGLE)/1.50x(投机采样)；Vicuna 13B为3.80x/2.32x/1.62x；LLaMA2-Chat 7B为3.19x/2.22x（投机采样N/A）；LLaMA2-Chat 13B为3.92x/2.68x（N/A）。原文借该图论证两点：①EAGLE-2的动态草稿树机制在全部模型上稳定超越EAGLE与投机采样；②在保证输出分布不变前提下仍取得3-4倍显著加速。该图作为论文首图，对全文方法部分起总览性铺垫作用，为Table 1的细粒度对比与动态草稿树算法阐述建立直观性能基准。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**1) 核心数据**：该图为温度=1（非贪婪采样）下四种目标模型（Vicuna 7B/13B、LLaMA2-Chat 7B/13B）上三种加速方法的推理加速比对比柱状图。EAGLE-2 分别取得 3.05×、3.80×、3.19×、3.92×，均显著高于 EAGLE（2.13×/2.32×/2.22×/2.68×）和 Speculative sampling（仅 Vicuna 系列为 1.50×、1.62×，LLaMA2-Chat 因无合适 draft 模型标 N/A）。
+
+**2) 关键结论**：在非贪婪设置下，EAGLE-2 相对 EAGLE 仍有 1.4×–1.5× 的提升，验证了"动态 draft tree"机制比静态 draft tree 在采样场景下更优；而 Medusa 等方法因放宽接受条件、无法保证输出分布一致性，故未参与比较。
+
+**3) 论文作用**：作为首页 Figure 1，是 EAGLE-2 方法有效性的"第一印象"证据，与 Figure 2（temperature=0 贪婪场景）互补，共同构成论文对动态 draft 树在两种采样模式下普适加速能力的核心实验支撑。
 *caption: Speedup ratios of different methods at tempera- ture=1. For speculative sampling, the Vicuna series uses… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-2: Faster Inference of Language Models with Dynamic Dr — Fig.2 (p.2)
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig02.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图2对比了EAGLE-2与四种基线方法（EAGLE、Medusa、Lookahead、Speculative sampling）在7个模型（Vicuna 7B/13B、LLaMA2-Chat 7B/13B/70B、LLaMA3-Instruct 8B/70B）上的推理加速比（temperature=0）。量化显示：EAGLE-2在Vicuna 13B达**4.26×**峰值，所有模型稳定在**3.29×–4.26×**，系统性地领先EAGLE（2.72×–3.07×）、Lookahead（1.43×–1.61×）与Medusa/Spec Sampling。原文借此论证动态草稿树带来的稳定且显著的加速收益，构成论文核心实验证据，支撑"EAGLE-2为当前最快推测解码方法"的结论，并衔接Table 1的扩展对比。
+图2展示温度=0下，五种加速方法（EAGLE-2、EAGLE、Medusa、Lookahead、Speculative sampling）在7个LLM上的加速比。EAGLE-2在所有模型上均最优：Vicuna 7B/13B为3.62x/4.26x，LLaMA2-Chat 7B/13B/70B为3.43x/4.21x/3.51x，LLaMA3-Instruct 8B/70B为3.46x/3.29x；EAGLE居次（约2.7–3.0x）；Medusa仅适用于Vicuna（约1.9–2.1x）；Lookahead与Speculative sampling分别约1.4–1.6x和1.4–1.9x，且后者在LLaMA2-Chat 7B/13B及LLaMA3 8B上标记N/A。该图作为核心实验证据，验证了动态草稿树相比固定草稿（speculative sampling）和单链扩展（Lookahead）的全面优势，并支撑后续Table 2对大模型τ值与加速比的进一步分析。
 *caption: Speedup ratios of different methods at temperature=0. For speculative sampling, the Vicuna series uses Vicuna- 68M as the draft model. LLaMA2-Chat 7B,… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-2: Faster Inference of Language Models with Dynamic Dr — Fig.3 (p.3)
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig03.png]]
-> [!tip] 【图文联合解读】草稿阶段(a)：标准方法对token(t2,t3→t4→t5)链式自回归；EAGLE额外引入上一层特征f1,f2，自回归预测f3,f4后映射为token。验证阶段(b)：标准方法链式校验t4→t5，单分支接受；EAGLE改用树结构(t4分支为t5、t6)，由原LLM一次性并行验证，可同时接受多token。论文以此图论证核心方法学结论：①特征级自回归降低草稿难度，②动态草稿树扩展一次验证的接受基数，构成EAGLE-2"特征预测+树形验证"双层加速推理框架的可视化基础，后续实验均围绕二者带来的端到端加速展开验证。
+> [!tip] 【图文联合解读】**图文联合解读**
+
+图3分(a)草稿、(b)验证两阶段对比标准投机采样与EAGLE：(a)中标准法仅以token t₂,t₃串行经"Token自回归草稿模型"生成t₄、t₅；EAGLE额外引入LLM倒数第二层特征f₁,f₂,f₃，作为"特征自回归草稿模型"输入，联合预测f₃→t₄、f₄→t₅。(b)中标准法对链式草稿(t₄,t₅)逐一验证，接受t₄而拒绝t₅；EAGLE采用动态树形草稿（如t₄分叉出t₅,t₆），单次LLM前向即可并行验证多候选，使t₄、t₆同时被接受。该图直观论证了"特征级自回归预测+动态树形草稿验证"是EAGLE-2相较传统投机采样提升接受率、加速推理的核心机制，是后续消融与基准实验的逻辑起点。
 *caption: Comparison of standard speculative sampling and EAGLE. For simplicity, EAGLE’s tree-structured draft is shown only in the verification stage, while th… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-2: Faster Inference of Language Models with Dynamic Dr — Fig.4 (p.3)
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 4）：**
 
-图4下半部对比了EAGLE与EAGLE-2的草稿树结构。EAGLE对"10+2"生成两分支"="和"+"，再对"10+2="静态地生成两分支"1"和"3"；EAGLE-2同样生成"="、"+"两分支，但识别到"1"高置信后，动态沿"="延伸出链式节点"1→2"。原文以此论证：**EAGLE-2依据置信度自适应调整草稿树形状**，将算力集中在高概率路径上，避免在低概率候选（如"3"）上浪费验证开销。该图作为方法论示例，引出后文提出的动态草稿树（dynamic draft tree）机制，是EAGLE-2相较EAGLE实现进一步加速加速比的核心创新证据。
+1) **核心结构**：图中以"10+2="为查询，分两栏对比——左侧EAGLE从该前缀并行扩展4个同层候选 token（"="、"+"、"1"、"3"），呈固定宽度草稿树；右侧EAGLE-2先输出高置信度 token "1"，再沿"1"向下延伸出"2"，形成动态深度优先的树形分支。
+
+2) **技术结论**：EAGLE的静态树形在"10+2="场景下仍生成低概率候选项"3"，浪费验证开销；EAGLE-2依据草稿模型置信度自适应调整树形（宽→深），将算力集中于高概率路径，提升单次验证接受率。
+
+3) **论文作用**：作为EAGLE-2方法核心创新（Dynamic Draft Tree）的可视化动机图，引出后文基于置信度阈值的动态树构建算法，是连接EAGLE基础框架与EAGLE-2加速方案的桥梁。
 *caption: Differences between EAGLE and EAGLE-2. EA- GLE always uses a fixed draft shape. When the query is “10+2=”, the next token is very likely to be correct… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-2: Faster Inference of Language Models with Dynamic Dr — Fig.5 (p.3)
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**1) 核心对象与数据：** 图(a)为草稿树结构——Query根节点分支为P1/P2，再分至P3-P6共6个位置；图(b)散点图显示各位置token接受率分布，P1约70%点接近1.0，P2中位数降至约0.3，P3-P6散布明显下移；图(c)排序曲线与y=x虚线对比，中段下凹。
 
-**1) 核心对象与数据：** 图(a)为二元draft树结构（Query→P1/P2→P3–P6，共6个叶子位置）；图(b)为散点图，纵轴Accept Rate(0–1)，横轴Position(1–6)，每点对应一次query。量化趋势：P1接受率密集集中在~1.0（全图最高），P2次之（约0.4–0.9），P3分散于0.2–0.5，P4、P6普遍跌至0.0–0.2（最低），P5相对偏高（0.2–0.9）。
+**2) 关键技术结论：** 接受率呈强位置依赖——树上层/左侧(P1)最高，树深层/右侧(P6)最低，验证原文"upper left side…higher acceptance rates"判断。
 
-**2) 关键结论：** draft token接受率具有显著的**位置依赖性**——左上（浅层、靠左分支）token接受率高，深层（尤其P6）接受率低。说明并非所有draft位置同等有价值。
-
-**3) 在论文中的作用：** 该图是EAGLE-2从静态树转向**动态draft树**的核心动机证据：既然接受率随位置差异巨大，等宽静态扩展浪费算力；动态树据此对高接受率分支多扩展、低接受率分支少扩展，从而提升speculative decoding的整体加速比。
+**3) 论文中作用：** 作为EAGLE-2动态草稿树的核心动机证据，说明EAGLE-1的静态均匀树非最优，应依据各位置历史接受率动态扩展高接受率分支、剪除低接受率分支，从而提升整体加速比。
 *caption: Overall, the acceptance rate of draft tokens is position-dependent, with the highest acceptance rate at position P1 and the lowest at position P6. Dra… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-2: Faster Inference of Language Models with Dynamic Dr — Fig.6 (p.4)
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig06.png]]
-> [!tip] 【图文联合解读】**图6图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1）核心对象与数据**：横轴为draft模型输出的置信度（0–1，分10个区间），纵轴为目标LLM Vicuna 7B在同一置信度区间内的实际接受率。蓝色柱体沿红色虚线 y=x 近似单调递增——置信度≈1.0区间接受率约0.98，最低区间（≈0.0–0.05）接近0.00。
+图6（右半）为柱状图，横轴为草稿模型置信度（0–1.0，分箱约20档），纵轴为目标LLM（Vicuna 7B）的实际接受率（0–1.0）。蓝色柱条与红色虚线 y=x 高度贴合：低置信区间（≈0.1）接受率约0.1，中段（≈0.5）约0.5，高置信（≈0.9–1.0）升至0.8–1.0，表明草稿模型置信度与真实接受率呈近线性、校准良好。
 
-**2）关键技术结论**：置信度与接受率高度正相关、几近线性；中段（0.4–0.6）柱体略超对角线，说明draft模型的置信度略偏保守但具有强校准性，可作为token排序与节点筛选的可靠信号。
+**技术结论：** 验证了草稿模型输出的置信分数可作为可靠信号，用于预测哪些draft token易被目标模型接受。
 
-**3）在论文中的作用**：为§4.1（动态扩展draft tree）与§4.2（draft token重排）提供经验支撑——按置信度从最新一层中挑选"最有希望"的节点送入下一轮扩展的做法是合理且有保障的。
+**链路作用：** 该图为第4.1节动态草稿树扩展（挑选高置信节点继续展开）与第4.2节重排序（按置信度加权）提供定量依据，是EAGLE-2"置信驱动"投机解码框架的实证基石。
 *caption: Average acceptance rates for different confidence score intervals of the draft model. The red dashed line connects (0,0) and (1,1) to aid in visual as… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-2: Faster Inference of Language Models with Dynamic Dr — Fig.7 (p.5)
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig07.png]]
-> [!tip] 【图文联合解读】**【对象与结构】** 动态草稿树：根"It(1.0)"分叉为is/has双层；橙色top-2节点(a=0.48, to=0.14)作扩展输入，生成绿色子节点good/nice/be/do；Rerank后保留top-8蓝色节点(It,is,has,a,the,to,good,be)，扁平为1D序列后按树结构构建仅可见祖先节点的注意力掩码。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**【技术结论】** 局部扩展(top-2选节点)与全局重排(top-8选草稿)解耦，使草稿树依据上下文动态自适应生成多条高置信候选，而非依赖预设静态结构。
+图示EAGLE-2两阶段流程：①扩张（Top-2）——以"It(1.0)"为根，按草稿模型置信度（0.6/0.2/0.8/0.1…）动态建树，从当前层选top-2高值节点 a(0.48)、to(0.14) 继续扩展生成绿块子节点 good/nice/be/do；②重排序（Top-8）——对全树节点按值排序后取 [It, is, has, a, the, to, good, be] 展平为1D序列，并配合树状 attention mask，使每 token 仅可见其祖先节点，保证分支互不可见。
 
-**【论文作用】** 直观看]<]minimax[>[展示EAGLE-2相对EAGLE"动态草稿树"的核心创新，支撑其以更少草稿模型调用换取更高接受率与推理加速比的实验结论。
+该图论证了 EAGLE-2 的核心技术：动态草稿树通过"扩张深化—重排保连通—树状掩码保障并行验证正确性"，在保持 speculative decoding 正确性的同时显著提升接受率与速度，是论文区别于 EAGLE-1（静态树）的关键方法论支撑，也直接服务于 §5 在 Vicuna、LLaMA2/3 多模型上的加速实验。
 *caption: Illustration of EAGLE-2. The numbers beside the edges represent the confidence scores of the draft model, and the numbers in brackets within the block… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.1 (p.2)
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig01.png]]
-> [!tip] 【图文联合解读】**图1核心内容**：以三行对照呈现三种语言生成范式——自回归（arbitrary-length、✓KV caching、✗Not Parallelizable）、全扩散（fixed-length、✗No KV caching、✓Parallelizable）、块扩散（arbitrary-length、✓KV caching、✓Parallelizable），并用"continue to reduce the deficit"等生成示例直观展示块内并行去噪过程。
+> [!tip] 【图文联合解读】图横向对比三范式，各以4属性(质量/长度/KV缓存/并行性)+逐token/逐块文例呈现：**自回归**高质量/可变长/有KV缓存但不可并行，逐token生成 "There are three categories of the average → rate → rate of…"；**扩散**质量较低/固定长/无KV缓存但可并行，整块同步去噪 "Repeal the reusability cuts…reduce the deficit"；**块扩散(本文)**四项均✓，块内并行扩散+块间以先前块为条件自回归式接续生成 "On September 17, 2016, we will be giving the beta-release of the…to our server testing"。
 
-**论证的技术结论**：块扩散融合两类模型优势，兼具变长生成、KV缓存与块内并行采样，同时克服自回归不可并行、纯扩散不可缓存的固有缺陷。
+**论证结论**：BD 通过分块机制同时消除 AR 的不可并行性与扩散的固定长度/无KV缓存痛点，兼取两类模型之长。
 
-**论文整体作用**：作为方法总览图，在引言/方法章节开篇建立"块内扩散+块间自回归"的混合范式概念框架，为后续训练损失推导、噪声调度设计与推理效率实验提供直觉锚点。
+**论文作用**：作为开篇 Figure 1 (p.2) 动机图，在 Method 概述前直观确立方法价值前提；与后续 Table 1 (p.5) 在 LM1B 16B token 上的困惑度实证形成"概念动机—实验验证"闭环，支撑全篇 "插值式框架" 的叙事。
 *caption: Block diffusion sequentially generates blocks of tokens by performing diffusion within each block and conditioning on previous blocks. By combining st… ｜ 论文 [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.2 (p.6)
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图2解读（LM1B，250k步训练NLL曲线）**
 
-图示LM1B（16B token训练）单token训练NLL曲线，横轴约150k–250k步，包含：红色曲线（块扩散/扩散，方差最大、存在明显尖峰）、橙色AR曲线（最平滑低方差）、绿色AR随机batch曲线（方差居中）等多条线对比。
+1）展示LM1B上四模型训练负对数似然：BD3-LM(NELBO)（棕红）、BD3-LM(调优调度)（紫）、AR（橙）、AR(随机batch)（绿）。NELBO曲线全程剧烈震荡，调优调度后与AR均平滑收敛至≈3.1–3.15。
 
-论文借此论证关键结论：平均50%掩码的离散扩散NELBO训练方差，与随机batch的AR相当，意味着每batch有效token近似翻倍（≈2×），扩散目标并无显著梯度劣势。
+2）论证NELBO训练方差≈随机batch的AR：因平均mask约一半token，仅半数贡献梯度，等效batch减半，故方差水平相当。
 
-该图为块扩散作为AR与扩散LM之间插值框架的可行性提供经验背书，回应"扩散训练方差大、不易优化"的潜在质疑，是后续block size与调度实验的方法论前提。
+3）在论文链路中作为block-diffusion训练稳定性问题的实证起点，引出后续"调优调度→消除方差→比肩AR"的方案，与Table 2的PPL/方差量化呼应。
 *caption: Train NLLs for modeling the per-token likelihood on LM1B. Models are trained on 16B tokens. Training under the discrete diffusion NELBO, where half of… ｜ 论文 [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.3 (p.21)
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig03.png]]
-> [!tip] 【图文联合解读】**Figure 3 图文联合解读**
+> [!tip] 【图文联合解读】**图3 联合解读**
 
-**1）核心对象与结构：** 图示一个专门化的注意力掩码（Specialized Attention Mask），按L=3个块（如x¹、x²、x³）排列，图中可见三色分区——**Block Diagonal (M_BD)**（块对角，每个块内独立）、**Offset Block Causal (M_OBC)**（偏移块因果，跨块时仅关注先前块）、**Block Causal (M_BC)**（块内因果，同块内token依次关注前者）。结合上下文规则：块内采用因果掩码更新x^b；块间跨注意力条件化于x^<b。
+图3展示 L=6、块大小 L′=2 下的专用注意力掩码可视化。坐标轴分两半：上方 3 行为带噪待去噪 token x_t¹~x_t³，下方 3 行为已生成的干净 token x¹~x³。三色区域对应三类掩码：橙色"块对角 M_BD"实现同块内待去噪 token 的双向自注意力；蓝色"偏置块因果 M_OBC"使待去噪块只能关注其前序已生成块（条件上下文）；黄色"块因果 M_BC"保证生成新干净块时仅看前序干净块。
 
-**2）关键技术结论：** 该掩码为块扩散模型构造了一种"块级稀疏因果+跨块条件化"的混合注意力模式：块内保持自回归因果性，块间以偏移因果避免信息泄露，同时通过M_BD实现并行去噪。原文Figure 4进一步证明，将其改写为FlexAttention兼容的稀疏掩码后，在L=1024、B=16、A5000上相比PyTorch原生实现可获**约5倍加速**与显著内存节省。
-
-**3）在论文中的作用：** 该图是块扩散方法的核心算法图示，奠定了"块级半自回归"训练/采样范式，并为后续高效推理实现提供视觉依据，连接理论框架与系统优化。
+该图核心论证：**块扩散**通过组合三种掩码，使块内可并行去噪（类扩散）、块间保持严格因果（类自回归），从而插值连接 AR 与纯扩散模型。它是全文方法基石，并直接支撑 Figure 4 将其映射为 FlexAttention 稀疏掩码，在 A5000、L=1024、B=16 下取得约 5× 加速与显著显存节省。
 *caption: x1 t x2 t x3 t x1 x2 x3 x1 t x2 t x3 t x1 x2 x3… ｜ 论文 [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.4 (p.22)
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图4解读：**
 
-图4展示了将图3的掩码策略改写为FlexAttention兼容的稀疏掩码函数（约30行PyTorch代码）。核心结构是合成三种掩码：①块内自注意（block_causal）、②跨块条件上下文（block_causal_BC）、③偏移块因果（M_OBC），通过`q//block_size`取整、`xt_flag`/`x0_flag`标识（0/1）控制q/kv关系，以按位XOR与AND逐元素组合，得到稀疏的`M_OBC`偏移因果掩码。
+图4展示`block_diff_mask`函数：将block diffusion注意力mask分解为三个布尔子掩码——M_BD（块对角，对应x_t块内自注意力）、M_OBC（偏移块因果，对应x_t对x_0的条件跨注意力）、M_BC（块因果，对应x_0更新），通过OR合并为FlexAttention兼容的稀疏掩码。
 
-该代码论证了：基于PyTorch≥2.5的FlexAttention/JIT定制算子，在A5000、L=1024、B=16条件下，**显存显著降低且加速≈5倍**，相较朴素的`scaled_dot_product_attention`优势明显。
+原文用它论证：在A5000 GPU、L=1024、B=16条件下，自定义JIT注意力较PyTorch≥2.5原生scaled_dot_product_attention实现可达≈5倍加速并显著降显存。
 
-在论文链路中，此图属于工程实现层，为Block Diffusion模型的关键创新——半自回归+扩散混合的块稀疏注意力——提供高效GPU实现支撑，是模型可扩展训练/推理的底层保障。
+该实现是把Fig.3理论掩码落地的关键工程模块，使AR–扩散混合架构在长序列上具备实际可训练性与可推理性，是论文方法链路中的效率支撑点。
 *caption: We can adapt the masking strategy from Fig. 3 to a FlexAttention compatible sparse masking function as above. This enables the creation of a customize… ｜ 论文 [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.5 (p.23)
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**注意：图片内容与原文段落存在明显错配。** 图片实际是代码片段（PyTorch FlexAttention 调用），而原文段落描述的应是某张 OWT 数据上的 PPL 结果表/图，非本图。以下仅基于真实图片内容解读：
 
-图5以代码片段展示核心实现：顶部调用 `torch.compile(fullgraph=True, mode="max-autotune-no-cudagraphs")` 进行全图编译加速；下方定义 `single_pass_block_diff_attn(q, k, v, block_mask)` 函数，内部通过 `flex_attention(q, k, v, block_mask=block_mask)` 完成一次前向注意力计算。
+## 1) 核心对象与结构
+图片是一段 ≤20 行的 PyTorch 代码，实现基于 `torch.nn.attention.flex_attention` 的块扩散注意力计算：(a) 用 `partial` 绑定 `block_diff_mask` 的 `seq_len` 与 `block_size` 参数；(b) 调用 `create_block_mask` 生成 `seq_len*2 × seq_len*2` 的稀疏块掩码（2× 对应扩散去噪的"噪声输入+干净目标"拼接）；(c) 用 `@torch.compile(fullgraph=True, mode="max-autotune-no-cudagraphs")` 编译加速；(d) 封装 `single_pass_block_diff_attn(q,k,v,block_mask)` 单次前向函数。
 
-该图论证的关键技术结论：块扩散语言模型利用 PyTorch FlexAttention 接口，将自定义的块级因果掩码（block_mask）直接传入底层注意力内核，无需重写 CUDA/Triton 内核即可在通用硬件上高效实现"块内双向、块间因果"的混合注意力模式。
+## 2) 论证的技术结论
+该代码证明 BD3-LMs 的核心算子——**块大小可调的分块因果注意力**——可在 PyTorch 原生 `FlexAttention` 框架下以 **稀疏掩码 + 编译优化** 方式高效实现，无需手写 CUDA kernel，为"块长越小越逼近 AR"的插值策略（block_size 控制因果粒度）提供了可落地的工程支撑。
 
-在全论文中的作用：它是连接理论掩码设计（Section）与高效训练推理的工程桥梁——通过 `flex_attention` 把块式注意力模式硬件化，使大语言规模下的块扩散训练成为可能，是模型可扩展性的核心实现支撑。
+## 3) 在论文链路中的作用
+此图属**方法实现层**（Methods/Implementation），与 Table 3、Table 5 等**实验结论层**互补：前者证明想法可行，后者证明想法有效。两者共同构成"理论→高效实现→规模验证"的完整论证链。
 *caption: Attention computation using FlexAttention with our proposed custom mask.… ｜ 论文 [[block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.6 (p.26)
@@ -567,33 +619,33 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.3 (p.3)
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**核心对象与数据**：横轴为 draft token 数（4/8/16），纵轴为 Latency（ms）。EAGLE-3 自≈6.5ms（4 tok）线性增至≈26ms（16 tok）；三档 DFlash 几乎不随长度变化——DFlash(1)≈1.8–2ms、DFlash(3)≈3.8–4ms、DFlash(5)≈5.5–5.8ms；16 tok 时 EAGLE-3 比 DFlash(1) 慢≈14×。
 
-**1）核心对象与数据：** 分组柱状图，横轴为 draft token 数（4/8/16），纵轴为生成延迟（ms）。EAGLE-3（1层）随 token 数线性增长：约 6.5→12→26 ms；而 DFlash 三种配置几乎平坦——DFlash(1) 始终 ≈2 ms，DFlash(3) 约 3.5–4 ms，DFlash(5) 约 5–6 ms。在 16 token 处，EAGLE-3 比最快 DFlash(1) 慢约 13 倍。
+**关键结论**：DFlash 因块扩散并行生成，draft 成本与生成长度近似解耦；EAGLE-3 受自回归限制成本随长度线性放大，在长 block 下 DFlash 显著更廉价。
 
-**2）关键结论：** DFlash 因采用 Block Diffusion 并行生成全部 draft token，延迟与草稿长度几乎解耦；而 EAGLE-3 因自回归逐 token 生成，成本随长度线性放大。这验证了 DFlash 作为 draft model 在效率上对自回归方案的数量级优势。
-
-**3）在论文中的作用：** 该图是论文核心卖点之一的实验支撑——证明 DFlash 不仅在生成质量/接受率上可竞争，更以"恒定低延迟"显著降低 speculative decoding 的单步开销，为其在在线推理/树形解码场景中的实用性提供量化证据。
+**论文作用**：量化支撑 DFlash"draft cost 可被并行摊销"的核心优势，为 Table 3 中更长 block 带来更高整体吞吐与加速比提供前置实验依据。
 *caption: Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.… ｜ 论文 [[dflash-block-diffusion-for-flash-speculative-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.4 (p.5)
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig04.png]]
-> [!tip] 【图文联合解读】**图4 联合解读**
+> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
 
-图分两栏。左栏"From Target Model"为6列（p1–p4, r1, r2）因果三角掩码，目标模型对prompt与干净response自回归编码，输出蓝色上下文特征；右栏"Mask Blocks"为12列×12行的块注意力矩阵，按r1/m/m/m、r2/m/m/m、r3/m/m/m划分为3块，每块4行中仅允许同块clean token（橙）及前块mask token（绿）相互可见，白色为不可见token。
+**1）核心对象与结构**：图中为两个注意力掩码矩阵。左侧对应 prompt tokens（约 6 列 × 13 行），灰色格全连通——即 target model 输出的 context features 对所有 prompt 做无条件 attend；右侧对应 response tokens（约 14 列 × 14 行），呈**块对角**结构：每个深灰块内自回归、块间由浅灰相连、白色被 mask，字符取自语料噪声片段"+'.!%0-#!1."等。
 
-**核心结论**：draft模型以左侧蓝色目标特征为cross-attention条件，在每个clean response token之后并行预测3个mask token，从而形成"块扩散"式训练目标；条件注入被严格限定在clean token位置，避免未来信息泄露。
+**2）论证结论**：该 attention pattern 严格匹配推理时的条件依赖——draft model 在生成第 *k* 块时仅 attend target model 给出的前一块 hidden states（context features，蓝色），与 block diffusion 训练目标一致，证明训练–推理 attention 一致性。
 
-**论文作用**：该图即DFlash核心训练范式的示意图，是后文Table 4中Qwen3-27B取得较长接受长度与加速比的方法论基础。
+**3）方法链路作用**：作为 method 部分核心可视化，奠定 DFlash "目标模型上下文驱动草模型逐块生成"的基础，是后续加速比与跨域泛化实验的前提。
 *caption: DFlash training attention. The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens… ｜ 论文 [[dflash-block-diffusion-for-flash-speculative-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.5 (p.13)
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig05.png]]
-> [!tip] 【图文联合解读】**图5图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图示Math500数据集上Acceptance Length随训练epoch（1–9）的演化，对比有/无loss decay两条曲线。蓝色（有loss decay）epoch 1即达~4.4，epoch 2快速跃升至~5.4；橙色（无）epoch 1仅~4.2，需至epoch 4方追至~6.0。两者在epoch 6–7同步收敛至峰值~6.45（蓝色略高），epoch 9趋于一致~6.35。
+图5为折线图，横轴为训练Epoch(1-9)，纵轴为Math500上的Acceptance Length（约4.2–6.5），对比"with loss decay"（蓝）与"without loss decay"（橙）两条曲线。前3个epoch蓝线明显高于橙线（如epoch 2蓝≈5.4 vs 橙≈5.2，差距约0.2），约epoch 5后两者趋于重合，并在epoch 7达峰值≈6.45，epoch 9轻微回落至≈6.35。
 
-原文据此论证：**loss decay策略使dFlash训练"收敛更快、效果更好"**——尤其在前3个epoch显著拉开差距。在论文整体链路中，该消融实验作为附录A.5.2随机掩码采样方案的支撑，验证了损失衰减对投机解码头快速稳定收敛、高接受率（最终~6.35）的必要性，是模型实现高效推测的关键训练技巧之一。
+原文以此论证：加入loss decay训练策略可使模型**收敛更快**（前期epoch差距明显）且**最终性能更优**（峰值略高），验证该技巧在dFlash推测解码框架中的有效性。
+
+该图属于附录A.5消融实验，与表5的加速比实验形成补充，从训练动力学角度独立支撑论文对loss decay机制的选择，增强方法设计的可信度。
 *caption: The loss decay makes training converge faster and better. A.5.2. RANDOM SAMPLING OF MASKED BLOCKS… ｜ 论文 [[dflash-block-diffusion-for-flash-speculative-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.1 (p.4)
@@ -610,73 +662,92 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin — Fig.1 (p.2)
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig01.png]]
-> [!tip] 【图文联合解读】**图1解读：**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-该图以分组柱状图形式对比三种推测解码方法（DFlash蓝、DDTree橙、JetSpec绿）在四个基准上的端到端加速比。HumanEval：DFlash≈?.4×、DDTree 6.31×、JetSpec **7.12×**；MBPP：3.96/6.09/**6.73×**；LCB：4.70/6.75/**7.67×**；MT-Bench：2.72/4.26/**4.58×**。
+该图为分组柱状图，在 H100、tree budget=256 条件下，对 DFlash（蓝）、DDTree（橙）、JetSpec（绿）三种方法在 7 个基准（数学 GSM8K/MATH-500/AIME25、代码 HumanEval/MBPP/LCB、对话 MT-Bench）上对比标准 AR 解码的端到端加速比。
 
-原文借此论证两点结论：①树形草稿（DDTree、JetSpec）显著优于块并行草稿（DFlash），证明因果性-效率瓶颈可突破；②JetSpec在所有基准上均取得最高加速，尤其在HumanEval和LCB上较DDTree额外提升约0.6–0.9×。
+**量化结果**：JetSpec 在所有基准均最优——GSM8K 7.82×、MATH-500 9.64×（全图峰值）、AIME25 8.78×、HumanEval 7.12×、MBPP 6.73×、LCB 7.67×、MT-Bench 4.58×；DDTree 次之，DFlash 最弱（如 MATH-500 仅 6.12×）。
 
-该图作为开篇主结果图，确立了JetSpec并行树形草稿的SOTA地位，为后续方法详解和消融实验提供总体性能基线。
+**论证结论**：相较 DFlash 块并行草案，树结构带来大幅提升（DDTree 普遍多 2–3×），而 JetSpec 在树草案之上再叠加 JetLinear 等优化，相对 DDTree 仍稳定再增约 0.3–1×，证明其打破了缩放天花板。
+
+**论文作用**：作为开篇 headline 实验图，确立 JetSpec 跨领域通用且最优的性能定位，为后续方法与低预算分析提供高预算下的对照基线。
 *caption: End-to-end decoding speedup over standard autoregressive decoding on H100 GPUs across math, coding, and chat benchmarks. DFlash denotes the original b… ｜ 论文 [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] ｜ arxiv 见 MD 元信息*
 
 ### JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin — Fig.2 (p.3)
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig02.png]]
-> [!tip] 【图文联合解读】图(a)横轴为对数刻度γ∈[2,256]，纵轴为加速比，在c=0.05条件下绘制6条曲线对应α=0.70~0.95。数据呈典型"先升后降"形态：α=0.95在γ=16处达~6.5×峰值，α=0.90峰值~4.6×(γ=16)，α=0.85峰值~3.7×(γ=8)，α=0.70仅在γ=2处~2.2×；γ>32后所有曲线骤降至<1.5×，在γ=256收敛至~0.5–1×。
+> [!tip] 【图文联合解读】The user wants me to analyze Figure 2 from the JetSpec paper, combining the image content with the paper's text. Let me carefully read the chart.
 
-论证结论：即便c已压至0.05，传统推测解码仍存在"加速比天花板"——单纯增大γ收益递减甚至恶化；必须**同时**降低每token起草成本c并提高接受率α才能突破。Table 12给出不同L、N下实测c值，为本图参数标定提供依据。
+Figure 2 shows two panels comparing expected speculative decoding speedup as a function of draft length γ (x-axis, from 2 to 256), with different acceptance rates α (0.70 to 0.95) and different per-token drafting costs c.
 
-论文作用：作为Eq.(2)理论预测的可视化锚点，定量揭示传统推测解码γ扩展失效的瓶颈，为JetSpec以**并行树形起草**大幅降低c、从而突破天花板的核心动机提供关键支撑。
+Left panel (a): Typical SD with c = 0.05
+- Y-axis: Expected speedup from ~0 to 7
+- Acceptance rates: 0.70, 0.75, 0.80, 0.85, 0.90, 0.95
+- All curves peak around γ = 16, then decline
+- Peak values: α=0.95 peaks at ~6.5, α=0.90 at ~4.6, α=0.85 at ~3.7, α=0.80 at ~3.1, α=0.75 at ~2.7, α=0.70 at ~2.3
+- At γ=256, most curves drop below 1
+
+Right panel (b): Ultra low-cost SD with c = 0.0005
+- Y-axis: Expected speedup from 0 to ~20
+- Same acceptance rates
+- Curves continue to grow longer, peaking around γ = 64-128
+- Peak values: α=0.95 reaches ~18-19, α=0.90 at ~9.5, α=0.85 at ~6.5, α=0.80 at ~5.5, α=0.75 at ~4, α=0.70 at ~3.3
+- At γ=256, curves still remain high
+
+The key insight: reducing c (drafting cost) extends the scalability ceiling of γ significantly, and higher α amplifies this effect.
+
+Now I need to write a Chinese interpretation in ≤220 characters covering:
+1) Core object/structure of the figure (specific, quantified)
+2) Key technical conclusion from the paper
+3) Role in the overall paper
+
+Let me count characters carefully. I need to be concise.
+
+Let me draft:
+
+图2展示期望推测解码加速比随草稿长度γ（2–256）的变化，分两面板对比草稿成本c=0.05（典型）与c=0.0005（超低）下的表现，每条曲线对应不同接受率α（0.70–0.95）。左图加速比在γ≈16处达峰后骤降（最高≈6.5，α=0.95），右图则持续增长至γ≈64–128（最高≈18）。论文借此论证：降低每token草稿成本c可大幅提升γ的可扩展性，提高α进一步放大该效应，从而引出JetSpec通过并行树状草拟实现超低c的动机。
 *caption: Expected speculative decoding speedup scales as a function of draft length γ, under different per-token drafting costs c and acceptance rates α. Compa… ｜ 论文 [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] ｜ arxiv 见 MD 元信息*
 
 ### JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin — Fig.3 (p.4)
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig03.png]]
-> [!tip] 【图文联合解读】**【核心对象】** 图示JetSpec三阶段流水线：①抽取冻结目标模型 $M_p$ 多层（Layer M…N）中间隐藏态，经Feature Fusion压缩为单条Fused Feature；②以"return"为anchor、γ个[init]为草稿槽，输入m层因果并行Draft Head $M_q$，单次前向产出7节点候选树（return为根，a(s=-0.51)/+(s=-2.48)/B(s=-4.05)/sum(s=-1.39)/b(s=-2.91)等分支）并配tree-causal注意力掩码矩阵；④BFS排序后回灌 $M_p$ 做tree-SD验证。
+> [!tip] 【图文联合解读】**核心对象与结构**：JetSpec 三步流水线架构图。①**特征提取**：从冻结目标模型 M_p 的 M~N 层隐藏态，经 Feature Fusion 生成融合特征向量；②**并行树状草稿生成**：融合特征与 Anchor 令牌（return）+ 3 个 Draft Slots 输入 m 层因果并行 Draft Head M_q，单次前向生成候选树——根节点 s=-0.51，分叉至 a(+)、b、+、B 等子节点，每个带独立置信分（如 s=-0.87、-1.56、-2.48）；③**树验证**：冻结 M_p（L~N 层冻结，❄标识）配合 tree-causal attention mask，对候选树打分并产出 step i+1 的已验证 token（return, a, +, b）。
 
-**【技术结论】** 草稿成本c被压至轻量head级，接受率α借中间层融合特征保持高位，破解c/α权衡，使加速比随γ单调上升。
+**论证的技术结论**：通过提取并融合目标模型多层隐藏态作为条件，配合因果并行头，可在一轮前向中产出多分支候选树（含具体得分），从而打破传统串行 speculative decoding 的缩放上限。
 
-**【链路作用】** 作为方法总览图，串联"特征抽取→并行树生成→tree验证"完整推理链，为后续实验论证加速上限提供架构依据。
+**论文链路作用**：作为方法总览图，串联"特征融合—并行草稿—树验证"三阶段，是 JetSpec 区别于 EAGLE/Medusa 等序列式草案方法的核心理论框架支撑，后续 Table 3 的消融即在该流水线上验证学习率等训练超参影响。
 *caption: JetSpec design overview. JetSpec extracts fused hidden features from the frozen target model and conditions a causal-parallel draft head to generate h… ｜ 论文 [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] ｜ arxiv 见 MD 元信息*
 
 ### JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin — Fig.4 (p.15)
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图4对比因果头与扩散头从相同前缀"We"出发的草稿树质量。
-
-**核心对象与数据：** 因果头rank-1分支"are told that"忠实（gap=−0.34），验证器接受6 token；扩散头rank-1分支"given told that"不连贯（gap=+42.50，目标联合概率≈e⁻⁶³），仅接受4 token；但扩散头rank-3分支（gap=−3.69）反而忠实。
-
-**关键技术结论：** 扩散头采用分支无关的逐位预测器q_sur，将"given"(depth 1)与"told"(depth 2)独立组合——两者局部合理但全局不相邻，导致rank-1分支虽高概率却全局荒谬。即：树质量而非单一token概率才是speculative decoding扩展的真正瓶颈。
-
-**论文作用：** 揭示并行树草稿在扩散头下的典型失败模式，论证JetSpec需要专门解决"局部合理、全局不连贯"的草稿质量问题，支撑其方法设计的必要性。
+> [!tip] 【图文联合解读】图(a)因果头 γ=0：rank-1 分支"are told that" gap=−0.34 忠实→验证接受 6 tokens；rank-3 分支 gap=+42.50 被拒。图(b)扩散头 γ=0：rank-1"given told that"联合概率≈e⁻⁶³、gap=+59.56 不连贯，仅接受 4 tokens；忠实分支"are given that the"反居 rank-3（gap=−3.69）。该图揭示扩散头的"排序错位"失败模式——高保真草稿被埋没、验证沿错置的 rank-1 路径短走，直接论证 JetSpec 引入 γ>0、以 Gumbel 噪声重排使优质分支升至 rank-1 的核心设计动机，是论文并行树草稿方法链路中说明 γ 参数必要性的关键定性证据。
 *caption: Tree-quality failure mode at MATH-500 prompt #0, decode step 0. Both heads draft from the same prefix (last token “We”). The causal head’s rank-1 bran… ｜ 论文 [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] ｜ arxiv 见 MD 元信息*
 
 ### JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin — Fig.5 (p.18)
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig05.png]]
-> [!tip] 【图文联合解读】图示注意力掩码矩阵，行=3 blocks × 6 query positions（anchor + 5），列=verified prefix（x₀–x₃）+ sampled blocks。**所有 query 对 verified prefix 全 ✓（黄色）**；仅 block 1 内部呈**左上三角因果掩码**——attend anchor a₁ 及更早位；block 2、3 对 block 1 列**全深紫遮蔽**，实现块间隔离。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-该掩码直接支撑 JetSpec 的**并行树形 draft 训练机制**：使多个采样块在同一前向中并行计算的同时，仍保留块内自回归约束与块间独立性，避免长串行展开；从而把 draft 规模从线性扩展转为批量扩展，论证其打破 speculative decoding 缩放上限的核心技术结论。
+图5展示JetSpec训练多采样块的因果注意力掩码（3×3块状矩阵）：键值序列为4 token已验证前缀(x₀₋₃) + 3个采样块（每块1锚点a+5草稿b，总长18）；查询按6+6+6排列。黄色=可关注，紫色=屏蔽。规则为：所有查询可全访前缀；块内q_{i,j}仅见a_i及b_{i,≤j}（因果下三角）；跨块完全隔离。该设计保证每块独立自回归预测，避免相互"偷看"，并复用目标模型中间表征作为草稿头上下文，从而支撑Table 5中JetSpec相对DDTree在Qwen3-30B-A3B（MoE）上τ加速比的优越性，验证并行树起草的可扩展性。
 *caption: Figure 5: Causal attention mask used for training with multiple sampled blocks. Each query can attend to the full verified prefix and to the anchor pl… ｜ 论文 [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] ｜ arxiv 见 MD 元信息*
 
 ### JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin — Fig.6 (p.19)
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图中展示 JetSpec 的**训练块采样结构**：每个 block 含 1 个 anchor（隐于上下文、无 loss）与多个 future token（带 loss），具体可见三行共 9 个标注 "loss" 的橙色块，索引形如 b_{i,j}（i=block 行号 1–3，j=块内位置 3–5），对应"predicted token position with loss"。
+1) **核心对象与结构**：图示"Block-wise supervision for sampled training blocks"，共 3 个块（Block 1–3），每块由 1 个 anchor（a_i，白色，标注"no loss"）与 5 个未来 token 位置（b_{i,1}–b_{i,5}，橙色，标注"loss"）构成，即 1:5 的锚点-预测配比；监督仅施加于橙色位置。
 
-原文借此论证关键结论：通过 block-wise 采样把 anchor 留作上下文、仅对 future 位置施加 loss，使因果 draft head 能在**冻结目标模型**条件下，以目标模型特征为条件学习多 token 联合预测，从而支撑其并行树状 draft 的可扩展性，缓解传统 speculative decoding 的 scaling ceiling。
+2) **关键技术结论**：该 block-wise 监督机制使因果 draft head 能以 anchor 携带的目标模型特征作为上下文条件进行预测，同时保持目标模型冻结不变，从而支撑"并行树状草稿 + 冻结目标"的训练范式。
 
-在整体链路中，此图属于**训练策略说明**模块，与 §3.3 的 draft head 设计衔接，为后续实验（墙钟加速比）提供方法论基础。
+3) **论文整体作用**：作为 JetSpec 训练链路的核心监督方案，为后续 Table 6 中 JetSpec 与 JetSpec-Corpus 的消融对比、以及整体 speedup / accept-rate 增益提供训练侧的算法基础。
 *caption: Each sampled block includes an anchor position and multiple future token positions. The anchor is retained as block context and excluded from the loss… ｜ 论文 [[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]] ｜ arxiv 见 MD 元信息*
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.1 (p.1)
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig01.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图含四个子图（256/1024/4k/16k GPU），散点横轴为GPT-3迭代时间(s)、纵轴为网络成本($)，颜色编码NIC端口数/GPU(1–8)，每图标注Best Performance、Cost-effective(ZCube)、Budget-friendly(BCube)三点，并对比HPN、Rail-only、3-layer Rail、Optimized FT等基线。
+图1由4个散点子图组成，分别对应256、1024、4096、16384 GPU规模的ATOP搜索结果。横轴为GPT-3迭代时间（256 GPU用22B模型，其余用175B），纵轴为网络成本($)，颜色编码每GPU的NIC端口数(1–8)。每图标注三个代表点（Best Performance、Cost-effective即ZCube、Budget-friendly）及5个参考拓扑（HPN、BCube、Rail-only、3-layer Rail、Optimized FT）。
 
-**关键结论：** 四种规模下ZCube均稳定落在帕累托前沿中段——相对BCube迭代时间显著缩短，相对HPN/Optimized FT网络成本大幅下降，论证其是兼顾性能与成本的最优折中拓扑。
+技术结论：在四档规模下，ZCube一致落在Pareto前沿的"低时延-低成本"拐点处，相比ROFT/HPN/BCube等基线获得更优性价比，验证ATOP可跨万卡规模自动发现兼具性能与成本的网络拓扑。
 
-**论文作用：** 该图为ATOP自动化搜索的核心产出，证明搜索可跨规模一致定位ZCube式优解，为后续ZCube拓扑推广与大规模训练实验提供实证支撑。
+论文作用：作为全文"动机总览图"，先以可视化方式呈现ATOP搜索空间与ZCube诞生过程，为后续建模、模拟评估及对比实验提供直观锚点。
 *caption: ATOP search results on different GPU scales, each point representing a topology. For each scale, we label the three notable points in each plot: Best … ｜ 论文 [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] ｜ arxiv 见 MD 元信息*
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.2 (p.3)
@@ -692,13 +763,15 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.3 (p.4)
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**核心对象与数据**
 
-**(a)** 256-GPU全互联流量下每100Gbps承载最大流数对比，BCube/ZCube/Best-perf三种配置分别为约2.5/1.2/0.4，BCube最高但Rail-only存在"Can't Comm"异常；(b) 4k-GPU GPT-3单ToR故障退化率：ZCube仅2.8%（成本54%），低于HPN 9.0%、BCube 15.0%、ROFT 46.9%、Rail-only 46.2%，甚至优于成本318%的Best-perf（8.3%）。
+图3(a)：256 GPU all-to-all流量下各拓扑每100Gbps最大并发流数（越低越好）。BCube约2.8最高，ROFT约1.7、HPN约1.6，**ZCube约1.3**与上限250%成本的Best-perf（0.75）接近；Rail-only标注"Can't Comm"。
 
-**技术结论：** ATOP自动生成的ZCube以约一半成本实现比ROFT/HPN更优的故障鲁棒性，且all-to-all带宽无通信异常，证明自动化设计能突破人工直觉局限。
+图3(b)：4k GPU单ToR故障下GPT-3迭代时间退化率。ROFT/Rail-only退化高达**46.9%/46.2%**；BCube 15.0%、HPN 9.0%、Best-perf 8.3%；**ZCube仅2.8%**，且成本仅54%。
 
-**论文作用：** 作为核心定量证据，串联"自动管线→新拓扑产出→成本/带宽/容错综合优越性"三段论证，支撑ZCube作为大规模模型训练高性价比拓扑的主结论。
+**论证结论**：ECMP+PXN优化有限（同一拓扑柱高差小），**拓扑设计增益更大**；ZCube在负载均衡与容错两个维度同时接近Best-perf上限，却只需其约1/5成本。
+
+**论文作用**：作为ATOP自动化管线产出的实证，支撑"以低成本获得高性能+高可靠"的核心主张，是论文方法有效性的关键实验证据。
 *caption: (a) The max number of flow per 100 Gbps under all-to-all traffic in a 256-GPUs topology. (b) The performance degradation of GPT-3 training after a Sin… ｜ 论文 [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] ｜ arxiv 见 MD 元信息*
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.4 (p.5)
@@ -756,13 +829,13 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.11 (p.12)
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig11.png]]
-> [!tip] 【图文联合解读】**图11解读：**
+> [!tip] 【图文联合解读】**图11 联合解读**
 
-该图展示(a) ROFT实测拓扑：4台Spine交换机与4台Leaf交换机组成全连接Clos结构，下连4台服务器（每机含4张GPU与4个NIC），上行链路400Gbps，每台Leaf全互联至全部Spine，构成典型胖树全互联模式。
+1. **核心对象与结构**：图示真实测试床上4台服务器（每台4×GPU+NIC）的两种拓扑。(a) ROFT采用标准两层Fat-Tree，4 Spine×4 Leaf全连接，链路速率400Gbps（蓝线）；(b) ZCube同样4×L2-4×L1两层结构，主链路降至200Gbps（紫线），并新增L2-L1直连灰色交叉连线，重新组织连接关系。
 
-**关键论证：** 通过ROFT与ZCube并列对比，原文用以说明传统全互联Clos开销巨大（链路数随端口数平方增长），而ZCube以更高成本效益的精简拓扑实现等价训练通信模式，验证"高成本效益大模型训练网络"的核心结论。
+2. **论证结论**：ZCube以更便宜的200Gbps交换机即可部署，其优化拓扑在带宽减半条件下仍可匹敌ROFT 400Gbps Fat-Tree的性能，验证"高性价比"核心主张。
 
-**链路作用：** 作为全文方法论的实测落地证据，承接自动化拓扑优化流水线（ATOP）的设计输出，为ZCube在真实测试床上的可行性与性能优势提供可视化与定量支撑。
+3. **论文作用**：作为方法链路的**实验验证环节**，从仿真走向物理部署，证明自动化拓扑优化pipeline（ATOP）生成的ZCube方案具备实际可落地性与成本优势。
 *caption: The topology diagrams of ROFT and ZCube on a real testbed. 1M 4M 16M 64M 256M 1G 4G 16G… ｜ 论文 [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] ｜ arxiv 见 MD 元信息*
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.12 (p.12)
@@ -802,11 +875,11 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig15.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-该图展示ATOP在**4k GPU异构DCN、严格搜索空间**下的Pareto搜索：横轴为GPT-3-175B迭代时间（约6.8–10.5 s），纵轴为网络成本（约$9M–$20M），散点按每GPU NIC端口数着色（绿色代表1端口），并绘有左下凸的Pareto前沿曲线。图中标注三个关键方案：**Best Performance**（~6.9s, $15M）、**Cost-effective**（~7.2s, $10M），以及对比基线**3-layer Rail-Optimized FT**（~7.5s, $16.5M）。
+1）**核心对象**：4k GPU 异构数据中心网络（DCN）搜索结果散点图，横轴为 GPT-3-175B 迭代时间（6.5–10.5 s），纵轴为网络成本（0.8×10⁷–2.0×10⁷ $），绿色散点为候选拓扑，颜色映射 NIC Ports/GPU=1；蓝色曲线为 Pareto 前沿，包含三个关键标记点：Best Performance（≈6.5 s, 1.5×10⁷ $）、Cost-effective（≈7.3 s, 1.0×10⁷ $）以及传统 3-layer Rail-Optimized FT（≈7.0 s, 1.7×10⁷ $）。
 
-**技术结论**：即便在严格搜索空间约束下，ATOP仍能同时优化性能与成本——其Cost-effective方案较Rail-Optimized FT基线仅微增迭代时间，却显著降低成本；Best Performance方案亦全面优于FT基线，验证了搜索质量。
+2）**关键结论**：在严格搜索空间约束下，ATOP 仍能发现显著优于传统 Rail-Optimized Fat-Tree 的异构拓扑——同一性能下成本更低，或同成本下迭代时间更短。
 
-**作用**：在"新建异构数据中心"场景下证明ATOP的通用性与有效性，是论文"自动化拓扑搜索→推荐拓扑"完整实验链路的关键支撑。
+3）**论文作用**：作为异构+严苛约束场景的补充实验，验证 ATOP 自动化搜索管道在不同部署假设下的通用性与经济性，为 ZCube 设计提供经验支撑。
 *caption: The search results of ATOP when building a new heterogeneous data center with strict search space con- straints.… ｜ 论文 [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] ｜ arxiv 见 MD 元信息*
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.16 (p.16)
@@ -827,22 +900,25 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.18 (p.17)
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig18.png]]
-> [!tip] 【图文联合解读】**图18图文联合解读**
+> [!tip] 【图文联合解读】**1) 核心对象与数据**
+图展示 4096 GPU 下 group all-to-all 通信的 JCT（s）随链路故障率（0–15%）的变化，比较 10 种拓扑（ROFT、BCube(64,2)/(16,3)、ZCube 三变体、HPN、Dragonfly、Rail-only），阴影为标准差。**ZCube(64,2)、ZCube(16,3)、ZCube(16,3)-partial（红/紫/棕）三者最优**，JCT 仅由 ~0.25 s 缓增至 ~0.6 s 且波动最小；Dragonfly（灰）最差，从 ~0.9 s 恶化至 ~1.7 s；Rail-only 与 ROFT 居中偏高；BCube 与 HPN 表现中等。
 
-该图在4096 GPU规模下，对比9种拓扑（ROFT、BCube(64,2)/（16,3）、ZCube(64,2)/（16,3）及其partial、HPN、Dragonfly、Rail-only）在链路口故障率0–15%下group all-to-all的平均JCT及标准差带。数据显示：Dragonfly对故障极敏感，JCT由约0.9s飙升至1.7s；Rail-only与ROFT劣化至约1.2s；而ZCube(16,3)-partial、ZCube(64,2)、ZCube(16,3)与HPN始终维持在0.6s左右，曲线平缓且方差带窄。
+**2) 关键结论**
+论证 ZCube 系列在链路故障下保持低时延与高稳定性，容错鲁棒性显著优于 Dragonfly、Rail-only 等传统拓扑，验证其冗余路径设计对大规模训练可靠性的贡献。
 
-原文借此论证：ZCube族（尤其是partial变体）在链路失效场景下具备最优鲁棒性与低延迟，验证其作为大规模训练高性价比拓扑的可行性。该图是论文实验链路的**容错性评估环节**，与性能、成本图共同支撑ZCube优于Dragonfly/BCube/HPN的核心结论。
+**3) 论文链路作用**
+作为方法验证的"鲁棒性"环节，与吞吐（Fig 15-16）、成本（Fig 17）共同支撑 ZCube "高性价比、可扩展、容错强"的核心立论。
 *caption: The average JCT for group all-to-all communica- tion under different topologies with link failures on 4096 GPUs, with shading representing the standar… ｜ 论文 [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] ｜ arxiv 见 MD 元信息*
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.19 (p.18)
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig19.png]]
-> [!tip] 【图文联合解读】**图19联合解读：**
+> [!tip] 【图文联合解读】**图19 图文联合解读**
 
-**核心对象与数据：** 左图为ROFT、右图为ZCube在Allreduce操作下的实测（TestBed，蓝实线）与仿真（Simulation，橙虚线）BusBw对比。横轴为消息规模（1M–16G），纵轴为BusBw（GB/s）。两图趋势高度一致：小消息（1M）约5 GB/s；16M处约40 GB/s；64M时TestBed约135、Simulation约115 GB/s出现可见差距；256M后均饱和于~195 GB/s。
+图示含四个子图，分别对比 ROFT 与 ZCube 两种拓扑在 Allreduce 与 All-to-all 两种集合通信下，TestBed（蓝实线）与 Simulation（橙虚线）随消息规模（1M–16G）变化的 BusBw（GB/s）：Allreduce 场景两者峰值均约 195–200 GB/s，All-to-all 场景峰值约 60–65 GB/s，两曲线在全部 8 个消息粒度上几乎重合，仅在 64M 附近 TestBed 略高。
 
-**关键技术结论：** 仿真曲线在饱和段与实测几乎重合，仅在中段（64M–256M）小幅低估，说明带packet spraying的数据包级仿真能较准确预测ROFT与ZCube两种拓扑的真实网络带宽性能，验证了仿真方法的可信度。
+**论证结论**：启用 packet spraying 的包级仿真器在两种典型拓扑与核心集合通信算子下均能高保真复现实测测试床结果，验证了仿真器的可信度。
 
-**论文作用：** 该图是仿真→实测闭环验证的关键证据，支撑论文以仿真驱动拓扑优化搜索的设计，证明所提出的自动化拓扑优化流水线（ATop→ZCube）所选拓扑在真实部署中具有可预期的高性能。
+**论文作用**：作为自动化拓扑优化流水线的核心可信性证据，使作者能以低成本包级仿真替代昂贵硬件实测，在大规模拓扑空间内高效搜索并筛出 ZCube 等高性价比拓扑，服务大模型训练场景。
 *caption: Comparison between packet-level network simulation (with packet spraying for load balancing) and the real-world testbed in §6.2. I… ｜ 论文 [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] ｜ arxiv 见 MD 元信息*
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.20 (p.19)
@@ -865,13 +941,15 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.22 (p.20)
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig22.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 22 – Rail-only 拓扑）：**
+> [!tip] 【图文联合解读】**注**：图中标注为"Figure 21: ROFT topology"，但所示内容（8条独立Rail + Rail 1 内部2层CLOS放大）与所给"Figure 22 Rail-only"叙述一致。
 
-1）**核心对象与结构**：16384 GPU 集群采用 Rail-only 拓扑，每条 Rail 独立成 2 层 CLOS。共 8 条 Rail 互连，单条 Rail 含 16 个 L2 SW（128×400G）下连 32 个 Pod 的 L1 SW，每个 L1 SW 服务 64 台服务器（Pod 内共 2048 台/rail，集群合计 16 384 GPU）。L2↔L1 用 4×400G 全连接，每台服务器 8 个 NIC 分别绑定到 Rail 1–8。
+【图文联合解读】
 
-2）**关键技术结论**：Rail 内部为独立 2 层 CLOS，L2 SW 与 32 个 Pod 的 L1 SW 全相连，提供 rail 内 full-bisection 带宽以承载张量并行的密集通信；同时规避 3 层 Fat-Tree 的规模与成本开销。
+**结构**：16384 GPU（2048服务器×8）纯Rail拓扑。右部展示8条独立Rail（R1–R8），每Rail承载2048服务器，每服务器8块NIC（NIC 1–8）分别接入不同Rail，无跨Rail交换层；左部Rail 1放大：32 Pod，每Pod中L1 SW以64×400G下行64服务器（Server 1–2048），上行64×400G至16台L2 SW（L2 SW 1–16），L2间以128×400G（每组4×400G）互联，构成2层CLOS。
 
-3）**论文作用**：作为 ROFT、HPN、ZCube 等候选方案之外的 baseline 参考，用以凸显 ZCube 在 cost-effective 与大规模训练带宽利用率上的优势。
+**结论**：Rail-only采用"每Rail独立2层CLOS、无Rail间交换"，是最简洁、成本最低的组网方案，与文献[51][57]一致。
+
+**作用**：作为ROFT的对比基线，证明即便去除跨Rail交换层仍可支撑16384 GPU集群，从而凸显ROFT通过增加Rail间互连所换来的带宽收益。
 *caption: Rail-only topology for a 16384 GPU cluster based on 51.2 Tbps switches. Each Rail-interconnection adopts a 2-layer CLOS architecture, consistent with … ｜ 论文 [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] ｜ arxiv 见 MD 元信息*
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.23 (p.20)
@@ -887,43 +965,35 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### From ATOP to ZCube: Automated Topology Optimization Pipeline — Fig.24 (p.20)
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig24.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**说明**：图片标题实际为"Figure 23: HPN topology (dual-port designs for ROFT)"，而非用户所述的 Figure 24 ZCube，故以下解读严格基于图中可见内容。
 
-该图展示 ZCube(128,2) 拓扑结构：顶层 128 台 L2 交换机（每台 128×200G + 128×200G 双端口，总 51.2 Tbps），通过紫色/橙色**跨 Pod 对角链路**下连 128 台 L1 交换机；每台 L1 直连 16 台服务器（2×200G，8 NIC），共 2048 台 ×8 NIC=16384 GPU。
+**核心对象与结构**：图示为基于 51.2 Tbps 交换机的 16384 GPU 集群（2048 台服务器，每机 2×NIC×200G）HPN 双口 ROFT 拓扑——128 台 L2 SW（橙色）位于上层，128 台 L1 SW（绿色）位于下层；每个 L1 SW 聚合 16 台服务器（每台 2×200G NIC，全 200G 收敛接入），并以 128×200G 双倍链路上联至全 128 台 L2 SW（紫色+橙色对应双口）。
 
-原文借此论证：ZCube 利用 L2↔L1 对角跳线替代传统 Fat-Tree 的中间层交换，使跨 Pod 通信跳数更少、层级更扁平，在 51.2 Tbps 交换容量下达成显著优于 ROFT/HPN 的成本-效益折中。
+**论证结论**：通过 L1↔L2 全连接双口设计，HPN 可在 51.2 Tbps 端口约束下达成无阻塞脊叶式扩展，验证 ROFT 双口方案对超大 GPU 集群的承载能力。
 
-在论文中，该图作为自动化拓扑优化流水线输出的代表性候选方案，与 Fig21–23 的 ROFT、Rail-only、HPN 横向对比，共同支撑大规模模型训练网络"拓扑—成本—性能"联合评估的实验链路。
+**论文作用**：作为 ZCube 对比的 baseline（传统 HPN），展示其带宽/成本劣势，从而凸显 ZCube(128,2) 在保证等价互联时的端口与成本节省优势。
 *caption: ZCube(128,2) topology for a 16384 GPU cluster based on 51.2 Tbps switches. 880… ｜ 论文 [[from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.1 (p.1)
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig01.png]]
-> [!tip] 【图文联合解读】## Figure 1 图文联合解读
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与数据：**
-该图为多面板条形图，对比 Kimi K2.5（蓝色 K 标）与 Claude Opus 4.5、Gemini 3 Pro 及另两款模型在四大类基准上的得分：
-- **Coding – SWE-bench Verified**：K2.5 = 76.8，其余为 80.0 / 80.9 / 76.2
-- **Coding – SWE-bench Multilingual**：K2.5 = 73.0（最高），余为 72.0 / 77.5 / 65.0
-- **Video – VideoMMBU**：K2.5 = 86.6（领先），余为 85.9 / 84.4 / 87.6
-- **Video – LongVideoBench**：K2.5 = 79.8（大幅领先），余为 76.5 / 67.2 / 77.7
-另有 SearchQA（76.1 vs 63.2）与视频类基准（87.7 vs 88.5）的局部对比。
+图1以四组共10项基准对比 Kimi K2.5 与 GPT-5.2 (xhigh)、Claude Opus 4.5、Gemini 3 Pro：**Agents** 三项（Humanity's Last Exam 50.2、BrowseComp 74.9、DeepSearchQA 77.1）、**Coding** 两项（SWE-bench Verified 76.8、Multilingual 73.0）、**Image** 三项（MMMU Pro 78.5、MathVision 84.2、OmniDocBench 1.5 88.8）、**Video** 两项（VideoMMMU 86.6、LongVideoBench 79.8）。
 
-**2) 关键论证结论：**
-K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取得 SOTA，在 SWE-bench Verified 上接近最优，证明其在视觉-智能体（coding + video）双线均具竞争力。
+关键论证：Kimi K2.5 在 **Agents 类别 3/3 全胜**（BrowseComp 超第二名 9.1 分），Video 与 Image 多项夺冠，量化支撑其"visual-agentic intelligence"核心卖点；在 SWE-bench Verified（76.8 vs Claude 80.9）上略弱，提示 Coding 仍有提升空间。
 
-**3) 在论文中的作用：**
-作为首页总览图，定量支撑论文核心卖点——"visual-agentic intelligence"，为后续 Table 1 的联合训练策略消融提供基线锚点。
+论文作用：作为首页总览图，锚定 Table 1 联合训练消融基线，并以横向对标建立"全能型 agentic 模型"定位。
 *caption: Kimi K2.5 main results. 1… ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.2 (p.4)
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png]]
-> [!tip] 【图文联合解读】**图2联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**① 核心数据**：图含两条RL训练曲线。左图MMMU Pro（粉）起点≈0.71–0.72，随RL FLOPs攀升并逼近≈0.76虚线参考；右图（绿）起点≈0.69，最终稳定在≈0.78左右，基线虚线位于≈0.70。两条曲线均呈持续上升趋势并伴随明显振荡收敛。
+1）**核心数据**：图含两条以 RL FLOPs 为横轴、Accuracy 为纵轴的训练曲线。左图（MMMU Pro，粉线）从基线 ~0.713 持续爬升至 ~0.755–0.760；右图（绿色，另一视觉基准）从 ~0.698 攀升至 ~0.78，两条虚线分别标注起止水平。两条曲线均呈单调上升趋势，验证随 RL 计算量扩展性能持续改善。
 
-**② 关键结论**：作者以"minimal zero-vision SFT"为起点，仅靠加大视觉RL算力即在两个基准上获得显著且单调的增益（MMMU Pro +4–5pp，右图 +8–9pp），证明无需预先大量视觉微调，长程RL即可"涌现"出鲁棒的视觉能力。
+2）**关键结论**：在仅经过极少量"zero-vision SFT"的起点上，仅依靠长程视觉 RL 即可获得稳健视觉能力——视觉涌现无需依赖大规模视觉 SFT，RL FLOPs 本身是性能提升的关键杠杆。
 
-**③ 方法链路作用**：此图为全文核心证据——支撑"文本能力先于视觉激活、视觉能力由RL后激活获得"的设计哲学，与Table 2的跨模态迁移结果呼应，共同论证MoE+RL的后训练范式无需显式视觉SFT即可获得多模态智能。
+3）**论文作用**：作为核心实证证据，支撑全文"zero-vision activation + 长程 RL" 的方法论主张，并与 Table 2 的跨模态迁移结果形成"视觉能力—文本能力同源提升"的互补论证，构成 K2.5 视觉智能后训练范式的关键一环。
 *caption: Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve… ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.3 (p.5)
@@ -935,44 +1005,40 @@ K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取�
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.4 (p.6)
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png]]
-> [!tip] 【图文联合解读】**图4 图文联合解读**
+> [!tip] 【图文联合解读】**图4联合解读**
 
-图含左右两子图，横轴均为 RL flops。左图（Training Accuracy vs Steps）以散点+红色平滑曲线呈现训练准确率，由初始约 36% 平滑上升至末段约 64%；右图（Average Parallelism vs Steps）显示平均并行度：初期约 8.5、中段长期平稳徘徊于 7.5–9、后期加速攀升至约 14。
+该图由左右两幅散点+平滑曲线图构成，横轴均为 RL flops。左图"Training Accuracy vs Steps"显示训练准确率从约 36% 单调平稳上升至约 63%；右图"Average parallelism vs Steps"显示平均并行度先在 8 附近小幅波动、中段保持平稳，后期急剧攀升至约 14。
 
-该图以双指标共演化论证两点核心结论：① 并行 Agent 强化学习训练过程平稳收敛、无发散崩溃，证明 r_finish 等奖励机制驱动的训练可行性；② 准确率与并行度同向增长，说明模型不仅"答对任务"，还主动学习提升任务分解的并行深度，回应了正文中"避免无意义切分过多子智能体"的设计目标——分解是有效而非冗余的。
+原文借此论证：在并行智能体 RL 环境中，对已完成子任务施加 r_finish 奖励，既能持续提升任务完成准确率，又能驱动策略学到更深入、有意义的任务分解（并行度上升），从而避免"无意义切分多个子代理"的退化解。
 
-在论文方法链中，该图承担 RL 后训练阶段"策略正确性 + 并行分解合理性"的双重实证支撑，为后续 agentic 能力评测提供训练可信度背书。
+在论文整体链路中，该图作为方法有效性证据，支撑第6页关于"奖励机制引导有效分解"的核心论点，为后续 Table 4 的 SOTA 结果提供训练动态层面的合理化解释。
 *caption: In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as train- ing progresses. At the same time, the lev… ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.5 (p.10)
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
 
-1) **图表内容**：左雷达图为"Performance (%)"，覆盖 AIME2025、GPQADIAMOND、HMMT25_Feb/Nov、MMLUPro、LiveCodeBenchV6 及 Overall 共 7 个基准；Toggle 前（灰虚线）vs 后（蓝实线）显示 5 项提升（如 LiveCodeBenchV6 +2.2%、AIME2025 +1.1%）、2 项下降（GPQADIAMOND −1.0%、MMLUPro −2.0%），Overall +0.3%。右雷达图为"Token Usage"，7 项全部减少（绿标 0 增加），幅度 −745 至 −8127 tokens，Overall 节省 4791。
+图示双雷达图对比Kimi K2 Thinking在token-efficient RL前后于7项基准（含HMMT25系列、AIME2025、GPQADIAMOND、LiveCodeBenchV6、MMLUPro及Overall）上的表现。
 
-2) **关键结论**：token-efficient RL 在 7 个基准上**全部**显著降低 token 消耗，同时整体性能仅微涨 0.3%，证明"省 token 不损精度"。
+**左图（性能）**：5升2降——LiveCodeBenchV6 +2.2%、AIME2025 +1.1%、HMMT25_Nov +0.8%、Overall +0.3%为正向；MMLUPro −2.0%、GPQADIAMOND −1.0%为退化。**右图（token消耗）**：7项全部下降，幅度−817至−8127，Overall削减−4791，无任何一项增长。
 
-3) **论文作用**：作为方法有效性的核心证据，支撑 Kimi K2 Thinking "降本保效"的核心卖点，为后续推理效率与多模态训练优化提供量化锚点。
+论文据此论证：token-efficient RL可在几乎不损伤（仅2项小幅退化）的前提下系统压缩输出token，实现推理效率与能力兼得。该图是支撑K2 Thinking"可控思考预算"训练范式的核心定量实证，并为Table 5的横向对比提供方法学锚点。
 *caption: Comparison of model performance and token usage for Kimi K2 Thinking following token-efficient RL. compromise alleviates memory pressure, it does not … ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.6 (p.14)
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig06.png]]
-> [!tip] 【图文联合解读】**注意**：所提供图片实为一张性能对比表格，与caption所述"词云"不符，以下按图像实际内容解读。
+> [!tip] 【图文联合解读】**说明**：所给图片实为 **Table 6（性能对比表）**，而非 Figure 6 的词云。图 6 词云本身未呈现，以下基于表格内容做联合解读。
 
-该表横向比较K2.5 Agent Swarm、Kimi K2.5、Claude Opus 4.5、GPT-5.2、GPT-5.2 Pro在三项基准上的得分：BrowseComp为78.4/60.6/37.0/65.8/77.9；WideSearch为79.0/72.7/76.2/—/—；In-house Swarm Bench为58.3/41.6/45.8/—/—。
+**核心数据**：在三个 agentic 搜索基准上，K2.5 Agent Swarm 均居首位——BrowseComp 78.4（vs Kimi K2.5 60.6、Claude Opus 4.5 37.0、GPT-5.2 65.8、GPT-5.2 Pro 77.9）、WideSearch 79.0（vs 72.7/76.2）、自建 Swarm Bench 58.3（vs 41.6/45.8）；其中在 Swarm 专用基准上领先优势最大（+16.7 vs K2.5）。
 
-论证结论：Agent Swarm相对Kimi K2.5基座在BrowseComp提升17.8分、In-house Swarm Bench提升16.7分，且在BrowseComp以78.4超越GPT-5.2 Pro（77.9），证明Orchestrator动态调度多异构子代理的架构有效。
+**论证结论**：Orchestrator 动态实例化的异构子代理（即图 6 词云所可视化的能力分布）确实转化为可量化的检索增益；多代理编排显著优于单模型，验证了 Swarm 架构的有效性。
 
-整体作用：作为论文方法链路的终点证据，量化呈现"Orchestrator+子代理群"框架相比单模型基座与同级前沿模型的综合优势。
+**论文作用**：作为方法链路下游的关键实验证据，证明 K2.5 Agent Swarm 在 agentic 任务上同时超越开源单模型与闭源商业基线，支撑"动态编排+异构子代理"的核心贡献。
 *caption: The word cloud visualizes heterogeneous K2.5-based sub-agents dynamically instantiated by the… ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.7 (p.14)
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig07.png]]
-> [!tip] 【图文联合解读】**图7实质为一张多基准成绩对比表**（caption仅提BrowseComp，但实际涵盖三项）：列依次为K2.5 Agent Swarm、K2.5 单代理基线（即Discard-all）、Claude Opus 4.5、GPT-5.2、GPT-5.2 Pro；行依次为 BrowseComp（78.4 / 60.6 / 37.0 / 65.8 / 77.9）、WideSearch（79.0 / 72.7 / 76.2 / — / —）、In-house Swarm Bench（58.3 / 41.6 / 45.8 / — / —）。
-
-**技术结论**：Agent Swarm在三项基准上均大幅超越Discard-all基线——BrowseComp +17.8、WideSearch +6.3、Swarm +16.7，并在BrowseComp上反超GPT-5.2 Pro（77.9）、远超Claude Opus 4.5（37.0），印证"Orchestrator主动上下文分片优于被动压缩"。
-
-**在论文中的作用**：作为核心实验证据，验证多代理编排方法相较单代理上下文管理的有效性，并完成K2.5与顶级闭源模型的横向定位。
+> [!tip] 【图文联合解读】图7以三行三基准对比K2.5 Agent Swarm与Discard-all版K2.5及主流闭源模型得分：BrowseComp 78.4 vs 60.6（+17.8），超GPT-5.2 Pro（77.9）；WideSearch 79.0 vs 72.7（+6.3），超Claude Opus 4.5（76.2）；自研Swarm Bench 58.3 vs 41.6（+16.7），亦超Claude（45.8）。核心结论为Agent Swarm上下文管理相对Discard-all带来稳定且显著的全面增益，使其在三项任务上均超越顶级闭源对手。在论文链路中，该图作为关键消融/对比证据，定量证明Swarm多智能体架构与上下文管理是K2.5刷新SOTA的核心机制驱动。
 *caption: Comparison of Kimi K2.5 performance un- der Agent Swarm and Discard-all context management in BrowseComp. (60.6%) and surpassing even GPT-5.2 Pro (77.… ｜ 论文 [[kimi-k2-5-visual-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2.5: VISUAL AGENTIC INTELLIGENCE — Fig.8 (p.15)
@@ -1079,20 +1145,25 @@ Kimi K2.5 augments its native visual perception with **external tool calls** to 
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.1 (p.9)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图1联合解读**
 
-**1) 图示内容：** 展示MoE层前向传播的Route与Dispatch两阶段数据流。`Input Tokens [B×S, H]` 进入绿色**TopKRouter**：先经`Gating Linear`，再由`Softmax/Sigmoid`打分，最后`Top-k Selection + Load Balancing`输出`routing map`与`probs`；随后蓝色**Token Dispatcher**执行`Permute`（按专家分组tokens）→`All-to-All`（跨GPU发送）→`Postprocess`（预处理），将tokens分发至右侧`Shared`通路及各Expert。
+图示MoE层前向四阶段数据流：输入`[B×S, H]`经TopK Router（门控线性层→Softmax/Sigmoid打分→Top-K选择含负载均衡）输出路由图与概率；Token Dispatcher按专家重排并All-to-All分发至各GPU；Expert Computation对E个专家执行Grouped GEMM并行计算；Token Combiner通过All-to-All回收、Unpermute还原顺序后按路由概率加权合并；Shared Expert MLP以旁路跳过路由直接汇入融合，最终输出`[B×S, H]`。
 
-**2) 关键结论：** 原文以此论证MoE的核心机制是**token级稀疏激活**与**跨GPU All-to-All通信**的耦合，路由决策与分发传输构成性能与扩展性的关键瓶颈。
+**论证结论**：通过显式拆分Route–Dispatch–Compute–Combine四步，揭示MoE计算中通信（两次All-to-All）与计算（Grouped GEMM）的解耦边界，为量化通信开销与设计重叠优化提供模型基础。
 
-**3) 论文作用：** 作为方法总览图，为后续章节深入讨论路由策略、通信优化、Expert并行计算等具体技术提供整体框架铺垫。
+**章节作用**：作为方法篇总览图，统一定义后续并行策略、张量/专家并行调度、Token-dropping及细粒度通信优化等章节所引用MoE计算图的术语体系与执行顺序。
 *caption: Data flow through an MoE layer: Route, Dispatch, Compute, and Combine stages.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.2 (p.10)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图示 **Megatron Core MoE TopKRouter** 四阶段流程：
 
-图示Megatron-Core中MoE TopKRouter架构：左为分数函数（softmax归一化得[BxS, E]维分数），中为Top-K选择，输出两个并行产物——逐token概率[BxS, E]（加权组合专家输出）与路由映射[BxS, E]（dispatcher布尔掩码）；下方为两类负载均衡机制：无辅助损失的Expert Bias与全局batch级的Global_aux_loss。原文借此论证Router同时兼容aux-loss与aux-loss-free双路径，可灵活切换细粒度路由与均衡策略；该图是后续细粒度MoE并行调度、分组GEMM与token-dropless训练等扩展组件的路由计算基础。
+1. **门控层**线性投影 $W_r\in\mathbb{R}^{H\times E}$，由 $l=W_r^T x$ 得 logits $[B\times S, E]$；
+2. **评分函数**支持标准 Softmax 与 Sigmoid 两形式；
+3. **Top-k 选择**自 $E$ 个专家中选 $k$ 个，输出每 token 概率与布尔**路由映射** $[B\times S, E]$；
+4. **负载均衡**：作用于 logits 的 z-loss/Sinkhorn、无辅助损失的**专家偏置**，以及作用于路由映射的 micro-batch/sequence/global 三粒度 aux_loss。
+
+原文借此论证 MoE 路由的模块化设计；该图为后续 Table 2 对比注意力层与 MoE 层并行需求差异、实现可扩展 MoE 训练奠定结构基础。
 *caption: Router architecture: linear projection, score function, top-𝑘selection, and load balancing. combine_postprocess (backward).… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.3 (p.13)
@@ -1104,32 +1175,36 @@ Kimi K2.5 augments its native visual perception with **external tool calls** to 
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.4 (p.15)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig04.png]]
-> [!tip] 【图文联合解读】图示 **EP=4、8 Experts、2 Experts/GPU**（GPU0 持 E0/E1，GPU1 持 E2/E3）的 MoE 数据流：token 序列 [T0][T1][T2]… 经路由后，由 **All-to-All dispatch** 分发到各 GPU 对应专家计算，再经 **All-to-All combine** 回收结果。原文借此论证：EP 将专家切分到多 GPU 以摊薄单设备显存与算力，关键代价是 all-to-all 通信。该图是论文方法学的起点，为后续 EP 通信优化与大规模扩展性实验提供架构基础。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图示 EP=4、8 个专家（每 GPU 2 个）的 MoE 专家并行流程：序列 [T0…Tn] 经 Router 决策后，通过 All-to-All Dispatch 将 token 分发至 GPU0–3 上的对应专家（E0–E7）并行计算，再经 All-to-All Combine 聚合，保持 token 顺序输出。
+
+**技术结论：** 论证 Megatron-Core 专家并行的核心机制——通过两次 all-to-all 通信实现"按专家分片、跨 GPU 调度"，使每 GPU 仅持有部分专家，显存随 EP 度扩展而摊薄。
+
+**论文作用：** 作为方法链路基础图，支撑后续 Table 3 的 DeepSeek-V3 配置与 Table 4 的重计算显存分析，是 EP 通信模式与专家分片策略的标准可视化说明。
 *caption: Expert Parallelism (EP) distributes experts across GPUs. The all-to-all communication dispatches tokens to their assigned experts and combines results… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.5 (p.17)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig05.png]]
-> [!tip] 【图文联合解读】## 图文联合解读
+> [!tip] 【图文联合解读】**图示 Attention（上）与 MoE 层（下）在 4 Rank 上的三种并行映射**：
+① DP4→EP4：每 rank 独占 1 个 expert（E1/E2/E3/E4 互斥分布）；
+② TP2-DP2→ETP2-EP2：attention 切 1/2，专家按 E1/E2 与 E3/E4 分组跨 rank——属传统强耦合（绿色虚线强制约束 attention 并行维度与 expert 维度同构）；
+③ TP2-CP2→ETP2-EP1：启用 MoE Parallel Folding，attention 引入 CP2，每 rank 折叠持有全部 4 个 expert 的 1/2（ETP2-EP1）。
 
-**1) 核心对象与结构：**
-左侧（传统方案）上为 TP2-DP2：序列被切成 Seq1/Seq2 两段，每段 2 个 Rank（Rank1–3）各持 1/2 Attn；下为 ETP2-EP2：4 个 Experts 被拆成两组分发到不同 Rank。右侧（Parallel Folding）上为 TP2-CP2：4 个 Rank 同处 Seq1，靠 Context Parallel 切分序列；下为 ETP2-EP1：所有 Experts（1/2 E1–E4）完整堆叠在每个 Rank 上（EP=1，专家本地化）。
+**关键结论**：解耦 attention 并行（DP/TP/CP）与 MoE 专家并行（ETP/EP），使后者可独立取 EP1 折叠全 expert，从而削减跨 rank 通信、降低激活显存并提升 token throughput。
 
-**2) 关键技术结论：**
-绿色虚线箭头显示二者可等价映射，证明可将原本耦合的 DP×EP 解耦为 CP×EP1——在保持等效序列并行度的同时，消除 EP 带来的跨设备 Expert 通信开销。
-
-**3) 论文链路中的作用：**
-该图作为 MoE Parallel Folding 方案的形式化定义与可行性证据，为后续显存/通信收益及大规模训练实验奠定理论基础，是该方法从"概念"走向"实现验证"的桥梁。
+**作用**：奠定 Table 5 "细粒度激活 offloading" 实验所依赖的灵活并行拓扑基础，证明 MoE 训练可摆脱"attention-必须-决定-expert 分布"的传统限制。
 *caption: Parallelism mappings: traditional constraints vs. MoE Parallel Folding decoupling.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.6 (p.18)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig06.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图6展示了 Parallel Folding 中 **Attention 层在单一 TP 组内**的并行配置：8 张 GPU（GPU0–GPU7）构成一个 TP=8 的张量并行组，组内通过 TP AllReduce（8 路通信）完成 attention 集合通信，A2A Scope 限定为这 8 GPU。
+图示将 Attention 层的 TP=8 单一组（GPU0–GPU7，8 路 TP AllReduce，A2A Scope=8 卡）按 fold_factor=4（=TP/ETP=8/2）折叠为 MoE 层的 ETP=2 × EP=4 网格：每 2 卡纵向配对（GPU0↔GPU1 等）做 ETP=2 的 Expert TP（Expert TP AllReduce），4 对横向构成 EP=4 的 4 路 EP A2A 通信（A2A Scope 缩至 4 EP rank）。
 
-**论证结论**：传统方案中 attention（TP/CP）与 MoE（EP）必须共享同一并行映射，导致通信域膨胀；而 folded 布局将二者解耦——attention 在小组内保持高 TP/CP，MoE 在同小组内独立使用 ETP=1、高 EP，all-to-all 与 attention 集合通信都局限在 NVLink 互连的小 GPU 组内，从而降低跨域通信开销。
+**关键结论：** 解耦 Attention 与 MoE 并行映射，使二者通信域独立——Attention 维持 8 路张量并行通信，MoE 专家通信仅需 4 路 A2A，显著降低跨域 AllReduce 频率与开销。
 
-**论文作用**：作为核心方法的可视化证据，支撑 Parallel Folding 在 MoE 训练中实现 attention–MoE 解耦并行、提升可扩展性的设计主张。
+**论文作用：** 作为 Megatron-Core MoE 可扩展训练的核心机制，Parallel Folding 在同一 8 卡集群上灵活切换并行策略，为后续 MEFS 优化、跨域通信隐藏及大规模 MoE 性能评估奠定方法基础。
 *caption: Parallel Folding: decoupled attention and MoE parallelism mappings.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.7 (p.22)
@@ -1145,22 +1220,20 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.8 (p.23)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig08.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图8联合解读：**
 
-图8展示了DeepSeek-V3架构中的**选择性重计算（Selective Recomputation）策略**。图例标注了七类操作的内存管理方式：紫色core_attn（fused_attn无需重算）、粉色moe_act、绿色layernorm、蓝色mlp_up_proj、黄色dispatch均采用**output-discarding**（丢弃输出，反向时重算）；红色虚线框标记moe模块，橙色虚线框标记shared_experts。右下块图可见shared_experts内部FC1→Swiglu→FC2三段结构，灰色阴影区域表示各模块的重计算范围。备注指出dense mlp模块的mlp_recompute未在图中绘出。
+**1) 核心对象与结构**：图示 DeepSeek-V3 单层 Transformer 的选择重计算策略。上半部为 MLA（LayNorm→Down_proj→Up_proj+RoPE→Core-attn→Proj Linear→bias-drop-add），下半部为 DeepSeekMoE（LayerNorm→路由专家：fp32 Router→Token Dispatcher→Grouped FC1→Swiglu→Grouped FC2→Token Combiner，共享专家：FC1→Swiglu→FC2）。色标区分 6 类模块：紫 core_attn（fused_attn 不需重算）、粉 moe_act、绿 layernorm、蓝 mla_up_proj、黄 dispatch 均标记为 "output-discarding"（不存输出，重算时重生成），红/橙虚线框标注 moe 与 shared_experts 整块重算区域，并备注 dense mlp 重算未在图中绘出。
 
-**技术结论：** 论文据此论证——重算应优先施加于"显存密集但计算廉价"的算子（layernorm、dispatch、mlp_up_proj等），从而以极小计算开销换取显著的激活显存节省，是MoE大规模训练的关键显存优化手段之一。
+**2) 关键技术结论**：原文论证——该策略对显存占用大但计算便宜的部分做丢弃输出、依赖重算的细粒度选择；具体到 DeepSeek-V3，对 MLA 的 up_proj、attention 输入、MoE 的 router/dispatch/Swiglu/FC1 均丢弃输出（重算而非缓存），从而以最小额外算力换显著显存节省。
 
-**论文作用：** 该图与Figure 7（通信计算重叠）共同构成第3章的两大训练加速支柱，支撑后文吞吐量与显存占用实验的优化依据。
+**3) 论文整体作用**：作为 MoE 大模型训练内存优化链路的关键一环，与混合精度（表8）、并行策略协同，使 MoE 训练在万亿参数规模下内存可控，支撑后文吞吐/显存实验论证。
 *caption: Selective Recomputation.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.9 (p.24)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig09.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】该图展示双流时间线：上为 **Compute Stream**（Forward FC1→FC2→Backward FC2→FC1），下为 **D2H Stream**（前向阶段 Offload to CPU、后向阶段 Prefetch from CPU）。FC2 计算时段与传输时段形成"Overlap"和"Latency hidden"两块浅绿区域，证明 D2H/H2D 传输与 FC2 计算在时间上完全重叠。
 
-图9展示前向传播中细粒度激活卸载的两流时间线。Compute Stream依次执行Forward FC1与FC2（深绿块），D2H Stream负责Offload to CPU（深灰块）。关键在于：FC1的激活无需等FC2完成即可启动卸载，箭头指示其起始时刻，浅绿"Overlap"区表明D2H传输与FC2计算在时间上完全并行。
-
-论文借此论证：通过流级重叠，可将激活offload开销隐藏于后续计算之下，避免串行等待的墙钟代价，从而在保留大规模MoE训练所需显存卸载能力的同时，最小化对训练吞吐的影响。该机制是Megatron-Core细粒度activation offloading调度方案的核心组成部分，与并行/流水策略协同实现大规模MoE模型的可扩展训练。
+原文据此论证**细粒度激活卸载**可将设备-主机数据传输延迟隐藏于 FC2 计算之后，使 offload/prefetch 不引入额外端到端耗时。该图是 Megatron-Core 降低激活显存占用、支撑大规模 MoE 训练的关键机制示意图，量化说明了"以算换存"策略的零额外开销特性。
 *caption: Fine-grained activation offloading: stream overlap for forward and backward passes.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.10 (p.26)
@@ -1174,61 +1247,67 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.11 (p.28)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig11.png]]
-> [!tip] 【图文联合解读】图(a)展示FSDP2策略下3个Linear模块在Device Rank 0/1上的分布：Linear 1采用Shard_Param按模块分片集体缓冲（蓝色，每Rank各持一份对应条目），Linear 2、3为均匀分片（绿/红色），再以DTensor形式映射至各Rank对应位置。原文借此论证FSDP2"逐参数均匀分片"使通信缓冲与shard不对齐、引入额外开销；该图为对比铺垫(b) Megatron-FSDP"按模块扁平化、非均匀分片并对齐通信缓冲"的核心论点服务，是论文分布式训练设计章节中支撑其sharding strategy优越性的关键原理示意。
+> [!tip] 【图文联合解读】**图文联合解读（Figure 11）**
+
+1) **核心对象与结构**：图示对比两种分片策略。(a) FSDP2：3个Linear层各自被均匀切成Rank0/Rank1两段，形成(Shard, Param)-Shaped Collective Buffer，两台Device各持有3个DTensor（每层一块）；(b) Megatron-FSDP：把3个Linear展平为单一Per-Module Collective Buffer，按DP-Shard Size做非均匀切片，每Device仅持有与buffer切片对齐的少量DTensor（通常对应若干完整层）。
+
+2) **关键结论**：Megatron-FSDP将分片边界对齐到通信buffer，使每设备D tensor更少、all-gather通信次数更少，从而优于FSDP2的逐参数均匀切分。
+
+3) **论文作用**：作为方法论论据，支撑Megatron-FSDP优于原生FSDP2的设计主张，为后续Table 11在GB300/GB200/H100上的MoE吞吐基准提供动机。
 *caption: Comparison of sharding strategies: (a) FSDP2 shards each parameter uniformly; (b) Megatron-FSDP flattens per-module and shards non-uniformly, aligning… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.12 (p.28)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig12.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示对比FSDP梯度处理两种方案：上方为torch.empty的CUDACachingAllocator每次通信重新分配；下方Persistent双缓冲设计——两个预分配buffer在FSDP collectives间循环复用，经Reduce Scatter产出Gradient shard。
+**核心对象与结构：** 图示展示 FSDP 反向传播中持久双缓冲（double-buffer）流水线。顶部两个 `CUDACachingAllocator`（`torch.empty`）分别预分配粉色与蓝色 4 块缓冲区，经绿色箭头下放至底部形成两套"Pre-allocated buffer"（含循环箭头表示复用）。流程：Param shard → AllGather → 粉色 buffer → Transformer layer BWD → 蓝色 buffer → Reduce Scatter → Gradient shard，两组 buffer 交替跨 FSDP 集合通信复用。
 
-原文借此论证：**消除每次collective的分配开销，并使NCCL User Buffer Registration成为可能**。该设计在论文中支撑Table 12关于不同并行策略（degree 𝑑）对内存与通信影响的对比实验，是MoE大规模训练通信栈优化的核心环节，对降低显存峰值、提升集合通信效率至关重要。
+**技术结论：** 原文借此论证通过预分配+循环复用双 buffer，可彻底消除每次 AllGather/Reduce-Scatter 的临时内存申请开销，并满足 NCCL User Buffer Registration（UBR）的固定地址注册要求，从而将通信与计算 overlap 最大化。
+
+**链路作用：** 属于论文系统级 FSDP 优化章节，与 Table 12 并行策略内存/通信分析互为佐证，为 MoE+Transformer 大规模训练提供低开销通信基础设施。
 *caption: Persistent double-buffer design: two pre-allocated buffers are cycled across FSDP collectives, eliminating allocation overhead and enabling NCCL User … ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.13 (p.30)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig13.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：图示 4 块 GPU（GPU0–3），每卡承载 1 个专家，整体并行处理 8 个 token（a1–a8，每卡 2 个）。数据流为：Attention Layer 输出 → 本地 Router 决策 → token 被染色标记目标专家（如 a2 标绿、a1 标蓝）→ 经 EP group 的 **Dispatch（All-to-All 集合通信）** 将 token 跨卡路由至对应专家所在 GPU。
+**1）核心对象与结构**：图示4 GPU各承载1个Expert（共4专家）的EP数据流。每GPU处理2个token（a1–a8），经Attention层后由本地Router决定路由，Dispatch（EP group）按路由结果执行all-to-all将token分发至对应专家所在GPU（如a1/a5/a8跨卡汇聚到GPU1 Expert，a3路由至GPU3 Expert），Expert计算后由Combine（EP group）将fi结果回传原GPU。
 
-2) **关键技术结论**：Expert Parallelism 的核心通信代价来自 Dispatch 阶段的 **All-to-All**：Router 在本地完成路由决策后，token 必须在 EP group 内重新分发，使每卡只处理分到本地专家的子集——这是 EP 区别于 TP/PP 的标志性通信模式。
+**2）关键技术结论**：论证Expert Parallelism通过分片存储专家权重+EP group的all-to-all通信机制，使每卡只需驻留1个专家权重，从而突破单卡显存容量上限；Router在本地决策、跨卡仅搬运被选中的token，最小化通信量。
 
-3) **论文中的作用**：作为 §4.2.1 "Communication Anatomy" 的开篇图，奠定后续讨论 Combine、GEMM 切分、All-to-All 优化（如双向/TMA 加速）等问题的基础，是 Megatron-Core MoE 通信栈设计的参照原型。
+**3）论文链路作用**：作为EP的示意性原理图，与Table 13"Memory bottleneck solutions"互证，是Megatron-Core MoE扩展方案（TP+EP+PP多维并行）中的关键并行维度，用于解决专家层显存瓶颈的工程实践基础。
 *caption: Expert parallelism across 4 GPUs with 4 experts.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.14 (p.31)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig14.png]]
-> [!tip] 【图文联合解读】图示HybridEP调度内核两路数据流：①节点间（绿框）从其他节点同rank获取RDMA Token/Prob/Scaling factor；②本地（粉框）从注意力层与路由器取Token/Prob/Scaling factor。前者由RDMA warp组跨节点交换后送入"Global Memory→SM warp group"，与本地输入共同经FIFO转发至目标expert。论证核心：HybridEP将跨节点RDMA与节点内dispatch解耦——先由RDMA warp组完成同rank交换，再由SM warp组在节点内FIFO推送，避免SM直接处理RDMA数据。该设计是MoE专家并行通信栈中dispatch阶段token高效路由的关键实现。
+> [!tip] 【图文联合解读】HybridEP调度内核呈现双路径融合结构：①节点内走"Global Memory ⇒ SM warp group → SMEM Cyclic FIFO → SM ⇒ Global Memory"流水线；②节点间经RDMA warp group直发。三类数据（Token、Prob、Scaling factor）并行贯穿两条通道。图原论证：HybridEP把节点内NVLink与节点间RDMA合并到单一调度内核，借SMEM Cyclic FIFO作片上环形缓冲，省去主机往返。该图支撑Table 14所述通信瓶颈解法，是实现跨节点MoE可扩展训练的核心通信原语。
 *caption: The dispatch kernel design of HybridEP.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.15 (p.31)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig15.png]]
-> [!tip] 【图文联合解读】1) **对象与结构**：图中是 HybridEP 的两条并行 combine 路径，每条处理 Token、Prob 两类数据：本地 Global Memory→SM/intra-node warp group，或其他节点同 rank 的 RDMA Token/Prob→SM/inter-node warp group；随后均经 SMEM Cyclic FIFO。  
-2) **技术结论**：节点内与 RDMA 通信分工处理，并用共享内存循环队列衔接，减少 CPU 调度、拷贝和同步开销。  
-3) **作用**：作为 MoE 通信到专家计算的 kernel 实现图，支撑 HybridEP 的低开销 token 组合及性能扩展性实验。
+> [!tip] 【图文联合解读】1）结构：图中是 HybridEP combine 的本地/跨节点 Token、Prob 流水：Global Memory→SM 后进入 Intra-node/Inter-node warp group；每段含 1 个 Reduce warp group、2 个 SMEM Cyclic FIFO，跨节点经 RDMA 传递 Token/Prob，并连接相同 rank id。  
+2）结论：核函数按节点内/节点间分工，以片上 FIFO 衔接，仅传输 token/prob，减少同步与通信开销。  
+3）作用：它是 MoE token 聚合、通信实现与性能/扩展性评估之间的原理图。
 *caption: The combine kernel design of HybridEP.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.16 (p.32)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig16.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 16）**
+> [!tip] 【图文联合解读】**图示内容**：横轴为时间，两行分别为Even（ubatch 0/2/4）与Odd（ubatch 1/3/5）微批次；每段顶部标"Merged"，由绿色FWD块与灰色BWD块组成，相邻偶奇ubatch的前向计算合并为统一的FWD-FWD窗口，BWD紧随其合并执行。
 
-该图展示双微批次（u-Batch Even / Odd）在 MoE 流水线中的三段时序，每行均包含 FWD→BWD→FWD；三段顶部标注"Merged"，下方虚线框分别标记 ubatch 0（归属 Even 行）与 ubatch 1（归属 Odd 行）。
+**关键结论**：通过将两个连续微批次的前向阶段合并，使MoE all-to-all通信与计算相互重叠，从而隐藏通信开销，解决流水线中all-to-all带来的bubble问题。
 
-**关键结论**：1F1B 流水使 ubatch 1 的 FWD 与 ubatch 0 的 BWD 并发；"Merged"段表明连续的 FWD-FWD 阶段可与 MoE 专家路由的 all-to-all 通信重叠执行，从而隐藏通信开销。
-
-**论文作用**：作为 Megatron-Core MoE 扩展方法的核心调度图，支撑其"计算-通信全重叠"的高吞吐训练策略。
+**论文作用**：作为Table 16"Computation bottleneck solutions"中与GroupedGEMM、early-reduce等并列的方案支撑图，证明通信—计算重叠策略在大规模MoE训练中可有效消除瓶颈。
 *caption: Merged FWD-FWD Timeline with all-to-all Overlapping.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.17 (p.33)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig17.png]]
-> [!tip] 【图文联合解读】**图17图文联合解读：**
+> [!tip] 【图文联合解读】**图17联合解读**
 
-**1) 核心对象与结构**：图示为按奇偶分流的微批次双轨时间轴（u-Batch-Even / u-Batch-Odd），横向分为三段："Not Merged"段仅含 ubatch0 的 FWD；"Merged-1"段将 ubatch0 的 BWD 与 ubatch1 的 FWD 并排放置；"Merged-2"段将 ubatch1 的 BWD 与 ubatch2 的 FWD 并行呈现，颜色块以绿(FWD)/灰(BWD)区分。
+1）**结构与对象**：横轴为训练时间流，纵向分两行（u-Batch-Even与u-Batch-Odd），共呈现6个ubatch（0–5）交错排列，每段由绿色FWD块与灰色BWD块组成；中间4段标注"Merged"，仅首段ubatch 0的FWD与末段ubatch 5的BWD标红"Not Merged"。
 
-**2) 论证的技术结论**：原文借此说明，在 MoE 训练中，相邻微批次的前向计算与上一微批次的反向计算可"合并"(merged)重叠执行，而非严格串行；该调度使 all-to-all（专家并行 dispatch/combine）通信得以嵌入计算空隙，从而隐藏通信开销。
+2）**关键结论**：图中展示FWD-BWD合并重叠调度——后一ubatch的FWD与前一ubatch的BWD并行执行，使MoE层中all-to-all通信被计算掩盖；首尾两次因无相邻阶段无法合并。
 
-**3) 在论文整体中的作用**：作为"All-to-All Overlapping"优化策略的可视化佐证，支撑 Megatron-Core MoE 流水线实现通信-计算重叠、提升大规模专家并行训练吞吐量的核心方法论结论。
+3）**论文作用**：作为Megatron-Core MoE的核心优化手段之一，通过跨ubatch流水化隐藏all-to-all延迟，是实现MoE大规模高效训练的调度基础。
 *caption: Merged FWD-BWD Timeline with all-to-all Overlapping.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.18 (p.34)
@@ -1250,13 +1329,13 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.19 (p.35)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig19.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-图19展示了**交错式PP时间线**（PP=4，VPP=3，Grad accumulation=8）在**warmup阶段**对all-to-all通信的隐藏策略。图例用橙/蓝/粉三色区分FWD的三条虚拟管道及对应BWD，每格数字标记微批次序号（1–8）。红色框出warmup结束时多执行的一个额外微batch，其fprop紧接主时间线起点的microbatch（标注"Execute one extra micro-batch"），而bprop则与下方相邻微batch的fprop/bprop重叠（多箭头所示）。
+**1) 核心对象与结构**：图示 PP=4、VPP=3、GA=8 下的交错 1F1B 时间线。横轴为时间步，纵轴为 4 个 PP 阶段 ×3 个虚拟阶段（共 12 行），色块按 FWD/BWD 与 VIRTUAL_PIPE_0/1/2（黄/红/粉）区分，编号 1–8 表示 8 个 micro-batch。含 Warmup 段（填管线）和 Flush 段（排空）。
 
-关键结论：**通过在warmup阶段注入额外微batch**，使后续微batch的前向/反向与MoE all-to-all通信在时间轴上**计算-通信交叠**，从而隐藏通信开销。
+**2) 关键结论**：上图展示原调度，下图通过在 1F1B 起始前多执行一个 micro-batch，使相邻 micro-batch 的 fprop/bprop 无数据依赖（图下箭头标注），从而将 MoE 的 all-to-all 通信与 Dense 计算重叠执行，消减管线气泡。
 
-在论文中，该图支撑Megatron-Core交错流水线中"**通信隐藏于计算**"的核心优化链路，是MoE大规模训练高效率的关键实证。
+**3) 在论文中的作用**：支撑 MoE 训练中"通信—计算重叠"的核心优化论点，是连接交错 PP 调度与 expert 并行效率分析的关键图表，为后续性能数据提供时序依据。
 *caption: Interleaved PP Timeline with all-to-all Overlapping.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.20 (p.37)
@@ -1270,35 +1349,41 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.21 (p.38)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig21.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-图21展示MoE路由器的融合流程：输入经Gating Linear产生Logits后，分两路径并行演示——上路采用Topk/Group Topk搭配Sigmoid/Softmax，下路用Topk搭配Sigmoid/Softmax，两路径分别汇聚为单一"Fused kernel"。
+**1) 核心对象与结构**
+图示为路由器融合工作流：输入经 Gating Linear 产生 Logits 后，分裂为两条并行分支。蓝色上路径依次执行 Topk/Group Topk → Sigmoid/Softmax → Scale，封装为**蓝色 Fused Kernel**，输出 *Probs* 与 *Routing map*；绿色下路径执行 Topk → Sigmoid/Softmax，封装为**绿色 Fused Kernel**，输出 *Score for aux loss* 与 *Routing map for aux loss*；两者再汇入紫色 **Compute aux loss**（第二个 Fused Kernel），最终送往 Dispatch Preprocess，共三个融合内核。
 
-**关键论证：** 路由器中的Top-k专家选择与激活函数可被融合为单个kernel，省去多次中间张量写回与launch开销，相比传统分步执行显著降低访存与调度代价。
+**2) 关键结论**
+MoE 辅助损失计算被融合进单一 kernel；上路径产生实际路由权重与分发映射，下路径仅生成供辅助损失使用的得分，二者共享 Gating Linear 输出但走独立分支，避免冗余访存与重复 Top-k 选取。
 
-**在论文中的位置：** 该图隶属Megatron-Core的MoE性能优化模块（与Figure 19/20的grouped GEMM等并列），是支撑其端到端可扩展训练链路中路由器层级算子融合优化的关键可视化说明。
+**3) 在论文中的作用**
+作为 Figure 18 范式"减少 GEMM 之外的 kernel 数量"在路由阶段的实例化，支撑 Megatron Core 中 MoE 训练端到端 kernel fusion 优化链路，提升大规模 MoE 训练吞吐。
 *caption: The workflow of the router fusion. • Computation of MoE auxiliary loss: Building on step 2, the auxiliary loss computation is fused into a single kern… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.22 (p.39)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig22.png]]
 > [!tip] 【图文联合解读】**图22 联合解读**
 
-**核心对象与结构**：上下两幅子图均含 CPU/GPU 双时间线。上图（传统执行）CPU 侧交替出现 *Python & Framework* 与 *Launch K1* 等多次调用块，GPU 侧 K1、K2 之间形成 "CPU Overhead" 气泡；下图（CUDA Graph 执行）CPU 侧仅一个 *Graph Launch (Single API call)* 长块，GPU 侧 K1、K2 紧密背靠背，底部绿色箭头标注 "NO GPU BUBBLE"。
+**核心对象与结构：** 图分上下两部分，均以时间轴（横轴 Time）为基准，纵向并列 CPU 与 GPU 两条 Timeline。上半"Traditional Execution"显示每轮迭代中 CPU 需交替执行 [Python & Framework] 与 [Launch K1/K2/K3]，每次 Launch 仅触发单个 Kernel（K1→K2→K3），Kernel 之间存在灰白色"GPU BUBBLES"间隙；下半"CUDA Graph Execution"显示 CPU 端仅需一次 Graph Launch（Single API call），GPU 端 K1–K5 五个 Kernel 紧密串联，标注"NO GPU BUBBLES"。
 
-**关键技术结论**：原文借此论证——逐核启动路径下 CPU 调度开销足以让 GPU 产生空闲等待，而单次 API 提交整张计算图可彻底消除该空泡。
+**关键技术结论：** 传统执行模式下 Python/框架调度开销导致 GPU 频繁空转（每两个 Kernel 出现一处气泡）；CUDA Graph 通过一次捕获后整图回放，消除逐 Kernel 的 CPU Launch 开销，使 Kernel 紧密 back-to-back 执行，GPU 利用率显著提升。
 
-**论文中作用**：MoE 训练含大量细粒度专家计算与 all-to-all 通信核，传统调度极易使 GPU 空转。本图为 Megatron-Core 集成 CUDA Graph 提供执行模型层面的动机支撑。
+**在论文中的作用：** 该图为 Megatron-Core 引入 CUDA Graph 优化 MoE 训练流水线提供直观机理依据，是其性能优化章节的关键支撑图，与文中吞吐/加速比数据形成"机制—收益"对照。
 *caption: Traditional execution (top) versus CUDA Graph execution (bottom).… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.23 (p.39)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig23.png]]
-> [!tip] 【图文联合解读】**图23解读：**
+> [!tip] 【图文联合解读】**核心对象与结构**：
+横轴展示一次训练迭代的执行序列，包含 2 个 microbatch × 3 个 layer 的前向（F₁₁–F₂₃）、反向（B₁₁–B₂₃）、损失 L 及优化器 Opti。两类 CUDA Graph 对比：
+- **紫色虚线（Layer-wise CUDA Graphs）**：以"单层/单 microbatch"为粒度，逐小块独立 capture，需多张图拼接；
+- **橙色虚线（Full CUDA Graphs）**：将整次迭代序列封装为一张大图，一次性 capture。
 
-图示一次训练迭代（3层、2微批次）的调度序列：前向块F₁₁–F₁₃、损失块L、反向块B₁₁–B₁₃依次排列。**紫色虚框（Layer-wise CUDA Graphs）**逐层独立封装每个F/B；**橙色虚框（Full CUDA Graphs）**将整段前向（或整段迭代）打包为单一图。
+**关键技术结论**：
+Full CUDA Graph 把全部前反向+优化器操作纳入单一图，消除了 layer-wise 方案在每个小块间的 kernel launch 开销与 CPU–GPU 同步停顿，从而获得更高吞吐与更稳定的执行时间。
 
-**技术结论：** MoE模型中各层专家路由使每层处理的token数动态变化，Full CUDA Graph要求全段shape一致，因此**无法捕获**；Layer-wise方案将每层作为独立子图capture，既复用kernel消除launch开销，又容忍层内shape浮动。
-
-**方法链作用：** 是论文针对MoE特殊结构对CUDA Graph机制的关键改造，构成Megatron-Core可扩展MoE训练性能优化的核心组件之一。
+**在论文中的作用**：
+该图是性能优化章节中"Full CUDA Graphs 优于 Layer-wise"论点的核心可视化证据，支撑 Megatron Core 在 MoE 训练流水线中选用端到端整图 capture 的方案。
 *caption: Full versus layer-wise CUDA Graphs in one training iteration (three layers, two microbatches).… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.24 (p.40)
@@ -1314,63 +1399,66 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.25 (p.41)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig25.png]]
-> [!tip] 【图文联合解读】**图25联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1）核心对象与结构**
-该图为NSight Systems profiler时间线，对比Transformer层前向传播两版本在+104~109ms（无CUDA Graph，上）与+97.5~103ms（部分CUDA Graph，下）区间的执行序列。按MoE流程划分为**preprocess、dispatch、routed experts（含GroupedGEMM_parallel/nvls）、combine**四个阶段。上图各kernel块之间存在明显**空白间隙**（CPU launch overhead）；下图左侧绿色"CUDA Graph"区块连续紧凑，可见`cudaMemcpyAsync`等异步调用将多步操作封装，kernel间隙被消除，而dispatch/combine等动态部分仍保留外部调度。
+1) **核心对象与数据**：图为Nsight Systems对Transformer层前向的时间轴剖面，自上而下分为attention、shared experts、router、preprocess、dispatch、routed experts、combine七阶段。上半部分无CUDA Graph，attention区间（≈98.5–104ms）含约十余次独立kernel（LayerNorm、Q/K/V proj、RoPE、attn、Proj…），kernel间存在明显CPU launch间隙；下半部分启用partial CUDA Graph后，attention整段被包裹在单一绿色"cudaGraph"块内（≈98–100.5ms），耗时由约6ms压缩至约2.5ms，节省≈50%。
 
-**2）关键技术结论**
-Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA Graph捕获，可基本消除CPU发射开销与launch latency；对依赖token路由、动态专家分配的dispatch/combine则保留非图路径，从而兼顾**执行效率与动态灵活性**。
+2) **关键技术结论**：attention作为形状/计算图静态的子模块，其CPU调度开销可被CUDA Graph彻底消除；router/dispatch/combine（含AllToAll）仍为动态，需在Graph外执行。
 
-**3）在论文中的作用**
-作为NSight实测证据，支撑文中核心论点——Partial CUDA Graphs是Megatron-Core MoE训练实现高吞吐的关键优化之一，与并行张量/专家、TokenDrop等优化协同，使大规模MoE训练可扩展。
+3) **作用**：为论文"partial CUDA Graphs"策略提供实测证据，支撑MoE训练中静态段图捕获、动态段保留的低开销优化方案。
 *caption: Transformer layer forward pass: without (upper) and with (lower) partial CUDA Graphs. CPU overhead is largely eliminated for static components.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.26 (p.42)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig26.png]]
-> [!tip] 【图文联合解读】图中以 \(L\) 层、\(M\) 个微批比较执行顺序：启用 PP 时连续运行 \(F_{mb0},F_{mb1},\ldots\)，再统一反向；禁用 PP 时按 \(F_{mb0}\!→\!B_{mb0}\!→\!F_{mb1}\!→\!B_{mb1}\) 执行。CUDA Graph 保存的反向上下文会被后续前向覆盖，故 PP 下不能跨微批共享，总计需 \(L·M·2\) 个图；无 PP 仅需 \(L·2\) 个。图中解释了两者冲突，为图数量估算及 MoE 训练优化设计提供依据。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图分上下两栏对比：上栏（带 PP，流水线并行）时间轴上 F_mb0→F_mb1→…→B_mb0→…→B_mb1 交错执行，F_mb(i+1) 先于 B_mb(i) 完成，红色叉号标注"不可跨 microbatch 共享图"，共需 L×M×2 张图；下栏（无 PP，顺序执行）严格 F→B→F→B 交替，绿色勾标注"F_mb(i+1) 在 B_mb(i) 之后执行，可共享"，仅需 L×2 张图。
+
+**技术结论：** PP 模式下交错调度使前向保存的张量/上下文被后续前向覆盖，反向时引发显存损坏，故每个 microbatch 必须独立捕获 CUDA Graph，使图数量随 M 线性放大。
+
+**论文作用：** 为 MoE 训练中 CUDA Graph 实现的显存开销分析提供量化依据（L×M×2 vs L×2），论证大规模 PP 场景下图管理的扩展性挑战，是方案设计的关键约束。
 *caption: Why Pipeline Parallelism prevents CUDA Graphs from being shared across microbatches. With PP (top): Execution is interleaved—multiple forward passes r… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.27 (p.45)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig27.png]]
-> [!tip] 【图文联合解读】**图27（Backward）图文联合解读：**
+> [!tip] 【图文联合解读】**图示内容（量化）：** 图示 ECHO 前/反向计算流。前向（红色标题）：Planner 据 hidden states 同时输出 routing map（送 Token Dispatch）与 hot expert map（送 Expert Dispatch），随后经 Token Dispatch→Expert FC1→MoE act→Expert FC2→Token Combine，两级 Expert Dispatch 将热专家权重克隆至空闲槽；反向：Combine backward→FC2 dgrad/wgrad→MoE act backward→FC1 dgrad/wgrad→Dispatch Backward，Expert Gradient Dispatch 将梯度归约回原专家。
 
-**1) 核心结构：** 图示ECHO反向计算流，自底向上为：Combine backward → FC2 双轨（dgrad 主路径 + wgrad 并行）→ MoE act backward → FC1 双轨（dgrad + wgrad）→ Dispatch Backward。两条黄色模块贯穿全程——左侧 "Expert Dispatch" 将 home expert 权重分发至 dgrad 计算路径；右侧 "Expert Gradient Dispatch" 从 wgrad 路径汇聚梯度回传 home expert。两条横向 dashed 线划分出 FC2、MoE act、FC1、dispatch 四个阶段。
+**技术结论：** 论证 ECHO 通过规划器驱动的动态克隆+空闲槽复用，实现不丢 token 的负载均衡 MoE 训练。
 
-**2) 关键结论：** 反向与前向结构对称——dgrad 在被克隆的 hot expert 上算、wgrad 归约回 home expert，从而在不改 MoE 算法的前提下，保持专家并行并复用热专家权重，避免跨 rank 重复存储。
-
-**3) 论文作用：** 与前向图配对构成完整 ECHO 调度示意图，是论证"调度即扩展性"的核心证据，支撑 ECHO 在不修改路由/并行框架条件下实现 MoE 高效训练的结论。
+**论文作用：** 作为 ECHO（论文核心贡献）相对 drop-and-pad 基线的可扩展 MoE 训练完整工作流图示佐证。
 *caption: ECHO workflow for forward and backward passes. The planner generates routing and hot expert maps. Expert Dispatch clones hot expert weights to spare s… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.28 (p.46)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig28.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**核心对象与结构：** 图分三列对比三种执行模式的显存布局。每列含多层（行）×多专家（Exp 0/1/2）的方块堆叠，绿色为实际占用 token（编号 0–5），白色为空闲区，虚线框表示预分配但未用容量。Eager 列贴合实际、无浪费；Static Shape 列每层独立预留最坏容量，白色碎片显著；Paged Stashing 列各层共享一个超尺寸 tmp 缓冲区，配合 Stashing buffer 将分散 token 紧凑填入。
+图示横轴对比三种执行模式（Eager / 静态Naïve worst buffer / 静态Paged stashing），纵轴为Layer 0/1/2下Exp 0/1/2的token（0–5）分配，深绿表实际占用、浅绿表分配缓冲。
 
-**关键结论：** Paged Stashing 以"共享最坏尺寸 tmp + 分页暂存"机制，在保留静态分配优势的同时，把碎片率逼近 Eager 水平，兼顾稳定性与显存利用率。
+**核心结构**：Layer 0仅Exp 2激活、Layer 2仅Exp 1/2激活，Naïve模式仍按worst-case为每层每专家预留满载缓冲，造成大量浅绿碎片；Paged Stashing采用跨层共享tmp缓冲+分页暂存未路由token，将浅绿区压缩为stashing buffer。
 
-**论文作用：** 为 MoE 训练中 Expert Parallel 显存瓶颈提供解决方案的可视化依据，支撑 Paged Stashing 作为 Megatron Core 中 MoE 通信–计算重叠优化的核心设计。
+**论证结论**：Paged Stashing在保留静态shape编译效率的同时，规避了Eager动态分配碎片化和Naïve最坏预分配浪费，实现内存利用率最优。
+
+**论文作用**：作为MoE显存优化的关键可视化证据，支撑"Paged Stashing"核心技术claim，与后续吞吐/显存实验数据形成机理与结果互证。
 *caption: Memory layout comparison across three execution modes. Left: Eager mode allocates memory dynamically based on actual usage. Middle: Baseline static sh… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.29 (p.46)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig29.png]]
-> [!tip] 【图文联合解读】**联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **图示对象**：横向时间线对比两条 CUDA Stream——绿色 Compute Stream（依次执行 Forward Layer N、N+1），深灰 Stash Stream（执行 Layer N 激活从 tmp buffer 拷至 stash buffer）；两者在时间轴上以箭头衔接，浅绿"Overlap"区表明 Layer N 的 stash 拷贝与 Layer N+1 的前向计算完全并行执行。
+图29以时间轴横向展示两条并行CUDA流：Compute流（绿色）依次执行Forward Layer N、N+1及反向Backward N+1、N；Stash流（灰色）执行tmp→stash缓冲的"Stash Layer N"与反向"Reload Layer N"。前向阶段Stash与Forward N+1完全重叠（Overlap），反向阶段Reload潜伏于Backward N+1之后被完全隐藏（Latency hidden）。
 
-2) **关键结论**：前向 stash 通信可与下一层计算 kernel 完全重叠，专用 Pack Stream 使 tmp→paged stash 的拷贝延迟被计算掩盖，不引入额外气泡。
+该图直观论证了**Paged Stashing通过双流DMA使激活搬运与计算全重叠、零额外开销**的关键结论。
 
-3) **链路作用**：作为 MoE 训练显存-计算重叠优化的核心证据，证明 paged stashing 通过流并行实现了激活备份零开销，是支撑大规模 MoE 流水线高吞吐的关键环节。
+在论文中，它是支撑MoE激活重计算/存储优化可行性的核心示意图，配合Figure 28构成"内存换显存、重叠隐藏延迟"的完整技术叙事链。
 *caption: Paged Stashing stream overlap. Forward pass: After Layer N computes, its activations are stashed (copied from tmp buffer to paged stashing buffer) on … ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.30 (p.50)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig30.png]]
-> [!tip] 【图文联合解读】**图示内容（量化）**：展示三种FP8量化方案的缩放因子粒度。Per-Tensor为整张量1个scale（最粗，单色大方块）；Blockwise为128×128块1个scale（中等，2×2示意）；MXFP8为1×32元素1个scale（最细，6×6共36个小色块）。底部双向箭头标注粒度光谱：左侧"Coarse / Fewer Scales"，右侧"Fine / More Scales"。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**技术结论**：FP8训练配置由"数据格式（E4M3/Hybrid）+ 缩放粒度"联合定义；粒度越细→scale越多→数值精度越高，但scale元数据存储与计算开销也越大，三者构成精度–效率的权衡谱系。
+图示横向对比三种FP8量化方案的缩放因子（scale）分配粒度：① **Per-Tensor**——整个张量共享1个scale（绿色大方块）；② **Blockwise**——每128×128元素块1个scale（图中2×2=4块示意）；③ **MXFP8**——每1×32元素1个scale（6×6细密小格）。底部箭头标示从"Coarse Granularity / Fewer Scales"到"Fine Granularity / More Scales"的演进。
 
-**方法作用**：位于第5.3节首图，承接前文"三堵墙"分析，作为Reduced-Precision Recipes的形式化铺垫，为后续NVFP4讨论建立粒度对比基准。
+原文借此论证：FP8训练配方由数据格式（E4M3，或E4M3+E5M2混合）与缩放粒度共同决定；粒度越细，scale数量越多，数值稳定性越高，但存储/通信开销随之增加，构成**精度–效率权衡**。该图为Megatron-Core低精度栈的选型基础，决定MoE大规模训练中FP8路径的数值稳定性与吞吐表现。
 *caption: FP8 training recipes: Per-Tensor Scaling, Blockwise FP8, and MXFP8. A reduced-precision training recipe consists of: • Data format. There are two type… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.31 (p.52)
@@ -1408,37 +1496,32 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.34 (p.57)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig34.png]]
-> [!tip] 【图文联合解读】图(b)展示4K→256K序列长度下SDPA与MoE占总FLOPs占比的此消彼长：SDPA（红）由4K约13%单调升至256K约90%；MoE（蓝）由4K的59.4%降至256K的约6%。两曲线在约16K附近交叉，4K时MoE主导（59.4%），64K时SDPA主导（69.7%）。
+> [!tip] 【图文联合解读】图(a)在0K–64K序列下展示三组件绝对FLOPs：SDPA（红）呈O(s²)于64K达32000+ TFLOPs，MoE（蓝）与剩余注意力（橙）为O(s)，同位置仅约10000和5000。图(b)4K–256K对数刻度显示占比演变：4K时MoE占59.4%主导，16K附近交叉于约40%，256K时SDPA升至约90%、MoE降至约6%。
 
-原图用以论证：SDPA复杂度为Θ(s²)、MoE及其他操作仅Θ(s)，故长序列训练时注意力成为算力瓶颈。论文据此强调须重点优化SDPA（如FlashAttention内核），才能使MoE模型在长序列场景下保持可扩展性。
+该图量化论证：序列超16K后，SDPA的二次复杂度使其取代MoE成为计算主导。论文借此指明长上下文MoE训练的优化重心应从MoE通信转向SDPA，为后续序列并行与计算-通信重叠等优化策略提供量化依据。
 *caption: SDPA exhibits 𝑂(𝑠2) complexity, while MoE and the remaining attention operations exhibit 𝑂(𝑠) complexity. Therefore, SDPA dominates the computation at… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.35 (p.59)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig35.png]]
-> [!tip] 【图文联合解读】该图以表格形式对比TP与两种CP（Context Parallel）在Core Attention中的通信与计算模式：CP(P2P)线性层权重复制，K/V切片直接送入SDPA并伴点对点通信；CP(A2A)权重同样复制，但K/V先经All-to-All重分布再输入SDPA；TP权重被切分并行、无额外集合通信步骤。
+> [!tip] 【图文联合解读】**图35 图文联合解读**
 
-关键结论：CP方案下线性层权重在各rank上重复存储，attention输入仍需通过P2P或A2A通信才能正确分片到各rank；而TP通过将权重本身切分，使各rank天然持有对应分片，通信模式更简洁高效。
+**核心对象与结构**：表格对比TP与两种CP在Core Attention层的通信-计算模式。CP(P2P)：线性权重复制，SDPA前后以P2P传递sequence-sharded张量（环形通信）；CP(A2A)：线性权重复制，SDPA前后通过A2A在sequence-sharded与head-sharded布局间转换；TP：权重切分(paralleled)，单次SDPA处理head-sharded张量，无额外跨设备通信。
 
-该图为论文论证长序列训练中CP与TP的通信开销权衡提供直观对比，是方法选型与性能分析的核心参考依据。
+**关键技术结论**：CP保留完整线性权重（节省显存、可承载更长序列），代价是额外的集合通信开销；TP切分权重、通信最少但显存放大。与正文对照，该图量化了"P2P适合序列切分、A2A需配合head切分"的设计取舍。
+
+**方法链路作用**：作为MoE长序列训练中TP×CP×EP并行组合选型的可视化决策依据，支撑后续关于通信开销与显存权衡的实验分析。
 *caption: Communication and computation patterns of TP and two types of CP.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.36 (p.61)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig36.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**
-图(a)"Unpacked sequences"展示5条变长序列（橙、蓝、米、绿、紫），按各自长度独立放置，未做拼接。最长序列（如蓝色）决定批处理行高，其余序列（尤其米色）右侧留有大量空白/padding，仅为对齐最长序列。
-
-**2) 关键技术结论**
-"未打包"模式下，短序列被强制padding到与最长序列等长，造成**显著的计算浪费**——GPU算力消耗在无意义的padding token上，**吞吐效率下降**。这在MoE训练中尤其严重，因为不同样本激活的专家数与序列长度相关，padding会污染token路由与负载统计。
-
-**3) 在论文中的作用**
-该图作为**动机图**，引出后文提出的"Packed sequences"方案：通过将多条样本拼接填满固定context长度，消除padding冗余，从而**提升MoE训练吞吐与专家路由统计的准确性**，是该方法整体效率优化的关键铺垫。
+图(a)展示5条长度不一的序列（橙、蓝、米黄、绿、紫）按原始长度堆叠，存在大量空白区域；图(b)将所有序列统一填充至最大长度，形成密实矩形块。原文借此论证**打包序列（packed sequences）策略**可消除padding冗余，使批次内token利用率接近100%，显著提升训练吞吐与GPU计算效率。该图是论文方法链路的基础铺垫——为后续MoE训练中变长序列的高效批处理、专家路由与token drop策略提供数据组织层面的前提。
 *caption: Unpacked vs. Packed sequences.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.37 (p.61)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig37.png]]
-> [!tip] 【图文联合解读】图中用4×4与4×2网格表示打包序列的因果注意力有效计算：左图7个单元集中为6+1，右图呈4+3分布，体现等长切分不等于计算均衡。原文据此指出变长样本会导致Context Parallel通信组负载不均；Dynamic-CP按序列长度动态选择切分和通信组，无需迁移参数或优化器状态，仅增加很小框架开销。该图是Dynamic-CP的动机性论证，并非性能实验。
+> [!tip] 【图文联合解读】图以3个4×4批次展示因果注意力掩码，彩色单元为有效计算：同样4个token，长度3+1需7个单元，2+2仅6个，未填充的长度4则有10个，负载在6～10间失衡。该对比论证Dynamic-CP需按序列长度和掩码动态调整QKV划分及CP通信组；它无需迁移参数或优化器状态，框架开销低。该图是从固定CP迈向可变长度动态并行的关键动机。
 *caption: Compute imbalance in causal attention over packed sequences. are partitioned and which CP communication group is used by attention operators, without … ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.38 (p.61)
@@ -1450,18 +1533,22 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.39 (p.64)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig39.png]]
-> [!tip] 【图文联合解读】图分两栏对比Megatron-Core MoE的两种负载均衡策略：(a)辅助损失法沿 Logits→Score Function→Top-k Selection→Dispatch 路径，先按分数函数计算专家接收概率 P_i=(1/T)Σ probs(x,i)，再统计路由频次 f_i=(1/(T·topk))Σ routing_map(t,i)，以 L_aux=α·E·Σ(f_i·P_i) 做梯度反向传播的"可微软均衡"；(b)Sinkhorn 路线沿 Logits→exp→Row/Col Norm 迭代收敛→Top-k→Dispatch，以矩阵归一化分配实现"非可微硬均衡"（图中示例矩阵元素为 -4,-3,-2,-1）。两者为框架提供互补的专家路由机制选择，是支撑大规模MoE可扩展训练栈的关键模块之一。
+> [!tip] 【图文联合解读】【对象】图分三栏对比 Megatron-Core MoE 三种负载均衡策略：(a) 辅助损失（梯度、可微、软均衡）经 Logits→分数函数→Top-k→Dispatch，附加 $L_{aux}=\alpha\cdot E[\sum f_i P_i]$；(b) Sinkhorn（指派、不可微、硬均衡）对 exp 矩阵迭代行列归一（no_grad）后 Top-k；(c) 无辅助损失偏置法（反馈、不可微、自适应）以 Logits+Expert Bias→Top-k→Dispatch→Token Counts 形成 $b_i\text{+=sgn}(avg-cnt_i)$ 闭环。
+
+【结论】呈现从"梯度惩罚→组合优化→无梯度反馈"的演进路线，揭示可微软均衡与不可微硬均衡之间的权衡。
+
+【作用】为论文 MoE 路由模块的方法选型与后续吞吐/质量对比实验提供统一基线。
 *caption: Load balancing strategies in Megatron-Core MoE.… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.40 (p.65)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig40.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图40展示Megatron-Core MoE的**共享专家架构**流程。核心结构：输入token流（T1–T7）经门控选Top-K→**Token Dispatch**（All-to-All通信，橙色框）→Norm→**Routed Experts Compute**（橙色框）→Norm→**Token Combine**（橙色框）→Add叠加共享专家输出→输出token。
+**1) 核心结构（图中可量化信息）：** 图示展示了 Megatron-Core MoE 的双路径架构。输入为 8 个 token（T0–T7），经 Router 分流为两条并行支路：左路（绿色）为 Shared Expert，对全部 8 个 token 依次执行 FC1 与 FC2 计算；右路（橙色）为 Routed Experts，仅对每个专家的 Top-K token 依次执行 Token Dispatch → Routed Experts Compute → Token Combine。最终通过 Add 操作将两路输出逐 token 相加，输出同样为 8 个 token。两路之间存在两个 "Comp/Comm Overlap" 节点（蓝色），用虚线箭头连接 Shared Expert 计算与 Dispatch/Combine 通信。
 
-**关键技术结论**：共享专家处理**全部token**，路由专家仅处理Top-K被分配的token；当启用overlap时，共享专家计算与Token Dispatch/Combine的All-to-All通信**并行执行**，从而隐藏通信延迟。
+**2) 关键技术结论：** Shared Expert 处理全量 token（计算量大但通信无关），Routed Experts 仅处理分配 token（需 All-to-All 通信）。通过 Comp/Comm Overlap，Shared Expert 的 FC1/FC2 计算可与 Token Dispatch/Combine 通信并发执行，隐藏其延迟，从而摊薄通信开销对整体吞吐的影响。
 
-**论文作用**：该图是Megatron-Core实现**计算–通信重叠（overlap）**优化的核心证据，支撑其作为Nemotron-3 Super/Ultra模型采用的MoE架构基础，证明双分支设计可在不增加关键路径时延的前提下扩展专家容量。
+**3) 在论文中的作用：** 该图作为计算–通信重叠优化的可视化证据，支撑论文关于"通过结构与流水线优化提升 MoE 训练可扩展性"的核心方法论，并佐证其已被 NVIDIA Nemotron-3 Super/Ultra 模型采纳，体现工业落地价值。
 *caption: Shared expert architecture in Megatron-Core MoE. The shared expert processes all tokens while routed experts process only their assigned tokens. When … ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.41 (p.66)
@@ -1477,13 +1564,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.42 (p.67)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig42.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 42）：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图示E2G2T2细粒度MoE结构：输入经**Grouped Router→topK/Softmax**，从**4个专家**中选通**top-2**（红箭头激活，灰X门控），每个专家含W1(**h×2h**)与W2(**2h×h**)，即中间维为密集MLP的一半，求和后输出。
+1. **核心对象**：左侧为稠密 MLP（含 W1∈ℝ^{h×4h}、W2∈ℝ^{4h×h}），右侧为细粒度 MoE E2G2T2（4 专家、组大小 2、Top-2、中间维减半 2h）。MLP 权重沿中间维切片为 2h 后复制成 4 组（h×2h），路由器权重 Wg 由 2×h 复制为 4×h，配合 Top-K/Softmax 强制每组各选一名专家。
 
-**关键技术结论：** 将密集MLP中间维切分为两半(4h→2h)并复制成2组专家，同时复制路由器权重使Top2**必然各选中一个不同分片**，训练起始MoE输出与原密集模型严格一致。
+2. **关键结论**：通过"沿中间维切片+复制"与"路由器权重复制"的组合初始化策略，可保证 MoE 输出在起步阶段与稠密模型数学等价，避免性能回退。
 
-**作用：** 这是"granular upcycling"的核心机制，实现从密集检查点**无损初始化**细粒度MoE，是论文扩大专家数量同时保持训练稳定性的关键链路。
+3. **链路作用**：作为"granular upcycling"的核心可视化证据，衔接稠密预训练向细粒度 MoE 的转换流程，是论文实现低成本、可扩展 MoE 训练的关键技术支撑。
 *caption: An example of granular upcycling a dense layer into E2G2T2 fine-grained MoE. E2G2T2 denotes 4 experts, top 2, with half intermediate size. (1) We shar… ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Qwen3-VL Technical Report — Fig.1 (p.3)
@@ -1499,11 +1586,9 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 ![[assets/crops/qwen3-vl-technical-report-fig02.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与数据**：柱状图按升序展示模型在自建多语言OCR测试集上的准确率（%）。可见语言包括罗马尼亚语、斯瓦希里语、俄语、印地语、希伯来语、波兰语、Catanzarro、意大利语、德语、越南语、乌克兰语、乌兹别克语、西班牙语、法语、葡萄牙语、日语等；准确率范围约71%–84%，其中拉丁/日耳曼语族（葡、法、西、日）达到83–84%的最高档，东欧与南亚语种处于71–74%最低档。
+图2为条形图，横轴列出39种语言（按准确率升序排列），纵轴为OCR准确率（%），色阶由浅紫渐变至深紫。最低为Romanian/Swahili约71%，最高为Swedish约98%，其中32种语言超70%；欧洲语种（瑞典、塞尔维亚、丹麦约97–98%）与韩语、阿拉伯语、泰语、印尼语表现突出。
 
-2) **关键结论**：39种支持语言中有32种准确率超70%，证明Qwen3-VL具备"实用级"多语种OCR能力，而非仅覆盖主流语言。
-
-3) **链路作用**：作为能力广度证据，补强论文"OCR相关VQA达到SOTA"的核心论点，体现模型在文档理解与多语言场景下的泛化优势。
+该图作为OCR-VQA基准之外的补充实验，与原文"原生分辨率Vision Encoder + DeepStack多层视觉令牌注入 + Interleaved MRoPE"架构相呼应，论证模型视觉-文本对齐能力在跨语言文档理解任务中的泛化性，支撑论文"强且可用的多语言能力"这一核心结论，定位为方法链路中视觉编码器表征质量的实证验证环节。
 *caption: Multilingual OCR performance of our model on a self-built test set. The model achieves over 70% accuracy on 32 out of 39 supported languages, demonstr… ｜ 论文 [[qwen3-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### Qwen3-VL Technical Report — Fig.3 (p.25)
@@ -1513,144 +1598,303 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 
 ### DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim — Fig.1 (p.1)
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 1）**
+> [!tip] 【图文联合解读】**图1联合解读：**
 
-该图分两部分：左为架构示意，将视觉token分4组（标注1–4）通过残差连接沿Transformer由浅至深（层l_a…l_d）分层注入，而非一次性串入序列；右为七维雷达图，对比7个基准（VQAv2 78.5/80.9/87.6、GQA 62.0/64.4、TextVQA 58.2/61.9、DocVQA 28.1/46.0、InfoVQA 25.8/31.6、SEED 58.6/62.9、POPE 85.9/87.6），四曲线分别为Sequence-576ctx、Sequence-2880ctx、DeepStack-V与DeepStack-L（均2880token/576ctx）。
+图1含三部分：(1)**左**——Sequence LMMs将576或2880视觉token**拼成一条长序列**送入L层Transformer，序列长度随分辨率线性增长；(2)**中**——DeepStack LMMs把2880 token**堆叠为网格并分4组**（每组576），分别在l_a、l_b、l_c、l_d四层通过**残差连接注入**（■↑■↑■↑），ctx_len恒为576；(3)**右**——雷达图显示DeepStack-L（红，2880 tok/576 ctx）在VQAv2（80.9）、GQA（64.4）、TextVQA（71.9）、DocVQA（46.0）、InfoVQA（31.6）、SEED（62.6）、POPE（87.5）7项基准全面超越Sequence（蓝/橙）。
 
-原文借此论证：仅靠"分层堆叠+残差注入"，在不增上下文长度前提下，DeepStack-L即可全面碾压同ctx的串接基线，并逼近5×ctx的串接模型。
-
-论文作用：以一张图同时完成"动机（高分辨率需更多token）→方法（分层注入）→收益（4× token且不增ctx）"的全链路论证，作为后续Vicuna-7B/CLIP ViT-L实验的可视化总纲。
+**论证结论**：以"分层堆叠+残差注入"替代"长序列拼接"，无需改动架构即可在**不增加上下文长度**前提下保留高分辨率视觉信息，并在多基准取得最优。该图作为论文开篇总览，奠定了DeepStack方法在整篇方法/实验链路中的核心立论——以最简改动突破高分辨率LMM的上下文瓶颈。
 *caption: Left: Conventional large multimodal models (LMMs) string all visual tokens into a sequence for high- and low-resolution images. Middle: Our DeepStack … ｜ 论文 [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] ｜ arxiv 见 MD 元信息*
 
 ### DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim — Fig.2 (p.4)
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
-
-图示 **DeepStack-V**（视觉编码器侧架构）：高分辨率图像被切分为多块网格（如编号 1–5 的彩色区域），低分辨率版本对应 1 块；经 Patch Embed 与首层 ViT Block 处理后，串接多层 ViT Block，每层间分别注入 4 个来自不同图像区域/分辨率的视觉 token 组（图中红/橙/绿/紫标号的 1-1-1-1、2-2-2-2、5-5-5-5），最终经 Connector 接入 LLM 与文本 token 融合。
-
-**技术结论**：DeepStack 将视觉 token 分散堆叠至 ViT 多个中间层（而非仅输入层），借助高分辨率邻域块在不同深度强化细粒度视觉表征。
-
-**方法作用**：作为论文核心架构图，证明"多层视觉 token 注入"在视觉编码器和 LLM 两侧均通用，是后续消融与基准实验的方法基石。
+> [!tip] 【图文联合解读】图以羊图说明两种实现：3×3高分辨率图提取局部邻域，低分辨率图提供整体内容，每组以4个视觉token表示。DeepStack-L将编号1、2、3、5的视觉组依次注入LLM不同块；DeepStack-V在ViT多个中间层堆叠特征，再经Connector与文本token进入LLM。该设计先编码全局信息，再逐层补充高分辨率细节，以简单堆叠深化视觉—语言融合；它是连接视觉编码与语言推理的核心方法，并支撑后续性能与消融实验。
 *caption: Architecture of DeepStack. The main innovation lies in the DeepStack strategy that infuses visual tokens into different layers. Left: DeepStack for LL… ｜ 论文 [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] ｜ arxiv 见 MD 元信息*
 
 ### DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim — Fig.3 (p.8)
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig03.png]]
-> [!tip] 【图文联合解读】**图3核心内容**：左图(b)展示插入全局token后，高分辨率token堆叠间隔*s*∈{3,4,5}对性能的影响——平均得分稳定在49.7–49.9，几乎无变化；右图(c)展示堆叠层数N∈{0,2,4,6,9}的影响——0层约49.5，4层达到峰值约50.7，9层回落至约49.5。
-
-**关键结论**：间隔*s*鲁棒（间隔1–2即可覆盖所有层），无需精细调参；层数需折中，过少无法充分融合、过多反而引入干扰，4层为最优。
-
-**论文作用**：为DeepStack"深层堆叠"策略提供超参依据，证明该设计轻量且对堆叠密度不敏感，仅需选好堆叠次数即可稳定获益，是方法实用性的关键验证。
+> [!tip] 【图文联合解读】将对应输入嵌入置零，并固定首层插入全局词元后，图消融起始层、间隔s与堆叠层数：(a) 起始层0/1/2/4/8/16/24时均分约49.5/49.5/49.4/49.2/48.2/44.2/38.0，越早越好；(b) s=0～5约为49.0/50.8/51.1/50.9/50.8/50.4，s=2最佳；(c) 堆叠0/2/4/6/9层约为49.2/50.3/51.0/50.0/49.5，4层最佳。视觉特征应早期、适度间隔、跨层反复注入LLM；该实验验证DeepStack机制并确定关键超参。
 *caption: Analysis on using LLM layers to process visual tokens. (a) We insert the visual tokens into different starting layers and initialize the correspondenc… ｜ 论文 [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] ｜ arxiv 见 MD 元信息*
 
 ### DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim — Fig.4 (p.10)
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig04.png]]
-> [!tip] 【图文联合解读】**图像无法有效辨认**——所展示的图片内容为循环图表（VOQA/POP/GAQA 等标注）与 DeepStack Figure 4（视觉问答对比示例）无关，疑似加载错误，故仅依据原文进行解读：
-
-1) **核心对象与结构**：图分两栏对比 LLaVA-1.5 与 DeepStack，两者均使用 576 视觉 token 的同等上下文长度；上方样本在图像中以**红圈**标注问题对应区域，下方样本展示细粒度图像描述任务。
-
-2) **关键技术结论**：在 token 数严格公平的前提下，DeepStack 通过多层叠加（stacking）策略，在需要**高分辨率与细粒度视觉理解**的 VQA（上方示例）以及**细节图像描述**（下方示例）上显著优于 LLaVA-1.5，验证视觉表征的层级堆叠优于单层扩张。
-
-3) **整体链路作用**：作为定性可视化（qualitative visualization），与论文中量化的 LLaVA-Bench、MMBench、MM-Vet、TextVQA、POPE、MMMU 等基准结果相互印证，支撑"深度堆叠视觉 token 而非简单增加 token 数"这一核心方法论主张。
+> [!tip] 【图文联合解读】该图对比 LLaVA-1.5 与 DeepStack（均 576 visual tokens）：上排 4 组细粒度 VQA——角落文字"Postcode"、白板星数 3、Hershey's 糖果条、HTC 手机，DeepStack 全对而 LLaVA-1.5 全错（红圈标注提问区域）；下排 2 组细节描述中，LLaVA-1.5 幻觉虚构餐桌/手袋/"Voice over QAM"，DeepStack 正确识别背景卡车与基准名 VQAv2/Pope/GQA；底部雷达图覆盖 VQAv2、GQA、TextVQA、DocVQA、InfoVQA、SEED、POPE 7 项基准。原文以此定性佐证 DeepStack 在等长视觉上下文下捕获更细粒度信息并抑制幻觉，支撑"少 token 不损精度"的核心结论。
 *caption: Visualization. Both LLaVA-1.5 and DeepStack use 576 visual context length for a fair comparison.… ｜ 论文 [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] ｜ arxiv 见 MD 元信息*
 
 ### DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim — Fig.5 (p.9)
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig05.png]]
-> [!tip] 【图文联合解读】图5展示DeepStack对4×4视觉token的三种采样分组方案：2D Spatial（行内交替"1,2,1,2 / 3,4,3,4"，行列均交替）、1D Sequential（按行同色，"1,1,1,1 → 4,4,4,4"纵向排列）、2D Grid（2×2块同色，"1,1,2,2 / 3,3,4,4"分块均匀）。相同编号token在同一层被堆叠送入LMM。论文借此论证分组策略的多样性与鲁棒性——2D Spatial细粒度空间交替、1D Sequential保持序列连续性、2D Grid强化局部块一致性，三者均支撑多层视觉token整合。作为消融可视化，它验证了"深度堆叠视觉token"对采样方式不敏感的核心结论，是证明DeepStack通用性的关键图示。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**核心对象：** 图示为 4×4 网格，编号 1–4 代表 4 个 LLM 层堆叠位置，呈现三种视觉 token 分配策略——2d Spatial 采用 2×2 棋盘式交错（每层均匀散布全图）；1d Sequential 按行顺序堆叠（前 1/4 行→层1，后 1/4 行→层4）；2d Grid 按 2×2 块分区（前 1/4 区域→层1，依此类推）。
+
+**关键论证结论：** DeepStack 需将 ViT 视觉 token 分组后送入不同 LLM 层；三种采样对应"空间均匀散布 / 严格时序分段 / 块状区域划分"三种粒度，为后续消融实验提供采样方案的对照基线。
+
+**论文链路作用：** 衔接方法设计与实验章节，作为堆叠机制的可视化定义，明确不同采样如何影响视觉-语言特征在各层的融合方式。
 *caption: Visualization of three sam- pling methods for DeepStack.… ｜ 论文 [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] ｜ arxiv 见 MD 元信息*
 
 ### 昇腾 950 NPU 架构白皮书 — Fig.301 (p.12)
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig301.png]]
+> [!tip] 【图文联合解读】**图文联合解读**
+
+**1) 图示核心结构：**
+该图展示昇腾950 双 Die 对称架构。两侧各含 1 个 AI Core（中央计算阵列），被上下两道 L2 Cache 环绕；每 Die 配备 2 个 Linx816 CPU、1 个 DVPP（视频预处理）模块与 1 个 STARS 加速器；外侧通过 2 个 Memory Interface 连接 Global Memory，并通过 D2D（Die-to-Die）接口实现片内互连。两侧封装端集成 PCIe5.0 CTRL、Security Core、UB CTRL，并外接 Hilink 总线接口。
+
+**3) 论证结论：**
+该图用以论证昇腾950 通过"双 Die + D2D 高速互连"扩展算力与显存容量，依托 L2 Cache 上下包夹 AI Core 的布局降低数据访问延迟，并借由 DVPP/STARS/Linx816 CPU 与 AI Core 协处理，构建"通用+专用"异构计算体系。
+
+**3) 在论文中的作用：**
+作为白皮书架构总览图，是后续各章节（计算、存储、互连、I/O）论述的结构基础，定位各子模块的功能边界与连接关系。
+*caption: 昇腾950 芯片架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.401 (p.17)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig401.png]]
+> [!tip] 【图文联合解读】该图展示Ascend 950 AI Core架构：
+①**计算单元**：1个Cube Core（16×16×16 FP16矩阵乘引擎）、2个Vector Core（各含双64×64 FP32 / 128×128 FP16 SIMD）、3个Scalar Core（Scalar 0/1/2）；
+②**分层SRAM**：L1 512KB顶层缓存、L0A/L0B各64KB直连Cube作为矩阵操作数缓冲、L0C 256KB存放累加结果、UB0/UB1各256KB作为Vector/Scalar共享缓存；
+③顶部Bus Interface对外连接。
+
+**关键技术结论**：通过Cube（张量）+Vector（向量）+Scalar（控制）三类异构单元与L1→L0A/B→L0C→UB四级紧耦合SRAM，将数据复用尽量留在片内，显著降低外部HBM带宽压力，为不同精度算子（FP32/FP16）提供差异化高吞吐通路。
+
+**论文作用**：作为AI Core基础结构图，奠定后续计算密度、片上存储层次、带宽模型与算子映射（matmul/conv）论述的硬件基础。
+*caption: AI Core 架构及各层级SRAM 示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.402 (p.18)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig402.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-该图实为正文段落而非架构示意图，仅依据文字与上下文解读。所述昇腾950为多Die合封Chiplet：含2个AI Die、2个IO Die，950PR配8个、950DT配4个HBM片上内存模组，通过D2D Clink与Memory Interface互联，构成UMA整体。结合原文论证：①Chiplet封装实现内存统一访问与扩展性；②Cube Core数量32/28/36、Vector Core 64/56/72，算力梯度按精度逐级递减，MXFP4下Cube算力最高达1946 TFLOPS；③支撑LLM算子加速（FlashAttention单核提升1.5~2倍）与CCU通信-计算融合，软硬协同支撑Super Node从384卡扩展至8K卡，是大模型训练推理全流程加速的硬件基石。
-*caption: 昇腾950 芯片架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+**1) 核心对象与结构：** 图示上半部为K组(x_i, y_i)输入对，分别进入独立Cube单元执行乘加；中间通过Σ单元完成部分和汇聚；下方为4×4共16个PE_S阵列承接结果并并行完成累加/写回。整体呈现"分组MAC → 局部Σ → PE_S并行处理"的三级脉动流水结构。
+
+**2) 关键技术结论：** Cube Core通过脉动阵列实现高并行矩阵乘加，每PE_S独立承担部分和的计算与存储，大幅降低片内数据搬运开销，体现Cube算力核心的并行性与能效优势。
+
+**3) 论文作用：** 作为Ascend 950 NPU中Cube Core的微架构示意，为后续算子映射、数值精度支持及峰值算力分析提供硬件结构依据，是整篇架构白皮书算力底座的图示基础。
+*caption: Cube Core 处理架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
 
 ### 昇腾 950 NPU 架构白皮书 — Fig.403 (p.18)
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig403.png]]
-> [!tip] 【图文联合解读】**注意：图与所给caption存在冲突**——题目称图为"数值精度示意"，但实际图像标题为「图4-2 Cube Core 处理架构示意图」。以下按图像真实内容解读：
+> [!tip] 【图文联合解读】图示Cube Core支持的8种数值精度格式及其位宽分配（符号/指数/尾数）：FP32(1+8+23)、TF32(1+8+10)、BF16(1+8+7)、FP16(1+5+10)、HiF8（动态分配）、FP8-E5M2(1+5+2)、FP8-E4M3(1+4+3)、FP4(1+2+1)，覆盖32/16/8/4-bit四档。
 
-**1) 核心对象与结构**：图像展示Cube Core的脉动式PE阵列微架构。上半部示意k个输入流（x₀…x_{k-1} 与 y₀…y_{k-1}）沿正交方向注入一排PE单元；下半部展开为 4×4 PEs 网格，所有PE输出汇聚至 Σ 累加单元，完成矩阵乘累加（MAC）运算。
-
-**2) 关键技术结论**：Cube Core 通过二维 PE 阵列实现大规模乘加并行，是 Ascend 950 张量算力的硬件载体；Σ 树形归约支持高吞吐、低延迟的矩阵乘法，是后续混合精度、稀疏加速等功能扩展的物理基础。
-
-**3) 论文整体作用**：作为第四章计算引擎微架构的图示锚点，为后续章节（算力峰值推算、精度支持、数据流优化等）提供结构化依据。
+该图论证Cube Core具备从FP32高精度训练到FP4/FP8低比特推理的完整精度谱系，硬件原生支持混合精度与量化工作负载；在论文中作为算子精度能力的核心佐证，支撑后续关于算力、能效与AI全栈适配性的论述。
 *caption: Cube Core 支持的数值精度示意… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.404 (p.19)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig404.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**核心对象与结构：**
+该图定义 HiF8 这一8位浮点格式。Normal 子类采用变长前缀码 Dot（0–4，共5档）自适应分配阶码位宽：Dot=0 隐含阶 E=0、Dot=1(E=±1)、Dot=2(E=±[2,3])、Dot=3(E=±[4,7])、Dot=4(E=±[8,15])，每升一档阶码增加1位、尾数 M 由3位递减至1位，总位宽恒为8（红色数字代表不存储的隐藏位）。Denormal 子类用"0000"前缀 + 3位 M 表示 E∈[-22,-16]。阶码额外含1位 SE（Sign of Exponent）。
+
+**关键结论：** HiF8 以变长前缀在8位内同时覆盖大动态范围（最高 ±2^15）与小数（denormal 至 2^-22），按数值大小自适应精度与范围。
+
+**论文作用：** 作为 Ascend 950 NPU 数值体系中的低精度浮点格式，为 AI 推理/训练提供高动态、低存储开销的运算支持。
+*caption: HiF8 数值精度… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.405 (p.21)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig405.png]]
+> [!tip] 【图文联合解读】**1) 核心对象与结构**
+
+图示Vector Core整体架构。左侧顶层由Scalar Unit、Async Function Queue（含Func0–Func6共6个槽位，分别标注SIMT/SIMD/NULL）、DMA Unit、Vector Unit SIMD/SIMT、Vector Cache/Buffer、Bus Interface、Global Memory自上而下串联。右侧细化两条执行路径：①**SIMD模式**——I Cache→Program Sequence→**OoO Dispatch**→Vector Cache/Unified Buffer（N个Bank+Cache Controller+Coalescing Unit）→Vector Load/Store Unit→**Vector Register File（Lane 0…Lane VL-1）**→Vector Execution Unit；②**SIMT模式**——I Cache→Program Sequence→**Warp Scheduler**→**In-order Dispatch**→共用N-bank Vector Cache/Unified Buffer→**SIMT Load/Store Unit**→**SIMT Register File（Lane 0…Lane warp_size-1）**→Vector Execution Unit。
+
+**2) 关键结论**
+
+论证同一Vector Core通过共享数据通路与执行单元，仅前端调度（OoO vs. Warp Scheduler+In-order）与寄存器宽度（VL vs. warp_size）差异，即可同时支撑SIMD高效向量计算与SIMT线程级并行。
+
+**3) 论文作用**
+
+作为Ascend 950异构并行架构的核心运算单元，向上衔接Scalar调度与指令派发，向下贯通Global Memory存储体系，是全篇并行编程模型与硬件承载论述的基础图示。
+*caption: Vector Core 架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
 
 ### 昇腾 950 NPU 架构白皮书 — Fig.406 (p.22)
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig406.png]]
-> [!tip] 【图文联合解读】**说明**：所提供内容仅为论文正文文字段落，未呈现实际的 Cube-Vector 融合架构示意图，故仅依据 4.1.4 节文本进行解读。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
----
+1) **核心对象与结构**：展示单 AI Core 内 Cube-Vector 异构融合微架构。两侧对称布置 Vector Core 0/1，各配独立 Register File 与统一缓冲区 UB0/UB1；中央为 Cube Core，配三级片上存储——L1（顶部共享）、L0A/L0B（矩阵乘双输入）、L0C（累加输出）；上下 Bus Interface 对接 HSM/HBM。4 组橙色双向箭头标识 UB↔L1、UB↔L0C 的数据通路。
 
-**图文联合解读**：
+2) **关键结论**：Cube 与 Vector 通过 L1 与 UB 紧耦合共享存储，矩阵乘结果经 L0C→UB 直供 Vector 完成 activation、归一化等逐元素算子，省去 HBM 往返与显式数据拷贝，支撑 Cube-Vector 流水线式融合执行。
 
-1) **核心对象与结构**：图示应展示 AI Core 内 Cube 核（含 L1 Buffer）与 Vector 核（含 Unified Buffer）通过一条**直连 CV 数据传输通道**相连，绕过 L2 层进行核内数据交换，体现 SIMD 为主、SIMT 为辅的新异构融合编程架构。
-
-2) **关键技术结论**：Cube L1 Buffer 与 Vector Unified Buffer 间的直连通道免去了 L2 中转，显著**提高核内数据复用率**，减少 L2 层数据搬移开销，从而提升 CV 融合算子的执行效率。
-
-3) **论文整体作用**：作为硬件级证据，支撑新架构在端到端吞吐、时延与开发效率三者之间取得更优平衡这一核心论点，是"CV 融合"特性论证的关键图示。
+3) **论文作用**：作为 AI Core 微架构蓝图，奠定后续片上存储层次、并行扩展、带宽/性能分析的参照，体现 Ascend 950 "异构融合+共享存储" 的核心设计思路。
 *caption: AI Core Cube-Vector 融合示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.407 (p.23)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig407.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图展示 **NDDMA（非连续直接内存访问）指令** 的数据搬运行为。左为 Global Memory（共32行），24个数据元素（1–24）按 2元素/组×9组 + 6个单元素的非连续模式散布，行间存在空隙（如第6、11、12行空缺）；右为 UnifiedBuffer，经 NDDMA 搬运后，数据被紧凑地重新排列为连续序列 1,2,3,5,6,7,9,10,11,13,14,15,17,18,19,21,22,23…，消除了原布局中的步进间隔。
+
+原文借此论证的关键结论：**单条 NDDMA 指令即可完成"跨步/非连续 Global Memory → 连续 UnifiedBuffer"的重组**，无需软件介入做地址计算或中间缓存拷贝。
+
+在论文整体链路中，该图属于 NPU 数据通路章节，用以说明 DMA 子系统为 Cube/Vector 计算单元提供就绪数据布局的能力，是片上存储与计算流水线高效衔接的关键支撑机制。
+*caption: NDDMA 指令… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.408 (p.24)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig408.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1) **核心对象与结构**：图示对比两种 MTE2→Vector 流水同步写法。左侧"set_flag/wait_flag"机制在 100 次循环中每轮插入 4 个同步原语（wait_flag、set_flag×2）并需 `if i>0`、`if i<99` 条件判断；右侧"BufferID"机制用 `get_buf(MTE2,#id)` 与 `rel_buf(V,#id)` 将同步隐式绑定到缓冲区生命周期，仅 4 个调用、无条件分支。
+
+2) **关键技术结论**：BufferID 新机制以"获取—释放"对替代显式 flag 握手，逻辑步骤由 8 行压减为 7 行，省去边界条件判断，证明同步可被缓冲区生命周期吸收，降低编程复杂度与出错面。
+
+3) **论文作用**：作为昇腾 950 新同步机制的代码级佐证，与架构层论述相互印证，体现"硬件能力下沉为编程原语"的设计思路。
+*caption: 昇腾950 新同步机制代码示例… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
 
 ### 昇腾 950 NPU 架构白皮书 — Fig.409 (p.25)
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig409.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**核心对象与结构：** 该图展示昇腾 950（950PR/950DT）的内存三级层次——底层为高速片上 DRAM（缓存全局数据，两型号配置不同），中层为 L2 Cache（服务 AIC/AIV 的 AI 计算，与片上内存双向搬运），上层为 L3 Cache（服务 AI CPU 通用计算），三级间以高带宽低延迟链路连通。
+该图展示昇腾950双Die（Die 0/Die 1）内存层次拓扑：每Die内含多个AI Core与AI CPU。AI Core内部分为AIC（含L1、L0A/L0B/L0C缓存）与AIV（含L1、UB统一缓冲）；AI CPU独立配置CPU L1/L2。Die内AI Core共享L2 Cache、CPU侧接L3 Cache，跨Die通过Directory维持缓存一致性，底层统一对接Global Memory。
 
-**关键技术结论：** 原文以此论证，分层存储将 AI 加速器与 CPU 的数据访问局部化——L2 以"片上 DRAM↔AIC/AIV"双向通路承担高吞吐 AI 数据流，L3 服务 CPU 通用任务，分工明确，整体提升 Memory 子系统效率。
+原文借此论证三点：①AIC/AIV异构分区使标量与向量访存解耦，L0A/B/C三级缓存降低指令重复访问开销，UB作为片上数据中转提升数据复用；②多Die通过Directory实现全局一致地址空间，支撑大模型跨Die张量并行；③L2/L3/GM分层提供容量与带宽的逐级放大。
 
-**论文作用：** 该图作为硬件架构总览的关键图示，与执行单元、数据流等章节联动，为读者建立"存储-计算"协同的整体认知框架，是论文方法论证的视觉锚点。
+该图位于硬件架构章节，为后续片上存储容量、带宽指标及一致性协议设计提供拓扑基础。
 *caption: 昇腾950 内存层次示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.410 (p.27)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig410.png]]
+> [!tip] 【图文联合解读】【核心对象】图示展示两条差异化数据通路：data A经"non-allocate"标记由Task0直接穿透至Global Memory，不进L2；data B则由Task0写入L2 Cache，再被Task1命中复用。
+
+【技术结论】原文论证：non-allocate hint允许软件声明一次性数据绕过L2，避免污染并节约缓存容量；可复用数据驻留L2供后续任务命中，减少对Global Memory的重复访问，体现软硬协同的片上缓存精细管控。
+
+【链路作用】位于存储层级与缓存管理软件接口章节，作为L2 hint机制的典型场景示例，为后续prefetch、cache hint等优化手段提供动机铺垫。
+*caption: Non-allocate（L2 hint）典型应用场景示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
 
 ### 昇腾 950 NPU 架构白皮书 — Fig.411 (p.27)
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig411.png]]
-> [!tip] 【图文联合解读】**图文联合解读**：
+> [!tip] 【图文联合解读】**图示联合解读（基于图片实际内容"STARS2.0 架构示意图"）：**
 
-需说明：图片实际为**图4-10 "Non-allocate (L2 hint) 典型应用场景示意图"**，而非所提示的 Figure 4-11 STARS2.0 架构图。以下按图实内容解读：
+**1) 核心对象与结构：** 图示分两层——上层为STARS调度框，内含4列Task堆叠队列、4个能力模块（Notify Sync / Conds / Profiling / Fusion）及底部Sched调度器；下层经两条总线外联——左侧HSCB总线挂接AIV、AIC计算簇，右侧NoC总线挂接UB DMA、SDMA、CCU、CPU、DVPP共5类异构IP，每类以多实例堆叠呈现。
 
-1. **核心对象与结构**：图中两个并行任务 Task0、Task1。其中 Task0 输出的 **data A** 沿 `non-allocate` 属性路径直接写入 Global Memory（绕过 L2 Cache）；而 Task0 与 Task1 共用的 **data B** 则经由 L2 Cache 中转复用，体现"绕过 vs. 复用"的差异化分配。
+**2) 关键技术结论：** STARS2.0通过Task队列抽象+Fission/Notify/Profile/Conds/Fusion五大机制，将计算簇（AIV/AIC）与非计算IP（DMA/SDMA/CCU/CPU/DVPP）统一封装在同一调度接口下，实现"软硬件协同解耦"——上层框架只需关注Task依赖与编排，无须感知底层异构拓扑。
 
-2. **论证的技术结论**：佐证正文所述——异腾 950 针对 SDMA 提供 L2 Cache 驻留策略（CMO），涵盖 Prefetch、Writeback、Flush 三类操作，程序员可通过配置参数控制 CMO 触发时机与作用域，从而按需决定数据是否驻留 L2。
-
-3. **链路作用**：该图位于 4.4 节"软硬协同高效调度：STARS2.0"之前，承担**承上启下**作用——以存储层级访存优化收束，随后转入 STARS2.0 硬件调度器在任务/资源/数据流层面的协同调度论述。
+**3) 在论文链路中的作用：** 作为全篇硬件架构总览图，奠定后续算子并行切分、L2 hint内存管理、SDMA/DVPP协同等章节的调度底层依据，凸显Ascend 950"软件定义硬件、统一任务抽象"的设计理念。
 *caption: STARS2.0 架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.412 (p.31)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig412.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1）该图刻画URMA异步访存通信的两端结构：发起端包含Core、URMA模块与本地UMMU，并配有4个Port（带省略号表示可扩展）；接收端由对等Port、本地UMMU构成。数据流（橙色箭头）经本地Memory→UMMU→URMA→多Port→对端UMMU→远端Memory，全程由Core通过"Doorbell"门铃信号异步触发URMA执行，无需CPU参与搬运。
+
+2）该图论证的关键结论：URMA通过硬件Doorbell机制与双端UMMU地址翻译，实现绕过处理器核的直接Memory-to-Memory异步传输；地址翻译由硬件卸载，Core仅发触发信号即可释放计算资源。
+
+3）在论文方法链路中，此图为URMA通信模型提供架构示意，是昇腾950 NPU片间/卡间高效访存与解耦通信能力论述的支撑图，奠定后续带宽、延迟优化的讨论基础。
+*caption: URMA 异步访存通信的过程示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.413 (p.32)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig413.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图展示UB Memory同步访存语义下跨域地址通信链路：Core发出访存请求→UB Mem Decoder解析并扇出至多个并行Port（左域）→经Port-Port对穿通道传输至右域Port→汇聚送入UMMU（统一内存管理单元）进行地址翻译→落达目标Memory；底部两域各挂独立Memory，体现源/目的端分离。
+
+技术结论：Ascend 950通过"多Port并行分发+UMMU统一地址映射"机制，实现UB同步访存语义的跨核/跨簇透明地址通信，在保证一致性的同时提升访存吞吐与并行度。
+
+作用：作为片上互联与内存子系统的核心证据，为论文论证NPU多核协同、统一地址空间与高性能访存模型提供硬件流程支撑。
+*caption: UB Memory 同步访存语义地址通信过程示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.414 (p.33)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig414.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图展示了CCU的层次化架构，顶层为CCUM（含Mission Call Interface、多个Mission Commander、Instruction Implementation Unit），其下分出Reduce Call Interface与URMA Call Interface两条调度通道。中间层为多个CCUA实例，每实例含Memory Slice组与Reduce Unit，承接Reduce任务。最底层URMA模块通过URMA Call Interface获取指令，底部连接多个Port用于外部互联。
+
+该图论证的关键结论是：CCU采用"中央调度（CCUM）+分布式执行（CCUA）"的两级架构，将集合归约与远程内存访问解耦为独立通路（红/蓝线分别下发给Reduce Unit与URMA），并通过多Mission Commander、多Memory Slice实现任务并行、内存切片化处理，从而支撑高效集合通信与跨设备数据搬运。
+
+在论文整体方法链中，本图为Ascend NPU通信子系统的核心架构说明，为后续集合通信性能、带宽利用率分析提供硬件拓扑基础。
+*caption: CCU 架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.415 (p.34)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig415.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1）图中呈现三层结构：底层为多个 **Port**（端口），中间层为 **Routing Table**（路由表），顶层为 **Network On Chip**（片上网络）；实线表示各 Port 与 Routing Table、NoC 的常规连接，虚线及向下箭头标注了一条具体转发路径，形象展示包从 Port 经查表后送往 NoC 的过程。
+
+2）该图佐证了 **UB On-Chip Switch 通过集中式路由表实现端口间转发** 的结论：每个 Port 接收的数据依据 Routing Table 决策下一跳/出口，再注入 NoC，端口—路由表—网络三级解耦保证了转发确定性与可扩展性。
+
+3）在论文中，此图属于 UB 互连子系统的微结构说明，配合整体 NoC 拓扑章节，支撑 Ascend 950 片内高带宽、低延迟数据通路的设计论证，是架构层级"结构图"链路的关键一环。
+*caption: UB On Chip Switch 转发示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.416 (p.35)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig416.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图示展示了 Ascend 950 NPU 中 **PCIe 5.0 子系统的分层架构**：自上而下依次为连接片内 System Bus 的**应用层**（含 MCTP 管理协议与 DMA 数据搬运引擎，以深蓝高亮标示）、**事务层**、**数据链路层**、**物理层（×16 通道宽度）**，最底层为浅青色标注的 **SerDes** 收发器。
+
+该图论证 Ascend 950 采用 **PCIe Gen5 ×16 接口**（理论单向带宽约 64 GB/s、双向约 128 GB/s），通过 MCTP+DMA 协同实现片外主机侧的设备管理与高效数据搬运，并以 ×16 物理通道 + SerDes 保障高带宽低延迟的板级 I/O。
+
+在论文整体链路中，本图位于 **I/O 互连子系统章节**，承接前文片上互连（L2C/HCCS/NLINK）的论述，呈现"**片内—封装内—板级**"三尺度完整数据通路，支撑后续训练/推理场景中模型与张量的主机侧供给及多卡横向扩展能力。
+*caption: PCIe 5.0 架构示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
 
 ### 昇腾 950 NPU 架构白皮书 — Fig.417 (p.36)
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig417.png]]
-> [!tip] 【图文联合解读】图像无法辨认，仅依据原文解读。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**图文联合解读：**
+该图展示昇腾 950 超节点的三层 Clos 式交换拓扑：底层为多颗 Ascend 950 芯片（蓝框，下方曲线表示芯片间高速全互连），中层为机柜/域内若干 Switch，最上层为跨域顶层 Switch 组（用"…"表示可扩展）。芯片→域内 Switch→顶层 Switch 形成多级交换树，体现大规模高带宽域内/域间互连。
 
-1. **核心对象**：图 417 的标题为"昇腾 950 的一种超节点示意图"，按 caption 应展示昇腾 950NPU 超节点（Super-Node）的拓扑结构，包括多颗 NPU 芯片经高带宽互连（如 HCCS/UB 或自研总线）组成的紧耦合域，可能涉及片间/机框级互联、共享内存或拓扑编排示意。但实际图片仅显示章节标题"4.7 超节点能力 / 4.7.1 异腾超节点"，并无具体拓扑图。
+该图论证的关键结论：超节点通过多级交换拓扑将数百至数千颗 Ascend 950 统一为单一算力域，兼顾域内高带宽与域间可扩展性，实现"scale-out 而非仅 scale-up"。
 
-2. **关键技术结论**：原文将其置于 4.7 节，作为昇腾 950 区别于单芯片能力的关键论据——通过超节点互联扩展算力规模与通信带宽，支撑大模型训练/推理中的跨芯片并行与协同。
-
-3. **论文作用**：承接前文单芯片微架构、Cache/HBM、计算单元等设计，论证昇腾 950 由"单 NPU"扩展到"超节点"的系统级扩展能力，是性能规模化叙事的关键支撑图。
+其作用：作为芯片→整机柜→超节点的体系结构证据，支撑论文阐述昇腾 950 在系统层级（而非裸片层级）实现大模型训练/推理集群协同的设计主张，是超节点章节的拓扑总览图。
 *caption: 昇腾950 的一种超节点示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
 
 ### 昇腾 950 NPU 架构白皮书 — Fig.418 (p.36)
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig418.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示呈现昇腾950超节点的三层交换拓扑：底层多颗Ascend 950芯片以曲线互联呈Full Mesh；中层各集群内Switch汇聚芯片间通信；顶层Switch跨集群互联，构成Clos/混合组网。原文据此论证：基于UB（Unified Bus）互连协议配合UB Switch，可组建K级别规模的超节点，芯片间通过UB实现高效通信，并支持Full Mesh、Clos、灵活混合等多种拓扑。该图位于4.7.2节"超节点与超大内存池组网"开篇，确立横向扩展架构框架，为后续引入CPU超大内存池共享与池化组网方案铺垫技术前提。
+该图展示了**两个机柜（Rack）**通过顶部**交换机（Switch，多节点堆叠）**互联的拓扑：
+
+- **左侧机柜**：承载两组昇腾950 NPU集群，每组上方配CPU，NPU（Ascend950方块）作为计算主体；
+- **右侧机柜**：三层结构，每层由CPU行配**Memory Pool（深蓝色大容量内存块）**组成，作为被访问的"超大内存池"。
+
+**论证结论**：昇腾950 NPU无需自带超大HBM，可通过交换网络远程透明访问CPU侧大内存池，实现**存算解耦（disaggregated memory）**，突破NPU本地存储容量上限。
+
+**论文作用**：该图作为关键架构证据，支撑昇腾950"超大内存寻址"设计主张，体现其在大模型训练/推理场景中利用分布式CPU内存扩展可用存储空间、提升单卡/集群有效容量的整体方法论。
 *caption: 昇腾950 访问CPU 超大内存池示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.419 (p.37)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig419.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图中展示了基于**交换机的计算-存储分离架构**：左侧为计算Rack，包含2组（每组2+ CPU与3+ Ascend950），右侧为存储Rack，部署5行×3列以上的Storage节点池，两者通过顶部交换机多链路互联。
+
+**核心结论**：Ascend 950 通过交换机**绕过CPU**，直接访问远端超大规模共享存储资源池，实现计算资源与存储资源的解耦与池化。
+
+**论文作用**：该图作为架构示意图，佐证昇腾950面向大模型训练/推理场景中"存算分离、存储共享"的设计思路，强调NPU对外部存储的高带宽、低延迟直访能力，为后续容量与带宽扩展性论证提供拓扑依据。
+*caption: 昇腾950 直接访问超大存储资源池示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.420 (p.38)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig420.png]]
+> [!tip] 【图文联合解读】**核心对象与结构**：图示一个昇腾超节点，包含2个外部 Ethernet Switch、2个 UB Switch（每个均配1个 ETH 上行口+1个 UB 下行口）以及若干 Ascend950 NPU。呈现三级互联：①底部 NPU 之间以 UB 曲线直连（对等链路）；②UB Switch 经 UB 绿色线与全部 NPU 全互联 Mesh；③UB Switch 经 ETH 蓝色线交叉上联两台外部以太网交换机。
+
+**关键技术结论**：UB Switch 作为 UB 协议 ↔ 以太协议转换枢纽，凭借双 ETH 上联实现跨超节点扩展；超节点内部 UB 全互联 Mesh 保证 NPU 高带宽近距通信，与外部以太网共同构成"近距 UB + 远距 ETH"的分级互联体系。
+
+**论文作用**：该图论证了 Ascend950 超节点仅凭 UB Switch 即可无感接入标准以太网基础设施，是其"超节点 + 通用以太网"可扩展架构的核心证据，为全篇大规模集群组网论述提供硬件可行性支撑。
+*caption: 昇腾超节点基于UB Switch 转换为以太网与以太世界互通示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
+
+### 昇腾 950 NPU 架构白皮书 — Fig.421 (p.39)
+![[assets/crops/ascend-950-npu-architecture-whitepaper-fig421.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图展示Ascend950芯片的双模混合互联拓扑：底层4颗（省略号示更多）Ascend950 NPU各集成ETH端口，通过蓝色ETH链路全交叉上联至同一机箱内的2个以太网交换机；后者再交叉对接机箱外2个外部以太网交换机，实现与外部"以太世界"互通；NPU之间另通过绿色UB总线两两直连，形成片间Mesh互联。
+
+原文以此论证关键技术结论：Ascend950原生集成以太网MAC/接口，可无缝接入标准以太网生态，同时保留片间专用UB高速总线，二者并行兼顾开放兼容与高带宽低延迟通信。
+
+该图在论文整体方法/实验链路中的作用：作为Ascend950互联架构的示意证据，支撑其在数据中心集群中"标准以太网+专用互联"双通道部署的可行性与扩展性论述。
+*caption: 昇腾芯片支持以太网与以太世界互通示意图… ｜ 论文 [[ascend-950-npu-architecture-whitepaper]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.1 (p.1)
 ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig01.png]]
-> [!tip] 【图文联合解读】图(b)为IFBench/Qwen3 8B上的学习曲线对比：蓝线(GEPA)在前几百次rollout即陡升至近满分并保持高平台；绿线(MIPROv2)上升模式类似但终值略低；橙线(GRPO)增长极缓，24k rollouts后仍处低位徘徊。测试集星标(左上蓝星≈满分，右下橙星≈零分)直观显示泛化鸿沟。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-原文借此论证两点关键技术结论：(1)基于反射的提示进化样本效率显著优于基于大规模采样的RL路线(GRPO)；(2)在提示优化领域亦超越SOTA的MIPROv2。
+该图分(a)(b)两子图，分别在 HotpotQA 与 IFBench 上以 Qwen3 8B 为基模，横轴为 rollout 数（≤24,000），纵轴为得分；曲线含 GEPA（蓝）、MIPROv2（绿）、GRPO（橙）及基线 prompt（灰），实心点为训练集性能、星标为留出测试集性能。
 
-在论文中，该图作为开篇首张核心实验证据，确立GEPA"少样本、高性能"的范式优势，为后续跨任务(HotpotQA、Sudoku等)与跨模型族的泛化性论证奠定基础。
+技术上，GEPA 仅用极少 rollout 即跃升至约 0.7–0.8 高位平台，MIPROv2 紧随其后；而 GRPO 增长缓慢且终值显著较低（HotpotQA 约 0.3，IFBench 约 0.4）。蓝星远高于绿/橙/灰星，证明泛化差距同样成立。
+
+作为论文 Figure 1，它以最直观的学习曲线定量立论："反射式提示进化"在样本效率与终值性能上同时优于 SOTA 提示优化器与 GRPO，为后续方法机理与多任务实验铺垫核心动机。
 *caption: A comparison of learning behavior of the GEPA prompt optimizer against a state-of-the-art prompt optimizer (MIPROv2) and GRPO (24,000 rollouts). As mo… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.2 (p.3)
 ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图2对比两段 prompt：seed 仅一行字段映射模板（"Given the fields question, summary_1, produce the fields query"）；GEPA 在 GPT-4.1 Mini 上进化出的版本扩展为含任务定义、输入理解、"避免复述/推断上位概念"等关键经验（含 Madeira 群岛人口等具体示例）、查询构建步骤与输出规范的多段结构化指令。
 
-该图展示GEPA为多跳QA系统"二跳文档检索"任务所生成的优化提示词（GPT-4.1 Mini），由初始种子提示演化而来。优化后的提示词具有高度结构化特征，包含Task、Input Understanding、Purpose and Context、Key Observations and Lessons、How to Build the Query、Practical Strategy、Output共7大段落，并嵌入了具体策略（如"识别summary_1中提到的更广泛实体"）与正反例（Madeira群岛人口、歌曲→专辑），引导LLM生成补充性检索查询。
+论文据此论证：GEPA 反思进化可从极简种子自动生成具备领域策略、避错教训与示例的专家级 prompt，体现其优化深度与可解释性。
 
-原文以此论证：**GEPA通过反思式提示进化，能产出结构化、含策略与示例的专家级提示，远胜简短种子提示**。该图作为定性证据，与附录L对各任务GEPA vs MIPROv2提示词的全面对比相呼应，共同支撑论文核心论点——**基于LLM反思的提示进化可超越强化学习方法**。在实验链路中，它处于"提示优化→任务执行→性能评估"环节的前端，用以直观展示GEPA所生成提示的复杂度与策略丰富度，为后续HotpotQA等基准上的量化结果提供可解释性背书。
+该图作为定性案例，与 Table 2 定量结果互证 GEPA 作为即用型 prompt 优化器在闭源模型上优于 MIPROv2，支撑全文方法主张。
 *caption: This figure shows an example prompt generated by GEPA for the second-hop document retrieval to be performed in a multi-hop question-answer system, alo… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.3 (p.5)
@@ -1709,7 +1953,15 @@ GEPA's iterative reflection accumulates **targeted, task-specific prompt refinem
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.6 (p.10)
 ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig06.png]]
-> [!tip] 【图文联合解读】图6展示了在Qwen3 8B上四种候选选择策略于HotpotQA、IFBench、Hover、PUPA四个基准的聚合得分：Baseline 48.84、SelectBestCandidate 54.89（+6.05）、BeamSearch 53.95（+5.11）、GEPA 61.28（+12.44）。论文据此论证：贪心式"每轮选最优"一次迭代即陷入局部最优，改善幅度有限（Hover仅45.33、IFBench反降至30.44），说明早熟收敛；而Pareto采样（GEPA）各项均最优（Hover 52.33、PUPA 91.85），同等预算下提升幅度约为前两者的两倍。该消融实验支撑了GEPA算法设计的核心决策——以Pareto候选选择替代贪心/束搜索，强化其相对传统RL搜索与朴素提示优化的优势。
+> [!tip] 【图文联合解读】**图像内容说明：** 所提供图片实际为一组数值结果表（Qwen3 8B 基模型下，Baseline / SelectBestCandidate / BeamSearch / GEPA 在 HotpotQA、IFBench、Hover、PUPA 四个任务上的得分及 Aggregate），而非 caption 所述的"左/右两幅候选选择策略对比示意"图。
+
+**基于表格数据的解读：**
+
+1) **核心数据：** Aggregate 列显示 GEPA=61.28 > SelectBestCandidate=54.89 > BeamSearch=53.95 > Baseline=48.84；相对 Baseline 改进幅度为 +12.44 / +6.05 / +5.11。SelectBestCandidate 在 HotpotQA（58.33）与 PUPA（85.45）尚可，但在 IFBench（30.44）反而低于 Baseline（36.90），说明纯贪心选择带来任务间失衡。
+
+2) **关键结论：** "每轮选最优"（SelectBestCandidate）虽能快速提升部分任务，但因反复利用同一条高分区路径，易陷入局部最优并牺牲弱项任务；BeamSearch 同理存在 +5.11 的次优提升；而 GEPA 的 Pareto 候选选择通过多任务侧写平衡探索，在所有四项任务上均取得最高分。
+
+3) **论文作用：** 该表为 Figure 6 的量化佐证——证明 Pareto 选择策略是 GEPA 性能优于朴素贪心/束搜索的关键设计，支撑论文"反思式提示进化可优于 RL"的核心主张。
 *caption: Comparing the impact of different candidate selection strategies. (Left) As can be seen, selecting the best-performing candidate in every iteration le… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.7 (p.13)
@@ -1774,20 +2026,20 @@ Figure 11: This figure compares the learning behaviour of GEPA against GRPO with
 ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig12.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-该图为Figure 12子图(c)，展示Qwen3 8B在HotpotQA上使用GRPO优化器时，4条不同配置曲线在0–250次rollout内的得分演化：蓝色曲线约50步内骤升至最高平台（约顶部），绿色虚线平稳居中，橙色阶梯式缓升至中低位，灰线始终贴底；星标分别标示各配置峰值，蓝星最高、灰星最低。
+图12展示HotpotQA上不同优化器在rollout（x轴，0–250）过程中的得分（y轴）演化曲线，分(a)(b)(c)三栏分别对应GPT-4.1 Mini-MIPRO、Qwen3 8B-MIPRO与Qwen3 8B-GRPO，仅(c)正常渲染。(c)中蓝色GRPO曲线在约50次rollout内即快速攀升至~0.55并趋于稳定（顶部蓝星标峰值），而绿色基线长期平台于~0.45，橙色曲线则需近200次rollout才逐步爬升至~0.45，效率与终值均显著落后。
 
-论文借此与同图(a)(b)的MIPRO基线并列，揭示RL类优化器在不同模型上样本效率与终值差异显著（GRPO在Qwen3 8B上收敛较慢、终值偏低），从而在整体实验链路中为GEPA的高样本效率与强泛化结论提供量化对照基准。
+论文借此论证：**反思式提示进化（GEPA/GRPO）相较传统RL/MIPRO类优化器，仅用极少量rollout即可达到更高分数**，以"样本效率"为关键证据支撑全文核心论点——提示演化可优于强化学习。
 *caption: Hotpot QA Bench: rollout vs. score for different models/settings. (a) GPT-4.1 Mini - MIPRO (b) Qwen3 8B - MIPRO 0 50 10 150 20 250… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.13 (p.29)
 ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig13.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图13(c)图文联合解读：**
 
-图13(c)展示了在IFBench基准上，Qwen3 8B模型采用GRPO方法时，"训练rollout次数（x轴）"与"得分（y轴）"的演化关系。可识别三条曲线：绿色线在前期迅速爬升至约0.85并保持平稳高位；橙色线缓慢上升，最终稳定在约0.55–0.60的较低水平；蓝色线几乎平直维持在接近0.95的高位（可能代表已优化提示或更强基线），星号标记各方法最优得分点。
+图13(c)展示Qwen3 8B在IFBench基准上、采用GRPO训练时三条rollout–得分曲线。横轴为采样预算，纵轴为得分（0–1）：蓝色线平直维持约0.95（顶端星标其最优值）；绿色线（GEPA）从约0.50急速攀升后稳定于≈0.85（中段星标约0.55）；橙色线（MIPRO）缓慢爬升至0.55–0.60区间。
 
-论文借此图论证的关键结论是：在IFBench这一指令遵循类任务上，RL类方法（GRPO，橙色）优化效率低、得分上限受限；而反思式提示进化方法（绿色，GEPA）仅需少量rollout即可达到显著更高的分数，验证了"prompt evolution can outperform RL"的核心主张。
+该图与(a)(b)子图共同构成MIPRO/GRPO基线对照族，原文借此论证关键论点：**反射式提示进化（GEPA）以远少于RL（GRPO）所需的rollout预算，即逼近甚至匹配其最优提示性能**——直接支撑"提示优化可超越强化学习"的核心主张。
 
-在论文整体实验链路中，该图属于RL基线对比环节，与MIPRO、HotpotQA等结果共同支撑作者关于"轻量级反思式提示优化在大模型上比强化学习更高效"的实验证据。
+在论文实验链路中，它是GEPA样本效率与上限优势的关键可视化证据，与正文实验数据共同构成方法论优越性的实证闭环。
 *caption: IFBench: rollout vs. score for different models/settings. (a) GPT-4.1 Mini - MIPRO (b) Qwen3 8B - MIPRO (c) Qwen3 8B - GRPO… ｜ 论文 [[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM — Fig.14 (p.29)
@@ -1951,13 +2203,13 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.1 (p.1)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图1解读：**
 
-1）**核心结构**：图(a)展示Orca的两级PP调度——4个请求A/B/C/D以完整prefill块(A_p, B_p, C_p, D_p)串行执行，decode小条(A_d1, B_d1…)稀疏插入，GPU1出现两段明显Bubble；图(b)展示SARATHI——prefill被切分为A_p1/A_p2、B_p1-B_p3、C_p1/C_p2、D_p1/D_p2等小块，与decode token密集交错，GPU1与GPU2均无空泡。
+**1）核心对象与结构：** 图展示两阶段（GPU1/GPU2）流水线并行时间线对比。上图(a)为Orca基线，4个请求A/B/C/D的长方形prefill块（Ap/Bp/Cp/Dp）后接多个极小条纹decode块，节点间存在明显"Bubble"空白；下图(b)为SARATHI方案，prefill被切分为多个等小块（如Ap1/Ap2/Bp1/Bp2/Bp3），并与decode按"Cp1Ad1""Dp1A_d2"形式组合填满每步调度，无bubble。
 
-2）**关键结论**：原文借此论证三点——(i)完整prefill长度不一导致pipeline bubble；(ii)decode单token开销比prefill高一个数量级却独占调度；(iii)SARATHI通过"chunked prefill + decode-maximal batching"将decode"搭车"piggyback到prefill chunk上，消除bubble并摊薄decode成本。
+**2）论证结论：** decode单token开销远高于prefill，且不均衡时序产生大量流水线气泡；将prefill分块并与decode"搭便车"组合，可饱和GPU算力、消除气泡。
 
-3）**论文作用**：作为开篇Figure 1，承担problem statement与solution teaser双重职能，为后文chunk size分析、stall-free调度及decode-maximal batching策略提供视觉锚点。
+**3）论文作用：** 作为方法总览图，开篇直观对比基线缺陷与SARATHI的chunked-prefills+decode-maximal batching核心机制，引出后续调度与性能评估。
 *caption: Example two-stage pipeline parallel schedule. (a)… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.2 (p.3)
@@ -1982,60 +2234,51 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.4 (p.4)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 4）**
 
-**(a)** LLaMA-13B/A6000 上 Prefill（1K 序列）在 batch=1 时即达 ~180 tokens/ms，吞吐随 batch 几乎饱和，曲线平坦；而 Decode 在 batch<32 时吞吐极低（<20 tokens/ms），仅在大 batch（≥256）且短序列（64）下才升至 ~100 tokens/ms。
+**(1) 核心对象与数据：** 图(a)横轴为batch size（1–512），纵轴为throughput (tokens/ms)。Prefill侧在batch≈4–16即饱和于170–185 tokens/ms，几乎不受序列长度影响；Decode侧从batch=1时的1–2 tokens/ms随batch单调上升，batch=256、seq=64时约100 tokens/ms。图(b)纵轴为算术强度：Prefill的preproj/attn/postproj/ffn四项随batch升至500–2750；Decode在batch≤8时普遍<10，至batch=256才跃至约240。
 
-**(b)** Prefill 算术强度随 batch 增长（≈800→2750），呈计算密集型；Decode 算术强度长期 <10，batch=256 时才跃升至 ~125–240，呈典型访存密集型。
+**(2) 关键结论：** 定量证实Prefill为compute-bound（高算术强度、吞吐早饱和），Decode为memory-bound（低强度、需大batch才能拉升吞吐），二者在硬件利用上严重不均衡。
 
-**论证结论：** Prefill 与 Decode 的算术强度存在数量级差异（计算 vs 访存瓶颈不同），这是两者无法在同 batch 中高效并发的根因。论文由此提出将 Prefill 分块"挂载"（piggyback）在 Decode batch 上，将短 Prompt 切碎以拉高 Decode 的 batch size 从而提升其算术强度，实现二者吞吐同时增益——这是 Sarathi 调度策略的核心动机。
+**(3) 链路作用：** 作为连接微观算子特性（Fig 3）与系统级调度评估的桥梁，为Sarathi将decode"挂载"在chunked prefill上做同batch混合调度提供硬件层面的动机与基准支撑。
 *caption: Impact of the arithmetic intensity (bottom) on the throughput (top) of prefills and decodes for LLaMA-13B on A6000 GPU. operations. Figure 4b shows th… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.5 (p.5)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig05.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**① 图示内容：** 2路PP跨GPU1/GPU2处理4个请求(A,B,C,D)的时间线。GPU1先依次完成Aₚ/Bₚ/Cₚ/Dₚ四个prefill块，随后出现PB₁、PB₂、PB₃三段虚线"气泡"，再处理Aᵈ1Bᵈ1、Cᵈ1Dᵈ1、Aᵈ2Bᵈ2等decode批次；GPU2延迟一个iteration启动，同样跑完prefill后衔接decode，未见明显空闲。
+1）**核心对象与结构**：图为2路Pipeline Parallelism（PP）在GPU1与GPU2上的迭代级时间线，处理4个请求（A/B/C/D）。每请求包含较长的Prefill块（Ap/Bp/Cp/Dp）与极短的Decode块（A_d1B_d1、C_d1D_d1、A_d2B_d2）；GPU2相对GPU1有错位的流水线延迟。图中标出PB_1、PB_2、PB_3三段灰色"Pipeline Bubble"，均出现在Decode阶段切换或GPU2等待GPU1输出时。
 
-**② 论证结论：** 由于同一batch内prefill与decode耗时差异显著（非均匀执行时间），标准iteration级PP调度会在GPU上产生pipeline气泡，造成算力浪费。
+2）**论证结论**：Prefill（计算密集、耗时） 与 Decode（访存密集、极短） 长度严重不均，导致流水线各micro-batch执行时间不一致，空泡占据GPU有效时间，形成气泡型资源浪费。
 
-**③ 论文作用：** 作为动机图，引出Sarathi的核心方案——将prefill切分为chunk与decode混合批处理，用decode"piggyback"填充气泡，提升吞吐。
+3）**在论文中的作用**：作为Sarathi提出"chunked-prefill + decode piggyback"方案的动机图——通过将Prefill切片并与Decode共批执行，消除非均匀批执行引发气泡，从而提升LLM推理的GPU利用率。
 *caption: Pipeline bubbles in LLM inference A 2-way PP iteration-level schedule [48] across 4 requests (A,B,C,D) shows the existence of pipeline bubbles due to … ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.6 (p.6)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig06.png]]
-> [!tip] 【图文联合解读】## Figure 6 深度解读
+> [!tip] 【图文联合解读】**图6图文联合解读：**
 
-**1) 核心对象与结构**
-该图为第三个 chunk prefill 迭代的注意力掩码矩阵。横轴为 12 个 key token（k0–k11），按 chunk_size=4 分为三组；纵轴为 4 个 query（q8–q11）。绿色区（k0–k7）全为 1，表示对历史 chunk 的注意力可复用预计算的 K/V；橙色区（k8–k11）呈下三角掩码——q8 仅关注 k0–k8，q9 关注 k0–k9，q10 至 k0–k10，q11 全关注，体现新 chunk 内部的标准因果掩码。
+**核心对象**：三张注意力掩码矩阵，展示三次chunk prefill迭代的Q×K掩码模式。第一次：4 query (q0-q3) × 4 key (k0-k3)，呈下三角因果掩码（橙色）；第二次：4 query (q4-q7) × 8 key (k0-k7)，左侧4列对历史chunk全连接（绿色），右侧4列维持因果（橙色）；第三次：4 query (q8-q11) × 12 key (k0-k11)，前8列绿色全连、后4列橙色因果。
 
-**2) 原文论证的关键技术结论**
-证明 chunked prefill 中，**旧 chunk 的 query（q8）只需与本 chunk 及之前 key 计算注意力**，无需重算；**新 chunk 的 query（q9–q11）仅需对当前及之前 token 做因果掩码**。即不同位置 query 所需注意力范围不同，为"非对称计算"和 piggybacking decode 提供了形式化依据。
+**技术结论**：SARATHI的piggybacking机制中，后续chunk的query可一次性关注此前所有chunk的全部key（绿色区域"1"密布），而当前chunk内部仍保持标准因果掩码（橙色下三角）。这种"跨chunk全连+块内因果"的组合掩码，在保证自回归语义正确性的前提下，使decode请求能与分块prefill共享一次前向传播。
 
-**3) 在论文方法链路中的作用**
-该图是 SARATHI 混合批处理（prefill + decode 同 batch）可行性的**核心可视化证据**：它解释为何可将 decode 的 query 拼接到 prefill chunk 后，无需重算全部注意力，从而支撑论文关于吞吐提升与流水线效率的核心论点。
+**论文作用**：作为方法正确性的关键可视化证据，支撑"SARATHI可在不损失精度的前提下混合prefill与decode以提升吞吐"的论断，为后续实验（vLLM基线对比、延迟/吞吐收益）提供理论正当性。
 *caption: Example of how attention mask is set across dif- ferent chunk prefill iterations in SARATHI (q and k represent “query" and “key" tokens, respectively)… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.7 (p.7)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig07.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 7）**
-
-**1）核心对象与结构**：图将 LLaMA-13B 在 A6000 上单次 transformer 迭代拆为 preproj、postproj、ffn、total compute 四条曲线，横轴为序列长度 0–1024，纵轴为耗时（ms）。preproj 缓慢从约 10ms 升至约 60ms；postproj 最小，全程 ≤20ms；ffn 主导耗时，从约 30ms 阶梯式跃升至约 150ms；total compute 从约 45ms 增至约 270ms。**关键特征**是 ffn 与 total compute 呈明显"楼梯状"跳变，突变点集中在 128、256、512、640、768、896 等处——这正是 GPU 矩阵乘 tile 尺寸边界，即 tile quantization 效应的可视化证据。
-
-**2）原文论证结论**：prefill 计算量并非随长度连续线性增长，而是按 tile 大小离散跳变；非 tile 对齐的请求会浪费碎片化算力。这是 Sarathi 采用"chunked-prefill、将 chunk 设为 tile 边界倍数"策略的硬件层动因。
-
-**3）在论文链路中的作用**：与前文 decode-maximal batching 对比呼应，作为 Sarathi-Serve 调度设计的实验支撑——证明以 tile 对齐 chunk 切分预填充，可显著降低单步延迟、消除碎片开销。
+> [!tip] 【图文联合解读】<think
 *caption: The effect of tile quantization on the runtime of one iteration of LLaMA-13B on A6000 GPU. maximal batching with that of the baseline scheme that com-… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.8 (p.9)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig08.png]]
-> [!tip] 【图文联合解读】**Figure 8 图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与数据**：横轴为 Batch Size（2–18），纵轴为 Decode-only 阶段加速比（0–10×），三组序列长度：1K（橙色）、2K（灰斜纹）、3K（绿网格）。1K 序列覆盖全部 batch；2K 止于 batch=8（最高≈5.8×，batch=2）；3K 仅至 batch=6（最高≈4.4×，batch=2）。随 batch 增大加速比单调下降：1K 由 ~9.8× 降至 ~2.7×；序列越长，可承载的 batch 越小，加速比也越低。
+图8为分组柱状图，横轴为Batch Size（2–18），纵轴为decode-only加速比（0–10），三组序列长度1K（橙）/2K（灰斜纹）/3K（绿交叉纹）。数据显示：1K序列在batch=2时加速最高约9.9×，随batch增大单调降至18时的约2.7×；2K序列在batch=8时仅约2.8×；3K序列在batch=6后消失（OOM）。
 
-**2) 关键结论**：即便排除 piggyback prefill 的收益，仅 decode 阶段 SARATHI 仍带来显著加速（最高近 10×），证明 chunked prefill 通过提高 GPU 利用率与改善 kernel 调度，正面惠及纯 decode 路径，而非仅来自混合 prefill 的分摊。
+**技术结论：** SARATHI在decode-only场景下能获得显著加速，但加速比随batch增大和序列变长而递减，长序列高batch时受显存限制无法运行，凸显其在批处理推理中的实际收益边界。
 
-**3) 在论文中的作用**：作为单独剥离 decode 的 ablation，排除"加速源于把 prefill 摊到 decode 上"的混淆，从机制层面夯实 SARATHI 在混合负载下整体吞吐提升的根基。
+**论文作用：** 该图作为图7系列补充，量化证明piggybacking策略在纯decode工作负载上同样有效，支撑论文核心主张——chunked-prefill与decode融合普遍优于传统分阶段调度。
 *caption: Decode-only speedup with SARATHI on an A6000 GPU with LLaMA-13B (chunk size = 256).… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.9 (p.10)
@@ -2053,29 +2296,37 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.10 (p.10)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig10.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图10解读：**
 
-图10以2×3堆叠柱阵展示LLaMa-13B在A6000上的算子级耗时分解，蓝色（SARATHI）柱普遍低于橙色（baseline），且差距随batch增大而扩大。例如seq_len=1K、chunk=256时，bs=18下baseline≈8.6s而SARATHI≈6.8s，节约约20%；seq_len=3K、bs=6下由≈8.4s降至≈6.8s。各分量中ffn占比最大、attn次之，preproj/postproj较小，且SARATHI主要压缩ffn与attn段，pre/postproj几近持平。chunk=512整体比256更优（如bs=18、1K时由6.8s再降至≈5.2s）。
+**1）核心对象与数据**：2×3 网格堆叠柱状图，对比 LLaMa-13B 在 A6000 上各操作（preproj/attn/postproj/ffn，单位秒）的耗时，橙=SARATHI 基线，青=SARATHI。上排 chunk=256、下排 chunk=512；列分别为 seq len 1K/2K/3K。量化读数：seq=1K、batch=18、chunk=256 时基线≈8.6s、SARATHI≈6.7s；同 batch=18 但 chunk=512 时基线≈6.5s、SARATHI≈5.2s；seq=3K、batch=6、chunk=256 时基线≈8.3s、SARATHI≈6.8s。ffn（实色段）为最大占比。
 
-**论证结论：** chunked-prefill与decode piggybacking通过提升kernel利用率，使ffn（GEMM-heavy）受益最显著，且随batch放大收益递增；减小chunk size会部分抵消优势。
+**2）论证结论**：增大 chunk（256→512）显著压缩总时延，且 SARATHI 在每个配置下均低于基线，收益主要来自 ffn 与 attn 段。
 
-**论文链路作用：** 与端到端加速比互补，作为微观算子级归因证据，支撑"SARATHI消除prefill/decode失衡、提升GPU利用率"的核心主张。
+**3）作用**：作为 Figure 9 的操作级分解补充，从微观算子层面验证 chunked-prefill + decode piggyback 减开销的机制有效性。
 *caption: Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU with varying sequence lengths and batch sizes, using prefill chunk si… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.11 (p.11)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig11.png]]
-> [!tip] 【图文联合解读】图(b)展示在序列长度1K、batch size=18下，SARATHI三种chunk尺寸（128/256/512）与Orca best-case随Prefill/Decode比（0–100%）变化的归一化吞吐曲线。SARATHI在低P:D区间（5–30%）出现峰值：chunk=256在P:D≈15%达1.26×，chunk=512在≈30%达1.23×，chunk=128在≈5%达1.14×；Orca best-case最高仅约1.10×。该图与子图(a)共同论证：SARATHI的chunked prefill合并策略在多种负载下均稳定优于Orca迭代级调度，是验证"Splitwise+chunked"设计优于纯迭代调度的关键消融证据。
+> [!tip] 【图文联合解读】**图文联合解读**
+
+图(a)：A6000+LLaMA13B，序列1K/2K/3K对应最大批18/10/6，chunk=256下SARATHI归一化吞吐稳定在1.22–1.27×；Orca最佳≈1.10×（仅1K下略高），最差与基线持平1.0×。
+
+图(b)：序列1K、批18，P:D比0–100扫描中，SARATHI三种chunk（128/256/512）峰值依次≈1.13/1.26/1.23×，全程压制Orca最佳（≈1.10×，P:D>30后回落至≈1.05×）。
+
+论证结论：chunked-prefill在不同序列长度与P:D负载下均稳定优于iteration级调度器Orca，chunk=256为最优甜点。
+
+论文作用：作为核心ablation之一，量化"piggyback"策略相对Orca的稳定吞吐增益，支撑Sarathi在混合prefill/decode负载下的调度有效性。
 *caption: Comparison with iteration-level scheduler Orca for LLaMa 13B on A6000 GPU. configuration of sequence length and chunk size, we show the effect of vary… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.12 (p.12)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig12.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 12b）**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-**核心对象与数据**：图(b)展示GPT-3在DGX A100上仿真部署下，三种调度策略处理0–10000请求时的端到端完成时间。在10000请求时，SARATHI（蓝色虚线）约1900s，TP+PP（橙色实线）约3700s，TP(8 replicas)（绿色点划线）约2900s，三者近似线性增长但斜率差异显著。
+**核心对象与数据**：图(a)为气泡时间CDF对比——SARATHI气泡集中在0–18s即达CDF=1.0，而TP+PP气泡散布于15–90s。图(b)为请求完成时间随请求数变化（0–10000条）：10000请求时SARATHI约1900s，显著低于TP+PP(约3700s)和TP×8副本(约2850s)。
 
-**关键技术结论**：通过将decode与chunked prefill混合调度消除pipeline bubble，SARATHI相较TP+PP将请求完成时间降低近50%，相较TP(8 replicas)亦快约35%，验证了混合流水策略的端到端优越性。
+**技术结论**：通过将chunked-prefill与decode混合调度（即"piggybacking"），SARATHI大幅消除pipeline气泡，同时端到端延迟较TP+PP降低近一半。
 
-**论文整体作用**：与图(a)的pipeline bubble分析呼应，从微观（气泡占比）到宏观（用户可见延迟）共同构成SARATHI有效性的完整证据链。
+**论文作用**：作为论文模拟实验部分的关键证据，量化论证SARATHI方案在流水线利用率与吞吐上的核心优势，支撑其"混合调度消除气泡"的核心设计主张。
 *caption: Impact of SARATHI on pipeline bubbles (top) and request completion times (bottom) for GPT-3 deployed on DGX A100(s) in simulation. the effect of varia… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.13 (p.13)
@@ -2091,42 +2342,38 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.1 (p.1)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig01.png]]
-> [!tip] 【图文联合解读】图1a为0~350s生成token数曲线：Sarathi-Serve平滑升至约30K tokens，vLLM呈阶梯状，在200~220s出现明显"Generation stall"（插图标注）。图1b为P99 token间隔柱状图，在QPS=0.55/0.7/1.0下vLLM从约0.5s飙升至约1.4s（负载越高恶化越剧），Sarathi-Serve稳定在约0.3~0.35s。该图作为开篇动机图，定量揭示vLLM在高并发下存在秒级生成停顿与尾部延迟膨胀两大缺陷，为Sarathi-Serve以chunked-prefill+stall-free调度兼顾吞吐上限与消除停顿的核心论点提供直接实证依据，并奠定后文调度设计与实验评估的必要性。
+> [!tip] 【图文联合解读】图1双子图：(a) Yi-34B双A100服务arxiv 128请求下"Tokens生成-时间"曲线，Sarathi-Serve(蓝)持续平滑上升，vLLM(橙)在200–220s区间出现数秒水平的"generation stall"平台；(b) P99 token间隔随QPS(0.55/0.7/1.0)柱图，vLLM由约0.5s升至1.35s，Sarathi-Serve稳定在≈0.3s。原文论证：负载升高时vLLM尾延迟急剧恶化且decode阶段存在阻塞，Sarathi-Serve通过chunked预填充与stall-free调度，兼顾高吞吐与低尾延迟。该图作为开篇动机图，直观揭示vLLM缺陷，为Table1所示模型/硬件配置下的系统设计与后续性能对比实验铺垫核心理由。
 *caption: Yi-34B running on two A100 GPUs serving 128 requests from arxiv-summarisation trace. 1a highlights one of the many generation stalls lasting over seve… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.2 (p.2)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig02.png]]
-> [!tip] 【图文联合解读】**图2解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 结构与数据**：二维定性定位图，纵轴为Throughput（越高越好），横轴为TBT Latency（越右越差）。四个系统坐标分别为：FasterTransformer（红圆，左下——decode优先，吞吐与TBT均低）、Orca（紫圆，中部偏右——prefill优先）、vLLM（蓝圆，右上——prefill优先，吞吐高但TBT尾延迟高）；三者由灰色虚线串联，标注"迭代级批处理→Paged Attention"，构成既有方法的帕累托前沿。Sarathi-Serve（绿色星标）独立位于左上象限——高吞吐、低TBT延迟，旁注"Stall-free batching"。
+图示二维空间（纵轴 Throughput，横轴 TBT Latency）中四系统的相对定位：FasterTransformer（红点，左下，Decode prioritizing）、Orca（紫点，中部，Prefill prioritizing + iteration-level batching）、vLLM（蓝点，右上，Prefill prioritizing + Paged Attention）沿虚线箭头由左下向右上推进，呈现传统"高吞吐 ↔ 低 TBT 不可兼得"的折中曲线。Sarathi-Serve（绿星，左上区）凭借 **stall-free batching** 跳出该曲线，同时占据高吞吐与低 TBT 时延象限。
 
-**2) 关键结论**：现有系统受调度策略制约，prefill优先换高吞吐却牺牲TBT，decode优先反之，沿虚线呈此消彼长；Sarathi-Serve通过无停顿批处理跳出该曲线，**同时实现高吞吐与低TBT**，打破throughput–TBT权衡。
+原文借此论证：**通过调度策略改进可在不牺牲 TBT 尾延迟的前提下显著提升吞吐**，即折中是可打破的而非本质约束。
 
-**3) 论文作用**：图位于第2页，作为问题动机图，先建立tradeoff认知、再预告方法定位，为后续chunked prefill、stall-free调度等机制设计与实验评估提供论证锚点。
+该图位于 p.2 开篇位置，作为全文**动机图（motivational figure）**，为后续 chunked-prefill 调度、stall-free batching 设计以及 Table 2 实验评估（optimum range、alpaca、sharegpt 等数据集下的端到端基准对比）提供问题陈述与目标锚点。
 *caption: Current LLM serving systems involve a tradeoff be- tween throughput and latency depending on their scheduling policy. Prioritizing prefills optimizes … ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.3 (p.5)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig03.png]]
-> [!tip] 【图文联合解读】**图3联合解读：**
+> [!tip] 【图文联合解读】**核心对象与数据**：左两图为Prefill/Decode吞吐量对比——Prefill在batch 1–8范围内吞吐稳定在~4.5K–5.5K tokens/s（batch=2时峰值），随batch增大几乎无提升；Decode从batch=1的~20 tokens/s近乎线性增长至batch=64的~820 tokens/s；二者y轴量级差约10倍，直观显示Prefill效率远高于Decode。右两图补充延迟分解：Prefill延迟随序列长度128→2K由~30ms增至~145ms，attention占比明显；Decode延迟几乎与batch无关，稳定在~15–20ms，线性层占主导。
 
-该图含左右两子图（Mistral-7B / 单卡A100，prompt长度1024）：
-- **Prefill**：批大小 1/2/4/8，吞吐约 4.5k→5.4k→5.2k→4.8k tokens/s，BS≥2 即饱和甚至略降；
-- **Decode**：批大小 1/8/16/32/64，吞吐约 10→110→220→420→810 tokens/s，随批大小近似线性增长。两图纵轴相差近一个数量级。
+**关键结论**：Prefill属compute-bound，batching边际增益小；Decode属memory-bound，batching带来近线性吞吐提升。该差异正是Sarathi-Serve需要协同调度两类阶段的根本动机。
 
-**论证结论**：prefill 计算密集，单请求即吃满算力，batching 边际收益小；decode 访存密集，受制于单 token 访存开销，batching 能近乎线性放大吞吐。
-
-**论文作用**：揭示两阶段算力–访存特性失衡这一根因，为 Sarathi-Serve 提出"分块 prefill + decode 共批（stall-free batching）"以提升整体吞吐、压低时延提供直接动机。
+**在论文中的作用**：该图是动机实验，定量揭示Prefill/Decode的负载特性差异，为后续提出chunked prefill与splitwise batching以调和throughput–latency tradeoff提供实证依据。
 *caption: Throughput of the prefill and decode phases with different batch sizes for Mistral-7B running on a single A100 GPU. We use prompt length of 1024 for b… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.4 (p.5)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig04.png]]
-> [!tip] 【图文联合解读】**图4解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1）核心数据：** 左图为Mistral-7B在A100上的Prefill耗时（序列长度128→2k），从约33ms单调上升至约143ms，其中linear层（青色斜纹）始终占主体（2k时约120ms），attention与others占比小。右图为Decode耗时（batch size 1→64），全程几乎持平于18–23ms，linear仍为主，attention可忽略。
+1）图中左子图为 Prefill 阶段随序列长度（128/256/512/1k/2k）的耗时，总时间近似线性增长（~32→145ms），其中 linear 层始终占主导（2k 时约 120ms）；右子图为 Decode 阶段随 batch size（1/8/16/32/64）的耗时，全程几乎平坦在 ~18–22ms，linear 仍为最大分量（约 12–15ms），attention 与 others 占比极小。
 
-**2）关键结论：** Prefill与Decode均以linear层为瓶颈；因decode算术强度低，**1个decode token的linear开销≈128个prefill token**，且增加batch几乎不放大延迟，说明decode是访存受限。
+2）关键结论：两阶段均以 linear 计算为瓶颈；由于 decode 算术强度低，**单 token decode 的 linear 耗时（~13ms）已接近 128 token prefill 的 linear 耗时（~17ms）**，验证 decode 属 memory-bandwidth bound、prefill 属 compute-bound。
 
-**3）在论文中的作用：** 该图是Sarathi-Serve提出"chunked prefill+decode共批"（splitwise）的核心动机——证明把prefill小块塞进decode batch可被现有GPU带宽"免费"吸收，从而打破throughput–latency权衡，同时解释了为何大batch下throughput仍受限。
+3）方法论作用：该图为 Sarathi-Serve 提供动机——prefill 重、decode 轻且对 batch 不敏感，故可将两者放入同一 hybrid batch 并对 prefill 分块（chunked-prefills），在隐藏 prefill 延迟的同时维持低 TBT，从而打破吞吐–延迟权衡。
 *caption: Prefill and decode time with different input sizes for Mistral-7B running on single A100 GPU. Linear layers contribute to the majority of runtime in b… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.5 (p.6)
@@ -2151,20 +2398,20 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.7 (p.6)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig07.png]]
-> [!tip] 【图文联合解读】图7沿时间轴横向对比四种调度的迭代块序列：vLLM在A_d、B_d之后串入C_p、D_p两个全prefill，导致A、B的decode发生stall（标注"TBT with prefill interference"）；Orca以C_p/D_p/A_d/B_d混合批处理，但因长prompt执行时长仍高，无法消除A、B的stall；FasterTransformer则反复多轮A_d/B_d直至A、B退出才调度C_p、D_p，虽无decode stall但新请求prefill却停滞；Sarathi-Serve将C、D的prefill各切分为p1、p2两chunk，在A_d、B_d的decode间隙交叉插入，实现全程"No stalls"。
-
-该图是论文核心可视化论据，定量证明仅靠"混合批"或"优先级极端倾斜"都无法双赢——唯有**chunked prefill与decode交错**才能兼顾吞吐与延迟，直接引出Sarathi-Serve"分块+交错调度"的核心方法论，并为后续Figure 8的stall-free时间线与正文throughput–latency tradeoff论证提供基础。
+> [!tip] 【图文联合解读】该图以时间线对比四种调度策略：vLLM与Orca将C、D完整prefill（p）打包执行，A、B的decode迭代被迫停滞；FasterTransformer仅调度decode（A退出→B退出），C、D的prefill被迫等待；Sarathi-Serve把prefill拆为p0、p1两个chunk与A_d、B_d交错执行，全程无stall。该图揭示了前三类系统在prefill–decode串行化上的结构性缺陷——或损失decode时效、或损失prefill吞吐——论证分块prefill+decode交叉调度是实现stall-free的核心机制，为§6后续SLO与吞吐实验提供关键动机基础。
 *caption: A generation stall occurs when one or more prefills are scheduled in between consecutive decode iterations of a request. A, B, C and D represent diffe… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.8 (p.7)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig08.png]]
-> [!tip] 【图文联合解读】**图8 联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图8对比两套2路PP调度（GPU0+GPU1×4请求A-D）时间线：
-① **Orca（上行）**：两GPU错位执行，标出两类灰色气泡——prefill长度差异（A_p/B_p vs C_p/D_p耗时不同）及prefill/decode相互干扰（解码等待下一个prefill完成），出现明显空档；
-② **Sarathi-Serve（下行）**：将每请求切分为A_p1/A_p2/A_d1/A_d2等定长块，两GPU锁步执行，标注"Minimal Bubbles"，气泡几乎不可见。
+图8对比了Orca与Sarathi-Serve在2路流水线并行、4请求（A,B,C,D）下的迭代级调度时序。Orca（上图）GPU0与GPU1上先后执行ApBp→CpDp→Ad1Bd1→Cd1Dd1，由于prefill长度差异（Ap/Bp与Cp/Dp不同）及prefill与decode（d1）混合计算时长不均，分别产生"长度变化气泡"和"prefill-decode干扰气泡"，GPU1还出现空闲等待。
 
-原文借此论证：变长prefill与prefill-decode共存是Orca流水线气泡的两大根源，而uniform-compute批次（分块prefill）能基本消除之。该图是Sarathi-Serve核心设计——**chunked-prefill+uniform batch**——的关键动机图，为后续吞吐-时延权衡实验奠定理论依据。
+Sarathi-Serve（下图）通过将prefill切分为等大小token块（如Ap1、Bp1、Ap2…）与decode请求组合，形成**等计算量批次**（Ap1Bp1Cp1D…），两卡时序几乎对齐，仅存极小气泡。
+
+原文借此论证核心结论：iteration-level调度的pipeline bubble根因是batch计算量不均匀，Sarathi-Serve以uniform-compute batching（即chunked-prefill + decode同批）为关键设计消除气泡。
+
+该图是论文方法动机—核心机制链路的关键证据，支撑"stall-free batching + 良好throughput/latency tradeoff"的主论点。
 *caption: A 2-way pipeline parallel iteration-level schedule in Orca across 4 requests (A,B,C,D) shows the existence of pipeline bubbles due to non-uniform batc… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.9 (p.8)
@@ -2189,11 +2436,13 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.11 (p.11)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig11.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图11 图文联合解读**
 
-图11含(a)(b)两子图，对比 Orca、vLLM、Sarathi-Serve 三种调度器在 LLaMA2-70B 与 Falcon-180B（均采用流水线并行 PP）下的最大容量（Max Capacity），分别在严格 SLO-S 与宽松 SLO-R 下评估。(a) openchat_sharegpt4 上 Sarathi 相对 vLLM 提升 **5.54–6.31×**；(b) arxiv_summarization 上严格 SLO 下为 **4.20–4.69×**，宽松 SLO 下为 **2.75–3.00×**。
+图11对比三种调度器（Orca、vLLM、Sarathi-Serve）在两类pipeline并行大模型（LLaMA2-70B、Falcon-180B）与两类SLO下的最大服务容量：(a) openchat_sharegpt4上，Sarathi-Serve相对Orca提速4.69x–6.31x（LLaMA2-70B SLO-R达0.83 vs Orca 0.13）；(b) arxiv_summarization上提速2.75x–4.60x。在所有模型×SLO×数据集组合中，Sarathi-Serve均显著领先vLLM与Orca。
 
-**关键结论**：Sarathi-Serve 在满足时延 SLO 的同时显著提高吞吐，且严格 SLO 下优势更突出，验证其 chunked-prefill + decode-fusion 调度对流水线并行大模型同样有效。该实验将论证从单 GPU 张量并行场景扩展到多节点 PP 场景，补强了全文的方法—实验论证链。
+该图论证：pipeline并行场景下，Sarathi-Serve的chunked-prefill与分阶段调度同样能显著突破吞吐-时延折中，释放更多请求容量。
+
+在论文链路中，图11将实验结论从单卡评估延伸至多卡分布式大模型部署，证明方法在更大规模场景中依旧有效，巩固整体方法优势。
 *caption: Capacity of LLaMA2-70B and Falcon-180B (mod- els with pipeline parallelism) with different schedulers under strict (SLO-S) and relaxed (SLO-R) latency… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.12 (p.12)
@@ -2209,11 +2458,7 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.13 (p.12)
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig13.png]]
-> [!tip] 【图文联合解读】**图13联合解读**
-
-图13以Falcon-180B为对象，对比跨节点并行策略。(a)P50 TBT条形图：batch 8→128时，纯跨节点TP8从~0.19s升至~0.36s，而TP4:PP2（节点内TP+跨节点PP）稳定在0.08–0.15s，batch=128时差距达2.4×。(b)容量图：SLO-S下Sarathi-Serve TP4:PP2达~0.6，是vLLM TP8（~0.13）与vLLM TP4:PP2（~0.15）的~4.6×与4×；SLO-R下亦达~0.75。
-
-该图论证两点：①跨节点TP因通信开销大导致TBT膨胀、扩展性差，应以PP替代；②在混合并行配置下，Sarathi-Serve的chunked-prefill与融合调度显著放大吞吐。它在论文中作为核心方法（延迟-吞吐权衡调度）面向跨节点超大模型场景的关键实验支撑，验证"避免跨节点TP + 采用Sarathi调度"是同时满足SLO与高吞吐的必要组合。
+> [!tip] 【图文联合解读】图13基于Falcon-180B对比跨节点TP8与节点内TP4+跨节点PP2的并行策略。**(a)** P50 TBT随batch从8增至128，TP8由0.19s升至0.37s，TP4:PP2仅由0.085s升至0.15s，batch=128时差距>2×，直接量化跨节点TP的扩展性劣势。**(b)** SLO-S下Sarathi-Serve TP4:PP2容量≈0.62，较vLLM TP8(0.14)、vLLM TP4:PP2(0.18)分别提升4.3×与3.6×；SLO-R下优势同样显著(0.75 vs 0.15/0.50)。该图为论文"TP+PP混合并行+分块调度"方案提供关键容量证据，论证在严格时延约束下混合并行与Sarathi调度协同带来的吞吐-时延权衡最优解。
 *caption: TP scales poorly across nodes. (a) Median TBT for decode-only batches: cross node TP increases median TBT by more than 2× compared to a 4-way TP withi… ｜ 论文 [[taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve]] ｜ arxiv 见 MD 元信息*
 
 ### Taming Throughput-Latency Tradeoff in LLM Inference with Sar — Fig.14 (p.13)
@@ -2259,141 +2504,128 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### KIMI-VL TECHNICAL REPORT — Fig.3 (p.3)
 ![[assets/crops/kimi-vl-technical-report-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 3）：**
 
-图示 Kimi-VL 三模块架构：**MoonViT**（原生分辨率视觉编码器）→ **MLP Projector** → **MoE Language Decoder**（堆叠 N 层，每层含 Attention + MoE FFN，Router 将 token 分派至 Non-shared Experts 与 Shared Experts）。
+1) **核心结构**：图为 Kimi-VL 三段式架构——底部 **MoonViT** 以**原生分辨率**直接编码多种尺寸输入（小图 50×20px、细粒度图 1113×672px、长视频帧 480×270px、UI 截图 800×1731px、特殊长宽比 OCR 58px 条带），经 **MLP Projector** 映射后送入 **MoE 语言解码器**（Attention 层 + 含 Router 的 MoE FFN，区分 Non-shared Experts 与 Shared Experts，堆叠 ×N 层），最终输出带颜色的多模态 token 序列。
 
-MoonViT 直接处理多尺度异构输入，规避 resize 失真：小图 50×20px、长视频 480×270px 多帧、细粒度图 1113×672px（1008px 内含 ROI）、OCR 条带 58px 高、UI 截图 800×1731px。
+2) **论证结论**：MoonViT 原生分辨率处理避免了对超高分辨率图像（如 UI、OCR）强制 resize 造成的细节丢失；MoE 共享+非共享专家设计在保证文本/推理能力的同时控制激活参数，提升效率。
 
-**论证要点**：原生分辨率编码保留细节以适配异构视觉任务；MoE 兼顾容量与推理效率。**论文作用**：作为开篇架构总图，奠定后续多基准（OCR InfoVQA、Agent OSWorld/屏幕截图、长视频 LongVideoBench 等）泛化性能的方法学根基。
+3) **论文作用**：作为方法论总纲图，支撑后续 Figure 2 的多基准结果（MMMU、InfoVQA、ScreenSpot-Pro 等），解释 Kimi-VL-Thinking 在多模态推理、长视频、文档、Agent 任务上竞争力的架构根基。
 *caption: The model architecture of Kimi-VL and Kimi-VL-Thinking, consisting of a MoonViT that allows native- resolution images, an MLP projector, and a Mixture… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.4 (p.4)
 ![[assets/crops/kimi-vl-technical-report-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图示Kimi-VL预训练五阶段：纯文本5.2T、ViT训练2.0T→0.1T（CoCa-loss对齐LLM）、联合预训练1.4T（多模态≤40%渐进）、联合冷却0.6T（高质量+重warmup高LR）、联合长上下文0.3T（RoPE 50k→800k），后三阶段以"resumes LR scheduler"衔接。
 
-该图展示 Kimi-VL 三阶段预训练流水线：(1) 文本预训练 5.2T tokens（纯文本）；(2) ViT 训练 2.0T→0.1T tokens，采用 CoCa-loss + 微型语言解码器对齐 LLM；(3) 联合预训练 1.4T tokens，多模态数据渐进式升至 40%，并以"resumes LR scheduler"衔接文本阶段。
+论文用以论证：所有更新LM的阶段均做联合训练（joint training），通过渐进多模态比例、再warmup、长上下文扩展保留文本能力，避免纯视觉微调导致的语言能力退化。
 
-论文借此论证两点关键结论：①预训练总计消耗 4.4T tokens（不含纯文本阶段）；②所有更新语言模型的阶段均为联合训练，以防止灾难性遗忘、保留文本能力。
-
-该图为方法总纲，奠定后续 SFT/RLHF 的基础——先打牢文本与视觉编码器各自基础，再以渐进比例融合多模态，是 Kimi-VL 在不牺牲语言能力前提下获得视觉理解能力的关键架构设计。
+论文作用：完整呈现方法论预训练框架，作为后文指令微调与Table 4多模态推理评测（MathVista、MMMU等）的方法基础。
 *caption: The pre-training stages of Kimi-VL consume a total of 4.4T tokens after text-only pre-training of its language model. To preserve text abilities, all … ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.5 (p.6)
 ![[assets/crops/kimi-vl-technical-report-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-**1) 核心结构：** 图示 Kimi-VL 后训练三阶段流水线。阶段一为**联合监督微调（SFT）**，在文本+多模态数据上依次进行 **1 Epoch@32K + 1 Epoch@128K**，上下文每阶段扩展 4 倍；阶段二为**长思维链 SFT（Long-CoT SFT）**，覆盖 Planning、Evaluation 等推理数据；阶段三为 **RL**（强化学习）以增强长思考能力。
-
-**2) 关键技术结论：** 通过"短上下文联合训练 → 上下文长度逐级倍增 → 长 CoT 微调 → RL 强化"的递进式设计，以约 80 万样本量实现长上下文与长链思考能力的协同激活。
-
-**3) 在论文中的作用：** 位于预训练之后、推理评测之前，是 Kimi-VL 区别于普通 VLM 的核心增强链路，承担将基础模型升级为具备长思考能力的 Thinking 变体的关键职能。
+> [!tip] 【图文联合解读】该图展示Kimi-VL后训练三阶段流水线：①联合SFT阶段（文本+多模态数据，先32K后128K各1 epoch）产出Kimi-VL；②长CoT SFT阶段（引入规划、评估、反思、探索类长思维链数据）；③在线RL阶段（仅对答案奖励，含长度惩罚与难度控制）产出Kimi-VL-Thinking。原文借此论证：每阶段上下文4倍扩展以渐进建立长文本能力，并经长CoT SFT激活、RL增强推理思维，形成从基础VLM到思考型VLM的完整训练链路，支撑后文Table 5等推理基准的评测。
 *caption: The post-training stages of Kimi-VL and Kimi-VL-Thinking, including two stages of joint SFT in 32K and 128K context, and further long-CoT SFT and RL s… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.6 (p.8)
 ![[assets/crops/kimi-vl-technical-report-fig06.png]]
-> [!tip] 【图文联合解读】**图6图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图6展示Kimi-VL-Thinking对爱因斯坦手稿图像的逐步推理过程（部分文字片段呈现）。模型沿多条线索链式分析：①**视觉感知**——手写潦草但连贯，源自单一作者；②**数学内容**——含g(引力)、M(质量)、T(时间)等变量、偏导求和与张量记法，符合场论风格；③**语言线索**——出现德语"Gleichung"(方程)、"Gln"，指向德语母语者；④**知识匹配**——公式与广义相对论场方程吻合，最终判定作者为Albert Einstein。该图作为定性案例，定证Thinking模式具备**多模态链式推理**与**跨域(历史人物+科学理论)联合推断**能力，是论文论证"思考型VLM"区别于普通VLM的核心可视化证据之一。
+该图左侧为用户指令"逐步推断手稿作者与内容"，右侧为Kimi-VL-Thinking的完整推理流程：先以千字级`<Think>`块分四步分析（纸张年代→公式变量→德语术语→作者风格），再输出结构化结论、Key Observations（字迹/内容/语言三条证据）与Final Answer，形成"证据→推理→结论"闭环，最终判定手稿为Einstein的引力场方程推导稿。
+
+**论文论证结论：** 模型具备融合视觉（笔迹）、语义（公式内容）与语言线索（德语"Einheitsvektor"等）的多模态链式推理能力，输出可验证而非即答。
+
+**论文定位：** 属"thinking with images"章节的定性案例，支撑Kimi-VL-Thinking在高阶历史/科学推理任务上优于纯生成式回答的核心卖点。
 *caption: Manuscript reasoning visualization. Kimi-VL-Thinking demonstrates the ability to perform historical and scientific inference by analyzing handwritten … ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.7 (p.12)
 ![[assets/crops/kimi-vl-technical-report-fig07.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-**1) 核心对象与结构：** 图为多子图问答演示，至少包含两个完整案例：①城市场景匹配——模型比对四张子图（含圆顶/天文台建筑），通过密度、布局、圆顶结构特征判定第4张与第1张同地；②地标识别——基于可伸缩屋顶与CN塔背景，定位为多伦多Rogers Centre体育场；③游戏场景识别——依据霓虹灯、全息屏、赛博朋克美学判断为《赛博朋克2077》Night City中的酒吧/俱乐部。每个案例以"图像+Response"配对呈现。
-
-**2) 关键技术结论：** 论证Kimi-VL具备三类视觉推理能力——空间/结构匹配（layout grounding）、文化地标识别（cultural landmark grounding）、风格化场景理解（stylistic cue grounding），即视觉内容可被锚定于空间、语境与文化知识。
-
-**3) 在论文中的作用：** 作为定性案例（qualitative showcase），与论文核心主张"激活视觉推理"互文，支撑其在M3原生训练阶段联合注入的OCR、图像描述、视觉定位与世界知识等多模态能力，无需CoT即可完成复杂跨模态推断。
+> [!tip] 【图文联合解读】图7以3组指令-响应定性示例展示Kimi-VL视觉推理能力：①多图选择任务（4张候选城市子图中匹配Image1），依据建筑密度/圆顶结构判Image4胜出；②地标识别（多伦多Rogers Centre穹顶体育馆，并关联CN Tower城市天际线地标群）；③游戏场景判读（Cyberpunk 2077 Night City霓虹酒吧任务点）。用以论证Kimi-VL将视觉内容锚定于空间布局、上下文美术风格与文化知识三大维度，体现多模态推理链中从视觉感知到空间/文化综合判断的能力。在论文方法链路中，作为定性能力展示与定量benchmark互补，构成完整证据链，证明模型在跨域视觉理解任务上的泛化性。
 *caption: Kimi-VL exhibits strong visual reasoning capabilities by grounding visual content in spatial, contextual, and cultural knowledge. It accurately identi… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.8 (p.13)
 ![[assets/crops/kimi-vl-technical-report-fig08.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构：** 该图展示一道圆形几何题的求解示例。题目给定⊙O中AB为直径、D、C在圆上、∠D=62°，求∠ACO（选项A.26°/B.28°/C.30°/D.32°）。模型分三步作答：①由直径得∠ACB=90°；②圆心角∠AOC=2×62°=124°；③等腰△AOC中2x+124°=180°，解得x=28°，选B。
+**核心内容：** 该图为圆几何推理示例。题目设定⊙O中AB为直径，C、D在圆上，∠D=62°，求∠ACO，提供A.26°/B.28°/C.30°/D.32°四选项。模型分三步求解：①由直径推∠ACB=90°（圆周角定理）；②圆心角∠AOC=2×62°=124°（圆周角定理）；③由OA=OC设∠ACO=x列方程2x+124°=180°，得x=28°，选B。
 
-**2) 关键结论：** 证明Kimi-VL能将视觉几何信息转化为符号链，综合调用圆周角定理、直径性质、等腰三角形等多条定理，完成多步精准推理。
+**论证结论：** 证明Kimi-VL具备符号推理与几何推断能力——能解析视觉条件、调用圆周角定理与三角形内角和等定理、多步符号演算后准确得出目标角。
 
-**3) 论文作用：** 作为定性案例，与MathVision等定量基准互补，展示模型在视觉-符号跨模态数学推理上的实际能力，强化其技术报告的方法学说服力。
+**论文作用：** 在第13页与MathVision基准论证衔接，作为定性示例佐证模型在复杂视觉数学推理（symbolic+geometric chain-of-thought）上的可靠性，与定量评测互补。
 *caption: Kimi-VL demonstrates its capability to perform symbolic reasoning and geometric inference by solving a circle geometry problem step by step. The model… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.9 (p.14)
 ![[assets/crops/kimi-vl-technical-report-fig09.png]]
-> [!tip] 【图文联合解读】**图像部分内容编码异常，仅能识别三栏布局与分隔结构，需结合原文解读。**
+> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
 
-图9以三栏并列结构展示Kimi-VL的OCR能力：①左栏为结构化金融表格（含"Total Current Assets""Property, Plant"等多行条目，括号内数值列），被解析为markdown表格；②中栏为复杂数学公式（含分式、求和、上下标 `∑h^N O^N`、`Q^x ≤ N` 等符号），下方标注"Rendered formula"，体现LaTeX转换；③右栏为手写中文段落，转录为带语境的文字。
+**1) 核心结构**：图采用 3列×2行 布局，共 6 个子面板。上排（蓝色）为 3 类输入：左为结构化金融表格（多列多行带分隔线），中为含分数/根号/上下标的复杂数学公式块，右为手写中文段落。下排为对应模型输出：左为 Markdown 表格（含多段小标题与数字行）、中为经 LaTeX 渲染后的公式矩阵、右为含数学符号与代码片段的转录文本（出现 `GP4a`、`FG3`、`]`、`P0` 等字符）。
 
-原文借此论证：模型在**结构化表格→markdown、符号公式→LaTeX、手写文本→转录**三类异构模态上均具备鲁棒的多模态文本抽取与解释能力。
+**2）关键技术结论**：通过输入-输出对照，定性证明 Kimi-VL 在三类异质 OCR 任务上具备统一的结构化解析能力——表格转 Markdown、公式转 LaTeX、手写文本转录，三者共享同一视觉-语言编码器。
 
-在论文链路中，该图作为Figure 9位于实验可视化部分（p.14），与表格/榜单（定量）互补，以定性案例支撑前文OCR、ChartQA、DocVQA等基准结论，强化"Kimi-VL在真实异构文档场景中具备工程级可用性"的叙事。
+**3）论文链路作用**：作为定量基准测试（OCRBench 等）之外的**定性可视化样例**，位于能力展示章节中段，用具体例子支撑论文"versatile multimodal text understanding"的总体结论，强化读者对模型泛化能力的直观信任。
 *caption: Diverse OCR visualization. Kimi-VL demonstrates strong OCR capabilities across varied content types, including structured financial tables, complex ma… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.10 (p.15)
 ![[assets/crops/kimi-vl-technical-report-fig10.png]]
-> [!tip] 【图文联合解读】**图像无法辨认，仅依据原文解读。**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-图片渲染为乱码字符，仅可辨识出 Step 1–12 共 12 个步骤标签，原图应为 Chrome 浏览器中开启"Do Not Track"的截图序列（含思考、动作、API 调用三栏），实际内容未能呈现。
+**1) 核心对象与结构**：图示展示Kimi-VL完成一项12步GUI代理任务。顶部为用户指令（启用Chrome"Do Not Track"）+ 初始桌面截图；下方按Step 1–12纵向排布，每步含三栏：屏幕截图、Thought（链式推理）、Action+Toolcall（精确API调用，如`click(x=0.884,y=0.144)`、`scroll(-5)`），所有坐标均为归一化值。
 
-按 caption 与正文论述：
+**2) 关键技术结论**：Agent在每步先"看"当前界面、再"想"下一步动作、最后以坐标级精度"点"。过程并非一蹴而就——Step 6误入"Manage HTTPS/SSL certificates"后，Step 9主动点击返回键修正路径，证明其具备多步规划、视觉定位与**自主错误恢复**能力。
 
-1) **核心对象**：Kimi-VL 在 GUI 智能体场景下的多步骤推理案例——12 步内依次完成 Chrome 隐私设置导航、菜单定位、开关切换等操作，每步均含 Thought / Action / API Call 三段结构；
-
-2) **关键结论**：证明模型具备逐帧视觉解读 + UI 元素识别 + 顺序动作执行的链式推理与工具调用能力，可胜任复杂 GUI 任务；
-
-3) **论文作用**：作为定性 case study，定向支撑"Kimi-VL 视觉–语言–动作闭环"的能力论述，是其与同类模型在 GUI agent 维度对比的直观佐证。
+**3) 论文整体作用**：作为定性案例（qualitative case），补足定量基准外的可解释性证据，验证"思维–动作–工具调用"框架在真实桌面GUI环境中的端到端可用性。
 *caption: Kimi-VL is capable of following multi-step reasoning processes to complete complex GUI tasks. In this example, it successfully enables the “Do Not Tra… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.11 (p.16)
 ![[assets/crops/kimi-vl-technical-report-fig11.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图11为Kimi-VL对一段约3分37秒长视频的"场景分割"定性示例。
 
-图11展示Kimi-VL长视频场景分割能力：左侧输入为一段约3分37秒的短片（密集帧采样网格），右侧模型输出12个场景切片（时间跨度00:00:00–00:03:37），每个均给出精确起止时间戳与细粒度描述，涵盖人物动作（如转经轮老者、滑雪跳跃）、镜头运动（特写/航拍/水下）、情绪氛围（神秘、敬畏）及贯穿主题（精神性、冒险、人与自然）。
+核心结构：左侧为切分指令"按场景切分并给出起止时间与描述"；输入为均匀采样的视频帧网格；右侧输出12段连续场景（00:00:00→00:03:37），每段含秒级时间戳与细粒度自然语言描述，覆盖镜头运动（如close-up、aerial view、pan）、光线、纹理与抽象主题（spirituality、adventure、preparation）。
 
-**论证结论：** 模型具备分钟级长时序视频理解、精准时间定位与连贯叙事生成能力，能在多场景切换中保持语义一致性，并自动提炼主题线索。
+技术结论：示例论证模型具备（1）长视频全局时间感知与场景边界判别；（2）细粒度视觉-语言对齐（识别皱纹、转经筒、山脉等微线索）；（3）抽象主题归纳与情绪氛围刻画能力。
 
-**整体作用：** 作为定性示例，与其他视频能力图共同支撑Kimi-VL在长视频任务上的实用性与细粒度描述质量，强化论文"长上下文多模态理解"的核心主张。
+方法链作用：作为定性可视化案例，验证模型仅凭视觉帧即可完成时序切分与叙述性描述，无需ASR/检测器辅助，支撑论文"长视频理解"主张，属应用展示而非定量评测。
 *caption: Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along wit… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.12 (p.17)
 ![[assets/crops/kimi-vl-technical-report-fig12.png]]
-> [!tip] 【图文联合解读】该图展示Kimi-VL对一段约36分钟（00:00–35:55）教学视频的10帧采样理解任务。指令要求在"授人以鱼/渔"谚语基础上找出作者的"进一步要求"。模型通过逐帧追踪幻灯片文本语义演进：从"give a man a fish"→"teach a man to fish"→"teach him the taste of fish and make him hungry"，精准定位第三层递进，并在响应中给出完整阐释（强调激励与持续学习的重要性）。
+> [!tip] 【图文联合解读】**图12图文联合解读**
 
-此例用以定性论证模型对**长视频帧序列的概念演化抽取与跨时序推理**能力。在论文评测链路中，它作为"长时序+概念理解"的典型案例，与定量基准互补，支撑 Kimi-VL 在视频理解维度的能力声明，体现其从稀疏关键帧中聚合高层语义的技术优势。
+图12由上下两栏组成：上栏为Instruction栏，含中文古谚"授人以鱼…授人以渔"及"找出作者进一步要求并详述"的指令，正文中"$$#$$"与圆点为视频帧采样占位符（代表小时级课程的多帧输入）；下栏为Response栏，模型准确识别深层要求为"教其鱼味并使之饥饿"，并阐释其"激发自驱学习"的内涵。
+
+**论证结论**：Kimi-VL能从小时级视频帧序列中追踪概念递进，完成细粒度语义抽取与抽象归纳，证明其视频时序理解与跨模态推理能力。
+
+**论文作用**：作为长视频理解的定性案例，与定量基准互补，支撑"thinking with images"在视频时序推理上的核心卖点，展示模型在真实长课程场景中的实用价值。
 *caption: Catching and understanding key details from an hour-long video course. Kimi-VL demonstrates its ability to comprehend and interpret instructional vide… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.13 (p.16)
 ![[assets/crops/kimi-vl-technical-report-fig13.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与数据**：图13展示Kimi-VL-Thinking在MMMU基准上，推理时最大思考token长度（1k/2k/4k/8k/16k）对测试准确率的影响。数据点为49.2%→52.4%→56.2%→60.1%→61.7%，呈单调递增；图中左侧另可见MathVista在8k时71.3%等数据点，共涉及三个benchmark。
+图13展示Kimi-VL-Thinking模型在三个基准（MathVision、MathVista、MMMU）上，测试精度随最大思维token长度（1k→2k→4k→8k→16k）变化的情况。
 
-2) **关键结论**：原文论证"在三个16k上限的benchmark上，增加推理时的最大思考token长度均能持续提升测试准确率"，即test-time scaling law在视觉推理模型上同样成立，思考预算越大收益越高，但16k→8k的边际增益（+1.6pp）小于4k→8k（+3.9pp），呈饱和趋势。
+**关键数据：**
+- **MathVision**：18.7% → 22.6% → 29.0% → 34.0% → 36.8%，近似翻倍（+18.1pp），单调上升且无明显饱和；
+- **MathVista**：66.7% → 69.0% → 70.9% → 70.6% → 71.3%，4k后趋于平台（+4.6pp）；
+- **MMMU**：49.2% → 52.4% → 56.2% → 60.1% → 61.7%，稳定增长（+12.5pp）。
 
-3) **论文作用**：该图作为"思考长度即性能杠杆"的实证支撑，强化了Kimi-VL-Thinking的核心卖点——通过扩展推理时的思考预算实现性能提升，与文本版Kimi k1.5的test-time compute scaling主张一脉相承，奠定视觉MLLM的scaling新范式。
+**论证结论：** 推理阶段延长思维链长度可在三类任务上持续提升准确率，证明Kimi-VL-Thinking的思维机制具备可扩展的测试时计算红利。
+
+**论文作用：** 该图属于"test-time scaling"分析，是论文方法链路中证明"thinking能力可被算力放大"的核心证据，与训练阶段强化学习成果共同支撑"思维链即推理算力"的整体叙事。
 *caption: Specifically, increasing the max thinking token length at inference time consistently improves test-time accuracy across all three 16… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.1 (p.1)
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 1）：**
+> [!tip] 【图文联合解读】图1展示2023-02至2024-01开源模型MATH Top@1走势：LLaMA1-65B（10.6%）→WizardMath-70B（22%）→Qwen-14B（24.5%）→Mistral-7B（28.5%）→Llemma-34B（31.5%）→Qwen-72B（35.2%），DeepSeekMath-7B（红星）跃至51.7%，超越GPT-4早期版（42.5%），逼近GPT-4 API与Gemini-Ultra（≈52–53%）。
 
-该图以时间为横轴，展示开源模型在MATH竞赛级基准Top1准确率的变化：LLaMA1-65B约10.6%（2023初）→WizardMath约21%（2023末），并用三条水平参考线标示闭源前沿——GPT-4早期版约42%、GPT-4 API约50%、Gemini-Ultra约54%。虚线趋势显示开源进步明显但仍落后闭源达2–3倍差距。
+原文以此论证：仅用7B参数与高质量数学语料即可匹敌百亿级闭源模型，验证"数据/方法杠杆≫纯扩模型"。
 
-作为论文**开篇动机图**，此图直观论证"开源模型在数学推理上仍未逼近前沿"这一核心问题，为后续提出DeepSeekMath填补这一能力缺口、突破开源数学推理上限的立题与实验链路提供必要的前提铺垫。
+该图为论文开篇锚定DeepSeekMath-7B的性能标杆，并衔接表1（语料消融）与后续方法/实验论证链。
 *caption: Top1 accuracy of open-source models on the competition-level MATH benchmark… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.2 (p.5)
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig02.png]]
-> [!tip] 【图文联合解读】**图1解读：**
-
-图示DeepSeekMath从Common Crawl采集数学网页的迭代流水线：①以种子数学语料训练fastText分类器；②从全网召回数学网页构建Math Corpus；③挖掘高密度数学域名；④新域名回灌至第②步形成闭环迭代。
-
-**图2原文论点：**
-通过"种子→分类器→域名发现"自举闭环，无需昂贵人工标注即可自动化、规模化地从无标注网页扩展高质量数学数据，验证数据规模与质量可兼得。
-
-**图3链路作用：**
-该流程产出120B token数学预训练语料，是DeepSeekMath-Base 7B训练的数据基石，并与下游GRPO强化学习协同，最终奠定模型数学推理的领先性能。
+> [!tip] 【图文联合解读】图示从Common Crawl 400亿HTML页面中迭代挖掘数学网页的闭环流程：①训练FastText分类器→②召回数学相关网页→③发现数学相关新域名→④人工标注URL路径，结果回灌Math Seed并循环。原文借此论证"种子扩充→分类器更准→召回更全→新域被发现"的自我增强数据飞轮机制。该管道为DeepSeekMath-Base 7B产出120B token级高质量数学预训练语料，是Table 2中数学推理性能领先的关键数据基础，串联起"数据-训练-评测"全链路。
 *caption: An iterative pipeline that collects mathematical web pages from Common Crawl.… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.3 (p.7)
@@ -2415,50 +2647,53 @@ MoonViT 直接处理多尺度异构输入，规避 resize 失真：小图 50×20
 
 ### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.4 (p.13)
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig04.png]]
-> [!tip] 【图文联合解读】图分上下两部分对比PPO与GRPO流程。PPO由策略模型对问题q采样单输出o，经Reference（KL）、Reward（r）、Value（v）三模型后用GAE计算优势A；GRPO对同一q采样G个输出{o₁…o_G}，仅用Reference与Reward，通过Group Computation由组内奖励{r₁…r_G}直接生成{A₁…A_G}，彻底取消Value模型。颜色上黄色为训练模型、蓝色为冻结模型。该图论证GRPO以组分数统计量替代Value基线，可显著节省显存与算力，构成论文RLHF训练阶段的方法基础。
+> [!tip] 【图文联合解读】**图文联合解读**
+
+图分上下两栏对比 PPO 与 GRPO 流程。PPO（上）含策略、参考、奖励、价值四个模型，对问题 *q* 生成单输出 *o*，由奖励模型与 KL 计算得 *r*、价值模型得 *v*，再经 GAE 输出优势 *A*；GRPO（下）省去价值模型，对同一 *q* 采样 *G* 个输出（*o*₁…*o*_G），仅用参考模型计算 KL、奖励模型打分 *r*₁…*r*_G，由 "Group Computation" 以组内分数均值作基线直接生成 A₁…A_G。
+
+**关键论证**：GRPO 以组内相对奖励替代逐状态价值估计，省去价值模型，显存/算力显著降低，且更契合数学题"一题多解"的群体奖励特性。
+
+**论文作用**：该图是方法链路核心，直观支撑 DeepSeekMath 在 RL 阶段采用 GRPO 而非 PPO 的设计选择，为后续 R1-Zero 式实验提供算法依据。
 *caption: Demonstration of PPO and our GRPO. GRPO foregoes the value model, instead… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.5 (p.19)
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图5图文联合解读**
 
-该图为 DeepSeekMath-Instruct 1.3B 模型在 GSM8K 基准上、采用不同方法继续训练 0–9000 步的准确率曲线对比。可见至少四条曲线：
+**对象**：DeepSeekMath-Instruct 1.3B经四种方法（RFT/Online RFT/GRPO+OS/GRPO+PS）继续训练约9000步，在GSM8K（左，56–66%）与MATH（右，27–30.5%）上的准确率（Acc）随训练步数曲线。
 
-- **蓝色方法**表现最佳，从约 56.5% 上升至 ~65–66%；
-- **橙色方法**次之，最终达 ~64%；
-- **Online RFT（绿色）**波动较大，由 ~56.5% 提升至 ~62–63%；
-- **RFT（紫色）**几乎停滞，长期徘徊在 59–60%。
+**量化对比**：GRPO+PS（蓝）在两基准全程领先——GSM8K峰值≈65.5%（约5000–7000步），MATH峰值≈30.5%（约4000–5000步）；GRPO+OS（橙）次之（约64% / 30%）；Online RFT（绿）波动较大但仍有提升（约62% / 29%）；离线RFT（紫）全程近乎停滞，GSM8K稳定在60%附近、MATH仅约28%。
 
-**关键结论**：原文据此论证——在 SFT 模型基础上，单纯的离线 RFT 已接近性能天花板（甚至饱和），而引入在线探索/采样的方法（如 Online RFT 及更强变体）能持续突破上限，验证了"在线强化"对数学推理进一步提升的必要性。
-
-**论文链路作用**：该图作为消融/方法对比证据，支撑论文主张的 GRPO 等在线策略优于 RFT 的核心论点，衔接其整体方法（监督 → RFT → Online RFT/GRPO）的演进叙事。
+**论证作用**：该消融实验证明，在线GRPO算法显著优于传统拒绝采样微调，且PS（正例策略）带来稳定增益。它直接支撑论文最终选用GRPO作为RL主干方法，构成"SFT→GRPO强化学习"方法链路中的关键实证环节。
 *caption: Performance of the DeepSeekMath-Instruct 1.3B model, which was further trained… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.6 (p.20)
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图6联合解读**
 
-该图展示 DeepSeekMath-Instruct 7B 在 GSM8K 与 MATH 上三轮迭代 RL 的训练曲线（步数 0–5300）。GSM8K 准确率从 Iteration-0 起点 ~83% 提升至 ~86%，Iteration-1 起步 ~87%、峰值 ~88%，Iteration-2 起步 ~87%、峰值 ~89%；MATH 从 ~46.8% 经 ~49% 升至 ~50.5%，三轮峰值均逼近 52%。
+该图展示DeepSeekMath-Instruct 7B在GSM8K（左）与MATH（右）两个基准上三次迭代RL的准确率-训练步数曲线。
 
-核心结论：**每轮迭代起点显著高于上一轮末值，证明 RL 切实带来能力提升；但迭代间增益边际递减**（GSM8K 仅 +1–1.5pp，MATH 仅 +1.5–2pp）。
+**具体数据**：GSM8K上，迭代0从约82.8%升至约87%后回落至约86%；迭代1在87–88%区间波动并出现约88.2%峰值；迭代2稳步攀升至约89%。MATH上，迭代0从约46.8%升至约50%后回落至约49%；迭代1峰值约52.3%；迭代2稳定在约51.5%。三条曲线呈"迭代2≥迭代1≥迭代0"的单调递进，未见饱和迹象。
 
-方法链作用：该图为"为何需要 GRPO+迭代 SFT 融合"提供经验依据——纯迭代 RL 收益趋缓、且训练步数逐轮增加（3000→5000+），论文据此提出用新 SFT 数据重置 RL 起点，突破 RL 自身天花板。
+**关键结论**：论文据此论证GRPO迭代强化学习可在SFT基础上持续获得稳定增益（约+6.2点GSM8K、约+5.5点MATH）。
+
+**链路作用**：作为RL阶段核心实证，验证论文"用当前最优策略生成新SFT数据→再启动下一轮RL"的闭环有效性，是支撑整个两阶段迭代训练范式的关键证据。
 *caption: Performance of iterative reinforcement learning with DeepSeekMath-Instruct 7B on… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeekMath: Pushing the Limits of Mathematical Reasoning i — Fig.7 (p.21)
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig07.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图示 GSM8K 上 Maj@K 与 Pass@K 随候选数 K（1→64，温度 0.7）的变化：Maj@K-Instruct（紫，81.5%→89.6%）与 Maj@K-RL（橙，88%→91%）在 K≥8 后趋于平台；Pass@K-Instruct（蓝，88.2%→97.4%）与 Pass@K-RL（绿，81.5%→99.2%）随 K 陡升。原文据此论证：**RL 显著提升 Maj@K**（橙高于紫约 1.4 个百分点），但对 Pass@K 无明显增益，说明 RL 改善的是多数投票的可靠性，而非单条解的正确率或解空间覆盖。该图是论文揭示"RL 主要强化自一致投票稳定性"这一核心增益模式的关键证据。
+> [!tip] 【图文联合解读】图示温度0.7的DeepSeekMath‑7B：K=1至64时，Instruct（SFT）与RL在GSM8K、MATH上的Maj/Pass。RL使Maj@64由约89.5%升至91.0%、59.8%升至60.8%；Pass@64却由99.0%降至97.3%、87.0%降至86.2%，其余K优势不稳定。说明RL强化高共识答案、改善多数投票，却未提升至少一次命中的概率。该图处于SFT→RL→多样本评测链，检验后训练优化的是答案收敛还是候选覆盖。
 *caption: The Maj@K and Pass@K of SFT and RL DeepSeekMath 7B on GSM8K and MATH… ｜ 论文 [[deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### High-Dimensional Continuous Control Using Generalized Advant — Fig.1 (p.8)
 ![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig01.png]]
-> [!tip] 【图文联合解读】该图上部展示3D仿生机器人：球形躯干+4条腿肢（每肢2自由度，共8维连续动作空间），置于棋盘格地面/蓝天的MuJoCo仿真环境；下部以5帧序列呈现习得步态，证明策略可驱动多肢协调移动。
+> [!tip] 【图文联合解读】**图文联合解读**
 
-原文在6.2.1 ARCHITECTURE节以该图建立具身仿真基准，论证GAE能处理躯干姿态与肢体关节耦合的高维连续控制，相对TD(λ)在多步信用分配上具优势。
+1) **核心对象与结构**：图分上下两栏四块。上栏展示两个 3D 运动仿真机器人：左侧为类人机器人（1 个躯干、球状头部、2 条臂、2 条腿），右侧为四足蜘蛛状机器人（1 个球状躯干 + 4 条腿），均置于棋盘格参考地面之上；下栏为各 5 帧的学习步态序列，呈现周期性摆臂摆腿（左）与交替迈步（右）动作。
 
-该图位于方法/实验链路起点，为后续TRPO+GAE训练提供高维任务载体，支撑策略学习的定量对比。
+2) **关键技术结论**：论文借此证明，仅依靠策略梯度 + GAE 优势估计，无需手工设计步态或轨迹，便可在数十维连续动作空间（人类机器人约 21 个关节、四足机器人约 15+ 个自由度）中，端到端学得自然、稳定的 3D 运动步态，验证了 GAE 在高维连续控制中的可扩展性与样本效率。
+
+3) **链路作用**：该图位于 6.2.1 章节开头，是后续策略/价值网络架构、奖励设计与超参数对比实验的可视化锚点——它把抽象算法指标对应到具象行为，为后文量化对比 λ 参数、batch size、折扣因子等提供了直观的实验载体。
 *caption: 6.2.1 ARCHITECTURE… ｜ 论文 [[high-dimensional-continuous-control-using-generalized-advantage-estimation]] ｜ arxiv 见 MD 元信息*
 
 ### High-Dimensional Continuous Control Using Generalized Advant — Fig.2 (p.10)
@@ -2479,27 +2714,22 @@ MoonViT 直接处理多尺度异构输入，规避 resize 失真：小图 50×20
 
 ### High-Dimensional Continuous Control Using Generalized Advant — Fig.4 (p.11)
 ![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig04.png]]
-> [!tip] 【图文联合解读】**图4（c）可见内容解读**（图中仅含站立片段，(a)(b)学习曲线未呈现，故结合原文caption综合解读）：
+> [!tip] 【图文联合解读】**图文联合解读**
 
-**1) 核心对象与结构**
-图4(c)以编号1–6的6个连续姿态，呈现3D模拟人形体由仰卧（1）→侧卧（2）→蜷缩撑地（3）→双手触地推起（4）→近直立并抬臂平衡（5）→完全站立举手（6）的运动序列；每帧姿态由MuJoCo渲染的多刚体棒人组成，对应二维状态特征。
+该图实际呈现两部分：(b)左侧为3D站立任务学习曲线（横轴0–500次策略迭代，纵轴cost 0–2.5），对比三条GAE配置——γ=0.99无value fn（绿）约收敛于0.95、γ=0.99, λ=1（橙）降至约0.5、γ=0.99, λ=0.96（黄，含误差棒）降至约0.4；(c)右侧为MuJoCo人形机器人从倒地到站立的6帧序列截图。
 
-**2) 论证的关键技术结论**
-该序列与(a)四足行走、(b)3D站立学习曲线互相印证，证明GAE在高维连续控制任务（含63维髋膝踝力矩+17维刚体姿态）中可稳定收敛，并习得具备"翻身—撑起—平衡—直立"语义结构的有意义行为，而非局部最优。
+**关键结论**：引入value function基线显著降低最终cost，GAE参数λ=0.96略优于λ=1，验证了GAE在高维连续控制任务中能有效降低策略梯度方差、加速收敛。
 
-**3) 在论文链路中的作用**
-作为GAE从低维基准推广至类人/多足高维运动控制的核心实验证据，支撑第7节"Discussion"中关于GAE可扩展至复杂3D locomotion与manipulation类任务的结论。
+**论文作用**：作为人形（高维）控制实验的核心证据，支撑"GAE是通用有效的策略梯度方差缩减技术"这一核心主张。
 *caption: (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up. 7 DISCUSSION… ｜ 论文 [[high-dimensional-continuous-control-using-generalized-advantage-estimation]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.1 (p.1)
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig01.png]]
-> [!tip] 【图文联合解读】图1为首页主结果条形图，对比 Kimi-K2-Instruct 与 DeepSeek-V3-0324、Qwen3-235B-A22B、GPT-4.1、Claude 4 Opus/Sonnet、Gemini 2.5 Flash（非思考模式）在四类基准的得分（%）：
-- SWE-bench Verified：65.8 vs Opus 72.5、GPT-4.1 54.6
-- SWE-bench Multilingual：47.3 vs Sonnet 51.0、GPT-4.1 31.5
-- Agentic & Competitive Coding：66.1 vs Opus 67.6、DeepSeek 48.8
-- AceBench(en)工具使用：76.5 vs GPT-4.1 80.1、Opus 75.6
+> [!tip] 【图文联合解读】**核心对象与数据**：Figure 1在"Agentic and Competitive Coding"分组下对比 Kimi-K2-Instruct 与 6 个开源/闭源基座（含 DeepSeek-V3-0324、Qwen3-235B-A22B、GPT-4.1、Claude 4 Opus/Sonnet、Gemini 2.5 Flash 非思考模式）在 6 项基准的得分：SWE-bench Verified K2=65.8（Claude 4 Opus 72.5 最高）、Multilingual 47.3、LiveCodeBench v6 53.7、OJBench 27.1、AceBench 66.1、AIME 2025 76.5。
 
-原文借此论证：Kimi-K2 在 SWE 与智能体编码达开源 SOTA、逼近闭源旗舰，工具使用接近 GPT-4.1。作为摘要级证据，支撑"开源领先、可比肩闭源旗舰"这一中心性能主张。
+**关键结论**：K2 在编码与智能体类任务全面领先开源对手（DeepSeek/Qwen3），并多数超越 GPT-4.1、Claude 4；仅在 SWE-bench Verified 与 AIME 2025 数学推理（GPT-4.1=80.1）上略逊于闭源 SOTA。
+
+**作用**：作为首页主结果图，确立 K2 在非思考模式下作为开源开放智能体模型的整体竞争力定位。
 *caption: Kimi K2 main results.2 1https://huggingface.co/moonshotai/Kimi-K2-Instruct 2All models evaluated above are non-thinking models. For SWE-bench Multilin… ｜ 论文 [[kimi-k2-open-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.2 (p.4)
@@ -2515,24 +2745,24 @@ MoonViT 直接处理多尺度异构输入，规避 resize 失真：小图 50×20
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.3 (p.5)
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig03.png]]
-> [!tip] 【图文联合解读】**图3 图文联合解读**
+> [!tip] 【图文联合解读】**Figure 3 图文联合解读**
 
-图3展示Kimi K2逐步训练loss曲线（未经平滑/抽样）：横轴约0–15.5T tokens，纵轴loss从≈2.0单调下降至≈1.35；密集蓝色震荡带约1.35–1.65，全程**未见异常尖峰或发散**。
+Figure 3 展示 Kimi K2 逐 step 训练 loss 曲线：横轴为 0–15.5 万亿 tokens，纵轴 loss 范围约 1.3–2.0，未经平滑或下采样。曲线自起点 ~2.0 在前 2T tokens 内陡降至 ~1.55，中段缓慢下行，至末端约 1.27；曲线密集连续，**全程未出现任何 loss spike 或发散点**。
 
-①**核心对象**：K2预训练全过程的step级loss轨迹，跨度约15.5万亿token。
-②**关键论证**：作者借此证明，相比K1.5新引入的合成数据/重述策略与训练栈协同良好，预训练在超大规模下保持单调收敛且无中断尖峰，间接佐证数据管线与基础设施的稳健性。
-③**链路作用**：作为"预训练无异常"的实证前提，为后续MuonClip优化器设计、后训练SFT/RL及智能体能力评测奠定可信基线。
+论文借此论证两点关键结论：① 引入合成数据生成策略后，预训练数据分布稳定、无异常样本冲击；② 整条工程管线（数据加载、混合、tokenization）足够鲁棒，支撑 15T+ tokens MoE 长程训练平稳收敛。
+
+该图在论文链路中扮演**"预训练可靠性"的实证锚点**——它先于第 4 节 MuonClip 优化器、第 5 节 SFT/RL post-training 出现，证明 K2 底座在规模化、长时间训练下是健康可信的，从而为后续能力评测（Table 3 中多项 SOTA）提供方法论前提。
 *caption: Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we om… ｜ 论文 [[kimi-k2-open-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.4 (p.5)
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig04.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**核心对象与结构**：Figure 4 展示自动回归式分块改写（auto-regressive chunk-wise rephrasing）流水线。输入长文本经切分后，顶部蓝色高亮框保留滑动上下文窗口，每块文本经紫色"rephrase-prompt"改写，生成绿色"partial output"（SDUWLDO RXWSXW），三块按自回归顺序（DXWR UHJUHVVLYH）依次处理，最终拼接为完整改写段落。
+图4展示自回归分块改写流水线结构：长文本被切分为3个输入块（顶部蓝色"WRNHQV"上下文窗口保留），每块经紫色"UHUULWH SUR"改写提示生成绿色"SDUWLDO RXWSXW"局部输出，前后块通过"DXWR UHJUHVVLYH"反馈串联，最终拼接为完整改写段落。
 
-**关键技术结论**：通过分块+上下文保留机制，突破单次改写长度上限，确保长文本改写时块间语义连贯；结合 fidelity verification 做语义对齐检验，作为训练前的质量把关。
+**论证结论**：通过切块+滑动上下文+顺序改写，可在保证语义衔接的前提下处理超长输入；配合fidelity verification（逐块语义对齐校验），为训练数据构建提供前置质量控制。
 
-**论文链路作用**：该流水线是 Kimi-K2 训练数据构造（特别是 Long Context 改写语料）的核心预处理环节，为后续 MuonClip 优化与多任务训练提供高质量、改写后的长上下文监督信号。
+**链路作用**：该图对应数据预处理阶段，承担"长文本→训练可用改写语料"的转换职能，是模型训练前的关键清洗/改写环节。
 *caption: • Fidelity verification: To ensure consistency between original and rewritten content, we perform fidelity checks that compare the semantic alignment … ｜ 论文 [[kimi-k2-open-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.5 (p.7)
@@ -2561,9 +2791,11 @@ MoonViT 直接处理多尺度异构输入，规避 resize 失真：小图 50×20
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig07.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图7上半部用横向时序条展示两个PP阶段内的算子重叠：计算侧（MLP/Attn/WGrad）与通信侧（EP-D 蓝、EP-C 黄、PP 绿）及卸载侧（Onload/Load 黄）嵌套并行。下半部呈典型流水线阶梯（微批次1–8错列），绿色边框标注的"8"块凸显PP通信气泡被EP dispatch/combine及其他算子"填满"，空闲时间大幅压缩。
+1）**图示结构**：采用 8 阶段 VPP+1 warmup 流水线，下方每阶段含 8 个微批次（编号 1–8），蓝色为前向、红色为反向；上方分三组高亮相，分别展示"Offload"、"Onload"、"Load"三类内存操作与 Attn/MLP/WGrad 计算、EP-D/EP-C 通信（绿色 PP 通信条）的时序叠加。
 
-论文借此论证核心结论：在不同PP阶段（warm-up、稳态、cool-down）中，计算、集合通信（EP收发、PP点对点）与CPU offload可被深度流水重叠，从而隐藏通信与I/O开销，是Kimi K2实现高MFU万卡训练的关键调度基础。
+2）**关键技术结论**：EP 的 dispatch/combine 通信与 Offload/Onload/Load 内存传输均被成功隐藏在计算时间之下，三类资源（计算、通信、内存）实现并行重叠，避免了 EP 通信和 MoE 权重搬运成为流水线瓶颈。
+
+3）**作用**：该图作为系统级训练效率证据，支撑论文"Kimi K2 大规模 MoE 训练低开销"的论断，证明其异构重叠调度机制可在不增加 bubble 的前提下容纳 EP 通信与权重 offload，是支撑万亿参数 MoE 可行训练的核心调度方案之一。
 *caption: Computation, communication and offloading overlapped in different PP phases.… ｜ 论文 [[kimi-k2-open-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.8 (p.10)
@@ -2656,13 +2888,11 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 
 ### Search-R1: Training LLMs to Reason and Leverage Search Engin — Fig.1 (p.4)
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】1) 图横向并列 **PPO（上）** 与 **GRPO（下）** 两条训练流程。PPO：查询 *q*→Rollout（Policy LLM + Search Engine）→观测 *o*，再经 Value LLM 得 *v*、Reward Model 与 Reference LLM（⊕）得 *r*，送入 **GAE** 输出优势 *A*；GRPO：同一 Rollout 对 *q* 采样 **G 条** *o₁…o_G*，由 Reward Model 得 *r₁…r_G*，经 **Group Computation** 归一化生成 *A₁…A_G*，仅以 KL 锚定、**无 Critic**。
 
-**核心对象与结构：** Figure 1 横向并列展示 Search-R1 的两种 RL 训练范式。上半部分为 **PPO**：策略 LLM（Trained Model，黄色）在 rollout 阶段多轮调用 Search Engine（蓝色）；训练时由 Value 函数 v 与即时奖励 r 经 **GAE** 计算 Advantage A，并以 Frozen Reference Model（绿色）做 KL 锚定。下半部分为 **GRPO**：移除 Critic，对同一 query 采样 G 条 rollout（r₁…r_G），经 **Group Computation** 生成逐样本归一化的优势 A₁…A_G。两者共用同一带 search engine 的多轮 rollout 通路。
+2) 论证关键结论：Search-R1 把"带搜索引擎的多轮 rollout"做成可复用的中间通路；PPO 需额训 Value 网络，GRPO 用组内归一化替代 Critic，省显存且更易扩展。
 
-**关键论证结论：** Search-R1 验证了"LLM+搜索引擎"可在 PPO（有 critic）与 GRPO（无 critic）两种主流 RL 算法下统一训练，证明 search engine 接入与具体 RL 框架解耦，方法具有算法无关的通用性。
-
-**论文整体作用：** 作为 Method 部分的总览图，统摄后续 PPO/GRPO 消融与主实验的实验链路，是读者理解 Search-R1 训练闭环的入口。
+3) 在论文中作用：作为方法总览图，确立 Search-R1 统一框架，衔接后文在多 QA 基准上对比两算法检索增强推理效果的实验链路。
 *caption: Demonstration of PPO and GRPO training with the search engine (SEARCH-R1).… ｜ 论文 [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Search-R1: Training LLMs to Reason and Leverage Search Engin — Fig.2 (p.9)
@@ -2676,31 +2906,35 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 
 ### Search-R1: Training LLMs to Reason and Leverage Search Engin — Fig.3 (p.17)
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 3：Retrieved Token Loss Masking Study）**
 
-图(b)为Qwen-2.5-7b-base在约200步RL训练中的Train Reward曲线，对比"w. mask"（蓝）与"w.o. mask"（橙）。两者起点均约0.10–0.15；带掩码曲线约150步升至~0.45并稳定；不带掩码曲线整体滞后，且在近终点处出现剧烈塌陷（骤降至~0.10），训练不稳定。
+**(1) 核心对象与数据**
+该图为消融实验，对比"对检索 token 做 loss 掩码（w. mask）"与"不做掩码（w.o. mask）"下 RL 训练奖励曲线，分两幅：**(a) Qwen-2.5-3b-base**（约 400 步）：w. mask（蓝）稳步上升至 ~0.40 并保持稳定；w.o. mask（橙）前期攀升至 ~0.40，但在 ~300 步后**骤降至接近 0**。**(b) Qwen-2.5-7b-base**（约 225 步）：w. mask 收敛至 ~0.45 且平稳；w.o. mask 同样在训练末段（约 215 步）出现**奖励崩塌**。
 
-**技术结论：** 检索到的外部token应被屏蔽、不参与损失计算；掩码策略可加速收敛并避免不相关检索内容干扰策略更新。
+**(2) 关键技术结论**
+不做掩码时，模型会"奖励黑客"——倾向直接复述检索到的原文以刷高似然，导致训练中后期奖励崩溃；而对检索 token 屏蔽 loss 可避免该退化，训练曲线稳定且最终性能更优。
 
-**方法作用：** 该实验验证了Search-R1训练链路中"retrieved-token-loss-masking"这一关键设计选择的必要性，为RL+检索的整体流程提供消融支撑。
+**(3) 在论文中的作用**
+这是 Search-R1 在算法设计上的**关键消融**，证明"对检索内容 token 进行 loss masking"是 PPO/GRPO 训练搜索增强 LLM 稳定收敛的必要设计，支撑了正文 Table 3 中稳定性能结果的合理性。
 *caption: Retrieved Token Loss Masking Study instruction-tuned models exhibit faster convergence and benefit from higher initial perfor- mance relative to their… ｜ 论文 [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Search-R1: Training LLMs to Reason and Leverage Search Engin — Fig.4 (p.17)
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig04.png]]
-> [!tip] 【图文联合解读】**核心对象与结构**：图(b)展示Qwen2.5-7b-base/instruct在PPO RL训练下的Train Reward曲线（Step 0–200，奖励区间0.15–0.50）。Base（蓝）初始奖励约0.18，约50步后开始抬升；Instruct（橙）初始约0.38，全程高位震荡；两者最终均收敛于~0.45。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**关键技术结论**：用以论证SEARCH-R1对底座模型鲁棒——指令微调版收敛更快、起点更优，但最终性能与基础版几乎一致，说明该RL训练范式不依赖特定的模型初始化。
-
-**论文整体作用**：作为支撑性消融实验，与Table 4（检索token loss masking消融）并列，证明SEARCH-R1的关键设计选择在多种设置下均有效，强化方法可推广性的论证。
+图(a)(b)分别展示Qwen2.5-3B与7B的Base/Instruct模型在200步RL训练中的Train Reward曲线。Base模型起始奖励低（3B≈0.05，7B≈0.17），约100步后才追上；Instruct模型起始即较高（3B≈0.20，7B≈0.30），收敛更快；但两者最终奖励趋于一致（3B≈0.35–0.40，7B≈0.45–0.50）。原文借此论证：SEARCH-R1对预训练范式不敏感，无论base还是instruct起点，最终均收敛至相近性能，体现方法对底层LLM选择的鲁棒性。该图作为消融/适用性实验的关键证据，支撑了"RL训练可独立于指令微调阶段"的整体方法假设。
 *caption: Study of SEARCH-R1 on base and instruct LLMs. The instruction model converges faster and starts from a better initial performance. However, the final … ｜ 论文 [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Search-R1: Training LLMs to Reason and Leverage Search Engin — Fig.5 (p.18)
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-图5展示了Search-R1在Qwen2.5-7b-base（500步，奖励0.1→0.55）与Qwen2.5-7b-it（约300步，奖励0.3→0.5）上PPO与GRPO的训练曲线对比。GRPO（橙）初期爬升更陡，约150步即接近收敛；PPO（蓝）爬升较缓但全程平稳；在7b-it图中GRPO约200步处出现明显下跌，印证其"后段不稳定"。
+图示 Search-R1 在 Qwen2.5-3b/7b（含 base 与 it 共 4 个模型）上分别采用 PPO 与 GRPO 作为底层 RL 算法时的 Train Reward–Step 训练曲线，横轴跨度约 300–500 步，纵轴奖励区间约 0.1–0.5。
 
-论文借此论证Search-R1框架对底层RL算法不敏感，PPO与GRPO最终奖励可比、均可作为可行基座，从而支撑其方法链路的算法兼容性结论，强化"RL+检索"范式的普适性主张。
+- **核心结构**：四幅子图均含橙（GRPO）、蓝（PPO）两条曲线。
+- **关键现象**：GRPO 在全部 4 个模型中均更早爬升至高位，但中段出现明显 reward 塌陷（曲线骤降至接近 0）；PPO 上升较慢，但全程平滑无崩塌；两者最终收敛到相近奖励。
+- **论证结论**：原文借此支撑"GRPO 收敛更快但训练不稳定、PPO 优化更稳健但速度较慢、最终性能可比"的论断。
+- **论文作用**：作为训练动力学证据，与 Table 5 主结果互证，为 Search-R1 框架中 PPO/GRPO 算法选型的合理性提供实验依据。
 *caption: Training dynamics of SEARCH-R1 with PPO and GRPO as the base RL method across four LLMs. GRPO generally converges faster but may exhibit instability a… ｜ 论文 [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Search-R1: Training LLMs to Reason and Leverage Search Engin — Fig.6 (p.19)
@@ -2716,9 +2950,11 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig07.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图7展示SEARCH-R1采用GRPO算法、基于Qwen2.5-7b-base模型时，不同组大小（group size=1/3/5）在约500步训练过程中奖励（reward）的动态变化曲线。横轴为训练步数（Step），纵轴为奖励值，绿色×标记（size=1）曲线明显位于上方，在0.4–0.6区间剧烈波动；蓝线（size=5）与橙线（size=3）则贴近底部、几乎重叠且波动微弱。
+图7呈现Qwen2.5-7b-base上SEARCH-R1(GRPO)三种group size（1/3/5）的训练奖励曲线。**size=5（蓝）**约120步升至~0.5后于~150步骤降归零；**size=3（橙）**在~200步同样崩塌；**size=1（绿）**缓慢爬升、稳定收敛至~0.5，全程未崩（500步）。
 
-原文借此说明：组大小并非PPO收敛的主导因素——size=1反而获得最高奖励，而size=3与size=5训练信号极弱（提示GRPO在该设定下需更大群体方差才能形成有效优势），从而佐证检索深度（top-k）并非性能瓶颈这一关键结论。在全文实验链路中，该图与表7互为补充，共同构成"对超参不敏感、方法鲁棒"的论证支撑，强化了SEARCH-R1框架无需精细调参即可稳定训练的核心卖点。
+原文据此论证关键结论：group size越大收敛越快，但GRPO基于采样的高方差使崩塌风险显著上升——这是强化学习固有不稳定性的体现。
+
+该图作为附录消融实验，在方法链路中支撑**超参trade-off讨论**：揭示"加速收敛"与"训练稳定"之间的张力，为主实验默认超参选择及PPO/GRPO对比（Table 7）提供定量依据。
 *caption: We observe that a larger group size generally leads to faster convergence but may also increase the risk of collapse due to the inherent instability o… ｜ 论文 [[search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### HYPER-CONNECTIONS — Fig.1 (p.1)
@@ -2743,22 +2979,22 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 ![[assets/crops/hyper-connections-fig03.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1）**图表内容**：横轴为层索引 i（0~32），纵轴为相邻层输入的余弦相似度 cos(h₀ⁱ, h₀ⁱ⁺¹)。红线（Pre-Norm）从第 1 层约 0.2 迅速攀升至 0.85–0.95 区间，并在整个网络深度上保持稳定的高值；蓝线（Hyper-Connection）同样从低位上升，但中位数仅在 0.60–0.85 之间大幅振荡，且第 5–95 分位带更宽（约 0.35–0.90）。
+1）**核心对象**：在 OLMo-1B 上，绘制第 *i* 层输入 **h₀ⁱ** 与第 *i+1* 层输入 **h₀ⁱ⁺¹** 之间的余弦相似度（曲线为中位数，阴影为 5–95 分位数），横轴覆盖 1–32 层。Pre-Norm（红）全程维持在 ~0.90–0.95，分布带极窄；Hyper-Connection（蓝）在 ~0.55–0.80 间波动，且 5–95 分位数带明显更宽。
 
-2）**关键论证**：Pre-Norm 模型中相邻层输入高度相似（≈0.9），表明存在明显的表征坍缩/秩坍缩问题，深层难以获得新信息；而 Hyper-Connection 将相似度显著拉低并放大层间差异，证明其有效缓解了该瓶颈。
+2）**关键结论**：Pre-Norm 相邻层输入高度相似，表明存在表征坍缩/重复，层间缺乏信息增益；扩展残差宽度后层间多样性显著恢复。
 
-3）**论文作用**：作为方法动机图，Figure 3 在引入 Hyper-Connection 前定量揭示 Pre-Norm 的固有缺陷，为后续提出残差宽度扩展（多流残差映射）以恢复层间表征多样性提供实验依据，奠定整篇方法的立论基础。
+3）**链路作用**：作为动机图，定量暴露 Pre-Norm 缺陷，为提出多流 Hyper-Connection 提供立论依据。
 *caption: Cosine similarity be- tween the input of the current and the previous layers for the OLMo-1B models (Groeneveld et al., 2024). The curve represents th… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HYPER-CONNECTIONS — Fig.4 (p.5)
 ![[assets/crops/hyper-connections-fig04.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图(a)展示n=2的**顺序排列**超连接结构：单个输入经展开生成2条并行隐藏流（蓝色与橙色块），依次通过layer 1与layer 2；每层前通过"⊕"汇聚各流，层内由可学习矩阵H^l控制流间混合与残差路径。
+1）**核心对象与结构**：图4展示n=2时HC的两种拓扑。(a)顺序排列：底部输入经加法节点分两流进入layer 1，再堆叠进入layer 2，逐层输出；(b)并行排列：输入分流后分别经layer 1与直接路径，汇聚加和再分流入layer 2，末端带⊕合并输出。两者均含2条残差流与2个⊕聚合节点。
 
-**论证结论**：该图直观说明超连接（HC）通过可学习矩阵将传统单残差扩展为多流并行结构，并在顺序堆叠中保持每层的多流聚合能力，证明HC可作为ResNet残差连接的**直接泛化**框架。
+2）**论证的关键结论**：HC不仅兼容传统顺序堆叠（等价于残差网络），还能以并行多分支形式运行——即通过n=2同时维护两条独立残差路径并以加法融合，揭示其结构自由度。
 
-**整体作用**：图4(a)(b)共同奠定HC的拓扑自由度——既支持常规顺序堆叠，也支持并行多分支，为后续实验（ResNet、ViT、LLM等任务）验证"多流残差优于单流"提供结构基础，是方法论层的核心可视化支撑。
+3）**链路作用**：作为方法论核心可视化，奠定"多流残差优于单流"的拓扑基础，为后续ResNet/ViT/LLM实验中对比HC-n=2、4与baseline的增益提供结构层面的支撑。
 *caption: Sequential and parallel arrangements of hyper-connections with n = 2.… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HYPER-CONNECTIONS — Fig.5 (p.6)
@@ -2781,11 +3017,11 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 
 ### HYPER-CONNECTIONS — Fig.7 (p.9)
 ![[assets/crops/hyper-connections-fig07.png]]
-> [!tip] 【图文联合解读】核心：32×32下三角热力图，对比超连接与Post/Pre-Norm层间权重（色阶−1至+1），奇数层（注意力层）用绿色刻度标记。超连接矩阵呈稀疏非均匀分布，第10–11行附近出现一处标注为"PTB"（预训练偏置）的异常亮斑；Post-Norm表现为对角方向的平滑衰减；Pre-Norm则接近均匀强连接（近似恒等）。
+> [!tip] 【图文联合解读】**核心对象**：Figure 7含两部分。上方表格显示DHC×4在7个基准（MMLU、HellaSwag、ARC-C/E、PIQA、WinoGrande、BoolQ）上全面超越OLMoE-1B-7B基线（如ARC-C 41.8→47.8，BoolQ 65.4→68.5）。下方为§4.5可视化，对比5种方法在32×32隐藏通道上的**连接矩阵**（颜色-1~1），绿色刻度标记奇数id的注意力层：Hyper-Connection呈现含蓝色负值的多样化斑块并标注PTB；Post-Norm呈对角平滑衰减；Pre-Norm全红均匀无选择性；Pre-Norm PTB呈阶梯状；Two-hop Residual呈规则竖条。
 
-结论：超连接学到了比固定残差更丰富、可学习的跨层路由结构，并保留了来自预训练的偏置特征，突破了Post/Pre-Norm的刚性模式。
+**关键结论**：基线连接模式要么过于刚性（Pre-Norm恒等）、要么结构单一（仅沿对角衰减或竖条），而Hyper-Connection可学习任意含负值的灵活连接，支持更丰富的跨层信息路由。
 
-作用：作为4.5节可视化分析的核心证据，解释表1中DHC×4在MMLU Var（39.7 vs 38.5）和HellaSwag（70.2 vs 69.5）上优于基线的性能来源。
+**论文作用**：作为机理层面的可视化证据，从结构表达力角度解释为何DHC×4能在表7所列各基准上稳定提升，呼应正文中HC框架相对于传统残差/规范化的设计优势。
 *caption: Visualization of connection matrices for hyper-connections and various related baseline methods. The attention layers, which have odd ids, are marked … ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HYPER-CONNECTIONS — Fig.8 (p.14)
@@ -2795,36 +3031,36 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 
 ### HYPER-CONNECTIONS — Fig.9 (p.17)
 ![[assets/crops/hyper-connections-fig09.png]]
-> [!tip] 【图文联合解读】图9由28张子图组成，对比 OLMoE-1B-7B（红）与 OLMoE-1B-7B-DHC×4（蓝）在约100B–500B tokens 训练区间的表现。上12张为训练loss及12个验证集（C4、Dolma六子集 books/cc/pes2o/reddit/stack/wiki、Ice、M2D2-s2orc、Pile、WikiText-103）的loss曲线，蓝色全程稳定低于红色约0.02–0.05；下16张为MMLU四类及平均、HellaSwag、SciQ、ARC-Challenge/Easy、PIQA、WinoGrande、OpenBookQA、BoolQ、COPA、CommonsenseQA、SocialIQA 的下游准确率，蓝色多数高于红色且差距随训练持续或扩大。
+> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
 
-论证：DHC×4 在保持 MoE 稀疏激活宽度不变的前提下，同时降低预训练loss并提升下游任务准确率，支撑核心主张——可学习残差连接（DHC）作为静态跳连的可扩展替代优于基线，是论文方法有效性的关键横向验证证据。
+图含28子图：12个验证集loss曲线（training、C4 en、dolma各子集、pile、wikitext103等）与16个下游任务accuracy曲线（MMLU 5子类、HellaSwag、SciQ、ARC、PIQA、WinoGrande、BoolQ、COPA等），对比OLMoE-1B-7B（红）与DHC×4（蓝）在500B tokens内的全程演化轨迹。**关键结论**：蓝线在全部12个验证loss上全程低于红线（差距约0.05–0.15），在全部16个下游accuracy上全程高于红线（如MMLU avg. ~1.5pp、HellaSwag ~2pp），一致胜出且差距稳定。**论文作用**：与图8定性架构对比、FLOPs开销表协同，定量证明DHC×4作为残差连接的替代具备跨领域、跨任务的普适增益，无明显退化任务，支撑其"即插即用"的工程定位。
 *caption: Loss curves in V3 validation sets and accuracy curves on downstream tasks for OLMoE-1B7B and OLMoE-1B7B-DHC×4 models. 17… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HYPER-CONNECTIONS — Fig.10 (p.18)
 ![[assets/crops/hyper-connections-fig10.png]]
-> [!tip] 【图文联合解读】图含15子图：9个V3验证集loss曲线（c4 en、dolma六子集books/cc/pes2o/reddit/stack/wiki、ice、m2d2-s2orc、pile、wikitext103）与6个下游任务准确率（HellaSwag、SciQ、COPA、OpenbookQA、PIQA、WinoGrande、ARC-Easy），对比OLMo-7B基线与OLMo-7B-DHC×4在100B–500B token训练区间表现。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-蓝色DHC×4在所有loss子图均稳定低于红色基线（如HellaSwag最终约70% vs 68%、SciQ约92% vs 90%、COPA约83% vs 80%），6个准确率均高于基线。论证DHC宽度扩展（×4）在7B规模上同时改善预训练loss与下游能力，是论文支撑"超连接可扩展优于残差基线"结论的核心实验链路。
+1) **核心对象与数据**：6×3 共 18 张子图，横轴均为训练 token 量（100–500B），红/蓝线分别代表 OLMo-7B 基线与 OLMo-7B-DHC×4。前 11 张为 V3 验证集（c4-en、dolma 子集 books/cc/pes2o/reddit/stack/wiki、ice、m2d2-s2orc、pile、wikitext-103）上的 loss 曲线，11 个数据集上 DHC×4 的 loss 始终低于基线（如 c4-en 500B 时约 2.47 vs 2.50，pile 约 2.04 vs 2.07）；后 7 张为下游任务准确率（HellaSwag、SciQ、COPA、OpenBookQA、PIQA、WinoGrande、ARC-Easy），DHC×4 在 SciQ 上领先约 2–3 个百分点（~92% vs ~89.5%），其余任务亦有 0.5–1 pp 的稳定优势。
+
+2) **关键结论**：在 7B 规模、长程训练（500B tokens）下，宽度×4 的动态超连接（DHC）相对标准残差连接同时降低预训练 loss 并提升全部 7 项下游准确率，证明方法可扩展性。
+
+3) **论文作用**：作为 DHC×4 扩展性实验的核心证据，支撑"超连接架构在大模型长程训练中仍有效"的主张，与 Table 10 共同构成方法稳健性验证链。
 *caption: Loss curves in V3 validation set and accuracy curves on downstream tasks for OLMo-7B and OLMo-7B-DHC×4 models. 18… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HYPER-CONNECTIONS — Fig.11 (p.20)
 ![[assets/crops/hyper-connections-fig11.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 图示对象与数据：** 图中展示 ViT/16-Large（红线）与 ViT/16-Large-DHC×2（蓝线）在约 60000–95000 步区间的训练 loss 曲线，EMA(0.999) 平滑；纵轴为 loss，横轴为训练步数。蓝线全程位于红线之下，差距随步数推进而逐渐收敛。
-
-**2) 论证的技术结论：** DHC×2 在多 epoch 训练中持续降低训练 loss，证明超连接带来的额外容量确有优化收益；但随同一数据集被反复遍历，HC 的增益递减，暗示存在对训练集的过拟合/记忆效应，容量扩展收益边际递减。
-
-**3) 在论文链路中的作用：** 作为支撑实验，量化验证 HC 的容量增益随训练饱和的边界条件，为后续关于泛化、可扩展性与训练效率的讨论提供实证依据，也解释了在有限 epoch 设置下 DHC 优势更显著的现象。
+该图对比ViT/16-Large基线（红）与DHC×2（蓝）在约30k–93k训练步的loss曲线（EMA=0.999平滑）。两条曲线均从≈1.8降至≈0.20–0.25，DHC全程略低约0.05–0.10，但差距极小且随训练推进逐渐收敛。论文借此论证：超连接带来稳定但**有限且递减**的loss增益，源于多epoch对同一数据集的反复过拟合。在整体实验链路中，此图作为训练动力学的补充实证，与Table 11的ImageNet精度结论相呼应——说明HC的价值不在于大幅压低训练loss，而体现在精度端与表征质量上。
 *caption: Training loss curves of ViT/16-Large and ViT/16-Large-DHC×2, smoothed using an… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HYPER-CONNECTIONS — Fig.12 (p.21)
 ![[assets/crops/hyper-connections-fig12.png]]
-> [!tip] 【图文联合解读】**图文联合解读（图12）**
+> [!tip] 【图文联合解读】**1) 核心对象**：7×3网格直方图，对应3个ImageNet类（33海龟、998 capitulum、779校车）的末层DHC权重（β₁、β₂及α分量）频次分布。
 
-图12展示ViT-Base/16-DHC×2末层DHC模块权重在两幅不同输入图上的分布直方图：左侧绿色为"capitulum"，右侧橙色为"779:school bus"，共7个参数（β₁≈1.10–1.20、β₂≈1.10–1.20、α₁,₀≈−0.65–−0.35、α₁,₁≈1.1–1.3、α₁,₂≈0.1–0.3、α₂,₀≈2.0–2.4、α₂,₁≈−0.2–0.2）。
+**2) 关键数据**：β₁、β₂呈双峰（≈0.95与1.20），类别差异显著——校车β₁集中于1.20（频次≈50），capitulum集中于0.95（频次≈45），海龟双峰并存；α₁,₀∈[-0.65,-0.35]、α₂,₀∈[2.0,2.4]。
 
-关键发现：同一网络面对不同样本时权重分布差异极大——"school bus"在β₁≈1.20、α₁,₁≈0.9、α₁,₂≈−0.1、α₂,₁≈−0.2等极值处高度集中（频次≈50），而"capitulum"分布相对分散。这是论文**"超连接具有输入自适应动态路由"**这一核心命题的直观证据，用以佐证其用可学习动态连接替代静态残差路径的方法论动机。
+**3) 结论与作用**：权重随输入类别自适应分化，印证DHC动态加权机制有效（非恒等残差），作为附录可视化支撑"输入依赖超连接"的核心理论主张。
 *caption: Distribution of weights of last DHC in ViT-Base/16-DHC×2 model. F MORE VISUALIZATION AND ANALYSIS… ｜ 论文 [[hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HYPER-CONNECTIONS — Fig.13 (p.22)
@@ -2912,27 +3148,33 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 
 ### Dual-Head Reasoning Distillation: Improving Classifier Accur — Fig.1 (p.2)
 ![[assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-fig01.png]]
-> [!tip] 【图文联合解读】**【图示内容】** 图以两张雷达图分别展示 Llama-3.2-3B+BoolQ 与 Qwen-3-4B+BoolQ 两个主干在 SuperGLUE 八项任务（CB/COPA/MultiRC/RTE/WiC/WSC/BoolQ/Avg）上 Teacher（CoT Zero-shot，紫点线）、Baseline（pooled classifier，蓝虚线）与 DHRD（红实线）的得分。DHRD 几乎完全包络 Baseline，在 CB（≈89 vs 78）、COPA（≈79 vs 75）、RTE（≈92 vs 91）等低资源推理任务上提升最显著，Avg 也略优，整体逼近 Teacher 曲线。
+> [!tip] 【图文联合解读】图示4个雷达图（Llama-3.1-8B/3.2-3B、Qwen-3-8B/4B），每图8轴对应BoolQ/CB/COPA/MultiRC/RTE/WiC/WSC/Avg任务，对比DHRD（红实线）、Gemini 2.5 Flash CoT（紫点线）、Pooled Baseline（蓝虚线）。DHRD在CB（93-100）、COPA、RTE等小样本任务上增益最显著，Avg分（如Qwen-3-8B 87、Llama-3.2-3B 95）逼近甚至持平Gemini教师，全面超Baseline。
 
-**【技术结论】** 原文据此论证：DHRD 仅在训练阶段引入 CoT 推理，跨主干稳健提升分类头精度；增益源于"输入–理由–标签"三元组对齐，而非通用 LM 正则化。
+**技术结论**：训练时双头推理蒸馏对齐"输入-理由-标签"三元组，无需测试时CoT即可获得教师级精度。
 
-**【整体作用】** 作为开篇概览图，定量支撑"训练时推理可替代测试时推理"的核心主张，为后续 Table 1 与消融实验铺垫。
+**论文作用**：开篇概览图，定量支撑"训练时推理替代测试时推理"的核心主张，为Table 1与消融实验铺垫。
 *caption: SuperGLUE per-task scores for four backbones. DHRD (train-time reasoning) consistently beats the pooled-classifier baseline and rivals teacher model G… ｜ 论文 [[dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning]] ｜ arxiv 见 MD 元信息*
 
 ### Dual-Head Reasoning Distillation: Improving Classifier Accur — Fig.2 (p.3)
 ![[assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-fig02.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示共享解码器上的双头架构：①**分类头**对蓝色输入token（L_cls个，D维嵌入ℝ^(L_cls×D)）池化输出K类logits；②**推理头**通过LM Head对全序列（蓝色分类token+橙色教师推理token，共L_cls+L_rat个，ℝ^((L_cls+L_rat)×D)）施加因果LM损失。原文据此论证：推理头仅在训练时借助教师思维链做辅助蒸馏，推理阶段完全弃用，使分类器零开销吸收推理知识。该图是论文DHRD方法的**核心架构图**，支撑"训练时推理、推理时仅分类"的整体链路设计，是其相对传统CoT蒸馏的关键创新点。
+该图展示了论文核心架构——共享解码器上的双头微调设计。左侧：输入 tokens（ℝᴸ）经 Decoder-only 模型生成 Embedding Tokens（ℝᴸˣᴰ），分为两路：(1) **分类头**对蓝色输入跨度 pooling（ℝᴾˣᴰ）后经 MLP 输出 K 维分类 logits；(2) **推理头**（仅训练用）通过 LM Head 对完整序列做因果 LM 损失，输出 ℝᴸˣⱽ logits。右侧细化训练输入：蓝色分类嵌入（ℝᴸᶜˡˢˣᴰ）与橙色教师推理嵌入拼接成 ℝ⁽ᴸᶜˡˢ⁺ᴸʳˢ⁾ˣᴰ，LM Head 在其上做生成式对齐。
+
+原文借此论证：推理蒸馏仅作用于训练阶段，推理时丢弃 LM Head，因此"白嫖"教师推理能力而不增加推理开销。该图是方法论基石，直接支撑表 2 关于 <REASON>/<ANS> 对齐消融的前提——若双头架构无法在共享表征中同时承载分类与生成信号，后续对齐实验无从谈起。
 *caption: Dual-head fine-tuning on a shared decoder. The classification head pools hidden states over the input span (blue) to produce K class logits. The train… ｜ 论文 [[dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning]] ｜ arxiv 见 MD 元信息*
 
 ### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.1 (p.4)
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 1 — DLCM 总体结构）**
 
-图(a)展示DLCM总览结构：输入token经编码器（蓝色圆角模块）后，通过Q查询机制映射至4个概念槽C₁–C₄（内含a、ba、bn等字符符号），再经后续"MH"模块继续处理。图(b)展示边界检测与池化：token序列(s、B、b、a、o、b、bn)按阈值K动态切分边界，池化为C₁–C₄四个概念。
+**(a) 总体架构**：左侧 8 个 token 输入经含 θ 参数的蓝色编码器，由查询 Q 抽取得到 4 个语义概念嵌入 C₁–C₄；中间橙色模块接收 KV 与隐状态 S，送入紫色解码器，最终输出右侧 4 个位置的下个 token 概率分布。
 
-原文借此论证：DLCM以"概念"（concept）替代传统token作为推理粒度，通过边界检测自适应分块、Q查询检索形成潜变量序列，实现语义空间中的动态推理。该图作为全文方法基石，为Table 1预训练数据统计与下游对比实验提供架构锚点。
+**(b) 边界检测与池化**：对编码隐状态 hθ(·) 设阈值 τ，按边界 τ 将 8 个 token 动态切分为 4 段并池化得到 C₁–C₄，体现"语义自适应粒度"。
+
+**(c) 解码器交叉注意力**：查询 q₁–q₅ 通过交叉注意力矩阵选择性聚焦 C₁–C₄，说明生成阶段在概念层而非 token 层进行推理。
+
+**关键结论**：DLCM 将 token 级推理上移至概念级 KV 缓存，缩短序列并支持动态粒度，构成论文"潜在自适应语义空间推理"方法的核心链路。
 *caption: 3.1… ｜ 论文 [[dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space]] ｜ arxiv 见 MD 元信息*
 
 ### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.9 (p.7)
@@ -2967,22 +3209,14 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.1 (p.3)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig01.png]]
-> [!tip] 【图文联合解读】该图展示3种RLHF算法（PPO/Safe-RLHF/ReMax）的三阶段数据流：①Generation（Actor Gen，ReMax含2个）；②Preparation（Ref/RM/Critic/Cost模型的Forward）；③Training（Actor Training，PPO与Safe-RLHF另有Critic Training，Safe-RLHF还引入L_ptx损失与Actor Fwd）。各算法模型组合与拓扑各异——PPO需4模型，Safe-RLHF额外引入Cost模型，ReMax仅3模型且无critic。
-
-**论证结论**：HybridFlow以统一的Stage抽象即可灵活承载不同模型数量与执行顺序，验证其作为通用RLHF框架的表达力与可扩展性。
-
-**论文作用**：作为方法论开篇的"能力示例"，证明单一系统可统一支持多样RLHF流程，为后续灵活的Actor/Colocation调度与高效分布式实现奠定设计动机。
+> [!tip] 【图文联合解读】图展示(a) PPO、(b) Safe-RLHF、(c) ReMax 三种 RLHF 算法的三阶段数据流图，含 actor、critic、reference policy、reward model、cost model 五类模型节点：①生成(Actor Gen)、②准备(Ref/RM/Critic/Cost Fwd 等前向)、③训练(Actor/Critic Training)。Safe-RLHF 引入 cost model 与 L_ptx，ReMax 采用双 actor+双 RM+双 Ref 结构。该图论证：不同 RLHF 算法共享"生成—准备—训练"骨架，但模型组合与依赖各异，故 HybridFlow 须以灵活的多控制器架构统一调度异构数据流，为其模块化设计提供关键动机，并衔接后文对现有框架灵活性差、效率低两类缺陷的剖析。
 *caption: Dataflow graph of 3 RLHF algorithms [19, 43, 55].… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.2 (p.3)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
 
-图(b)展示HybridFlow混合编程模型：顶层单控制器协调Actor、Critic、Reward、Reference四类模型；每个模型内部采用多控制器实现（图中以`gen(prompts)`、`comp_values(res)`、`comp_reward(res)`三段伪代码为例，共享`all_gather_weights()`同步与`model()`调用），灰色节点表示当前未激活。
-
-原文借此论证两个关键技术结论：**灵活**——解耦数据与计算依赖、无缝集成任意LLM系统；**高效**——阶段转换零冗余（避免权重重复广播）、支持不同模型放置策略。
-
-在论文整体链路中，该图是"混合控制器"设计的核心证据，与(a)纯多控制器范式形成对照，支撑后续吞吐量、显存占用与分布式扩展性实验的设计假设，是方法论章节的奠基性技术图。
+图2对比两种RLHF编程模型。(a)现有框架采用纯多控制器：Actor、Critic、Reward各worker独立调度，代码层嵌套`recv_actor()`/`broadcast()`递归调用，由此产生两大缺陷——**Inflexible**（计算与数据依赖深度耦合、难以适配多种LLM系统）与**Inefficient**（训推切换开销大、模型放置策略僵化）。(b) HybridFlow提出混合模型：**Inter-Node**用单控制器统一编排`actor.gen → critic.comp_value → reward.compute_reward`；**Intra-Node**仍保留多控制器并行`gen`/`comp_reward`（含`all_gather_weights`）。由此获得**Flexible**（解耦数据与计算依赖、无缝集成任意LLM）与**Efficient**（零冗余切换、支持灵活模型放置）。该图是论文方法动机的核心可视化，与Table 2实测的训推切换开销直接呼应，奠定后文HybridFlow编程抽象与性能优势的设计基础。
 *caption: Programming model used in RLHF systems. (a)… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.3 (p.4)
@@ -3016,11 +3250,11 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.6 (p.7)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**核心对象与结构**：图右代码展示同一HybridFlow框架下PPO、ReMax、Safe-RLHF三算法的统一编排，分三阶段：①生成响应（`actor.generate_sequences`）；②准备经验（critic/values、reference log_prob、reward、cost、advantages）；③actor-critic训练。蓝色标注ReMax差异（`do_sample=False`、删除critic），红色标注Safe-RLHF差异（复用RewardWorker初始化cost模型、新增`compute_cost`与`pretrain_loss`）。
 
-图6展示一份**单一Python控制脚本**，按"生成响应→准备经验→更新actor/critic"三阶段编排，涵盖PPO/ReMax/Safe-RLHF三种RLHF算法；其中**蓝色虚框**标注ReMax特有行（`do_sample=False`、蓝叉标记`critic.compute_values`在ReMax中可省），**红色虚框**标注Safe-RLHF特有行（`cost.compute_cost`与`pretrain_loss`）。
+**关键技术结论**：原文据此论证HybridFlow编程模型无需修改RLHF算法代码即可切换算法，**仅需增删数行**即可适配不同分布式执行模式与损失函数（`algo_type`参数化）。
 
-原文借此论证**HybridFlow在不改算法代码的前提下，仅增删若干行即可切换不同RLHF算法**，体现其编程模型的灵活性。该图作为方法部分的关键示例，与第3节"单控制器抽象+分布式执行解耦"的设计形成呼应，为后文性能与易用性实验提供代码级证据。
+**方法链路作用**：作为论文"算法灵活性（flexibility）"主张的代码级实证，与吞吐量/可扩展性实验互补，证明框架对多种RLHF范式（单/双/多奖励模型）的低门槛支持是其相对已有系统（Megatron-LM、ColossalAI等）的关键差异化优势。
 *caption: Implementation of PPO [55], ReMax [43], and Safe- RLHF [19]. Users can adapt to different RLHF algorithms by simply adding or deleting a few lines of … ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.7 (p.8)
@@ -3051,11 +3285,13 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.9 (p.11)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig09.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图9图文联合解读**
 
-图9以四个子图(a–d)对比7B/13B/34B/70B模型在8–128 GPU上的PPO吞吐量(tokens/s)，四种系统（NeMo-Aligner、DS-Chat、OpenRLHF、HybridFlow）同列对照。绿色HybridFlow条形在各规模下均最高：7B/128 GPU达约3.7×10⁴ tok/s，70B/128 GPU达约0.8×10⁴ tok/s；加速比随模型增大而扩大（7B: 1.68–8.63×，70B: 5.17–17.98×，34B峰值达20.57×）。
+**① 核心对象与数据**：四个子图分别呈现 7B/13B/34B/70B 四种模型规模下 PPO 训练吞吐量（tokens/s）随 GPU 数（8→128）变化的柱状对比，被对比对象为 NeMo-Aligner、DS-Chat、OpenRLHF 三个基线。典型读数：在 128 GPU 下，HybridFlow 在 7B 上达约 3.8×10⁴、70B 上约 0.82×10⁴ tokens/s，对应最高加速比从 7B 的 8.63× 攀升到 70B 的 17.98×。
 
-论文借此定量论证：HybridFlow通过灵活组合3D混合并行与RLHF阶段解耦编排，在端到端训练吞吐上系统性优于现有框架。该图是全文"高效RLHF"主张的核心实验支撑，证明其架构优势随模型与集群规模同步放大。
+**② 关键结论**：HybridFlow 在所有规模与 GPU 配置下均稳定领先，且模型越大、可调度资源越多，优势越显著——证明其 3D 混合引擎在大模型 RLHF 训练中具备优越的吞吐量与可扩展性。
+
+**③ 论文作用**：作为方法部分的旗舰实验，与图8的端到端时延图共同支撑"灵活+高效"的核心主张，是全文系统级性能优势的关键实证依据。
 *caption: PPO throughput. Numbers in parentheses are HybridFlow speedups compared with baselines. 8 16 32 64 128 # of GPUs 0 1 2 3… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.10 (p.11)
@@ -3079,54 +3315,63 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.12 (p.12)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig12.png]]
-> [!tip] 【图文联合解读】## 图文联合解读
+> [!tip] 【图文联合解读】**图示内容**：三组子图（a）13B、（b）34B、（c）70B（部分截断），横轴为 GPU 数量（16–128），纵轴为吞吐量 tokens/s（量级 1e4），每个 GPU 配置下并排比较 Colocate（蓝）、Split（橙）、Standalone（红）、HybridFlow（绿）四种放置方案。
 
-**1) 核心对象与数据**：图(a)为13B模型下四种放置策略（Colocate蓝、Split橙、Standalone红、HybridFlow绿）在16/24/32/64/96/128 GPU下的吞吐量（tokens/s，单位1e4）。小规模时Colocate≈HybridFlow≈0.7–1.0e4，Standalone仅0.4–0.7e4；128 GPU时四者收敛至约2.6e4。
+**关键结论**：随着 GPU 规模扩大，吞吐量单调上升，128 卡时 13B 场景接近 2.5–3×10⁴ tokens/s、34B 与 70B 约 1.2–1.5×10⁴ tokens/s；HybridFlow 在各模型规模与 GPU 配置下均达到与最优方案相当或更优的水平，尤其在中小规模/大模型场景下相对 Standalone 优势明显，说明其放置策略对模型与集群规模均具良好扩展性。
 
-**2) 关键技术结论**：HybridFlow在不同GPU规模下吞吐均≥Standalone，尤其在16–64 GPU区间显著领先（最大提升约30–40%），且在小规模时与Colocate持平；说明其灵活映射并不以吞吐为代价，突破了"非Colocate则慢"的固有代价。
+**论文作用**：作为 placement 消融实验，与 Fig.11（67B actor）共同支撑方法章节关于"flexible 3D hybrid engine"可适配多种模型与硬件拓扑的核心主张。
 
-**3) 在论文中的作用**：作为可扩展性实验的核心证据，证明HybridFlow的placement解耦设计兼具灵活性与高效性，为"统一多策略RLHF训练"主张提供关键性能背书。
+> 注：图中右下角可见 "Figure 13" 标注，与原题所述 Figure 12 编号存在偏差。
 *caption: Throughput of HybridFlow under different placements 32 64 96 128 # of GPUs… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.13 (p.12)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig13.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 13）**
 
-**核心对象与数据**：图13展示13B actor/ref + 70B critic/reward配置下，Colocate、Split、Standalone、HybridFlow四种放置策略在32/64/96/128块GPU上的吞吐量（tokens/s，量级1e4）。32 GPU时HybridFlow约5500，与Colocate持平但远高于Split(~2000)与Standalone(~2500)；64 GPU时HybridFlow升至约8500，居首；96–128 GPU时四种策略差距收窄至约9000–12000，HybridFlow仍领先约10%。
+1) **核心对象**：三幅柱状图，横轴为 GPU 数（16–128），纵轴为吞吐量（tokens/s，量级 10⁴），对比 Colocate、Split、Standalone、HybridFlow 四种模型放置策略，场景为 13B Actor/Reference 与 70B Critic/Reward 的非对称 RLHF 配置。左图覆盖最广 GPU 规模，中、右图聚焦特定区间。
 
-**关键结论**：异构模型规模下，固定放置策略（Colocate/Split/Standalone）顾此失彼，HybridFlow的灵活放置在中小规模GPU集群上提升最显著（最高近2×），验证其自适应布局优势。
+2) **关键技术结论**：在小规模（≤32 GPU）下 Colocate 与 HybridFlow 接近，但随 GPU 增至 96–128，HybridFlow 凭借灵活放置策略实现最高吞吐，验证其在异构模型尺寸（13B+70B）下通过细粒度调度获得显著性能优势。
 
-**论文作用**：作为placement消融实验，与图12（67B actor场景）共同支撑方法章节关于"flexible 3D hybrid engine"可扩展性的主张。
+3) **论文作用**：支撑 HybridFlow "单控制器多角色 3D 并行 + 自动放置" 的核心主张，回应 RLHF 流水线中模型规模异构带来的调度挑战，为系统设计提供量化依据。
 *caption: Placement comparison under 13B actor and reference policy & 70B critic and reward model.… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.14 (p.13)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig14.png]]
-> [!tip] 【图文联合解读】**图文联合解读（图14）：**
+> [!tip] 【图文联合解读】## 图文联合解读
 
-图14以双子图形式，在7B(T_g=2)与13B(T_g=4)两种配置下，对比四种框架在不同GPU规模下的"actor训练↔生成"模式切换耗时。
+**核心数据**：图14比较了四种系统（OpenRLHF、DS-Chat、HybridFlow-V、HybridFlow）在四种模型规模（7B/13B/34B/70B）下，Actor训练→生成阶段的转换耗时。
 
-- **7B子图**：OpenRLHF从8卡约4s线性增至128卡约11s；DS-Chat约3-5s；HybridFlow-V约3-4s；HybridFlow始终稳定在2.5-3.5s（最低）。
-- **13B子图**：差距进一步放大——OpenRLHF从10s升至17s，DS-Chat从5s升至12s，而HybridFlow几乎保持在3-4s，几乎不随GPU数增长。
+- **7B（128 GPU）**：OpenRLHF约11s，HybridFlow约3.5s；
+- **34B（128 GPU）**：OpenRLHF飙升至约50s，HybridFlow稳定在约5s；
+- **70B（128 GPU）**：OpenRLHF/DS-Chat/HybridFlow-V分别约90s/28s/28s，HybridFlow仅约9s，差距达约10倍。
 
-**论证结论**：HybridFlow通过将训练与生成统一在同一调度器内（而非控制器分离式架构），将切换开销压到最低且具备良好扩展性。这正是其端到端RLHF训练吞吐量优于同类框架的关键工程支撑。
+**关键论证**：HybridFlow在训练与生成阶段**复用同一并行策略**（同构并行），无需重组张量/流水/数据并行组；HybridFlow-V（生成用3D、训练用1D）则需重新分片，代价随模型与集群规模剧增。实验证明：正是这一设计抉择带来了近乎一个数量级的转换加速。
+
+**论文作用**：支撑HybridFlow"统一并行抽象"的核心架构贡献，是其端到端RLHF训练效率优于现有系统（端到端加速1.53×–20.44×）的关键微结构证据。
 *caption: Transition time between actor training and generation.… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.15 (p.13)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig15.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-该图展示了 **7B 与 13B actor 模型在 16 GPU 上**于四种生成并行配置（T_g/D_g = 8/1、4/2、2/4、1/8）下的时间分解，包含 **generation time（蓝色）** 与 **transition time（橙色）** 两部分。量化来看：7B 生成时间随 T_g 减小从约 85s 降至 30s 左右；13B 则在 T_g=8/D_g=1 与 T_g=1/D_g=8 时均出现约 220s 的高值，呈现非单调 U 形。transition time 占比相对较小（7B 约 3–5s，13B 约 5–10s），但不可忽略。
+图15展示了7B与13B模型在不同生成并行配置（T_g张量并行/D_g数据并行，固定16 GPU）下，单步generation time与transition time的分解对比。
 
-原文借此论证：HybridFlow 通过解耦训练/生成资源并采用统一调度，将 actor 模型的 **reshard 过渡时间平均减少 55.2%（11.7s）**，凸显其在 RLHF 流水线中显著降低模式切换开销的关键优势。该图在实验链路中服务于"RLHF 训练—生成频繁交替场景下的端到端效率"这一核心主张，为 HybridFlow 的灵活并行设计提供了直接量化支撑。
+**数据要点：** 7B模型generation time从T_g=8时的~88s降至T_g=1时的~33s，但transition time从几乎可忽略升至~10s；13B模型同样在T_g=4时generation最优（~145s），T_g=1时反而回升至~225s。
+
+**论证结论：** 生成并行策略存在明显权衡——降低张量并行度虽压缩生成耗时，却显著抬升权重reshard与同步开销；HybridFlow通过解耦与高效迁移，将transition time平均降低55.2%（11.7s），有效缓解该权衡。
+
+**论文作用：** 该图为§8.2实验提供并行配置敏感性证据，支撑"3D-HybridEngine"的调度合理性——需动态选择生成并行度，使端到端RLHF迭代时间最小化。
 *caption: Time breakdown on different generation parallel sizes of the actor model on 16 GPUs. various model scales, which is the time to reshard model weights … ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.16 (p.13)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig16.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 16 设备映射算法运行时间）：**
 
-该图以对数纵轴柱状图展示8组（模型规模, GPU数）配置下的设备映射算法耗时：(7B,8)≈10s、(7B,16)≈30s、(13B,24)≈65s、(13B,32)≈110s、(34B,48)≈220s、(34B,64)≈370s、(70B,96)≈800s、(70B,128)≈1400s。
+1）**核心对象与数据**：该图为对数纵轴柱状图，横轴为同时放大的"模型规模+GPU数"配置，依次为 (7B,8)、(7B,16)、(13B,24)、(13B,32)、(34B,48)、(34B,64)、(70B,96)、(70B,128)；运行时间从约 10s 单调增长至 ~10³s（近千秒），呈近似指数级上升趋势。
 
-原文借此论证：当模型与GPU同步放大时，Auto Device Mapping的求解时间呈近似指数增长，但在最大规模70B/128 GPU下仍控制在约25分钟以内，处于工程可接受范围，证明该算法在千亿级RLHF训练中具备可扩展性，避免了映射本身成为系统瓶颈，从而支撑HybridFlow整体"灵活高效"的实验结论。
+2）**关键结论**：HybridFlow 的设备映射算法在大模型+大集群下仍可在分钟级完成规划（最大 ~1500s），开销可控，避免成为流水线瓶颈。
+
+3）**链路作用**：与 Figure 14 互证——前者证明训练-生成切换极短，本图证明前期规划代价可接受，共同支撑"HybridFlow 单控制器 3D 混合调度低开销、可扩展至 70B/128GPU"的方法论结论。
 *caption: Runtime of device mapping algorithm. The model size and # of GPUs are simultaneously scaled.… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.1 (p.1)
@@ -3136,7 +3381,7 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.2 (p.4)
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig02.png]]
-> [!tip] 【图文联合解读】图(b)展示Agentic RL训练流水线两阶段闭环：Rollout阶段由Agentic LLM向环境输出Action（Tokens），回收Observation（State）；积累的Trajectory Data送入Training阶段完成Weight Update，再经Weight Synchronization回传LLM，形成自循环。图(a)展示ALE生态（含RK Sandbox、CLI、Agent Framework、LLM、Proxy Service、Response Queue、Execution Engine等模块），为流水线提供可执行环境与工程支撑。原文据此论证：智能体RL的核心挑战已从单纯的数据规模与质量，转向训练基础设施、可执行环境与评估协议的协同设计——ALE即作为该一体化技术栈，催化社区协作。
+> [!tip] 【图文联合解读】图(a)展示ALE双层架构：左侧ROLL训练框架含Actor Train/Infer（Sync Weight同步权重）与Env.Manager调度多Env.Worker（运行Rock SDK）；右侧ROCK执行引擎以iFlow CLI为Agent，通过ModelProxy的Request/Response Queue与LLM四步轮询（①送②收③查④回）。图(b)RL管线：Rollout阶段Agentic LLM与Environment以Action Tokens、Observation State循环生成Trajectory Data；Training阶段据此Weight Update，再经Weight Synchronization回灌Rollout。原文据此论证智能体强化学习的核心挑战已从"数据规模"转向"训练基础设施、可执行环境与评估协议的协同设计"，ALE构成后续Terminal-Based Benchmark（Table 2）等实验的系统底座，并通过rollout与训练解耦支撑大规模端到端训练。
 *caption: The overview of agentic RL ecosystem (a) and its training pipeline (b). technical stack, ALE is also a call to reframe the community’s priorities. In … ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.3 (p.5)
@@ -3154,11 +3399,9 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig04.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示ROCK系统架构：右侧聚焦两大核心技能——Skill 4"海量调度"（含10,000+并发Sandbox，节点标注Running/Succeed/Failed/Pending四态，由Docker鲸鱼统一编排）与Skill 5"鲁棒容错隔离"（展示鲸鱼容器RUNNING/CRASHED状态自动恢复）；左侧揭示Worker–Sandbox–Env Hub执行栈，并通过Agent Bridging模块实现Model Server与RL Frame间经GEM传递Action/Observation的闭环交互。
+图4以"ROCK SERVICE"为核心架构，展示了五大核心技能：①Skill 1精简SDK控制（make/reset/step/close四操作）；②Skill 2无缝Agent扩缩，统一纳管Openhands、iFlow CLI、Mini Agent、SWE Agent等多类异构Agent；③Skill 3原生Agent桥接，通过OpenAI协议对接Agent Frame、GEM协议对接RL Frame（传输LLM Request/Response与Action/Observation）；④Skill 4大规模调度，支持10,000+并发Sandbox（Running/Succeed/Failed/Pending多状态共存）；⑤Skill 5鲁棒故障隔离，单Sandbox崩溃不影响其他Running节点。
 
-**技术论断：** 该图直观论证ROCK具备万级并发沙箱编排与节点级故障自愈两大能力，是智能体强化学习训练得以规模化落地的工程基石。
-
-**论文作用：** 作为Figure 4居于系统设计章节，为后续Table 4（大模型工具调用基准）等实验提供基础设施可行性背书，贯穿"craft on rock and roll"的核心叙事。
+该图论证了ROCK通过"控制平面SDK化+执行平面Sandbox池化+协议层兼容化"的设计，同时支撑训练与推理链路。在论文整体链路中，它奠定了Table 4工具使用基准测评的工程基础——正是凭借10K+并发环境与多Agent兼容能力，论文才能在R²-Harness、τ²-Bench等基准上跑通大规模强化学习训练流，从而得出"工具调用SOTA"的结论。
 *caption: ROCK System Architecture.… ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.5 (p.8)
@@ -3199,11 +3442,9 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig09.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示横向三行对比同一智能体轨迹上三种重要性采样粒度。顶行（token级）将众多τ_token打包入chunk c₂…cₜ，两处"Interaction"箭头落入chunk内部，与chunk边界错位；中行（chunk级，橙色高亮并标✓）每条Interaction箭头恰好落在chunk边界上，τ_{2h}/r₂ 与 s_t/τ_{t1} 等位置严格对齐；底行（sentence级）一个粗粒度句子横跨多条Interaction，混叠多个交互事件。结构上量化呈现了"chunk数↔token数↔interaction次数"的三种对应关系。
+该图对比了三种重要性采样粒度：每个 chunk 由 system prompt sₜ、h 个 token (τₜ₁–τₜₕ) 与 response rₜ 构成。Token 级将交互点落在 chunk c₂ 的 token 序列内部（最细粒度）；Chunk 级让交互点严格对齐 chunk 边界（即 c₁→c₂ 或 cₜ 末尾，✓ 标记处），与一次完整 agent 交互天然对应；Sentence 级则将多个 chunk 聚合为一个交互单位（粒度最粗）。
 
-原文据此论证：**chunk级粒度与环境中agentic交互的天然边界完全对齐**，既避免token级的子chunk内切分失配，又避免sentence级的跨交互混叠，因而是重要性采样的最优选择。
-
-在论文方法链路中，该图为后续"采样策略—交互步对齐—策略梯度更新"模块提供粒度选择的实证依据，是连接环境交互建模与训练目标设计的关键前提。
+**关键结论**：Chunk 级采样与交互的自然粒度一致，能获得更稳定、低方差的重要性权重估计，是论文 method 设计的基础选择。**链路作用**：作为消融性图示，为后续实验中选择 chunk 级策略提供直觉与一致性论据。
 *caption: Comparison of importance sampling strategies across token-level, chunk-level, and sentence- level granularities, where chunk-level aligns with the nat… ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.10 (p.23)
@@ -3215,52 +3456,41 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig11.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构：**
-左图为"Sampling From Beginning"示意。一条轨迹被切分为多个 chunk（s₁→c₁→r₁→⋯→s*ₜ→c*ₜ→r*ₜ→⋯→s*ₗ），星号 s* 标识"关键岔路口"（Crucial Fork）状态。在每个 chunk 上并行展开 III 次 rollout（标注 ⁽ⁱ⁾、⁽ⁱⁱ⁾、⁽ⁱⁱⁱ⁾），结果全部以 ❌ 失败告终（"All Failures"、"Uninformative Rollouts"），右端仅露出"Expert-Like"轨迹示意，暗示需回溯到 s*ₗ 关键节点才可获得专家级轨迹。
+左图：从 s₁ 全程采样至关键分叉 s*ᵢ 再至 s*ⱼ，多条 rollout 全部失败（✗），标注 "Costly Search from the Beginning""All Failures""Uninformative Rollouts"，凸显从零探索的低效。
 
-**2) 关键技术结论：**
-原文论证：从头开始的 rollout 难以抵达关键岔路口 s*ₗ，导致大量无效探索，严重限制策略学习效率；而 Sequential Rollback 从关键 chunk 初始化，可大幅降低探索负担，使模型沿关键节点逐步回溯，实现 chunk 级课程学习。
+右图：在专家轨迹引导下 "Rollback" 回滚至 Crucial Fork s*ᵢ，从该 chunk 重采样 c(i)⁽ⁱ⁾r(i)⁽ⁱ⁾ 三条并行分支，得到成功（✓）与失败（✗）混合的 "Valuable Rollouts"，Success Rate 显著提升。
 
-**3) 在论文中的作用：**
-该图作为动机图，揭示了传统"从初始状态采样"在长程困难任务中的低效性，为后文提出的 Chunk-Level Initialized Resampling（Sequential Rollback）提供必要性依据，是 AgentFlow 训练管线中关键的数据采样加速机制之一。
+**技术结论**：Sequential Rollback 将搜索负担从全程前推压缩到 chunk 级重采，大幅释放有效样本；**论文作用**：与 Resampling 模块协同，是 FlowRL 在长程 agentic 任务中解决"前期探索瘫痪"的关键采样加速器，直接决定策略收敛效率。
 *caption: Illustration of the Chunk-Level Initialized Resampling Strategy (Sequential Rollback). Left: In challenging tasks, sampling high-quality trajectories … ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.12 (p.25)
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig12.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图含三子图，对比Seq-Rollback（绿）与Baseline（灰）约175步训练。左图"训练时平均成功率"：绿线在10%–100%剧烈波动、均值约60–80%，两橙色圈标记骤降点（≈20%和≈40%）；灰线恒为0%。中图"Expert Chunks数量"：绿线由~45递减至~20，标注"Rollback"箭头；灰线恒为0%。
+图12以三联子图展示Sequential Rollback与Baseline在困难训练任务上的对比。**左图**（训练成功率）：Seq-Rollback成功率在10%–100%剧烈波动，基线始终为0；图中橙色圆圈标出两处"成功率骤降"点，暗示模型跨越关键chunk回退重试。**中图**（专家chunk使用量）：随训练步数从约42单调降至0，标注"沿专家轨迹回退"，说明模型逐步摆脱对专家的依赖。**右图**（测试成功率）：前75步两者均失败，约75步后Seq-Rollback陡升至近100%，基线恒为0。
 
-原文用此论证：顺序回退机制能产出大量有价值正样本，而朴素采样基线完全失败；成功率骤降恰反映模型跨关键chunk回退重试的机制行为。作为论文核心贡献Sequential Rollback在难训练任务上的关键经验证据，支撑回退策略的必要性、有效性与可解释性。
+该图作为论文核心实验证据，定量证明：顺序回退机制可产生富含正信号的rollout，且随训练自收敛——专家介入渐少、测试成功率跃升，完整支撑了"agentic crafting需回退式探索"这一方法论主张。
 *caption: Performance of Sequential Rollback and baseline (naive sampling) on a challenging training task. Left: Average success rate during training, which ref… ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.13 (p.26)
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig13.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】该图由三个子图对比IPA算法有无Chunk-Level初始化重采样（并行初始化）的效果。左图（训练平均成功率）：加该模块（橙）由约35%稳步升至~95%，基线（灰）峰值仅~75%且后期回落至~40%；中图（训练最低任务成功率）：加模块约40步后陡升至~70%，基线恒为0，蓝色箭头标注"学习困难任务能力"；右图（测试平均成功率）：加模块达~90%，基线仅~53%。
 
-图13对比"块级初始化重采样"（Parallelized Initialization, 橙线）与无该机制（灰线）下的IPA训练表现。可见右侧测试时成功率曲线：训练100步时橙线达约90%，灰线仅约52%，差距近40个百分点；左侧训练任务平均成功率在早期阶段橙线也明显领先。原文借此论证两点关键技术结论：(1) 块级重采样在训练初期即提供更多样化的奖励信号；(2) 使模型能以课程式方式攻克最难任务（Middle面板最低成功率亦显著提升）。在论文整体链路中，该图作为消融证据支撑"Parallelized Initialization"是IPA方法中提升rollout价值与最终泛化性能的关键组件。
+原文以此论证Chunk-Level初始化重采样在训练早期为batch注入更丰富的奖励信号，使智能体能攻克困难任务并显著提升测试泛化，是IPA流程中关键的样本多样性增强组件，支撑整体训练稳定性与泛化性能。
 *caption: Comparison of IPA with & without Chunk-Level Initialized Resampling (Parallelized Initial- ization) on a mini-set of the training data. Left: Average … ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.14 (p.27)
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig14.png]]
-> [!tip] 【图文联合解读】**图文联合解读（≤220字）**
-
-该图为Figure 14的部分视图，展示Terminal Bench Pro的基准特征与跨基准对比。
-
-**(a) 环形图**：呈现Terminal Bench Pro在8个任务类别（Scientific Computing、Debugging、Games、System Administration、Security、Machine Learning、Data Processing、Software Engineering）上的分布，各扇区面积接近，表明**类目分布均衡**（每类约12.5%）。
-
-**(c) 热力图**：三列对比Terminal Bench 1.0/2.0/Pro Public在Security、SE、System Admin、Debugging四类上的pass@1标准差。Pro Public在所有四类均最低（如SE: 0.02 vs 1.0的0.09；Debugging: 0.04 vs 2.0的0.18），验证其**评估方差更低、更稳定可靠**。
-
-**论证结论**：通过"均衡覆盖 + 低方差"双重证据，支撑Terminal Bench Pro作为**更严谨基准**的主张——避免类别偏斜与结果波动，使模型能力评估更具区分力。
-
-**链路作用**：作为§3.3.2小节核心可视化，为后文实验（如评测新模型时统一在该基准上的可比性）提供方法论基础。
+> [!tip] 【图文联合解读】图14以四联图刻画Terminal Bench Pro：8类任务各25例，共200例、每类占12.5%，较1.0/2.0更均衡。Pro Public每题测试数最小/中位/均值为10/19/28.3（1.0：1/3/5；2.0：1/3/8）；安全、软件、运维、调试的跨基准pass@1标准差为0.04/0.02/0.05/0.04。说明新版测试更充分、性能波动更低；该图在主评测前审计基准，为后续能力与泛化比较提供统一标尺。
 *caption: Benchmark characterization and cross-benchmark comparison of Terminal Bench Pro against other benchmarks.… ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.15 (p.28)
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig15.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 15 · 激活参数量 vs 准确率）：**
+> [!tip] 【图文联合解读】**核心对象与数据**：双子图散点图。左图横轴为总参数量（15B–Unknown，对数刻度），右图为激活参数量（0–Unknown），纵轴均为智能体任务平均准确率（10–40%）。圆点=开源已知参数模型，菱形=闭源模型。关键数据：IFlow-ROME（30B-A3B，紫色星标）以仅3B激活参获约30%准确率；同尺寸Qwen3-Coder 30B-A3B仅约20%；480B级Qwen3-Coder 480B、Kimi-K2-0905约32–34%；闭源Claude-Haiku-4.5达约40%。
 
-图示为各模型在 agentic 基准上的平均准确率（纵轴 10–40%）与激活参数量（横轴 0–40B+）的散点对比。核心发现：**iFlow-ROME（30B-A3B）在仅 ~3B 激活参数下达约 30% 准确率**，逼近 GLM-4.6（~28B 激活、~36%）、Kimi-K2-0905（~30B、~32%）等大模型，并显著优于同激活量级的 GPT-OSS-120B（~25%）与 Qwen3-Coder 30B-A3B（~21%）；右上方为参数未知的闭源模型（Claude-Haiku-4.5、GPT-5 Mini 等）。图中斜向"Performance-Parameter Trade-off"箭头印证：在极低激活成本下，iFlow-ROME 凭借路由机制实现了极具竞争力的 agent 性能，凸显 MoE 架构的效率优势，为论文"小激活、大能力"的核心主张提供量化支撑。
+**技术结论**：右图中IFlow-ROME显著领先Pareto前沿——以约1/10的激活参量匹配甚至超越480B级开源模型，证明MoE在智能体任务上的高参数效率；左图同步显示其30B总参亦优于多数同体量模型。
+
+**论文作用**：作为模型发布的核心效率证据，呼应"小激活、强能力"主张，与训练流程、通用/代码智能体基准评测章节形成完整论证闭环。
 *caption: Performance-parameter trade-offs in agentic tasks. Scores represent averages on general agentic and code agent benchmarks. Models with known parameter… ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.16 (p.34)
@@ -3293,7 +3523,13 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 
 ### Let It Flow: Agentic Crafting on Rock and Roll — Fig.18 (p.37)
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig18.png]]
-> [!tip] 【图文联合解读】图18以5×2网格对比ROME、Qwen3-Coder-Plus、GLM-4.6、Qwen3-coder-30B、Devstral-Small-2五款代理在"太阳系建模"任务第2、3次截图：ROME呈现完整恒星＋多颗行星分布在同心轨道环上，UI控件齐全；Qwen3-Plus行星排成水平直线，几何失真；GLM-4.6背景转为蓝色渐变且太阳退化为黄色矩形，未完成渲染；Qwen3-30B行星稀少；Devstral-Small-2两屏几乎全黑，仅留椭圆描边。图中用以论证ROME在多轮迭代式可视化生成中，物体完备性、布局合理性与稳定性显著优于开源基线模型，支撑论文"agentic crafting"框架能显著提升大模型创意编码与复杂动态场景构建能力这一核心结论。
+> [!tip] 【图文联合解读】## 图18图文联合解读
+
+**核心对象**：5×2网格对比ROME、Qwen3-Coder-Plus、GLM-4.6、Qwen3-coder-30B、Devstral-Small-2共5个模型对"太阳系建模"任务的两帧渲染截图。ROME产出最完整——黑底同心椭圆轨道+中心太阳+多颗异色行星按真实尺度分布；Qwen3-Coder-Plus行星在帧2呈初始共线；GLM-4.6含星空蓝底与左右UI信息面板；Qwen3-coder-30B带中文行星标签；Devstral-Small-2近乎空场，仅余中心亮点与单轨道，未渲染行星。
+
+**论证结论**：作为定性证据，支撑ROME在agentic创意编码中场景完整度、物理合理性与元素丰富度全面优于基线模型。
+
+**论文作用**：实验章节"案例研究"的视觉佐证，与定量评估互补，共同验证"agentic crafting"框架在多类创意生成任务上的普适优势。
 *caption: Case study 2 screenshot examples: Solar System Modeling. 37… ｜ 论文 [[let-it-flow-agentic-crafting-on-rock-and-roll]] ｜ arxiv 见 MD 元信息*
 
 ### Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with — Fig.1 (p.1)
@@ -3442,42 +3678,40 @@ Figure 10 展示 ASearcher-Local-14B 在约 220 训练步内三个行为指标�
 
 ### AREAL: A Large-Scale Asynchronous Reinforcement Learning Sys — Fig.4 (p.8)
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig04.png]]
-> [!tip] 【图文联合解读】**图4联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图4以2×2子图展示强扩展性实验，对比AREAL（蓝实线）与verl（橙虚线）在GPU数从128增至512时的吞吐量，纵轴约18k–37k tokens/秒，覆盖7B/32B模型与16k/32k上下文四种组合。AREAL扩展接近理想线性线，32B模型下吞吐由约18k提升至35k；verl斜率显著偏低，且在32B+32k上下文时直接OOM导致数据缺失。
+该图展示 AReaL 与 verl 在强扩展（strong scaling）下的吞吐量对比，纵轴为 token/s，横轴为 GPU 数；6 个子图按模型规模（1.5B/7B/32B）×上下文长度（16k/32k）排列。
 
-该图用以论证AREAL异步RL框架的扩展性优势：在更大模型、更长上下文场景下仍保持近线性加速比，而同步基线verl已触及显存瓶颈，从而为论文"大规模异步RL可行且高效"的核心结论提供关键实证支撑。
+**关键数据**：以 7B/32k 为例，GPU 从 64 增至 512 时，AReaL 由约 19k 升至 103k token/s（接近理想线性虚线），而 verl 仅由 19k 升至 38k；在 1.5B/16k 下，AReaL 在 256 GPU 处达 ~155k，约为 verl（67k）的 2.3 倍。
+
+**核心结论**：AReaL 的扩展效率显著优于 verl，且更贴近理想线性；更重要的是，32B/32k 配置下 verl 因 OOM 缺失数据点，而 AReaL 仍可在 256→512 GPU 间保持 ~18k→35k 的近线性增长，验证其异步架构在大模型长序列下的内存与并行优势。
+
+**作用**：该图是论文"系统效率"章节的实证支柱，证明 AReaL 异步 RL 框架在保证训练可行性的同时具备良好的可扩展性，为后续 Table 4 中 AIME24/25 等基准的优异结果提供了算力与吞吐基础。
 *caption: The strong scaling trend. Dotted lines indicate ideal linear scaling. verl consistently encounters OOM with 32k context length and the 32B model so th… ｜ 论文 [[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]] ｜ arxiv 见 MD 元信息*
 
 ### AREAL: A Large-Scale Asynchronous Reinforcement Learning Sys — Fig.5 (p.9)
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读（图5，p.9）**
+> [!tip] 【图文联合解读】**图5联合解读：**
 
-**1）核心对象与数据：** 三面板消融实验，基于1.5B模型在数学推理任务上的训练。(a)(b)分别为naive PPO与解耦目标（式5）下MaxStaleness∈{0,1,2,4,8,16,∞}的奖励曲线；(c)为有效吞吐量条形图，定量数据为128.7→269.3→356.6→356.6→371.7→382.4→396.8 k tokens/s，随staleness单调递增。
+图5基于1.5B模型在数学推理任务上做了三组消融：(a) naïve PPO学习曲线显示staleness=0/1训练奖励最高(≈-0.7)，staleness=16/∞仅≈-1.5；(b) 加入解耦目标(eq.5)后，staleness=2/4反而追平甚至略优于0/1；(c) 有效吞吐随staleness单调上升——0→128.7、1→269.3、2→356.6、4→356.6、8→371.7、16→382.4、∞→396.8 (k tokens/s)。
 
-**2）关键结论：** 仅增大staleness会劣化naive PPO（曲线发散、奖励下降）；而解耦目标使所有staleness曲线紧贴η=0 oracle，性能几乎无损。二者结合即"适度staleness+解耦目标"可获得>2×训练加速且保持最终评估性能——证实两个算法选择缺一不可。
+**技术结论**：解耦目标与适度staleness缺一不可。naïve PPO对异步延迟高度敏感；解耦目标使算法对staleness鲁棒，二者协同可在staleness=2~4时实现>2×加速(吞吐128.7→356+)且维持最终性能。
 
-**3）论文链路作用：** 该图为AREAL异步RL框架的核心算法决策提供实证：它把"解耦PPO目标"与"staleness容忍度"确立为系统级最优配置，支撑后文大规模实验的高吞吐-高性能主张，是方法论可行性的关键消融证据。
+**论文作用**：作为关键消融，验证AREAL异步框架两条核心算法设计（解耦PPO目标 + staleness控制）的必要性与协同增益，为后续大规模实验提供方法论支撑。
 *caption: Ablation studies of the decoupled PPO objective and staleness control with a 1.5B model on math reasoning tasks. Both algorithmic choices are essentia… ｜ 论文 [[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]] ｜ arxiv 见 MD 元信息*
 
 ### AREAL: A Large-Scale Asynchronous Reinforcement Learning Sys — Fig.6 (p.10)
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig06.png]]
-> [!tip] 【图文联合解读】图6(b)展示中断式生成消融：1.5B模型吞吐量231k vs 207k tokens/s，7B为130k vs 111k，可中断机制带来约12%–17%提升。结合未渲染的图6(a)：动态批处理在1B/7B/32B较常规批处理分别达427.4/454.7/387.7 vs 404.4/303.1/283.0 TFLOPs/GPU，平均~30%吞吐增益。两图共同量化验证AREAL的两项系统优化——动态微批次分配与可中断生成——均显著提升吞吐，在论文方法链中为异步RL框架的工程可行性提供关键实验支撑。
+> [!tip] 【图文联合解读】图6通过两组消融实验量化两项系统优化：(a)动态微批次分配在1B/7B/32B模型上吞吐量达427.4/454.7/387.7 TFLOPs/GPU，较常规批处理(404.4/303.1/283.0)平均提升约30%；(b)可中断生成在1.5B/7B上吞吐达231k/130k tokens/s，比非中断方案(207k/111k)提升12%–17%。两图共同论证动态微批次与可中断生成均显著加速，验证AREAL异步RL框架在大规模语言推理训练中的工程可行性，为其系统设计提供关键量化支撑。
 *caption: Ablation studies on system optimizations. experimental setup, we configured 32 micro-batches for the standard setting and established a token budget o… ｜ 论文 [[areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via  — Fig.2 (p.6)
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig02.png]]
-> [!tip] 【图文联合解读】图2展示DeepSeek-R1的四路汇聚管线（带6类图例：模型/提示-响应/算法/提示/奖励/后处理）：
+> [!tip] 【图文联合解读】**图文联合解读**
 
-(a) V3 Base → RL（Accuracy & Format奖励）→ **R1 Zero** → Sampling+Filter（准确性）+人工Refine → Cold Start Long CoT 数据；
+图示DeepSeek-R1三阶段流水线：①左路，V3 Base经纯RL（推理prompt+准确性/格式奖励）得R1 Zero，再采样并以"V3+人工"精炼产出冷启动长CoT；②中路，V3 Base经冷启动CoT SFT得Dev-1，再RL加入语言一致性奖励得Dev-2；③右路，融合Dev-2采样推理数据与非推理数据SFT得Dev-3，最终以多样化prompt+规则与偏好奖励RL产出R1。
 
-(b) V3 Base → SFT（冷启动长CoT）→ **Dev-1** → RL（规则奖励 & 语言一致性）→ **Dev-2**；
-
-(c) V3 Sampling → 推理+非推理数据集；
-
-(d) V3 Base → SFT融合数据 → **Dev-3** → RL（规则奖励 & 偏好奖励）→ **R1**。
-
-原文借此论证"冷启动长CoT → 双轮SFT+RL迭代"是兼顾推理能力激发与人类对齐的核心范式，作为整篇方法学总览图，为后续蒸馏与基准对比提供路线支撑。
+该图论证两大结论：纯RL可自发激发长链推理（"aha moment"），但需冷启动与多轮SFT-RL迭代才能兼顾语言一致性与人类偏好。它是全文方法总纲，串联R1 Zero与R1两条主线，支撑后续实验对比。
 *caption: In the initial stage, we collect thousands of cold-start data that exhibits a conversational, human-aligned thinking process. RL training is then appl… ｜ 论文 [[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via  — Fig.3 (p.14)
@@ -3593,29 +3827,31 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 
 ### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.5 (p.16)
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig05.png]]
-> [!tip] 【图文联合解读】图5展示Engram架构消融：深蓝曲线描绘3B MoE下Engram单模块插入层深（Layer 8–12）对验证损失的影响，呈先微升后回落趋势，结合原文揭示Layer 2早注最优。右栏5个×号标记消融变体：去多分支融合、去token压缩、去门控、加4-gram、去短卷积，分别落于橙虚线（基线）与绿虚线（完整Engram）之间梯度位置。原文借此论证三大核心组件——分支专属融合、上下文感知门控、tokenizer压缩——任一缺失即引最大回归。该图为论文"条件记忆需多组件协同"方法论的关键证据，串联架构设计→消融验证→相对3B MoE全面优越的实验闭环。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1）**核心对象与数据**：该图以Validation Loss为纵轴（含断轴，1.768–1.808区间），横轴左侧为层索引1–12，右侧为5种消融变体。橙色虚线代表3B MoE Baseline（约1.808），绿色虚线代表完整3B MoE+1.6B Engram（约1.768）；深蓝曲线为单模块插入不同层的扫掠结果，Layer 2处取得最低值≈1.7705，随后单调恶化至Layer 12的≈1.783；右侧×号标注的"w/o multi branch / token compress / gating"、"+4-gram"、"w/o short conv"五种变体loss均高于绿色基线。
+
+2）**关键结论**：Engram需在浅层（如Layer 2）早期注入，深度越深收益越弱；同时证实三大核心组件——分支融合、上下文感知门控、tokenizer压缩——均为必要设计。
+
+3）**论文作用**：该图为架构设计提供经验依据，定位最佳插入位置并验证各模块不可缺，是支撑"条件记忆+稀疏查找"整体方法有效性的关键消融证据。
 *caption: We find that three components yield the most significant gains: (i) branch- specific fusion within the multi-branch backbone, (ii) context-aware gatin… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.7 (p.18)
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig07.png]]
-> [!tip] 【图文联合解读】## Figure 7 联合解读
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**核心对象与结构**：图以热力图形式展示 Engram 门控机制在多语言文本上的激活分布。颜色越深红表示门控标量 αₜ 越接近 1，每行对应一个 token 序列，N=3 后缀 n-gram 完成后触发。可观察到五行示例：(1) 英文 "…norse Brucephal us." 中 "Bruce" 与 "phalus" 显著激活；(2) "Way." 中 "Way" 激活；(3) "…iana, Princess of Wales." 中 "Princess of Wales" 连续高亮；(4) 中文 "印刷术。" 中 "术" 单独激活；(5) 中文 "…医圣',…《伤寒杂病论》" 中 "医圣"、"《伤寒杂病论》" 等命名实体高亮。
+**核心对象与结构**：图中以热力图展示 Engram 门控标量 α_t∈[0,1]（白→深红）在 5 个句子（含 3 条英文、2 条中文）逐 token 上的取值，采用 N=3 后缀 n-gram。强激活（深红）集中在 "the Great"、"uce phal"、"Milky Way"、"Princess of Wales" 等多 token 命名实体，以及 "By the way" 这类固定短语；中文行则在 "四大 发明"、"造纸术"、"指南针"、"张仲景" 等成语/专名处显著激活。
 
-**关键论证结论**：门控机制并非均匀响应，而是呈现高度选择性——仅在**静态、可枚举的局部模式**完成时强烈激活，涵盖英语多 token 命名实体（如 Princess of Wales）与公式化短语；该选择性在中文场景同样成立（"医圣"、《伤寒杂病论》），证实跨语言泛化。
+**关键结论**：门控具有高度选择性——仅在**局部静态模式完成时**触发，而非逐词全开。这验证了条件记忆检索的"按需触发"假设，即 Engram 只对高复用、可枚举的多 token 模式做强记忆读取，且该行为在跨语言（英/中）下保持一致。
 
-**链路作用**：此图构成 Engram "条件记忆"假设的定性证据，表明查找表能精准捕捉模式补全信号而非全段均匀检索，是后续量化稀疏性增益与推理加速实验的机理基础。
+**论文链路作用**：该图作为质化证据，与定量检索命中率、困惑度互补，支撑"查找式记忆构成 LLM 稀疏性新维度"的核心论点——通过选择性门控，将稳定的模式化知识从注意力计算中剥离，使模型算力集中于需要组合推理的位置。
 *caption: The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static pa… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.1 (p.1)
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图1对比三种残差连接结构：(a)标准残差——$x_l$经Layer $\mathcal{F}$后与自身相加得$x_{l+1}$；(b)HC引入Res/Pre/Post三个可学习映射$\mathcal{H}_l^{\text{res}}$、$\mathcal{H}_l^{\text{pre}}$、$\mathcal{H}_l^{\text{post}}$，作用于多流隐层$\mathbf{h}$；(c)mHC对上述三映射施加流形投影约束$\mathcal{P}_{\mathcal{M}^{\text{res}}}$、$\mathcal{P}_{\mathcal{M}^{\text{pre}}}$、$\mathcal{P}_{\mathcal{M}^{\text{post}}}$。
 
-该图对比三种残差连接结构：(a) 标准残差——单条恒等旁路，x_l 经 Layer F 后与 x_l 简单相加得 x_{l+1}；(b) Hyper-Connections (HC)——引入三个可学习映射（橙色 H_l^pre、H_l^post、H_l^res），将单流扩展为多流并通过 Pre/Post/Res Mapping 混合；(c) mHC——在 HC 基础上对三个映射分别施加流形投影算子 P_M（绿色框），即 P_M^pre(H_l^pre)、P_M^post(H_l^post)、P_M^res(H_l^res)。
-
-原文借此论证关键技术结论：HC 的 Res Mapping 矩阵若不加约束，其行和可能偏离 1、破坏残差流的尺度稳定性，导致训练振荡；mHC 将映射投影到（如双随机矩阵）流形上，从而稳定残差信号幅度。
-
-在论文中的作用：作为开篇 Figure 1，它奠定全文方法框架，使后续 Table 1 的消融实验与正文中关于"流形约束带来收敛稳定性与性能增益"的论证得以直观对照。
+该图直观论证：mHC通过投影约束使残差路径趋近恒等、Pre/Post映射近似正交，从而稳定收敛、提升性能；作为开篇框架图，为Table 1消融实验与"流形约束带来性能增益"的核心论点建立结构基线。
 *caption: Illustrations of Residual Connection Paradigms. This figure compares the structural… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.2 (p.7)
@@ -3645,18 +3881,18 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.5 (p.12)
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig05.png]]
-> [!tip] 【图文联合解读】图5在27B模型、5万步内比较Baseline、HC与mHC。左图以Baseline损失差为0；mHC由约−0.06回升至−0.021，HC回升更快、约至−0.015。右图mHC梯度范数由约0.13缓降至0.04，明显低于在0.09–0.18间剧烈波动并多次触及0.20的HC，且后期趋近Baseline。说明流形约束可抑制梯度爆炸、提升训练稳定性，同时维持更低损失；该图是mHC稳定性设计与后续性能实验之间的关键验证。
+> [!tip] 【图文联合解读】基于27B模型、0–5万步，对比Baseline、HC与mHC：(a) mHC相对基线的训练损失差由约−0.06收敛至−0.021，HC仅约−0.015，表明mHC损失更低；(b) mHC梯度范数由0.20平稳降至0.08并接近基线0.04，HC则在0.10–0.18间剧烈波动。该图是优化侧诊断，验证流形约束缓解HC梯度不稳定，使理论设计转化为更可靠、可扩展的训练。
 *caption: Training Stability of Manifold-Constrained Hyper-Connections (mHC). This figure… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.6 (p.13)
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig06.png]]
 > [!tip] 【图文联合解读】**图6(b) Token Scaling Curve 解读**
 
-**对象与数据**：图(b)为双面板折线图，横轴为FLOPs（≈1–5×10²¹）。左面板"Absolute Loss Gap"以Baseline归零为参考，mHC曲线从约-0.024单调上升至-0.015；右面板"Relative Loss Ratio"中Baseline锁定100%，mHC由98.8%升至99.15%，两者均表明mHC在各token预算下Loss始终更低。
+**核心数据**：横轴FLOPs从1×10²¹扩至4×10²¹共4个采样点；mHC绝对损失差由约-0.024单调升至-0.015（差距缩小），相对损失比由约98.6%升至99.2%（优势增强），Baseline恒为0/100%。
 
-**技术结论**：mHC的增益在数据规模维度上**持续存在但略有收敛**，说明Baseline仅能通过更多token部分追赶，无法反超，验证了mHC改进的稳健性。
+**关键结论**：随训练token规模扩大，mHC相对Baseline的优势比例保持稳定且略升，说明其增益不会被数据规模稀释，具备良好的token维可扩展性。
 
-**论文作用**：与(a) Compute Scaling Curve互为补充，从**参数量（3B→27B）**与**数据量**两轴联合证明mHC在全规模上可扩展，是支撑其"适用于生产级预训练"主张的核心缩放性证据。
+**论文作用**：与图(a)Compute Scaling构成"算力–数据"双轴可扩展性证据，从训练量维度进一步支撑"mHC在各规模下均稳定优于Baseline"的核心主张，强化方法有效性。
 *caption: Scaling properties of mHC compared to the Baseline. (a) Compute Scaling Curve.… ｜ 论文 [[hc-manifold-constrained-hyper-connections]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.7 (p.14)
@@ -3699,22 +3935,18 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 ![[assets/crops/root-mean-square-layer-normalization-fig01.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图(b)横轴为训练时间(0–160分钟)，纵轴为Loss(4–10)，展示GRU-RNNSearch前10k步的两条曲线：蓝色Baseline最终约6.0，橙色LayerNorm约4.5；在约35分钟同一训练步处，Baseline=7.0，LayerNorm=5.9，损失差1.1。
+1) **核心对象与数据**：该图展示了基于 GRU 的 RNNSearch 模型在前 10k 训练步内 Baseline（无归一化，蓝线）与 LayerNorm（橙线）的训练损失曲线。子图(a)按训练步数（×100）绘制，在约 3000 步时 Baseline loss=7.0，LayerNorm loss=5.4，相差 1.6；子图(b)按训练时间（分钟）绘制，同等时长约 30 分钟时 Baseline=7.0，LayerNorm=5.9，相差 1.1。两条 LayerNorm 曲线全程显著低于 Baseline，且收敛更快、更平稳。
 
-原文借此论证：LayerNorm带来的加速收敛主要来自**缩放不变性**而非均值中心化（re-centering invariance），因为均值归一化并不降低隐藏状态或梯度方差。作者据此提出RMSNorm仅保留缩放项即可达到相近甚至更优效果。
+2) **论证的关键结论**：作者借此说明 LayerNorm 带来的训练稳定性提升主要来源于**缩放不变性（scale invariance）**而非重中心化（re-centering），从而为后续提出"可移除均值项、仅保留 RMS 缩放归一化"即 RMSNorm 提供实验铺垫。
 
-该图作为论文动机起点，连接Table 1的不变性分析，推动RMSNorm作为更轻量替代方案的提出与后续实验验证。
+3) **在论文中的作用**：作为支撑性预实验，与 Table 1 的 WMT 翻译结果互证，强化"RMSNorm ≈ 去均值 LayerNorm"的核心论点，构成从 LayerNorm → RMSNorm 简化论证链条的关键一环。
 *caption: One major feature of LayerNorm that is widely regarded as contributions to the stabilization is its re-centering invariance property: the summed input… ｜ 论文 [[root-mean-square-layer-normalization]] ｜ arxiv 见 MD 元信息*
 
 ### Root Mean Square Layer Normalization — Fig.2 (p.6)
 ![[assets/crops/root-mean-square-layer-normalization-fig02.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与结构**：Figure 2 为 RNNSearch 模型在 newstest2013 上的验证集 SacreBLEU 收敛曲线，横轴为训练步数（×30k，0–50），纵轴为 Valid BLEU（0–25），共五条曲线。L2-Norm（红）起步最低、收敛最慢，最终约 22；Baseline（蓝）起步约 15，收敛缓慢；LayerNorm（橙）、RMSNorm（绿）、pRMSNorm（紫）均在 ~5 步内快速攀升至 23–24 平台。
-
-2）**关键结论**：RMSNorm/pRMSNorm 在保持与 LayerNorm 相当收敛速度的同时，达到最高的终端 BLEU，验证其在 NMT 任务中作为轻量归一化方案的有效性。
-
-3）**论文作用**：作为支撑实验，与 Table 1 等 WMT 测试集结果互证，强化"RMSNorm = 可去均值重中心化的 LayerNorm"这一核心论点。
+图2展示RNNSearch在newstest2013上五条SacreBLEU收敛曲线（横轴0–50×30k步，纵轴0–25）：RMSNorm（绿）、pRMSNorm（紫）、LayerNorm（橙）约5步内快速升至23–24平台；Baseline（蓝）缓升至~22；L2-Norm（红）起步近0、收敛最慢。它论证了RMSNorm/pRMSNorm收敛速度与LayerNorm相当、显著快于基线、且BLEU持平或更优。该图为论文核心主张——"无trick的RMSNorm在训练效率与翻译质量上等价甚至优于LayerNorm"——提供收敛行为的可视化证据，铺垫后文Table 2在Test14/Test17上的最终质量与耗时对比，形成"收敛速度→最终质量→计算开销"的完整实验论证链。
 *caption: SacreBLEU score on newstest2013 for the RNNSearch. Models are implemented accord- ing to Nematus [25] in Tensorﬂow.… ｜ 论文 [[root-mean-square-layer-normalization]] ｜ arxiv 见 MD 元信息*
 
 ### Root Mean Square Layer Normalization — Fig.3 (p.7)
@@ -3741,22 +3973,12 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 
 ### Root Mean Square Layer Normalization — Fig.5 (p.8)
 ![[assets/crops/root-mean-square-layer-normalization-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图5展示了Attentive Reader模型上六种归一化方法的验证错误率收敛曲线（约300k训练步）：Baseline（蓝）收敛缓慢，300k步后错误率仍约0.48；BatchNorm-LSTM（绿）较慢；LayerNorm（红）、BatchNorm-Everywhere（橙）、RMSNorm（紫）、pRMSNorm（棕）在约50k步即收敛至≈0.5。结合表6，各方法每0.1k步耗时为：LayerNorm 392s、RMSNorm 333s（节省15.1%）、pRMSNorm 330s（节省15.8%）。
-
-论文以此论证关键结论：**RMSNorm与LayerNorm收敛性能相当，但计算开销显著降低**——通过省略均值中心化、重计算缩放不变性，简化了归一化计算。该实验在整体方法链中起核心验证作用：证明RMSNorm在保持训练稳定性的同时，实现了效率与精度的最佳平衡，为后续在Transformer、机器翻译等大规模任务中的推广提供了实证依据。
+> [!tip] 【图文联合解读】图示6种归一化方法在attentive reader上的验证误差随训练步数（×1k, 最长≈300k）的收敛曲线：RMSNorm、pRMSNorm与LayerNorm均稳定收敛至约0.47，BatchNorm-LSTM约0.50，Baseline下降最慢且最终仅≈0.48。配套Table 6记录每0.1k步训练耗时——Baseline 315s、LayerNorm 392s、RMSNorm 333s（较LayerNorm快15.1%）、pRMSNorm 330s（快15.8%）。原文据此论证：RMSNorm与LayerNorm在收敛误差上相当，但训练速度领先约15%，以"精度持平、效率更优"的实证支撑全文核心结论，构成RMSNorm消融对比实验中关键的速度–精度权衡证据。
 *caption: Error rate on validation set for the attentive reader model.… ｜ 论文 [[root-mean-square-layer-normalization]] ｜ arxiv 见 MD 元信息*
 
 ### Root Mean Square Layer Normalization — Fig.6 (p.8)
 ![[assets/crops/root-mean-square-layer-normalization-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 COCO 跨模态检索任务中验证集 Recall@K 随训练步数（×0.3k，0–250）的演化。蓝色 Baseline 曲线在三项指标上均明显落后（R@1≈39 vs. 归一化组≈41；R@10≈87 vs. ≈89），收敛更慢且终值更低；RMSNorm（绿）与 pRMSNorm（红）自训练早期即领先 LayerNorm（橙），三者最终趋于相近，但 RMSNorm/pRMSNorm 峰值与稳定性略优。
-
-原文借此论证：**在 OE 跨模态场景下，RMSNorm 收敛速度与最终性能均不逊于 LayerNorm，且远胜无归一化基线**，呼应 Figure 5 的"精度可比"与 Table 6 的"RMSNorm 比 LayerNorm 快约 15%"。
-
-在论文整体实验链路中，该图与 §6.3 的 Image-Caption Retrieval 共同构成"质量—效率"双重证据链：既证明 RMSNorm 在跨模态检索中提供与 LayerNorm 同等收敛质量，又凸显其计算效率优势，从而支撑全文核心主张——RMSNorm 是 LayerNorm 的有效替代。
+> [!tip] 【图文联合解读】图6比较Order-embedding模型在验证集上的Mean Recall@1/5/10，对比Baseline、LayerNorm、RMSNorm、pRMSNorm；每0.3k步取样，训练约0–75k步。Recall约由34/71/84升至40–41/76–77/88，三种归一化更早收敛，R@K整体优于Baseline，RMSNorm与LayerNorm相当。它承接图5的收敛结果及表6效率数据：RMSNorm性能不降，训练时间较LayerNorm快约15%，再由表7测试结果完成验证。
 *caption: Recall@K values on validation set for the order-embedding models. worse than RMSNorm. Although in Figure 5 the performance of RMSNorm and LayerNorm is… ｜ 论文 [[root-mean-square-layer-normalization]] ｜ arxiv 见 MD 元信息*
 
 ### Root Mean Square Layer Normalization — Fig.7 (p.13)
@@ -3826,54 +4048,60 @@ Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 C
 
 ### Qwen2.5-VL Technical Report — Fig.1 (p.3)
 ![[assets/crops/qwen2-5-vl-technical-report-fig01.png]]
-> [!tip] 【图文联合解读】图示Qwen2.5-VL架构：Vision Encoder支持原生分辨率与动态FPS采样（0.5/1/2FPS），视频宽644、时长8s，经Conv3D(2×14×14)窗口划分与Conv2D 2×时序合并后映射成644/1288/2576可变长token；ViT块由Window Attention×M+Full Attention×1构成，配RMSNorm与SwiGLU FFN；3D MRoPE沿时间轴对齐绝对时间ID(0–15s)，最终输入Qwen2.5 LM Decoder。原文借此论证三大核心：原生分辨率保细节、动态采样提效率、绝对时间编码增强时序/时刻定位，作为全篇方法总纲，为后续视频理解与时间定位实验提供架构基线。
+> [!tip] 【图文联合解读】图1展示Qwen2.5‑VL的统一多模态链路：视觉编码器以窗口划分、3D卷积（2×14×14）及窗口/全注意力处理原生分辨率图像/视频，将视觉Token与文本Token送入Qwen2.5 LM解码器。1092×8204、224×28、1260×700图像分别产生11427、8、1125 Token；644×392视频随动态FPS产生644/1288/2576 Token。该图说明尺寸和帧率可弹性转为变长序列，是多模态训练与评测的输入基础。
 *caption: The Qwen2.5-VL framework demonstrates the integration of a vision encoder and a language model decoder to process multimodal inputs, including images … ｜ 论文 [[qwen2-5-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeek-V3 Technical Report — Fig.5 (p.12)
 ![[assets/crops/deepseek-v3-technical-report-fig05.png]]
-> [!tip] 【图文联合解读】# Figure 5 深度解读
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**核心对象与结构**：图示展示 **8 个 PP（流水线并行）rank × 20 个 micro-batch** 的 DualPipe 双向调度时序。绿色方格代表正向（forward）计算，橙色代表通信（communication），蓝色代表反向（backward）计算，白色为空闲/bubble 时间。每个 PP rank 从两端同时接收 micro-batch，编号 2–9 的 micro-batch 对称分布于流水线两半，由黑色边框标注"通信-计算重叠"单元。
+图示展示 **8 个 PP rank**（Device 0–7）与 **20 个双向 micro-batch** 的 DualPipe 调度，色块区分 Forward（橙）、Backward（深/浅绿）、Backward for weights（蓝）及计算-通信重叠区（共享黑框）。正反向 batch 同时从 pipeline 两端注入，中部 Device 3–4 前后向大面积重叠，蓝色权重梯度块填补气泡时间。
 
-**论证的关键技术结论**：双向流水线使大部分通信（橙色）可被计算（绿色/蓝色）完全覆盖，显著压缩了传统单向流水线的 bubble 区；只要保持计算-通信比恒定，模型进一步扩展时仍可实现跨节点的 **细粒度专家并行（fine-grained EP）**，获得近零通信开销。
+**原文论证：** 双向流水线 + 细粒度计算-通信 overlap 显著压缩 pipeline bubble，使跨节点 EP 下的 all-to-all 通信被前向/反向计算完全掩盖。
 
-**在论文中的作用**：Figure 5 是 DeepSeek-V3 训练基础设施一节（p.12）的核心示意图，为 DualPipe 算法与跨节点 EP 协同设计提供可视化证据，支撑"大规模 MoE 训练近乎零开销"这一基础设施层面的关键声明。
+**论文作用：** 作为训练基础设施章节的核心可视化证据，支撑"MoE 训练近乎零通信开销"这一关键声明，与 FP8、低精度优化、跨节点 EP 设计共同构成 DeepSeek-V3 高效训练闭环的方法学支撑。
 *caption: It employs a bidirectional pipeline scheduling, which feeds micro-batches from both ends of the pipeline simultaneously and a significant portion of c… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeek-V3 Technical Report — Fig.6 (p.15)
 ![[assets/crops/deepseek-v3-technical-report-fig06.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图中所见聚焦 Wgrad（权重梯度）通路：FP8 输入先经 ⊗ 矩阵乘、再在 **FP32** 下 Σ 累加，产出 Weight Gradient (FP32)；该梯度与 Master Weight（由 Optimizer States 以"**To BF16 / To FP32**" 回写更新）共同进入优化器；同时 Input、Output Gradient 均标注"**To FP8**"用于 Dgrad 计算。原文借该图论证：尽管 Linear 的 Fprop / Dgrad / Wgrad 三类 GEMM 均以 FP8 加速以降低算力与显存，但权重梯度在 **FP32** 累加、主权重以 BF16/FP32 高精度维护，从而保证 FP8 训练下的数值稳定性。
+该图展示DeepSeek-V3的FP8混合精度训练框架，以Linear算子为例，包含三个GEMM：**Fprop**（BF16 Input→FP8，与Weight相乘，FP32累加→Output BF16）、**Dgrad**（BF16 Output Gradient→FP8，与Weight相乘→Input Gradient BF16）、**Wgrad**（FP8输入相乘→Weight Gradient FP32→BF16）。权重经Optimizer在FP32 Master Weight上更新，再转FP8供前/反向使用。
 
-该图是 DeepSeek-V3 **混合精度 FP8 训练框架** 的核心架构图，承接前文 tile-wise / block-wise 量化策略，为后续消融实验与训练成本下降提供方法学依据。
+**论证结论：** 多数核心GEMM可采用FP8计算、FP32累加、BF16/FP32输出的混合精度策略，在不损失数值稳定性的前提下显著加速训练、降低显存。
+
+**方法链地位：** 该框架是DeepSeek-V3高效训练的关键基础设施，支撑其671B参数模型以经济成本完成端到端FP8训练，是后续Table 6基准对比（性能对标GPT-4o/Claude-3.5）的工程前提。
 *caption: Firstly, in order to accelerate model training, the majority of core computation kernels, i.e., GEMM operations, are implemented in FP8 precision. The… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### DeepSeek-V3 Technical Report — Fig.10 (p.48)
 ![[assets/crops/deepseek-v3-technical-report-fig10.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-该图展示 230B DeepSeek-V2 模型上 BF16 与 FP8 两种精度训练的 loss 曲线对比：横轴为已处理 token 数（0–~900B），纵轴为 loss（1.7–2.5），两条曲线全程几乎完全重合；右上角内嵌放大子图给出相对差 (FP8−BF16)/BF16 随训练步数的变化，振荡区间约在 ±0.5% 内。
+图10由左右两个子图组成，分别对比16B与230B DeepSeek-V2模型在BF16与FP8两种精度下的训练loss曲线（EMA平滑系数0.9）：横轴为训练token数（B），纵轴为loss；两图均含放大显示FP8−BF16残差的插图，幅值仅约±0.001，两条曲线高度重合。
 
-原文借此论证：所提出的 FP8 混合精度框架（细粒度量化、累加精度保持等）可在不引入额外 spike 的前提下，逼近 BF16 基线的收敛行为，从而支撑"全程 FP8 训练无损"的核心结论。
+该图论证的关键结论是：FP8混合精度训练相对BF16基线loss几乎无损，差值始终在极小噪声范围内波动，证明低精度训练框架是收敛等价的。
 
-在论文整体链路中，该图位于方法章节末尾，作为对底层训练基础设施（low-precision training framework）正确性的关键实证依据，为后续 V3 全栈 FP8 大规模预训练（14.8T tokens）的可行性提供直接经验支撑。
+在论文链路中，它是"低精度训练消融"章节的核心实证，与FP8 GEMM/累加策略、tile-wise与group-wise量化方案共同构成DeepSeek-V3以FP8完成全量训练可行性论证的关键依据。
 *caption: 48… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.1 (p.1)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图1为散点图：X轴=8K上下文理论解码成本(0.05–0.10 USD)，Y轴=激活参数(0–50B)。Step-3以红星标于≈(0.055, 38B)，位居Pareto前沿最左下；对照点为DSv3≈(0.068,37)、Kimi K2(0.067,32)、Qwen3 MoE(0.062,22)、Pangu Pro(0.058,17)、Llama4(0.068,17)、ERNIE4.5(0.085,47)、MM M1(0.095,46)；深灰阴影区为GQA模型前沿。
 
-图1为二维散点图，横轴为8K上下文下的理论解码成本（0.05–0.10 USD），纵轴为激活参数量（0–50B）。Step-3以红星标于约(0.056 USD, 38B)，处于同激活参数规模下解码成本最低的位置；DSv3约(0.069, 37B)、Kimi K2约(0.066, 32B)均在其右上方，灰色阴影区域为GQA模型的Pareto前沿。原文借此论证：解码阶段因MFU低、推理模型thinking长，导致每token成本居高，Step-3通过系统协同设计打破了"高激活参数⇔高成本"的传统权衡，实现"大而省"。该图作为全文动机图，将"高激活参数×低解码成本"确立为Step-3的核心设计目标，为后续架构与推理系统共设计奠定论证基础。
+原文论证：Step-3以最低解码成本实现≈38B激活参数，与DSv3量级相当却显著更便宜；其attention effective rank与DSv3持平，约为Qwen3 MoE 235B与Kimi K2的两倍，证"大而便宜"。
+
+作用：开篇将"解码MFU低、长上下文昂贵"痛点可视化，奠定全文动机，引出AFD解耦与Multi-Matrix Factorization Attention两大核心创新。
 *caption: The Pareto frontier of recent models regarding acti- vated parameters and decoding costs. The darker area is GQA models’ Pareto frontier. Note: Step-3… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.2 (p.6)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图/表联合解读（Table 6，即文中 Figure 2 类解码成本图）**
 
-图2以双柱状图对比Step-3、DSv3、Qwen3 MoE、Qwen3 32B在H800、H20、A800、910B、AFD五种部署方案下的**每百万token理论解码成本**，分别对应8K（左）与32K（右）上下文。8K下Step-3成本约0.055–0.080，32K下AFD方案降至约0.13，**均显著低于Qwen3 32B（8K约0.083–0.197，32K约0.28–0.73）和DSv3**；AFD部署通过为Attention与FFN分别选用最优硬件，使各模型成本降至最低。
+**① 核心对象与数据**：双子图横轴为5种部署配置（H800、H20、A800、910B、AFD），纵轴为每百万token解码成本（USD），对比4模型在8K与32K上下文下的表现。8K下Qwen3 32B在H800高达约$0.195，Step-3在AFD仅约$0.055；32K下Qwen3 32B@H800飙至$0.73，而Step-3 AFD仅$0.135，且各硬件下Step-3均居最低。
 
-该图直接支撑论文核心论点——Step-3虽**激活参数最多（38B）**，但凭借模型-系统协同设计（AFD等），解码成本反而最低，验证了"大而经济"的设计主张，是论文方法链路中**实验验证**的关键证据。
+**② 原文论证结论**：Step-3激活参数最多（38B）却全面成本最低，验证"大而实惠"；AFD通过为attention与FFN分别选用最优硬件（如H800跑attention、H20跑FFN）实现全局最优配置，进一步压低成本。
+
+**③ 论文作用**：与Table 2的理论算力/访存量分析互补，以美元实证成本为系统-模型协同设计的经济可行性提供关键支撑，贯穿"模型×硬件×推理范式"联合优化主线。
 *caption: With all the results shown, we make the following observations:… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.3 (p.6)
@@ -3912,86 +4140,73 @@ Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 C
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.6 (p.11)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 6）**
+> [!tip] 【图文联合解读】**1) 图示内容**：展示AFD架构的Attention与FFN模块解耦。左侧**Attention Instance**（Norm→Attn→Norm，含残差⊕）以**fp8**精度传给右侧**FFN Instance**（Router→TP gather/EP scatter→Expert Compute→TP scatter/EP gather→Expert Combine，含Top-k打分），FFN处理后以**bf16**返回下一层。FFN模块可按TP-only、EP-only或TP+EP混合三种方式部署。
 
-**1) 图示结构（量化）**：左路Attention模块（Norm→Attn→Norm+残差）本地计算；中路由Norm→Router→Expert Combine本地完成，右路由TP gather/EP scatter→Expert Compute→TP scatter/EP gather置于远端专家池。隐藏状态以fp8经中间虚线跨域传输，回传bf16；Router下发expert distribution，Expert Combine回传TopK score。
+**2) 论证结论**：Attention/FFN解耦后，FFN并行策略可依据硬件与模型灵活选择；借助fp8跨实例通信，仅需4×200Gbps或8×400Gbps等较弱互联即可满足带宽。
 
-**2) 关键技术结论**：FFN模块可依硬件与模型结构，自适应选择TP-only、EP-only或TP+EP混合并行部署，体现模块解耦的灵活性。
-
-**3) 论文作用**：作为Step-3模型-系统协同设计中AFD（Attention/FFN Disaggregation）架构的核心示意图，奠定"注意力本地低延迟+专家远端弹性扩展"的设计思想，是后续讨论专家均衡、稳定性及整体成本-性能权衡的方法基础。
+**3) 文中作用**：与L20算例配合，证明弱硬件在**272μs/层（16.6ms÷61层）**延迟预算内仍可跑通AFD三/四阶段流水线，从而支撑Table 6中Step-3相对其他MoE/稠密模型实现更低解码成本（USD）的核心结论。
 *caption: Module disaggregation in AFD architecture. FFN can be deployed in TP-only, EP-only, or a hybrid TP+EP way, depending on hardware and model architectur… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.7 (p.12)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig07.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**
-左侧展示通信拓扑：8卡FFN实例与8卡Attention实例通过**Direct RDMA**实现1对1直连（GPU数量相等、无中间路由）。右侧为时间轴上的多阶段流水线：Layer0/Layer1各承载3个批次（D1–D3与D1'–D3'），FFN（顶行）与Attention（底行）交替执行；两者间存在两条非对称传输——FFN→Attention 采用 **bf16**（黄块1/2/3、1'/2'/3'），Attention→FFN 采用 **fp8**（棕色块）。
+**1) 核心对象与结构：** 图左侧展示AFD（Attention-Feedforward Disaggregation）通信拓扑——FFN实例（8卡）与Attention实例（8卡）通过Direct RDMA逐卡点对点直连，无参数服务器中转。右侧展示多阶段流水线：沿时间轴，每个请求（Layer0的D1/D2/D3与Layer1的D1'/D2'/D3'）依次经历FFN层→F→A传输（bf16）→Attention层→A→F传输（fp8）→下一FFN层，多请求交错实现计算—通信重叠。
 
-**2) 关键论证结论**
-图文共同证明AFD架构通过：(a) 解耦Attention/FFN并直连以消除PCIe/NCCL瓶颈；(b) **非对称精度传输**（前向高保真、反向压缩）平衡精度与带宽；(c) 批次×层级二维流水，使通信与计算深度重叠，掩盖访存延迟。
+**2) 关键结论：** 拆分Attention与FFN为独立实例后，配合非对称精度传输（去程bf16、回程fp8以省带宽）和多请求流水线，可在保证低延迟的同时提升吞吐，传输路径不阻塞各请求的处理。
 
-**3) 在论文中的作用**
-该图是AFD系统设计的核心机制图，作为前文MoE解码算力–带宽失衡问题与后续系统级硬件协同（cost-effective decoding）论证之间的桥梁，奠定"模型–系统协同"立论基础。
+**3) 论文中的作用：** 作为AFD系统级co-design的核心架构证据，与Table 7（不同硬件平台达成高MFU所需的MoE最低稀疏度）共同支撑"大模型仍可低成本解码"这一总体主张。
 *caption: Communication topology and the multi-stages pipeline of the AFD architecture.… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.8 (p.13)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig08.png]]
-> [!tip] 【图文联合解读】**图联合解读：**
+> [!tip] 【图文联合解读】# Figure 8 图文联合解读
 
-**核心对象与结构：** 图示StepMesh为AFD设计的双实例流水线。左侧Attention实例含CPU三线程（NetRecv Thread经RDMA PollCQ收张量、Main Thread执行Wait→Launch Attention→PushPull、NetSend Thread做Kernel Sync与RDMA PostSend）与GPU（Attention Kernel将Activation Tensors转为Token Tensors）；右侧FFN实例结构对称（GPU跑FFN Kernel反向产出Activation Tensors），两实例经底部RDMA NIC交叉互连。
+**1) 核心对象与结构**
 
-**关键结论：** 通过Recv/Send/Main三线程并行，Main Thread Wait与Launch Kernel期间网络收发被Kernel Sync完全隐藏，实现通信-计算全重叠；Token与Activation张量在Attention↔FFN间直接RDMA交换，无中心调度。
+图示 AFD 架构下 StepMesh 的通信流程，分左右两大模块：
+- **左侧 Attention Instances**：CPU 含 NetRecv Thread（Recv Tensors→RDMA PollCQ）、NetSend Thread（Kernel Sync→RDMA PostSend）、Main Thread（Wait 上一层→Launch Attention→PushPull 下一层）；GPU 含 Activation Tensors → Attention Kernel → Token Tensors。
+- **右侧 FFN Instances**：结构对称但方向相反，GPU 接收 Token Tensors 经 FFN Kernel 输出 Activation Tensors；CPU Main Thread 执行 GetBatch→Launch FFN→Respond。
+- 两侧通过底层 **RDMA NIC** 直连，形成跨节点的张量交换闭环。
 
-**论文作用：** 该图为AFD（Attention-FFN解耦）提供系统级实现证据，支撑论文"大模型廉价协同解码"的整体论点——异构低成本节点按Attention/FFN分工组网即可承担超大模型推理。
+**2) 关键技术结论**
+
+该图论证了 AFD 三线程流水（接收/发送/计算）可隐藏 RDMA 延迟：Attention 实例的 PushPull 与 FFN 实例的 GetBatch 在 GPU kernel 异步执行时并行进行跨节点张量搬运，实现计算与通信重叠，从而保证解码吞吐满足 SLA。
+
+**3) 在论文中的作用**
+
+作为 StepMesh 的通信实现基础，为 Table 8 中与 DSv3 在 20 tokens/s 解码 SLA 下的 TGS 性能对比提供机制支撑，证明注意力–FFN 解耦 + 异步 RDMA 流水能以更少 GPU 达成成本可控的高吞吐解码。
 *caption: StepMesh communication workflow tailored for AFD.… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.9 (p.13)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig09.png]]
-> [!tip] 【图文联合解读】## Figure 9 图文联合解读
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心结构（三层架构）：**
-- **顶层 API 层**：左侧 AFTensorWorker API 封装 `Wait`、`PushPull`（供 attention 实例）；右侧 AFTensorServer API 封装 `GetBatch`、`Respond`（供 FFN 实例）。
-- **中间核心层**：StepMesh Core，含 NetSend/NetRecv 线程，负责跨设备张量传输调度。
-- **底层后端层**：分两条路径——Network API（RDMATransport → RDMA NIC）与 Accelerator API（CPUBackend / GPUBackend / xPUBackend → CPU / GPU / xPU 设备）。
+图9展示StepMesh框架的三层分层架构：(1) 顶层双API——AFTensorWorker（Wait/PushPull，对应Attention实例）与AFTensorServer（GetBatch/Respond，对应FFN实例）；(2) 中间StepMesh Core，基于NetSend/NetRecv线程统一通信；(3) 底层双抽象——Network API（RDMATransport/RDMA NIC）与Accelerator API（CPUBackend/GPUBackend/xPUBackend）。
 
-**2) 关键结论：**
-该图论证 StepMesh 将张量通信逻辑与底层硬件解耦，通过 Attention-FFN 解耦后两套对偶 API（PushPull 与 GetBatch/Respond）实现异构多加速器（CPU/GPU/xPU）间的 RDMA 高效协同。
+**技术结论**：通过Attention/FFN解耦API设计＋统一RDMA传输＋异构后端抽象，证明StepMesh可在多类型加速器（CPU/GPU/xPU）上以低开销方式协同工作，支撑MoE双分支流水。
 
-**3) 论文链路作用：**
-作为"模型–系统协同设计"中的**系统栈组件**，StepMesh 与 MFA 注意力、MoE 路由等算法级创新配套，支撑论文"大规模但低成本解码"的核心主张。
+**论文作用**：作为系统级协同设计的"通信骨架"，衔接算法层（AF注意力/MFA）与硬件层（异构集群），是实现"大模型、低成本解码"的核心中间件设计证据。
 *caption: StepMesh framework for multiple accelerators. AF-… ｜ 论文 [[step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.1 (p.2)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】图示三模块串联架构：①**前端客户端**封装语言原语（Sec.2）→②**黄色 Interpreter 模块**作为调度桥梁→③**蓝色 Runtime 后端**集成三项核心优化——RadixAttention（Sec.3）、压缩有限状态机（Sec.4）、API 推测执行（Sec.5）。各组件与后续章节一一锚定。
 
-图示SGLang三层架构：**前端**(SGLang Client，含Sec.2语言原语extend/gen/fork) → **Interpreter**(黄色调度器) → **后端Runtime**(蓝色，集成Sec.3 RadixAttention、Sec.4 压缩FSM、Sec.5 API推测执行)。
+**技术结论**：该图论证 SGLang 通过"原语—解释器—优化运行时"的解耦分层，将高层结构化生成语义与底层 KV 缓存复用、状态机压缩、推测解码等系统级优化分离，使复杂 LLM 程序既可编程又可高效执行。
 
-该图论证的核心结论：以**嵌入式DSL前端+流式Interpreter+优化Runtime**的分层设计，将原语依赖解析、KV缓存复用、状态机压缩统一抽象；Interpreter记录数据依赖使独立原语并行批执行，前缀自动命中RadixAttention。
-
-作为论文方法链路总纲图(Fig.1)，它在Sec.1结尾铺垫后三章技术细节(§2原语→§3缓存→§4 FSM→§5推测)，并支撑§6实验：在HumanEval/MTBench等基准上较vLLM/Guidance/LMQL实现最高6.4×加速。
+**链路作用**：作为§1→§5 方法总纲图，串联四大技术模块（§2 原语、§3 缓存、§4 FSM、§5 推测），并为§6 在 HumanEval/MTBench 基准上相较 vLLM、Guidance、LMQL 实现最高 **6.4×** 加速的实验结论提供架构层面的因果支撑。
 *caption: System architecture: An interpreter executes language primitives with optimized runtime.… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.2 (p.3)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig02.png]]
-> [!tip] 【图文联合解读】# Figure 2 图文联合解读
+> [!tip] 【图文联合解读】**图2图文联合解读**
 
-**1) 核心对象与结构**
+该图展示一个SGLang程序，使用branch-solve-merge提示技术实现多维度作文评分，定义了3个评分维度（Clarity、Originality、Evidence），代码含12处SGLang原语（红色，如`system/user/assistant/select/fork/gen/regex`）。流程为：①构造多模态对话（图像+作文）；②用`select`原语做"related"二分类判断并用Python控制流提前返回；③`s.fork(len(dimensions))`拆出3个并行分支，每路用`gen(stop="END")`独立评判；④join合并生成summary与grade；⑤用`regex=schema`约束输出JSON。
 
-该图为代码注释图，展示 SGLang 中多维作文评判器（multi-dimensional essay judge）的完整实现，调用 `gen`、`select`、`fork` 等原语（红色高亮），由右侧黄色箭头逐行标注功能：
-- **入口**：`run` 函数——运行 SGLang 程序，支持 chat 模板与多模态输入；
-- **分支（branch）**：`fork()` 并行触发多个 `gen` 调用，按"dimension"逐项评判；
-- **求解（solve）**：单维度调用采用 **KV Cache Reuse**（Sec. 3）复用前文 prompt；用 `select` 从候选选项中选最高概率答案；
-- **合并（merge）**：汇总各维度 JSON 结果，并采用 **快速约束解码**（Sec. 4，正则 `[ABCD][+-]?\s`）与 **API 投机执行**（Sec. 5）输出最终字母等级与摘要。
+原文用它论证：SGLang原语既能表达复杂LM程序，又自动启用三类运行时优化——KV缓存复用（Sec.3，用于fork共享前缀）、快速约束解码（Sec.4，通过regex）、API推测执行（Sec.5）。
 
-**2) 关键论证结论**
-
-图示证明：仅用 7 个原语即可将论文 [40] 的 branch-solve-merge 提示范式实现为高效程序，且 SGLang 的三类运行时优化（KV cache 复用、约束解码、投机执行）可无缝嵌入。
-
-**3) 在论文链路中的作用**
-
-该图作为"方法示例"，承上（Sec. 2 编程模型）启下（Sec. 3–5 各项优化），直观体现 SGLang 用高层原语 + 自动优化替代手工工程，是后续性能基准（Figure 3）与消融实验的应用载体。
+在论文整体链路中，该图作为核心示例，展示SGLang将"结构化LM程序"与"底层推理优化"统一于同一原语层，奠定后续性能实验的设计基础。
 *caption: The implementation of a multi-dimensional essay judge in SGLang utilizes the branch-solve-merge prompting technique [40]. Primitives provided by SGLan… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.3 (p.5)
@@ -4007,53 +4222,39 @@ Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 C
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.4 (p.6)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig04.png]]
-> [!tip] 【图文联合解读】**图(a)**：Normal FSM为regex `{"summary":_`构建**12状态(0-11)**线性结构，每个状态对应单个字符`{ " s u m m a r y " : _`；**(c)**：解码过程显示FSM校验与LLM前向频繁交替——每token（`{"`、`summary`、`":`、`_`）均触发**独立LLM调用**，调度粒度过细。
-
-**关键结论**：原文借助Normal FSM对照Compressed FSM论证——后者通过合并具有相同未来转移的等价状态节点，把逐字符校验压缩为多 token批量匹配，从而**单次LLM解码可同时校验多字符**，显著降低调度与前向开销。
-
-**作用**：作为第3节"压缩FSM等价性"(Theorem 3.1)的可视化证据，与算法1的cache-aware调度共同构成"问题刻画→压缩优化→延迟基准"方法链路中的核心论据，支撑sglang高效结构化生成的性能优势。
+> [!tip] 【图文联合解读】图(a)将正则`{"summary": "_"}`展开为14个FSM状态，解码需4次调用LLM；(b)把确定性序列压缩为2个状态，(c)(d)显示调用由4次降至2次，且`_`仍为空格。结论：压缩可跳过确定前缀，减少状态转移和模型调用，从而降低延迟、提升吞吐；该图连接FSM压缩原理与实际解码、缓存调度及后续性能验证。
 *caption: The decoding process of normal and compressed FSMs (the underscore _ means a space). requests by matched prefix length and prioritize requests with lo… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.5 (p.7)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】该图横轴含11种结构化任务（MMLU、ReAct、Generative Agents、Tree/Skeleton of Thought、JSON Decoding、多轮对话、DSPy Pipeline等），纵轴为Llama-7B上的归一化吞吐，SGLang被归一为1.0基准，对比vLLM、Guidance、LMQL。SGLang全任务领先：Generative Agents下vLLM≈0.92、Guidance≈0.68；HellaSwag/DSPy下vLLM仅0.02–0.16，其他系统大多<0.5。
 
-1) 图为 Llama-7B 上 6 个结构化生成任务（LLM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat 短/长、DSPy RAG）的归一化吞吐条形对比。橙色条（SGLang）在全部任务上柱高均显著领先蓝色（Guidance）与绿色（LMQL）基线；LLM Judge 与 DSPy RAG 上领先幅度最大（近 4–5 倍），Multi-Turn Chat(long) 上三者差距最小。
-
-2) 原文以此论证：含两次 `gen` 的 pattern 中，朴素做法需对同一 `context` 重复支付输入 token 费用；而 SGLang 借助推测执行复用首次调用的 prefix 并继续生成，从而在跨任务场景下稳定获得高吞吐增益。
-
-3) 该图是论文核心实验证据，将运行时优化（推测执行、前缀共享/RadixAttention）与真实结构化 LM 程序效率挂钩，支撑"DSL 前端 + 高效执行后端"整套方法的有效性结论。
+结合caption中"两次gen即两次重复计费context"的场景，论证SGLang通过RadixAttention与推测式调度有效复用共享前缀，显著优于vLLM前缀缓存及Guidance/LMQL的编译器式方案，是论文核心性能证据。
 *caption: Normalized throughput on Llama-7B models. Higher is better. pattern: s += context + "name:" + gen("name", stop="\n") + "job:" + gen("job", stop="\n").… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.6 (p.8)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig06.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与结构**：横轴为 6 个 Llama-7B 工作负载（LM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat 短/长、DSPy Pipeline RAG），纵轴为归一化延迟。橙色（SGLang）、蓝色（Guidance）、灰色（LMQL）、绿色（另一基线）四组柱状对比，前两项三项齐全，后四项 Guidance/LMQL 因不支持批处理与并行而被剔除。
+**核心对象与数据：** 在Llama-7B上对比SGLang、vLLM、Guidance、LMQL四系统在11个任务上的归一化延迟（多数任务以LMQL=1.0为基准，数值越低越好）。结构化生成类任务（MMLU、ReAct、Generative Agents、Tree-of-Thought、Skeleton-of-Thought、LLM Judge、HellaSwag）上，SGLang延迟普遍降至0.04–0.18，相对LMQL提速约5–25倍；JSON Decoding（~0.20）亦明显优于vLLM（~0.98）；而在Multi-Turn Chat、Multi-Turn Chat(long)、DSPy RAG等通用场景中，各系统延迟趋同（约0.7–1.0）。
 
-2）**关键结论**：在 LM Judge 与 HellaSwag 上，LMQL 延迟达 SGLang 的约 2.5–3 倍；Multi-Turn Chat（短/长）与 DSPy Pipeline 上，绿色基线延迟也明显高于 SGLang。SGLang 在全部 6 项基准中延迟最低。
+**技术结论：** SGLang的加速效果并非Llama-7B单点现象，而是跨任务类型的系统性优势，尤其在多调用/结构约束场景中最为突出。
 
-3）**论文作用**：该图作为性能收尾证据，配合 Figure 7（Mixtral-8x7B）证明 SGLang 的 RadixAttention 与前端优化在分类、Agent、CoT、结构化输出、多轮对话、RAG 等典型结构化 LLM 程序场景下均具备跨负载、跨模型规模的稳定加速优势。
+**论文链路作用：** 与Figure 5（Llama-7B主结果）形成补充，证明其吞吐优势可跨并行策略与任务结构稳健复现，强化"方法通用性"论证。
 *caption: Normalized latency on Llama-7B models. Lower is better. MMLU… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.7 (p.8)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig07.png]]
-> [!tip] 【图文联合解读】该图展示 Mixtral-8x7B 启用张量并行后，SGLang 在 5 类基准（MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought）上的归一化吞吐：SGLang 均归一为 1.0；对手在 MMLU≈0.12、ReAct Agents≈0.10 落后最显著，Tree of Thought≈0.25 差距明显，Generative Agents 与 Skeleton of Thought≈0.72 差距最小。
+> [!tip] 【图文联合解读】【核心】图示 Mixtral-8x7B + TP 下，SGLang（橙）与 vLLM（绿）在 11 类基准上的归一化吞吐。SGLang 均归一为 1.0；vLLM 在 HellaSwag/MMLU/JSON Decoding/ReAct/DSPy RAG 仅 0.03–0.10，Tree-of-Thought/LLM Judge 约 0.25–0.30，Generative Agents/Skeleton-of-Thought 与 Multi-Turn Chat(long) 最高也仅 0.58–0.70。
 
-原文借此论证：SGLang 的前端优化与运行时协同在 MoE + 张量并行场景下仍稳定胜出，优势在含控制流、多轮交互的 Agent 与 CoT 负载上尤为突出。
+【技术结论】证明 SGLang 在所有结构化 LLM 程序场景下均显著快于 vLLM，加速来源为 KV cache 复用、程序内并行挖掘与更快的受限解码。
 
-作用：补充 Figure 6（Llama-7B），证明吞吐优势可跨模型规模与并行策略复现，强化方法在大模型场景下的通用性结论。
+【论文作用】作为性能收尾证据，与前图共同验证 RadixAttention 与前端优化跨负载、跨模型规模均提供稳定加速优势。
 *caption: Normalized throughput on Mixtral-8x7B models with tensor parallelism. Higher is better. result from KV cache reuse, the exploitation of parallelism wi… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.8 (p.9)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig08.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图8(c)为RadixAttention消融实验的柱状图，横轴为四个基准负载（LLM Judge、Tree of Thought、MMLU、Multi-Turn Chat短对话），纵轴为归一化性能（0–1），对比七种配置：无缓存、无树结构、FCFS调度、随机调度、无前端并行、无前端提示、全优化（Full Optimization，橙色）。
-
-**关键结论**：全优化方案在四个负载上均接近1.0归一化值，显著优于任一单一组件关闭情形；其中"无缓存"在LLM Judge与MMLU上退化最严重（约0.15–0.40），"无前端并行/提示"在Tree of Thought上影响明显（约0.35），证实radix缓存、树状调度、前端并行与提示各自独立贡献性能。
-
-**论文作用**：该消融图支撑SGLang核心设计——RadixAttention缓存+前端DSL优化是端到端加速的必要组成部分，缺一不可，为整体性能优势提供分项归因证据。
+> [!tip] 【图文联合解读】图8含三子图：(a)(b)显示缓存命中率0–100%时吞吐由~0.4k升至1.2k token/s、总延迟由400s降至~130s；(c)对比LLM Judge、ToT、MMLU、Multi-Turn Chat四类负载下七种配置（无缓存/无树/FCFS/随机/无前端并行/无前端提示/全优化）的归一化吞吐，全优化（橙色）均达到1.0，明显优于任一组件缺失。该图论证RadixAttention、前端并行与提示协同显著提升性能，是论文方法链路的消融实验核心，支撑SGLang端到端优化有效性的关键证据。
 *caption: (a)(b) Cache hit rate ablation study. (c) RadixAttention ablation study.… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.9 (p.14)
@@ -4067,13 +4268,7 @@ Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 C
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.10 (p.17)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig10.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图上部分给出一个 JSON 结构化正则（含 `name:[\w\d\s]+`、`age:[0-9]+`、`house` 为 Gryffindor/Slytherin/Ravenclaw/Hufflepuff 四选一枚举）；下部分"Decoding Status"列出对"填 Harry Potter 信息"提示符的候选下一 token：仅小写 "age" ✓ 被接受，而 "Age" 因大小写不符被 ✗、"hou" 因当前路径无法延伸到合法 token 被 ✗；箭头 "Decode + FSM" 指向右侧 "Constrained Decoding" 输出。
-
-**技术结论：** 原文借此论证——regex 经自动编译为 FSM 后，在每一步解码通过对 logit 施加掩码屏蔽与模式不符的 token，使生成结果严格匹配 JSON 字段名、字符集与枚举约束，无需后处理重解析。
-
-**链路作用：** 该图位于"regex→FSM→约束解码"方法链路可视化末端，为后续 JSON/HTML/SQL 等结构化输出基准的正确性与吞吐实验提供直观原理支撑，强调 FSM 路径相对逐 token 语法校验的效率优势。
+> [!tip] 【图文联合解读】图示3类 JSON 正则（姓名、age `[0-9]+`、4学院枚举）编译为 FSM；age 路径含8个状态0–7：`"a"→"g"→"e"→":"→数字→逗号`，状态6对0–9自环。解码name后，FSM借logits掩码放行`age`、`0/1`，屏蔽`Age`、`hou`、`fif`。它说明SGLang以逐token合法转移保证JSON、减少回退；本图是机制示意，非性能实验。
 *caption: Example of how regex is converted into FSM and how FSM guides the decoding process.… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.11 (p.18)
@@ -4132,68 +4327,65 @@ Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 C
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig12.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-该图为 Llama-2-70B + TP 配置下 SGLang（橙色，归一化为 1.0）与另一基线系统（绿色，图例被裁切）于 5 种典型 LLM 程序上的吞吐对比。绿色条读数大致为：MMLU≈0.12、ReAct Agents≈0.10、Generative Agents≈0.60、Tree of Thought≈0.30、Skeleton-of-Thought≈0.80，呈现"简单 prompt 差距悬殊、复杂多调用场景差距收窄"的梯度。
+图对比 SGLang 与 vLLM 在 Llama-2-70B（张量并行）下 11 项结构化程序的归一化吞吐：SGLang 皆归一为 1.0；vLLM 跨度极大——HellaSwag 仅 ~0.03、Skeleton-of-Thought 最高 ~0.82；MMLU/ReAct/JSON/DSPy 约 0.12–0.18，多轮短/长聊天约 0.40/0.73。
 
-原文借此论证：在张量并行的大模型上，SGLang 的 RadixAttention 与 API 级批调度对含多轮/分支调用的结构化生成（Agents、ToT、SoT）带来 1.2×–10× 的吞吐加速，证实其前端语言模型程序与后端 KV 缓存协同设计的端到端效率优势，构成实验链路中"真实工作负载可扩展性"的关键证据。
+**技术结论：** SGLang 在所有结构化程序负载上全面领先 vLLM，Agent/RAG/多轮等分支多调用工作流优势最为显著，定量验证 RadixAttention 跨调用前缀复用对复杂 LLM 程序的加速核心价值。
+
+**论文作用：** 承担吞吐主实验基准，与前后图表共同构建"结构化程序×多后端×多模型"完整对比链，定量支撑 SGLang 系统级方法的有效性。
 *caption: Normalized throughput on Llama-2-70B models with tensor parallelism. Higher is better. MMLU… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.13 (p.19)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig13.png]]
-> [!tip] 【图文联合解读】**图13联合解读**
-
-图13以并列条形图对比"SGLang"（橙）与"Optimal cache hit rate"（浅蓝）在6个基准上的命中率——LLM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat (short/long)、DSPy RAG Pipeline。除Multi-Turn Chat两类外，SGLang柱高均接近甚至贴合Optimal柱；Multi-Turn Chat (short) 与 (long) 出现明显落差。论文借此论证：SGLang的缓存复用已接近理论最优，但多轮对话场景仍有提升空间，由此引出附录D.1中"重写计算图与更多静态规划"这一未来优化方向。
+> [!tip] 【图文联合解读】图13以分组柱状图对比10个基准上SGLang实际缓存命中率（橙）与理论最优命中率（蓝）。多数任务命中率超85%，与最优仅差1-3%（Tree of Thought ~98%、HellaSwag ~99%、DSPy RAG ~92%），印证Cache调度接近最优。但**Multi-Turn Chat**差距显著：短对话~48% vs 60%、长对话~57% vs 73%，相差12-16个百分点。原文借此论证多轮场景中前缀复用模式更复杂，仍存图重写与静态规划优化空间，作为附录D.1"更多编译优化机会"的量化支撑。
 *caption: Achieved cache hit rate and optimal cache hit rate on various benchmarks. opportunities for more compilation optimizations, as we can rewrite the grap… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.14 (p.20)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig14.png]]
-> [!tip] 【图文联合解读】## Figure 14(b) 图文联合解读
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心结构与数据：**
-图中展示一个计算图，按列分为三条 Stream（对应三次函数调用）。Stream 1 主链含 18 个节点（ConstantText×10、Argument×1、Gen×3、Variable×2）；Stream 2 与 Stream 3 各含 4 个节点。跨流边将 Stream 1 中 Gen("tip_1") 的输出分别送入 Stream 2、3 的 Variable("tip_1") 节点；Gen("tip_2") 输出则同时被 Stream 2 的 Variable("paragraph") 引用，呈现典型的 fan-out 数据依赖。
+**1) 核心对象与结构：** 图(b)展示了对应Fig.14a程序的数据流图，共3条Stream（对应3次函数调用）。Stream 1约16个节点，依次为ConstantText("Here are…")、Argument(topic)、Gen("tip_1")、Gen("tip_2")、Gen("summary")等；Stream 2/3各4个节点，含Variable("tip_1")与Gen("paragraph")。关键边：Stream 1的Gen("tip_1")、Gen("tip_2")输出通过箭头指向Stream 2/3的Variable节点。
 
-**2) 关键技术结论：**
-通过把 SGLang DSL 程序编译成显式数据流图，可揭示 Stream 1 内 Gen("tip_1") 与 Gen("tip_2") 之间、乃至三条 Stream 之间的并行机会——LM 生成调用可被调度器批量/乱序执行，而非受源代码顺序约束。
+**2) 论证结论：** 证明SGLang程序可被自动编译为数据流图，显式表达变量依赖关系；运行时据此识别跨函数调用的中间结果复用与并行机会。
 
-**3) 在论文中的作用：**
-该图作为 runtime scheduler 的**动机示例**，论证 SGLang 将命令式 LLM 程序提升为数据流图后，能够自动发现并利用生成调用间的并行性，从而支撑论文核心主张——结构化语言模型程序的高效执行。
+**3) 整体作用：** 该图是SGLang"前端编译→运行时调度"链路的核心可视化，支撑后续关于batch调度、并行执行与前缀复用优化的论述。
 *caption: An SGLang program and its corresponding dataflow graph.… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### Efficiently Serving Large Multimodal Models Using EPD Disagg — Fig.1 (p.1)
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig01.png]]
-> [!tip] 【图文联合解读】**核心对象与结构**：图1对比两种LMM服务执行时间线。上半"Aggregated"（DP=4）E与LLM共享同GPU，4行流水线依次为E¹→LLM¹、E²→LLM²、E³→LLM³、E⁴→LLM⁴（挤占E⁵使其延迟）→LLM⁵；下半"Disaggregated"（P=3, E=1）E与LLM分置不同GPU，Encoder行集中处理E¹–E⁵，LLM三行并行执行LLM¹–LLM⁵。
+> [!tip] 【图文联合解读】**图1联合解读**
 
-**论证结论**：聚合架构下encoder与prefill共用GPU产生资源争用，如LLM⁴阻塞E⁵；解耦后两者独立调度，消除时序干扰。
+图1为甘特式调度图，对比两种架构：①**聚合（DP=4）**：4块GPU同时承载编码E与LLM预填充，4行依次为E¹→LLM¹、E²→LLM²、E³→LLM³、E⁴→LLM⁴→**E⁵→LLM⁵**，其中第4行LLM⁴占据GPU时间长，直接队头阻塞后续请求E⁵的编码启动。②**解耦（E=1, P=3）**：编码独占1块GPU流水处理E¹/E³/E⁴/E⁵，3块prefill GPU并行LLM¹-LLM⁵预填充，编码与LLM不再串行争用。
 
-**论文作用**：开篇动机图，揭示传统聚合部署的流水线瓶颈，为后文EPD解耦方案提供必要性依据。
+**技术结论**：直观论证EPD解耦可消除编码—预填充阶段间的资源争用与队头阻塞。
+
+**论文作用**：与Table 1（EPD在所有视频长度下TTFT最低）互为印证，作为全文方法动机的核心可视化证据。
 *caption: Aggregated (top) vs. disaggregated (bottom) sys- tem architectures. In the aggregated setup, the encoder (E) and LLM share the same GPUs, leading to i… ｜ 论文 [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] ｜ arxiv 见 MD 元信息*
 
 ### Efficiently Serving Large Multimodal Models Using EPD Disagg — Fig.2 (p.2)
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig02.png]]
-> [!tip] 【图文联合解读】**图2联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1）**核心数据**：该柱状图对比了 MiniCPM-V 2.6 模型在 **Disaggregated（蓝色）** 与 **Aggregated（绿色）** 两种部署下的最大批处理大小（Max Batch Size），横轴为每请求图像数（1/3/5/15/20/30/40）。数据显示：1图时，解耦配置批大小约48 vs 聚合仅约6；3图时约17 vs 约2；5图时约8 vs 约1；15图及以上，聚合模式全部 OOM（显存不足），而解耦模式仍可支持 15图≈4、20图≈3、30–40图≈1 的批处理。
+1) **核心数据**：图示 MiniCPM-V 2.6 在不同每请求图像数（1/3/5/15/20/30/40）下，Disaggregated（蓝）与 Aggregated（绿）方案支持的最大批大小。1图时蓝≈48 vs 绿≈6；3图蓝≈17 vs 绿≈2；5图蓝≈7 vs 绿≈1；15图起绿方出现 OOM，蓝方仍可支持小批量。
 
-2）**论证结论**：将 LLM 从 GPU 卸载后，编码器独占显存，使批容量获得数倍乃至近一个数量级的提升，并解锁了更高分辨率/更多图像的请求输入，直观证明了**解耦架构的显存效率收益**。
+2) **关键结论**：将 LLM 从编码端 GPU 摘除（EPD 解耦）后，显存释放使单请求图像数与批容量均显著提升；高并发/多图场景下 Aggregated 直接 OOM，解耦方案才可服务。
 
-3）**论文作用**：该图位于方法介绍后的实验验证环节，作为 EPD-Disaggregation 提出的**首个量化动机证据**，为后续吞吐/延迟实验提供容量前提说明。
+3) **论文作用**：作为论文 EPD Disaggregation 核心动机的实验依据，定量证明"编码—预填—解码"三阶段解耦相较聚合部署在显存效率上的优势，支撑后续 Table 2 跨模型对比与框架设计论证。
 *caption: Impact of disaggregation on supported batch size and number of images per request for the MiniCPM- V 2.6 model. Removing the LLM from the GPU signifi-… ｜ 论文 [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] ｜ arxiv 见 MD 元信息*
 
 ### Efficiently Serving Large Multimodal Models Using EPD Disagg — Fig.3 (p.3)
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig03.png]]
-> [!tip] 【图文联合解读】**图3图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-该图展示EPD分离推理流水线架构：三类GPU（E黄、P橙、D绿）各自配备独立的队列与处理阶段——Encoding Queue→Encoding Stage→EP Bridge Queue、P同构、D同构。数据经"EP Migration"由E传P，再经"PD Migration"由P传D，输入ip/im经三阶段生成输出o。
+该图展示EPD Disaggregation的三阶段推理流水线结构：E GPUs（黄）负责Encoding Stage，经EP Migration迁移至P GPUs（橙）的Prefill Stage，再经PD Migration迁移至D GPUs（绿）的Decode Stage；每阶段含独立输入队列（Encoding/Prefill/Decode Queue），底部分别设EP Bridge Queue与PD Bridge Queue实现跨阶段数据缓冲。
 
-**论证结论：** 将多模态推理拆解为编码、预填充、解码三个异构阶段，因各阶段显存/算力特征差异显著（对应Table 3中E与P最大批处理规模相差数倍），独立部署可避免资源争用。
+**论证结论**：通过将多模态编码、文本预填、解码三类异构负载解耦到独立GPU池，并配合桥接队列迁移，可针对性解决"编码瓶颈"问题，使各阶段按需独立扩缩。
 
-**论文作用：** 作为EPD方法的核心架构定义图，确立阶段划分与跨阶段迁移机制，为后续资源调度、批处理优化等实验奠定基础。
+**论文作用**：作为核心架构图，奠定了Table 3对比E/P阶段最大批大小差异的实验基础，是全文方法论与评估链路的基石。
 *caption: The inference pipeline of EPD Disaggregation. stages—EP-migration and PD-migration—handle the trans- fer of data from encoding to prefill and from pre… ｜ 论文 [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] ｜ arxiv 见 MD 元信息*
 
 ### Efficiently Serving Large Multimodal Models Using EPD Disagg — Fig.4 (p.4)
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig04.png]]
-> [!tip] 【图文联合解读】图示EPD分离推理架构：多模态请求经Scheduler(Load Balancer)分配至Encoding、Prefill、Decoding三类专精实例，分别承载Encoder Weights+MM Cache、LLM Weights+MM/KV Cache及纯解码任务。阶段间以5槽EP Bridge Queue经Async Transfer(§3.2.1)异步交接；阶段内用TP/PP并行，跨阶段用IRP(§3.2.2)通信。
-
-它论证将异构负载解耦到独立实例可弹性扩缩、消除长尾阻塞，是论文EPD方法的核心系统蓝图，后续全部实验均基于此架构展开。
+> [!tip] 【图文联合解读】图中为三阶段流水线：编码器 E 将图像 \(i_{m_t}\) 转为高维嵌入 \(v_t^e\)，经 EP 迁移至 Prefill(P)，结合文本提示 \(i_p\) 生成初始 KV 与首个 token \(o_1^P\)；再经 PD 迁移至 Decode(D)，以 \(kv_{t+1}^d\) 更新并循环至输出结束。E/P/D 独立部署、按 DP 并发请求，从而解耦资源、按阶段扩缩容；IRP 消融中，移除后 TTFT 最多恶化 2.9×。所给图片是公式段落，并非 Figure 4 架构图。
 *caption: System architecture of the proposed EPD Disaggregated Inference. the data associated with the request. In the decoding stage, workers load the LLM wei… ｜ 论文 [[efficiently-serving-large-multimodal-models-using-epd-disaggregation]] ｜ arxiv 见 MD 元信息*
 
 ### Efficiently Serving Large Multimodal Models Using EPD Disagg — Fig.5 (p.6)
@@ -4266,111 +4458,105 @@ Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 C
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.1 (p.2)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig01.png]]
-> [!tip] 【图文联合解读】图示Mooncake架构：左侧KVCache-centric Conductor含三调度器（Cache-aware Prefill Scheduler、KVCache Balance Scheduler、Load-balance Decoding Scheduler）；纵向分三层资源池——Prefill Pool（GPU/VRAM+本地分块预fill+分页KVCache）、KVCache Pool（CPU/DRAM/SSD分布式KVCache）、Decoding Pool（GPU/VRAM+分页KVCache），节点间以RDMA传输KVCache、Prefill节点间用PP/SP通信。右侧明示两阶段优化目标：Prefill max Cache Reuse受TTFT SLO、最低MFU、KVCache<DRAM约束；Decoding max Throughput受TBT SLO、KVCache<VRAM约束。
+> [!tip] 【图文联合解读】**图文联合解读**
 
-技术结论：解耦prefill/decoding并将KVCache显式提升为一等公民资源，通过分布式RDMA池化跨节点复用cache，从而兼顾延迟SLO与吞吐。
+图1展示Mooncake的整体架构，核心由左侧"KVCache-centric Conductor"（含Cache-aware Prefill、KVCache Balance、Load-balance Decoding三个调度器）和右侧三类资源池构成：Prefill Pool（GPU/VRAM内含Local Chunked Prefill Scheduler+Paged KVCache，CPU/DRAM/SSD为Distributed KVCache Pool）、KVCache Pool（Inter-node RDMA跨节点传输）、Decoding Pool（同构分页KVCache）。Prefill实例间通过PP/SP流水线并行，两阶段资源解耦。
 
-作用：全文方法总览图，奠定后续调度器设计与Table 1缓存命中率实验的分析框架。
+原文借此论证两点关键结论：(1)远程位置拉长TTFT、大batch增大TBT，吞吐优化与延迟SLO天然冲突；(2)必须分阶段建模——Prefill阶段以"最大化Cache复用"为目标并约束TTFT SLO、最低MFU及KVCache<DRAM；Decoding阶段以"最大化吞吐"为目标并约束TBT SLO、KVCache<VRAM。
+
+该图是论文方法论的骨架总图，将后续Chunked Prefill、分页KVCache、RDMA传输、负载均衡等具体机制统一在该解耦架构框架下，为后续实验提供结构基础。
 *caption: Mooncake Architecture. remote location will prolong the TTFT, and a large batch size will lead to a larger TBT. Thus, the utilization of both these th… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.2 (p.4)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig02.png]]
-> [!tip] 【图文联合解读】## 图2（右半·解码阶段）联合解读
+> [!tip] 【图文联合解读】左图（batch=1，seq 8k→128k）：prefill延迟由约0.03s超线性升至1.0s，归一化吞吐量由1.0降至0.54；右图（seq=8k，batch 1→16）：decode吞吐量由0.08升至1.0，延迟由0.80缓升至约1.0。原文据此论证：attention计算量随序列长度二次方增长，导致prefill耗时超线性攀升；而decode阶段可依靠增大batch显著提升吞吐，延迟增幅却相对有限。
 
-**核心数据**：横轴为 Batch Size 1–16（序列长度固定 8k）。绿色柱（归一化吞吐量）从约 0.07 近似线性增长至 1.0；红色折线（解码延迟）几乎平稳，仅在 Batch 15–16 处轻微上扬至 1.0。
-
-**论证结论**：解码阶段吞吐随 batch 近似线性放大，而延迟几乎不增长——这是「**解码高 batch 友好**」的关键实测证据。结合左半图 prefill 阶段计算量随序列长度超线性增长的事实，作者论证 prefill 与 decode 具有截然不同的扩缩特性。
-
-**论文作用**：作为 Mooncake 提出 **prefill/decode 分离架构（disaggregation）** 的核心动机支撑——将计算密集、低延迟敏感的 prefill 与可大批并行、可吞吐优先的 decode 解耦部署，由 KVCache-centric 调度器协同，才能同时兼顾吞吐与 SLO。
+该图为Mooncake将prefill与decode解耦的双层架构提供了量化依据：因二者计算/访存特性差异悬殊（长序列下prefill为延迟敏感型，decode为吞吐敏感型），必须采用差异化调度与资源分配，正是后续解耦架构设计及端到端实验验证的基础前提。
 *caption: Normalized throughput and latency of prefill and decoding stages with different sequence lengths or batch sizes for the dummy LLaMA2-70B model. the co… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.3 (p.5)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig03.png]]
-> [!tip] 【图文联合解读】**图3联合解读（≤220字）**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-① **核心对象与结构**：展示CPU内存中的KVCache池，含9个Token块(a–i)。每个块采用**链式哈希**：A=Hash(a)、B=Hash(A+b)、…、F=Hash(E+f)，哈希值由自身内容与前缀哈希共同决定。三色分类：黄色=前缀缓存块、粉色=增量缓存块、灰色=未分配块。
+1) **核心对象与结构**：图示CPU内存中的KVCache池，由9个Token Blocks（a–i）组成，每块附带链式哈希值（A=Hash(a)、B=Hash(A+b)…F=Hash(E+f)），融合自身与前缀哈希。三类缓存块以颜色区分：黄色为前缀缓存块，粉色为增量缓存块，灰色为未分配块。
 
-② **关键技术结论**：示例中a–e五个前缀块全部Match✓复用，f处Mismatch✗触发失配；增量块F–I(粉色)被新计算并写入新位置。证明链式哈希+块粒度可实现**精确前缀去重**，避免整请求重复计算前缀KVCache。
+2) **关键技术结论**：前缀哈希A–E匹配✅，F处失配❌，触发新增增量块F–I写入；证明链式哈希机制可有效识别公共前缀并去重，仅复用命中部分、新增增量部分，避免全量重算。
 
-③ **论文整体作用**：该池是Mooncake解耦架构的存储底层，通过Prefill Instance→Messenger→Decoding Instance间的Load/Store/Transfer/Write/Read五路径实现跨实例KVCache流转，为后续Prefix Caching复用与Early Rejection（表3所示过载场景拒请求）提供基础设施支撑。
+3) **方法链路作用**：支撑Mooncake"KVCache-centric"解耦架构——Prefill实例通过Messenger读/写KVCache至池中，Decoding实例加载复用，实现预填充与解码解耦下的高效缓存共享。
 *caption: The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.4 (p.6)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig04.png]]
-> [!tip] 【图文联合解读】图分两栏：左为Prefill实例，含CPU/GPU双层，按Prefix与Incremental KVCache分块；右为Decoding实例，含Full KVCache。流程含s1前缀复用、s2增量prefill、s3跨实例KVCache传输、s4解码四个步骤。Prefill侧(∗)逐层Load/Store与计算并行，隐藏传输开销；Decoding侧(†)异步加载与GPU解码重叠，避免GPU空泡。该图论证Mooncake分离架构"计算与传输并发"的核心优化设计，是KVCache中心化方法论的关键图示。
+> [!tip] 【图文联合解读】图示 Prefill 与 Decoding 两实例工作流。左 Prefill 端：GPU 经 s2 做增量 Prefill，CPU↔GPU 通过"逐层 Load and Store*"(∗)并行传输 Prefix+Incremental KVCache；右 Decoding 端：CPU 异步加载 Full KVCache†(†)至 GPU，GPU 并行执行 s4 解码；两端 CPU 内存间由 s3 完成 KVCache Transfer。该图论证：在 prefill/decoding 解耦架构下，通过分层 Load/Store 与异步加载，使 KVCache I/O 与 GPU 计算重叠，可掩盖传输开销、避免 GPU 空闲，是 Mooncake 围绕 KVCache 中心化设计以降低 TTFT、提升吞吐的核心机制。
 *caption: Workflow of inference instances. ( ) For prefill instances, the load and store operations of the KVCache layer are performed layer-by-layer and in pa… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.5 (p.6)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig05.png]]
-> [!tip] 【图文联合解读】图5展示请求trace的输入（蓝）与输出（绿）长度分布，频率为log刻度。**输入高度右偏**：峰值集中于0–5k tokens（~10⁴），但长尾延伸至120k+，跨度达4个数量级；**输出近似双峰**：主峰在300–500 tokens（~10³），次峰近2000，最大约2100。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**关键论证**：实际负载中输入长度极端异构——长输入使prefill阶段产生巨大KV cache却仅生成少量token，与decode阶段轻量增量KV形成严重的内存–计算失衡；而输出相对短且有界，prefill/decode资源需求极不对称。
+图5展示请求trace中输入长度（左蓝）与输出长度（右绿）频率分布，均采用对数纵轴。
 
-**论文作用**：此图为后续"以KVCache为中心的prefill–decode解耦架构"提供数据驱动的动机支撑，是Mooncake分离式设计合理性的关键实证基础，也为调度策略与cache复用讨论奠定前提。
+**核心数据：**
+- **输入长度**：严重右偏长尾，峰值在<5K处（~10⁴），但分布延伸至128K，部分请求极长。
+- **输出长度**：双峰分布，首峰在<50处（~1.5×10⁴），次峰约300–500区间，长尾至2048处有明显截断尖峰。
+
+**论证的技术结论：** 输入长度跨度极大且长尾显著，说明存在大量长prefill与可复用prefix场景，验证了prefill-decode解耦与KVCache中心化存储的必要性；输出以短生成为主但存在长输出长尾，表明解码阶段需灵活调度以避免长尾请求阻塞。
+
+**论文链路作用：** 作为实验trace特征刻画，为后续基于真实负载的调度策略（如early rejection、prefix caching命中率分析）提供量化依据，支撑解耦架构相对传统架构的收益论证。
 *caption: Input and output length distributions in the request trace. 4… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.6 (p.7)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 6）**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **图示数据**：横轴 Block Hit Count（对数刻度 1–10⁴），纵轴 CDF。约 55% 的块命中次数=1，约 77% ≤2 次，约 95% ≤10 次；命中≥10² 的块占比可忽略，最大值延伸至 ~10⁴ 但概率极小。整体呈极度长尾分布。
+**1）核心对象与数据：** 图示为请求trace中KV cache block命中次数的CDF（X轴对数刻度1~10⁴）。曲线迅速攀升：约55%的block仅命中1次，约77%命中≤2–3次，约90%命中≤4–5次，在命中次数≈30处已逼近1.0，呈极重长尾分布。
 
-2) **关键结论**：少量"热门"块承担绝大多数重用请求，证实 LLM 请求间 KV cache 复用潜力大、冗余重计算成本高，从而为"以 KV cache 为中心"的设计提供量化依据。
+**2）原文论证结论：** block命中高度集中于少量低频/单次复用块，说明上下文前缀复用极不均匀、热点极其集中，从而印证"以KV cache为中心"的Mooncake架构设计前提——离散的prefix cache池即便容量不大也能捕获绝大部分重复前缀。
 
-3) **论文作用**：支撑 Mooncake 的核心动机——将 prefill 计算与 KV cache 存储解耦、池化共享，使小部分热块可被多次复用，显著降低 prefix 重算开销。
+**3）论文链路作用：** 该CDF为后续cache容量规划与eviction策略（优先淘汰低命中冷块、按命中次数而非LRU调度）提供量化实证支撑，是连接"真实负载复用特性"与"解耦式KV cache架构设计"的关键依据。
 *caption: CDF (Cumulative Distribution… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.7 (p.9)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig07.png]]
-> [!tip] 【图文联合解读】**图7联合解读**
+> [!tip] 【图文联合解读】# 图7 联合解读
 
-图7对比两种KVCache存储策略（Serialized序列化 vs Layer-wise分层）在不同请求长度（8K–128K）下的存储延迟。量化数据：Serialized延迟近似线性增长（8K约0.11s→128K约0.86s）；Layer-wise全程稳定在约0.10s，128K时仅为Serialized的~1/8.6。
+**核心数据**：横轴为请求长度（8K–128K tokens），纵轴为存储KVCache的延迟（秒）。蓝色"Serialized"随序列长度从约0.11s线性增长至约0.87s；橙色"Layer-wise"全程稳定在约0.10s，几乎不随长度变化。
 
-**关键结论**：原文借此论证"分层并发存储KVCache"可消除长序列下存储开销的线性放大，是Mooncake采用Transformer层间流水线调度、并把prefill计算与KVCache写入重叠的核心实验依据，支撑其长上下文场景下的高吞吐设计。
+**关键结论**：Layer-wise方案（边预fill计算边传输KVCache）通过将存储开销与计算流水重叠，成功将存储延迟从随长度线性增长压缩为常数。序列越长，优势越显著——128K时差距达近9倍。
+
+**论文作用**：此图直接支撑Mooncake架构的核心设计——Prefix Caching必须采用"层粒度调度"而非"序列化等待"，否则长上下文场景下KVCache传输将成瓶颈；为后续Transfer Engine与Instance间的流水线协作提供了量化依据。
 *caption: Latency of storing KVCache of different request lengths (Layer-wise latency refers to the difference in latency between Layer-wise Prefill and Prefill… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.8 (p.11)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig08.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-该图为箱线图，纵轴为TTFT（秒），含一条约30秒的SLO虚线。横轴对比四种调度策略：
-
-1. **核心数据**：KVCache-centric中位数约7–8s，分布极紧凑，远低于SLO；cache-aware中位数约18s，仅少量离群点；load-balancing均值89.41s、箱体伸至~105s，须线达~220s；random均值92.92s、箱体最高~150s、须线逼近285s。
-
-2. **关键结论**：论文提出的KVCache-centric调度策略TTFT最低且稳定，证明以KVCache为中心的调度远优于负载均衡与随机策略，能稳定满足SLO；而load-balancing和random因忽略cache局部性，导致大量长尾延迟。
-
-3. **链路作用**：作为消融/对比实验，量化验证核心调度设计（KVCache-centric）的有效性，支撑论文"以KVCache为中心"这一核心架构主张。
+> [!tip] 【图文联合解读】图中以盒须图比较 Mooncake 集群四种 prefill 调度的 TTFT（30 s SLO）：KVCache-centric、cache-aware、load-balancing、random 的均值约为4.2、12.4、57.4、89.2 s，上须最高约12、63、220、290 s，后两者大量请求超时。结果表明，按 KVCache 亲和性放置可提高缓存复用率并显著降低均值与尾延迟；该实验验证了 KVCache-centric 调度器是分离式推理架构低延迟服务的重要保障。
 *caption: The prefill scheduling experiment in the Mooncake cluster.… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.9 (p.13)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig09.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1) 图示20分钟窗口内 prefill（绿线）与 decoding（黄线）实例的负载率随时间变化曲线，y 轴负载范围约 10%–95%。两条曲线呈明显**反相位**：prefill 飙升时 decoding 多处低位，反之亦然，且 prefill 振幅显著更大，深谷多次逼近底部。
+1）**核心数据**：图示20分钟内（0:00–20:00）prefill（绿）与decoding（橙）两类实例的负载百分比曲线。绿线波动剧烈，多次跌至3%–8%的近空闲状态，又冲至90%–95%的满载；橙线整体偏高但仍起伏于约35%–95%。两条曲线在多个时间点呈明显反向波动——prefill高峰时decoding走低，反之亦然，反映两类节点负载严重错配。
 
-2) 原文借此论证：在未启用基于预测的 early rejection 机制之前，解耦架构下 prefill 与 decoding 节点负载严重不均衡、波动剧烈，暴露出传统调度难以稳定 SLO 的缺陷，从而为引入**预测式早拒**以均衡负载提供动机。
+2）**技术结论**：在未启用基于预测的早期拒绝机制前，prefill与decoding实例负载无法被均衡调度，存在严重的"此忙彼闲"现象，部分节点长期空转而另一些节点接近饱和，说明仅靠被动调度难以解决分离架构下的负载失衡。
 
-3) 该图作为**对比基线**，与后续启用 early rejection 后的负载曲线（图10/11）形成对照，串联起"暴露问题 → 提出方案 → 实验验证"的完整论证链，是 Mooncake 调度策略章节的关键支撑。
+3）**论文链路作用**：此图作为**动机证据**（motivation），引出论文提出的预测式早期拒绝策略——通过预先识别可被截断的请求并提前rejection，削峰填谷，从而在后续实验（图10/11）中展示该机制对负载均衡与整体吞吐的改善效果。
 *caption: The load of prefill and decoding instances over 20 minutes, before using the prediction- based early rejection.… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.10 (p.14)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig10.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图10联合解读**
 
-1）**核心对象与数据**：图分上下两行4个Stage，沿时间轴展示实例**解码负载（上，橙）与预填充负载（下，蓝）**的动态变化。Stage1解码≈0.15（低）/预填充≈0.95（高，新请求密）→Accept；Stage2解码≈0.8（高）/预填充≈0.15（低）→Reject；Stage3再次解码≈0.15/预填充≈0.8→Accept；Stage4解码≈0.6/预填充≈0.3→Reject。曲线连接呈现"高-低"振荡。
+**核心内容**：图含两子图——(a) Early Rejection 与 (b) Early Rejection Based on Prediction，均为 2×4 箱线图阵列：横轴为 4 个时间点（黑色箭头推进），纵轴双行分别对应两类实例；底行深色箱体表征预测负载，☆号标记早拒发生节点。
 
-2）**关键结论**：早期拒绝依据预测的解码负载阈值（≈0.6，橙色虚线）切换Accept/Reject，避免预填充过载溢出，同时印证原文"资源稀缺、需精确预测时，请求级预测尤为困难"——单纯看当前预填充会误判（Stage2本应Reject时预填充低），必须预测解码端未来负载。
+**技术结论**：在资源稀缺场景下，仅做 Early Rejection 易造成实例间负载集中与失衡；而引入预测后仍受请求级预测精度制约，凸显单点拒绝策略的局限。
 
-3）**方法链作用**：该图为Mooncake**过载预测与早期拒绝策略**提供可视化依据，是调度器在Prefill/Decode解耦架构中保护KVCache节点不被预填冲击的关键决策环节。
+**论证作用**：作为对比基线，与后续启用 Mooncake 完整调度后的负载曲线串联，形成"暴露问题→提出方案→实验验证"论证链，是调度策略章节的关键支撑。
 *caption: Instance load when applying Early Rejection and Early Rejection Based on Prediction. conditions where resources are scarce and accurate predictions ar… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.11 (p.16)
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig11.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-该图呈现2×2网格中的L-Eval列（ArXiv列未显示）：横轴为请求速率（0.25–2.0 req/s），纵轴为归一化P90 TTFT（上）与P90 TBT（下），虚线1.0为SLO阈值；蓝、红、橙三曲线分别对应Mooncake与两种vLLM基线。TTFT图中，Mooncake在1.5 req/s前维持在0.1–0.3，至~2.0才破线；基线分别在1.25与1.5处即触线。TBT图中，Mooncake与红色基线先后在~1.0与~0.75 req/s突破SLO，而橙色基线始终平坦于~0.2–0.3。
-
-原文借此论证：解耦架构在端到端长文本场景中显著提升SLO吞吐上限，TTFT增益尤为突出；该图为论文整体方法链路的"系统级压测"收尾，呼应§3.2调度与KV缓存传输设计，并以真实基准数据支撑"以KV Cache为中心"的可行性结论。
+> [!tip] 【图文联合解读】图示2×2网格，对比Mooncake-[3P+1D]（蓝）与两基线在ArXiv、L-Eval长文本数据集上的归一化P90 TTFT/TBT-请求速率曲线。量化：TTFT图中Mooncake于~3.5/2.0 req/s才达SLO，基线在1.5-2.5/0.75-1.25即饱和；TBT图中Mooncake在ArXiv稳定~0.48、L-Eval于~0.9触阈。结论：Mooncake解耦架构在高负载下TTFT/TBT均显著优于vLLM基线，证明prefill-decoding分离及KVCache中心化设计有效提升长上下文吞吐与延迟；该端到端实验验证核心架构对vLLM方案的实际优越性。
 *caption: End-to-end experiments of Mooncake and vLLM on the ArXiv Summarization and L-Eval datasets instances. In real-world clusters, the demand for prefill a… ｜ 论文 [[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]] ｜ arxiv 见 MD 元信息*
 
 ### Mooncake: A KVCache-centric Disaggregated Architecture for L — Fig.12 (p.16)
@@ -4424,7 +4610,11 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### MegaScale: Scaling Large Language Model Training to More Tha — Fig.2 (p.3)
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig02.png]]
-> [!tip] 【图文联合解读】该图展示Interleaved 1F1B流水线调度：3个stage（0/1/2）在时间轴排列，粉色为前向、蓝色为反向（编号0–5代表micro-batch），灰色为warmup/cooldown区段；红色虚线将时间轴划分为warmup（重复出现0,1,2,0,1,2,3）、稳态1F1B（4,0,5,1,3,2,4,0,5,1,3,2…）、cooldown三阶段。warmup阶段同一组micro-batch号重复出现，说明每个stage承担多个模型chunk并交错执行前向，从而用更少气泡填满流水线。原文据此论证：交错调度与ZeRO状态分片结合可显著压缩气泡率，是支撑千卡–万卡规模强扩展（对应Table 2中3072→12288 GPU仍保持高吞吐）的关键调度策略。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图示为**3级Interleaved 1F1B流水线调度时序图**：横轴为时间步，每行对应一个stage，方块内数字为微批次ID，**粉红色代表前向（warm-up段）**、**蓝色代表后向（稳态1F1B段）**、灰色为bubble/空闲；两条红虚线将调度切分为**warm-up → 稳态交替执行F/B → cooldown**三阶段，每stage内含多个模型分片（chunk）交叉调度，使前/后向在不同分片上交错进行。
+
+原文借此论证：**交错调度将pipeline bubble率压缩至传统1F1B的1/v**，从而提升吞吐、降低端到端训练时延；该调度是Megatron在万卡级千亿模型（175B）扩展中的核心并行组件，与ZeRO分片策略协同，支撑Table 2所示的强可扩展性实验结论。
 *caption: Interleaved 1F1B pipeline. update the model. Instead of duplicating model states (like the optimizer states, gradients, and parameters), Zero Redun- d… ｜ 论文 [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] ｜ arxiv 见 MD 元信息*
 
 ### MegaScale: Scaling Large Language Model Training to More Tha — Fig.3 (p.4)
@@ -4442,25 +4632,22 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig04.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 图示核心对象与结构**
-该图对比流水线并行相邻两阶段（stage i、stage i+1）的两个阶段时序：左侧 Warm-up 阶段，每阶段呈现 R→FWD→S 的串行序列；右侧 Steady 阶段，FWD（绿）与 BWD（紫）计算块沿独立 stream（虚线）与顶部的 R、底部的 S 通信块并行排布，标注 "Communication Overlap"。
+图示流水线并行中 stage i 与 stage i+1 的 S/R（Send/Receive）与 FWD/BWD（Forward/Backward）任务调度。顶部为原始序列，S/R 与计算紧邻串行；底部经"Communication Overlap"变换后，**Send 前移至 FWD 之前**、**Receive 后移至 FWD/BWD 之后**，分 Warm-up 与 Steady 两阶段展示。
 
-**2) 原文论证的关键结论**
-稳态下前向与反向计算均与相邻 Send/Receive 通信相互独立，因此通信可分流并行、覆盖计算，从而隐藏集合通信延迟；冷启动（cool-down）阶段则为该重叠技术的逆向复用。
+原文据此论证关键结论：通信可与计算流水重叠，稳态时前向与反向计算均独立于相邻通信操作，cool-down 阶段为 warm-up 的逆过程，可复用同一技术。
 
-**3) 在论文整体方法中的作用**
-此图为 MegaScale 在 10000+ GPU 规模下流水线并行的核心系统优化之一，通过通信-计算解耦降低通信占比、提升 GPU 利用率，是实现高吞吐大规模训练的关键设计。
+该图是 MegaScale 流水线通信重叠优化（与张量并行融合通信共同支撑）的核心图示，构成其在 10K+ GPU 上维持高 MFU 训练效率的基础组件之一。
 *caption: The cool-down phase can be viewed as the inverse of the warm-up phase, allowing for the inverse application of the same technique. As for the steady p… ｜ 论文 [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] ｜ arxiv 见 MD 元信息*
 
 ### MegaScale: Scaling Large Language Model Training to More Tha — Fig.5 (p.6)
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig05.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图5呈现Megascale万卡训练的容错工作流，采用**Driver-Executor双层架构**。Driver侧含User API、Checker、Log Analysisor、Evicted Pods/Blocked IPs四个模块；Executor侧含Executor 0~N并行节点。关键交互包括：User API提交作业并生成驱逐Pod/封禁IP列表；Checker对Executor执行stop & check并回收结果；Log Analysisor通过心跳（heartbeat）触发Checker；Driver经Kubernetes管理资源。
+该图展示大规模训练鲁棒性工作流的三层架构：①**Kubernetes层**（含Training Job Info、Evicted Pods、Blocked IPs状态表）；②**Driver控制层**（User API提交作业，Checker周期性发起stop&&check巡检，Log Analysor通过心跳信号触发Checker）；③**Executors执行层**（Executor 0…N，受Kubernetes调度并向Checker回传心跳与检查结果）。
 
-原文借此论证：在>10,000 GPU规模下，网络链路抖动（flapping）、Pod驱逐等故障不可避免，需通过心跳监测+主动检测+IP封禁的闭环机制实现快速恢复，确保长稳训练不中断。
+**论证结论**：在万卡级训练中，故障（链路抖动flapping、节点异常）不可避免；该工作流通过"心跳感知→日志分析→Checker巡检→驱逐异常Pod/屏蔽故障IP"的闭环，使Kubernetes快速重建资源，实现训练不中断的自动恢复。
 
-该图在论文中起到承上启下作用：上承底层网络/通信栈的可靠性设计，下启具体故障应对策略（链路恢复、节点替换），是证明"万卡可持续训练"系统可信度的核心架构图。
+**论文作用**：作为可靠性保障模块的核心架构说明，为后续关于"千卡故障可秒级恢复、万卡训练可连续运行多周"的实验结论提供机制依据，是论文系统设计章节的关键配图。
 *caption: Robust training workflow. interval and help recover the transmission more quickly when the link flapping period is short. 4… ｜ 论文 [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] ｜ arxiv 见 MD 元信息*
 
 ### MegaScale: Scaling Large Language Model Training to More Tha — Fig.6 (p.8)
@@ -4478,11 +4665,11 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig07.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：该图为48个rank（rank 0–47，分布在host 0–11共12台主机，每机4卡）的计算阶段（前向+反向）延迟热力图。色阶由2.0s（浅粉）到2.5s（深红），并标注三类通信依赖：TP Comm（绿色）、DP Comm（紫色）、PP Comm（橙色箭头）。rank 20（host 5）被选中高亮，可展开3D视图观察跨并行维度的依赖关系。多数rank稳定在~2.0s，但rank 32（host 8）显著偏红，存在掉队。
+**1) 核心对象与结构：** 12台host（0–11）按4×3排列，每台含4个rank，共48个rank；颜色映射计算耗时（浅粉≈2.0s → 深红≈2.5s）。Rank 20以斜纹标注，作为选中示例，通过绿/橙/紫三条虚线箭头分别连接TP、PP、DP三维通信的邻居rank。
 
-2) **关键结论**：热力图直观暴露了大规模训练中的延迟分布不均——个别rank（如32）成为straggler；同时揭示了TP/DP/PP三种并行维度间的通信耦合关系，便于诊断瓶颈来源。
+**2) 论证的关键结论：** 大多数rank耗时均匀，但host 8的rank 32与host 10的rank 40–41明显偏慢，构成"computational stragglers"；沿PP链路的虚线箭头揭示耗时沿流水线阶段累积传播，3D视图直观暴露三维并行（TP/DP/PP）耦合下的跨维度延迟依赖。
 
-3) **论文作用**：作为性能剖析与可视化工具，支撑MegaScale诊断流水线中"识别长尾、定位通信热点"的核心能力，是其全栈优化体系（算法/网络/调度）发现问题→定位根因的关键一环。
+**3) 在论文中的作用：** 作为Megascale诊断工具的可视化证据，证明万卡级训练中存在跨节点、跨并行维度的性能失衡，为后续straggler识别与负载重平衡优化提供分析依据。
 *caption: We gather latency data of the computation phase (forward and backward) across devices and average the latency across steps. The aggregated data is vis… ｜ 论文 [[megascale-scaling-large-language-model-training-to-more-than-10000-gpus]] ｜ arxiv 见 MD 元信息*
 
 ### MegaScale: Scaling Large Language Model Training to More Tha — Fig.8 (p.9)
@@ -4576,11 +4763,13 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### ZeRO: Memory Optimizations Toward Training Trillion Paramete — Fig.4 (p.16)
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-fig04.png]]
-> [!tip] 【图文联合解读】**图4散点图联合解读：**
+> [!tip] 【图文联合解读】**图4（左半）联合解读**
 
-左图为散点图，横轴为模型规模(1–13B参数)，纵轴为单卡吞吐量(0–50 Tflops)。绿色圆点(ZeRO-DP)从1.5B约40 Tflops上升，6–8B时达峰约47 Tflops，超过35 Tflops虚线(对应集群聚合4.5 Pflops)；橙色三角(Baseline-DP)在同等规模仅约18 Tflops，较ZeRO低约55%。右图(Figure 5)补充Model-ZeRO-17B验证困惑度全程低于Megatron-LM-8.3B。
+**核心内容**：横轴为模型规模1.5B–13B参数，纵轴为单卡吞吐（Tflops）。绿圆点为ZeRO-DP，橙三角为Baseline-DP，蓝虚线标示4.5 Pflops聚合吞吐（≈35 Tflops）。ZeRO-DP在1.5B–8B规模维持40–47 Tflops峰值；10B起降至约35、21 Tflops。Baseline-DP仅在≤1.5B处出现约39与约18 Tflops两点。
 
-**技术结论：** ZeRO-DP仅靠分片数据并行即可将单卡吞吐提升约2倍，并在10B级仍维持近峰值，验证其可扩展性。**论文作用：** 该图作为吞吐可行性证据，支撑后续Figure 5中17B模型训练实验及向万亿参数扩展的论证链。
+**技术结论**：① ZeRO-DP在≤8B规模下单卡效率逼近理论峰值，并显著高于Baseline-DP；② 模型规模超过8B后，受显存限制batch size被迫减小，吞吐随之下降；③ 但即便降速，ZeRO-DP仍可训练Baseline-DP根本装不下的13B模型，验证其规模可扩展性。
+
+**论文作用**：与Fig2、3及Table 4共同构成ZeRO吞吐量分析链，为"训练万亿参数模型"的核心主张提供效率与规模双重证据。
 *caption: Max model throughput with ZeRO-DP.… ｜ 论文 [[zero-memory-optimizations-toward-training-trillion-parameter-models]] ｜ arxiv 见 MD 元信息*
 
 ### ZeRO: Memory Optimizations Toward Training Trillion Paramete — Fig.5 (p.16)
@@ -4605,67 +4794,72 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### ZeRO: Memory Optimizations Toward Training Trillion Paramete — Fig.7 (p.16)
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-fig07.png]]
-> [!tip] 【图文联合解读】图含三子图，量化展示ZeRO五种配置：①固定batch=16时最大模型规模由Config 1–3的40–60B跃升至Config 4–5的140–150B；②40B/100B模型各配置下缓存占用稳定在20–30GB；③170B模型在Config 1–4下无法训练（×标记），仅Config 5达约20Tflops，60B模型单卡吞吐由约12升至约31Tflops。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-原文结论：ZeRO-3+（Config 4/5）在缓存相近的前提下将可训练模型规模提升约3倍，并首次实现纯数据并行下的170B级训练，验证零冗余存储可突破显存瓶颈。
+图7由三个子图组成，对比ZeRO阶段1–5：
+1) **左图**（固定batch=16）：阶段1–3最大模型约40–60B，阶段4–5跃升至140B/150B。
+2) **中图**（缓存分配）：40B模型阶段1约29GB，阶段4–5降至约20GB；100B模型阶段4–5约26–29GB，说明缓存与模型规模解耦。
+3) **右图**（单卡吞吐）：60B模型阶段4达约35 Tflops峰值；170B模型仅阶段5可行（约21 Tflops）。
 
-论文作用：作为核心定量证据，支撑ZeRO将数据并行扩展至万亿参数规模的方法链路。
+**技术结论**：ZeRO阶段4–5在保持缓存恒定（≤30GB）的前提下，将可训练模型规模提升约3倍、吞吐提升近3倍，验证"内存优化可换来模型规模与算力效率的双重扩展"。
+
+**论文作用**：作为支撑ZeRO可训练万亿参数模型的核心实证，连接内存优化理论与大规模训练可行性。
 *caption: Max cache allo- cated.… ｜ 论文 [[zero-memory-optimizations-toward-training-trillion-parameter-models]] ｜ arxiv 见 MD 元信息*
 
 ### ZeRO: Memory Optimizations Toward Training Trillion Paramete — Fig.8 (p.16)
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-fig08.png]]
-> [!tip] 【图文联合解读】图以ZeRO配置1–5为横轴：左图显示40B/100B模型缓存由约30/29 GB降至20/26 GB；右图显示60B模型在配置4达约35 Tflops，170B仅配置5可运行，约21 Tflops。说明深层配置可兼顾内存与吞吐，使超大模型训练可行；据此估算1T BERT-Large训练约需140天，为ZeRO方案选择和万亿参数扩展提供量化依据。
+> [!tip] 【图文联合解读】**【核心对象与数据】** 图分两栏。左栏"Cache Allocated"显示40B模型缓存随ZeRO Config 1–5从30GB→20GB递减，100B仅Config 4–5可行（30/27GB）；右栏"Throughput per GPU"显示60B吞吐12→36→32 TFlops递增，170B仅Config 5达约20 TFlops，其余均OOM（×）。
+
+**【关键结论】** Config 5同时实现缓存最小化与吞吐峰值，使170B模型从不可行变为可训练，验证"内存切分不损计算效率"的ZeRO核心命题。
+
+**【论文作用】** 与表8显存分配互证，共同支撑"内存优化推动可训练规模跃升至T级"的整体技术叙事，奠定方法验证阶段的关键实验证据。
 *caption: Throughput per GPU. a Bert-Large model for a data sample. Even if we assume the same sequence length and the total number of samples required to train… ｜ 论文 [[zero-memory-optimizations-toward-training-trillion-parameter-models]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.1 (p.1)
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图1图文联合解读**
 
-1) **核心对象与数据**：半对数散点图，横轴为2018–2021年份，纵轴为参数量（10⁻²至10³亿，对数轴）。六个标注点：ELMo (94M, 2018)→BERT-L (340M)→GPT-2 (1.5B)→Megatron-LM (8.3B)→Turing-NLG (17.2B)→GPT-3 (175B, 2020)，红色虚线拟合呈指数增长。
+图1位于论文首页右侧，为一张折线图：横轴为年份（2018–2021），纵轴为参数量（对数刻度，单位十亿，范围10⁻²–10³），按时间顺序标注五个代表性NLP模型——ELMo(94M)、BERT-L(340M)、GPT-2(1.5B)、Turing-NLG(8.3B)、GPT-3(175B)，红色虚线拟合显示参数规模近指数增长，约每1–1.5年放大一个数量级。
 
-2) **论证结论**：约2年内参数量增长近3个数量级，训练所需FLOPs随之指数飙升，单卡/单节点已无法承载。
+原文借此为Abstract中两大瓶颈提供量化证据：训练SOTA模型所需FLOPs呈指数增长，而GPU显存有限使大模型难以装入单机/单卡，迫切需要新的模型并行方法。
 
-3) **论文作用**：作为开篇动机图，引出Megatron-LM的核心贡献——张量并行+流水并行，在GPU集群上高效训练千亿级模型，与图中趋势形成"问题—方案"呼应。
+该图作为引言动机图，引出Megatron-LM提出的**张量并行+流水线并行**方案，并自然衔接后文Table 1对1B–1T参数GPT模型的弱扩展吞吐实验，构成"问题驱动—方案提出—规模验证"的完整逻辑链。
 *caption: Trend of sizes of state-of-the-art Natural Language Pro- cessing (NLP) models with time. The number of floating-point op- erations to train these mode… ｜ 论文 [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.2 (p.3)
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图示 N_t=2、N_p=2 的二维正交并行：每层 Transformer 内含 Self-Attention 与 MLP 模块，被横切为 Tensor MP partition #1/#2，权重/激活经蓝虚线（all-reduce）在 2 张 GPU 间同步；不同层分属 Pipeline MP #1/#2，沿绿色箭头串行。
 
-1）**核心对象与结构**：图示展示了 Transformer 层在 PTD 并行下的二维切分。绿色实线框"Pipeline MP partition #1"代表一个流水阶段，内部串联多个结构相同的 Transformer 层（每层含 Self-Attention 与 MLP 子模块）；蓝色虚线框"Tensor MP partition #1/#2"将同一层内 Q/K/V 矩阵乘法与 MLP 切分到 2 个 GPU 上，层间仅在边界处通过 all-reduce 通信。
+**论证结论**：层内张量并行平摊权重与激活显存，层间流水线并行扩展深度，二者正交使单卡显存降为 1/(N_t·N_p)，是 Table 2 中 GPT 扩至 530B 参数规模的架构基础。
 
-2）**关键技术结论**：该图直观论证了 Megatron 的核心方案——张量并行（层内）与流水线并行（层间）正交组合，使单层权重与激活显存被 N_t 个 GPU 平摊，同时流水阶段又可跨 N_p 个 GPU 扩展层数，从而在保持高利用率的前提下支撑超大规模模型（论文 Table 2 即在此架构上将 GPT 模型扩至 530B 参数）。
-
-3）**论文作用**：此图是全文方法学的"总览图"，后文 Table 2 等实验均以此 PTD 并行布局为基线，证明其相对 ZeRO-3 的吞吐与可扩展性优势。
+**论文链作用**：为 Section 3 并行策略推导与 Section 5 弱扩展性实验（N_t=N_p=8 等配置）提供可视化与硬件映射前提，奠定"张量×流水线"正交分解的整体方法框架。
 *caption: Combination of tensor and pipeline model parallelism (MP) used in this work for transformer-based models.… ｜ 论文 [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.3 (p.3)
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig03.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构：** 图示GPipe在4个Device上的流水线调度，1个batch切分为8个microbatch（编号1–8）。蓝色方块为前向pass，绿色为反向pass（时长为前向的2倍），灰色区域为pipeline bubble。Device 1率先启动前向，各设备依次错开1个microbatch时间，全部前向完成后才依次启动反向，呈现典型"先全部F、再全部B"的同步模式。
+1) **核心对象与结构**：图中展示 GPipe 流水调度在 4 个 Device（Device 1–4）上的时间—任务分配。每个 mini-batch 被切分为 8 个 micro-batch（编号 1–8），先依次执行前向（蓝色 1→8）再依次执行反向（绿色 8→1），灰色区域表示设备空闲的"流水线气泡"，右侧"Pipeline flush"分界线后开始下一批（9–16）。
 
-**2) 关键结论：** 纯流水线并行存在显著气泡（warm-up与cool-down阶段设备空闲），其占比与microbatch数N和设备数M相关（效率≈N/(N+M−1)），是GPipe方案的核心效率瓶颈。
+2) **关键技术结论**：气泡（灰色）产生于流水线首尾的填充与排空阶段，其占比随 micro-batch 数 m 与流水级数 p 之比（p−1/m）决定；反向耗时设为前向 2 倍，但调度效率与该比值无关，仅由气泡比例主导——这是 GPipe 的固有瓶颈。
 
-**3) 论文作用：** 作为Megatron-LM提出PTD-P（张量+流水线+数据三维并行）方法的动机基线，论证单维流水线并行不足以高效训练超大模型，需结合张量并行进一步压缩气泡、提升GPU集群利用率。
+3) **在论文中的作用**：Figure 3 揭示传统 GPipe 的气泡开销，以此作为动机，引出本文提出的 Interleaved 1F1B 调度策略（在后续 Figure 中展示），通过交错前反向显著缩小气泡，从而提升大规模 Transformer 在 GPU 集群上的训练效率，构成方法部分的核心改进点。
 *caption: GPipe pipeline schedule with forward passes (blue) for all microbatches (represented by numbers) followed by backward passes (green). The gray area re… ｜ 论文 [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.4 (p.3)
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig04.png]]
-> [!tip] 【图文联合解读】图中展示4个设备（Device 1–4）上两种1F1B流水线调度对比：上图默认调度按顺序处理微批次1–7，灰色气泡（warm-up阶段）约占前半时段；下图交错调度将每设备再分配1个模型分片（深绿为第1分片、浅绿为第2分片），微批次扩展至1–8，灰色气泡明显缩小，flush更早完成。原文借此论证：交错式1F1B通过把多个Transformer分片分配到同一GPU，让前向/反向计算在时序上更紧密交叠，可在几乎不增加显存开销的前提下显著压缩气泡、提升端到端吞吐。该图是Megatron-LM提出的Interleaved 1F1B核心优化的示意，作为流水线并行的关键贡献，直接支撑后续千卡级GPU集群训练LLM的大规模实验验证。
+> [!tip] 【图文联合解读】# Figure 4 图文联合解读
+
+**1) 核心对象与结构**：上图为4设备默认非交错1F1B流水线，每设备单chunk，前向(深蓝)预热4个micro-batch后进入1F1B稳态，尾部灰色气泡含一段空闲；下图为交错1F1B，每设备分配2个chunk（深/浅色区分），micro-batch数翻倍至约24+，同色段对应同一chunk内的前/反向，灰色气泡显著缩短。
+
+**2) 关键技术结论**：通过将多chunk分配给同一设备、虚拟扩大流水线深度P，使稳态期 in-flight micro-batch 数加倍，等效缩小编排/排空阶段气泡占比，从而提高流水线并行利用率、降低单步时间。
+
+**3) 在论文中的作用**：作为Megatron-LM面向GPU集群大模型训练的核心创新之一，与张量并行、序列并行共同构成"TP+PP+DP"三级并行框架，支撑万亿参数级Transformer的高效端到端训练。
 *caption: Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleav… ｜ 论文 [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.5 (p.5)
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-1) **核心结构**：图分(a) MLP和(b) Self-Attention两个子图，展示Transformer块沿2个GPU的张量切分方式。MLP中`f`将`X`拆为`[Y₁B₁, Y₂B₂]`并行计算，`g`做all-reduce恢复`Z`；Self-Attention中`Q/K/V`沿注意力头维度切分为`[Q₁,Q₂]/[K₁,K₂]/[V₁,V₂]`，各GPU独立完成`Softmax→Dropout`后由`g`合并输出。
-
-2) **关键结论**：`f`与`g`为共轭算子——前向`f`恒等、`g`通信，反向时角色互换，证明层内张量并行只需一次all-reduce即可同步，无需逐层参数传递。
-
-3) **论文作用**：与流水线并行（层间）正交，构成Megatron-LM"层内张量并行+层间流水线并行"双维度并行的可视化基础，用于推导通信量代价模型并降低pipeline bubble占比。
-
-(约218字)
+> [!tip] 【图文联合解读】图(a)将MLP权重按列切分A=[A₁,A₂]与B=[B₁,B₂]至两块GPU：X经f（恒等）复制后分别做XAᵢ→GeLU得Y₁、Y₂，由g全归并为Y=GeLU(XA)，再切分B线性映射输出Z。图(b)沿注意力头切分Q=[Q₁,Q₂]、K、V，各GPU独立完成Q·Kᵀ→Softmax→乘V后由g归并。前向f恒等、g为all-reduce；反向二者互换，保证X梯度仅一次跨GPU通信。论文据此论证：tensor-parallel模块每两次GEMM间各插入一次all-reduce，单次通信量∝隐藏维度h、可与计算重叠，从而在千亿参数规模下维持近线性扩展，支撑PTD-P方案的整体可行性。
 *caption: Blocks of transformer model partitioned with tensor model parallelism (figures borrowed from Megatron [40]). 𝑓and 𝑔 are conjugate. 𝑓is the identity op… ｜ 论文 [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.6 (p.5)
@@ -4708,9 +4902,11 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.10 (p.8)
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig10.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图10核心展示：在固定全局batch size下，175B（虚线）与530B（实线）GPT模型分别用ZeRO-3（蓝）与PTD-P（橙）训练时，单卡吞吐（Achieved teraFLOP/s per GPU）随GPU数（768–1920）的变化。定量看：PTD-P 530B稳定在约170→160，PTD-P 175B约150→143，几无衰减；而ZeRO-3 175B从约143骤降至~45，ZeRO-3 530B从约138降至~50。
 
-图示四组配置下每GPU吞吐量（TFLOP/s）随GPU数（768→1920+）的变化。橙色PTD-P两条曲线稳定在140–170 TFLOP/s区间，几乎不随规模衰减；蓝色ZeRO-3则从约145急剧下滑至45–50，175B模型降幅最显著（仅剩约1/3）。论文借此论证：纯数据并行方案（ZeRO-3）在GPU增多后通信开销主导，性能严重退化；而PTD-P结合张量、流水线与数据并行的混合策略保持近线性高效扩展，支撑了Megatron-LM方法体系的核心结论——大规模模型训练必须采用混合并行而非单纯数据并行，以获得可扩展的吞吐。
+原文借此论证：**纯数据并行（ZeRO-3，不含模型并行）随GPU规模增大吞吐严重退化**；PTD-P（张量+流水线并行）保持高且稳定的单卡效率，故千亿级以上模型必须引入模型并行。
+
+该图与Table 1互补，作为"为何需Megatron式TP+PP"的**关键经验依据**，支撑论文弱扩展至1T参数的核心结论。
 *caption: Throughput per GPU of PTD-P and ZeRO-3 for two differ- ent GPT models (the 175B GPT-3 model is shown with dotted lines, and the 530B model is shown wi… ｜ 论文 [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.11 (p.9)
@@ -4802,52 +4998,54 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### Megatron-LM: Training Multi-Billion Parameter Language Model — Fig.1 (p.2)
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图1为对数-对数坐标下 PetaFLOPs/s 随 GPU 数的变化：蓝色模型并行（1–8 卡，≈0.04→0.23 PFLOPs/s）；绿色模型+数据并行（64–512 卡，≈2.5→16 PFLOPs/s），两段曲线均紧贴灰色"线性"虚线参考。结论：纯模型并行与"模型+数据"混合并行均实现近似线性的弱扩展效率，512 卡达到 ~16 PFLOPs/s。作用：在论文主体提出 transformer 层内 MLP/Attention 切分优化之前，先以实测 FLOPS 证明并行框架具备近线性可扩展性，为后续大模型训练方案奠定可行性基础。
+> [!tip] 【图文联合解读】图1以log-log坐标展示PetaFLOPs/秒随GPU数的变化：蓝线（纯模型并行，1–8 GPU）由~0.04增至~0.24；绿线（模型+64路数据并行，64–512 GPU）由~2.5增至~14 PFLOPs/s；两条曲线均紧贴灰色虚线（理想线性）。结论：两种并行策略均接近理想弱扩展，验证Megatron高效可扩展。作用：作为开篇性能证据，为后续训练3B、8.3B乃至83B参数模型的可扩展性提供关键支撑。
 *caption: Model (blue) and model+data (green) parallel FLOPS as a function of number of GPUs. Model parallel (blue): up to 8-way model parallel weak scaling wit… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
 
 ### Megatron-LM: Training Multi-Billion Parameter Language Model — Fig.2 (p.3)
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig02.png]]
-> [!tip] 【图文联合解读】该图展示Transformer单层数据流：输入嵌入→Layer Norm→Attention子层（Self-Attention+Dropout+残差Add）→Layer Norm→MLP子层（H→4H经GeLU激活后4H→H，含Dropout与残差Add），整个块重复x L次后接输出层。紫色块为全连接层，MLP含4倍维度扩展。原文以此论证Transformer结构高度规整且MLP参数占比巨大，为后续按注意力头和MLP维度进行张量切分的模型并行方案提供结构基础，是实现千亿参数高效训练的关键依据。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图2展示了GPT-2风格解码器Transformer架构。核心结构为：底部输入嵌入(带Dropout)→Layer Norm→橙色Attention块(内含Self Attention、Attention Dropout、Layer Norm)→Add残差→Layer Norm→橙色MLP块(内含MLP H→4H扩展、GeLU、MLP 4H→H压缩、Dropout)→Add残差→顶部Output/Heads/Loss。紫色MLP为全连接层，整个蓝色Transformer Layer重复N次。该图是论文模型并行切分策略的基础依据：论文论证的关键结论在于，Transformer每一层中包含两个超大紫色MLP全连接层（H×4H维度，占该层参数主要部分），而注意力头计算量虽大但参数较少，因此适合对MLP做张量并行、对Attention做流水线并行，从而支撑83亿参数规模GPT-2训练。
 *caption: Transformer Architecture. Purple blocks correspond to fully connected layers. Each blue block represents a single trans- former layer that is replicat… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
 
 ### Megatron-LM: Training Multi-Billion Parameter Language Model — Fig.3 (p.4)
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig03.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构：** 图示 Transformer 块的两个子模块——(a) MLP 和 (b) Self-Attention——沿纵向切分至 2 个 GPU。MLP 中 X 经 f 算子分为 A₁、A₂ 两路并行计算后由 g 合并；Self-Attention 中 X 经 f 分为两组注意力头（Q₁/Q₂、K₁/K₂、V₁/V₂），并行 Softmax+Dropout 后拼接输出。
+该图展示Transformer块（MLP与Self-Attention）在模型并行下的具体结构：(a)MLP中权重A按行切分为[A₁,A₂]，X沿列切分，经GeLU得Y₁,Y₂后再合并；(b)Self-Attention将多头Q/K/V拆分为[Q₁,Q₂]/[K₁,K₂]/[V₁,V₂]。两条并行路径间通过共轭算子**f**（前向恒等、反向all-reduce）与**g**（前向all-reduce、反向恒等）衔接。
 
-**2) 关键技术结论：** f 与 g 是**共轭算子**——f 在前向为恒等、反向为 all-reduce；g 在前向为 all-reduce、反向为恒等。即一次通信在前向与反向间复用，避免冗余同步，仅在子模块边界处通信即可完成跨 GPU 计算。
-
-**3) 在论文中的作用：** 该图是 Megatron-LM 模型并行的基本构建块，论证了 MLP 列切分与 Attention 头切分均无需额外参数同步即可正确反向传播，为后续训练 83 亿/175 亿参数模型提供了核心并行原语与通信正确性保证。
+原文借此论证核心结论：仅插入f、g两个同步原语，即可在不重写编译器/代码的前提下实现Transformer的模型并行，是Megatron-LM方法的关键机制基础，为后续千亿/万亿参数规模训练的可扩展性提供理论与工程支撑。
 *caption: Blocks of Transformer with Model Parallelism. f and g are conjugate. f is an identity operator in the forward pass and all reduce in the backward pass… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
 
 ### Megatron-LM: Training Multi-Billion Parameter Language Model — Fig.4 (p.5)
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-1) **核心对象与结构**：图示单个模型并行 Transformer 层。流水线为 X → LayerNorm → Self-Attention(Q/K/V Linear + 输出 Linear) → Dropout → 残差⊕ → LayerNorm → MLP(Linear → GeLU → Linear) → Dropout → 残差⊕ → Y。其中 Self-Attention 与 MLP 两块以虚框标注为"Model Parallel"（各占一份权重分片），LayerNorm/Dropout/⊕在每卡本地复制。**每层共 4 次 all-reduce**：两块各在 fwd+bwd 中各 1 次（每个 Model Parallel 块对应 "2 All-Reduces"）。
+图示单Transformer层的模型并行结构：输入X经LayerNorm进入**第一个Model Parallel块**（Self-Attention+Linear(f)），残差叠加后再经LayerNorm进入**第二个Model Parallel块**（Linear→GeLU→Linear）。每个并行块正反向各需1次All-Reduce，故单层共计**4次通信操作**。
 
-2) **原文论证的关键结论**：在列并行 GEMM Y_i = X A_i 下，每块前向需 1 次 all-reduce 聚合 Y；反向梯度 ∂X 需另 1 次 all-reduce。故单层前向+反向共 4 次集合通信，**与层数线性、与数据并行组解耦**，通信量可控。
+论文借此论证：(1) 列切分使attention与MLP中的并行GEMM仅需All-Reduce，无需all-gather/reduce-scatter，通信开销最小且与batch/序列长度解耦；(2) 通信量可精确预测（4次/层），不随张量大小爆炸。
 
-3) **整体方法链作用**：这是 Megatron 张量并行的"通信账本"基础——证明仅靠列并行+行并行（无参数服务器、无额外同步）即可扩展到数十亿参数，为后续 PTD-P（与流水并行/Pipeline 组合）及在 8/16 卡 DGX 上训练 GPT-3 8.3B/22.4B 提供通信开销量化的理论依据。
+该图是支撑Megatron-LM核心方案的关键：证明仅靠简单的张量切分+All-Reduce即可在不引入额外调度复杂度的前提下训练8.3B参数模型，为后续GPU集群规模扩展的通信成本分析提供基础。
 *caption: Communication operations in a transformer layer. There are 4 total communication operations in the forward and backward pass of a single model paralle… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
 
 ### Megatron-LM: Training Multi-Billion Parameter Language Model — Fig.5 (p.6)
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig05.png]]
-> [!tip] 【图文联合解读】**图5图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图5展示两类并行的弱扩展效率：模型并行（1→8 GPU）由100%降至77%；模型+数据并行（64→512 GPU）由96%缓降至74%。原文借此论证：扩展至512卡时效率仍保持74%以上，证明模型并行及与数据并行结合可有效训练超大模型，突破单卡显存限制并保持高利用率，为论文核心实验提供关键支撑。
+该图由 **Table 1** 与柱状图组成。表1列出4组模型配置：参数从1.2B→8.3B，层数40→72，隐藏维度1536→3072，模型并行GPU为1/2/4/8，分别叠加数据并行至64/128/256/512 GPU。柱状图展示弱扩展效率——**纯模型并行**在1/2/4/8 GPU上分别为100%/95%/82%/77%；**模型+数据并行**在64/128/256/512 GPU上为96%/83%/79%/74%。
+
+**技术结论**：原文借此证明 Megatron-LM 的张量并行方案随 GPU 增加效率衰减可控（8卡仍达77%），且与数据并行叠加后扩展至512卡仍保持74%，验证了模型并行可训练超过单卡显存的大模型。
+
+**论文作用**：作为"系统可扩展性"证据，处于性能论证链路前端，为后续证明更大参数模型在下游任务上泛化更强（Figure 5/Table 5）提供工程可行性基础。
 *caption: Model and model + data parallel weak scaling efﬁciency as a function of the number of GPUs. done by scaling the batch-size, however, this approach doe… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
 
 ### Megatron-LM: Training Multi-Billion Parameter Language Model — Fig.6 (p.7)
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig06.png]]
-> [!tip] 【图文联合解读】**图示核心：** 横轴为训练迭代次数（0–300k），纵轴为验证集 LM 困惑度（8–24）。三条曲线分别对应 355M（蓝，收敛于 ~15）、2.5B（红，~11）、8.3B（黄，~9）三个 GPT-2 模型，均训练 300k 迭代。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**关键结论：** 在相同迭代预算下，模型规模越大，下降越陡、收敛越快、终值困惑度越低，明确证实了参数规模与收敛性能的扩展效应（scaling effect）。
+图6展示355M/2.5B/8.3B三档GPT-2模型（对应Table 2配置：层数24/54/72，隐层1024/1920/3072）在300k迭代内的验证困惑度曲线。三条曲线在训练初期快速下降后趋于平稳，最终分别收敛至约15、10.5、9，8.3B模型始终最低且下降最陡。
 
-**论文作用：** 该图直接服务于核心论点——即所提出的模型并行方案可成功训练出数十亿参数 Transformer 并获得更优下游能力。它以收敛曲线为关键实证，回击了对超大模型训练可行性的质疑，支撑后文 8.3B 模型质量评估的合理性。
+论文以此曲线量化论证"模型规模越大，收敛越快、终值困惑度越低"的关键结论，作为支撑模型并行（model parallelism）有效性的核心实验证据，回应"能否高效训练十亿参数模型"的中心问题，从而串联起Table 2（配置）→图6（效果）→Table 3（下游零样本评测）的完整扩展性论证链。
 *caption: Validation set perplexity. All language models are trained for 300k iterations. Larger language models converge notice- ably faster and converge to lo… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
 
 ### Megatron-LM: Training Multi-Billion Parameter Language Model — Fig.7 (p.8)
@@ -4870,13 +5068,19 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.1 (p.2)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig01.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 图示内容**：该图呈现论文的整体结构框架，展示了4个并列的技术维度章节及子节：§4并行策略（4.1混合并行、4.2自动并行、4.3异构并行，各1子节）、§5计算优化（5.1算子优化、5.2混合精度训练）、§7集合通信（7.1集合通信、7.2通信调度、7.3网内聚合）、§8容错（8.1故障分析、8.2异常检测、8.3检查点恢复、8.4无检查点恢复，共4子节最多）。
+图1以2×3虚线网格将全文结构化为**6大主题、共19个子节**：
+- §3 基础设施（AI加速器/网络/存储，3子节）
+- §4 并行方案（混合/自动/异构并行，3子节）
+- §5 计算优化（算子优化/混合精度训练，2子节）
+- §6 内存优化（激活重计算/冗余消除/碎片整理/卸载，4子节）
+- §7 通信优化（集合通信/通信调度/网内聚合，3子节）
+- §8 容错（故障分析/异常检测/检查点恢复/无检查点恢复，4子节）
 
-**2) 论证结论**：原文用此图论证分布式大模型训练效率可沿"并行—计算—通信—容错"四层栈式分解，每层含具体子技术（如并行3类、通信3类、容错4类）。
+**技术结论：** 该总纲论证高效LLM分布式训练需在"硬件基础→并行策略→算子/内存/通信优化→容错"全栈协同推进，单一层级优化无法独立解决问题，揭示多维度交织的优化空间。
 
-**3) 论文作用**：作为综述的导航图，为读者提供分类索引，明确各优化技术在整个训练流水线中的层级定位与覆盖范围。
+**作用：** 作为论文路线图，统领后续章节从各维度系统综述与对比各类优化技术。
 *caption: Overall structure of this survey.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.2 (p.3)
@@ -4890,62 +5094,58 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.3 (p.4)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig03.png]]
-> [!tip] 【图文联合解读】**图3图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图示将分布式LLM训练基础设施划分为左右两平面：左侧**数据面**自上而下依次为Backend Network（承载训练流量）→4个Compute Node→Frontend Network（管理与存储流量）→Training Dataset Storage与Checkpoint Storage；右侧**控制面**包含Scheduling System，以及Fault Tolerance子系统（细分Anomaly Detection与Failure Recover）。
+该图以分层架构呈现分布式LLM训练基础设施：顶层为"Backend Network (Training Traffic)"，下挂4个并行Compute Node；底层为"Frontend Network (Management & Storage Traffic)"，接入Training Dataset Storage与Checkpoint Storage；右侧独立列出Scheduling System与Fault Tolerance（含Anomaly Detection、Failure Recover两个子模块）。
 
-**论证结论**：分布式LLM高效训练不仅依赖算力横向扩展，更需前后端网络解耦（分离训练流量与管控/存储流量）、存储分层（数据集与检查点独立），并通过调度与容错子系统协同保障大规模训练的稳定性与可恢复性。
+**关键论证：** 原文借此说明训练流量与存储/管理流量须在网络上分离，避免I/O抢占梯度同步带宽；同时表明调度与容错（检测+恢复）作为横切子系统与计算集群解耦，构成独立保障层。
 
-**论文作用**：作为综述的总览架构图，统摄后续对并行计算、网络拓扑、存储优化、调度策略与容错机制等章节的系统化论述，构成全篇方法学的整体框架。
+**论文作用：** 作为统一参照拓扑，为后续并行策略、通信优化、容错与调度等章节提供共享的组件边界与术语基准。
 *caption: Infrastructure overview for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.4 (p.5)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图中将分布式LLM训练的基础设施优化研究分为两大类别（可视为按优化主题的分类表）：
-
-**第一类（资源调度与分配类，12项）**：Tiresias、THEMIS、ElasticFlow、Gavel、Gandiva_fair、FGD、Lucid、Pollux、Sia、Crius、Hydro、Acme，主要聚焦GPU/作业调度与公平性。
-
-**第二类（系统效率与弹性类，7项）**：Cassini、HIRE、SiloD、Synergy、EnvPipe、Zeus、Perseus，侧重流水线、弹性伸缩、能效与容错。
-
-**原文论证结论**：作者通过该分类表系统梳理了"基础设施优化"这一维度的代表性工作，凸显调度、弹性、效率三大研究主线，为后续讨论并行策略与算法优化奠定对比基线。
-
-**论文作用**：作为综述的方法学骨架之一，与算法层优化形成"算法×基础设施"双维度分类图谱，帮助读者快速定位研究坐标。
+> [!tip] 【图文联合解读】图4以三级树状结构系统梳理LLM分布式训练基础设施研究：根节点分四大类——①AI加速器（NVIDIA Ampere/Hopper/Blackwell GPU，及AMD、GAUDI、TPU、Graphcore IPU、Cerebras CS-2等异构芯片）；②网络基础设施（Chip-to-Chip NVLink/NVSwitch/TPU、Node-to-Node RDMA InfiniBand/RoCE、网络拓扑Clos/Dragonfly/HPN、负载均衡与拥塞控制PFC/DCQCN/HPCC等）；③存储系统（检查点Tectonic/HDFS/Ceph与训练数据Lustre/GPFS/Alluxio）；④调度系统（工作负载调度Tiresias/Pollux与资源调度Zeus/Perseus）。该图支撑"算力–网络–存储–调度全栈协同优化"核心论断，是论文基础设施优化分类章节的骨架图，为后续并行策略与资源管理讨论提供分类依据。
 *caption: Studies on infrastructure optimizations for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.5 (p.6)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig05.png]]
-> [!tip] 【图文联合解读】图5展示五种芯片间互连拓扑：(a)树形——1个Root Complex经PCIe Switch分层挂接16片芯片；(b)Cube-Mesh——8节点构成3D立方体邻接；(c)交换全连接——2个NVSwitch各自将上下两组芯片全连；(d)P2P全连接——8节点两两直连，呈完全图；(e)2D-Torus——4×4网格，含红色行向与蓝色列向环绕边。
+> [!tip] 【图文联合解读】图示五种片间(chip-to-chip)拓扑结构：(a)树形以Root Complex为根，经PCIe Switch分级连接8个叶节点；(b)Cube-Mesh由8节点构成三维立方网格；(c)Switch全连通过2个NVSwitch各连接4个芯片；(d)P2P全连8节点两两直连；(e)2D-Torus为4×4网格，红/蓝绕回边实现行与列首尾相连。
 
-论文据此论证：各拓扑在带宽、延迟、可扩展性与成本间存在显著权衡——树形廉价但根节点处易成瓶颈；Cube-Mesh结构平衡；NVSwitch全连（如NVLink）提供高带宽；P2P延迟最低但N²连线难以扩展；2D-Torus（如TPU Pod）利于大规模部署但AllReduce需特殊映射。
+原文借此论证各拓扑在带宽、可扩展性与延迟上的权衡——树形存在根节点瓶颈，Mesh/Torus利于扩展，全连带宽最优但连线数达O(N²)。
 
-作用：作为后续讨论3D并行（TP/PP/DP）通信模式与节点内拓扑选型匹配的硬件基础铺垫。
+该图作为硬件层基础，支撑后续分布式并行训练策略(数据/流水线/张量并行)与通信效率优化的分析。
 *caption: Five chip-to-chip topologies: tree topology, cube-mesh topology, switch-based fully-connected topology, P2P-based… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.6 (p.7)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig06.png]]
-> [!tip] 【图文联合解读】图6展示大规模GPU集群四种典型网络拓扑（2 Pod 并列，每Pod含2 Spine + 2 Leaf + 每Leaf下挂8 GPU节点）：(a) Clos——Core(2)-Spine(4)-Leaf(4)三级直连，叶仅连本Pod；(b) Dragonfly+——省去Core层，两Pod Spine间以弧形长线直接跨Pod互连；(c) Rail-Optimized——保留Core-Spine层，但每Leaf横向扇出至对Pod GPU（底部大量交叉连线），带宽局部优化；(d) Rail-Only——仅本Pod内Leaf-GPU链路，无跨Pod底层通路。原文借此论证：拓扑决定All-Reduce等集合通信的对分带宽与最短路径，直接影响DP/TP/PP并行切分及计算-通信重叠效率。该图为后续章节搭建"硬件拓扑→并行策略→训练效率"的物理前提，是连接基础设施与算法优化的枢纽图示。
+> [!tip] 【图文联合解读】**图文联合解读**
+
+图示展示四类大规模GPU集群网络拓扑：(a) **Clos** 为标准Fat-Tree四层结构（2 Core → 各Pod内2 Spine → 2 Leaf → 约8 GPU），全连接带宽均衡；(b) **Dragonfly+** 去除Core层，Pod间通过Spine交换机直接弧形互联，降低跨Pod跳数与时延；(c) **Rail-Optimized** 保留Clos骨干，但同rank GPU跨Leaf交换机交叉互联，专为张量并行AllReduce优化；(d) **Rail-Only** 进一步精简，跨Pod仅靠Core，Pod内仅Leaf-GPU Rail直连。
+
+论文借此论证：**网络拓扑直接决定LLM分布式训练集合通信的带宽、跳数与成本**，是基础设施选型核心权衡点。该图为后续并行策略（TP/PP/DP）与通信优化（overlap、压缩、调度）章节提供物理层前提。
 *caption: Four typical network topologies in large-scale GPU clusters: Clos topology, Dragonfly+ topology, rail-optimization… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.7 (p.10)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig07.png]]
-> [!tip] 【图文联合解读】**图7联合解读：**
+> [!tip] 【图文联合解读】## 图文联合解读
 
-**核心对象与结构**：图7将分布式LLM训练的并行方案研究分为两类列表呈现——上框列举12项并行方案研究（HetPipe [221]、AccPar [222]、Whale [223]、AMP [224]、Pathways [225]、HPH [226]、SDPipe [227]、HAP [228]、PipePar [229]、Yuan et al. [230]、SWARM [231]、FusionAI [232]），涵盖异构流水线、自动并行等系统级方案；下框列举6项RLHF训练系统（DeepSpeed-Chat [233]、HuggingFace TRL [234]、OpenRLHF [235]、Adaptive Placement and Parallelism [236]、ReaLHF [237]、PUZZLE [238]），聚焦强化学习微调场景。
+**核心结构**：该图以树状分类法系统梳理分布式LLM训练的并行方案，根节点"Parallelism Schemes"下分三大支系：(1) **混合并行**（5子类，含数据/张量/流水线/序列/专家并行，约60+项工作，细分子问题如流水线气泡、内存不均衡、通信优化、负载均衡）；(2) **自动并行**（通用框架与Transformer专用，约25项）；(3) **异构并行**（硬件与模型两类，约18项）。量化地映射了约100余篇文献。
 
-**技术结论**：通过分类列举，揭示分布式LLM训练并行技术已从单一流水线/数据并行拓展到异构资源调度、自动并行搜索及RLHF专用框架等多元路径，技术生态丰富且针对不同训练阶段（预训练、对齐）有专门优化。
+**关键结论**：论证了单一并行策略已难以应对大规模LLM训练，研究呈两大趋势——其一是**方案融合化**（DP/TP/PP/SP/EP混合），其二是**自动化与异构化**（自动搜索最优切分策略、利用异构硬件/模型资源提升效率）。
 
-**论文作用**：作为综述章节的分类总览图，为后续深入讨论各类并行策略提供文献索引框架，便于读者快速定位相关工作。
+**论文作用**：作为第III节并行方案的**全局索引图**，为后续章节（流水线气泡优化、内存均衡、MoE通信、异构调度等）的方法分类与对比提供统一框架，是读者快速定位具体优化技术的导航图。
 *caption: Studies on parallelism schemes for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.8 (p.12)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig08.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 8）：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-该图以一个16层LLM为例，展示三层并行嵌套结构：外层为2个Data Parallel副本（Rank 0/1），通过AllReduce同步梯度；内层包含4个Pipeline Stage（0/1/2/4，跳号编排），分别承载Layers 0-3、4-7、8-11、12-15，Stage间以Send/Recv传递激活值；每个Stage内部进一步切分为4个Tensor Parallel分片（TP-0至TP-3）。原图还嵌入Sequence Parallel层。
+**图示结构**：展示2个DP副本（Rank 0/1）经AllReduce跨副本同步；每副本内含4级流水线（Stage 0-3），各级嵌入4路TP（TP-0~3），共16层Transformer按"L0-3/4-7/8-11/12-15"四段分配，Stage间以Send/Recv衔接，每层沿TP维度四色分块表示权重切片。
 
-原文借此论证：**DP解决数据扩展、PP分摊层间计算与内存、TP分摊单层显存**，三者正交可叠加，是支撑千亿级LLM在分布式集群上训练的核心组合范式。在全文方法链中，该图为"并行策略分类与组合"章节的实例化说明，为后续ZeRO、激活重计算等内存优化技术的讨论奠定拓扑基础。
+**技术结论**：3D并行可正交叠加——PP切分网络深度、TP切分单层宽度、DP扩展样本量；三类通信（AllReduce / Send-Recv / TP组内集合）沿独立网域并行，互不抢占带宽，规避瓶颈重叠。
+
+**论文作用**：作为全文"DP×TP×PP×SP"四维资源拓扑基准图，为后续章节讨论通信优化（如梯度压缩）、显存调度与流水线气泡消解提供统一参照框架。
 *caption: An example of 3D-parallelism with data parallelism, tensor parallelism, and pipeline parallelism.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.9 (p.14)
@@ -4959,74 +5159,81 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.10 (p.17)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig10.png]]
-> [!tip] 【图文联合解读】**核心对象与结构**：该图为 RLHF 四模型协作数据流图。包含 2 个可训练模型（Actor Model、Critic Model，红色）与 2 个冻结模型（Reference Model、Reward Model，蓝色），并标注三步流程：① Actor 由 query 集 x₁…xₙ 生成 response y₁…yₙ；② Critic/Reference/Reward 推理产出 value、score、KL 估计；③ 训练信号回传 Actor 与 Critic。
+> [!tip] 【图文联合解读】**图文联合解读**
 
-**关键结论**：RLHF 需协同 4 个异构模型并交替执行"推理—评分—训练"，其中 2 个冻结、2 个可训练，证明 RLHF 对分布式显存、通信与调度均提出高于普通 SFT 的资源需求。
+该图以**RLHF 流程**为对象，展示"推理—训练"两阶段闭环：①Actor 模型（可训练）以 Query Dataset 输出的 x₁…xₙ 为输入，生成 y₁…yₙ 响应；②Critic（可训练）、Reward、Reference（冻结）三模型并行推理，分别产出 value、score 与 KL 估计，用于③回灌 Actor 进行策略更新。图中通过"Trainable/Freezed"颜色标注明确区分各角色角色属性，揭示了 RLHF 四模型协同 + 三类监督信号（value/score/KL）的核心结构。
 
-**论文作用**：作为 RLHF 训练范式章节的结构锚点，为后文分布式优化策略（模型并行、显存管理等）提供动机与需求基线。
+**技术结论**：RLHF 的高效训练需同时承载多个异构模型（其中仅 Actor、Critic 可训练），并融合三类不同来源信号，是 LLM 分布式训练中最复杂的范式之一，因此论文将其单列为代表性案例进行讨论。
+
+**论文作用**：作为综述中典型 RL 训练范式的可视化锚点，为后续展开 RLHF 分布式优化挑战（多模型同步、显存压力、通信开销）提供统一参照框架。
 *caption: An example of RLHF. Inference process: 1 The… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.11 (p.19)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig11.png]]
-> [!tip] 【图文联合解读】**核心对象**：分类树状结构，列出分布式LLM训练中4类计算优化研究及约22项代表性工作：
-① **编译优化**（左侧标签 "…tions"）：Kernel级（Halide[267]、TVM[252]、Roller[268]、Triton[269]、ALCOP[270]）；Graph级（Chimera[271]、Welder[272]、Slapo[203]、TorchDynamo&TorchInductor[273]、JIT-Q[274]）。
-② **混合精度**（标签 "…int"）：FP16 [275]、Campgo[276]、BF16 [277]、THC[278]。
-③ **亚字节精度**（标签 "…oint"）：Wang et al.[279]、Sun et al.[280]、FP8-LM[281]、Rouhani[282]。
-④ **量化**（标签 "…nt"）：INT8-Jetfire[283]、INT4-Xi[284]、1-Bit-BitNet[285]/b1.58[286]。
+> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
 
-**关键论证**：计算优化从**编译器层级**（kernel、graph）到**数值精度层级**（mixed precision、sub-byte、quantization）逐级压降算力与显存，是分布式训练效率提升的关键技术支柱。
+该图以树形分类展示"LLM训练计算优化"的两大主线：
 
-**论文作用**：作为综述对"计算优化"子领域的系统分类索引，与通信优化、并行策略、内存优化等并列，构成完整分布式LLM训练优化全景图。
+- **算子优化**：分*手写类*（FlashAttention/2/3、BPT、ByteTransformer 等6项）与*自动类*——Kernel 级（Halide、TVM、Triton、ALCOP 等5项）+ Graph 级（Chimera、TorchDynamo、TorchInductor、JIT-Q 等5项）；
+- **混合精度训练**：*16位*（FP16、BF16 等4项）、*亚8位浮点*（FP8-LM 等4项）、*低位定点*（INT8 Jetfire、INT4、1-Bit BitNet/b1.58，共4项）。
+
+论文借此论证：计算优化呈"**手写算子 + 编译自动化**"双轨并行，并沿精度持续下探。它在论文方法学链路中与并行策略、内存优化并列，构成"**算法—系统—硬件**"三位一体高效训练框架的核心环节。
 *caption: Studies on computation optimizations for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.12 (p.21)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig12.png]]
-> [!tip] 【图文联合解读】图12展示分布式LLM训练内存优化研究的分类树（局部）。顶部框为"卸载（Offloading）"，细分为静态卸载（L2L、ZeRO-Offload、Elixir、Yuan et al.，共4项）与动态卸载（TSPLIT、PatrickStar、Mobius、Harmony、TMOF、STRONGHOLD，共6项）；下方框列举另一类共6项工作（ZeRO-Infinity、Angel-PTM、Smart-Infinity、Fuyou、MoESys等），对应异构存储扩展显存方案。原文据此论证：内存优化研究沿"卸载"与"异构显存扩展"两条路径展开，均通过CPU/NVMe分担GPU显存压力。该图为论文方法综述章节的子分类支撑，系统梳理分布式训练栈，缓解大模型训练的内存瓶颈。
+> [!tip] 【图文联合解读】**图示对象与结构**
+该图为三级树状分类法：根节点"LLM训练内存优化"分4大类、8子类，覆盖约42篇代表工作——
+①激活重计算：动态逐出3篇（DTR、MegTaiChi、Coop）+静态逐出5篇（Checkmate、LoongTrain、DistFlashAttn等）；
+②冗余削减：全分片2篇（ZeRO、FSDP）+部分分片5篇（ZeRO++、MiCS、PaRO、RTP、AMSP）；
+③碎片整理：张量基5篇（ROAM、ZeRO-R等）+VMM基2篇（GMLake、Expandable Segments）；
+④卸载：CPU静态4篇+CPU动态6篇（TSPLIT、PatrickStar等）+SSD 6篇（ZeRO-Infinity、Angel-PTM等）。
+
+**关键技术结论**
+优化路径沿"重算→分片→整理→外存卸载"递进，从静态策略（ZeRO/FSDP/Checkmate）演进至动态策略（TSPLIT/ZeRO-Infinity），分别缓解激活值、参数、优化器状态及显存碎片化四大瓶颈。
+
+**文中作用**
+作为分布式LLM训练内存优化的全景总图，承接前文并行策略章节，奠定"算法—系统协同"的整体优化框架。
 *caption: Studies on memory optimizations for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.13 (p.25)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig13.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 13）：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 13）**
 
-该图为128×128 GPU对通信热力图，量化展示InternLM-2 102B单次迭代在TP=8/PP=4/DP=4/ZeRO-1=4配置下的通信量（256MB–12GB）。
+该图为 128×128 GPU 单次迭代通信热力图，对应 InternLM-2 102B 预训练，并行配置为 TP=8、PP=4、DP=4、ZeRO-1=4，色阶 256MB–12GB。图中沿对角线可见 16 个 8×8 深紫色稠密块（TP 组内 AllReduce，单对约 12GB），呈最重通信；其间的浅蓝散点对应中等流量的跨阶段 PP 通信；外围黄色细线代表流量最低的 DP/ZeRO 通信（约 256MB 量级）。
 
-**结构特征**：
-- 对角线有16个8×8深紫方块（16组TP群组），单次AllReduce峰值达12GB，为最重通信；
-- 蓝色点状散点对应DP/ZeRO群组内通信，强度次之；
-- 黄色对角线代表PP点对点通信，仅256MB量级，最轻。
+原文据此得出关键结论：TP 单对通信量最大，须映射至最快互连（如节点内 NVLink）；DP/ZeRO 次之；PP 通信最小，可容忍较慢链路，从而确立"TP > DP/ZeRO > PP"的拓扑映射优先级。
 
-**关键结论**：通信强度呈 TP > DP/ZeRO > PP 的明确层次，验证了"按通信强度优先级排布拓扑"的设计原则——需将高带宽TP通信约束在NVLink域内。
-
-**论文作用**：作为实验证据支撑第7章集体通信优化讨论，证明分层并行中不同维度通信开销差异巨大，是拓扑感知调度与集合通信算法选择的核心依据。
+该图为论文分布式训练章节提供量化实证，将并行维度与物理网络层级匹配的原则从定性建议转为可度量的设计依据，是连接并行策略与集群拓扑协同优化的核心论据。
 *caption: Communication traffic heatmap for InternLM-2… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.14 (p.26)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig14.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图14 联合解读**
 
-图14以三层分层结构（左标签被截断，依内容可还原为**Scheduling/ Aggregation/ Delegation**）梳理分布式LLM训练的通信优化研究：
+图14以三级树状分类系统梳理LLM分布式训练的通信优化技术，沿三大维度展开：**① 集体通信**——预定义算法（MPI/NCCL/RCCL库，Ring/Tree/Hybrid拓扑）与合成算法（GC3、SCCL、TACCL、Blink、P²共5种）；**② 通信调度**——FIFO（Poseidon、GradientFlow、PyTorch DDP）、优先级调度（P3、TicTac、ByteScheduler、PACE、Lina）及分解式调度（流水线/通信/计算三类分解，附ooBP）；**③ 网络内聚合**——以太网方案（SwitchML、FPISA、NetReduce、AllReduce-Switch、PANAMA、ATP共6种）与InfiniBand方案（NVIDIA Mellanox SHARP v1/v2/v3）。
 
-- **上层（调度）**：分四子类——流水线阶段分解（Breadth-First[159]、Fold3D[351]、TriRace[352]）、通信分解（SYNDICATE[354]等4项）、计算分解（CoCoNet[357]等4项）、乱序反向传播[361]，共12篇。
-- **中层（聚合）**：SwitchML[362]、FPISA[363]等6种可编程交换机方案。
-- **下层（委派）**：仅NVIDIA Mellanox SHARP v1/v2/v3[368]一项，指向硬件卸载。
-
-**论证结论**：通信优化呈"软→硬"分层谱系，从算法调度到网络设备卸载，互补共存。
-
-**论文作用**：作为综述通信优化章节的方法学分类地图，为读者快速定位各层代表工作与选型权衡提供索引。
+该图为论文通信优化章节提供结构化分类基座，明确各子方向代表性工作，是后续方法对比、瓶颈分析与优化策略选型的统一索引框架。
 *caption: Studies on communication optimizations for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.15 (p.29)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig15.png]]
-> [!tip] 【图文联合解读】**图文联合解读（图15）**
+> [!tip] 【图文联合解读】**核心对象与结构**：图为"LLM分布式训练容错"三级分类树，根节点展开为三类：① Anomaly Detection，含 Statistical Monitoring（TPUv4 Healthd、MegaScale 等8项）与 Proactive Validation（SuperBench、Preflight Check 等4项）；② Checkpointing-Based Recovery，其中 Persistent Checkpointing 按范式进一步细分 Synchronous（DeepSpeed、Varuna 等5项）、Snapshot-Stall（Check-N-Run、TorchSnapshot 共2项）、Asynchronous（DeepFreeze、CheckFreq、LightCheck 等5项），另含 In-Memory（Gemini、REFT 2项）；③ Checkpointing-Free Recovery，含 Live Migration（Parcae、Oobleck）与 Module Redundancy（Bamboo、SlipStream、SWARM）。整图归类约 32 个系统/方法。
 
-该图以分类树形式系统梳理分布式LLM训练容错技术，左侧为四类主干（Checkpointing、Recomputing、Parcae/Oobleck类、Elasticity），右侧罗列代表性工作，共19项：Checkpointing下细分**同步**（DeepSpeed、Varuna、JIT-/Flash-/Universal Checkpointing，5项）、**Snapshot-Stall**（Check-N-Run、TorchSnapshot，2项）、**异步**（DeepFreeze、CheckFreq、LightCheck、DataStates-LLM、FastPersist，5项）；其余三行各列2–3项。
+**关键技术结论**：揭示容错体系按"检测—恢复—无检查点恢复"分层递进；持久化检查点因同步、一致性、停顿开销的权衡而分化出同步/快照停顿/异步三档；无检查点路径以活迁移与模块冗余提供轻量替代。
 
-原文借此论证：容错设计存在**同步开销、快照粒度与弹性恢复**间的权衡——主流方案由同步快照逐步演进到异步检查点与弹性冗余。图中各子类的划分与文献编号直接支撑全文"训练效率优化"谱系中的**可靠性分支**，与并行、通信、内存优化并列，是综述方法分类的重要组成部分。
+**论文作用**：作为综述"分布式基础设施可靠性"章节的分类地图，串联异常检测与恢复策略，为读者建立容错研究全景并支撑后续对比与选型。
 *caption: Studies on fault tolerance techniques for distributed LLM training.… ｜ 论文 [[efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.1 (p.1)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig01.png]]
-> [!tip] 【图文联合解读】左图量化展示 A100 40GB 显存分配：参数 26GB(65%) 常驻，KV Cache >30% 按请求动态分配，激活仅小片。右图双曲线对比：现有系统(橙)batch≈8 即显存触顶 39GB、吞吐仅 ~0.3k tok/s；vLLM(蓝)线性缓增、batch=40 仍可服务，吞吐稳 ~0.9k tok/s。作用：开篇动机图，揭示传统 KV 连续分配引致内部碎片严重、batch 受限，锚定 PagedAttention 分页方案——碎片降至 sub-block 量级、吞吐提升 2–4×，为全文方法与实验铺垫论证基础。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**核心对象与数据**：左图展示13B参数LLM在NVIDIA A100（40GB）上的内存布局——参数占26GB（65%，灰色）、KV Cache超30%（红色）、少量为激活等开销（黄色）。右图上为不同批量下的内存占用：现有系统（橙）增长陡峭，约8请求即触顶40GB；vLLM（蓝）线性缓增，约40请求才达上限。下图为吞吐量对比，vLLM在大批量下吞吐显著领先。
+
+**关键结论**：传统系统因KV Cache按连续块预分配，内存迅速耗尽，限制批大小；vLLM通过分页化管理将内存利用率与吞吐同步拉高。
+
+**论文作用**：Figure 1在首页定量化揭示KV Cache浪费问题，作为引入PagedAttention动机，与Table 1配置及后续消融实验共同构成"问题—方法—验证"叙事链。
 *caption: Left: Memory layout when serving an LLM with 13B parameters on NVIDIA A100. The parameters (gray) persist in GPU memory throughout serving. The memory… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.2 (p.2)
@@ -5038,98 +5245,100 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig03.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-该图以一条水平连续内存条展示两段请求的KV cache分配：请求A占用7个prompt token槽("Four…fathers")+1个已生成token槽，并预留2个reserved槽，但其后留有**2038个从未使用的内部碎片**；请求B仅用3个prompt token槽+1个reserved槽，留有**507个内部碎片**；两段间的灰色间隙标注为**外部碎片(External fragmentation)**。
+图3以两并发请求的KV cache物理布局为例，展示了现有系统的三内存浪费：**①预留浪费**——每个请求按最大序列长度预先分配槽位（如请求A为"forth"、`<eos>`预留2槽，请求B为"once`预留1槽）；**②内部碎片**——请求A预分配后实际未用2038槽，请求B未用507槽；**③外部碎片**——两请求内存块之间的空隙无法被新请求利用。
 
-原文借此论证：现有系统因按最大序列长度**连续预分配**，同时产生reserved、internal fragmentation、external fragmentation三类浪费，使显存无法容纳更多并发请求。该图作为**动机图**，直接引出PagedAttention的核心思想——将KV cache拆为固定大小非连续"页"，借助块表映射消除碎片，从而在方法链路中奠定"页式显存管理"必要性的视觉证据基础。
+原文借此论证：传统按"最长序列"连续预分配的方式，使显存大部分被浪费而非服务真实请求，严重限制了批处理并发度。这是PagedAttention提出"虚拟内存+非连续分页"方案的核心动机——通过将KV cache按固定page分页管理，消除三类碎片，从而提升显存利用率与系统吞吐，构成论文方法（vLLM）部分的关键问题陈述。
 *caption: KV cache memory management in existing systems. Three types of memory wastes – reserved, internal fragmentation, and external fragmentation – exist th… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.4 (p.5)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig04.png]]
-> [!tip] 【图文联合解读】**图4联合解读（vLLM系统架构）**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：图示含三类组件——中央**Scheduler**（调度器）通过有向边连接**KV Cache Manager**（内含两张Block tables网格）与N个并行**Worker**（每个Worker含Cache Engine+Model Shard+GPU）；KV Cache Manager下接**CPU/GPU Block Allocator**两个分配器。
+1) **核心对象与结构**：左半图展示 vLLM 系统由三类组件构成——顶部 **Scheduler**（调度器）单向分发给 N 个 **Worker**（Worker 0…N-1），每个 Worker 内含 **Cache Engine** 与对应 GPU 上的 **Model Shard**；左侧 **KV Cache Manager** 维护两张 **Block tables**，下接 **CPU Block Allocator** 与 **GPU Block Allocator**，分别管理两种物理显存。
 
-2) **关键技术结论**：Scheduler集中管控请求调度；KV Cache Manager以Block Table为元数据，将GPU显存按"页"粒度（类OS虚拟内存）分配；CPU Block Allocator支持阻塞序列的溢出管理，证明PagedAttention可消除KV Cache碎片。
+2) **论证的关键结论**：Scheduler 集中调度、Worker 并行执行的分层架构，使 KV Cache 逻辑块与物理块解耦——Block tables 完成"逻辑序列→物理页"的映射，从而在 GPU 显存中以非连续、固定大小的页块存储注意力 Key/Value 向量，规避传统连续预分配造成的内部碎片与浪费。
 
-3) **论文整体作用**：此图是vLLM的系统总览，对应后续§4 PagedAttention算法的硬件落地——Scheduler+Block Manager实现"以页为单位的注意力计算"，是连接内存管理理论与实际GPU serving系统的桥梁，支撑了§5实验中高吞吐量的结果。
+3) **论文链路中的作用**：该图给出 PagedAttention（图右）的运行底座——只有在此 Scheduler/Allocator/Block table 三层协同下，逻辑连续、KV 物理分散的分页注意力才能落地，是后续吞吐量实验（如共享 prefix、beam search 场景）实现 2–4× 提升的架构前提。
 *caption: vLLM system overview.… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.5 (p.5)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig05.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示：左侧查询向量"forth"与右侧3个非连续KV块（块大小B=4）通过箭头建立注意力计算关系。Block1存"years/ago/our/fathers"，Block2存"brought/forth"（未填满），Block0存"Four/score/and/seven"；逻辑序列为0→1→2，但物理上分散、不相邻。
+1）**核心对象与结构**：图左侧展示分布式推理架构——Scheduler 调度请求，KV Cache Manager 通过 Block tables 管理物理块，分配给 N 个 Worker（每个含 Cache Engine + Model Shard，部署于 GPU）。右侧展示 PagedAttention 核心：将一条序列 "Four score and seven years ago our fathers brought forth" 的 KV 向量切成定长 Block（Block 0/1/2），各块在内存中非连续存储，但通过块表逻辑映射；给定 Query "forth"，按需读取 Block 0（含 "Four score and seven"）和 Block 2（含 "brought forth"）参与计算。
 
-论证结论：原文给出分块注意力公式A_ij=exp(qᵢᵀK_j/√d)/Σ，证明softmax注意力可按固定大小块独立计算，KV向量无需在显存中连续存储，从而彻底解耦逻辑序列顺序与物理内存布局。
+2）**关键技术结论**：KV 缓存可像操作系统虚拟内存分页一样按块（size=B）非连续存放，分块式注意力计算（按 Kⱼ、Vⱼ 分块累加）仍然数学等价，从而彻底消除显存碎片与重复分配。
 
-论文作用：作为PagedAttention算法的标志性图示，为后续block table虚实块映射机制、显存分页管理及高吞吐LLM serving的系统实现奠定直观基础。
+3）**论文作用**：作为方法总览图，把"分页 KV 缓存 + 块表管理 + 多 Worker 并行"链路一次性呈现，是后续块共享、Copy-on-Write 等优化的前提。
 *caption: Illustration of the PagedAttention algorithm, where the attention key and values vectors are stored as non-contiguous blocks in the memory. block size… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.6 (p.6)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig06.png]]
-> [!tip] 【图文联合解读】**1) 核心结构（具体/量化）**：图示 Request A 的 KV 分页映射。4 个逻辑 KV 块（Block 0–3，每块容量 4 token）通过 Block Table 指向 GPU DRAM 上的物理块 **7、1、3**（序号非连续），表项含 "Physical block number" 与 "# filled"；新生成的 *fathers*、*brought* 使逻辑块 1 由 3→4、逻辑块 2 由 0→1，以黄色高亮。
+> [!tip] 【图文联合解读】**图文联合解读（Figure 6 — Block table translation in vLLM）：**
 
-**2) 论证的技术结论**：①逻辑–物理块解耦，物理块可非连续分配，消除外部碎片；②块内按 token 增量填充，`# filled` 追踪部分占用，避免预分配造成的内部浪费，并支持流式解码时原位追加。
+1) **核心对象与结构**：图左侧展示 Request A 的 Logical KV blocks（Block 0–3，存 "Four score and seven"、"years ago our fathers"、"brought" 等 token）通过 Block Table 映射到 GPU DRAM 上的 Physical KV blocks（Block 7、1、3），表项含「物理块号」与「# filled 计数」（如 4、4、1），实现非连续分配与按需填充。
 
-**3) 在论文链路中的作用**：本图是 PagedAttention 的机制示意——把 OS 虚拟内存分页思想移植到 LLM 的 KV cache 管理，是后续显存高效利用、近零浪费以及请求间物理块共享等实验结论的方法论基础。
+2) **论证结论**：PagedAttention 打破了 KV cache 必须连续预分配的假设——逻辑块顺序固定，但物理块可分散、按需分配，避免碎片与浪费，为同前缀请求复用物理块（如图右侧 Figure 7 中 Request B 共享 Block 4、5）提供基础。
+
+3) **链路作用**：作为 vLLM 内存管理层核心数据结构，是后续 §4.5 CPU RAM 交换、近零显存浪费与高吞吐实验结论的机制前提。
 *caption: Block table translation in vLLM. divides it into physical KV blocks (this is also done on CPU RAM for swapping; see §4.5). The KV block manager also m… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.7 (p.6)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig07.png]]
-> [!tip] 【图文联合解读】**图7 图文联合解读**
+> [!tip] 【图文联合解读】**图7图文联合解读**
 
-图示两并发请求（A："Four score and seven…"；B："It was the best of…"）的逻辑KV块经各自块表映射至共享的9块物理KV池（每块4 token）。物理分配**非连续且跨请求交错**：A 的逻辑块 0→物理 7、块 1→物理 1、块 2→物理 3；B 的逻辑块 1→物理 2；橙色高亮为 A 生成阶段新增 token，绿色为 B 的块。
+①**核心对象与结构**：左图为单请求A的KV缓存——4个逻辑KV块（每块4 token，含①②③①位置编号）经Block Table（物理块号+#filled列）映射至8个非连续物理KV块（例：逻辑Block0→物理Block7、Block1→物理Block4、Block2→物理Block3）；右图为请求A、B同时存储于同一9块物理池——两者各持独立逻辑块表（A:4块，B:3块），分别指向共享物理块（Block1/7归A，Block2/5归B），实现同池共存。
 
-**核心结论**：PagedAttention 通过逻辑–物理块映射的"类虚拟内存"机制，消除连续分配导致的内存碎片与浪费，支持多请求并发下的块级独立调度与跨请求内存共享（如公共前缀可共用物理块）。
+②**技术结论**：Block Table解耦逻辑视图与物理布局，多请求可共享物理显存池，按需动态分配、无须预留连续空间，显存利用率逼近理论最优。
 
-**论文作用**：该图是 PagedAttention 核心机制最直观的设计级证据，为后续吞吐量、显存利用率等系统级实验提供方法基础，论证 vLLM 服务框架的可行性。
+③**文中作用**：与Figure 8（parallel sampling）、beam decoding共同构成"复杂解码场景"图示组，支撑vLLM在多请求场景下保持近最优显存效率的核心论点。
 *caption: Storing the KV cache of two requests at the same time in vLLM. requests and the latest tokens for generation phase requests) as one sequence and feeds… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.8 (p.7)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig08.png]]
-> [!tip] 【图文联合解读】该图展示两样本 A1、A2 并行采样的内存视图：二者 Logical Block 0（prompt "Four score and seven"）通过块表映射到同一 Physical Block 7，**Ref count=2**；当 A2 写"mothers"触发 Copy-on-write，原共享块被复制出新 Block 3（"fathers"），Ref count 由 2→1，两样本写入互不影响。原文借此论证：PagedAttention 的块级内存管理可在 prompt 共享 KV cache 的同时，仅在输出分歧处按块复制，兼顾显存节约与样本独立性，是 vLLM 高吞吐、低显存的关键设计支撑。
+> [!tip] 【图文联合解读】**图文联合解读（Figure 8 Parallel sampling）**
+
+**1) 核心对象与结构**
+图8展示Parallel Sampling场景：同一请求A派生出两个样本A1、A2，二者共享同一prompt前缀"Four score and seven years ago our"（逻辑Block 0–1）。分叉后A1生成"fathers"、A2生成"mothers"。中间为物理KV块表（Block 0–8），其中Block 7为原始共享前缀页，Block 2、3为分叉后各自独占页；红色"Ref count: 2→1"标注与Copy-on-write弧线显式指示：分叉触发时仅复制被修改页，前缀页引用计数递减。
+
+**2) 关键技术结论**
+PagedAttention借助分页式内存管理与Copy-on-write机制，使多输出序列的prompt前缀KV cache实现**零冗余共享**——引用计数跟踪共享块、被写时再按页复制，从而逼近显存利用的理论最优。
+
+**3) 在论文整体中的作用**
+与Figure 7（shared prefix）、Figure 9（beam search）共同构成"复杂解码策略"图示组，支撑全文核心论点：vLLM在parallel sampling、beam search等多样化解码下均能实现近最优显存效率，论证PagedAttention方案的通用性。
 *caption: Parallel sampling example. generates a single sequence. In the remainder of this paper, we assume the more general case in which a request gener- ates… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.9 (p.7)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig09.png]]
 > [!tip] 【图文联合解读】**图9 — Beam Search下的Paged KV缓存布局**
 
-图示4条beam候选在block级KV缓存上的分配：**Block 0、Block 1**为全部beam共享的前缀块；候选0/1在**Block 3**处分叉，候选2/3在**Block 2**处分叉；带"×"标记的**Block 5、Block 2、Block 4、Block 8**代表其所属beam在后续步被剪枝，对应物理块随即被回收，复用为**Block 9–12**。
+**核心对象与结构（量化）**：
+- **左侧（Copy-on-write机制）**：样本A1与A2共享前缀逻辑块（"Four score and seven years ago our"），分叉点触发CoW——物理Block 1的引用计数由2→1（仅A2独占"mothers"），新物理Block 3独立承载A1的"fathers"分支；Block 7亦被两样本共享。
+- **右侧（Beam候选块链管理）**：4个候选通过块链表组织，候选1与候选2共享Block 0→1→3的前缀链；候选2分叉后接Block 7→11；候选0与候选3因被剪枝（叉号标记Block 5/2/4/8）所占块被回收，腾出供新扩展（如Block 9/10/11/12）复用。
 
-**原文论证的关键结论**：相较传统连续分配因beam间前缀重复和动态剪枝造成的严重碎片与显存浪费，paged block机制可同时实现①跨beam前缀KV共享与②被剪枝beam内存的即时释放，从而显著提升beam search场景下的显存利用率与批吞吐。
+**关键技术结论**：Copy-on-write + 引用计数 + 块级共享，使Beam Search中多条候选序列的公共前缀无需物理重复存储，从根本上消除前缀冗余造成的内存浪费。
 
-**在论文中的作用**：该图是PagedAttention针对beam decoding提出的内存管理方案的直观示例，与shared-prefix（Figure 7）、parallel sampling（Figure 8）共同构成"复杂采样场景"图示组，支撑全文核心论点——vLLM在多样化解码策略下均能逼近最优显存效率。
+**在论文中的作用**：证明PagedAttention不仅适用于basic decoding（Figure 4–6），还可泛化至beam search等含前缀共享与动态剪枝的复杂解码场景，是其通用性的关键证据之一。
 *caption: Beam search example. sample space. The algorithm relies on the beam width pa- rameter 𝑘, which determines the number of top candidates retained at eve… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.10 (p.8)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig10.png]]
-> [!tip] 【图文联合解读】**Figure 10 图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**
-图中展示两个并行翻译请求（Sequence A 与 B）的三段式结构：
-- **Shared prefix**（黄色共享段，~50 token）：两序列完全相同，含指令"Translate English to French:"及三个示例对（sea otter→loutre de mer / peppermint→menthe poivrée / plush giraffe→girafe en peluche）。
-- **Task input**（绿色私有段）：A 为 `"cheese" =>`，B 为 `I love you =>`。
-- **Task output**（蓝色私有段）：A 输出 `fromage`，B 输出 `Je t'aime`。
+图10展示机器翻译的共享提示（shared prompt）结构：序列A与序列B共用同一长前缀——包含"Translate English to French:"指令及三个少样本示例（"sea otter"→"loutre de mer"、"peppermint"→"menthe poivrée"、"plush giraffe"→"girafe en peluche"），仅任务输入（"cheese" vs "I love you"）与LLM输出（"fromage" vs "Je t'amie"）不同。
 
-**2) 原文论证的技术结论**
-两请求的 prefix 完全一致，意味着 LLM serving 中该部分会产生重复的 prefill 计算与 KV cache 存储；这正是 PagedAttention 引入 **block-level KV cache sharing** 的现实驱动力——共享前缀的物理页只需分配一次，多请求复用，节省显存并避免冗余计算。
+该图用以论证：在真实LLM服务中，多条请求常共享长前缀，少样本提示场景尤为典型；PagedAttention支持按块粒度共享前缀的KV缓存，从而显著节省显存、提升吞吐。
 
-**3) 在论文整体中的作用**
-作为 vLLM 共享前缀优化（如 Copy-on-Write、块表复用）的典型用例图，证明 few-shot prompting 与 system prompt 场景下 prefix 共享具有普遍性，为后续性能收益（显存节省、吞吐提升）提供具体应用背景。
+在论文整体链路中，它作为典型用例，支撑第4节"Sharing for Shared Prompt"等共享前缀优化机制的设计动机，与并行解码、beam search等场景并列，共同展示PagedAttention在实际工作负载下的普适价值。
 *caption: Shared prompt example for machine translation.… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.11 (p.9)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig11.png]]
-> [!tip] 【图文联合解读】## 图文联合解读
+> [!tip] 【图文联合解读】图(a) ShareGPT：输入均值161.31 tokens，集中于近0处（峰≈1.75×10⁻²）；输出均值337.99 tokens，长尾延伸至≈2000。图(b) Alpaca：输入均值19.31 tokens（峰≈7×10⁻²），输出均值58.45 tokens。两数据集均呈"输入短、输出长且高变异"的长尾分布。
 
-**1. 核心对象与数据**
-图(a) ShareGPT：输入长度均值 161.31 tokens，输出均值 337.99 tokens，分布跨度大，输出长尾延伸至 ~2000 tokens；图(b) Alpaca：输入均值仅 19.31，输出均值 58.45，两者均高度集中在 0–100 tokens 区间，密度峰值约 7–8×10⁻²。两个数据集的输入/输出长度均呈现**高度异构、长尾分布**特征，且输出长度方差显著大于输入。
+原文用以论证：请求长度方差大、输入输出长度悬殊，使KV缓存必须弹性管理，凸显PagedAttention按页分配机制的必要性。
 
-**2. 关键论证结论**
-请求长度（尤其是输出）不可预测且差异巨大，传统基于"最长预估长度预分配连续 KV cache"的方案会造成严重内部碎片与内存浪费；这正是 PagedAttention 提出**按页非连续分配、动态拼接**的动机——以分页机制应对任意长度的生成请求。
-
-**3. 在论文链路中的作用**
-位于评估章节开头，作为实验场景的真实数据画像：ShareGPT 代表长对话、长输出压力场景，Alpaca 代表短指令场景。两者互补地验证了 vLLM/PagedAttention 在**不同负载特征**下均能维持高吞吐，证明分页 KV 缓存机制具有通用性与鲁棒性。
+链路作用：作为端到端服务实验的前置动机证据，与批处理吞吐结果共同支撑"vLLM在各模型规模与负载下均最优"的核心方法结论。
 *caption: Input and output length distributions of the (a)… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.12 (p.10)
@@ -5145,25 +5354,33 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.13 (p.10)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig13.png]]
-> [!tip] 【图文联合解读】图13展示OPT-13B在ShareGPT(2 reqs/s)与Alpaca(30 reqs/s)两种负载下的平均批处理请求数对比。ShareGPT子图：vLLM=30.42，Orca(Oracle/Pow2/Max)依次为13.62/9.81/7.00，vLLM约为Orca最优的2.2倍；Alpaca子图：vLLM=132.44，Orca依次为72.75/43.24/7.00，约为Oracle的1.8倍。该图论证PagedAttention通过消除KV cache碎片化与显存浪费，使系统可同时承载更多并发请求，有效批大小显著超越传统连续批处理方案。在论文实验链路中，它与吞吐量、延迟指标互补，直接量化vLLM"更高吞吐"的核心优势，为方法有效性提供关键实证。
+> [!tip] 【图文联合解读】**图文联合解读（Figure 13）**
+
+**(1) 核心对象与数据：** 图中含两个柱状图，对比在 OPT-13B 下四种调度方案的平均批大小。ShareGPT 轨迹（2 req/s）：Orca(Max)=7.00、Orca(Pow2)=9.81、Orca(Oracle)=13.62、vLLM=30.42；Alpaca 轨迹（30 req/s）：分别为 7.00、43.24、72.75、132.44。
+
+**(2) 关键结论：** vLLM 的平均批处理请求数是 Orca(Max) 的 4 倍以上（ShareGPT 约 4.3×，Alpaca 约 18.9×），即便对比拥有"最优预知"的 Orca(Oracle)，vLLM 仍可承载 2–4× 的并发请求，凸显其更强的批处理吞吐能力。
+
+**(3) 论文整体作用：** 该图在 Figure 12（延迟-请求率曲线）基础上，从"批大小"维度解释 vLLM 为何能显著拓展请求率上限：得益于 PagedAttention 的高效显存管理（消除碎片、提升 KV cache 利用率），vLLM 能容纳更大并发批，从而直接转化为更高的服务吞吐，构成方法有效性论证链的关键一环。
 *caption: Average number of batched requests when serv- ing OPT-13B for the ShareGPT (2 reqs/s) and Alpaca (30 reqs/s) traces.… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.14 (p.11)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig14.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 14）**
 
-图14展示OPT-13B在Alpaca数据集上四种负载（并行生成size=2/4、束搜索width=2/4）下，vLLM（蓝/绿线）与Orca-Max、Orca-Power（红叉/橙三角）的归一化延迟（s/token）随请求速率（req/s）变化曲线。图中显示vLLM蓝色曲线在请求速率达到约15-18 req/s时延迟才开始急剧上升，而Orca-Max仅在约2 req/s、Orca-Power在约8 req/s即饱和。
+该图以2×3子图展示OPT-13B在Alpaca上的6组对照：上排为并行生成（size=2/4/6），下排为束搜索（width=2/4/6），横纵轴分别为请求率与归一化延迟，对比Orca三档策略与vLLM。关键量化结果：vLLM在所有配置下饱和请求率均最高，例如size=2时可达~17 req/s，显著超过Orca(Pow2)≈9与Oracle≈12；width=6时仍达~7 req/s，约为Oracle的2倍。
 
-**关键结论：** 在并行采样与束搜索等需要共享前缀或管理多个序列的工作负载下，vLLM凭借PagedAttention的分页KV缓存管理，将吞吐量较Orca-Max提升约7-8倍，较Orca-Power提升约2倍。
+原文论证结论：PagedAttention通过页式KV cache实现序列间灵活共享，缓解了并行采样/束搜索造成的内存浪费，使vLLM在高资源竞争场景下依旧保持领先。
 
-**论文作用：** 该图扩展了Figure 13的实验维度，证明PagedAttention不仅在普通自回归生成中有效，在更复杂的解码策略（并行生成、束搜索）中同样显著降低内存碎片、提升服务吞吐，巩固了vLLM方法的核心技术优势。
+论文作用：补充第5节单序列基准实验，验证vLLM对多种并行解码策略的通用性与鲁棒性，强化"内存效率→吞吐增益"的核心论点。
 *caption: Parallel generation and beam search with OPT-13B on the Alpaca dataset.… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.15 (p.11)
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig15.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图15联合解读：**
 
-图(a)(b)分别量化OPT-13B服务Alpaca负载时，并行采样（输出序列数2/4/6）与束搜索（束宽2/4/6）下KV块共享带来的显存节省。并行采样节省由6.09%升至9.79%；束搜索节省则达37.56%→53.13%→55.16%，幅度与绝对值均显著更高。论文借此实证块共享对公共前缀密集的解码场景（尤以束搜索为甚）收益突出，支撑PagedAttention通过共享KV块提升显存利用率这一核心机制的有效性，是其系统级显存高效性实验论证链中的关键一环。
+图15以两组柱状图量化KV块共享带来的内存节省：(a)并行采样下，输出序列数为2/4/6时分别节省6.09%/8.53%/9.79%；(b)束搜索下，束宽为2/4/6时分别节省37.56%/53.13%/55.16%。
+
+数据表明束搜索场景的节省（峰值55.16%）远高于并行采样（峰值9.79%），因为beam内序列共享大量前缀token，KV块复用率高；而并行采样各序列前缀重叠有限。该结果直接验证了PagedAttention的块级共享机制在真实输入输出长度异质、请求结构复杂的Alpaca负载下仍可大幅压缩KV缓存占用。论文借此支撑核心结论——相比Orca基线，在真实聊天场景中可提升服务吞吐40–60%，构成从合成benchmark（Figure 13–14）到真实trace验证链路中的关键实证环节。
 *caption: Average amount of memory saving from sharing KV blocks, when serving OPT-13B for the Alpaca trace.… ｜ 论文 [[efficient-memory-management-for-large-language-model-serving-with-pagedattention]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Memory Management for Large Language Model Serving — Fig.16 (p.12)
@@ -5217,16 +5434,20 @@ The figure contains two subplots:
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig01.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示用三色图例区分可共享KV缓存（蓝）、不可共享prompt（绿）、不可共享generation（黄），对比Sequence-based与四种Tree-based解码：(1)Self-consistency——单prompt分支为G₁/G₂；(2)Few-shot prompting——示例P₁/P₂及其生成可共享；(3)Tree-of-thoughts——通过Search History在分支间共享上下文；(4)推测解码——草稿模型产出token树t₀→t₁,t₂,t₃→t₄，验证后保留t₀/t₂/t₄并跨Step history复用。Sequence-based各序列完全独立、无共享；而Tree-based蕴含丰富可共享结构，但传统实现难以高效利用。结合Table 1（ToT生成38,315 vs CoT仅525 token的开销差异），作者论证Tree-based存在严重计算冗余，从而引出DeFT借助FlashAttention对树状结构做高效分块注意力与KV缓存复用的核心贡献。
+图1将序列式解码（上：两独立Prompt各生成一条）与树式解码（下：四类场景）对比：(1) Self-consistency——单Prompt分支G₁/G₂；(2) Few-shot prompting——示例+P₁/P₂并行生成；(3) Tree-of-thoughts——P经Search History多层分支为P₁.₁/P₁.₂/P₂.₁/P₂.₂及对应生成；(4) Speculative decoding——draft产出token树t₀–t₄，verify后保留t₀/t₂/t₄的KV cache。配色区分蓝色shareable KV、黄色非共享生成。
+
+**技术结论：** 原文借此说明树搜索/选择类应用产出的token量远多于传统任务，而树结构中存在大量共享前缀（蓝色KV），但序列式注意力无法利用此冗余。
+
+**链路作用：** 作为动机图，引出DEFT需设计Flash Tree Attention以高效处理共享与非共享KV并存的结构化推理。
 *caption: Usually, these applications produce substantially more tokens than traditional ones, to provide large space for tree search (Graves, 2012; Lu et al., … ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.2 (p.5)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig02.png]]
-> [!tip] 【图文联合解读】图示DEFT两阶段中的**Phase 1（QKV准备）**：HBM内Input Metadata含Query、共享前缀KV_0、分支KV_1/KV_2及Tree Topo，Q_a/Q_b各映射对应分支KV。经**KV-Guided Grouping**（跨分支复用KV_0）与**Flattened Tree KV Splitting**（按树拓扑切成均衡组G_i），IO感知装入各SM_i。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-原文论证：消除共享前缀冗余KV读取 + SM负载均衡，为Phase 2共享内存（19TB/s）跑部分注意力 + 树感知全局归约供均衡输入。
+图示DEFT两阶段流水线：①阶段1（QKV Preparation）在HBM中读取含共享前缀的Tree KV（KV₀/KV₁/KV₂），经KV-Guided Grouping扁平分组为G₀/G₁/G₂，按IO感知与负载均衡加载至对应SM₀/₁/₂；②阶段2（Attention Calculation）在Shared Memory（19 TB/s）内并行运行DEFT Attention Kernel得局部A₀/A₁/A₂，再经Global Reduction合并为Final Attention。
 
-在论文中：作为投机解码链路的**前端预处理核心**，直接决定HBM带宽（2TB/s）利用率与SM并行度，是"内存高效、硬件友好树结构注意力"方法的基础环节。
+原文据此论证：利用HBM（2 TB/s）与SM（19 TB/s）近10×带宽差，将树结构推测解码中的共享前缀复用与并行注意力解耦，缓解KV加载瓶颈。该图为全文方法总览，衔接§3.3 QKV准备细节与后续注意力核性能分析。
 *caption: Overview of DEFT. Input Metadata is prepared in the system elaborated in Appendix A.1. In QKV… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.3 (p.6)
@@ -5246,25 +5467,20 @@ The figure contains two subplots:
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.4 (p.9)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig04.png]]
-> [!tip] 【图文联合解读】**图4解读**
+> [!tip] 【图文联合解读】**图4解读（≤220字）：**
 
-图4展示在Medusa 32查询token树的推测解码场景下，6种注意力方法的延迟分解（Attention/KV Management/Other三类，纵轴秒）。关键量化数据：非分页的Tree-Attention-Medusa（U）总延迟最高约275s，其中KV管理占比高达53.46%；而DeFT系列（带分页机制）总延迟仅55–90s区间，以DeFT-Flatten最低。
+**1）核心对象与数据**：堆叠柱状图对比6种Attention方法在Size=32的Medusa树结构投机解码下的延迟构成（Attention橙色/KV Management蓝色/Other绿色）。Paged路径总延迟约49–89s（Radix≈70、DeFT-Flatten≈49、DeFT-Node≈89、DeFT-Node-Chunk≈53）；Unpaged路径（U）显著更高——DeFT-Node(U)≈195s、Tree-Attention-Medusa(U)≈280s。其中Unpaged方案的KV Management占比飙升至69–83%，而Paged方案中KV Management仅7.67–13.79%，瓶颈转移到Attn/Other（padding浪费）。
 
-**论证结论**：非分页方案的KV管理是主要延迟瓶颈，而分页KV管理能显著压低总延迟。
+**2）关键结论**：验证DEFT的Paged内存管理将KV管理开销压至极低水平（<14%），整体延迟较Unpaged Medusa基线降低约5–6倍；同时DeFT-Flatten与DeFT-Node-Chunk以最低Attn占比（~30%）在Paged路径中取得最优延迟，证明Flash Tree Attention在两种内存路径下均全面优于既有方案。
 
-**论文作用**：该图是实验链路中验证DEFT核心设计——Flash Tree Attention + 分页KV——相对Tree-Attention-Medusa实现显著加速的关键证据，支撑"分页管理是树结构LLM推理高效性必要条件"这一论点。
+**3）链路作用**：与Table 4形成Paged/Unpaged双路径的延迟归因证据，支撑"KV管理是树形解码主要瓶颈、paging是有效解"的核心论断。
 *caption: Latency breakdown for specula- tive decoding with a token tree of 32 queries, whose tree topology is from Medusa (Cai et al., 2024). U means unpaged m… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.5 (p.15)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig05.png]]
-> [!tip] 【图文联合解读】**1) 核心对象与结构**
-图示一棵解码树：根节点 S0=Prompt"Machine Learning"，分叉为 S1="System is difficult" 与 S2="has changed the"，当前迭代 iter=3。底部输入元数据含 Query、KV Cache (S0,S1,S2)、Tree Topo，经"extract and pack"送入 HBM→Shared Mem。上部按 KV 前缀划分为 3 个 QKV Group（Group 0/1/2），每组 Query（"difficult/the"、"the"、"the"）按共享 KV 配对执行 Attention。
+> [!tip] 【图文联合解读】**图文联合解读（Figure 5）**
 
-**2) 关键技术结论**
-论证 DeFT 的核心机制：Query 按 KV 前缀分组复用，使共享 KV 路径只需一次访存即可被多条查询路径共同使用，从而消除树形推理中的冗余计算与内存访问；并说明 DeFT-Node 与 DeFT-Flatten 仅 QKV 划分策略不同。
-
-**3) 在论文中的作用**
-作为系统总览与算法核心图，将"解码树→元数据→QKV 分组→Flash-Tree Attention Kernel"流水线具象化，为后续核函数设计与吞吐加速实验提供机制基础。
+左图展示DEFT系统四模块——模型接口（含DeFT Attention Kernel×#layer）、KV Cache Manager、Sequence Tree Manager与Branch Controller，通过Query/KV/Tree Topology三路元数据协同；右图以iter=0提示"Machine Learning"(S₀)在iter=3分叉为S₁"System is difficult"与S₂"has changed the"为例，按KV分组打包QKV（如Group 1：KV="System is difficult" + Q="difficult"）后送入注意力核并行计算。该图论证"按KV分组的Flash树形Attention"是消除树解码QKV冗余的核心机制，为Table 5的延迟对比实验提供方法学支撑。
 *caption: Illustration of DEFT. (Left) System overview. (Right) The data flow of DEFT-Node (DEFT-Flatten is similar except for QKV partitioning) using a decodin… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.6 (p.16)
@@ -5317,29 +5533,34 @@ Figure 6: Discussion of tree-based decoding with tree queries (Miao et al., 2023
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.11 (p.21)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig11.png]]
-> [!tip] 【图文联合解读】图11对比三种Tree Attention的QKV分块策略：左侧Medusa按GEMM将KV切为m×k与k×n的tile块，产生全量partial结果M；右侧SpecInfer采用Q-Guided Grouping，把查询分为G₀（Q_a）与G₁（Q_b）两组，分别共享同一组KV₀/₁/₂，并通过Q-BCM位掩码"110""101"标注各查询实际访问的KV子集。原文论证：当叶节点数ln足够大时，partial结果的IO开销可与KV cache相当，从而说明朴素的逐tile GEMM切分存在冗余访存问题，为论文提出的Q-BCM分块与Flash Tree Attention优化提供必要性依据，是方法链路中IO分析与分块策略设计的支撑图。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**1) 核心对象与结构：**
+图分三栏对比 QKV 分块策略——左栏 Vanilla Tree Attention 展示 G₀ 中 Q_a、Q_b 与 KV₀/KV₁/KV₂ 的关系，用 3×3 掩码矩阵 M 标出 KV-Guided Grouping；中栏 Medusa 采用 GEMM 分块（Q 块 m×k，KV 块 k×n），DCM 退化为单块 m×n；右栏 SpecInfer 用 Q-BCM 二值掩码 "110"（Q_a）和 "101"（Q_b）做 Q-Guided Grouping。
+
+**2) 关键技术结论：**
+Vanilla 的 KV-Guided Grouping 产生大量空块浪费；Medusa 的 GEMM 均匀分块忽略树结构掩码；SpecInfer 的 Q-Guided Grouping 按查询精准定位所需 KV，三者在内存访问粒度与计算冗余上各有权衡，凸显需要专门的树注意力内核。
+
+**3) 论文作用：**
+作为 Figure 3 的补充，该图铺垫 DEFT 设计的动机——证明现有树注意力实现未能联合优化分块与掩码，支撑 Flash Tree Attention 借助分块稀疏矩阵乘融合 KV-Guided/Q-Guided 分组的必要性。
 *caption: When the number of leaf nodes/queries ln is sufficiently large, the IO cost of partial results might become comparable to that of the KV cache. For in… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.12 (p.23)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig12.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图12图文联合解读**
 
-图12展示两阶段构建解码树模板的流程。左绿框"Reconstruct thought trees"：Prompt节点按宽度w在d层深度上扩展为思维树，节点标为thought_i_j；✓标记保留节点，红色✗标记剪枝节点，虚线省略其余深度/宽度分支。右橙框"Tree templates for decoding"：每个保留节点封装5项元数据——start/end iteration（100/103）、thought size（3）、parent id（thought_i-1,k）、children id（None），并映射到具体文本"System is difficult"。据此生成两张结构化表：**Branch records**（迭代100，从(i-1,k)生成(i,j)）与**Prune records**（迭代103，剪掉(i,j)）。
-
-**技术结论**：作者论证树模板可由真实推理轨迹离线重建，并通过5项元数据完整表征节点的生成时机、长度、父子关系，从而无遗漏地为解码阶段提供可调度的分支与剪枝信息。
-
-**方法链路作用**：该模板是DeFT解码的离线预处理产物，为FlashTreeAttention提供"何时生成何分支、何时剪除何节点"的调度依据，是实现高效树结构推理的关键前置步骤。
+图12展示DEFT从实际多步推理记录重建思维树模板的过程。左侧从Prompt出发构建深度d、宽度w的思维树（节点thought i,j），用✓保留最优路径、⊖标记待剪枝节点；右侧将每个思维编码为五元组元数据（start_iter=100, end_iter=103, thought_size=3, parent_id=thought i-1,k, children_id=None），并据此导出Branch records（迭代100，从(i-1,k)生成(i,j)）与Prune records（迭代103，剪枝(i,j)）。该图论证了树模板可由真实推理轨迹结构化重建，为FlashTreeAttention的高效树状批解码提供预处理输入，是DEFT方法链路的模板构建核心环节。
 *caption: The detailed procedure of reconstructing tree templates for multi-step reasoning. (Left)… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.13 (p.25)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig13.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与数据**：图示排序任务下，DEFT-Node 与 DEFT-Flatten 两种切分策略在迭代步 2000–3700 区间的对比。左轴 Speedup Ratio（蓝实线）前期稳定在 320–380 倍，后期（≈3000 后）剧烈震荡；右轴 Tree Node Len std（红虚线）在 220–300 之间周期性起伏。
+图13以sorting任务为载体，对比DEFT-Node与DEFT-Flatten两种分割策略。横轴为推理步数（0–3500），蓝色实线为加速比（Node/Flatten每步延迟比，左轴1.25–2.0），红色虚线为树节点长度标准差（右轴150–400）。可见：节点长度std较低时，加速比稳定在1.3–2.0区间；std出现周期性尖峰（如step≈700处飙至400）时，加速比同步骤降，极端点甚至跌至0.25以下。
 
-2）**关键结论**：DEFT-Node 相对 DEFT-Flatten 获得高达约 350 倍的加速比，证明节点级切分显著优于展平切分，尤其在节点长度方差较小、树结构深度（d=10）× 宽度（w=10）规整的排序任务上，Node 策略能充分利用 Flash Tree Attention 的并行前缀，避免 Flatten 带来的冗余计算。
+**技术结论：** 树节点长度方差小→DEFT-Node更优（加速1.5×+）；方差大→Flatten反超，揭示两种策略存在互补适用域。
 
-3）**在论文中的作用**：作为消融/对比实验，支撑 DEFT-Node 作为默认切分策略的设计选择，强化"树状推理的高效解码依赖于与树结构对齐的注意力切分"这一核心论点。
+**论文作用：** 属实验消融分析，为DEFT依据负载特征自适应选择分割策略提供量化依据，支撑整体系统的鲁棒性论证。
 *caption: Comparison of split strategies DEFT-Node and DEFT-Flatten in sorting task. Speedup ratio refers to the ratio between the per iteration latency of DEFT… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.14 (p.26)
@@ -5356,28 +5577,42 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.15 (p.26)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig15.png]]
-> [!tip] 【图文联合解读】该图展示Prompt Length=1000时，不同token树规模（t=32/64/128/256）下单层Attention延迟随KV Chunk Size（128–1024）的变化曲线（实线为DeFT-Flatten，虚线为对照）。量化数据：t=32橙色线约90μs，t=256黄色线约270μs，延迟随t递增；多数曲线在chunk=256–512处取极小值，至1024时明显回升。原文据此论证chunk选择是Query IO冗余（越小越冗余）与SM线程块调度（越大越易空闲）的权衡；该ablation为DEFT系统确定最优KV chunk尺寸提供依据，支撑Flash Tree Attention整体推理效率的实验链路。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图15在Prompt长度=1000与4000两组下，给出**单层Attention延迟(μs)随KV Chunk Size(128/256/512/1024)** 的消融曲线，对比 **DeFT-Flatten（实线）** 与 **DeFT-Node-Chunk（虚线）** 在候选树规模 **t=32/64/128/256** 四档下的性能。
+
+核心结论：延迟随chunk增大**先降后微升**，最优chunk size集中在 **256–512**；以t=256、Prompt=4000为例，延迟从chunk=128时约1190μs降至chunk=512时约680μs；DeFT-Flatten整体略优于Node-Chunk。该结果直接呼应caption所述——chunk size是**Query IO冗余与SM线程块调度**的折中。
+
+在论文中，该消融为DeFT采用Flatten策略及推荐KV切分超参提供了实证依据，是方法选型与性能优化闭环的关键一环。
 *caption: The chunk size selection is a trade-off between IO redundancy and threadblock scheduling: a larger chunk size means less redundancy of Query IO but ma… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.16 (p.27)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig16.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 16）**
 
-该图展示在投机解码场景下（生成长度1000、token树大小=64），三种DEFT变体（DeFT-Node、DeFT-Node-Chunk，图中推测最高红线为DeFT-Flatten）的每输出token时间（TPOT）随prompt长度（2500–20000 tokens）变化的趋势。三条曲线均单调上升，但DeFT-Flatten增速最快（20000时TPOT最高），DeFT-Node居中，DeFT-Node-Chunk最低且增速最平缓，长prompt下优势显著拉开。原文借此论证：**chunk级KV切分策略（DeFT-Node-Chunk）在长上下文投机解码中延迟最低**，验证了Table 6关于切分粒度对注意力延迟影响的结论。该图作为方法验证的关键实验，支撑了论文整体方法链中"分块注意力优化"这一核心技术贡献，证明其在真实长prompt场景下具备实用加速价值。
+1）**核心对象与数据**：图16为双子图（token树大小 t=32 与 t=64），横轴为 prompt 长度（2500–20000 tokens），纵轴为 TPOT（ms/token），生成长度固定为 1000，对比 Radix-Attention、DEFT-Flatten、DEFT-Node、DEFT-Node-Chunk 四种方法。在 prompt=20000、t=64 时，Radix-Attention 约 37 ms/token，DEFT-Node 约 27 ms/token，而 DEFT-Node-Chunk 与 DEFT-Flatten 仅约 12–14 ms/token；随 prompt 增长，Radix-Attention 斜率最陡，DEFT-Flatten/Node-Chunk 近似线性且平稳。
+
+2）**关键技术结论**：DEFT-Flatten 与 DEFT-Node-Chunk 在长 prompt 下显著优于 Radix-Attention，验证了 KV 切分策略对长上下文推测解码的扩展性优势；DEFT-Node 因逐节点开销大，扩展性较差。
+
+3）**论文整体作用**：作为关键实验证据，支撑"DEFT 在树结构推测解码下可高效处理长上下文"的核心主张。
 *caption: Time per output token(TPOT) of DEFT with different prompt lengths in speculative decoding. 2500 5000 7500 10000 12500 15000 17500 20000… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.17 (p.27)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig17.png]]
-> [!tip] 【图文联合解读】该图展示生成长度=1000、Token Tree Size=64时，4种注意力实现的解码延迟随Prompt长度（约2000→20000 tokens）的变化。短prompt下四条曲线几乎重合（差异≈0），但随prompt延长，粉色基线斜率最陡，DeFT-Node次之，DeFT-Node-Chunk与橄榄色chunk基线增长最缓，至20000 tokens时差距已拉开数倍。论文借此论证：在推测解码的长上下文场景中，节点级KV复用叠加chunk分块的双重优化使DeFT-Node-Chunk具备最优可扩展性，是其作为论文核心高效变体的关键实验支撑。
+> [!tip] 【图文联合解读】该图分两栏展示生成长度1000时、树规模分别为32与64查询下，Radix-Attention与三种DEFT变体（Flatten/Node/Node-Chunk）随prompt长度（≈1k–20k）变化的解码延迟。量化读数：prompt=20k时，Flatten仅≈9s（树32）与≈13s（树64），Node-Chunk≈10.5s与≈15s，增长最缓；Radix在树64、prompt=20k飙至≈37.5s且斜率最陡，Node也达≈28s。
+
+该实验论证：DEFT-Flatten与Node-Chunk对prompt长度呈近线性低增长，而Radix-Attention随树规模增大劣化显著，凸显树结构注意力下Flash树注意机制在长上下文推测解码中降低IO与延迟的必要性，作为论文核心实验结论之一支撑所提方法的优越性。
 *caption: Decoding latency of DEFT with different prompt lengths in speculative decoding.… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### DeFT: Decoding with Flash Tree-attention for Efficient Tree- — Fig.18 (p.28)
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig18.png]]
-> [!tip] 【图文联合解读】图18在生成长度1000、Token Tree Size=64的推测解码设定下，对比不同注意力实现随Prompt长度（0–20000 tokens）变化的延迟曲线：红色线（朴素树注意力）斜率最陡，长prompt下延迟最高；DeFT-Node（青蓝）次之；DeFT-Node-Chunk（紫）增长最缓且接近最优基线。
+> [!tip] 【图文联合解读】该图展示推测解码（Generation length=1000）下，DEFT 四种变体（Flatten、Node、Node-Chunk）与 Radix-Attention 在 prompt 长度 500–20000 tokens 范围内的 Attention 延迟（秒），分 Token Tree Size=32（左）与 64（右）两个子图。
 
-核心结论：随prompt增长，朴素树注意力开销急剧膨胀，而DeFT-Node-Chunk通过分块策略显著压缩长prompt下的注意力延迟，验证了chunk机制在大上下文推测解码中的可扩展性。
+**核心数据**：树=32、prompt=20k 时，Radix-Attention 与 DeFT-Node 同处 20–24s 高位，DeFT-Flatten/Node-Chunk 仅约 5–6s；树=64、prompt=20k 时，Radix-Attention 飙至 ~33s，DeFT-Node ~23s，而 DeFT-Flatten/Node-Chunk 仅 8–10s。
 
-该图在论文实验链路中起"长上下文效率验证"作用，作为DEFT方法论在长prompt场景下优于朴素树注意力的关键定量证据，支撑整体Tree-Structured speculative decoding的高效性论证。
+**论证结论**：Radix-Attention 与 DeFT-Node 延迟随 prompt 长度与树规模呈陡峭上扬，而 DeFT-Flatten 与 Node-Chunk 始终保持低斜率线性增长，验证 chunk 化策略在长 prompt、大草稿树场景下对 Attention 开销的有效抑制。
+
+**论文作用**：与 Table 18（A/F-LR 消融）配合，从 Attention 单一算子延迟维度量化解释 DEFT 加速来源，支撑"长上下文 + 树形推测解码"下 Flash Tree Attention 整体高效性论证。
 *caption: Attention latency of DEFT with different prompt lengths in speculative decoding.… ｜ 论文 [[deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.1 (p.3)
@@ -5410,32 +5645,41 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig04.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-该图以时间轴展示现有LLM推理系统单层执行流水线，依次包含：KQV投影（黄/计算）、DecAttn（绿/访存）、PF Prefill（黄）、Attn.AG（蓝/网络）、O投影、O.AG、UGD大块计算（黄，主导项）、UGD.AR全归约（蓝）；首尾虚线框表示邻层KQV。
+图4展示单层Transformer在现有LLM服务框架（如vLLM）下的串行执行流水线，水平轴为时间，包含6类操作：KQV、DecAttn、Prefill Attention (PF)、O、Attn.AG/O.AG、Up-Gate-Down (UGD)，分别用黄（计算受限）、绿（访存受限）、蓝（网络受限）三色标注。
 
-**关键结论：** 在KQV-DecAttn、PF-AG、AG-UGD、UGD-AR四段交界均出现"WASTED"空隙，因短小的访存/网络操作（DecAttn、AG/AR）与超长UGD计算（占主导）无法流水填充，导致计算核心在等访存/通信时空转，吞吐受限。
+关键发现：计算受限的KQV/O/UGD与访存/网络受限的DecAttn/PF/AG之间存在4段"WASTED"空泡——短小的访存/网络操作耗时远低于紧邻的长计算操作，使昂贵的GPU计算单元在流水过渡期处于空闲，严重拉低整体吞吐。
 
-**论文作用：** 此图作为动机图，定量揭示"算力被访存/网络气泡浪费"的结构性瓶颈，直接引出NanoFlow将多层小操作聚合以消除WASTED、提升throughput的核心方案。
+此图作为NanoFlow的核心动机图，揭示现有pipeline的算力浪费瓶颈，从而引出其解决方案：在节点内将小操作与对应计算操作**融合**（如DecAttn+PF融合），消除空泡，最大化紧致瓶颈资源的利用率，为后续NanoFlow的分块交错调度设计奠定基础。
 *caption: Execution pipeline of existing systems. The green, yellow, and blue operations correspond to memory-, compute-, and network-bound operations. Operatio… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.5 (p.8)
 ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig05.png]]
-> [!tip] 【图文联合解读】图5展示不同GEMM-GEMV实现配对下的归一化性能P：最优GEMM（蓝线）由左侧~1.0单调降至~0.45，最优GEMV（橙线）由近0升至~1.0，二者呈明显此消彼长；非最优GEMV（灰虚线）在0.1–0.9间剧烈波动。红色参考线标出P≈0.8与P≈0.3两个临界点。
+> [!tip] 【图文联合解读】## 图文联合解读
 
-论证两点关键结论：(1) GEMM与GEMV性能存在显著权衡，错配将使GEMV性能跌至非最优路径的~0.1；(2) 不同实现组合形成"数百万种配置"，穷举profile不可行。
+**1) 核心对象与结构：**
+Figure 5 以横轴为不同 GEMM-GEMV 实现对（共约 18 个配对），纵轴为归一化性能 P∈[0,1.2]，绘制三条曲线：蓝色圆点实线（GEMM）从 ~1.0 单调下降至 ~0.45；橙色圆点实线（GEMV）由近 0 上升至 ~1.0；灰色×虚线（非最优 GEMV）则在两曲线间剧烈震荡。图中以红色虚线标出 0.3 与 0.8 两个阈值，分别对应"GEMM 优先"（左）与"GEMV 优先"（右）两个分区。
 
-作用上，此图作为NanoFlow的motivation，支撑其设计高效性能模型与搜索策略，在不遍历全空间的前提下为硬件选择最优GEMM-GEMV重叠组合，是LLM推理跨核重叠调度的基础实验依据。
+**2) 关键论证结论：**
+两曲线呈典型此消彼长——优先 GEMM 时 GEMV 跌至 0.3，反之 GEMM 降至 0.45；而非最优 GEMV 实现性能完全不可预测（0.2–0.7 间抖动）。这印证了 GPU 上计算、内存、缓存资源竞争导致的 kernel interference 不可显式控制，且实现选择对干扰程度有数量级影响。
+
+**3) 在论文中的作用：**
+为 NanoFlow 必须采用"逐实现穷举 profiling + R_physical 测量"的方法论提供直接依据——既然干扰不可预测且依赖实现，就必须靠实测建模来分配 SM/带宽，是后文搜索空间指数膨胀论证的实验支撑。
 *caption: Interference characteristics between GEMM and GEMV kernels. The points on the x-axis correspond unique GEMM-GEMV implementation pairs. The y-axis deno… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.6 (p.11)
 ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig06.png]]
-> [!tip] 【图文联合解读】图6展示NanoFlow为LLaMA-2 70B单层自动生成的执行流水线：沿"Layer"时间轴，将KQV计算、Prefill（PF1）、Q/O投影、Up·Gate·Down（UGD1/UGD2 R=0.9）、DecAttn1–4（R=0.4）及AG·AR（R=0.1–0.2）等算子分置计算/内存/网络三条轨道并行排布；实色与格纹背景分别对应batch 0–768与768–2048。原文借此论证NanoFlow通过Prefill Attention、AG→AR Transform等机制，使计算密集（UGD R=0.9）与访存/网络密集（KQV、AR R=0.1–0.4）算子互补重叠，提升整体资源利用率，从而提高服务吞吐。该图是把NanoFlow自动调度能力与端到端吞吐实验相连的核心可视化证据。
+> [!tip] 【图文联合解读】图6为NanoFlow为LLaMA-2 70B自动生成的层内执行流水线，横向分三行：绿色行DecAttn1-4（R=0.4）、黄色行KQV1-4/O1-2/UGD1-2（R=0.4-0.9，主计算）、蓝色网格行Attn.AG/O.AG/UGD.AR（R=0.1-0.2，内存与网络传输）。实色与阴影底分别对应batch 0-768与768-2048。原文借此论证：NanoFlow将计算、内存、网络三类操作在纳秒级时间轴上交错（如Prefill Attention与AG→AR转换并行），使各类资源利用率同时抬升（UGD达R=0.9），消除单类资源瓶颈、提升吞吐。该图是NanoFlow自动调度器的可视化核心证据，承上启下，支撑后续与vLLM等基线的吞吐对比实验。
 *caption: Execution pipeline of LLaMA-2 70B, automatically generated by NanoFlow. The solid background and shaded background represents input batch 0-768 and 76… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.7 (p.11)
 ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig07.png]]
-> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
+> [!tip] 【图文联合解读】**图7图文联合解读**
 
-该图以LLaMA-2-70B、8 GPU、TP=8为固定配置，在Splitwise、LMSYS-Chat、ShareGPT三组真实负载下对比每GPU吞吐量（tokens/s）。四个柱形（由低到高约251→1259、293→1247、335→1272）显示NanoFlow（橙色）达到1259/1247/1272 tokens/s，约为理论最优线1857（红色虚线）的67%，相对最优基线提升约1.5–2倍，并全面优于其余三种方法。该图是§6.4消融实验的收口，以端到端量化证据证明NanoFlow所提协同优化在所有真实负载上均稳定逼近最优，构成论文"近最优LLM服务"核心论点的关键支撑。
+图7展示LLaMA-2-70B（8 GPU, TP=8）下NanoFlow与vLLM、DeepSpeed-FastGen、TensorRT-LLM的离线吞吐对比。(a)定长场景（输入/输出512–1024）：NanoFlow达1212–1286 tokens/s；(b)真实数据集（Splitwise/LMSYS-Chat/ShareGPT）：NanoFlow达1247–1272 tokens/s，均逼近理论最优1857；最强基线TensorRT-LLM仅560–817 tokens/s，NanoFlow全面领先约2.5×。
+
+原文论证：所有工作负载下NanoFlow均显著优于现有系统，证明其跨场景的通用性与领先地位。
+
+该图在论文中承担端到端性能验证的角色，作为§6.4各技术贡献（拆分注意力、AG转换、跨batch交错等）消融分析与§6.5资源利用模式讨论之外的最终效果收口，佐证NanoFlow设计的整体有效性。
 *caption: Offline throughput comparison. NanoFlow outper- forms all baselines for all the workload settings. TP stands for the number of GPUs used with tensor p… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.8 (p.13)
@@ -5481,42 +5725,43 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### Gated Delta Networks: Improving Mamba2 with Delta Rule — Fig.2 (p.8)
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-fig02.png]]
-> [!tip] 【图文联合解读】**图2图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-该图以3×2网格展示6个长文本基准(GovReport、Qasper等)上、序列长度从4k扩展至20k时的性能曲线，纵轴为各任务指标。图例含四条线：Mamba1(橙)、DeltaNet(蓝)、GatedDeltaNet及另一变体(绿/棕)。
+**1) 核心对象与数据：** 图2为6子图矩阵，依次展示GovReport、QMSum、NarrativeQA、Qasper、CodeParrot、PG19六个长文本基准上Perplexity随序列长度（4k→20k）变化的曲线；纵轴量化范围因任务不同（如QMSum约12–18、CodeParrot约5–20）；横轴对数刻度。每条曲线对应7个模型：Mamba1、Mamba2、DeltaNet、Samba、GatedDeltaNet及其两个消融变体H1、H2。
 
-**关键观察**：在所有基准上，**Mamba1退化最严重**——如GovReport从~9.1降至~6.0，Qasper从~20降至~13；**DeltaNet(蓝)居中**，16k后也明显下滑；而**GatedDeltaNet系列(绿/棕)**曲线始终位于最下方簇，在20k处仍保持稳定。
+**2) 关键结论：** 论文用以论证Delta-rule更新与门控机制结合后，模型在训练窗口外（>4k）能稳定保持低困惑度。定量看，六个基准上GatedDeltaNet-H2（红橙）始终处于最低带（如QMSum≈13、CodeParrot≈6），且随长度几乎不恶化；而Mamba1（橙）在多数基准（如CodeParrot ≈15–18）最高，Mamba2（紫）在NarrativeQA（≈18–20）次差。H2较H1的差距说明门控策略的具体设计对长度外推有关键影响。
 
-**论证作用**：该实验用以证明——**门控(gating)与Delta规则的组合显著改善了Mamba2/DeltaNet基线的长度外推能力**，是验证"Gated DeltaNet"核心设计(在Delta规则上引入遗忘门)有效性的关键证据，呼应论文标题"improving Mamba2 with delta rule"的主旨。
+**3) 论文作用：** 此图与Table 2互补——后者证明检索式任务（短上下文）上的优势，本图则补齐长上下文外推维度，共同支撑"Gated DeltaNet全面优于Mamba2/DeltaNet"的核心结论，构成方法链路中泛化性证据的关键一环。
 *caption: Length extrapolation on six long benchmarks.… ｜ 论文 [[gated-delta-networks-improving-mamba2-with-delta-rule]] ｜ arxiv 见 MD 元信息*
 
 ### Gated Delta Networks: Improving Mamba2 with Delta Rule — Fig.3 (p.9)
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-fig03.png]]
-> [!tip] 【图文联合解读】图3为折线图，横轴为序列长度×批大小组合（2K×16→16K×2），纵轴为训练吞吐（K tokens/s，~25–60）。展示8个1.3B模型在单卡H100上的表现：Transformer++（蓝线）随序列增长由~55急降至~27 K/s；而DeltaNet、Mamba1/2、Gated DeltaNet、Samba等线性注意力/Gated RNN基线保持平稳（~38–50 K/s）。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-原文借此论证两点：(1) 独立混合器中Samba优于Mamba；(2) 所提Gated DeltaNet-H1与-H2吞吐超越Samba，证明Delta Rule+门控机制兼具高质量与高效率。
+**1）图示对象与数据**：1.3B模型在单卡H100上的训练吞吐（Kt/s），横轴为"序列长度×batch size"四档（2K×16 → 16K×2）。共8条曲线：Gated DeltaNet-H1全程最高（≈55→52.5，几乎平稳）；H2稳定≈49–50；Mamba2≈48；DeltaNet/Gated DeltaNet≈45–46；Samba 45→43微降；Mamba1最低≈38；Transformer++从55断崖式跌至≈26.5。
 
-该图作用：与下游语言建模/下游任务质量指标形成互补，从算力成本维度佐证所提架构"质量–效率"双重优势，闭环论证其工程实用性。
+**2）原文结论**：standalone mixer层面Samba＞Mamba，Gated DeltaNet-H1/H2＞Mamba2；线性注意力类架构吞吐对序列长度鲁棒，Transformer++则严重退化，验证门控+delta rule对Mamba2的硬件效率增益。
+
+**3）论文作用**：与Table 3精度互补，从效率侧论证"又快又好"；是支撑Gated DeltaNet价值主张的关键工程证据。
 *caption: Training throughput comparison of 1.3B models on a single H100 GPU. standalone mixers: Samba outperforms Mamba, while Gated DeltaNet-H1 and -H2 outper… ｜ 论文 [[gated-delta-networks-improving-mamba2-with-delta-rule]] ｜ arxiv 见 MD 元信息*
 
 ### Parallel Scan on Ascend AI Accelerators — Fig.3 (p.3)
 ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig03.png]]
-> [!tip] 【图文联合解读】**1) 图示对象与结构**：展示Ascend 910B单AI Core架构：含1个AI Cube Unit（Cube核心+L0A/L0B/L0C、BT/FP、L1 Buffer+FixPipe+Scalar）与2个AI Vector Unit（各含Vector核+Vector Scratchpad+Scalar），三者均经左侧Global Memory互联。
+> [!tip] 【图文联合解读】该图展示Ascend 910B单AI核的异构结构：1个AI Cube Unit（含L1 Buffer分解为L0A/L0B/BT/FP四个子缓冲，配套Cube Unit计算后经L0C输出，再汇入FixPipe）+ 2个对称的AI Vector Unit（各含Scalar Unit、Vector Unit与Vector Scratchpad Memory），三者均通过双向通道挂接Global Memory。
 
-**2) 关键技术结论**：Cube与Vector各持独立scratchpad，跨单元无本地直连通路，仅能经全局内存/L2交换数据；非对称划分迫使parallel scan采用block-tiled、解耦look-back的通信最小化设计，而非GEMM中心方案。
-
-**3) 论文方法链作用**：为解耦scan方法提供硬件依据——AIV跑element-wise/局部scan，AIC做跨块前缀累积，MTE编排块级tile传输，从而在Ascend上高效实现线性注意力/SSM scan。
+原文借此论证其"矩阵立方+向量"双计算引擎与L0/L1/Global多层内存层次，为后续parallel scan算子的硬件映射奠定基础：算法须同时利用Cube的高吞吐矩阵乘与Vector的灵活访存，才能高效实现扫描归约类操作。该图是论文方法链路中连接硬件特性与并行扫描实现策略的关键参照。
 *caption: 1 shows the Ascend architecture where the… ｜ 论文 [[parallel-scan-on-ascend-ai-accelerators]] ｜ arxiv 见 MD 元信息*
 
 ### Parallel Scan on Ascend AI Accelerators — Fig.4 (p.4)
 ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig04.png]]
-> [!tip] 【图文联合解读】**图4核心内容：**
+> [!tip] 【图文联合解读】**核心对象与结构**：展示向量 x 在 Global Memory 中的子块 **x_ℓ** 经 Cube + Vector 异构单元处理后回写为 **y_ℓ** 的完整数据通路。
+- **Cube 单元**：x_ℓ→L0A，s×s 下三角单位阵 **U_s**（对角线为1）→L0B；A @ U_s 一次性算出 tile 内 s 个**并行局部前缀和**，结果落入 L1C。
+- **Vector 单元**：L1C→UB，由 5 个并行加法器完成 tile 间**顺序累加**。
+- 最终 y_ℓ 写回 Global Memory 的 y。
 
-图示 ScanU 单 tile（x_l → y_l）的片上数据通路。左下为 Global Memory，含输入张量 x（含 tile x_l）、上方的 U_s（通常为上一轮的累加结果），以及输出 y（含 y_l）。右上 Cube unit：从 GM 读 x_l 至 L0A（矩阵缓冲），与 L0B 中 1/0 选择矩阵（实现下三角扫描矩阵）做矩阵乘，结果落入 L1C；随后 L1C 数据经 DMA 进入右下 Vector unit 的 UB，并在 UB 内通过一串 "+" 链式累加（向量级 prefix-sum），最终写回 y_l。
+**技术结论**：ScanU 将前缀扫描拆解为「**Cube 做 tile 内并行局部扫描 + Vector 做 tile 间顺序累加**」，复用矩阵乘算力实现扫描并行化。
 
-**论证结论：** ScanU 把"扫描"拆解为 Cube 端的大规模矩阵乘（构造 partial sum）+ Vector 端的链式累加（完成 prefix-sum），即"超立方算子 + 向量归约"混合实现，避开显式多步同步扫描。
-
-**在论文中的作用：** 作为 Algorithm 4.1 的微观数据流证据，支撑其"用 Cube unit 完成并行扫描主体、用 Vector unit 完成剩余归约"的核心设计；与性能模型及实验部分呼应，论证该混合策略在 Ascend 上的吞吐与访存优势。
+**论文作用**：是 Algorithm 4.1 到 Ascend 硬件映射的**桥梁图**，支撑后续性能建模与吞吐分析，论证异构 AI 加速器天然适配并行扫描负载。
 *caption: 1: Data path from an input tile xℓto an output tile yℓof the ScanU (Algorithm 4.1).… ｜ 论文 [[parallel-scan-on-ascend-ai-accelerators]] ｜ arxiv 见 MD 元信息*
 
 ### Parallel Scan on Ascend AI Accelerators — Fig.5 (p.7)
@@ -5537,7 +5782,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### Kimi K3: Open Frontier Intelligence — Fig.1 (p.1)
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig01.png]]
-> [!tip] 【图文联合解读】图1为多面板水平柱状对比图，Kimi K3以蓝色高亮、Fable 5/Opus 4.8/GPT-5、5.6 Sol/GLM-5.2为基线，覆盖12项Coding与通用/视觉Agent基准。在可见面板中，Kimi K3于FrontierSWE(81.2)、SWE-Marathon(42.0)、AutomationBench(30.8)三项夺魁，对GLM-5.2最大领先近17分；仅ZeroBench w/tool(41.0)略逊于Fable 5(46.0)。该图置于首页，作为全文方法-实验链路的开篇主结果，集中论证Kimi K3在编码与Agent推理上达到开源前沿水平，为后续章节提供核心实证锚点。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图1分"Coding"与"General & Visual Agents"两栏共12基准（DeepSWE、Kimi Code Bench 2.0、Terminal-Bench 2.1、ProgramBench、FrontierSWE、SWE-Marathon、GDPval-AA v2 Elo、BrowseComp、AutomationBench、JobBench、CharXiv w/ tool、ZeroBench Pass@5），以横向条形对比Kimi K3与GPT-5.6 Sol、Opus 4.8、Fable 5、GLM-5.2得分，K3以蓝色高亮。
+
+**技术结论：** K3在ProgramBench(77.8)、FrontierSWE(81.4)、SWE-Marathon(42.0)、BrowseComp(91.2)、AutomationBench(30.8)居首；Terminal-Bench(88.3)、Kimi Code Bench(72.9)、CharXiv(91.3)、JobBench(54.3)紧追Fable 5；DeepSWE(67.5)居第4、GDPval-Elo(1686)居中。论证K3在编码与代理任务达开源前沿、与闭源SOTA相当但未全面超越。
+
+**论文作用：** 开篇主结果图，定量锚定K3前沿定位，为后续方法/实验论证提供基准锚点。
 *caption: Kimi K3 main results. 1https://huggingface.co/moonshotai/Kimi-K3[cs.CL] 7 Aug 2026… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.2 (p.3)
@@ -5547,11 +5798,11 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### Kimi K3: Open Frontier Intelligence — Fig.3 (p.5)
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig03.png]]
-> [!tip] 【图文联合解读】**图(b)核心对象**：两个4×4分块矩阵对比KDA分块计算。Kimi Linear：主对角线4个橙色"Position-pair Diagonal"块需显式位置对计算，下三角6格用蓝色Tensor Core；Kimi K3：经log-decay下界化后，全部10个因果块（主对角+下三角）统一为蓝色Tensor Core稠密矩阵乘，白色上三角保留因果掩码。
+> [!tip] 【图文联合解读】**图(a)** 展示对数衰减参数化对比（A=0）：Kimi Linear 用 g = -e^A·Softplus(z)（灰线无下界，z→-∞ 时趋于-∞）；K3 改用 g = g_min·Sigmoid(e^A·z)（红线在 g_min = -5 处饱和）。**图(b)** 展示 chunkwise KDA 对角块差异：Kimi Linear 中对角橙色块须显式位置对计算、非对角蓝色块才用 Tensor Core；K3 因衰减有下界，所有因果块统一为蓝色 Tensor Core 稠密矩阵乘法。
 
-**论证的技术结论**：log-decay下界化（sigmoid钳至g_min=-5）使对角块不再需要特殊计算路径，所有因果块均可纳入Tensor Core加速，硬件利用率显著提升，复杂度从"对角线特殊+其余稠密"简化为"统一稠密GEMM"。
+**论证结论**：对衰减施加下界约束，可消除"位置对 vs 稠密"的混合计算模式，统一为 Tensor Core 密集 GEMM，同时改善数值稳定性。
 
-**论文整体作用**：这是K3相对Kimi Linear的核心工程优化之一，支撑其在大规模长序列训练/推理中的硬件效率，是"前沿智能"得以在KDA架构上落地实现的关键链路。
+**论文作用**：作为 K3 相对 Kimi Linear 核心架构改进（数值稳定 + 训练效率）的可视化证据，支撑其"chunkwise 加速、长上下文可扩展"的方法级主张，属于方法论章节的关键图示。
 *caption: Lower-bounded decay and its effect on chunkwise KDA computation. (a) Kimi Linear uses an unbounded negative-Softplus mapping, whereas Kimi K3 bounds t… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.4 (p.7)
@@ -5565,44 +5816,44 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### Kimi K3: Open Frontier Intelligence — Fig.5 (p.8)
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】【核心对象】图5以 m=8 token、n=4 routed experts、k=1 为示例，三栏展示路由均衡全流程：(a) 原始 Top-1 路由产生负载 (4,3,1,0)，E₁ 过载、E₄ 空载；(b) Quantile Balancing 阶段按列对 token-专家得分设分位阈值（红色虚线），红星标记每列入选 token；(c) 重路由后每专家恰承接 2 token，负载严格均匀 (2,2,2,2)。
 
-该图展示Quantile Balancing路由机制的核心步骤：m=8 token、n=4 routed experts、k=1选一。(a) 标准Top-k产生负载(4,3,1,0)严重倾斜；(b) 图中灰色横杠为各margin $s_{i,j}+b_j-\alpha_i$，红色虚线为新偏置阈值$\widehat{b}_j^{(t+1)}$，置于第(q+1)大margin处，使每列恰q=2个margin越过；(c) 经此重新路由后，t1–t8被均匀分给E1–E4，每专家恰收2 token。
+【技术结论】论证分位均衡可将偏斜的 Top-k 分配转化为均匀分配，避免过热专家过拟合、空闲专家欠训练，保障 MoE 专家利用率与训练稳定性。
 
-**论证结论：** Quantile Balancing通过对每专家偏置的"分位数截断"，将不均衡Top-k路由强制转化为均匀分配，从根本上抑制过热/饿死专家。
-
-**论文作用：** 作为Kimi K3稀疏MoE路由层关键算法可视化证据，支撑其大规模专家并行训练中负载均衡与训练稳定性的方法论主张。
+【论文作用】作为 MoE 负载均衡机制的可视化证据，与辅助偏置损失互补，支撑稀疏激活模型在大规模训练中的基础设施论证。
 *caption: Illustration of Quantile Balancing with m = 8 tokens, n = 4 routed experts, and k = 1 selected expert per token. (a)… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.6 (p.9)
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**Figure 6 图文联合解读**
 
-该图呈现预训练消融阶段视觉塔梯度范数随训练步（7k–22k+）的完整轨迹，对比MoonViT-3D（蓝，SigLIP初始化）与MoonViT-V2（红，从零训练）。MoonViT-3D多次出现0.5–0.75的高尖峰，尤其集中在14k–15k步处；而MoonViT-V2梯度主体低于0.2，尖峰稀少且小，仅在22k附近出现约0.4的脉冲。
+**(1) 核心数据：** (a)展示7k–30k训练步两种视觉塔梯度范数全程曲线；(b)放大14k–16k区间。蓝色MoonViT-3D（SigLIP初始化）全程频繁出现0.4–0.75的尖峰，放大图显示其基线约0.02–0.03、尖峰达0.1–0.15。红色MoonViT-V2（从零训练）基线始终≤0.02，仅约22k步出现一次~0.4的孤立尖峰，其余区段近乎平坦。
 
-此图论证的核心结论：**从零训练的MoonViT-V2优化更稳定、梯度更可控**，显著优于基于SigLIP初始化的MoonViT-3D方案。
+**(2) 技术结论：** V2从头训练相比SigLIP初始化方案，梯度范数更低、尖峰显著更少，优化过程明显更稳定——为"放弃强视觉预训练权重、重新设计原生视觉编码器"这一关键决策提供量化稳定性证据。
 
-在论文整体方法链路中，它为"弃用外部预训练初始化、改用从零训练视觉编码器"的架构决策提供了直接的训练稳定性实证，是MoonViT-V2最终取代MoonViT-3D成为默认视觉塔的关键支撑证据之一。
+**(3) 在论文中的作用：** 作为预训练消融（pre-training ablation）的客观度量，与下游任务性能互补，从训练动力学角度背书MoonViT-V2架构选择，强化"原生从头设计优于借用预训练初始化"的整体方法论主张。
 *caption: Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lowe… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.7 (p.11)
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig07.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图7联合解读**
 
-1) **核心对象与结构**：图示为对数–对数坐标系下的两条拟合 scaling-law 曲线（虚线），横轴为训练 FLOPs（10²¹ 刻度可见），纵轴为评估损失。蓝色虚线为 Kimi K2，红色虚线为 Kimi K3，每条曲线上标有星号表示实测数据点。两曲线整体平行下移，K3 在相同 FLOPs 下损失更低，或达到相同损失所需计算量约为 K2 的 1/2.5。
+1. **核心对象与结构**：双对数坐标图，横轴为训练FLOPs（≈5×10¹⁹–2×10²¹），纵轴为Validation Loss。蓝色（K2）与红色（K3）两条拟合直线近似平行，K3整体左移；图中以"2.5×"标注在等Loss水平上K3相对K2的横向FLOPs位移比，数据点（星标）紧贴拟合线。
 
-2) **关键结论**：以 2.5× 的横向位移定量证明 K3 在 scaling efficiency 上相较 K2 取得显著增益，即每单位算力可获得更优模型质量，验证了 K3 架构/训练方案的有效性。
+2. **关键技术结论**：K3在保持幂律scaling形式的同时，仅需K2约40%的算力即可达到相同验证损失，即scaling efficiency提升2.5×，证明K3的架构/训练改进切实转化为计算–性能收益。
 
-3) **论文作用**：该图位于实验论证环节，作为支撑 K3 跨入 "open frontier intelligence" 主张的核心定量证据之一，将抽象的"更强"转化为可测量的计算效率提升，为 K3 资源分配决策与代际跃迁论断提供经验依据。
+3. **在论文中的作用**：作为method链路的关键经验证据，定量支撑"open frontier intelligence"的核心主张——K3并非单纯扩规模，而是以更高效scaling曲线实现前沿能力，呼应全文优化Muon、优化器、合成数据等改进的累积效果。
 *caption: Fitted scaling-law curves for Kimi K2 and Kimi K3. Kimi K3 achieves 2.5× gain in scaling efficiency over Kimi K2.… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.8 (p.13)
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig08.png]]
-> [!tip] 【图文联合解读】**图文联合解读（图8）：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图8为2×2四宫格双轴折线图，覆盖Web Development、Agentic Search、Agentic Chart Understanding、Agentic Visual Puzzles四项评测。横轴为RL FLOPs，蓝实线（左轴）为得分(%)，红虚线（右轴）为平均助手步数。量化趋势：Web Development得分由~10%升至~80%、步数~5→10；Agentic Chart Understanding得分~30%→70%、步数~3→6；Agentic Visual Puzzles得分~40%→80%；Agentic Search得分~10%→60%；四任务步数整体均随FLOPs同步增长。
+图8由2×4共8个子图构成，横轴为RL FLOPs（强化学习计算量），纵轴双轴显示：蓝色实线为Score(%)、红色虚线为Avg. steps（平均工具调用步数），覆盖Coding Experience、General Tool Use、Web Development、Agentic Search、Professional Workflows、Office Deliverables、Agentic Chart Understanding与Agentic Visual Puzzles八类评测。随着RL FLOPs自左向右放大，绝大部分子图中两条曲线呈协同上升趋势——例如Professional Workflows与Office Deliverables的分数从约30%爬升至80%以上，Avg. steps同步由低位升至高位；Agentic Visual Puzzles与Coding Experience亦呈近似单调递增的强相关，General Tool Use的Avg. steps增幅显著。仅Web Development与Agentic Search波动较大，但整体仍呈正相关。
 
-原文据此论证**"RL FLOPs扩展→工具调用步长与综合能力协同提升"**这一核心scaling结论。该图与Figure 7互补，构成论文"算力驱动Agentic能力与推理深度共增长"主线论断的关键实证，支撑Kimi K3以RL为后训练主要杠杆的方法学定位。
+**论证结论：** 原文据此说明"RL算力规模化→工具调用链路变长→综合能力全面提升"，建立了"长链工具使用+能力增益"的可扩展关系。
+
+**论文作用：** 作为RL scaling实验的核心证据，支撑"Kimi K2在RL阶段涌现更深层智能体行为"的论点，与Figure 7/9的tool-use统计、benchmark总分构成RL训练链路的完整佐证。
 *caption: Scores and the average assistant steps across a variety of public and in-house evaluations during RL. By scaling RL FLOPs, tool-call steps scale up co… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.9 (p.15)
@@ -5618,9 +5869,7 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### Kimi K3: Open Frontier Intelligence — Fig.10 (p.17)
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig10.png]]
-> [!tip] 【图文联合解读】1) 图中4条阶梯曲线比较黑盒“相机维修管理系统”的复现进度：工具调用从50%推进至100%，完成度由验证器评估；终值约为红/橙90、紫82、蓝81、绿52。  
-2) 曲线表明，代理借助 oracle 查询可逐层还原隐藏的3D维修系统及Web应用，但过程是阶段性的，代理能力决定完成效率与上限。  
-3) 该实验构成“黑盒探测—工具执行—系统复现—验证评测”链路，证明方法可处理开放式长程应用复制。
+> [!tip] 【图文联合解读】图示四模型在"Camera Repair Management System"黑盒系统复现任务上的完成度曲线（验证器评分，横轴为归一化工具调用进度）。Kimi K3以得分1.000成为唯一达100%完成度的模型，且在约90%–100%区间出现陡峭跃升；Opus 4.8（0.918）与GPT-5.5（0.893）分别止于约92%、89%并在末段趋于平台；Kimi K2.6仅0.560，封顶约56%。论文借此论证：Kimi K3在长程黑盒逆向与复杂Web复现中具备最高的探索—收敛效率，曲线末端跃升表明其在工具调用后期仍能持续突破。该图是支撑"前沿智能体能力"主张的核心实证之一。
 *caption: Completion curves on Camera Repair Management System, a black-box system replication task in which the agent reconstructs a hidden 3D-camera repair sy… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.11 (p.19)
@@ -5634,13 +5883,11 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### Kimi K3: Open Frontier Intelligence — Fig.12 (p.23)
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig12.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**1) 核心对象与结构：** 1个6144-token物理块划分为12个512-token哈希块；MLA KV行前5块蓝色（已缓存）、后7块浅灰（空）；KDA检查点行在第5块边界B=2560处标橙色命中点，第4块为灰色持久checkpoint，其余位置为开圈（无checkpoint）。
 
-**① 核心对象与结构：** 1个6144-token物理块被切分为12个512-token的prefix-hash子块，其中前5块为蓝色（已缓存的MLA块，对应B=2560/512=5），后7块为浅灰色（空块）；下方12个标记对应每个hash边界的KDA checkpoint状态（○=无checkpoint，●=已持久化，橙色●=在B=2560处命中）。
+**2) 关键技术结论：** 命中B=2560时，从checkpoint恢复KDA状态、对部分MLA块执行copy-on-write，[0,B)区间零重算即可续prefill——证明512-token粒度的细粒度哈希前缀缓存与KDA状态持久化可协同工作，避免整块重新计算，实现按哈希边界的增量恢复。
 
-**② 关键结论：** KDA checkpoint稀疏分布且通常与对话轮次边界对齐；新请求到达B=2560时，以copy-on-write方式复用前5个MLA hash块与该处KDA checkpoint，对区间[0, B)实现零重算（zero-recompute）即可直接续写prefill。
-
-**③ 在论文中的作用：** 展示"细粒度prefix caching + 状态checkpoint"的协同机制，是Kimi K3长上下文推理高效prefill恢复与KV复用方案的核心可视化证据。
+**3) 论文作用：** 该图是"细粒度前缀缓存+KDA增量恢复"机制的可视化证据，与相关章节共同支撑系统级增量推理管线设计，论证检查点粒度选择（512-token哈希块）的工程合理性。
 *caption: Fine-grained prefix caching within a physical cache block. A 6144-token physical block contains twelve 512-token hash blocks, with cached MLA blocks s… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.13 (p.32)
@@ -5654,11 +5901,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig14.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**：该图为AttnRes算子GPU kernel优化的纵向case study，横轴为优化耗时（小时，约15–20h区间），纵轴为相对加速比。四条阶梯状轨迹分别对应四个模型的迭代优化过程，×号标记为单次尝试散点，水平虚线表示各自达到的最高性能平台：Kimi K3（红）**+59.7%**、Claude Fable 5（蓝）**+57.1%**、GPT-5.5（绿）**+30.8%**、GPT-5.6 Sol（深红）**+17.3%**。
+该图为 AttnRes GPU kernel 优化任务的案例研究，纵轴为性能得分（0–64.1），横轴为有效工作时间（Active hours，0–22h），以阶梯线追踪四个模型的迭代优化轨迹。
 
-**2) 关键技术结论**：Kimi K3在约17h即触及性能天花板，最终加速比领先第二名约2.6个百分点、领先GPT系列25–42个百分点；其轨迹爬升更快、平台更早稳定，说明该模型在编译反馈—profiling—改写循环中具备更高效的多轮迭代搜索与"通过"判定能力，而GPT-5.6 Sol虽耗时相近却仅获+17.3%，凸显Kimi K3在底层算子优化任务上显著优于同期前沿闭源模型。
+**核心数据**：Kimi K3（红线）增长最快，约第 3 小时起步，第 5 小时已达 ~40%，第 15 小时封顶 ~60（+59.7%）；Claude Fable 5（蓝线）约第 4 小时起跑，第 15 小时达 ~57（+57.1%）；GPT-5.5（绿线）缓慢爬升至 ~30 后长期平台期（+30.8%）；GPT-5.6 Sol（深红线）全程落后，仅在第 20 小时达到 ~17（+17.3%）。
 
-**3) 在论文链路中的作用**：作为Figure 14 case study，它与上游基准评测互补，从"过程性"维度具象化K3的智能边界——不再仅给出最终分数，而是展示模型在长时程、需工具反馈的复杂系统工程任务中的探索效率与上限突破能力，支撑"开放前沿智能"（open frontier intelligence）这一核心论断。
+**关键结论**：原文以"前期加速+最终峰值"双重优势论证 Kimi K3 在长周期、迭代式深度优化任务中兼具探索效率与求解质量，显著优于同梯队模型。
+
+**论文作用**：作为 frontier intelligence 的实证切片，支撑"K3 在开放式研究/工程难题上达到人类专家级推理"的整体论断。
 *caption: Case study: GPU kernel optimization on AttnRes. 7… ｜ 论文 [[kimi-k3-open-frontier-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi K3: Open Frontier Intelligence — Fig.15 (p.34)
@@ -5679,55 +5928,52 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### Prefill-as-a-Service: KVCache of Next-Generation Models Coul — Fig.1 (p.2)
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig01.png]]
-> [!tip] 【图文联合解读】**图1解读**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-图1对比PD分离LLM两种部署范式：左侧PrfaaS（Prefill-as-a-Service）专用集群配本地KV Store与Prefill节点，右侧本地PD集群含Standard/Decode节点及本地KV Store，二者经中间"跨数据中心KVCache传输层"（松耦合KV Transfer）连接，层内对比"Dense—Network Bound"（✗，因带宽受限被否）与"Hybrid—Prefill Bound"（✓，以Prefill为瓶颈而被选）两条路径，并由底部"基于以太网的跨集群KV Store"统一封装。
+图1对比PD分离LLM推理的两种部署范式。**(a)现状**：单同构集群内Prefill与Decode经各自KV Store，通过"Tightly Coupled KV Transfer"紧耦合传输，底层为RDMA单集群KV存储。**(b)PrfaaS**：PrfaaS集群（Prefill专用+本地KV）与本地PD集群（Decode+本地KV）通过以太网跨集群KV存储松耦合传输；传输层给出两种策略——**Dense**（全量KV、Network Bound、✗不可行）与**Hybrid**（按Prefill块粒度、Prefill Bound、✓可行）。
 
-**论证结论**：Hybrid松耦合方案可克服跨数据中心带宽瓶颈，使KVCache可在集群间高效流转，从而实现PrfaaS多集群分离推理。
+**论证结论**：随下一代模型KV Cache规模爆炸，RDMA紧耦合方案难以扩展；PrfaaS利用Hybrid策略将传输受限于计算侧（Prefill-bound）而非网络带宽，使跨数据中心KVCache复用成为可能。
 
-**全文作用**：作为方法论总图，引出后续对Hybrid传输、KV布局与跨集群调度的具体设计与实验。
+**作用**：作为全文核心动机图，奠定"为何需跨数据中心PrfaaS"前提，并衔接Table 1模型配置与后续PrfaaS系统设计/实验链路。
 *caption: Comparison of two deployment paradigms for PD-disaggregated LLM serving.… ｜ 论文 [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] ｜ arxiv 见 MD 元信息*
 
 ### Prefill-as-a-Service: KVCache of Next-Generation Models Coul — Fig.2 (p.4)
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】图左半部展示MiniMax-M2.5在8×H200上、prompt长度1K–128K时的KV吞吐（蓝柱）与prefill延迟（红折线）：吞吐由约5 Gbps升至64K峰值约61 Gbps，128K回落至约48 Gbps；延迟由约0.3 s超线性增长至约5.5 s。右表对比GQA/MLA/Sparse/SWA/Linear Attention五类注意力机制的prefill延迟与KV吞吐高低。
 
-**1）核心数据：** 图以 MiniMax-M2.5 在 8×H200 实例上的实测呈现双轴关系——蓝柱为 KV 吞吐量(Gbps)、红线为 Prefill 延迟(s)，横轴为 prompt 长度(1K–128K)。吞吐量从 1K 的 ~5 Gbps 单调升至 64K 峰值 ~61 Gbps，128K 回落至 ~48 Gbps；延迟在 ≤32K 区间保持 <1.2 s，64K 升至 ~2.2 s，128K 陡增至 ~5.5 s。
-
-**2）关键结论：** 长上下文 prefill 产生高达数十 Gbps 级别的 KV 流量，且在 128K 出现明显 **compute-bound 拐点**——吞吐量不升反降、延迟指数级攀升，证明长 prompt 的 prefill 是高算力开销单元，将其剥离至专用实例具备现实必要性。
-
-**3）论文作用：** 为 "prefill-as-a-service / KV cache 跨数据中心传输" 的核心动机提供单实例 KV 带宽量化证据，论证解耦 prefill 与 decode 的工程价值。
+原文据此论证：长上下文prefill产生的KV cache传输已达数十Gbps量级，延迟随长度急剧放大，且不同注意力机制在吞吐/延迟上取舍各异——从而支撑"跨数据中心传输KV cache将成为下一代模型prefill服务瓶颈"这一核心论点，为Prefill-as-a-Service方案提供量化依据与机制选型参考。
 *caption: KV throughput of MiniMax-M2.5 on an 8×H200 instance at various input lengths.… ｜ 论文 [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] ｜ arxiv 见 MD 元信息*
 
 ### Prefill-as-a-Service: KVCache of Next-Generation Models Coul — Fig.3 (p.6)
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig03.png]]
-> [!tip] 【图文联合解读】该图展示PrfaaS-PD部署拓扑：核心为Local PD Cluster（含Prefill与Decode两类节点，由Intra-Cluster RDMA Network高带宽互联，配套Hybrid Prefix Cache Pool），短请求(l≤t)本地直接处理；Global KVCache Manager经Inter-Cluster Ethernet跨集群统一调度。原文借此论证：PrfaaS-PD通过Prefill/Decode分离、RDMA+Ethernet分层网络与混合前缀缓存池，可支撑跨数据中心的KVCache传输。该图为后文跨机房KV吞吐实验（表3，8×H200，SGLang v0.5.9）提供系统部署前提与方法框架。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图示PrfaaS-PD双集群部署拓扑：Request Router按阈值t分流请求——长请求(l>t)送PrfaaS集群的Prefill节点（标"高计算吞吐"），短请求(l≤t)送Local PD集群的Decode节点（标"高内存带宽"）。两集群各含三层子系统：Compute层为PD节点、Network层为Intra-Cluster RDMA Network、Storage层为Hybrid Prefix Cache Pool；二者经Cross-Cluster Ethernet互联，并由Global KVCache Manager跨集群统一调度。原文借此论证：PD分离+RDMA/Ethernet分层网络+混合前缀缓存池三层协同，可支撑跨数据中心KVCache传输。该图作为后文跨机房KV吞吐实验（表3，8×H200，SGLang v0.5.9）的系统部署前提与方法框架。
 *caption: Deployment topology of the PrfaaS-PD architecture.… ｜ 论文 [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] ｜ arxiv 见 MD 元信息*
 
 ### Prefill-as-a-Service: KVCache of Next-Generation Models Coul — Fig.4 (p.7)
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig04.png]]
-> [!tip] 【图文联合解读】图4展示统一Hybrid Cache Pool：第3组Full Attention含8个块级KVCache单元；池中可见12块，其中5个粉色跨集群Transfer-Cache块、7个灰色空闲块。论文说明，线性状态与全注意力KVCache虽分组建管，却共享分块资源；前缀缓存仅集群内且按块对齐，传输缓存可跨集群任意长度并在使用后释放。该结构连接各PD集群的prefill/decode链路，为跨数据中心KV传输、资源隔离及统一池调度提供架构基础，并非结果指标图。
+> [!tip] 【图文联合解读】**1) 核心对象与结构**：图示统一混合缓存池（Unified Hybrid Cache Pool），Linear Attention Group（请求级循环态，3对块）与Full Attention Group（块级KVCache，约7–8个半填块）通过Group 0–3四条通道向池子Allocate/Free；池内块按用途分三类——Prefix-Cache（紫色，可复用、块对齐）、Transfer-Cache（红色，跨簇、任意长度）、Free（灰色），全注意力侧可见明显的半填碎片块。
+
+**2) 论证结论**：异构注意力模型的两类状态可在同一存储后端上共存，并通过"簇内复用 vs 跨簇一次性传输"语义分类隔离，从而统一管理。
+
+**3) 论文链路作用**：该池是PrfaaS调度框架的基础设施抽象层，使本地PD集群与跨集群预填池能在同一资源池内协同分配，为跨数据中心KVCache调度提供底层支撑。
 *caption: Hybrid prefix cache pool. Linear states and full-attention KVCache are managed by separate groups backed by a unified block pool. Blocks are categoriz… ｜ 论文 [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] ｜ arxiv 见 MD 元信息*
 
 ### Prefill-as-a-Service: KVCache of Next-Generation Models Coul — Fig.5 (p.11)
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig05.png]]
-> [!tip] 【图文联合解读】**图(a)** 展示本地 PD 集群内 prefill/decode 实例分配（固定 Np+Nd=8）的吞吐量网格扫描：下 x 轴 Np∈[1,7]、上 x 轴 Nd∈[7,1]，纵轴 Λ_max(req/s)。红线 Prefill bound 在 Np=1→3 单调上升至 3.24，绿线 Decode bound 在 Np=4→7 单调下降至 ~0.8，二者在最优点 ★Np=3、Nd=5 交汇。附表量化 1K/8K/32K/128K 序列对应 KVCache 为 190.8/308.9/701.3/2316.3 MiB。
-
-**关键结论**：总实例数受限时，prefill 与 decode 实例存在唯一最优配比——prefill 过多受 prefill 吞吐上界制约，decode 过多受 decode 上界制约，形成"V 形"包络。
-
-**论文作用**：与图(b)固定 Np=3、Nd=5 扫描传输时间 t 配合，构成两变量优化的两阶段网格搜索，为跨数据中心 KVCache 共享方案的实例/带宽联合部署决策提供量化依据。
+> [!tip] 【图文联合解读】图及实测表：1K/8K/32K/128K序列的KVCache为190.8/308.9/701.3/2316.3 MiB，预填充0.44/0.72/1.84/7.40 s，KV吞吐3.61/3.59/3.19/2.62 Gbps。固定最优t≈19.4K，在Nₚ+N_d=8下搜索，得Nₚ=3、N_d=5时Λmax=3.24 req/s；固定配比扫描t，峰值不变。该实测驱动两阶段网格搜索，连接PD资源分配与跨机房/本地路由优化，确定PaaS配置。
 *caption: Illustration of the grid search process for the two optimization variables. (a) fixes t at the optimum and searches over the prefill/decode instance s… ｜ 论文 [[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]] ｜ arxiv 见 MD 元信息*
 
 ### LongSpec: Long-Context Lossless Speculative Decoding with Ef — Fig.1 (p.1)
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig01.png]]
-> [!tip] 【图文联合解读】**1) 核心对象与数据**
-对数刻度柱状图（y 轴 2k→10M），对比 7 个前沿 LLM 的上下文窗口：DeepSeek-V3、Qwen3-235B-A22B 约 128k；Claude 3.7 Sonnet 约 200k；Grok 3、GPT-4.1、Gemini 2.5 Pro 约 1M；Llama 4 Scout 约 10M（最高）。红色虚线标 2k，为 EAGLE 训练上下文长度。
+> [!tip] 【图文联合解读】**图1联合解读（≤220字）**
 
-**2) 关键结论**
-现代 LLM 实际上下文窗口为 EAGLE 训练长度的 **64×~5000×**，EAGLE 根本无法覆盖真实长上下文场景，直接迁移将失效。
+该图以对数纵轴条形图对比7个现代LLM的上下文窗口：Llama 4 Scout约10M（最高），Grok 3、GPT-4.1、Gemini 2.5 Pro约1M，Claude 3.7 Sonnet约200k，DeepSeek-V3与Qwen3-235B-A22B约128k；底部红色虚线标注于2k处，对应SoTA推测解码方法EAGLE的训练上下文长度2048。
 
-**3) 论文作用**
-作为核心动机图，揭示 SOTA 推测解码方法在长上下文下的根本局限，为 LongSpec（长上下文无损推测解码）的研究必要性提供直观量化依据。
+**原文论证结论**：EAGLE训练上下文（2k）相比现代LLM（128k–10M）存在**两个数量级到四个数量级**的巨大差距，传统SD方法无法直接迁移到长上下文场景。
+
+**论文作用**：作为开篇**动机图**，直接引出LongSpec的核心必要性——必须为超长上下文重新设计草稿生成与验证机制，为后续方法设计与Table 1/Figure 3的实验评测铺垫问题背景。
 *caption: The SoTA SD method, EAGLE, has a training context length of 2048, which is significantly shorter than the context lengths of modern LLMs. 2023), and t… ｜ 论文 [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] ｜ arxiv 见 MD 元信息*
 
 ### LongSpec: Long-Context Lossless Speculative Decoding with Ef — Fig.2 (p.4)
@@ -5744,26 +5990,14 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### LongSpec: Long-Context Lossless Speculative Decoding with Ef — Fig.4 (p.8)
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图中展示长上下文训练过程中两条Loss曲线（横轴Steps 0–1200）：红色为启用了Anchor-Offset Indices的预训练模型，初始Loss约4.2并快速收敛至~3.5；蓝色为未启用版本，初始Loss高达~6.3，需经约1200步才降至同等水平。红色箭头标注"3.93×"，定量说明无Anchor-Offset需多花近4倍训练步数才能追上。
-
-该图作为训练阶段的实证依据，证明Anchor-Offset位置编码策略在长上下文建模中具备显著更优的起点Loss与收敛效率，为后续投机解码中Draft模型对超长位置信息的准确预测提供了关键的模型质量前提，从而支撑Table 4中更高的平均接受长度τ与解码加速结论。
+> [!tip] 【图文联合解读】该图上半为表格：Multi-News 与 RepoBench-P 上，无 Anchor-Offset 时 τ=3.20/3.26、Tokens/s≈85；引入后 τ 升至 3.36/3.39、Tokens/s 升至 91+。下半为 0–1200 步训练损失曲线，Anchor-Offset（红）初损约 4.2、终损约 3.5；无 Anchor-Offset（蓝）初损约 6.4，原文用红色箭头标注其达同等损失需多耗 3.93× 步数。结论：Anchor-Offset 索引在长上下文上同时降低训练初/终损失并大幅加速收敛，同时提升推理接受长度与吞吐。该图衔接训练消融与推理评测，闭环支撑 LongSpec "训练-推理协同" 的长上下文推测解码方案。
 *caption: Training loss curves on long-context data.… ｜ 论文 [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] ｜ arxiv 见 MD 元信息*
 
 ### LongSpec: Long-Context Lossless Speculative Decoding with Ef — Fig.5 (p.8)
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig05.png]]
-> [!tip] 【图文联合解读】**核心对象与量化数据**
+> [!tip] 【图文联合解读】**图5图文联合解读**
 
-Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对比 **EAGLE（~78 ms）** 与 **Hybrid Tree Attention（~40 ms）**，分四段：draft model forward、target model attention、target model FFN、verification。EAGLE 中 target attention 约 50 ms（占绝对主体）；Hybrid 将其压缩至 ~12 ms（约 4× 加速），draft、FFN、verification 三段基本不变，总耗时近乎减半。
-
-**关键技术结论**
-
-该图量化佐证 caption 论述：Hybrid Tree Attention 的收益**集中体现在目标模型注意力层**，直接缓解长上下文验证阶段的注意力计算瓶颈，验证了作者"目标模型 attention 层显著降低"的论断。
-
-**在论文整体链路中的作用**
-
-作为 LongSpec 核心效率实证证据，支撑其"长上下文无损 + 高效"的设计主张；与吞吐、接受率等实验数据相互呼应，证明优化并非以牺牲无损性为代价。
+图5以水平堆叠条形图分解单次投机解码循环延迟，对比EAGLE（≈76 ms）与Hybrid（≈37 ms），分四段：draft forward（红）、target attention（黄）、target FFN（绿）、verification（蓝）。EAGLE中target attention段约51 ms，占绝对主导；Hybrid将其压缩至约11 ms，约4–5×加速；其余三段近似不变，总延迟近乎减半。结论：Hybrid Tree Attention精准削减了长上下文下target attention的关键瓶颈。该图作为方法核心论据，以延迟分解直观证明改进集中于attention层，支撑LongSpec整体近2倍加速的实验结论。
 *caption: Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latenc… ｜ 论文 [[longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification]] ｜ arxiv 见 MD 元信息*
 
 ### LongSpec: Long-Context Lossless Speculative Decoding with Ef — Fig.6 (p.9)
@@ -5773,18 +6007,20 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 
 ### SpecExtend: A Drop-in Enhancement for Speculative Decoding o — Fig.1 (p.1)
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig01.png]]
-> [!tip] 【图文联合解读】图1展示Llama-3.1-8B-Instruct+EAGLE-3在1K–128K输入长度下的双轴数据：绿色折线为吞吐量(tokens/s)，堆叠柱为显存占用(蓝Model Weights+橙KV Cache)。量化可见：吞吐量从1K的~150骤降至4K的~45 tokens/s；而KV Cache在≤32K时仍<2 GiB，直至128K才增至~16 GiB与权重持平。
+> [!tip] 【图文联合解读】图1展示Llama-3.1-8B-Instruct+EAGLE-3在1K–128K输入长度下的吞吐量（绿线，左轴）与显存占用（堆叠柱，右轴：蓝色Model Weights+橙色KV Cache）。吞吐量从1K的~148 tokens/s骤降至4K的~50、128K仅~5；而KV Cache占比直到64K–128K才显著膨胀至~16 GiB。
 
-**技术结论**：性能崩塌远早于显存瓶颈出现，说明长序列下推测解码减速的主因并非KV Cache显存/带宽，而源自其他机制(如草稿模型匹配率下降、注意力计算开销等)。
+**关键结论**：性能衰减远早于显存瓶颈的转移——说明主因并非显存压力，而是长序列下草稿模型命中率下降。
 
-**论文作用**：以"反直觉"现象作为核心动机，引出SpecExtend——针对非显存瓶颈的长序列性能退化，提出对推测解码的即插即用增强方案。
+**论文作用**：以量化证据建立问题动机，论证现有方案（如TriForce）仅靠KV压缩无法挽救长序列投机解码收益，从而引出SpecExtend这一drop-in增强方案。
 *caption: Performance and memory usage of speculative decoding with Llama-3.1-8B-Instruct and EAGLE-3 across varying input lengths. Performance significantly de… ｜ 论文 [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] ｜ arxiv 见 MD 元信息*
 
 ### SpecExtend: A Drop-in Enhancement for Speculative Decoding o — Fig.2 (p.2)
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig02.png]]
-> [!tip] 【图文联合解读】该图展示SpecExtend整体流程：长输入序列切分为8个Chunk，经Flash Attention Prefill并行输入Target与Draft模型；Target通过Hybrid Tree Attention验证Draft生成的候选Token，其Attention Scores经"Cross-model Retrieval"反向回传，从8个Chunk中筛选出{1,3,7,8}保留至Draft Model KV Cache，实现draft与target的KV对齐。
+> [!tip] 【图文联合解读】**图示结构**：左侧"长输入序列"切分为8个chunk（红色chunk 3为高注意力相关片段），经FlashAttention预处理后并行输入目标模型（蓝）与草稿模型（绿）；草稿生成候选tokens，目标模型通过Hybrid Tree Attention验证；验证所得注意力分数经"跨模型检索"反馈，仅将相关chunk（1、3、7、8）保留至草稿模型KV cache。
 
-论文以此论证三项drop-in加速技术——Prefill阶段FlashAttention、Verify阶段Hybrid Tree Attention、基于注意力分数的Chunk选择性缓存——在无需额外训练下兼顾draft速度与准确性，为Table 2中相对自回归生成取得显著Speedup提供了核心方法学支撑。
+**论证结论**：无需额外训练即可在长序列上同时提升草稿速度与准确率——三阶段加速链（FlashAttention预fill→Tree Attention验证→稀疏KV cache）共同缩短推测解码关键路径。
+
+**论文作用**：作为方法总览图，定锚整套SpecExtend流水线，为后续Table 2中接受长度τ与加速比的实验验证提供架构对应。
 *caption: Overview of SpecExtend. FlashAttention accelerates the prefill phases of both target and draft models, and Hybrid Tree Attention accelerates the verif… ｜ 论文 [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] ｜ arxiv 见 MD 元信息*
 
 ### SpecExtend: A Drop-in Enhancement for Speculative Decoding o — Fig.3 (p.4)
@@ -5812,13 +6048,11 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 
 ### SpecExtend: A Drop-in Enhancement for Speculative Decoding o — Fig.5 (p.6)
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1) 该图为四面板分组柱状图（图片可见右侧"LC-7B/LC-68M"与"LC-7B/EAGLE"两面板），横轴为GovReport上1K–16K输入长度，纵轴加速比0–3.5，深浅蓝柱对比标准投机解码与SpecExtend。关键数据：LC-68M在8K由1.12升至2.30、16K由1.51升至2.84；EAGLE在16K由1.81升至3.21。
+图5在GovReport数据集上，对四种模型组合（V-7B/V-68M、V-7B/EAGLE、LC-7B/LC-68M、LC-7B/EAGLE）对比标准推测解码与SpecExtend在1K–16K输入长度下的加速比。数据揭示两个趋势：①标准推测解码随长度增加加速比急剧下滑，如V-68M从1K的1.78×降至8K的1.08×，LC-68M从1.78×降至1.12×；②SpecExtend始终稳定或上升，16K时普遍达到2.82–3.21×，较标准方法提升近一倍（V-7B/EAGLE：1.61→3.08）。
 
-2) 原文论证：标准投机解码随序列增长加速比显著衰减（16K仅1.51/1.81），而SpecExtend始终保持>1.8并呈上升趋势，长序列增益最明显，证实其对长输入的稳健加速能力。
-
-3) 该图是论文核心实验证据，验证SpecExtend作为即插即用模块在不同draft模型（LC-68M、EAGLE）与各长度下均稳定提升加速比，支撑其长序列泛化性与工程实用价值。
+论文借此论证核心结论：长序列下草稿模型因训练上下文外分布偏移命中率骤降，SpecExtend通过扩展草稿模型窗口恢复并放大加速比。该图是论文"drop-in即插即用、长输入普遍受益"主张的关键实验支撑。
 *caption: Speedup comparison of standard speculative decoding and SpecExtend across varying input lengths on… ｜ 论文 [[specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences]] ｜ arxiv 见 MD 元信息*
 
 ### SpecExtend: A Drop-in Enhancement for Speculative Decoding o — Fig.6 (p.7)
@@ -5850,33 +6084,25 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 
 ### A Survey of Large Language Models — Fig.4 (p.7)
 ![[assets/crops/a-survey-of-large-language-models-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-**1）核心对象与结构：** 图中以时间轴串联GPT-1(2018.06)→GPT-2(2019.02)→GPT-3(2020.05)→Codex(2021.07)→GPT-3.5(2022.03)→GPT-4(2023.03)，并下挂两条虚线支链：一条经 code-davinci-002 → text-davinci-002（+instruction）→ text-davinci-003（+RLHF）→ gpt-3.5-turbo（+chat）；另一条延伸至GPT-4 Turbo与GPT-4 Turbo with vision(2023.09)。ChatGPT横跨GPT-3.5与GPT-4。
-
-**2）关键论证结论：** GPT系列沿"decoder-only生成式预训练→规模化→上下文学习→代码专门化→指令微调→RLHF对齐→对话/多模态"路径演进，体现decoder-only架构与人类对齐技术是LLM能力跃迁的两大核心驱动力。
-
-**3）论文中的作用：** 为综述提供GPT系发展时间锚点，作为代表性LLM案例支撑后续方法分类与能力分析。
+> [!tip] 【图文联合解读】图4以时间线展示OpenAI GPT系列技术演化，含三分支结构：主干GPT-1(2018.06)→GPT-2(2019.02)→GPT-3(2020.05)→Codex(2021.07)→GPT-3.5(2022.03)→GPT-4(2023.03)；对齐链code-davinci-002→text-davinci-002/003→gpt-3.5-turbo；GPT-4 Turbo(2023.09)扩展长上下文与视觉。实线=官方继承证据，虚线=关联推断。原文借此论证GPT遵循"decoder-only预训练→规模缩放→in-context learning→代码预训练→指令/RLHF对齐→多模态"演进范式，作为后续预训练、对齐、能力评测章节的方法论奠基图谱。
 *caption: The basic principle underlying GPT models is to compress the world knowledge into the decoder-only… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.5 (p.12)
 ![[assets/crops/a-survey-of-large-language-models-fig05.png]]
-> [!tip] 【图文联合解读】**【图文联合解读·图5 LLaMA进化图】**
+> [!tip] 【图文联合解读】图5是以LLaMA为根节点的衍生模型演化树，约含30余个变体。结构上：①红色虚线表示"继续预训练"路径（如Chinese-LLaMA、Open-Chinese-LLaMA）；②绿色实线为指令微调中的"模型继承"，蓝色为"数据继承"（如Alpaca用合成数据、Vicuna用chat数据）；③黄/白框区分参数高效微调与全参数微调；④底部涵盖数学、金融、医学、法律、教育、双语六大领域，右侧虚线框归集多模态变体（LLaVA、MiniGPT-4等）。
 
-**1) 核心对象与结构：** 以LLaMA为根节点的有向进化图，共30+变体，按4类边演化——①红虚线"继续预训练"派生Chinese-LLaMA、BiLLa、Panda等中文化版本；②绿/蓝实线"模型/数据继承"对应指令微调，衍生Alpaca、Vicuna、BELLE、Ziya、Chinese-Alpaca等；③任务/领域适配支线（含图标分类：数学Goat、医疗ChatMed、法律Lawyer LLaMA、TaoLi等）+RLHF线（PKU-Beaver）；④虚线框内为多模态扩展（LLaVA、MiniGPT-4、OpenFlamingo、VisionLLM）。
+该图论证三点结论：(1)开源基模LLaMA催生庞大衍生生态；(2)训练数据与微调策略是模型分化的核心轴；(3)LLaMA已向垂直领域与多模态双向扩展。
 
-**2) 关键论证：** 原图集中论证——开源LLaMA通过"继续预训练+指令微调+任务适配+多模态扩展"四条路径，在数月内引爆社区生态，验证了开源模型相对闭源在迭代速度与跨域扩散上的显著优势。
-
-**3) 论文作用：** 作为开源生态爆炸式发展的具象证据，支撑全文核心论点"开源驱动LLM快速迭代与领域/模态扩散"，并串联方法论章节对指令微调、RLHF、领域适配、多模态技术的讨论。
+在论文整体方法链中，此图作为开源LLM生态的"可视化快照"，与Table 5（模型配置详情表）互补，从宏观分布与微观参数两个尺度支撑"开源驱动快速迭代"的中心论点。
 *caption: Public API of LLMs. Instead of directly using the model copies, APIs provide a more convenient way for common users to use LLMs, without the need of r… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.7 (p.18)
 ![[assets/crops/a-survey-of-large-language-models-fig07.png]]
-> [!tip] 【图文联合解读】图7展示LLM预训练前的**6阶段数据预处理流水线**：①原始语料（网页/书籍/代码等）→②过滤筛选（语言/度量/统计/关键词四类启发式规则）→③去重（句级、文档级、集合级）→④隐私脱敏（检测并移除PII）→⑤分词（SentencePiece、Byte-level BPE等）→⑥得到可直接喂入训练的token序列。
+> [!tip] 【图文联合解读】**核心结构**：图7以6阶段流水线呈现LLM预训练数据预处理全流程——Raw Corpus（网页、图书、论文、GitHub等多源原始语料）→ Filtering & Selection（语言/指标/统计/关键词四类过滤）→ De-duplication（句级/文档级/集合级去重）→ Privacy Reduction（检测并替换PII）→ Tokenization（复用/SentencePiece/BPE）→ Ready to pre-train（输出数值token序列）。每阶段均以"Alice is writing a paper about LLMs."为例演示具体操作（如删除脏字、划线去重、Replace替换人名、Encode编码）。
 
-**原文论证**：高质量语料是预训练基础；过滤阶段采用分类器式与启发式两种互补策略，可显著降噪提质。
+**关键技术结论**：原文指出过滤筛选分classifier-based与heuristic-based两类，前者训练二分类器以高质量文本为正例识别低质数据；去重与隐私脱敏在多粒度执行以提升数据纯净度与合规性。
 
-**论文作用**：作为数据准备章节的方法总览图，将文本采集到模型训练的全链路可视化，奠定后续分词、模型架构与训练策略论述的事实基础。
+**论文作用**：该图作为第2章"Pre-training Data"的方法总纲，将散落于各小节的清洗、去重、脱敏、分词技术整合为端到端流程，为后续章节讨论各模型（Gopher、GPT-3、LLaMA等）的具体数据策略提供统一参照框架。
 *caption: Filtering and Selection. To remove low-quality data from the collected corpus, existing work generally adopts two ap- proaches, namely classifier-base… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.8 (p.20)
@@ -5900,79 +6126,70 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 
 ### A Survey of Large Language Models — Fig.13 (p.43)
 ![[assets/crops/a-survey-of-large-language-models-fig13.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 13，p.43）**
 
-图13展示了四种参数高效微调（PEFT）方法的结构对比：
+**① 核心对象与结构**  
+图示对比四种 PEFT 方法的 Transformer 接入方式：(a) Adapter Tuning — 每层在 MHA→FFN 之间、FFN 之后各嵌一个瓶颈 Adapter 模块；(b) Prefix Tuning — 在 Layer #1~#N 各层前均注入可训练 Prefix 向量；(c) Prompt Tuning — 仅在输入端前置一个 Prompt，深层不再附加；(d) LoRA — 在每层旁并行接入低秩矩阵对 W_up / W_down。
 
-**(a) Adapter Tuning**：在每个Transformer层的MHA与FFN之后各插入一个瓶颈结构的Adapter模块（绿色），仅训练新增的小模块参数。
+**② 原文技术结论**  
+四种方案的差异本质在于"可训练参数注入位置"：层内瓶颈（Adapter）、逐层前缀（Prefix）、输入级提示（Prompt）、并行低秩分解（LoRA），均冻结原模型主体，仅训练极少附加参数即可适配下游任务。
 
-**(b) Prefix Tuning**：在每一层输入前拼接可训练前缀向量（红色），冻结原模型参数。
-
-**(c) Prompt Tuning**：仅在输入层最前端添加可学习Prompt（黄色），不侵入各层结构，最轻量。
-
-**(d) LoRA**：在权重矩阵旁并行低秩分解矩阵（W_up、W_down，橙色），推理时可合并。
-
-**论证结论**：四种方法的核心思想一致——冻结预训练LLM绝大部分参数，仅微调极少量新增参数（Adapter、前缀、Prompt或低秩矩阵），即可适配下游任务。
-
-**论文作用**：作为第43页"Parameter-Efficient Fine-Tuning"小节的核心图示，与Table 4的定量对比呼应，为后续章节讨论指令微调与RLHF的成本权衡提供方法论支撑，是LLM高效适配技术的总览入口。
+**③ 论文整体作用**  
+作为 Adaptation 章节的核心对比图，为读者建立 PEFT 方法全景认知，支撑后续"参数高效微调显著降低大模型部署与适配成本"的论述。
 *caption: Adapter Tuning. Adapter tuning incorporates small neural network modules (called adapter) into the Transformer mod- els [406]. To implement the adapte… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.16 (p.54)
 ![[assets/crops/a-survey-of-large-language-models-fig16.png]]
-> [!tip] 【图文联合解读】**图文联合解读（Figure 16）：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图示 **Planning Framework** 含三大核心组件——**Task Planner (LLM)**、**Plan Executor**、**Environment**，并附 Memory、Tool 两个辅助模块。流程为：Task→LLM 生成 Plan→Executor 输出 Action 作用于 Environment→Environment 经 Feedback 回传 Planner 触发 plan refine→最终输出 Result。底部按 **Internal(LLM 自身)** 与 **External(Human / World / Others)** 对组件分类。
+该图展示LLM提示式规划的三组件闭环：**Task Planner(LLM)** 输出Plan→**Plan Executor** 执行Action→作用于**Environment**；执行结果通过**Feedback**回传Planner实现"generate & refine"迭代，最终输出Result。Environment分内部(LLM/Memory)与外部(Human/World/Other/Tool)两类。
 
-原文据此论证：LLM 可作为 task planner，生成自然语言动作序列或可执行程序形式的多步整体方案，闭环反馈支持计划的迭代修正与泛化。
+论文借此论证：LLM作为任务规划器，可生成自然语言动作序列或可执行程序，通过人–机–世界反馈循环，将单步推理扩展为多步复杂任务求解。
 
-作用上，该图作为论文**规划范式的总纲（统一形式化框架）**，为后文具体方法（zero-shot / few-shot / CoT 规划、ReAct 等）提供一致的组件划分与交互参照。
+在论文方法链中，该图为第4章"规划与决策"提供统一形式化框架，与Tool use、Memory、Reflection等子节并列，支撑后续实验评估中"复杂任务解决能力"的论证。
 *caption: In this paradigm, there are typically three components: task planner, plan executor, and environment36. Specifically, task planner, which is played by… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### A Survey of Large Language Models — Fig.17 (p.59)
 ![[assets/crops/a-survey-of-large-language-models-fig17.png]]
-> [!tip] 【图文联合解读】**图文联合解读（图17）：**
-
-该图以两组人机对话并排对比两类幻觉：**(a)内在幻觉**——输入"Bob之妻Amy、之女Cindy，谁是Cindy对Amy的关系？"，模型却答"Cindy是Amy的**daughter-in-law**（儿媳）"（红字标注），与输入直接矛盾，应为孙女关系；**(b)外在幻觉**——被问及"RLHF含义"时，模型将其臆造为"Rights, Limitations, Harms, and Freedoms"（红字），却正确解释了LLM，无中生有。
-
-**论证结论：** 幻觉不仅在GPT-4等顶尖LLM中普遍发生，且模型自身难以识别文本中的幻觉内容。
-
-**章节作用：** 作为第59页"幻觉挑战"小节的关键实证样例，与LVLM幻觉引用[604]共同支撑作者对可信度风险的定性论述，引导后续缓解策略章节。
+> [!tip] 【图文联合解读】图17以两组对话展示LLM幻觉：(a)内在幻觉——输入"Bob之妻Amy、之女Cindy"的事实后，LLM却答"Cindy是Amy的儿媳"，与输入直接矛盾；(b)外在幻觉——问RLHF含义时，LLM凭空编造其代表"Rights, Limitations, Harms, and Freedoms"（实为Reinforcement Learning from Human Feedback）。原文借此定性论证：幻觉在GPT-4等顶级LLM中仍频发，且模型难以自识别已生成的幻觉内容。该图作为现象级案例证据，铺垫后文对幻觉分类（内在/外在）、检测与缓解方法的系统综述，是论述"可靠性挑战"这一关键议题的视觉锚点。
 *caption: Hallucination widely occurs in existing LLMs, even the most superior LLMs such as GPT-4 [46]. Furthermore, existing work shows that LLMs encounter dif… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.1 (p.2)
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig01.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示展示了自回归生成的两个连续步骤（Step 1、Step 2），序列由"The"、"apple"、"tas"等青色 token 框组成，曲线箭头表示当前新 token 对所有历史 token 的注意力依赖；右下方粉色框标注"KV Cache"，用于存储历史 token 的 K、V 矩阵。
+1）图示自回归两步生成过程：Step1序列"The apple tastes"（青色历史token），橙色"?"经attention对全部历史做预测，输出"sweet"；Step2扩展为"The apple tastes tastes sweet"再预测"."；底部粉色框标注KV Cache存储历史token的K/V。
 
-**核心结论：** 图示直观论证 KV cache 的必要性——若无缓存，每步都需从头重算所有历史 token 的 K、V，时间复杂度为 O(n²)；借助缓存复用，仅需计算新增 token，使单步注意力降为 O(n)。
+2）论证结论：新token每步需attend全部历史K/V，无缓存时每步从零重算开销巨大；KV Cache通过存并复用历史K/V避免冗余计算，显著降低推理时延。
 
-**论文作用：** 作为 Figure 1 置于引言，奠定全文优化动机，后续章节围绕"如何更高效地压缩/共享该缓存"展开，属于全文技术链路的问题定义与起点。
+3）论文作用：作为引言Figure1奠定核心问题与优化动机，后续章节围绕KV Cache压缩、共享、淘汰等策略展开，构成全文方法链路的起点。
 *caption: Autoregressive generation, at each step the new token (orange) attends to all prior tokens (cyan). Without caching, keys and values for every past tok… ｜ 论文 [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.2 (p.3)
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：图示单层 Transformer 内 KV cache 的数据流。输入 token $x_t$（橙色）经三个投影 $W_Q, W_K, W_V$ 分流：$Q_t$（黄色，左侧）无需缓存；$K_t, V_t$（teal 蓝绿）依次 append 到各自的 cache $K_c=[K_1,\ldots,K_t]$、$V_c=[V_1,\ldots,V_t]$（teal 框标注缓存区）。底部给出注意力的完整计算式 $\mathrm{softmax}(Q_tK_c^\top/\sqrt{d_k})V_c$。右侧橙色标注明确指出缓存体量为 $t\times d_v$，每头每层线性增长。
+该图刻画单Transformer层KV Cache数据流：输入token $x_t$经$W_K$、$W_Q$、$W_V$三路投影得$K_t$、$Q_t$、$V_t$；$K_t$、$V_t$以"append"方式累入缓存$\mathbf{K}_c=[K_1..K_t]$（$t \times d_k$）与$\mathbf{V}_c=[V_1..V_t]$（$t \times d_v$），teal高亮；$Q_t$对完整缓存执行$o_t=\text{softmax}(Q_t\mathbf{K}_c^\top/\sqrt{d_k})\mathbf{V}_c$注意力运算。
 
-2) **关键技术结论**：teal 色块直观看清"被缓存的对象"就是 K、V 两路；其大小随已解码 token 数 $t$ 以 $O(T)$ 增长，逐 token 累积、不可压缩释放。这正是后文所有 KV cache 优化策略（量化、淘汰、共享、压缩、分页等）共同针对的内存瓶颈来源。
+原文借此论证关键结论：每头每层缓存随序列长度$T$以$O(T)$线性增长，构成LLM推理的显存与带宽瓶颈。
 
-3) **论文链路作用**：作为全文"问题定义"奠基图——在介绍任何优化方法之前，先建立 KV cache 的结构、大小与访存模式，为后续 5 大类优化技术的分类与实验对比提供统一的参照基线。
+论文作用：该图为全篇"问题基线"，Table 2所列eviction、量化、共享、分页等优化策略均围绕缓解此$O(T)$增长展开。
 *caption: Data-flow of the KV cache within a single transformer layer. Input token xt fans into three projections; Kt and Vt are appended to their respective ca… ｜ 论文 [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.3 (p.3)
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig03.png]]
-> [!tip] 【图文联合解读】图以32K–128K上下文为横轴、FP16 KV缓存显存为纵轴，展示LLaMA‑2 7B、13B、70B三条线性增长曲线；128K时缓存分别约64、80、40GB。虚线表示A100 80GB容量，点线表示FP16参数显存（约14、26GB）。KV缓存随序列长度持续膨胀：7B仅缓存就占64GB，计入14GB参数后几乎耗尽单卡显存，成为推理瓶颈。该图为后文缓存压缩、量化及调度卸载实验提供容量基线与必要性依据。
+> [!tip] 【图文联合解读】图示LLaMA-2三种变体（7B、13B、70B-GQA）在fp16精度下KV缓存随上下文长度（0–128K）的线性增长，每token开销分别为0.50/0.78/0.31 MB。虚线标注GPU显存上限（RTX 4090:24 GB、A100:80 GB），点线标注参数权重（7B:14 GB、13B:26 GB）。关键发现：7B模型KV缓存在约48K token处即突破RTX 4090显存上限（图中"7B KV"箭头），128K时达~64 GB——长上下文场景下KV缓存已超越参数成为主存瓶颈。此图作为动机图，为后文Table 3所列KV压缩方法（量化、稀疏、共享等）的必要性提供量化论证。
 *caption: KV cache memory as a function of context length for three LLaMA-2 model variants under fp16 precision.… ｜ 论文 [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.4 (p.4)
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig04.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-该图以 4×4 因果自注意力矩阵呈现"The apple tastes sweet."的注意力分布，采用 Viridis 配色（深紫=低、黄=高），灰色表示被掩码的未来 token；右下"Query=sweet"行可读出对"apple"约 0.65（对应 caption 中 65%）、"tastes"约 0.20、"sweet"自注意约 0.10，行和归一为 1。
+①**核心对象**：4×4 因果自注意力权重矩阵（Query="The/apple/tastes/sweet"×Key 同四词），行和归一为1。量化数据："sweet"行注意力分布为0.05/0.65/0.20/0.10，峰值0.65落于"apple"列（橙色框标注）；其余三行对角自注意分别为1.00、0.70、0.55。Viridis配色，深紫=低、黄=高，灰格为未来掩码。
 
-论文借此论证：**KV 条目重要性高度不均**——个别 token（如 sweet→apple）承载绝大部分注意力，其余条目贡献微弱。这正是 H₂O、SnapKV 等基于注意力分数驱动的 KV 淘汰策略的核心前提，为后文量化、淘汰与预算分配等优化章节提供直觉依据与动机锚点。
+②**关键结论**：注意力分布严重偏斜——后序 token（"sweet"）将65%权重集中于非自身的早期 token（"apple"），说明多数 KV 对仅承载低权重贡献，是 KV Cache 淘汰（eviction）的天然候选。
+
+③**论文作用**：该图为后续所有缓存压缩/淘汰策略（如低权重 KV 驱逐、混合内存方案）提供动机与直觉支撑，是论证"KV Cache 可稀疏化而不损性能"的入门示例。
 *caption: Causal self-attention weight matrix for “The apple tastes sweet.” visualised with the Viridis colormap (dark purple = low, yellow = high). Gray cells … ｜ 论文 [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.5 (p.5)
@@ -6000,22 +6217,18 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig08.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1）图示对象为KV cache矩阵X∈R^(l_prompt×d)：蓝色大矩形为完整缓存，红色虚框沿d维度（通道/列方向）取出一列，标注 s_X, z_X∈R^d，表明缩放因子与零点按"通道"逐列计算——即**per-channel quantization**沿token维度聚合统计量。
+**1) 核心对象与结构**：图示KV缓存矩阵 X∈R^(l_prompt×d) 的两种量化粒度。左图 *per-token* 对每一行（一个 token）共享一组缩放因子与零点 s_X, z_X ∈ R^(l_prompt)；右图 *per-channel* 对每一列（一个通道）共享 s_X, z_X ∈ R^d；红色虚线框分别圈出被量化的行/列单元。
 
-2）结合正文"K中某些维度幅度极大"的观察，该图论证：Key cache存在显著通道级异常值，故需**逐通道量化**以保留敏感维度精度；而Value无此模式，KIVI改用per-token量化，二者结合构成KIVI的核心设计。
+**2) 关键技术结论**：key cache 存在幅度很大的 outlier，而 value cache 无明显 outlier。KIVI 据此对 key 采用 per-channel、对 value 采用 per-token 量化，使 outlier 所在通道获得更细粒度的量化参数，从而保留关键信息并降低误差。
 
-3）该图为KIVI方法的关键可视化依据，支撑其"Key per-channel + Value per-token"非对称量化策略，为后续实验链路中实现4-bit近无损压缩提供理论直觉与方案锚点。
+**3) 在论文中的作用**：作为 KIVI 混合量化策略的概念基础，为后续实验的精度–效率权衡提供设计依据。
 *caption: Definition of per-token and per-channel quantization. X ∈Rlprompt×d is the key/value cache, where lprompt is the number of tokens and d is the number … ｜ 论文 [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.9 (p.9)
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig09.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：图示 Palu 的低秩 KV-cache 压缩流——原始线性投影权重 W 被分解为下投影矩阵（左侧输入 X 块）与上投影矩阵 **B**（底部红块）；蓝色"Original KV"框中为完整输出 **Y**，红色文字"**Cache H instead of Y**"标示被替换的缓存对象。虚线箭头表示下投影到低维隐表示 **H**，实线箭头表示由 B 重建回 Y。
-
-2) **关键结论**：推理时不再缓存完整 K/V 张量 Y，而只缓存经低秩压缩后的 H；Y 可通过 Y ≈ B·H 低成本重建，从而以 rank 比例缩减 KV-cache 显存，同时保持输出近似等价。
-
-3) **论文作用**：作为 Palu 章节的方法示意图，为"低秩投影压缩 KV-cache"这一核心论点提供直观机制说明，支撑后续实验在长上下文、多 batch 推理场景下显存与吞吐收益的论证。
+图9展示Palu低秩压缩的两条对比路径：上行为原始线性投影 X→W→Y（缓存完整KV Y）；下行为分解路径，将W离线分解为下投影A与上投影B，执行 X→A→H→B→Y，仅缓存低维隐层H而非Y。原文借此论证：W≈BA，rank远小于dim(d)，故|H|≪|Y|，可在推理时即时通过B重建Y，从而以极小算力开销换取KV-cache显存与带宽的大幅压缩。该图是Palu整篇方法的基石机制，后文实验均围绕"以H替Y"展开压缩率、吞吐与精度权衡的验证。
 *caption: Palu’s low-rank projection method for KV-cache reduction. A weight matrix W of linear projection is decomposed into two low-rank matrices. Input X is … ｜ 论文 [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.10 (p.11)
@@ -6040,11 +6253,17 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.12 (p.15)
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig12.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】## Figure 12 图文联合解读
 
-图示上方"标准线性注意力"为**单层顺序链**：每步接收Q、K、V——顶部为3维查询向量、底部为3×3键值矩阵，经单节点处理后水平传递历史状态，复杂度O(N)；下方"对数线性注意力"采用**双层分层结构**：底层K、V先经多个分桶节点并行聚集，再通过⊕加法运算合并至上层节点，形成对数级深度的递推架构。
+**1) 核心结构对比（具体、量化）：**
+- **上图（Standard Linear Attention）**：8 个同质紫色方块水平链式串联，每个节点结构完全相同——上方接收 query（单列向量），下方接收 key 与 value（各 2 列向量），呈单层均匀网络。
+- **下图（Log-Linear Attention）**：同样 8 个 token 位置，但节点呈**多层金字塔/树状层次结构**——底层连接 K/V，深蓝色中间节点通过 ⊕ 加法逐层聚合相邻邻域的表征，再传到上层浅色节点，实现分层归并。
 
-该对比论证关键结论：标准线性注意力复杂度低但只能拟合全局线性关系、表达力受限；分层对数线性结构以近线性代价换来更强的近似能力。在论文中，此图位于**注意力机制综述**背景章节（[30]引文），用于引出"局部线性注意力"等改进思路，为后续KV-Cache压缩、稀疏化等核心方案奠定理论与结构基础。
+**2) 关键技术结论：**
+原文用此对比论证：标准线性注意力 ≈ "全局线性回归"（一条直线拟合所有数据，难以捕捉局部模式）；Log-Linear 通过分层邻域聚合 ≈ "局部线性回归"，天然引入**局部归纳偏置**，从而优于全局线性方案。
+
+**3) 在论文整体链路中的作用：**
+该图位于第 15 页综述部分，作为**替代注意力机制的动机图**，从"理论类比"过渡到"方法设计"，直接启发了论文提出的 **Local Linear Attention**——融合两者优势的折中方案，是从观察 → 方案推导的关键桥梁。
 *caption: Standard linear attention (top) vs. loglinear attention (bottom). The input consists of query, key, and value vectors [30]. at nearby keys and average… ｜ 论文 [[kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference]] ｜ arxiv 见 MD 元信息*
 
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.13 (p.17)
@@ -6069,26 +6288,16 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.1 (p.1)
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig01.png]]
-> [!tip] 【图文联合解读】```thinking
-The image is Figure 1(b) from the Kimi Linear paper, showing TPOT (Time Per Output Token, ms) vs Decoding Length (4K to 1M tokens). Three curves: MLA (teal dashed, steep growth), GDN-H (orange, low growth), Kimi Linear (purple, low growth, overlapping with GDN-H). At 1M tokens: Kimi Linear ≈1.84ms vs MLA ≈11.48ms (6.3× speedup). Red arrows mark 4.8×/5.7×/6.3× speedups at 256K/512K/1M.
-
-Need ≤220 Chinese chars covering: 1) quantified data/structure, 2) key technical conclusion from caption/text, 3) role in paper's overall argument chain.
-```
-
-**图文联合解读：**
-
-图(b)展示TPOT(ms)随解码长度(4K→1M)的变化曲线：MLA(青色虚线)急剧攀升，1M时达约11.48ms；Kimi Linear(紫色)与GDN-H(橙色)近乎重合且低增长，1M时Kimi仅1.84ms。红色箭头标注256K/512K/1M处相对MLA的加速比依次为4.8×/5.7×/6.3×。
-
-**原文论证结论：** Kimi Linear在长序列解码中维持低TPOT，与GDN-H持平并显著优于MLA，支持更大batch，从而实现端到端推理加速。
-
-**论文作用：** 与(a)图"性能-加速比Pareto前沿"互补，构成"质量不减、速度更优"的双重证据链，是验证Kimi Linear架构实用价值(尤其长上下文场景)的核心实验支撑。
+> [!tip] 【图文联合解读】图(a)性能–加速比散点图：MMLU-Pro(4k)上Kimi Linear以51.0分同速领先（GDN-H 47.9、MLA 47.2），RULER(128k)上以84.3分达Pareto最优并实现3.98×加速（MLA 81.3、GDN-H 80.5）。图(b)TPOT–解码长度曲线显示，Kimi Linear在1M tokens时约1.84ms，较MLA的11.48ms分别于256K/512K/1M处实现4.8×/5.7×/6.3×加速，曲线几乎贴合GDN-H。该开篇图以统一1.4T token作严格公平对比，从任务精度与推理时延双维度论证Kimi Linear在长上下文下兼具高表达与高效率的核心卖点，为后续混合架构设计及扩展实验提供核心动机。
 *caption: (a) Performance vs. acceleration. With strict fair comparisons with 1.4T training tokens, on MMLU-Pro (4k context length, red stars), Kimi Linear lead… ｜ 论文 [[kimi-linear-an-expressive-efficient-attention-architecture]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.2 (p.5)
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig02.png]]
-> [!tip] 【图文联合解读】图2展示了batch=1、16头条件下，KDA（ours）与DPLR两种注意力内核在输入长度2K–64K（对数刻度）下的执行时间（ms）对比。KDA（紫色实线）从2K约2ms平稳增长至64K约30ms；DPLR（青色虚线）在64K时陡升至约58ms，曲线明显更陡。两者差距随序列长度扩大而显著拉大。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-原文借此论证：KDA内核相对DPLR在长序列上具有更优的推理效率与更好的复杂度表现，是论文"expressive yet efficient"核心主张的关键效率证据，支撑Kimi Linear在长上下文场景下的实际部署可行性。
+图2展示在 batch=1、16 heads 固定条件下，两种注意力核 **KDA（作者方法，蓝色实线）与 DPLR（绿色虚线）** 随输入长度 2K→64K 的执行时间（ms）。具体数据：2K 时两者均约 1 ms，几无差异；8K 起 KDA 拉开优势（KDA≈3 ms vs DPLR≈8 ms）；16K 时 KDA≈6 ms、DPLR≈15 ms；32K 时 KDA≈14 ms、DPLR≈30 ms；64K 时差距最大，KDA≈30 ms，DPLR≈58 ms，DPLR 约为 KDA 的 2 倍。
+
+原文借此论证：在不牺牲表达性的前提下，KDA 核在长序列上具有显著的 **线性复杂度效率优势**，且序列越长优势越显著，为后续 Table 2 的 scaling law 实验和端到端训练吞吐收益提供了底层算子级证据支撑。
 *caption: Execution time of kernels for vary- ing input lengths, with a uniform batch size of 1 and 16 heads.… ｜ 论文 [[kimi-linear-an-expressive-efficient-attention-architecture]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.3 (p.5)
@@ -6104,123 +6313,112 @@ Need ≤220 Chinese chars covering: 1) quantified data/structure, 2) key technic
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.4 (p.7)
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 4）**
 
-图4为2×3网格：上行绘制256–2048序列长度下的峰值准确率，下行绘制1K token下20K步训练收敛曲线，对比KDA/GDN/Mamba2在Palindrome、MQAR、Stack三任务表现。数据上，KDA与GDN在短序列均近100%，但KDA约5K步即收敛，GDN需15–20K步；Mamba2于Palindrome（≥512）、Stack（≥1024）即降至0%，完全失效。论文借此论证KDA兼具**快速收敛**与**长序列表达力**，是唯一在三项任务同时有效的方案，为下游真实语言基准评测提供合成任务层面的理论支撑。
+该图通过 2×3 子图矩阵，对比 **KDA、GDN、Mamba2** 三种架构在三类合成任务——**Palindrome（回文）、MQAR（多查询关联回忆）、Stack（状态跟踪）**——的表现：上排刻画序列长度 256→2048 的**长度外推**，下排刻画 0–20K 步的**收敛曲线**。
+
+核心定量发现：(1) **Mamba2 在三类任务中均崩塌至 0%**，表明其表达力不足以求解此类精确记忆/状态任务；(2) **长度外推差距明显**——MQAR 在 1024→2048 时，KDA 仍保持 ~47%，GDN 仅 ~28%；(3) **收敛效率 KDA ≫ GDN**——Palindrome 中 KDA 约 5K 步即达 100%，而 GDN 需约 17K 步；Stack 上 KDA 3K 步收敛，GDN 需 ~5K 步。
+
+该图为论文核心主张提供**受控合成证据**：KDA（Kimi Linear 的内核）同时具备更强表达力、更好长度泛化与更快收敛，**为后续在 Table 4 中论证 Kimi Linear 替代 full-attention MLA 的可行性奠定实验基础**，构成从合成任务→短上下文 benchmark→长上下文评测的完整验证链路的第一步。
 *caption: Results on synthetic tasks: palindrome, multi query associative recall, and the state tracking.… ｜ 论文 [[kimi-linear-an-expressive-efficient-attention-architecture]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.5 (p.9)
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig05.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图中以双对数坐标对比 MLA（蓝，虚线，2.3092·C⁻⁰·⁰⁵³⁶）与 Kimi Linear（红，虚线，2.2879·C⁻⁰·⁰⁵²⁷）在不同算力 C（FLOP/s-days，约 10¹ 量级）下的损失曲线。两曲线斜率相近（衰减指数仅差 0.0009），表明两者随算力提升的收益节奏一致；但 Kimi Linear 曲线整体下移，等损失下算力节省约 **1.16×**。论文借此论证 Kimi Linear 在保持与 MLA 几乎相同 scaling 行为的同时，实现了显著的"常数级"效率优势，从而支撑其作为新注意力架构在长上下文场景中可扩展且更优的结论，是实验链路中验证方法有效性的关键定量证据。
+**1）核心对象与数据：** 该图以双对数坐标绘制 PFLOPS/s-days（横轴，约 4–25） vs Loss（纵轴，约 1.98–2.26）的缩放曲线。两条幂律拟合分别为 MLA：L=2.3092·C⁻⁰·⁰⁵³⁶（蓝）与 Kimi Linear：L=2.2879·C⁻⁰·⁰⁵²⁷（红），星标为各计算预算下的实测点。红线在所有尺度上系统性低于蓝线，并在图中标注"Kimi Linear 达到同等 Loss 仅需约 1.16× 更少算力"。
+
+**2）关键结论：** Kimi Linear 在 MLA 同等训练成本下取得更低损失，或在相同损失下减少 ~16% 算力，证明其替代 MLA 时具有更优的标度效率。
+
+**3）论文作用：** 该图是连接"架构设计 → 训练效率"的核心证据，配合 Table 5 的长上下文评测，共同支撑"用 Kimi Linear 替换 MLA 兼具高效与长程性能更强"的整体论断。
 *caption: The fitted scaling law curves for MLA and Kimi Linear. balanced positional bias across layers, which improves robustness and extrapolation at long ran… ｜ 论文 [[kimi-linear-an-expressive-efficient-attention-architecture]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.6 (p.12)
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig06.png]]
-> [!tip] 【图文联合解读】**图6核心对象与量化数据**
-
-图6展示双面板折线图，追踪RL训练约20–110步过程中Kimi Linear@1.4T（紫实线）与MLA@1.4T（青虚线）在**(b) MATH 500 Test** 与 **(c) AIME 2025** 两个数学基准上的准确率。可读出关键数值：MATH 500上Kimi Linear收敛至约87–88%，MLA约78–80%，全程领先约6–8个百分点；AIME 2025上Kimi Linear达约22–23%，MLA约19%，领先约3–4个百分点。
-
-**原文论证的关键结论**
-
-Kimi Linear的KDA+MLA混合架构在整个RL阶段始终显著优于纯全注意力基线，证明高效注意力不会损害数学推理能力。
-
-**在论文链路中的作用**
-
-前文已论证训练效率与长上下文优势，此图补全"RL后训练推理能力不退化"的关键实证闭环，为"线性注意力可替代全注意力"这一核心主张提供下游任务维度的支撑。
+> [!tip] 【图文联合解读】图(a)(b)(c)分别展示Math RL训练中 Kimi Linear@1.4T 与 MLA@1.4T 在训练集、MATH 500、AIME 2025 上的精度曲线：(a) 训练精度 Kimi Linear 升至约 58–60，MLA 仅约 52；(b) MATH 500 测试 Kimi Linear 稳定在 ~86，MLA ~84；(c) AIME 2025 Kimi Linear 达 ~22，MLA ~19。原文据此论证：高效线性注意力在 RL 后训练阶段全程持续领先全注意力基线（MLA），验证"Kimi Linear 可替代 MLA"这一核心结论，补齐了从预训练到 RL 的完整实验证据链。
 *caption: The training and test accuracy curves for Kimi Linear@1.4T and MLA@1.4T during Math RL training. Kimi Linear consistently outperforms the full attenti… ｜ 论文 [[kimi-linear-an-expressive-efficient-attention-architecture]] ｜ arxiv 见 MD 元信息*
 
 ### Kimi Linear: An Expressive, Efficient Attention Architecture — Fig.7 (p.13)
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig07.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图(b)为batch=1时TPOT随解码长度（4K→1M，对数刻度）变化曲线：MLA虚线随长度近似线性攀升至~18ms（1M处）；Kimi Linear（紫实线）与GDN-H（橙）几乎重合，1M处仅~8ms；图中标注在512K处提速1.8×、1M处提速2.2×。
+图7展示在batch=1条件下，三种注意力机制的效率对比。左图(a)为预填充延迟：当序列达1M时，MLA约64s，Kimi Linear仅约22s（2.9×加速），512K处达2.3×；右图(b)为解码TPOT：1M处MLA约17ms，Kimi Linear约8ms（2.2×），512K处1.8×。GDN-H曲线与Kimi Linear几乎重合。
 
-**关键结论：** 长序列解码场景下，Kimi Linear较全注意力MLA取得1.8–2.2倍加速，且与GDN-H性能曲线几乎不可区分，说明其用线性注意力取代部分MLA层后，仍保持了类GDN的高效推理特性。
+原文借此论证：**Kimi Linear在保持表达能力的同时，效率与线性注意力基线GDN-H基本一致**，并显著优于全注意力MLA，随长度增长优势放大。
 
-**论文作用：** 与图(a)预填充时延互为补充，从"预填充+解码"两端共同证明Kimi Linear相对MLA的全链路效率优势，是论证该架构具备实际部署价值的关键效率证据。
+该图在论文中充当**效率与可扩展性证据**，与Table 7（机制理论统一性）相互呼应，证明Kimi Linear不仅在TTT框架下与主流注意力机制同构，更在长序列场景下具备实际部署的推理优势，支撑"expressive且efficient"的核心主张。
 *caption: (a) The prefilling time of MLA (full attention), hybrid GDN-H and our Kimi Linear. (b) The time per output token (TPOT) for MLA, GDN-H and Kimi Linear… ｜ 论文 [[kimi-linear-an-expressive-efficient-attention-architecture]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.1 (p.1)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig01.png]]
-> [!tip] 【图文联合解读】图(b)可见：MMLU分数对训练FLOPs（2e22~1e24+，对数横轴）的Pareto前沿散点图。红星Moonlight-2.4B-1.2T与Moonlight-2.4B-5.7T精确落于蓝色虚线"MMLU Performance Frontier"上；约15个橙点对比模型（Qwen-2.5-14B/7B/3B、Gemma-2-9B、OLMo-2-13B/7B、Llama-3.1-8B、DCLM-7B、StableLM-2-12B、DeepSeek-V3-Small-2.4B等）多分布于前沿下方。
-
-技术结论：结合(a)面板Muon相对AdamW拟合线整体更低、水平箭头标注"0.519× FLOPs"，论文主张Muon在计算最优训练下效率约2倍提升，使Moonlight以更低算力突破MMLU Pareto前沿。
-
-论文作用：作为开篇总览图，将"优化器可扩展性"(a)与"下游能力评估"(b)双线耦合，是全文核心结论（Muon可大规模替代AdamW）的视觉锚点，为后续缩放实验与模型发布提供关键数据支撑。
-
-（注：图像仅显示(b)面板，(a)面板依原文论述补充。）
+> [!tip] 【图文联合解读】图(a)给出Muon与AdamW在0.1–10 PFLOP/s-days下的LM loss拟合曲线：Muon(蓝)全程低于AdamW(红)，达相同loss仅需约**0.519×算力**，即~2倍计算效率。(b)将MMLU得分对训练FLOPs散点化，**Moonlight-2.4B-1.2T(≈60.5)**与**Moonlight-2.4B-5.7T(≈70)**均落在或贴近前沿虚线，同算力档优于Qwen-2.5-3B(≈65.5)、OLMo-2-7B(≈63.5)等。作为论文首图，它定量锚定"Muon可扩展且更高效"的核心主张，为后续优化器机制分析与大规模训练奠定结论基础。
 *caption: Scaling up with Muon. (a) Scaling law experiments comparing Muon and Adam. Muon is ∼2× more computational efficient than Adam with compute optimal tra… ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.2 (p.4)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig02.png]]
-> [!tip] 【图文联合解读】图含双面板。下方展示约35k–65k迭代中AdamW（绿）、无WD Muon（红）、加WD Muon（蓝）的验证损失曲线，两Muon变体均显著低于AdamW，且加WD Muon末段最低。上方差曲线（无WD−加WD）标注两关键节点：24k迭代处无WD领先0.023，66k迭代处被反超，加WD领先0.017。结论：随训练推进，权重衰减对Muon的正则化收益逐步累积并反超，使其最终收敛损失最低。论文作用：以消融形式证实WD是Muon可扩展训练配方不可或缺的一环，为完整方法链路提供关键支撑。
+> [!tip] 【图文联合解读】**图示核心**：横轴为训练迭代(0~66k+)，纵轴为验证损失(2.25~2.55)，对比 AdamW(绿)、Muon 无权重衰减(红)、Muon 带权重衰减(蓝)三条曲线。三者起点均≈2.55；前期(≤49k 步)红线无 WD 下降最快，绿线 AdamW 始终最高；约第 49k 步三线交汇于≈2.275 后蓝线反超，终态约 2.24/2.255/2.26。插图量化差值：第 24k 步时无 WD 领先 0.023，第 66k 步时带 WD 反超 0.017。
+
+**技术结论**：Muon 全程稳定优于 AdamW；但权重衰减在长程训练不可或缺——无 WD 初期收敛更快，却牺牲终态泛化，引入 WD 显著降低最终损失。
+
+**论文作用**：与 Table 2 缩放实验配套，提供 Muon 在 LLM 训练中的消融证据，支撑其可扩展性主张并指导 WD 超参选择。
 *caption: Validation loss curves for AdamW (green), Muon without weight decay (red), and Muon with weight decay (blue).… ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.3 (p.7)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig03.png]]
-> [!tip] 【图文联合解读】**1) 图示内容**：横轴为训练算力 OP/s-days（log scale，约 10⁰–10¹），纵轴为 LM loss（log scale）。图中含两类曲线：实线为多组不同模型规模下 Muon（蓝）/AdamW（红）的实际训练轨迹（噪声明显）；虚线为两者的拟合标度律曲线。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**2) 关键结论**：在整个算力范围内 Muon 蓝色虚线始终位于 AdamW 红色虚线下方，且两条虚线斜率近似平行。拟合式为 $L_\text{Muon}\approx 2.506\cdot C^{-0.052}$，$L_\text{AdamW}\approx 2.608\cdot C^{-0.054}$——等算力下 Muon 绝对 loss 低约 0.1，且标度指数（0.052 vs 0.054）相近，说明其优势可随规模持续保持而非趋同。
+图3以对数横轴PFLOP/s-days（≈10⁻²–10¹）与纵轴LM loss（2.2–4.0）绘制Muon（蓝）与AdamW（红）的拟合标度律曲线，叠加多个模型规模下的实际训练轨迹（浅色实线）。Muon曲线在全程显著低于AdamW：约10 PFLOP/s-days时Muon达~2.23，AdamW约~2.30；低算力端差距更大（Muon~3.3 vs AdamW~3.48）。
 
-**3) 论文作用**：作为整篇 scaling 实验的定量收束，验证 Muon 具备与 AdamW 同阶的标度行为但更优常数项，为 compute-optimal 配置与"Muon 可扩展"的核心主张提供直接证据。
+**论证结论**：Muon在标度律意义上系统性地更省算力，二者均呈幂律下降且斜率近似，故该优势可外推至更大规模。
+
+**作用**：作为核心实证，将单点对比升级为"整条标度律对比"，是支撑"Muon可扩展至LLM训练"主张的关键证据，衔接Table 3参数与正文结论。
 *caption: Fitted scaling law curves for Muon and AdamW optimizers.… ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.4 (p.10)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig04.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与结构**：图为1×6子图网格（图中可见SharedExperts、Router、Dense三个，其余AttnQO、AttnKV、Experts被截），每图横轴为训练迭代次数（0–约30K+），纵轴为权重矩阵的SVD熵值；每图叠加AdamW（红）与Muon（蓝）两条曲线。具体数值：SharedExperts中AdamW从~0.94降至~0.90，Muon从~0.95降至~0.925；Router中AdamW约0.68→0.78，Muon高达0.91–0.96；Dense中AdamW稳定在~0.955，Muon约0.97–0.985。
+1. **核心对象与结构**：图展示六类权重矩阵（AttnQO、AttnKV、Experts、SharedExperts、Router、Dense）在约0–40K训练迭代下的SVD熵演化，蓝色为Muon、红色为AdamW。
 
-2）**关键结论**：Muon在所有六类权重矩阵上的SVD熵均**一致高于**AdamW，说明Muon更新后奇异值分布更均匀、矩阵秩更满，有效抑制了AdamW训练中出现的"谱塌缩/方向退化"现象。这从频谱/几何角度揭示了Muon优越性来源——Newton-Schulz正交化保留了多方向学习能力。
+2. **量化结论**：Muon在全部六组熵值均高于AdamW，例如AttnQO终点约0.88 vs 0.82，Router约0.90 vs 0.78，SharedExperts约0.93 vs 0.90；AdamW早期出现显著凹陷（最低跌至0.69，Router组）后部分回升，Muon则自高位平稳略降。
 
-3）**论文链路作用**：该图属于Muon论文的"机制分析"模块，紧接loss/benchmark等结果之后，为Muon可扩展性提供**理论级**解释，与正交化动量、谱范数控制等讨论呼应，构成"现象→机制→方法"的闭环论证。
+3. **论文作用**：该图以谱分析直接论证Muon的正交化更新有效抑制权重矩阵的秩坍塌，保持奇异值分布均衡，从而维护模型表达能力，是支撑"Muon可扩展至LLM训练"这一核心论断的关键谱性质证据。
 *caption: SVD entropy of weight matrices across different training iterations. We categorize the weight matrices into 6 different groups: 1) AttnQO denotes the … ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.5 (p.15)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-该图通过左右两面板呈现5个算力档（1.0e+20 → 8.9e+20 FLOPs）的优化景观：左面板为学习率（~0.0010–0.0014）与损失的关系，右面板为批量大小（200–900）与损失的关系。关键结构特征：(1) 算力每增一档，最终损失单调下降约0.02–0.05；(2) 最优批量随FLOPs上移，从~250扩至~850，呈明显的batch-size scaling；(3) 各档曲线在最优值附近均较平坦，表明最优超参对算力预算稳健。
-
-论文用此图论证：**Muon优化器下的最优LR与batch size均遵循可预测的scaling law**，不同FLOPs档间曲线形状一致，验证了训练开销从1e20到8.9e20 FLOPs的可扩展性。
+> [!tip] 【图文联合解读】该图展示Muon优化器在5个FLOPs预算（1.0e+20~1.1e+21）下三组超参扫描的Loss景观：左图为Loss随训练token数（~1.5e9~6e9）单调下降；中图为Loss随学习率（0.0006~0.0014）呈平坦U形曲线，最优点集中在0.0008~0.0010；右图为Loss随batch size（200~900）单调上升，最小值出现在各FLOPs预算的左端。关键结论：最优学习率跨预算近乎恒定，最优batch size随FLOPs预算增大而增大。该图经验性地证明Muon超参可沿FLOPs预测性扩展，支撑论文"scaling law超参可稳定外推"的核心论点，为后续表5 scaling law拟合提供数据基础。
 *caption: Optimization Landscapes for Scaling Law Hyper-parameters Across FLOPs Budgets… ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.6 (p.15)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**Figure 6 联合解读**
 
-图6展示了计算**门控缩放因子（gate scaling factor）**的Python实现片段。代码对应一个函数（签名含`int, topk: int, iter_times: int`参数），注释涉及MoE（混合专家）、experts数量、top-k选择及迭代次数。可辨识的关键逻辑含`l1]`与`*0.5`操作，推测基于Newton-Schulz迭代的谱范数估计，对门控矩阵的更新按 √(fan_in) 或与topk、专家数相关的比例进行缩放，以保持更新谱范与Adam尺度一致。
+**核心对象**：MoE 门控缩放因子的 Python 实现。函数 `calc_gate_scaling_factor(num_experts, topk, iter_times)` 对 `num_experts` 维高斯 logits 经 sigmoid、排序后截取 top‑k、归一化得到概率向量 p；缩放因子即 `1/‖p‖₂`（p 的 ℓ₂ 范数倒数），经 `iter_times` 次蒙特卡洛采样取均值返回。
 
-**论证作用**：论文借此说明Muon优化器在推广至MoE架构时，需针对门控矩阵（非线性选择机制）定制缩放规则，确保与对hidden weights采用Newton-Schritz正交化更新时保持动力学一致，从而支撑"Muon可规模化"的核心结论。
+**论证结论**：Muon 优化器应用于 MoE 路由场景时，门控输出须乘以 `1/‖p‖₂`，才能保证经 Newton‑Schulz 正交化后的更新等价于谱范数归一化，从而维持 Muon 的尺度不变性前提。
 
-**论文链路**：图6是方法论的可复现性补充，与Table 6（优化器在预训练/SFT阶段互换实验）形成"算法实现→跨阶段验证"的闭环，证明Muon不仅适用于dense LLM，在MoE结构与不同训练阶段同样有效。
+**链路作用**：该图为论文将 Muon 从稠密 LLM 扩展至 MoE 架构提供了可复现的数值校准实现，与 Table 6 中预训练/SFT 阶段优化器互换实验互为支撑，闭环证明 Muon 在稀疏路由下的可扩展性。
 *caption: D… ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.7 (p.17)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig07.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图7 联合解读：**
 
-**(1) 核心对象与数据**  
-图(b) Gradient Norm 横轴为训练迭代（0–37000次），纵轴梯度范数 0–1.0。红色 Moonlight-A 出现多次尖峰：约 12000 步达 ~0.95、16000 步达 ~1.0、还有 5000、8000、18000、24000 步等多处小尖峰；蓝色 Moonlight 则从起始 ~0.3 平滑衰减并稳定在 ~0.05 附近，无明显尖峰。图(d) Large Attention Logits Ratio (Layer 1) 纵轴 0–0.00014，蓝色 Moonlight 在 ~18000–25000 步出现剧烈尖峰（峰值 ~1.4e-4，集中在 21000–23000 步），而红色 Moonlight-A 全程贴近 0。
+该图含4子图，对比Moonlight（蓝，原始Muon）与Moonlight-A（红，改进版）在~37k迭代内的训练动态。(a) 训练Loss：两者均从~2.20下降至~1.95，Moonlight略低；(b) 梯度范数：Moonlight-A在~12k、17k等处出现尖峰（高达1.0），Moonlight更平稳；(c) 第1层最大Attention Logit：Moonlight从~20飙升至~120（20k步附近）再回落，Moonlight-A稳定在20–30；(d) 大Logit占比：Moonlight在15k–25k间突增达1.4×10⁻⁴，Moonlight-A全程近零。
 
-**(2) 关键技术结论**  
-作者用此图对比两变体训练稳定性：Moonlight-A 梯度更易爆炸（高幅频繁尖峰），而 Moonlight 虽梯度平稳，却在第一层注意力 logits 上出现集中式大幅异常；两种不稳定形态不同但都揭示训练中的数值风险。
-
-**(3) 在论文链路中的作用**  
-该图为 Muon 优化器扩展至 LLM 训练时的训练动力学诊断证据，用于支撑后续归因分析与改进方案（如 rms 平衡项），位于 ablation/分析章节，承接主结果表、过渡至稳健性讨论。
+**技术结论：** Muon优化器会导致训练中注意力Logit异常膨胀及大值集中（attention sink问题），而Moonlight-A通过权重衰减改进有效抑制了该现象，同时保持相近Loss。该图是论文"Muon可扩展性"论证的关键实验支撑，证明了修正后方法的训练稳定性优于基线。
 *caption: Training dynamics comparison between Moonlight and Moonlight-A… ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.8 (p.9)
 ![[assets/crops/muon-is-scalable-for-llm-training-fig08.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图8以双对数坐标（Training FLOPs）展示各模型GSM8k得分，两个红色星标为Moonlight系列：2.4B-1.2T在约2e22 FLOPs下达46分，2.4B-5.7T在约9e22 FLOPs下达77分，均精准落于蓝色"性能前沿"虚线上。对比Qwen-2.5-7B/14B、Llama-3.1-8B、Gemma-2-9B等模型，它们需3-10倍FLOPs才能追平Moonlight-5.7T。
+图8为散点图，横轴为训练FLOPs（对数尺度，2e22–2e24），纵轴为GSM8k分数（10–90），蓝色虚线表示GSM8k性能前沿。两个Moonlight模型（红星★）位置突出：**Moonlight-2.4B-1.2T**在约2e22 FLOPs下得46分，**Moonlight-2.4B-5.7T**在约8e22 FLOPs下得77分，均位于同算力区间主流模型（Qwen-2.5-3B得79、OLMo-2-7B得68、LLaMA-3.1-8B得57、DeepSeek-V3-Small-2.4B仅31等）之上并紧贴前沿曲线。
 
-**技术结论**：Muon优化器使Moonlight以显著更低的训练算力即可达到GSM8k性能前沿，验证Muon在大模型训练中具备强可扩展性与算力效率。
+**技术结论：** Muon优化器使Moonlight以显著更低的训练算力，匹配甚至超越参数量相近的Qwen、OLMo、LLaMA等模型，验证了Muon在大规模LLM训练中的算力效率与可扩展性。
 
-**论文作用**：作为收尾性证据，将Muon从算法层面的收敛改进，落地为终端任务（数学推理）的算力-性能最优，强化"Muon可规模化"的核心主张。
+**论文作用：** 该图是"Muon可扩展"主张的核心实证之一，配合Table 8的RMS分析，从下游任务性能维度为Muon取代AdamW提供直接定量支撑。
 *caption: 6.… ｜ 论文 [[muon-is-scalable-for-llm-training]] ｜ arxiv 见 MD 元信息*
 
 ### Muon is Scalable for LLM Training — Fig.9 (p.18)
@@ -6325,14 +6523,14 @@ Muon 经 Newton–Schulz 正交化后，其训练得到的 FFN 权重矩阵奇�
 *caption: Depth mixing matrices M for four residual variants (L=4; Block AttnRes uses block size S=2). Highway is shown with scalar gates for clarity. AttnRes p… ｜ 论文 [[attention-residuals]] ｜ arxiv 见 MD 元信息*
 
 ### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.2 (p.23)
-![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p23.png]]
-> [!tip] I don't see a figure on this page—it consists entirely of body text (page 23 of a technical paper on FlowServe, covering DistFlow KV-transfer scheduling, heterogeneous prefill/decode deployment on Ascend NPUs, and the introduction to §5.2 "Disaggregated MoE-Attention").
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig02.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-The page does **reference** two figures, but they are not present on this page:
-- **Figure 2** — referenced in the "Heterogeneous Prefill-Decode Deployment" paragraph for the cross-NPU KV-cache transfer path (Ascend 910B prefill ↔ Ascend 910C decode over RoCE/VPC via DistFlow).
-- **Figures 18 and 19** — referenced at the very bottom of the page as illustrations of three new techniques for disaggregated MoE-Attention.
+**(a) 集群层：** CloudMatrix384 SuperPod 含 48 台 910C 服务器、共计 384 颗 NPU（每服务器配 2 CPU + 多 NPU + 1 NIC），三层互连并用：VPC（绿色，管理面）、UB（蓝色，节点内/间全互联总线）、RoCE（红色，RDMA 数据面）。
 
-Because no figure or caption is actually rendered on the supplied image, I cannot describe its architecture/components/data flow or transcribe its caption verbatim. If you can share the page(s) containing Figure 2 or Figures 18/19, I'll provide the description and verbatim caption as requested.
+**(b) 芯片层：** 单颗 910C 由 Die 0 与 Die 1 经高带宽 NoC 互连构成；每 Die 采用解耦 DaVinci 架构，含 AIC（Cube + Buffer）与 AIV（Scalar + Vector + Unified Buffer），辅以 AI CPU、DMA、Misc 单元，通过 MTE2/MTE3 访存。
+
+**论证作用：** 该图奠定全篇硬件底座——(1) 双 Die + NoC 提供片上高带宽，是 MoE-Attention 解耦、专家并行卸载的算力前提；(2) 图中显式的 RoCE/VPC/UB 三类互连直接对应后文"异构 Prefill-Decode 部署"中 910B 预填充 ↔ 910C 解码的 KV-cache 跨片传输路径，并支撑 FlowServe 依据网络拓扑选择 DistFlow 后端、保障 MLA 模型（DeepSeek、Kimi K2）的 TTFT/TPOT SLA。
 *caption: FlowServe selects the appropriate DistFlow [10] backend based on the network fabric. For MLA models like DeepSeek and Kimi K2, both interconnects sati… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
 
 ### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.4 (p.8)
@@ -6357,13 +6555,9 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 
 ### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.10 (p.12)
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig10.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读**
 
-**核心对象与结构：** 该图展示 DeepSeek 单个 MoE 层在多 Die（Die 0–3 及 N–1/N）上的并行执行时间线，每 Die 依次执行 MLAPrologue（红）→ MLA（黄）→ All2All（绿）→ O → Gating 序列。关键视觉差异：(1) Die 0/1 的 MLA 块宽度明显大于 Die 2/3，量化呈现 MLA 延迟的 die 间差异；(2) 各 Die 的 All2All 被红色虚线垂直对齐，标示同步点；(3) Die 2/3 在 Gating 之后出现蓝色空白段，代表空闲等待。
-
-**论证的技术结论：** 配合三种 Key Technique——① DP-LB 调度将不同 Die 的 MLA 延迟拉齐，避免 All2All 同步时的短板效应；② MLAPrologue 与 MLA 采用 TP=1 配合 All2All，避免 KV cache 重复；③ Proactive GC 回收 Gating 后空闲 Die 的 CPU 资源，消除 stragglers。
-
-**论文作用：** 该图作为 FlowServe 推理架构中分布式 MoE 调度章节的标志性图示，直观串联"延迟变异—同步阻塞—资源闲置"三大痛点与其解决方案，是论文分布式执行优化的核心证据。
+图示展示DeepSeek单MoE层在FlowServe上跨N+1个Die（Die 0至Die N）的并行执行时序：每Die流水线为 MLAPrilogue → MLA → All2All → O → Gating → Dispatch → MoE → Combine → Next Layer，两条红色虚线标出Dispatch前与Combine后的全局同步点。它支撑四项关键技术结论：①DP-LB均衡MLA时延波动；②MoE-LB均衡MoE时延；③Proactive GC消除CPU straggler；④MTP+Dynamic MicroBatch提升整体吞吐。在论文方法链路中，此图是调度优化方案的可视化骨架——把"DP组抽象（受SGLang启发）+四类负载/内存/batching策略"映射到具体流水时序，为后续Figure 11+的端到端性能评估提供机制锚点，证明四条技术可正交叠加而非冲突。
 *caption: This redesign centers on three key components: • First, we introduce the Data Parallel (DP) group abstraction, inspired by SGLang [24].… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
 
 ### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.12 (p.16)
@@ -6382,25 +6576,30 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.1 (p.2)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig01.png]]
-> [!tip] 【图文联合解读】图中将“块1+块2+块3”的KV生成分为4种：①全量重算3块，最慢但质量高；②仅复用块1前缀缓存，重算块2–3；③全量复用3块KV、忽略跨块注意力，速度快但质量低；④CacheBlend全量复用，仅选择性重算少量KV，速度提升明显且质量良好。该图用于引出速度—质量权衡，并作为后续实验基线。
+> [!tip] 【图文联合解读】图1由四个子图横向对比四种KV缓存策略：(a)完整KV重算——对全输入做prefill，最慢但质量好；(b)前缀缓存——仅复用前缀KV，略快且质量好；(c)全KV复用——直接拼接各块KV并忽略跨注意力，虽快但质量低；(d)CacheBlend（本文）——复用全部KV但仅选择性重算其中一小部分，实现"又快又好"。原文借此构建"速度-质量"二维权衡空间，明确指出前三类方案各有缺陷：全重算延迟超线性增长，RAG场景下尤为严重；前缀缓存收益有限；全复用损害质量。从而论证CacheBlend选择性重算同时兼得两端收益的必要性，为全文核心方法定位与动机奠基。
 *caption: Contrasting full KV recompute, prefix caching, full KV reuse, and CacheBlend’s selective KV recompute. full KV recompute (Figure 1(a)). Despite many o… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.2 (p.4)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig02.png]]
-> [!tip] 【图文联合解读】图2双子图：Musique(a)与2WikiMQA(b)，横轴为输入相关chunks数(1–45/1–35)，纵轴F1-Score。对比Full KV recompute含跨块注意力(蓝实线)与Full KV reuse无跨块注意力(橙虚线)：Musique上蓝线从0.19升至0.32峰值(25块)后微降，橙线在5块处达0.23后持续下滑至0.16；2WikiMQA蓝峰0.31(30块)，趋势一致。
+> [!tip] 【图文联合解读】## 图文联合解读
 
-论文借此论证：检索chunks越多质量越高，但若无跨块注意力，单纯KV复用质量反随chunks数增加而下降。图内直接标注"跨块注意力增益"，是CacheBlend提出"选择性KV重算+跨块融合"方案的核心动机，为后续方法设计及效率/质量权衡实验提供立论基础。
+**核心对象与数据**：图2含两个子图——(a) Musique、(b) 2WikiMQA数据集，横轴为LLM输入的相关文本块数(5–45/5–35)，纵轴为F1-Score(0.15–0.35)。对比两条曲线：蓝色实线（Full KV recompute，带跨块attention）随块数增加F1持续上升，Musique在约25块时峰值≈0.32，2WikiMQA在约30块时峰值≈0.32；橙色虚线（Full KV reuse，无跨块attention）基本持平于0.20–0.23，甚至后期略降。两线间标注的垂直箭头即"跨块attention带来的收益"。
+
+**论证的关键结论**：检索的文本块越多，生成质量越高；但若仅复用各块独立预计算的KV cache而不重新融合跨块attention，质量增益受限；跨块attention是性能提升的关键。
+
+**在论文中的作用**：该图作为CacheBlend的核心动机实验，证明"全量KV重算"虽质量最优但代价高、"全量KV复用"虽快但丢质量，从而为后续提出的"选择性KV重算融合"方案（兼顾质量与速度）提供立论依据。
 *caption: Generation quality improves as more text chunks are retrieved. and fetch top-k relevant chunks from the database, based on the least L2 distance betwe… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.3 (p.4)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig03.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图(c)展示"Full KV reuse"方案：两块预存的KV缓存（Chunk1、Chunk2）直接拼接Query送入LLM，不做任何重计算。输出示例显示，面对FIFA世界杯类查询，模型仅给出"梅西、C罗知名"等表面信息（红色❌），未能融合两chunk内容得出正确答案。
+图(a)展示典型LLM输入结构：Chunk1（Messi进13球）+Chunk2（Cristiano进8球）+Query"谁进球更多"。
+(b)完整KV重算时，模型输出正确答案"Messi进球多于Cristiano"（✓）；
+(c)完整KV复用时，模型却开始ramble，输出"该问题关于世界杯……Messi与Ronaldo的名字广为人知……"（✗）。
+原因在于复用两段KV cache时，**丢失了chunk间的cross-attention**——模型无法跨块比较"Messi的13"与"Cristiano的8"。
 
-**原文结论**：完整复用KV虽省时，但忽略了chunk间的cross-attention，导致跨块信息无法交互，产生事实性错误。
-
-**论文作用**：此图与图(b)"Full KV recompute"形成对比——前者慢而正确、后者快而错——共同揭示RAG场景中KV复用的核心矛盾（效率 vs 准确性），从而为CacheBlend提出"选择性KV重计算以恢复跨块注意力"的方法提供直接动机与问题定义。
+论文借此论证：纯KV复用会损害答案正确性，从而为**CacheBlend**所采用的"选择性KV重算+部分复用融合"策略提供了核心动机——既保留跨块注意力以保证正确率，又避免完全重算的开销，达成速度与精度的折中。
 *caption: An illustrative example of an LLM input with two text chunks prepended to a query. Full KV recompute (b), with- out reusing KV cache, is slow but give… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.4 (p.5)
@@ -6416,7 +6615,13 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.5 (p.6)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig05.png]]
-> [!tip] 【图文联合解读】图中为第 \(i\) 层的选择性重算：输入经 \(Q_i\) 与按 token 存储的 \(K_i\) 相乘生成注意力矩阵，再乘 \(V_i\)，得到第 \(i+1\) 层输入；图中明确标出仅重算 2 个 token 的 KV，而非整层 token。它说明 CacheBlend 在保留注意力知识融合效果的同时，以少量重算降低计算量和时延。该图是 RAG 缓存复用机制的结构示意，连接其性能与精度实验，并非结果数据图。
+> [!tip] 【图文联合解读】**图5解读（CacheBlend机制图）**
+
+**1）核心对象与结构**：展示单层 Transformer 内 QKV 注意力计算的两种方式。(a) Full KV recompute：全部 token 的 K_i、V_i 均重新计算（深灰块），与 Q_i 相乘生成完整 Attn Matrix；(b) Selective KV recompute：仅对 K_i、V_i 中**2 个选中 token** 深色重算，其余浅色"Re-used"直接复用缓存 KV，从而以极小重算量（仅2 token）维持注意力输出。
+
+**2）论证的关键结论**：CacheBlend 不必像全量重算那样耗费全部 token 的 QKV 前向，只需选择性重算少数关键 token 的 KV 即可修正朴素缓存融合带来的精度损失，实现"算力开销 ≪ 精度损失"，为 RAG 场景下低延迟复用多文档 KV cache 提供微观机制依据。
+
+**3）链路作用**：该图属于方法核心机制图（Fig 5–9），将"KV cache 融合"的具体注意力计算过程可视化，为后续 Fig 10–12 的端到端延迟-吞吐性能提升提供机理支撑。
 *caption: Illustrated contrast between (a) full KV recompute and (b) selective KV recompute on one layer. 0 10 20 30 40 50… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.6 (p.6)
@@ -6434,29 +6639,36 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig07.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图7以CDF形式刻画Mistral-7B（4/5/6层）、Yi-34B（10/11/12层）、Llama-70B（4/5/6层）相邻层间KV偏差的分布。三组曲线高度重合，绝大部分token的KV偏差集中在0–20以内（约90%分位数），三条曲线几乎完全重叠，说明跨相邻层的KV值变化极小、分布近似一致。
+图示三模型连续层的KV偏差CDF分布：Mistral-7B(层4-6)、Yi-34B(层10-12)、Llama-70B(层4-6)，横轴分别约0–60、0–75、0–60。三图均呈现陡升长尾形态——CDF在偏差≈20–30处迅速趋近1.0，仅极少数token的偏差延伸至60–75。
 
-该图用以论证：**LLM各层KV缓存对最终输出贡献稳定，仅靠缓存拼接近似已足够**，无需逐token重算全部层。这正是CacheBlend"选择性少层重算+缓存融合"策略的实验依据——既然偏差小，少量层（如每16层中只重算1层）即可修正拼接误差，从而在RAG长上下文场景下实现KV缓存复用与加速推理，构成论文方法链路的关键支撑图。
+**论证结论**：相邻层间及跨模型间KV偏差分布高度一致，表明绝大多数token前后层生成的KV近似相同，仅个别"长尾"token显著偏离。该CDF为CacheBlend核心策略——**选择性重算长尾token的KV、复用其余缓存**——提供了直接的量化实证。
+
+**链路作用**：该图以分布视角证实"KV偏差集中在少量关键token"，从而支撑全文选择性KV融合方案，使其区别于全量重算，在保持生成质量的同时显著加速RAG推理。
 *caption: Distribution of KV deviation of different tokens on one layer. 5 vs. 6 12 vs. 13 21 vs. 22 31 vs. 32… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.8 (p.7)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig08.png]]
-> [!tip] 【图文联合解读】## 图文联合解读
+> [!tip] 【图文联合解读】## Figure 8 图文联合解读
 
-**1) 核心对象与数据：** 该图展示三个模型（Mistral-7B、Yi-34B、Llama-70B）中，相邻层间每个 token 的 KV 偏差的 Spearman 秩相关系数。横轴为不同层对（如 5 vs. 6、12 vs. 13、31 vs. 32 等），纵轴 0–1.0。三组柱形均接近 1.0（≈0.97–1.00），且跨浅层、中层、深层层对均保持极高相关性。
+**1) 核心对象与数据**
+该图以三组柱状图分别展示 Mistral-7B（4 对层：5/6、12/13、21/22、31/32）、Yi-34B（5/6、16/17、31/32、46/47）与 Llama-70B（11/12、21/22、41/42、61/62）中**相邻层间逐 token KV 偏差的 Spearman 秩相关系数**。三个模型在所有采样层对上的秩相关均稳定在 **≈0.95–1.0** 区间，接近完全正相关。
 
-**2) 关键论证结论：** 原文据此指出，HKVD（高 KV 偏差）token 在不同层并非独立，其分布在相邻层间高度一致；因此只需识别少数 token 即可在全层做选择性重算，避免逐层独立选取带来的额外开销。
+**2) 关键技术结论**
+HKVD（高 KV 偏差）token 在不同层之间**并非独立**：一旦某 token 在某一层被识别为"重要"，其相邻层几乎必然也属于重要 token。这一强跨层相关性为后续策略提供了统计支撑——无需对每层独立、逐 token 重算 KV 偏差。
 
-**3) 在方法中的作用：** 该图为 CacheBlend 的"选择性 KV 重计算 + 缓存融合"策略提供统计依据——HKVD 的层间相关性正是该策略得以在保证生成质量前提下大幅降低重算量的核心前提。
+**3) 在论文方法链路中的作用**
+该结论直接支撑 CacheBlend 的**选择性 KV 重算（selective KV recompute）** 设计：可利用层间秩相关，仅在少量代表层中识别关键 token，并将其"扩散"应用到相邻层缓存，从而**以极低开销完成关键 KV 的重计算与融合**，避免全 token、全层重算带来的高昂代价，是 CacheBlend 实现"快"的核心经验依据之一。
 *caption: Rank correlation of the KV deviation per token be- tween two consecutive layers. expensive and defeats the purpose of selective KV recom- pute. Instea… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.9 (p.7)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig09.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图9展示CacheBlend逐层HKVD（高KV偏差）token的级联筛选机制。结构上：每层对"Updated KV"与"Precomputed KV"做KV偏差计算（柱状图），筛出HKVD tokens。Layer 1全量重算以建立初始HKVD集合，Layer 2仅在前层HKVD子集内重算3个token并再次筛选，后续层继续级联。浅色格代表Re-used，深色代表Re-computed。
+1) **核心对象与结构**：图示三层（Layer 1–3）双行结构，上行"Updated KV"、下行"Precomputed KV"。Layer 1全量重算所有token，Layer 2仅重算3个token，Layer 3仅重算2个token。流程为：底层KV deviation（黑色条形图）→ 选取HKVD token（Selected列）→ 送入上一层重算。浅色立方=Re-used（缓存复用），深色立方=Re-computed（重算）。
 
-原文借此论证：层间级联选择使重算规模逐层收敛至极少数token，被复用缓存的偏差仍受控，从而兼顾精度与速度。该机制是CacheBlend在RAG长上下文场景下"高比例缓存复用+极少增量重算"这一核心加速方案的关键环节，使预填充计算量显著降低而生成质量几乎无损。
+2) **论证的关键结论**：验证逐层递归选择HKVD token策略——仅基于上一层选出的高偏差子集计算当前层偏差并选择性重算，使每层重算量递减，无需全层重算即可获得完整KV。
+
+3) **在论文中的作用**：作为CacheBlend选择性重算机制的核心可视化，支撑其"逐层级联HKVD选择→少量重算+大量缓存复用"的效率论证，是方法相比全量重算显著提速的关键证据。
 *caption: CacheBlend selects the HKVD (high KV deviation) tokens of one layer by computing KV deviation of only the HKVD tokens selected from the previous layer… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.10 (p.8)
@@ -6535,15 +6747,14 @@ CacheBlend exploits **pipelining of KV loading and selective recomputation** so 
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.17 (p.12)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig17.png]]
-> [!tip] 【图文联合解读】**Figure 17 图文联合解读**
+> [!tip] 【图文联合解读】**图示内容**
+两幅散点图对比CPU RAM（左）与Slow Disk 4Gbps（右）下四种方法的TTFT（0–3s）与F1-Score（0–0.4）。RAM场景TTFT≈0.7s、F1≈0.32，质量与Prefix Caching/Full Recomp（F1≈0.33）持平但延迟仅其1/3；Full KV Reuse TTFT最低（0.15s）但F1仅≈0.15。Slow Disk场景TTFT≈1.3s、F1≈0.32，仍优于Full KV Reuse（F1≈0.15）并与另两方法持平。
 
-该图以两个散点图（CPU RAM、Slower Disk 4Gbps）对比四种方法，横轴为 TTFT（首 token 延迟，秒），纵轴为 F1-Score：CacheBlend（红方）、Full KV Reuse（橙×）、Prefix Caching（蓝圆）、Full Recomp（蓝三角）。
+**技术结论**
+论文借此论证：CacheBlend在不同存储介质下均能以更低延迟保持与全重计算相当的高质量输出，突破"低延迟必损质量"瓶颈。
 
-**关键数据**：RAM 下 CacheBlend TTFT≈0.6s、F1≈0.32；Prefix Caching 与 Full Recomp TTFT 2.0–2.4s、F1≈0.32；Full KV Reuse TTFT 0.2s 但 F1 仅 0.15。慢盘场景下 CacheBlend TTFT≈1.3s、F1≈0.32，仍低于 Prefix Caching/Full Recomp 的 2.0s。
-
-**技术结论**：CacheBlend 在与重计算相当的 F1 下，TTFT 显著降低，构成 Pareto 最优，验证即便 KV 缓存存于较慢存储，仍能兼顾速度与生成质量。
-
-**论文作用**：此图为实验链路中存储介质敏感性实验，支撑"KV 复用+部分重算"机制在不同硬件条件下的鲁棒性结论。
+**论文作用**
+属实验评估中的稳健性/泛化性验证环节，证明方法不依赖特定硬件即可在速度-质量维度取得帕累托最优，强化了全文核心卖点。
 *caption: CacheBlend’s outperforms baselines when using RAM and slower disks… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.1 (p.3)
@@ -6572,9 +6783,13 @@ CacheBlend exploits **pipelining of KV loading and selective recomputation** so 
 
 ### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.3 (p.5)
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图文联合解读（Figure 3）：**
 
-图示Agentic RL阶段的核心架构：Actor Model（绿）与Critic Model（蓝）均由RL预热后采样的轨迹分别初始化；Critic Model额外经Value Training训练，二者通过PPO算法连接并最终生成CUDA Agent。原文以此论证：(1)采用"单轮RL预热→轨迹采样→初始化actor-critic"的两阶段训练策略，保证agentic RL的稳定冷启动；(2)以PPO为框架的actor-critic结构是大规模CUDA内核生成agentic RL的关键设计。该图是论文整体方法链路的核心枢纽，串联起轨迹生成、奖励调度与最终高性能CUDA智能体训练的全流程。
+1) **核心结构**：图示三阶段训练管线——（a）Single-Turn Warm-up：Base Model 经 PPO 得到 Single-Turn Model；（b）Agent Warm-up：Single-Turn Model 采样 Agent Trajectories，同时用于 RFT 训练 Actor Model（绿色）与 Value Pretraining 训练 Critic Model（蓝色）；（c）Agentic RL：Actor+Critic 经 PPO 训练为最终 CUDA Agent。两阶段共享 PPO 算法，分别对应"单轮热身→多轮智能体"的两步训练。
+
+2) **论证的关键结论**：单轮 RL 热身阶段产生的采样轨迹具有双重用途——既为 Actor 提供 RFT 监督信号，又为 Critic 提供价值预训练数据；这种"轨迹复用"机制保证 Actor 与 Critic 初始化分布对齐，缓解后续多轮 Agentic PPO 中奖励稀疏与冷启动 Critic 估值不准的问题，为引入 Robust Reward Scheduling（替代纯 speedup 奖励）奠定稳定基础。
+
+3) **整体链路作用**：该图是论文方法论的核心蓝图，明确展示从 Base→Single-Turn→CUDA Agent 的训练递进路径，强调"先单轮后多轮"的渐进策略，是后续 Table 3 训练数据构成与奖励调度实验的框架基础。
 *caption: Overview of training pipeline. Following a single-turn RL warm-up stage, the sampled trajectories are… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
 
 ### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.4 (p.10)
@@ -6597,18 +6812,22 @@ CacheBlend exploits **pipelining of KV loading and selective recomputation** so 
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig06.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图(b)展示训练数据中的"组合型Torch算子类"`Model`：在`forward`中依次执行`Softmax(dim=1)`→`ConvTranspose2d`(3→16通道，k=3，s=2，p=1)→可学习`bias`相加；输入张量形状为`[512, 3, 32, 32]`。它表明训练算子并非单原子操作，而是由softmax+转置卷积+偏置融合而成的复合算子类，由此扩展了可优化算子空间的组合深度与多样性，为agent生成长程、融合式CUDA kernel提供更贴近真实工作负载的训练目标，支撑大规模RL对复杂算子的端到端优化能力验证。
+**1) 核心对象与结构：** 图A展示两类算子类样例。(a) 为 `transformers` 算子类，基于 `FNetConfig` 定义 `FNetPredictionHeadTransform`/`FNetLMPredictionHead`，`get_inputs()` 返回形状 `(32,128,512)` 与 `(32,512)` 的随机张量；(b) 为组合型 `torch` 算子类，将 `nn.Softmax(dim=1)`、`nn.ConvTranspose2d` 与可学习 `bias` 串联，配置含 batch_size=512、in/out_channels=3/16、kernel_size=3、stride=2、padding=1、output_padding=1。
+
+**2) 关键技术结论：** 训练数据覆盖两类典型算子——框架级封装类（如 transformers 的预测头）与原子算子组合类（Softmax+ConvTranspose2d+bias），且均通过 `get_inputs()`/`get_init_inputs()` 显式提供形状参数，体现真实算子的输入规约模式。
+
+**3) 论文方法链路中的作用：** 为 Agentic RL 提供多样化、可执行的 CUDA kernel 生成训练样本，使策略学习真实算子的 forward 行为与张量形状约束，是后续 RL 训练与 kernel 生成质量的数据基础。
 *caption: Examples of operator classes in our training data.… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
 
 ### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.7 (p.13)
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig07.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图7 联合解读：**
 
-1) **核心对象**：直方图展示训练样本与全部评估样本间的最大AST相似度分布。横轴范围0–0.45，纵轴占比0%–12%；峰值约12%出现在相似度≈0.30处，整体集中于0.15–0.45区间，极低相似度(<0.10)样本几乎为零；右上角虚线"t"标记约0.42的阈值位置。
+1) **核心对象与数据**：该直方图横轴为训练样本与所有评估样本的"最大AST相似度"（0–1），纵轴为占比（0%–12%）。分布显著左偏并集中于0.20–0.40区间，主峰约位于0.27处（≈12%），次峰约0.33（≈10%）和0.20（≈11%）；0.5以上几乎为0，**没有任何样本越过黄色虚线所示的0.9阈值**。
 
-2) **关键结论**：训练集与评估集存在中等程度的代码结构重叠，既非高度雷同（避免数据泄露/记忆式刷分），也非完全无关（保证任务可迁移），由此佐证评估结果的有效性与公平性。
+2) **论证的技术结论**：作者借此证明训练集与评估集在抽象语法树层面高度去相关——即便取最大相似度，绝大多数训练样本与测试样本的代码结构差异显著，且不存在近似复刻（≥0.9）的情况，从而排除了数据污染/泄漏的可能，确保评测分数反映真实泛化能力。
 
-3) **链路作用**：作为前置数据审计环节，用于在RL训练前排除与评测题高度相似的训练样本，防止策略过拟合到已知解，确保后续KernelBench等基准上的性能提升来自真正的泛化能力。
+3) **在论文中的作用**：作为方法链路中的"数据有效性/可信度"前置验证环节，为后续KernelBench基准上的泛化性结论提供合规依据；若缺少此图，对未见过算子的性能提升结果将难以排除记忆效应。
 *caption: Distribution of the maximum AST similarity between each training sample and all evaluation samples.… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
 
 ### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.8 (p.22)
@@ -6666,9 +6885,11 @@ Figure 12: Fused sum-then-dot-product kernel implementation (Case D.3).
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig13.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图13展示`ModelNew`自定义算子类（22行代码），将原本独立的**矩阵乘法、除法、求和与缩放**四类操作融合，通过单次`cuda_extension.fused_sum_dot`调用替代多条PyTorch逐op链。`__init__`声明weight参数与scaling_factor，`forward`仅返回融合输出，体现**算子融合 + 自定义CUDA扩展**的端到端可集成形态。
+该图展示 Case D.3 的 PyTorch 集成代码：`ModelNew(nn.Module)` 仅 22 行，将 `torch` 中的矩阵乘、除法、求和与 scaling 四种操作融合为单一 CUDA 算子 `cuda_extension.fused_sum_dot_forward(x, weight, scaling_factor)`。输入张量 (batch, input_size) 与权重 (hidden, input) 经一次 fused kernel 调用即输出 (batch, hidden)，实现 4-op → 1-kernel 的算子融合。
 
-论文借此论证：在D.3案例中，Agent能够生成超越torch原生接口的**fused custom operator**，将多类element-wise/reduction操作合一，直接通过PyTorch `nn.Module`对外暴露，验证了agentic RL在生成可编译、可调用的高性能CUDA算子方面的泛化能力，为"算子级优化取代逐op调度"提供落地证据。
+**论证结论：** CUDA-Agent 生成的扩展不仅能写单一 GEMM，还能跨多种运算类型自动融合，显著减少 kernel launch 与显存往返。
+
+**论文作用：** 作为 Case D.3 证据点，验证 agent 在"多操作自定义算子"场景下端到端 Python 封装与调用链的完整生成能力。
 *caption: Custom operator for matrix multiplication, division, summation, and scaling (Case D.3).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
 
 ### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.14 (p.28)
@@ -6721,100 +6942,85 @@ Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
 
 ### Single-Rollout Asynchronous Optimization for Agentic Reinfor — Fig.1 (p.1)
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig01.png]]
-> [!tip] 【图文联合解读】**图1联合解读**
+> [!tip] 【图文联合解读】图示对比SAO、GRPO与Baseline在5项基准的准确率（%）：AIME2025（80.4 / 84.2 / 97.3）、BeyondAIME（53.3 / 54.8 / 74.8）、HMMT Nov 2025（75.2 / 76.0 / 88.3）、IMOAnswerBench（53.3 / 55.8 / 74.0）、SWE-Bench Verified（23.0 / 27.0 / 29.8）。
 
-该图为柱状图，对比SAO（深蓝）、GRPO（浅蓝）与基线（白）在多基准上的得分。可读取的量化结果：MMT Nov 2025上SAO达**88.3**，较GRPO（76.0）提升**12.3**分；IMO Answer Bench上SAO为**55.8**，超出基线53.3；SWE-Bench Verified上SAO得**29.8**，较GRPO（27.0）和基线（23.0）分别提升**2.8**与**6.8**分。
+技术结论：SAO在全部5项基准上同时优于Baseline与GRPO。推理类任务提升最显著——较GRPO提升12.3–20.0个百分点；编码任务虽绝对值偏低，仍取得对GRPO +2.8pp、对Baseline +6.8pp的正向增益，验证方法在"带Python工具的agentic推理"与"真实软件工程修复"两类异质场景下的通用有效性。
 
-原文借此论证核心结论——SAO在四个推理基准与一个编码基准（共五项）上**全面稳定超越**GRPO与Qwen3-30B-A3B SFT基线，是支撑"单次rollout异步优化策略优于传统同步GRPO"主张的**首要经验证据**。
-
-该图作为论文首页Figure 1，奠定整篇实验链路的基调——先以宏观性能对比建立方法有效性，再逐项剖析机制（异步、效率、单rollout假设），形成"结果先行、机理跟进"的论证结构。
+论文作用：作为headline result，与Table 1（纯数学推理）形成"广（多基准）—专（数学域）"互补，构成SAO在agentic RL设置下方法有效性的核心实证链，为后续消融与分析奠定基础。
 *caption: The performance of SAO on reasoning and coding benchmarks. The four reasoning benchmarks are evaluated in a reasoning-with-Python-tool setting, where … ｜ 论文 [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Single-Rollout Asynchronous Optimization for Agentic Reinfor — Fig.2 (p.3)
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig02.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与结构**：图分两行对比。上行（SAO）：编号 7、9（及 8）三条轨迹**逐条独立**送入 Training 模块，参数 π_θ 与 π_rollout 通过反向箭头同步迭代；下行（GRPO）：编号 3→2→1 的轨迹必须**积攒为一组**后整体送入 Training。右侧附两幅相同的 Trust Region 图，以横轴 A、纵轴 π_θ / π_rollout 给出上下界 1+ε_h 与 1-ε_l 围成的灰色安全区域，表明两方法均受同一信任域约束。
-
-2）**关键技术结论**：SAO 单轨迹一完成即可训练（"ready for training"），无需等齐整组，从而消除 GRPO 中因等待最慢样本造成的 GPU 气泡；同步保证新旧策略比仍在 1±ε 信任域内。
-
-3）**论文链路作用**：该图是方法概述的总锚点，承上启下——直观展示 SAO 把同步组训练拆解为异步流水线，启下各节中"Rollout–Train 交叠""资源利用率/吞吐提升""信任域约束保持"等分析与实验的对比基准。
+图示GRPO与SAO两种训练范式的核心差异。GRPO（上）需生成组内全部9条轨迹后才启动训练，存在"waiting for Group"同步阻塞（已完成的1、2、7、9需等待仍在生成的3、4、5、6、8）；SAO（下）采用单轨迹完成即训练，按完成序9→8→…→1逐条进入训练端，rollout与训练流水线并行。两者共用相同Trust Region约束（π_θ/π_rollout ∈ [1−ε_l, 1+ε_h]），表明异步化并未放宽策略限制。该图论证了SAO的核心动机：在不改变信任域前提下，通过消除组同步等待提升时序利用率与样本效率，直接支撑后文SWE-Bench Verified实验中精度与训练效率的提升论证。
 *caption: Overview of SAO with single rollout design. The numbers denote the generation order of trajectories. For SAO, each trajectory becomes available for tr… ｜ 论文 [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Single-Rollout Asynchronous Optimization for Agentic Reinfor — Fig.3 (p.6)
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图3以Qwen3-30B-A3B为基模型，在AIME 2025与Beyond（AIME之外）两个数学基准上，对SAO、GRPO(w/ DIS)与Vanilla GRPO三条曲线进行了约1000步训练的准确率对比。**量化结果**显示：在AIME 2025上，SAO最终达到约95%，GRPO(w/ DIS)约92%；在Beyond基准上，SAO约70%，GRPO(w/ DIS)约65–67%；Vanilla GRPO在约150步后骤降至约73%并迅速崩溃退出。
-
-**技术结论**：图中SAO曲线在两个基准的训练全程几乎全程位于GRPO(w/ DIS)之上，直观支撑原文"SAO almost consistently outperforms the optimized GRPO"的核心论断；同时Vanilla GRPO的早崩反衬出DIS稳定化与单rollout异步策略的必要性。
-
-**作用定位**：作为论文的主对比实验图，它在方法/实验链路中扮演关键验证角色——将提出的SAO与经改进的强基线GRPO并列训练，是证明"单rollout+异步优化"在智能体RL中相对主流GRPO具有稳定性与性能双重优势的核心证据。
+> [!tip] 【图文联合解读】图以训练步数为横轴、准确率为纵轴，对比AIME 2025、BeyondAIME、HMMT-Nov-2025：SAO（紫）几乎全程高于GRPO(DIS，蓝），终点约为96%/76%/91%，后者约95%/71%/87%；Vanilla GRPO（浅蓝）在百步后跌至约70%/42%/68%。上表最终准确率为23.0%→27.0%→29.8%。该图以同带DIS的GRPO公平对照，支撑SAO单次rollout异步优化更稳定、最终更优，并为Table 3价值模型与critic消融提供训练侧证据。
 *caption: Performance comparison between SAO and GRPO (w/ DIS) during training. It can be observed that SAO almost consistently outperforms the optimized GRPO d… ｜ 论文 [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Single-Rollout Asynchronous Optimization for Agentic Reinfor — Fig.4 (p.7)
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图4(b)(c)分别展示SAO训练动力学的两项关键诊断。**(b)** 为 Critic Gradient Norm 曲线，上方"SAO w/o Frozen attention"（全参数优化）在~500步后梯度飙升至约10且持续增长；下方 SAO（冻结注意力）稳定保持在4–5，证明冻结注意力对价值网络训练的正则化必要性。**(c)** 为 Token-level Clip Ratio，紫色 SAO 曲线在~500步附近出现峰值约0.006，蓝色 vanilla VAPO（无DIS）全程趋近于0，说明 DIS 机制允许更积极的策略更新并触发裁剪。两图共同支撑论文核心论断：异步单次rollout需配合**冻结注意力价值训练**与**DIS解耦裁剪**两项设计，二者协同保证异步架构下 critic 稳定与 policy 高效探索，是 SAO 优于串行VAPO的实验证据基础。
+> [!tip] 【图文联合解读】图4三子图诊断SAO训练动力学：**(a)** Explained Variance，SAO在~900步达~0.60，SAO w/o Faster value仅~0.52，差约8个百分点，验证Faster value提升价值拟合；**(b)** Critic Grad Norm，无冻结注意力时~500步后梯度飙至>10并持续增长，冻结后稳定于3–5，证明冻结注意力对价值网络训练的强正则化必要性；**(c)** Clip Ratio，SAO在~800步峰值~0.006，vanilla VAPO全程近0，表明DIS允许更积极策略更新并触发裁剪。三图共同支撑SAO两项核心设计（冻结注意力价值训练+DIS解耦裁剪），为异步架构优于串行VAPO提供关键实验证据。
 *caption: Training dynamics of asynchronous single-rollout RL. (a) Explained Variance for SAO and a single-critic-update baseline. (b) Critic gradient norm duri… ｜ 论文 [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Single-Rollout Asynchronous Optimization for Agentic Reinfor — Fig.5 (p.9)
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig05.png]]
-> [!tip] 【图文联合解读】图示训练步数(0–430)与奖励(0–0.75)曲线，对比SAO(深蓝)与Running Mean基线(浅蓝)在单rollout在线学习下的表现。两处灰色阴影区(步150–170、290–310)代表风格奖励切换：SAO峰值约0.70–0.75，切换后迅速回升；Running Mean则适应滞后明显，稳态性能偏低(约0.45–0.60)。
+> [!tip] 【图文联合解读】**图5联合解读：**
 
-该图论证在非平稳偏好下，SAO相比运行均值优势估计具备更快适应速度与更高稳态奖励，凸显其对偏好漂移的鲁棒性。
+图(a)展示Cute、Chuunibyou、Classical三种写作风格在400+训练步内的准确率动态迁移：偏好切换阴影区分别位于约175步与300步。Cute从初始~30%攀升至~73%峰值后骤降至近0%；Chuunibyou在275步附近达~78%峰值后回落；Classical则在300步后从0飙升至~65%；Academic始终贴近0%。图(b)对比SAO与Running Mean基线的奖励曲线：SAO峰值约0.72，显著高于基线的~0.55，且在两次偏好漂移阴影区后回升斜率更陡。
 
-在实验链路中，此图作为消融对比，验证SAO相对传统优势估计的必要性，为单rollout异步优化方法的核心论点提供关键实证。
+**论证结论**：证明SAO能在**非平稳奖励分布**下完成快速风格偏好适配，相比Running Mean基线具有更高的峰值奖励与更优的切换后恢复能力。
+
+**整体作用**：该实验是论文验证算法**在线部署鲁棒性**的关键环节——超越静态任务基准，模拟真实场景中用户偏好时变的情形，为SAO相对传统RL方法的优势提供直接实证支撑。
 *caption: Online learning simulation under changing writing-style preferences. 5… ｜ 论文 [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### Single-Rollout Asynchronous Optimization for Agentic Reinfor — Fig.6 (p.13)
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig06.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-图中横轴为训练步数（部分截断），纵轴为Reward（范围约0.42–0.54），对比三条曲线：SAO（token-level，浅蓝）、Step-level(Average)（紫）、Step-level(Last-Token)（深蓝）。训练起点三者均约0.44–0.45，中段曲线交织；最终SAO升至约0.47，明显高于Step-level(Average)的~0.44与Step-level(Last-Token)的~0.45。
-
-原文借此论证：**在单次rollout异步优化框架下，采用token级优势估计（即SAO）比step级聚合（Average/Last-Token）能获得更高的训练奖励**，验证token级细粒度信用分配在agentic RL中的有效性。
-
-在论文整体链路中，该图属于消融/对比实验环节，为前文方法部分提出的token级SAO算法提供直接经验证据，说明其设计选择（非step级粗粒度回报聚合）在奖励优化上具有可观测优势，支撑后续任务性能（pass@k）的整体提升结论。
+> [!tip] 【图文联合解读】图6对比三种方案训练奖励（0–400步）：SAO（token级）由~0.425升至~0.54；Step-level(Average)与Step-level(Last-Token)均收敛于~0.495。token级SAO全程领先，差距约0.04–0.05。论文以此论证token级异步优化粒度优于步级均值或末token聚合，是SAO的关键设计依据，在消融链路中验证粒度选择对策略学习效率的直接影响。
 *caption: Training reward for token-level SAO training and step-level variants, where token-level shows better training rewards.… ｜ 论文 [[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
 ### rLLM: Relational Table Learning with LLMs — Fig.1 (p.1)
 ![[assets/crops/rllm-relational-table-learning-with-llms-fig01.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-左图为2010–2025年全球数据量堆叠柱状图（单位ZB），总量从约30ZB增至约100ZB，其中Video/Image占比最大，Text仅约20ZB。右图为LLM分词成本堆叠面积图（单位trillion dollar），到2025年升至约5000，但Text逆袭成为最大成本项。图中标注指出："语言数据虽量小但token成本高"、"多模态数据虽量大但成本相对低"。
+Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 
-论文借此引出关键结论：**结构化表格数据**虽规模有限，却长期被LLM高昂的token开销与语义理解需求所忽视，因而亟需专门的关系表学习方法（即rLLM）。该图作为开篇动机证据，与Table 1（数据集汇总）衔接，为后续方法设计与基准实验提供问题驱动的论证支撑。
+- **左图（堆叠柱状图，单位 ZB）**：全球数据总量从 2010 年约 30 ZB 增至 2025 年约 100 ZB，其中 Video（橙色，约 40+ ZB）与 Image（黄色）占比最大，Structured data（浅蓝，约 10 ZB）体量最小。
+- **右图（堆叠面积图，单位万亿 $）**：LLM token 成本由近 0 增至约 5000 万亿 $；其中 **Text**（中蓝色）与 **Structured data**（底部浅蓝）占绝对主体，而 Video/Image 仅占薄薄一层。
+
+论文借此论证的关键结论：**多模态数据体量大但 token 化成本低，语言/结构化数据体量小却消耗绝大部分 token 成本**——即 LLM 处理结构化数据的"性价比"问题被严重低估。
+
+在论文整体链路中，该图作为引言动机，引出 rLLM 项目核心议题：如何用 LLM 高效建模 Relational Table（结构化数据），为后续 Table 1（基准数据集综述）与方法部分提供必要性铺垫。
 *caption: Trends in global data volume and in LLM token costs by data type… ｜ 论文 [[rllm-relational-table-learning-with-llms]] ｜ arxiv 见 MD 元信息*
 
 ### rLLM: Relational Table Learning with LLMs — Fig.2 (p.2)
 ![[assets/crops/rllm-relational-table-learning-with-llms-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
-
-图示rLLM自下而上的三层架构：①底层**Data Engine**含Data Loader、Graph Builder、Table Marker三个组件；②中层**Modules**整合三类——GNNs（GraphConv、GraphTransform）、LLMs（Prediction、Enhancement）、TNNs（TableConv、TableTransform）；③顶层**Models**提供Combine、Align、Co-Train三种范式。
-
-原文借此论证其"以最小架构复杂度高效捕获表间依赖"的核心设计理念——通过数据→模块→模型的分层解耦，将异构模型（GNN/LLM/TNN）统一在统一接口下。
-
-该图是全文方法总纲，为后续模块化实现与Table 2的RelBench等基准分类精度对比实验提供整体框架支撑。
+> [!tip] 【图文联合解读】该图展示rLLM三层架构：底层Data Engine含Data Loader、Graph Builder、Table Marker三个组件；中层Modules分为GNN（图卷积/图变换）、LLM（预测/增强）、TNN（表卷积/表变换）三类共6个模块；上层Models含Combine、Align、Co-Train三种范式。原文借此论证：仅以简洁的三层结构即可高效捕获跨表依赖。作用上，该图是论文方法骨架，串联异构模型与统一数据处理流程，为Table 2的对比实验提供标准化实现框架。
 *caption: The architecture of rLLM analyzed using GNNs. This design efficiently captures inter-table dependencies with minimal architectural complexity.… ｜ 论文 [[rllm-relational-table-learning-with-llms]] ｜ arxiv 见 MD 元信息*
 
 ### rLLM: Relational Table Learning with LLMs — Fig.3 (p.2)
 ![[assets/crops/rllm-relational-table-learning-with-llms-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-图示rLLM基础数据结构：底层"ABC (Python)"和"Dataset (Pytorch)"通过继承箭头指向统一的"Dataset"基类；后者派生"Cora、IMDB、Titanic..."等具体数据集，并通过花括号（containment）包含右上方虚线框内的"GraphData"与"TableData"两个抽象父类，二者再分别由"BaseGraph"和"BaseTable"继承实现。
+该图展示 rLLM 的基础数据结构继承/包含关系。核心对象包括：`Dataset`（同时继承 Python 的 `ABC` 与 PyTorch 的 `Dataset` 基类），其内含（括号关系）两个子类层级——`GraphData ← BaseGraph` 与 `TableData ← BaseTable`，分别承载图数据与表数据；箭头向上指向 `Cora、IMDB、Titanic…` 等具体数据集实例。
 
-原文以此论证：rLLM数据层以单一Dataset类统一封装图数据与表数据（含外键关系），同时满足关系表数据的存储与处理需求。该图是论文方法链路的底层基石——为后续表学习、图神经网络与外键建模提供了可继承、可扩展的标准化数据接口。
+原文借此论证：rLLM 通过这一统一容器同时兼容表数据与外键关系，使两种异构数据可在同一 `Dataset` 下被一致地存储与批处理，从而满足关系表学习的"存储+处理"双重需求。
+
+在整体方法链中，它是 rLLM 框架的数据入口层，为上游模型（如图神经网络/LLM）在关系表任务（如节点分类、回归）上的训练提供标准化、可扩展的数据抽象，使不同领域数据集（Cora、IMDB、Titanic 等）均能即插即用，构成实验可复现性的基础。
 *caption: Base data structure in rLLM. Arrows indicate inher- itance relationships and parentheses indicate containment relationships. data, respectively. Overa… ｜ 论文 [[rllm-relational-table-learning-with-llms]] ｜ arxiv 见 MD 元信息*
 
 ### rLLM: Relational Table Learning with LLMs — Fig.4 (p.3)
 ![[assets/crops/rllm-relational-table-learning-with-llms-fig04.png]]
-> [!tip] 【图文联合解读】图示BRIDGE双路架构：左侧关系表（Table I/II含PK，Table III含PK+FK）经Table Encoder升维为表格嵌入；非表格特征（图结构等）旁路直连Graph Encoder（GNN），二者融合后输出。
+> [!tip] 【图文联合解读】**图文联合解读（≤220字）**
 
-**技术结论**：TableConv将异构列特征映射至高维空间，以弥补列数少、样本信息不足的缺陷；非表格特征旁路设计则避免图结构信息在表格编码中损失。
+图示BRIDGE架构：左侧Table I/II（含PK）与Table III（含PK+FK，多FK连接）构成关系表数据；中间Tabular features经Table Encoder升维映射为Tabular embeddings，再与顶部Non-tabular features（图结构等）在Graph Encoder中融合，最终输出预测。
 
-**论文作用**：作为BRIDGE总框图，串联"关系表→表格嵌入→图嵌入→预测"全链路，为后续TableConv与GNN融合的实验提供架构基础。
+原文论证：表格列特征类型多样、信息有限，需映射至高维空间以增强样本表征；TableConv通过多层列间交互学习完成特征提取。
+
+作用：作为方法总览图，揭示BRIDGE"表编码+图编码"双路融合范式——统一处理关系型表格数据与外部非表格特征，是后续TableConv/GraphConv模块设计、消融与基准实验验证的整体框架基础。
 *caption: The architecture of BRIDGE columns, which can vary greatly in nature. Due to the diverse types of features and the often limited information provided … ｜ 论文 [[rllm-relational-table-learning-with-llms]] ｜ arxiv 见 MD 元信息*
 
 ## 按主题分类
@@ -7776,47 +7982,47 @@ Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
 
 - ⭐ Fig.301 (p.12) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig301.png]]
   - 昇腾950 芯片架构示意图
-- Fig.401 (p.17) ![[assets/ascend-950-npu-architecture-whitepaper-p17.png]]
+- ⭐ Fig.401 (p.17) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig401.png]]
   - AI Core 架构及各层级SRAM 示意图
-- Fig.402 (p.18) ![[assets/ascend-950-npu-architecture-whitepaper-p18.png]]
+- ⭐ Fig.402 (p.18) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig402.png]]
   - Cube Core 处理架构示意图
 - ⭐ Fig.403 (p.18) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig403.png]]
   - Cube Core 支持的数值精度示意
-- Fig.404 (p.19) ![[assets/ascend-950-npu-architecture-whitepaper-p19.png]]
+- ⭐ Fig.404 (p.19) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig404.png]]
   - HiF8 数值精度
-- Fig.405 (p.21) ![[assets/ascend-950-npu-architecture-whitepaper-p21.png]]
+- ⭐ Fig.405 (p.21) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig405.png]]
   - Vector Core 架构示意图
 - ⭐ Fig.406 (p.22) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig406.png]]
   - AI Core Cube-Vector 融合示意图
-- Fig.407 (p.23) ![[assets/ascend-950-npu-architecture-whitepaper-p23.png]]
+- ⭐ Fig.407 (p.23) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig407.png]]
   - NDDMA 指令
-- Fig.408 (p.24) ![[assets/ascend-950-npu-architecture-whitepaper-p24.png]]
+- ⭐ Fig.408 (p.24) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig408.png]]
   - 昇腾950 新同步机制代码示例
 - ⭐ Fig.409 (p.25) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig409.png]]
   - 昇腾950 内存层次示意图
-- Fig.410 (p.27) ![[assets/ascend-950-npu-architecture-whitepaper-p27.png]]
+- ⭐ Fig.410 (p.27) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig410.png]]
   - Non-allocate（L2 hint）典型应用场景示意图
 - ⭐ Fig.411 (p.27) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig411.png]]
   - STARS2.0 架构示意图
-- Fig.412 (p.31) ![[assets/ascend-950-npu-architecture-whitepaper-p31.png]]
+- ⭐ Fig.412 (p.31) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig412.png]]
   - URMA 异步访存通信的过程示意图
-- Fig.413 (p.32) ![[assets/ascend-950-npu-architecture-whitepaper-p32.png]]
+- ⭐ Fig.413 (p.32) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig413.png]]
   - UB Memory 同步访存语义地址通信过程示意图
-- Fig.414 (p.33) ![[assets/ascend-950-npu-architecture-whitepaper-p33.png]]
+- ⭐ Fig.414 (p.33) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig414.png]]
   - CCU 架构示意图
-- Fig.415 (p.34) ![[assets/ascend-950-npu-architecture-whitepaper-p34.png]]
+- ⭐ Fig.415 (p.34) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig415.png]]
   - UB On Chip Switch 转发示意图
-- Fig.416 (p.35) ![[assets/ascend-950-npu-architecture-whitepaper-p35.png]]
+- ⭐ Fig.416 (p.35) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig416.png]]
   - PCIe 5.0 架构示意图
 - ⭐ Fig.417 (p.36) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig417.png]]
   - 昇腾950 的一种超节点示意图
 - ⭐ Fig.418 (p.36) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig418.png]]
   - 昇腾950 访问CPU 超大内存池示意图
-- Fig.419 (p.37) ![[assets/ascend-950-npu-architecture-whitepaper-p37.png]]
+- ⭐ Fig.419 (p.37) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig419.png]]
   - 昇腾950 直接访问超大存储资源池示意图
-- Fig.420 (p.38) ![[assets/ascend-950-npu-architecture-whitepaper-p38.png]]
+- ⭐ Fig.420 (p.38) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig420.png]]
   - 昇腾超节点基于UB Switch 转换为以太网与以太世界互通示意图
-- Fig.421 (p.39) ![[assets/ascend-950-npu-architecture-whitepaper-p39.png]]
+- ⭐ Fig.421 (p.39) ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig421.png]]
   - 昇腾芯片支持以太网与以太世界互通示意图
 
 ### #16 GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEM
@@ -8881,7 +9087,7 @@ Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
 
 ### #66 Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP
 
-- ⭐ Fig.2 (p.23) ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p23.png]]
+- ⭐ Fig.2 (p.23) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig02.png]]
   - FlowServe selects the appropriate DistFlow [10] backend based on the network fabric. For MLA models like DeepSeek and Kimi K2, both interconnects satisfy TTFT and TPOT SLAs.
 - ⭐ Fig.4 (p.8) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig04.png]]
   - Step 1: The sender’s serving engine invokes XCCL’s send, passing the source buffer in the app data area (e.g., KV cache), an eventID (e.g., number of sends), the receiver NPU’s ID, and the number of A

@@ -111,13 +111,13 @@ tags: [training]
 > Inference time and average dev set performance comparison of T5 Large and XXL models with multi-head attention, and 5% uptrained T5-XXL models with multi-query and grouped-query attention on summarization datasets CNN/Daily Mail, arXiv, PubMed, MediaSum, and MultiNews, translation dataset WMT, and q
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】注：图中可清晰辨认的是 **Figure 3 散点图**，Table 1 仅显示了标题文字而无表格数据，故按 Figure 3 解读。
+> 【图文联合解读】**表1核心内容**：对比 T5-Large/XXL（MHA）与仅 5% 额外训练的 MQA-XXL、GQA-8-XXL 在 7 个任务（CNN/DM、arXiv、PubMed、MediaSum、MultiNews 用 R₁，WMT 用 BLEU，TriviaQA 用 F1）的推理时延 T_infer 与平均得分。
 
-**1) 核心对象与数据**：横轴为推理时每样本耗时（ms），纵轴为多任务平均 Performance，对比四模型：MHA-XXL（≈1.5 ms, ≈47.2）质量最高但最慢；GQA-XXL（≈0.3 ms, ≈47.1）速度提升约 5× 而性能几乎无损；MQA-XXL（≈0.3 ms, ≈46.55）与 MHA-Large（≈0.3 ms, ≈45.95）均快但质量依次降低。
+**关键数据**：MHA-XXL 为 1.51 s / 47.2；MQA-XXL 降至 0.24 s / 46.6；GQA-8-XXL 为 0.28 s / 47.1。
 
-**2) 关键结论**：仅经 5% uptraining 的 GQA-XXL 即达到与 MHA-XXL 几乎持平的性能，却获得接近 MQA 的推理速度，验证 GQA 是 MHA→MQA 转换中保留质量的最优折中。
+**论证结论**：MQA 推理提速约 6.3× 但均分仅降 0.6；GQA-8 提速约 5.4× 而质量几近追平 MHA-XXL，证明 GQA 在速度与精度间取得最佳平衡。
 
-**3) 在论文中的作用**：作为实验链路的总览证据，支撑"多查询注意力可从多 head checkpoint 经均值池化与少量微调高效恢复甚至超越性能"的核心主张。
+**论文作用**：作为核心实证，支撑"MHA checkpoint 经极少 uptraining 即可无损转换为 GQA、服务高效部署"的核心主张。
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

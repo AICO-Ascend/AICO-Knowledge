@@ -30,11 +30,7 @@ tags: [rl]
 > Dataflow graph of 3 RLHF algorithms [19, 43, 55].
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图展示3种RLHF算法（PPO/Safe-RLHF/ReMax）的三阶段数据流：①Generation（Actor Gen，ReMax含2个）；②Preparation（Ref/RM/Critic/Cost模型的Forward）；③Training（Actor Training，PPO与Safe-RLHF另有Critic Training，Safe-RLHF还引入L_ptx损失与Actor Fwd）。各算法模型组合与拓扑各异——PPO需4模型，Safe-RLHF额外引入Cost模型，ReMax仅3模型且无critic。
-
-**论证结论**：HybridFlow以统一的Stage抽象即可灵活承载不同模型数量与执行顺序，验证其作为通用RLHF框架的表达力与可扩展性。
-
-**论文作用**：作为方法论开篇的"能力示例"，证明单一系统可统一支持多样RLHF流程，为后续灵活的Actor/Colocation调度与高效分布式实现奠定设计动机。
+> 【图文联合解读】图展示(a) PPO、(b) Safe-RLHF、(c) ReMax 三种 RLHF 算法的三阶段数据流图，含 actor、critic、reference policy、reward model、cost model 五类模型节点：①生成(Actor Gen)、②准备(Ref/RM/Critic/Cost Fwd 等前向)、③训练(Actor/Critic Training)。Safe-RLHF 引入 cost model 与 L_ptx，ReMax 采用双 actor+双 RM+双 Ref 结构。该图论证：不同 RLHF 算法共享"生成—准备—训练"骨架，但模型组合与依赖各异，故 HybridFlow 须以灵活的多控制器架构统一调度异构数据流，为其模块化设计提供关键动机，并衔接后文对现有框架灵活性差、效率低两类缺陷的剖析。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig02.png]]
@@ -43,13 +39,9 @@ tags: [rl]
 > Programming model used in RLHF systems. (a)
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（≤220字）：**
 
-图(b)展示HybridFlow混合编程模型：顶层单控制器协调Actor、Critic、Reward、Reference四类模型；每个模型内部采用多控制器实现（图中以`gen(prompts)`、`comp_values(res)`、`comp_reward(res)`三段伪代码为例，共享`all_gather_weights()`同步与`model()`调用），灰色节点表示当前未激活。
-
-原文借此论证两个关键技术结论：**灵活**——解耦数据与计算依赖、无缝集成任意LLM系统；**高效**——阶段转换零冗余（避免权重重复广播）、支持不同模型放置策略。
-
-在论文整体链路中，该图是"混合控制器"设计的核心证据，与(a)纯多控制器范式形成对照，支撑后续吞吐量、显存占用与分布式扩展性实验的设计假设，是方法论章节的奠基性技术图。
+图2对比两种RLHF编程模型。(a)现有框架采用纯多控制器：Actor、Critic、Reward各worker独立调度，代码层嵌套`recv_actor()`/`broadcast()`递归调用，由此产生两大缺陷——**Inflexible**（计算与数据依赖深度耦合、难以适配多种LLM系统）与**Inefficient**（训推切换开销大、模型放置策略僵化）。(b) HybridFlow提出混合模型：**Inter-Node**用单控制器统一编排`actor.gen → critic.comp_value → reward.compute_reward`；**Intra-Node**仍保留多控制器并行`gen`/`comp_reward`（含`all_gather_weights`）。由此获得**Flexible**（解耦数据与计算依赖、无缝集成任意LLM）与**Efficient**（零冗余切换、支持灵活模型放置）。该图是论文方法动机的核心可视化，与Table 2实测的训推切换开销直接呼应，奠定后文HybridFlow编程抽象与性能优势的设计基础。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig03.png]]
@@ -99,11 +91,11 @@ tags: [rl]
 > Implementation of PPO [55], ReMax [43], and Safe- RLHF [19]. Users can adapt to different RLHF algorithms by simply adding or deleting a few lines of code. our programming model, HybridFlow is flexible in support- ing diverse distributed execution patterns without any code change of the RLHF algorithm (Figure 6).
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**核心对象与结构**：图右代码展示同一HybridFlow框架下PPO、ReMax、Safe-RLHF三算法的统一编排，分三阶段：①生成响应（`actor.generate_sequences`）；②准备经验（critic/values、reference log_prob、reward、cost、advantages）；③actor-critic训练。蓝色标注ReMax差异（`do_sample=False`、删除critic），红色标注Safe-RLHF差异（复用RewardWorker初始化cost模型、新增`compute_cost`与`pretrain_loss`）。
 
-图6展示一份**单一Python控制脚本**，按"生成响应→准备经验→更新actor/critic"三阶段编排，涵盖PPO/ReMax/Safe-RLHF三种RLHF算法；其中**蓝色虚框**标注ReMax特有行（`do_sample=False`、蓝叉标记`critic.compute_values`在ReMax中可省），**红色虚框**标注Safe-RLHF特有行（`cost.compute_cost`与`pretrain_loss`）。
+**关键技术结论**：原文据此论证HybridFlow编程模型无需修改RLHF算法代码即可切换算法，**仅需增删数行**即可适配不同分布式执行模式与损失函数（`algo_type`参数化）。
 
-原文借此论证**HybridFlow在不改算法代码的前提下，仅增删若干行即可切换不同RLHF算法**，体现其编程模型的灵活性。该图作为方法部分的关键示例，与第3节"单控制器抽象+分布式执行解耦"的设计形成呼应，为后文性能与易用性实验提供代码级证据。
+**方法链路作用**：作为论文"算法灵活性（flexibility）"主张的代码级实证，与吞吐量/可扩展性实验互补，证明框架对多种RLHF范式（单/双/多奖励模型）的低门槛支持是其相对已有系统（Megatron-LM、ColossalAI等）的关键差异化优势。
 
 ### Figure 7 (p.8) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig07.png]]
@@ -146,11 +138,13 @@ tags: [rl]
 > PPO throughput. Numbers in parentheses are HybridFlow speedups compared with baselines. 8 16 32 64 128 # of GPUs 0 1 2 3
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图9图文联合解读**
 
-图9以四个子图(a–d)对比7B/13B/34B/70B模型在8–128 GPU上的PPO吞吐量(tokens/s)，四种系统（NeMo-Aligner、DS-Chat、OpenRLHF、HybridFlow）同列对照。绿色HybridFlow条形在各规模下均最高：7B/128 GPU达约3.7×10⁴ tok/s，70B/128 GPU达约0.8×10⁴ tok/s；加速比随模型增大而扩大（7B: 1.68–8.63×，70B: 5.17–17.98×，34B峰值达20.57×）。
+**① 核心对象与数据**：四个子图分别呈现 7B/13B/34B/70B 四种模型规模下 PPO 训练吞吐量（tokens/s）随 GPU 数（8→128）变化的柱状对比，被对比对象为 NeMo-Aligner、DS-Chat、OpenRLHF 三个基线。典型读数：在 128 GPU 下，HybridFlow 在 7B 上达约 3.8×10⁴、70B 上约 0.82×10⁴ tokens/s，对应最高加速比从 7B 的 8.63× 攀升到 70B 的 17.98×。
 
-论文借此定量论证：HybridFlow通过灵活组合3D混合并行与RLHF阶段解耦编排，在端到端训练吞吐上系统性优于现有框架。该图是全文"高效RLHF"主张的核心实验支撑，证明其架构优势随模型与集群规模同步放大。
+**② 关键结论**：HybridFlow 在所有规模与 GPU 配置下均稳定领先，且模型越大、可调度资源越多，优势越显著——证明其 3D 混合引擎在大模型 RLHF 训练中具备优越的吞吐量与可扩展性。
+
+**③ 论文作用**：作为方法部分的旗舰实验，与图8的端到端时延图共同支撑"灵活+高效"的核心主张，是全文系统级性能优势的关键实证依据。
 
 ### Figure 10 (p.11) ⭐深度解读
 ![[assets/hybridflow-a-flexible-and-efficient-rlhf-framework-p11.png]]
@@ -203,13 +197,13 @@ tags: [rl]
 > Throughput of HybridFlow under different placements 32 64 96 128 # of GPUs
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## 图文联合解读
+> 【图文联合解读】**图示内容**：三组子图（a）13B、（b）34B、（c）70B（部分截断），横轴为 GPU 数量（16–128），纵轴为吞吐量 tokens/s（量级 1e4），每个 GPU 配置下并排比较 Colocate（蓝）、Split（橙）、Standalone（红）、HybridFlow（绿）四种放置方案。
 
-**1) 核心对象与数据**：图(a)为13B模型下四种放置策略（Colocate蓝、Split橙、Standalone红、HybridFlow绿）在16/24/32/64/96/128 GPU下的吞吐量（tokens/s，单位1e4）。小规模时Colocate≈HybridFlow≈0.7–1.0e4，Standalone仅0.4–0.7e4；128 GPU时四者收敛至约2.6e4。
+**关键结论**：随着 GPU 规模扩大，吞吐量单调上升，128 卡时 13B 场景接近 2.5–3×10⁴ tokens/s、34B 与 70B 约 1.2–1.5×10⁴ tokens/s；HybridFlow 在各模型规模与 GPU 配置下均达到与最优方案相当或更优的水平，尤其在中小规模/大模型场景下相对 Standalone 优势明显，说明其放置策略对模型与集群规模均具良好扩展性。
 
-**2) 关键技术结论**：HybridFlow在不同GPU规模下吞吐均≥Standalone，尤其在16–64 GPU区间显著领先（最大提升约30–40%），且在小规模时与Colocate持平；说明其灵活映射并不以吞吐为代价，突破了"非Colocate则慢"的固有代价。
+**论文作用**：作为 placement 消融实验，与 Fig.11（67B actor）共同支撑方法章节关于"flexible 3D hybrid engine"可适配多种模型与硬件拓扑的核心主张。
 
-**3) 在论文中的作用**：作为可扩展性实验的核心证据，证明HybridFlow的placement解耦设计兼具灵活性与高效性，为"统一多策略RLHF训练"主张提供关键性能背书。
+> 注：图中右下角可见 "Figure 13" 标注，与原题所述 Figure 12 编号存在偏差。
 
 ### Figure 13 (p.12) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig13.png]]
@@ -218,13 +212,13 @@ tags: [rl]
 > Placement comparison under 13B actor and reference policy & 70B critic and reward model.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 13）**
 
-**核心对象与数据**：图13展示13B actor/ref + 70B critic/reward配置下，Colocate、Split、Standalone、HybridFlow四种放置策略在32/64/96/128块GPU上的吞吐量（tokens/s，量级1e4）。32 GPU时HybridFlow约5500，与Colocate持平但远高于Split(~2000)与Standalone(~2500)；64 GPU时HybridFlow升至约8500，居首；96–128 GPU时四种策略差距收窄至约9000–12000，HybridFlow仍领先约10%。
+1) **核心对象**：三幅柱状图，横轴为 GPU 数（16–128），纵轴为吞吐量（tokens/s，量级 10⁴），对比 Colocate、Split、Standalone、HybridFlow 四种模型放置策略，场景为 13B Actor/Reference 与 70B Critic/Reward 的非对称 RLHF 配置。左图覆盖最广 GPU 规模，中、右图聚焦特定区间。
 
-**关键结论**：异构模型规模下，固定放置策略（Colocate/Split/Standalone）顾此失彼，HybridFlow的灵活放置在中小规模GPU集群上提升最显著（最高近2×），验证其自适应布局优势。
+2) **关键技术结论**：在小规模（≤32 GPU）下 Colocate 与 HybridFlow 接近，但随 GPU 增至 96–128，HybridFlow 凭借灵活放置策略实现最高吞吐，验证其在异构模型尺寸（13B+70B）下通过细粒度调度获得显著性能优势。
 
-**论文作用**：作为placement消融实验，与图12（67B actor场景）共同支撑方法章节关于"flexible 3D hybrid engine"可扩展性的主张。
+3) **论文作用**：支撑 HybridFlow "单控制器多角色 3D 并行 + 自动放置" 的核心主张，回应 RLHF 流水线中模型规模异构带来的调度挑战，为系统设计提供量化依据。
 
 ### Figure 14 (p.13) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig14.png]]
@@ -233,14 +227,17 @@ tags: [rl]
 > Transition time between actor training and generation.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（图14）：**
+> 【图文联合解读】## 图文联合解读
 
-图14以双子图形式，在7B(T_g=2)与13B(T_g=4)两种配置下，对比四种框架在不同GPU规模下的"actor训练↔生成"模式切换耗时。
+**核心数据**：图14比较了四种系统（OpenRLHF、DS-Chat、HybridFlow-V、HybridFlow）在四种模型规模（7B/13B/34B/70B）下，Actor训练→生成阶段的转换耗时。
 
-- **7B子图**：OpenRLHF从8卡约4s线性增至128卡约11s；DS-Chat约3-5s；HybridFlow-V约3-4s；HybridFlow始终稳定在2.5-3.5s（最低）。
-- **13B子图**：差距进一步放大——OpenRLHF从10s升至17s，DS-Chat从5s升至12s，而HybridFlow几乎保持在3-4s，几乎不随GPU数增长。
+- **7B（128 GPU）**：OpenRLHF约11s，HybridFlow约3.5s；
+- **34B（128 GPU）**：OpenRLHF飙升至约50s，HybridFlow稳定在约5s；
+- **70B（128 GPU）**：OpenRLHF/DS-Chat/HybridFlow-V分别约90s/28s/28s，HybridFlow仅约9s，差距达约10倍。
 
-**论证结论**：HybridFlow通过将训练与生成统一在同一调度器内（而非控制器分离式架构），将切换开销压到最低且具备良好扩展性。这正是其端到端RLHF训练吞吐量优于同类框架的关键工程支撑。
+**关键论证**：HybridFlow在训练与生成阶段**复用同一并行策略**（同构并行），无需重组张量/流水/数据并行组；HybridFlow-V（生成用3D、训练用1D）则需重新分片，代价随模型与集群规模剧增。实验证明：正是这一设计抉择带来了近乎一个数量级的转换加速。
+
+**论文作用**：支撑HybridFlow"统一并行抽象"的核心架构贡献，是其端到端RLHF训练效率优于现有系统（端到端加速1.53×–20.44×）的关键微结构证据。
 
 ### Figure 15 (p.13) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig15.png]]
@@ -251,9 +248,13 @@ tags: [rl]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-该图展示了 **7B 与 13B actor 模型在 16 GPU 上**于四种生成并行配置（T_g/D_g = 8/1、4/2、2/4、1/8）下的时间分解，包含 **generation time（蓝色）** 与 **transition time（橙色）** 两部分。量化来看：7B 生成时间随 T_g 减小从约 85s 降至 30s 左右；13B 则在 T_g=8/D_g=1 与 T_g=1/D_g=8 时均出现约 220s 的高值，呈现非单调 U 形。transition time 占比相对较小（7B 约 3–5s，13B 约 5–10s），但不可忽略。
+图15展示了7B与13B模型在不同生成并行配置（T_g张量并行/D_g数据并行，固定16 GPU）下，单步generation time与transition time的分解对比。
 
-原文借此论证：HybridFlow 通过解耦训练/生成资源并采用统一调度，将 actor 模型的 **reshard 过渡时间平均减少 55.2%（11.7s）**，凸显其在 RLHF 流水线中显著降低模式切换开销的关键优势。该图在实验链路中服务于"RLHF 训练—生成频繁交替场景下的端到端效率"这一核心主张，为 HybridFlow 的灵活并行设计提供了直接量化支撑。
+**数据要点：** 7B模型generation time从T_g=8时的~88s降至T_g=1时的~33s，但transition time从几乎可忽略升至~10s；13B模型同样在T_g=4时generation最优（~145s），T_g=1时反而回升至~225s。
+
+**论证结论：** 生成并行策略存在明显权衡——降低张量并行度虽压缩生成耗时，却显著抬升权重reshard与同步开销；HybridFlow通过解耦与高效迁移，将transition time平均降低55.2%（11.7s），有效缓解该权衡。
+
+**论文作用：** 该图为§8.2实验提供并行配置敏感性证据，支撑"3D-HybridEngine"的调度合理性——需动态选择生成并行度，使端到端RLHF迭代时间最小化。
 
 ### Figure 16 (p.13) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig16.png]]
@@ -262,11 +263,13 @@ tags: [rl]
 > Runtime of device mapping algorithm. The model size and # of GPUs are simultaneously scaled.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 16 设备映射算法运行时间）：**
 
-该图以对数纵轴柱状图展示8组（模型规模, GPU数）配置下的设备映射算法耗时：(7B,8)≈10s、(7B,16)≈30s、(13B,24)≈65s、(13B,32)≈110s、(34B,48)≈220s、(34B,64)≈370s、(70B,96)≈800s、(70B,128)≈1400s。
+1）**核心对象与数据**：该图为对数纵轴柱状图，横轴为同时放大的"模型规模+GPU数"配置，依次为 (7B,8)、(7B,16)、(13B,24)、(13B,32)、(34B,48)、(34B,64)、(70B,96)、(70B,128)；运行时间从约 10s 单调增长至 ~10³s（近千秒），呈近似指数级上升趋势。
 
-原文借此论证：当模型与GPU同步放大时，Auto Device Mapping的求解时间呈近似指数增长，但在最大规模70B/128 GPU下仍控制在约25分钟以内，处于工程可接受范围，证明该算法在千亿级RLHF训练中具备可扩展性，避免了映射本身成为系统瓶颈，从而支撑HybridFlow整体"灵活高效"的实验结论。
+2）**关键结论**：HybridFlow 的设备映射算法在大模型+大集群下仍可在分钟级完成规划（最大 ~1500s），开销可控，避免成为流水线瓶颈。
+
+3）**链路作用**：与 Figure 14 互证——前者证明训练-生成切换极短，本图证明前期规划代价可接受，共同支撑"HybridFlow 单控制器 3D 混合调度低开销、可扩展至 70B/128GPU"的方法论结论。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -276,13 +279,9 @@ tags: [rl]
 > Transition overhead between training & generation
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读**
+> 【图文联合解读】**Table 2 解读：**
 
-**1) 核心对象与数据：** 表2对比三种方案在训练⇄生成模式切换时的三项开销。其中 *Comm. Vol.*（通信量）：DS-Chat 为 $\frac{tpd-1}{tpd}M$，HybridFlow-V 为 $\frac{tp-1}{tp}M$，HybridFlow 为 $\frac{tp-t_g p_g}{t_g p_g tp}M$；*Peak Mem.*（峰值显存）：DS-Chat、HybridFlow-V 均为 $M$，HybridFlow 降至 $\frac{1}{t_g p_g}M$；*Redundancy*（参数冗余）：DS-Chat、HybridFlow-V 分别有 $\frac{1}{tpd}M$、$\frac{1}{tp}M$ 的冗余，HybridFlow 为 0。
-
-**2) 关键结论：** HybridFlow 通过同一组显存复用 actor/critic/ref/reward 四模型并使训练/生成各采用独立并行配置 $(tp)$ 与 $(t_g p_g)$，在切换时实现了 **零参数冗余**、通信量近似线性降低、显存峰值缩减 $t_g p_g$ 倍，相对 DS-Chat 与 HybridFlow-V 均显著更优。
-
-**3) 在论文中的作用：** 该表量化支撑了 HybridFlow 混合编程模型（图2）相对于纯多控制器方案的核心收益——消除模式切换开销，是其端到端高吞吐实验结论的理论依据。
+该表量化训练→生成切换阶段的**通信量**(Comm.Vol)、**峰值显存**(Peak Mem.)、**冗余**(Redundancy)，对比DS-Chat、HybridFlow-V、HybridFlow三者，以模型大小M、分片数t_p/t_pd/t_g及参数ρ_g表达。核心结论：HybridFlow**冗余为0**（优于DS-Chat的M/t_pd与HybridFlow-V的M/t_p），**峰值显存降至**M/(t_g ρ_g)（其余两者均为完整M），通信量分子亦最小。该表与Figure 2编程模型共同支撑3D-HybridEngine设计——证明HybridFlow在RLHF训练-生成高频交替场景下显著降低显存与通信开销，是论文论证框架高效性的核心理论证据。
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

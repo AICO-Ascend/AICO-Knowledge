@@ -32,9 +32,14 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-左图为2010–2025年全球数据量堆叠柱状图（单位ZB），总量从约30ZB增至约100ZB，其中Video/Image占比最大，Text仅约20ZB。右图为LLM分词成本堆叠面积图（单位trillion dollar），到2025年升至约5000，但Text逆袭成为最大成本项。图中标注指出："语言数据虽量小但token成本高"、"多模态数据虽量大但成本相对低"。
+Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 
-论文借此引出关键结论：**结构化表格数据**虽规模有限，却长期被LLM高昂的token开销与语义理解需求所忽视，因而亟需专门的关系表学习方法（即rLLM）。该图作为开篇动机证据，与Table 1（数据集汇总）衔接，为后续方法设计与基准实验提供问题驱动的论证支撑。
+- **左图（堆叠柱状图，单位 ZB）**：全球数据总量从 2010 年约 30 ZB 增至 2025 年约 100 ZB，其中 Video（橙色，约 40+ ZB）与 Image（黄色）占比最大，Structured data（浅蓝，约 10 ZB）体量最小。
+- **右图（堆叠面积图，单位万亿 $）**：LLM token 成本由近 0 增至约 5000 万亿 $；其中 **Text**（中蓝色）与 **Structured data**（底部浅蓝）占绝对主体，而 Video/Image 仅占薄薄一层。
+
+论文借此论证的关键结论：**多模态数据体量大但 token 化成本低，语言/结构化数据体量小却消耗绝大部分 token 成本**——即 LLM 处理结构化数据的"性价比"问题被严重低估。
+
+在论文整体链路中，该图作为引言动机，引出 rLLM 项目核心议题：如何用 LLM 高效建模 Relational Table（结构化数据），为后续 Table 1（基准数据集综述）与方法部分提供必要性铺垫。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/rllm-relational-table-learning-with-llms-fig02.png]]
@@ -43,13 +48,7 @@ tags: []
 > The architecture of rLLM analyzed using GNNs. This design efficiently captures inter-table dependencies with minimal architectural complexity.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
-
-图示rLLM自下而上的三层架构：①底层**Data Engine**含Data Loader、Graph Builder、Table Marker三个组件；②中层**Modules**整合三类——GNNs（GraphConv、GraphTransform）、LLMs（Prediction、Enhancement）、TNNs（TableConv、TableTransform）；③顶层**Models**提供Combine、Align、Co-Train三种范式。
-
-原文借此论证其"以最小架构复杂度高效捕获表间依赖"的核心设计理念——通过数据→模块→模型的分层解耦，将异构模型（GNN/LLM/TNN）统一在统一接口下。
-
-该图是全文方法总纲，为后续模块化实现与Table 2的RelBench等基准分类精度对比实验提供整体框架支撑。
+> 【图文联合解读】该图展示rLLM三层架构：底层Data Engine含Data Loader、Graph Builder、Table Marker三个组件；中层Modules分为GNN（图卷积/图变换）、LLM（预测/增强）、TNN（表卷积/表变换）三类共6个模块；上层Models含Combine、Align、Co-Train三种范式。原文借此论证：仅以简洁的三层结构即可高效捕获跨表依赖。作用上，该图是论文方法骨架，串联异构模型与统一数据处理流程，为Table 2的对比实验提供标准化实现框架。
 
 ### Figure 3 (p.2) ⭐深度解读
 ![[assets/crops/rllm-relational-table-learning-with-llms-fig03.png]]
@@ -58,11 +57,13 @@ tags: []
 > Base data structure in rLLM. Arrows indicate inher- itance relationships and parentheses indicate containment relationships. data, respectively. Overall, this design meets the familiar storage and processing requirements of relational table data consist of table data and foreign key relationships.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-图示rLLM基础数据结构：底层"ABC (Python)"和"Dataset (Pytorch)"通过继承箭头指向统一的"Dataset"基类；后者派生"Cora、IMDB、Titanic..."等具体数据集，并通过花括号（containment）包含右上方虚线框内的"GraphData"与"TableData"两个抽象父类，二者再分别由"BaseGraph"和"BaseTable"继承实现。
+该图展示 rLLM 的基础数据结构继承/包含关系。核心对象包括：`Dataset`（同时继承 Python 的 `ABC` 与 PyTorch 的 `Dataset` 基类），其内含（括号关系）两个子类层级——`GraphData ← BaseGraph` 与 `TableData ← BaseTable`，分别承载图数据与表数据；箭头向上指向 `Cora、IMDB、Titanic…` 等具体数据集实例。
 
-原文以此论证：rLLM数据层以单一Dataset类统一封装图数据与表数据（含外键关系），同时满足关系表数据的存储与处理需求。该图是论文方法链路的底层基石——为后续表学习、图神经网络与外键建模提供了可继承、可扩展的标准化数据接口。
+原文借此论证：rLLM 通过这一统一容器同时兼容表数据与外键关系，使两种异构数据可在同一 `Dataset` 下被一致地存储与批处理，从而满足关系表学习的"存储+处理"双重需求。
+
+在整体方法链中，它是 rLLM 框架的数据入口层，为上游模型（如图神经网络/LLM）在关系表任务（如节点分类、回归）上的训练提供标准化、可扩展的数据抽象，使不同领域数据集（Cora、IMDB、Titanic 等）均能即插即用，构成实验可复现性的基础。
 
 ### Figure 4 (p.3) ⭐深度解读
 ![[assets/crops/rllm-relational-table-learning-with-llms-fig04.png]]
@@ -71,11 +72,13 @@ tags: []
 > The architecture of BRIDGE columns, which can vary greatly in nature. Due to the diverse types of features and the often limited information provided by tables with fewer columns, it is crucial to map or transform some columns into higher-dimensional feature spaces to enhance the sample in- formation. The TableConv module facilitates multi-layer interactive learning among feature columns to extrac
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图示BRIDGE双路架构：左侧关系表（Table I/II含PK，Table III含PK+FK）经Table Encoder升维为表格嵌入；非表格特征（图结构等）旁路直连Graph Encoder（GNN），二者融合后输出。
+> 【图文联合解读】**图文联合解读（≤220字）**
 
-**技术结论**：TableConv将异构列特征映射至高维空间，以弥补列数少、样本信息不足的缺陷；非表格特征旁路设计则避免图结构信息在表格编码中损失。
+图示BRIDGE架构：左侧Table I/II（含PK）与Table III（含PK+FK，多FK连接）构成关系表数据；中间Tabular features经Table Encoder升维映射为Tabular embeddings，再与顶部Non-tabular features（图结构等）在Graph Encoder中融合，最终输出预测。
 
-**论文作用**：作为BRIDGE总框图，串联"关系表→表格嵌入→图嵌入→预测"全链路，为后续TableConv与GNN融合的实验提供架构基础。
+原文论证：表格列特征类型多样、信息有限，需映射至高维空间以增强样本表征；TableConv通过多层列间交互学习完成特征提取。
+
+作用：作为方法总览图，揭示BRIDGE"表编码+图编码"双路融合范式——统一处理关系型表格数据与外部非表格特征，是后续TableConv/GraphConv模块设计、消融与基准实验验证的整体框架基础。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -85,11 +88,11 @@ tags: []
 > Summary of the datasets.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 联合解读**
+> 【图文联合解读】**Table 1 图文联合解读**
 
-Table 1 汇总三个关系表基准：**TML1M**（users 6,040/5、movies 3,883/11、ratings 1,000,209/4；关系表 user–movie；标签为用户年龄段，7 类，划分 140/500/1000）、**TLF2K**（artists 9,047/10、user_artists 80,009/3、user_friends 12,717/3；user–artist 与 user–user；标签为艺术家流派，11 类）、**TACM12K**（papers 12,499/5、authors 17,431/3、citations 30,789/2、writings 37,055/2；paper–paper、paper–author；标签为论文会议，14 类）。
+Table 1 汇总了三类关系表基准数据集及其结构：①**TML1M**（users[6,040/5]、movies[3,883/11]、ratings[1,000,209/4]，单关系 user-movie，预测7类用户年龄）；②**TLF2K**（artists、user_artists、user_friends，含 user-artist 与 user-user 双关系，预测11类艺术家流派）；③**TACM12K**（papers、authors、citations、writings，含 paper-paper 与 paper-author 双关系，预测14类会议）。三者训练集分别仅 140/220/280 条样本而测试集均为 1000，构成典型少样本划分。
 
-原文借此论证两点：① 数据集覆盖电影、社交、学术三类异构 schema，关系表数量与类别数（7→11→14）逐级递增，体现基准的多样性与难度梯度；② 统一 Train/Val/Test 划分与节点级分类标签，为后续章节在 rLLM 框架下公平比较不同关系表学习方法提供了可复现实验链路。
+**论证作用**：原文据此表明 rLLM 框架需在节点规模跨度极大（数千行至百万级）、关系类型数不同（1–2 种）、分类粒度差异（7–14 类）的异构任务上保持统一有效；极小训练/大测试的设置凸显了 LLM 用于关系表学习在低资源场景下的必要性，是论文三类典型异构关系网络上的统一实验基准。
 
 ### Table 2 (p.5) ⭐深度解读
 ![[assets/crops/rllm-relational-table-learning-with-llms-tab02.png]]
@@ -97,17 +100,11 @@ Table 1 汇总三个关系表基准：**TML1M**（users 6,040/5、movies 3,883/1
 > Classification accuracy.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读**
+> 【图文联合解读】**Table 2 图文联合解读**
 
-该表列出 rLLM 框架的 3 个关系表分类基准：
+该表实为**关系型数据集统计**，列出三组基准：TML1M（用户-电影-评分，3表，用户年龄7分类，训练仅140）、TLF2K（艺术家-用户关系-好友，3表，艺术流派11分类，训练220）、TACM12K（论文-作者-引用-著作，4表，论文会议14分类，训练280）。各数据集均含2–4张表（行数从3,883至1,000,209不等），通过外键关系（如user-movie、paper-author）构成典型RDB结构。
 
-- **TML1M**：users/movies/ratings（6,040–1,000,209 行），预测用户年龄段，7 类，#Train=140
-- **TLF2K**：artists/user_artists/user_friends（9,047–80,009 行），预测艺术家流派，11 类，#Train=220
-- **TACM12K**：papers/authors/citations/writings（12,499–37,055 行），预测论文会议，14 类，#Train=280
-
-**技术结论**：数据集覆盖二部图（user-movie）、异构多关系（user-artist + user-user、paper-author + paper-paper）等多种图结构，且训练样本极少（140–280），专门检验模型在少样本、多表关联场景下的泛化能力。
-
-**作用**：作为论文下游分类实验的统一评测基座，为 GNN、LLM 等基线方法提供可比标准，支撑 rLLM 在关系表学习任务上的有效性论证。
+该表作用：①量化定义实验场景——小训练集（140–280）、固定验证/测试集（500/1000），体现**少样本关系学习**设定；②覆盖异构领域（推荐/音乐/学术），类别数7–14保证任务难度梯度；③为rLLM方法提供**统一评测土壤**，支撑后续跨数据集的分类性能对比，验证其在不同表规模与关系复杂度下的泛化能力。
 
 ## 技术点深读（DEEP）
 

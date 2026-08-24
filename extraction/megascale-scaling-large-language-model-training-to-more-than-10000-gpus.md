@@ -45,7 +45,11 @@ tags: [training]
 > Interleaved 1F1B pipeline. update the model. Instead of duplicating model states (like the optimizer states, gradients, and parameters), Zero Redun- dancy Optimizer (ZeRO) [11] shards these states across every data-parallel process. As a result, the traditional all-reduce operations that aggregate gradients are decomposed into sep- arate reduce-scatter and all-gather operations. This is because ev
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图展示Interleaved 1F1B流水线调度：3个stage（0/1/2）在时间轴排列，粉色为前向、蓝色为反向（编号0–5代表micro-batch），灰色为warmup/cooldown区段；红色虚线将时间轴划分为warmup（重复出现0,1,2,0,1,2,3）、稳态1F1B（4,0,5,1,3,2,4,0,5,1,3,2…）、cooldown三阶段。warmup阶段同一组micro-batch号重复出现，说明每个stage承担多个模型chunk并交错执行前向，从而用更少气泡填满流水线。原文据此论证：交错调度与ZeRO状态分片结合可显著压缩气泡率，是支撑千卡–万卡规模强扩展（对应Table 2中3072→12288 GPU仍保持高吞吐）的关键调度策略。
+> 【图文联合解读】**图文联合解读：**
+
+图示为**3级Interleaved 1F1B流水线调度时序图**：横轴为时间步，每行对应一个stage，方块内数字为微批次ID，**粉红色代表前向（warm-up段）**、**蓝色代表后向（稳态1F1B段）**、灰色为bubble/空闲；两条红虚线将调度切分为**warm-up → 稳态交替执行F/B → cooldown**三阶段，每stage内含多个模型分片（chunk）交叉调度，使前/后向在不同分片上交错进行。
+
+原文借此论证：**交错调度将pipeline bubble率压缩至传统1F1B的1/v**，从而提升吞吐、降低端到端训练时延；该调度是Megatron在万卡级千亿模型（175B）扩展中的核心并行组件，与ZeRO分片策略协同，支撑Table 2所示的强可扩展性实验结论。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig03.png]]
@@ -71,14 +75,11 @@ tags: [training]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**1) 图示核心对象与结构**
-该图对比流水线并行相邻两阶段（stage i、stage i+1）的两个阶段时序：左侧 Warm-up 阶段，每阶段呈现 R→FWD→S 的串行序列；右侧 Steady 阶段，FWD（绿）与 BWD（紫）计算块沿独立 stream（虚线）与顶部的 R、底部的 S 通信块并行排布，标注 "Communication Overlap"。
+图示流水线并行中 stage i 与 stage i+1 的 S/R（Send/Receive）与 FWD/BWD（Forward/Backward）任务调度。顶部为原始序列，S/R 与计算紧邻串行；底部经"Communication Overlap"变换后，**Send 前移至 FWD 之前**、**Receive 后移至 FWD/BWD 之后**，分 Warm-up 与 Steady 两阶段展示。
 
-**2) 原文论证的关键结论**
-稳态下前向与反向计算均与相邻 Send/Receive 通信相互独立，因此通信可分流并行、覆盖计算，从而隐藏集合通信延迟；冷启动（cool-down）阶段则为该重叠技术的逆向复用。
+原文据此论证关键结论：通信可与计算流水重叠，稳态时前向与反向计算均独立于相邻通信操作，cool-down 阶段为 warm-up 的逆过程，可复用同一技术。
 
-**3) 在论文整体方法中的作用**
-此图为 MegaScale 在 10000+ GPU 规模下流水线并行的核心系统优化之一，通过通信-计算解耦降低通信占比、提升 GPU 利用率，是实现高吞吐大规模训练的关键设计。
+该图是 MegaScale 流水线通信重叠优化（与张量并行融合通信共同支撑）的核心图示，构成其在 10K+ GPU 上维持高 MFU 训练效率的基础组件之一。
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig05.png]]
@@ -89,11 +90,11 @@ tags: [training]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图5呈现Megascale万卡训练的容错工作流，采用**Driver-Executor双层架构**。Driver侧含User API、Checker、Log Analysisor、Evicted Pods/Blocked IPs四个模块；Executor侧含Executor 0~N并行节点。关键交互包括：User API提交作业并生成驱逐Pod/封禁IP列表；Checker对Executor执行stop & check并回收结果；Log Analysisor通过心跳（heartbeat）触发Checker；Driver经Kubernetes管理资源。
+该图展示大规模训练鲁棒性工作流的三层架构：①**Kubernetes层**（含Training Job Info、Evicted Pods、Blocked IPs状态表）；②**Driver控制层**（User API提交作业，Checker周期性发起stop&&check巡检，Log Analysor通过心跳信号触发Checker）；③**Executors执行层**（Executor 0…N，受Kubernetes调度并向Checker回传心跳与检查结果）。
 
-原文借此论证：在>10,000 GPU规模下，网络链路抖动（flapping）、Pod驱逐等故障不可避免，需通过心跳监测+主动检测+IP封禁的闭环机制实现快速恢复，确保长稳训练不中断。
+**论证结论**：在万卡级训练中，故障（链路抖动flapping、节点异常）不可避免；该工作流通过"心跳感知→日志分析→Checker巡检→驱逐异常Pod/屏蔽故障IP"的闭环，使Kubernetes快速重建资源，实现训练不中断的自动恢复。
 
-该图在论文中起到承上启下作用：上承底层网络/通信栈的可靠性设计，下启具体故障应对策略（链路恢复、节点替换），是证明"万卡可持续训练"系统可信度的核心架构图。
+**论文作用**：作为可靠性保障模块的核心架构说明，为后续关于"千卡故障可秒级恢复、万卡训练可连续运行多周"的实验结论提供机制依据，是论文系统设计章节的关键配图。
 
 ### Figure 6 (p.8) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig06.png]]
@@ -119,11 +120,11 @@ tags: [training]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：该图为48个rank（rank 0–47，分布在host 0–11共12台主机，每机4卡）的计算阶段（前向+反向）延迟热力图。色阶由2.0s（浅粉）到2.5s（深红），并标注三类通信依赖：TP Comm（绿色）、DP Comm（紫色）、PP Comm（橙色箭头）。rank 20（host 5）被选中高亮，可展开3D视图观察跨并行维度的依赖关系。多数rank稳定在~2.0s，但rank 32（host 8）显著偏红，存在掉队。
+**1) 核心对象与结构：** 12台host（0–11）按4×3排列，每台含4个rank，共48个rank；颜色映射计算耗时（浅粉≈2.0s → 深红≈2.5s）。Rank 20以斜纹标注，作为选中示例，通过绿/橙/紫三条虚线箭头分别连接TP、PP、DP三维通信的邻居rank。
 
-2) **关键结论**：热力图直观暴露了大规模训练中的延迟分布不均——个别rank（如32）成为straggler；同时揭示了TP/DP/PP三种并行维度间的通信耦合关系，便于诊断瓶颈来源。
+**2) 论证的关键结论：** 大多数rank耗时均匀，但host 8的rank 32与host 10的rank 40–41明显偏慢，构成"computational stragglers"；沿PP链路的虚线箭头揭示耗时沿流水线阶段累积传播，3D视图直观暴露三维并行（TP/DP/PP）耦合下的跨维度延迟依赖。
 
-3) **论文作用**：作为性能剖析与可视化工具，支撑MegaScale诊断流水线中"识别长尾、定位通信热点"的核心能力，是其全栈优化体系（算法/网络/调度）发现问题→定位根因的关键一环。
+**3) 在论文中的作用：** 作为Megascale诊断工具的可视化证据，证明万卡级训练中存在跨节点、跨并行维度的性能失衡，为后续straggler识别与负载重平衡优化提供分析依据。
 
 ### Figure 8 (p.9) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig08.png]]
@@ -209,16 +210,13 @@ tags: [training]
 > Model configurations.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**
-Table 1 列出了两种规模的 LLM 训练配置：175B 模型（128 heads、12288 hidden、96 layers，TP=8、PP=8）与 530B 模型（160 heads、20480 hidden、105 layers，TP=8、PP=35）。两模型张量并行度 TP 保持 8，而 530B 的层数（105）显著多于 175B（96），导致其流水线并行度 PP 从 8 跃升至 35；隐藏维度也由 12288 增至 20480，head 数从 128 增至 160，对应整体参数量约 3 倍膨胀。
+**1) 表内核心数据：** Table 1 给出两个模型的并行配置——175B（96 层 / 128 头 / hidden=12288 / TP=8 / PP=8）与 530B（105 层 / 160 头 / hidden=20480 / TP=8 / PP=35）。两模型张量并行度 TP 恒为 8，而流水线并行度 PP 由 8 跃升至 35，层数与 hidden 同步放大。
 
-**2) 关键技术结论**
-该表为论文在万卡规模下进行 ZeRO-2 数据并行 + 张量/流水线混合并行的实验提供模型基底。TP 固定为 8 反映单节点内 GPU 拓扑约束，PP 在 530B 上大幅拉长（35 段）则印证了"模型越大、流水线越深、跨节点通信与故障面越广"这一核心观察——即论文后续讨论的容错、心跳检测与节点隔离方案必须应对 PP=35、长流水线带来的稳定性挑战。
+**2) 论证的技术结论：** TP 固定表明节点内 8 路张量并行已是单节点上限；规模扩张时必须通过加深 PP（8→35）将模型切片分摊至更多节点，体现"TP 饱和、PP 扛规模"的万卡并行拓扑设计。
 
-**3) 在论文链路中的作用**
-Table 1 是全文规模化实验的"模型规格锚点"，与 Figure 1（ZeRO-2 数据并行示意）共同支撑 10000+ GPU 训练框架的可行性论证，为后续性能、可靠性及扩展效率分析提供统一基线。
+**3) 在论文中的作用：** 该表是后续 MegaScale 框架实验的统一模型基线，所有 MFU、吞吐、容错恢复等万卡级评测均以此配置为输入，是连接并行策略设计与大规模训练实证的关键参数表。
 
 ### Table 2 (p.10) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab02.png]]
@@ -226,13 +224,11 @@ Table 1 是全文规模化实验的"模型规格锚点"，与 Figure 1（ZeRO-2 
 > Strong-scaling training performance for the 175B model. We set the batch size to 6144 when training with 3072 to 12288 GPUs. For 256 to 1024 GPUs, we decrease the batch size to 768 due to GPU memory limit. We report the training time required for training 300B tokens here. The number in parentheses 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
+> 【图文联合解读】**Table 2 解读：**
 
-**①核心对象与数据**：表展示175B模型强扩展训练性能，对比MegaScale与Megatron-LM在两档batch size下的表现——小batch（768）跑256–1024卡，大batch（6144）跑3072–12288卡，记录迭代时间、吞吐(tok/s)、300B tokens训练天数、MFU与PFlops/s。关键数据如：12288卡+6144 batch时，MegaScale将训练时间由2.37天压缩至**1.75天**，MFU由41.2%提升至**55.2%（1.34×）**，算力达2166.3 PFlops/s；1024卡下MFU也由44.7%升至59.0%。
+该表对比 Megatron-LM 与 MegaScale 在 175B 模型上的强扩展性能，分两档 batch size：768（256–1024 GPU）与 6144（3072–12288 GPU）。数据显示 MegaScale 在各规模下全面领先：12288 GPU 时单次迭代时间由 8.57s 降至 6.34s，吞吐从 1466.8k 提至 1984.0k tokens/s，训练 300B tokens 用时从 2.37 天压至 **1.75 天**；MFU 提升 1.19–1.34×，峰值算力达 2166.3 PFlops/s，且扩展至 12288 GPU 时 MFU 仍保持 55.2%，几乎无衰减。
 
-**②关键技术结论**：MegaScale在全规模、全batch档下均稳定取得1.19×–1.34×加速，MFU绝对值较Megatron-LM提升约10–15个百分点，验证其在万卡级仍能保持高算力利用率与良好的强扩展性。
-
-**③论文方法链中的作用**：该表作为全文最重要的端到端基准，与图2的流水线和ZeRO切分设计相互印证，将"系统级工程优化"具体化为可量化的训练加速与算力效率证据，是支撑"MegaScale可工业级扩展到万卡"这一核心论点的决定性实验依据。
+论文借此论证：通过系统级优化（通信/流水线/算子），MegaScale 相比原 Megatron-LM 显著提升训练效率与可扩展性，是支撑 10000+ GPU 万卡训练可行性结论的核心实验证据。
 
 ### Table 3 (p.11) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab03.png]]
@@ -240,13 +236,13 @@ Table 1 是全文规模化实验的"模型规格锚点"，与 Figure 1（ZeRO-2 
 > MFU improvement breakdown when training the 175B model with 256 GPUs and batch size 256.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表3解读：**
+> 【图文联合解读】**Table 3 图文联合解读**
 
-**1) 核心数据：** 175B模型在256 GPU、BS=256下，MFU从基线47.7%经9项逐项叠加优化升至65.3%（累计+17.6%）。单项增益：PTB +4.6%、SWA +1.0%、TP/PP/DP通信重叠累计+5.2%、高效算子+1.7%、杂项优化+1.1%、LAMB(BS×3)再+3.0%。
+1) **核心数据**：表格以175B模型在256 GPU、BS=256下，逐项累加9个优化对MFU的影响。基线47.7%→最终65.3%，累计提升+17.6pp；其中通信重叠类（TP/PP/DP overlap）合计贡献约+7.2pp，LAMB+BS×3单项贡献最大（+3.0pp），PTB、efficient operators、SWA各贡献1–4.6pp。
 
-**2) 关键结论：** ①PTB是单点最大增益源；②三层通信-计算重叠（TP+PP+DP）累计约6.2%（含PTB），验证重叠策略对扩展性关键；③LAMB解耦batch与收敛，使BS×3仍可训练，将大batch从瓶颈转为加速手段，呼应Figure 3所示PTB与TP/SP重叠设计。
+2) **关键结论**：证明论文所提各项优化均非冗余——从并行结构（PTB）、注意力（SWA）、三轴通信重叠、算子融合到LAMB，均能独立带来可量化增益，且可叠加。
 
-**3) 论文作用：** 作为消融实验，量化MegaScale在单节点规模（256 GPU）上每项系统优化贡献，验证"算法-系统协同"设计原则，为后续跨节点万卡线性扩展提供基线支撑。
+3) **链路作用**：作为消融式证据，支撑后文"高效优化使千卡级扩展可行"的核心论点，为Figure 3的通信重叠设计与万卡级扩展实验提供量化基础。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

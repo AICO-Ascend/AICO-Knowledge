@@ -30,13 +30,11 @@ tags: [training, rl]
 > Demonstration of PPO and GRPO training with the search engine (SEARCH-R1).
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】1) 图横向并列 **PPO（上）** 与 **GRPO（下）** 两条训练流程。PPO：查询 *q*→Rollout（Policy LLM + Search Engine）→观测 *o*，再经 Value LLM 得 *v*、Reward Model 与 Reference LLM（⊕）得 *r*，送入 **GAE** 输出优势 *A*；GRPO：同一 Rollout 对 *q* 采样 **G 条** *o₁…o_G*，由 Reward Model 得 *r₁…r_G*，经 **Group Computation** 归一化生成 *A₁…A_G*，仅以 KL 锚定、**无 Critic**。
 
-**核心对象与结构：** Figure 1 横向并列展示 Search-R1 的两种 RL 训练范式。上半部分为 **PPO**：策略 LLM（Trained Model，黄色）在 rollout 阶段多轮调用 Search Engine（蓝色）；训练时由 Value 函数 v 与即时奖励 r 经 **GAE** 计算 Advantage A，并以 Frozen Reference Model（绿色）做 KL 锚定。下半部分为 **GRPO**：移除 Critic，对同一 query 采样 G 条 rollout（r₁…r_G），经 **Group Computation** 生成逐样本归一化的优势 A₁…A_G。两者共用同一带 search engine 的多轮 rollout 通路。
+2) 论证关键结论：Search-R1 把"带搜索引擎的多轮 rollout"做成可复用的中间通路；PPO 需额训 Value 网络，GRPO 用组内归一化替代 Critic，省显存且更易扩展。
 
-**关键论证结论：** Search-R1 验证了"LLM+搜索引擎"可在 PPO（有 critic）与 GRPO（无 critic）两种主流 RL 算法下统一训练，证明 search engine 接入与具体 RL 框架解耦，方法具有算法无关的通用性。
-
-**论文整体作用：** 作为 Method 部分的总览图，统摄后续 PPO/GRPO 消融与主实验的实验链路，是读者理解 Search-R1 训练闭环的入口。
+3) 在论文中作用：作为方法总览图，确立 Search-R1 统一框架，衔接后文在多 QA 基准上对比两算法检索增强推理效果的实验链路。
 
 ### Figure 2 (p.9) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig02.png]]
@@ -58,13 +56,16 @@ tags: [training, rl]
 > Retrieved Token Loss Masking Study instruction-tuned models exhibit faster convergence and benefit from higher initial perfor- mance relative to their base counterparts. Despite this early advantage, the final performance of both model types converges to a similar level after training. These results indicate that while instruction tuning facilitates more efficient early-stage learning in reasoning
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 3：Retrieved Token Loss Masking Study）**
 
-图(b)为Qwen-2.5-7b-base在约200步RL训练中的Train Reward曲线，对比"w. mask"（蓝）与"w.o. mask"（橙）。两者起点均约0.10–0.15；带掩码曲线约150步升至~0.45并稳定；不带掩码曲线整体滞后，且在近终点处出现剧烈塌陷（骤降至~0.10），训练不稳定。
+**(1) 核心对象与数据**
+该图为消融实验，对比"对检索 token 做 loss 掩码（w. mask）"与"不做掩码（w.o. mask）"下 RL 训练奖励曲线，分两幅：**(a) Qwen-2.5-3b-base**（约 400 步）：w. mask（蓝）稳步上升至 ~0.40 并保持稳定；w.o. mask（橙）前期攀升至 ~0.40，但在 ~300 步后**骤降至接近 0**。**(b) Qwen-2.5-7b-base**（约 225 步）：w. mask 收敛至 ~0.45 且平稳；w.o. mask 同样在训练末段（约 215 步）出现**奖励崩塌**。
 
-**技术结论：** 检索到的外部token应被屏蔽、不参与损失计算；掩码策略可加速收敛并避免不相关检索内容干扰策略更新。
+**(2) 关键技术结论**
+不做掩码时，模型会"奖励黑客"——倾向直接复述检索到的原文以刷高似然，导致训练中后期奖励崩溃；而对检索 token 屏蔽 loss 可避免该退化，训练曲线稳定且最终性能更优。
 
-**方法作用：** 该实验验证了Search-R1训练链路中"retrieved-token-loss-masking"这一关键设计选择的必要性，为RL+检索的整体流程提供消融支撑。
+**(3) 在论文中的作用**
+这是 Search-R1 在算法设计上的**关键消融**，证明"对检索内容 token 进行 loss masking"是 PPO/GRPO 训练搜索增强 LLM 稳定收敛的必要设计，支撑了正文 Table 3 中稳定性能结果的合理性。
 
 ### Figure 4 (p.17) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig04.png]]
@@ -73,11 +74,9 @@ tags: [training, rl]
 > Study of SEARCH-R1 on base and instruct LLMs. The instruction model converges faster and starts from a better initial performance. However, the final performance of both models is very similar. F
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**核心对象与结构**：图(b)展示Qwen2.5-7b-base/instruct在PPO RL训练下的Train Reward曲线（Step 0–200，奖励区间0.15–0.50）。Base（蓝）初始奖励约0.18，约50步后开始抬升；Instruct（橙）初始约0.38，全程高位震荡；两者最终均收敛于~0.45。
+> 【图文联合解读】**图文联合解读：**
 
-**关键技术结论**：用以论证SEARCH-R1对底座模型鲁棒——指令微调版收敛更快、起点更优，但最终性能与基础版几乎一致，说明该RL训练范式不依赖特定的模型初始化。
-
-**论文整体作用**：作为支撑性消融实验，与Table 4（检索token loss masking消融）并列，证明SEARCH-R1的关键设计选择在多种设置下均有效，强化方法可推广性的论证。
+图(a)(b)分别展示Qwen2.5-3B与7B的Base/Instruct模型在200步RL训练中的Train Reward曲线。Base模型起始奖励低（3B≈0.05，7B≈0.17），约100步后才追上；Instruct模型起始即较高（3B≈0.20，7B≈0.30），收敛更快；但两者最终奖励趋于一致（3B≈0.35–0.40，7B≈0.45–0.50）。原文借此论证：SEARCH-R1对预训练范式不敏感，无论base还是instruct起点，最终均收敛至相近性能，体现方法对底层LLM选择的鲁棒性。该图作为消融/适用性实验的关键证据，支撑了"RL训练可独立于指令微调阶段"的整体方法假设。
 
 ### Figure 5 (p.18) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig05.png]]
@@ -86,11 +85,14 @@ tags: [training, rl]
 > Training dynamics of SEARCH-R1 with PPO and GRPO as the base RL method across four LLMs. GRPO generally converges faster but may exhibit instability after trained for a number of steps, whereas PPO provides more stable optimization but converges at a slower rate. PPO and GRPO achieve comparable final reward performance. G
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读**
 
-图5展示了Search-R1在Qwen2.5-7b-base（500步，奖励0.1→0.55）与Qwen2.5-7b-it（约300步，奖励0.3→0.5）上PPO与GRPO的训练曲线对比。GRPO（橙）初期爬升更陡，约150步即接近收敛；PPO（蓝）爬升较缓但全程平稳；在7b-it图中GRPO约200步处出现明显下跌，印证其"后段不稳定"。
+图示 Search-R1 在 Qwen2.5-3b/7b（含 base 与 it 共 4 个模型）上分别采用 PPO 与 GRPO 作为底层 RL 算法时的 Train Reward–Step 训练曲线，横轴跨度约 300–500 步，纵轴奖励区间约 0.1–0.5。
 
-论文借此论证Search-R1框架对底层RL算法不敏感，PPO与GRPO最终奖励可比、均可作为可行基座，从而支撑其方法链路的算法兼容性结论，强化"RL+检索"范式的普适性主张。
+- **核心结构**：四幅子图均含橙（GRPO）、蓝（PPO）两条曲线。
+- **关键现象**：GRPO 在全部 4 个模型中均更早爬升至高位，但中段出现明显 reward 塌陷（曲线骤降至接近 0）；PPO 上升较慢，但全程平滑无崩塌；两者最终收敛到相近奖励。
+- **论证结论**：原文借此支撑"GRPO 收敛更快但训练不稳定、PPO 优化更稳健但速度较慢、最终性能可比"的论断。
+- **论文作用**：作为训练动力学证据，与 Table 5 主结果互证，为 Search-R1 框架中 PPO/GRPO 算法选型的合理性提供实验依据。
 
 ### Figure 6 (p.19) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig06.png]]
@@ -114,9 +116,11 @@ tags: [training, rl]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图7展示SEARCH-R1采用GRPO算法、基于Qwen2.5-7b-base模型时，不同组大小（group size=1/3/5）在约500步训练过程中奖励（reward）的动态变化曲线。横轴为训练步数（Step），纵轴为奖励值，绿色×标记（size=1）曲线明显位于上方，在0.4–0.6区间剧烈波动；蓝线（size=5）与橙线（size=3）则贴近底部、几乎重叠且波动微弱。
+图7呈现Qwen2.5-7b-base上SEARCH-R1(GRPO)三种group size（1/3/5）的训练奖励曲线。**size=5（蓝）**约120步升至~0.5后于~150步骤降归零；**size=3（橙）**在~200步同样崩塌；**size=1（绿）**缓慢爬升、稳定收敛至~0.5，全程未崩（500步）。
 
-原文借此说明：组大小并非PPO收敛的主导因素——size=1反而获得最高奖励，而size=3与size=5训练信号极弱（提示GRPO在该设定下需更大群体方差才能形成有效优势），从而佐证检索深度（top-k）并非性能瓶颈这一关键结论。在全文实验链路中，该图与表7互为补充，共同构成"对超参不敏感、方法鲁棒"的论证支撑，强化了SEARCH-R1框架无需精细调参即可稳定训练的核心卖点。
+原文据此论证关键结论：group size越大收敛越快，但GRPO基于采样的高方差使崩塌风险显著上升——这是强化学习固有不稳定性的体现。
+
+该图作为附录消融实验，在方法链路中支撑**超参trade-off讨论**：揭示"加速收敛"与"训练稳定"之间的张力，为主实验默认超参选择及PPO/GRPO对比（Table 7）提供定量依据。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -126,7 +130,13 @@ tags: [training, rl]
 > Main results. The best performance is set in bold. † / ⋆ represents in-domain/out- domain datasets.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表2以Qwen2.5 3B/7B为骨干，对比Direct、CoT、IRCoT、Search-o1、RAG、SFT、R1及拒绝采样，评估4个通用QA和3个多跳QA（NQ、HotpotQA为域内，其余域外）。7B Search-R1-base平均0.431（拒绝采样0.348），7项中6项最佳，仅2Wiki由instruct版0.414领先；3B instruct版平均0.325。说明RL+搜索带来稳定主增益；该表承担跨域泛化证据，并衔接训练曲线：有效搜索增加，GRPO快但后期不稳，PPO更稳。
+> 【图文联合解读】**Table 2 图文联合解读**
+
+Table 2 在 Qwen2.5-7B/3B 两个基座上，对比 Direct/CoT/IRCoT/Search-o1/RAG/SFT/R1/Rejection Sampling 与 Search-R1 共 11 种方法，在 NQ†、TriviaQA⋆、PopQA⋆、HotpotQA†（域内†）及 2wiki⋆、Musique⋆、Bamboogle⋆（域外⋆）七项 QA 上的准确率。
+
+关键数值：Search-R1-base 在 7B 上平均 **0.431**，全面压制 RAG（0.304）与 Rejection Sampling（0.348），并在 NQ/TriviaQA/PopQA/HotpotQA/Musique/Bamboogle 六项夺最优；3B 上 Search-R1-instruct 以 **0.325** 居首。
+
+论文借此核心论证：RL 联合搜索引擎微调显著优于传统 RAG、SFT 与推理时检索增强，且在域内域外均稳定提升，是支撑 Search-R1 方法有效性的关键总表证据。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab03.png]]
@@ -134,7 +144,7 @@ tags: [training, rl]
 > The performance results of S EARCH -R1 with PPO and GRPO on seven datasets.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 3 给出 Qwen2.5-7B/3B 上 Search-R1-base/instruct 在 7 个 QA 任务（NQ、TriviaQA、PopQA、HotpotQA、2wiki、Musique、Bamboogle）的成绩：7B 端 Search-R1-base 平均 0.431，6 个数据集最优，显著领先 Rejection Sampling（0.348）、RAG（0.304）、IRCoT（0.239）等基线；3B 端 Search-R1-instruct（0.325）略胜 base（0.303）。论文借此论证基于 RL（PPO/GRPO）训练在通用与多跳问答均稳定超越 CoT/SFT/RAG，方法具备规模与任务通用性。该表作为主结果对齐两套 RL 算法与多基线，为方法有效性提供核心量化支撑。
+> 【图文联合解读】表3在7个QA数据集(NQ、TriviaQA、PopQA、HotpotQA、2wiki、Musique、Bamboogle)上对比11种方法在Qwen2.5-7B/3B基座与指令版上的平均表现。关键数据：Search-R1-base(7B)以0.431均分全面领先，大幅超过RAG(0.304)、Search-o1(0.206)及拒绝采样(0.348)；Search-R1-instruct(3B)达0.325亦为最优。该表证明RL驱动的Search-R1(PPO/GRPO)在通用QA与多跳QA、两种模型规模下均显著优于CoT、IRCoT、RAG等基线，是论文验证"强化学习+搜索引擎协同推理"方法有效性的核心主实验证据。
 
 ### Table 4 (p.9) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab04.png]]
@@ -142,13 +152,9 @@ tags: [training, rl]
 > The performance of S EARCH -R1 with and without retrieved token loss masking. The LLM trained with retrieved token loss masking achieves consistently better performance. (LLM: Qwen2.5-7b-base; RL: PPO)
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 图文联合解读**
+> 【图文联合解读】Table 4 对比 Search-R1 在 Qwen2.5-7b-base + PPO 下，是否对检索 token 做 loss masking 在 7 个 QA 基准上的表现：带 mask 版本 NQ 0.480/TriviaQA 0.638/PopQA 0.457/HotpotQA 0.433/2wiki 0.382/Musique 0.196/Bamboogle 0.432，均值 0.431；无 mask 版本对应为 0.388/0.567/0.391/0.325/0.321/0.108/0.304，均值 0.343。七项全部领先，平均提升约 8.8 个百分点（Bamboogle +0.128、Musique +0.088 最显著）。
 
-Table 4 对比 Search-R1 在 7 个 QA 基准上"是否 mask 检索 token loss"的消融结果（Qwen2.5-7b-base + PPO）。带 mask 版本在 NQ(0.480)、TriviaQA(0.638)、PopQA(0.457)、HotpotQA(0.433)、2wiki(0.382)、Musique(0.196)、Bamboogle(0.432) 七项全部领先，平均分 0.431 对 0.343，绝对提升 0.088；Bamboogle 涨幅最大(+0.128)。
-
-**论证结论**：训练中对检索文本 token 不计算 loss 是关键设计——避免模型退化为抄写检索内容，使 PPO 梯度信号集中在自身生成的推理 token 上。
-
-**论文作用**：作为方法关键消融之一，为 Search-R1 "仅对生成 token 计算 loss"的 RL 训练策略提供实证支撑，验证了方法设计的合理性与必要性。
+论文据此论证：训练时屏蔽检索文档 token 的 loss，避免 LLM 在外部检索内容上消耗梯度信号，是 Search-R1 的关键设计。该消融支撑了整体方法链路——多轮检索与推理联合 PRL 训练中"让模型专注于学习何时、如何调用搜索，而非记忆检索内容"的核心假设。
 
 ### Table 5 (p.17) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab05.png]]
@@ -156,9 +162,9 @@ Table 4 对比 Search-R1 在 7 个 QA 基准上"是否 mask 检索 token loss"�
 > Main results. The best performance is set in bold. † / ⋆ represents in-domain/out- domain datasets.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5 展示在 Qwen2.5-14b-Base/Instruct 上 10 种方法在 7 个 QA 基准（NQ†、TriviaQA⋆、PopQA⋆、HotpotQA†、2wiki⋆、Musique⋆、Bamboogle⋆）上的精确匹配率（EM）。**Search-R1-base 平均 0.479，在全部 7 项中均取得最高分**（NQ 0.486、TriviaQA 0.676、PopQA 0.480、HotpotQA 0.468、2wiki 0.470、Musique 0.241、Bamboogle 0.528），较 R1-base（0.357）、Search-o1（0.310）、RAG（0.281）、IRCoT（0.221）等基线平均提升 12–20 分。
+> 【图文联合解读】**Table 5 图文联合解读**
 
-原文借此论证：引入搜索引擎交互的强化学习训练，相比传统 RAG、IRCoT 及纯推理 R1 基线均带来显著且一致的提升，**证明了"推理+检索"联合强化学习的有效性**。该表是论文主实验的核心证据，集中呈现 Search-R1 的方法贡献与性能优势。
+Table 5 展示 Qwen2.5-14b 上 9 种方法在 7 个 QA 数据集（2 个域内†、5 个域外⋆）的精确匹配率。Search-R1-base 7 项全部加粗最优，均值 0.479，较 Direct Inference（0.227）、RAG（0.281）、SFT（0.250）提升约 111%/70%/92%；Search-R1-instruct 均值 0.433 亦全面领先。R1-base/instruct 仅靠 RL 推理（无搜索）即达 0.357/0.339，已超 CoT、IRCoT、RAG 等检索方法，证明强化学习本身增益。该表作为全文主结果，支撑"RL+搜索引擎"显著优于提示方法、RAG 与 SFT 的核心结论。
 
 ### Table 6 (p.18) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab06.png]]
@@ -168,14 +174,7 @@ Table 4 对比 Search-R1 在 7 个 QA 基准上"是否 mask 检索 token loss"�
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 6 图文联合解读**
 
-**1) 核心对象与数据**
-该表对比 SEARCH-R1 在 Qwen2.5-7B-Base 与 Qwen2.5-3B-Base 上"有无检索 token 损失掩码"（w. mask / w.o. mask）两种变体，在 NQ、TriviaQA、PopQA、HotpotQA、2wiki、Musique、Bamboogle 共 7 个 QA 基准及平均分上的精确匹配率。结果显示：7B-Base w. mask 平均 0.431 vs w.o. mask 0.343（+0.088），7 项全部领先；3B-Base 0.303 vs 0.262（+0.041），6/7 项胜出，仅 Musique、Bamboogle 两小集略低。
-
-**2) 关键结论**
-原文借此论证"对外部检索 token 做损失掩码"是必要训练技巧：避免将奖励/梯度信号错误分配给非模型自身生成内容，从而稳定 RL 优化、提升泛化。
-
-**3) 在论文中的作用**
-属训练细节消融实验，支撑 SEARCH-R1 多轮"思考—检索—推理"RL 框架的核心设计：损失必须仅覆盖模型输出 token，是其方法可信复现与推广的关键贡献之一。
+Table 6 在 Qwen2.5-7B 与 3B 基座上对比 SEARCH-R1（PPO）训练时**是否对检索 token 做 loss 掩码**在 NQ、TriviaQA、PopQA、HotpotQA、2wiki、Musique、Bamboogle 七项 QA 基准的 Exact Match 得分。7B 带 mask 平均 0.431 vs 不带 0.343；NQ 0.480 vs 0.388、TriviaQA 0.638 vs 0.567、Musique 0.196 vs 0.108；3B 平均 0.303 vs 0.262，原文指出**带 mask 在绝大多数基准上均更优**，仅 Bamboogle 极个别点例外。结论：屏蔽检索片段的梯度可避免外部文本污染策略/价值信号，使 LLM 专注于自身推理生成与搜索调用决策，从而稳定提升 RAG-RL 性能。此消融支撑了 Search-R1 框架"仅对模型自身输出计算 RL 损失"这一核心训练机制设计的必要性。
 
 ### Table 7 (p.19) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab07.png]]
@@ -183,7 +182,11 @@ Table 4 对比 Search-R1 在 7 个 QA 基准上"是否 mask 检索 token loss"�
 > The number of retrieved passages study in S EARCH -R1 training. (LLM: Qwen2.5- 7b-base; RL: PPO)
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表格展示Qwen2.5-7b-base+PPO在7个QA基准（NQ/TriviaQA/PopQA/HotpotQA/2wiki/Musique/Bamboogle）上topk∈{1,3,5}的实证对比：topk=3平均0.431全面领先topk=5（0.400）与topk=1（0.375），并在7个数据集中的6个上取得最优（如Musique 0.196 vs 0.156/0.146，Bamboogle 0.432 vs 0.352/0.328）。原文借此论证两点关键结论：①检索深度并非PPO收敛的主导驱动因素（因训练轨迹近乎重合）；②topk=3为搜索质量与上下文噪声的最优折中。该消融与Figure 7（GRPO组大小）共同支撑"SEARCH-R1对关键超参鲁棒、可稳定收敛"的核心实验论断，并为默认topk=3的设计选择提供量化依据。
+> 【图文联合解读】1) 表格展示 SEARCH-R1 训练时检索片段数 topk∈{1,3,5} 对 Qwen2.5-7b-base+PPO 在 7 个数据集（NQ、TriviaQA、PopQA、HotpotQA、2wiki、Musique、Bamboogle）及 Avg. 上的影响：topk=3 平均 0.431 最高且各列数值加粗全面胜出，topk=5 次之（0.400），topk=1 最差（0.375）。
+
+2) 关键结论：检索片段并非越多越好，呈非单调关系——topk=1 信息不足、topk=5 引入噪声反拖累推理，topk=3 为最优折中。
+
+3) 在论文中作为检索数量的消融实验，与 Figure 7 的 group size 消融并列，共同为训练超参选择与 RL 稳定性提供实证依据。
 
 ### Table 8 (p.20) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab08.png]]
@@ -191,7 +194,13 @@ Table 4 对比 Search-R1 在 7 个 QA 基准上"是否 mask 检索 token loss"�
 > The group size study of S EARCH -R1 (GRPO) on seven datasets. (LLM: Qwen2.5-7b- base)
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表8以Qwen2.5-7B-Base为骨干，对SEARCH-R1的GRPO组大小1、3、5进行消融，覆盖7个数据集。平均分依次为0.410、0.363、0.350，size=1总体最优；NQ、TriviaQA、PopQA分别为0.463、0.605、0.449。仅Bamboogle例外：size=3为0.400，高于size=1的0.384。该表说明增大采样组并无稳定收益，用于确定训练超参并检验检索增强GRPO策略。
+> 【图文联合解读】**Table 8 联合解读**
+
+1) **对象与数据**：Qwen2.5-7b-base 上 Search-R1 (GRPO) 在 NQ/TriviaQA/PopQA/HotpotQA/2wiki/Musique/Bamboogle 七数据集的 group size（1/3/5）消融。size=1 平均 0.410，size=3 为 0.363，size=5 为 0.350；size=1 在 NQ(0.463)、TriviaQA(0.605)、PopQA(0.449)、HotpotQA(0.392)、2wiki(0.413)、Musique(0.163) 六个任务上均最优，仅 Bamboogle 上 size=3 略胜 (0.400)。
+
+2) **关键结论**：GRPO 组规模增大反而损害检索增强推理性能，size=1（无组内优势估计）即足以甚至最优，挑战"大 group 必优"的常规 GRPO 假设。
+
+3) **链路作用**：作为消融支撑 Search-R1 训练对超参的低依赖性与鲁棒性，免去大 group 带来的采样开销，巩固其简洁可复现的设计主张。
 
 ### Table 9 (p.20) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab09.png]]
@@ -199,13 +208,25 @@ Table 4 对比 Search-R1 在 7 个 QA 基准上"是否 mask 检索 token loss"�
 > A case study of R1 and S EARCH -R1.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 9 图文联合解读**
 
-该表对比了 SEARCH-R1 在检索文档数量 size=1/3/5 三种设置下，于 NQ、TriviaQA、PopQA、HotpotQA、2wiki、Musique、Bamboogle 七个数据集上的表现。数据显示：**size=1 平均最优（0.410）**，NQ（0.463）、TriviaQA（0.605）、PopQA（0.449）、HotpotQA（0.392）、2wiki（0.413）、Musique（0.163）均居首；仅 Bamboogle 上 size=3（0.400）略胜。
+该表展示 size=1/3/5 三种配置在 7 个 QA 基准（NQ、TriviaQA、PopQA、HotpotQA、2wiki、MusiQue、Bamboogle）上的得分。size=1 全面领先，平均 0.410（NQ 0.463、TriviaQA 0.605、PopQA 0.449、2wiki 0.413 加粗）；size=3 均降至 0.363，size=5 降至 0.350，规模越大性能越差。
 
-论文借此论证关键结论：**SEARCH-R1 检索单文档即可获得最佳性能**，增加检索数量反而因引入噪声而拖累效果（0.410→0.363→0.350），说明该方法具备从最小化检索上下文中精准推理的能力。
+原文借此论证关键结论：SEARCH‑R1 采用单文档检索即可达到最优，扩大检索返回量反而引入噪声、稀释有效信号、降低精度。该消融支撑了论文方法链路中检索模块的设计——少而精的检索配合 PPO/GRPO 强化学习训练优于多文档方案，证明模型在 R1 蒸馏框架下可习得精准调取搜索的能力。
 
-在全论文链路中，此消融实验支撑了"检索增强 + 强化学习"框架的简洁性主张，为 SEARCH-R1 相对 R1 的设计选择提供了实验依据。
+### Table 10 (p.22) ⭐深度解读
+![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab10.png]]
+> [!quote] caption
+> Search-R1 case study 1 (successful): Search-R1 conduct multi-step reasoning, search, with self-verification and finally answer the question.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 10 联合解读**
+
+**核心对象与数据**：该表记录了 Search-R1 模型对多跳问答"What type of profession does Chris Jericho and Gary Barlow have in common?"的完整执行轨迹。模型共发起 5 次 `<search>` 调用、5 段 `<think>` 反思，依次检索两人各自职业、共同职业，并最终自验证纠正中间错误（如曾把"摔角手"误判为共同点），输出正确答案 `musician`（与 Ground Truth 一致）。
+
+**论证的技术结论**：该案例直接支撑论文核心论点——经强化学习训练后，LLM 能自主编排多轮"思考—检索—验证"循环，调用搜索引擎补充外部知识，并在推理出错时通过迭代反思自我修正，无需人工设计推理链。
+
+**在论文整体中的作用**：作为 Case Study 1，它与定量基准测试（Benchmark 指标）互补，以可读的 trace 形式直观展示 Search-R1 在 7B/13B 规模上涌现的自主多步推理与自验证能力，是证明 RL 训练有效性的关键定性证据。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

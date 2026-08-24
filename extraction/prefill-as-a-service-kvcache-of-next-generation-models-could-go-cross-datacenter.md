@@ -30,13 +30,13 @@ tags: [kv-cache]
 > Comparison of two deployment paradigms for PD-disaggregated LLM serving.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图1解读**
+> 【图文联合解读】**图文联合解读**
 
-图1对比PD分离LLM两种部署范式：左侧PrfaaS（Prefill-as-a-Service）专用集群配本地KV Store与Prefill节点，右侧本地PD集群含Standard/Decode节点及本地KV Store，二者经中间"跨数据中心KVCache传输层"（松耦合KV Transfer）连接，层内对比"Dense—Network Bound"（✗，因带宽受限被否）与"Hybrid—Prefill Bound"（✓，以Prefill为瓶颈而被选）两条路径，并由底部"基于以太网的跨集群KV Store"统一封装。
+图1对比PD分离LLM推理的两种部署范式。**(a)现状**：单同构集群内Prefill与Decode经各自KV Store，通过"Tightly Coupled KV Transfer"紧耦合传输，底层为RDMA单集群KV存储。**(b)PrfaaS**：PrfaaS集群（Prefill专用+本地KV）与本地PD集群（Decode+本地KV）通过以太网跨集群KV存储松耦合传输；传输层给出两种策略——**Dense**（全量KV、Network Bound、✗不可行）与**Hybrid**（按Prefill块粒度、Prefill Bound、✓可行）。
 
-**论证结论**：Hybrid松耦合方案可克服跨数据中心带宽瓶颈，使KVCache可在集群间高效流转，从而实现PrfaaS多集群分离推理。
+**论证结论**：随下一代模型KV Cache规模爆炸，RDMA紧耦合方案难以扩展；PrfaaS利用Hybrid策略将传输受限于计算侧（Prefill-bound）而非网络带宽，使跨数据中心KVCache复用成为可能。
 
-**全文作用**：作为方法论总图，引出后续对Hybrid传输、KV布局与跨集群调度的具体设计与实验。
+**作用**：作为全文核心动机图，奠定"为何需跨数据中心PrfaaS"前提，并衔接Table 1模型配置与后续PrfaaS系统设计/实验链路。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig02.png]]
@@ -45,13 +45,9 @@ tags: [kv-cache]
 > KV throughput of MiniMax-M2.5 on an 8×H200 instance at various input lengths.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】图左半部展示MiniMax-M2.5在8×H200上、prompt长度1K–128K时的KV吞吐（蓝柱）与prefill延迟（红折线）：吞吐由约5 Gbps升至64K峰值约61 Gbps，128K回落至约48 Gbps；延迟由约0.3 s超线性增长至约5.5 s。右表对比GQA/MLA/Sparse/SWA/Linear Attention五类注意力机制的prefill延迟与KV吞吐高低。
 
-**1）核心数据：** 图以 MiniMax-M2.5 在 8×H200 实例上的实测呈现双轴关系——蓝柱为 KV 吞吐量(Gbps)、红线为 Prefill 延迟(s)，横轴为 prompt 长度(1K–128K)。吞吐量从 1K 的 ~5 Gbps 单调升至 64K 峰值 ~61 Gbps，128K 回落至 ~48 Gbps；延迟在 ≤32K 区间保持 <1.2 s，64K 升至 ~2.2 s，128K 陡增至 ~5.5 s。
-
-**2）关键结论：** 长上下文 prefill 产生高达数十 Gbps 级别的 KV 流量，且在 128K 出现明显 **compute-bound 拐点**——吞吐量不升反降、延迟指数级攀升，证明长 prompt 的 prefill 是高算力开销单元，将其剥离至专用实例具备现实必要性。
-
-**3）论文作用：** 为 "prefill-as-a-service / KV cache 跨数据中心传输" 的核心动机提供单实例 KV 带宽量化证据，论证解耦 prefill 与 decode 的工程价值。
+原文据此论证：长上下文prefill产生的KV cache传输已达数十Gbps量级，延迟随长度急剧放大，且不同注意力机制在吞吐/延迟上取舍各异——从而支撑"跨数据中心传输KV cache将成为下一代模型prefill服务瓶颈"这一核心论点，为Prefill-as-a-Service方案提供量化依据与机制选型参考。
 
 ### Figure 3 (p.6) ⭐深度解读
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig03.png]]
@@ -60,7 +56,9 @@ tags: [kv-cache]
 > Deployment topology of the PrfaaS-PD architecture.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图展示PrfaaS-PD部署拓扑：核心为Local PD Cluster（含Prefill与Decode两类节点，由Intra-Cluster RDMA Network高带宽互联，配套Hybrid Prefix Cache Pool），短请求(l≤t)本地直接处理；Global KVCache Manager经Inter-Cluster Ethernet跨集群统一调度。原文借此论证：PrfaaS-PD通过Prefill/Decode分离、RDMA+Ethernet分层网络与混合前缀缓存池，可支撑跨数据中心的KVCache传输。该图为后文跨机房KV吞吐实验（表3，8×H200，SGLang v0.5.9）提供系统部署前提与方法框架。
+> 【图文联合解读】**图文联合解读：**
+
+图示PrfaaS-PD双集群部署拓扑：Request Router按阈值t分流请求——长请求(l>t)送PrfaaS集群的Prefill节点（标"高计算吞吐"），短请求(l≤t)送Local PD集群的Decode节点（标"高内存带宽"）。两集群各含三层子系统：Compute层为PD节点、Network层为Intra-Cluster RDMA Network、Storage层为Hybrid Prefix Cache Pool；二者经Cross-Cluster Ethernet互联，并由Global KVCache Manager跨集群统一调度。原文借此论证：PD分离+RDMA/Ethernet分层网络+混合前缀缓存池三层协同，可支撑跨数据中心KVCache传输。该图作为后文跨机房KV吞吐实验（表3，8×H200，SGLang v0.5.9）的系统部署前提与方法框架。
 
 ### Figure 4 (p.7) ⭐深度解读
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig04.png]]
@@ -69,7 +67,11 @@ tags: [kv-cache]
 > Hybrid prefix cache pool. Linear states and full-attention KVCache are managed by separate groups backed by a unified block pool. Blocks are categorized as prefix-cache (intra-cluster only, block-aligned) or transfer-cache (cross-cluster, discarded after transfer). categories. Local PD clusters perform PD-disaggregated serving and can complete inference for a request end to end. PrfaaS clusters pr
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图4展示统一Hybrid Cache Pool：第3组Full Attention含8个块级KVCache单元；池中可见12块，其中5个粉色跨集群Transfer-Cache块、7个灰色空闲块。论文说明，线性状态与全注意力KVCache虽分组建管，却共享分块资源；前缀缓存仅集群内且按块对齐，传输缓存可跨集群任意长度并在使用后释放。该结构连接各PD集群的prefill/decode链路，为跨数据中心KV传输、资源隔离及统一池调度提供架构基础，并非结果指标图。
+> 【图文联合解读】**1) 核心对象与结构**：图示统一混合缓存池（Unified Hybrid Cache Pool），Linear Attention Group（请求级循环态，3对块）与Full Attention Group（块级KVCache，约7–8个半填块）通过Group 0–3四条通道向池子Allocate/Free；池内块按用途分三类——Prefix-Cache（紫色，可复用、块对齐）、Transfer-Cache（红色，跨簇、任意长度）、Free（灰色），全注意力侧可见明显的半填碎片块。
+
+**2) 论证结论**：异构注意力模型的两类状态可在同一存储后端上共存，并通过"簇内复用 vs 跨簇一次性传输"语义分类隔离，从而统一管理。
+
+**3) 论文链路作用**：该池是PrfaaS调度框架的基础设施抽象层，使本地PD集群与跨集群预填池能在同一资源池内协同分配，为跨数据中心KVCache调度提供底层支撑。
 
 ### Figure 5 (p.11) ⭐深度解读
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig05.png]]
@@ -78,11 +80,7 @@ tags: [kv-cache]
 > Illustration of the grid search process for the two optimization variables. (a) fixes t at the optimum and searches over the prefill/decode instance split within the local PD cluster. (b) fixes
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图(a)** 展示本地 PD 集群内 prefill/decode 实例分配（固定 Np+Nd=8）的吞吐量网格扫描：下 x 轴 Np∈[1,7]、上 x 轴 Nd∈[7,1]，纵轴 Λ_max(req/s)。红线 Prefill bound 在 Np=1→3 单调上升至 3.24，绿线 Decode bound 在 Np=4→7 单调下降至 ~0.8，二者在最优点 ★Np=3、Nd=5 交汇。附表量化 1K/8K/32K/128K 序列对应 KVCache 为 190.8/308.9/701.3/2316.3 MiB。
-
-**关键结论**：总实例数受限时，prefill 与 decode 实例存在唯一最优配比——prefill 过多受 prefill 吞吐上界制约，decode 过多受 decode 上界制约，形成"V 形"包络。
-
-**论文作用**：与图(b)固定 Np=3、Nd=5 扫描传输时间 t 配合，构成两变量优化的两阶段网格搜索，为跨数据中心 KVCache 共享方案的实例/带宽联合部署决策提供量化依据。
+> 【图文联合解读】图及实测表：1K/8K/32K/128K序列的KVCache为190.8/308.9/701.3/2316.3 MiB，预填充0.44/0.72/1.84/7.40 s，KV吞吐3.61/3.59/3.19/2.62 Gbps。固定最优t≈19.4K，在Nₚ+N_d=8下搜索，得Nₚ=3、N_d=5时Λmax=3.24 req/s；固定配比扫描t，峰值不变。该实测驱动两阶段网格搜索，连接PD资源分配与跨机房/本地路由优化，确定PaaS配置。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -92,7 +90,13 @@ tags: [kv-cache]
 > Configurations of representative models. Type A denotes the linear-complexity block, and Type B denotes the quadratic-complexity full attention block.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 1 罗列 6 个代表性 LLM 的注意力结构与参数量：Kimi Linear（48B，KDA+MLA，3:1）、MiMo-V2-Flash（309B，SWA+GQA，5:1）、Qwen3.5-397B（GDN+GQA，3:1）、Ring-2.5-1T（Lightning+MLA，7:1）均采用线性块 A 与二次方块 B 混合，A:B 介于 3:1–7:1；而 MiniMax-M2.5（229B）与 Qwen3-235B（235B）仍为纯 GQA。原文据此论证：下一代大模型正普遍引入线性复杂度注意力块，使 KV cache 访存模式规则化、prefill 计算可批量预测，跨数据中心搬运 cache 因此具备可行性。该表为论文"prefill-as-a-service、KV cache 跨 DC 调度"的核心方案提供了模型结构层面的现实依据。
+> 【图文联合解读】**Table 1 解读**
+
+1) **核心数据**：表格列出 6 个代表性模型的两类注意力配置——Type A（线性复杂度块）与 Type B（二次复杂度全注意力），并给出混合比 A:B 及参数规模。关键数据点：Kimi Linear (KDA+MLA, 3:1, 48B)、MiMo-V2-Flash (SWA+GQA, 5:1, 309B)、Qwen3.5-397B (GDN+GQA, 3:1, 397B)、Ring-2.5-1T (Lightning+MLA, 7:1, 1T)；MiniMax-M2.5 与 Qwen3-235B 为纯 GQA 全注意力。
+
+2) **论证结论**：下一代大模型（48B–1T）普遍采用"线性注意力+全注意力"混合架构，且混合比集中于 3:1–7:1，混合已成主流趋势，纯二次全注意力只在较小旧模型中出现。
+
+3) **在论文中的作用**：作为问题动机的现实依据，支撑后续"prefill-as-a-service 跨数据中心"的论证——混合注意力带来线性 KV 局部化与全注意力全局 KV 截然不同的访问/传输模式，使跨数据中心 KV cache 复用成为新瓶颈，从而引出对混合模型 PD 解聚服务的设计需求。
 
 ### Table 3 (p.4) ⭐深度解读
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-tab03.png]]
@@ -100,9 +104,15 @@ tags: [kv-cache]
 > KV throughput Φ kv (Gbps) at various input lengths. All models are benchmarked on 8 × H200 with SGLang v0.5.9 [7].
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表3量化了6个模型在1K/8K/32K/128K四种序列长度下的KV吞吐Φ_kv（Gbps），分Hybrid（Kimi Linear、MiMo-V2-Flash、Qwen3.5-397B、Ring-2.5-1T）与Dense两组对比。关键发现：（1）Hybrid吞吐整体显著低于Dense——32K时Ring-2.5-1T仅2.59、Qwen3.5-397B为8.25 Gbps，而同长度Dense模型达33–60 Gbps，量级差近一个数量级；（2）Dense吞吐随序列长度呈"先升后降"，32K达峰、128K回落；（3）Ring-2.5-1T呈反常递减趋势（1K的7.27→128K的1.46）。
+> 【图文联合解读】**Table 3 图文联合解读**
 
-该表支撑论文核心论点：下一代大模型的KV cache传输吞吐受限、长上下文场景尤甚，凸显Figure 3所示跨数据中心PrfaaS-PD分离架构的必要性，为"KV cache可跨DC传输"的关键论断提供量化依据。
+该表展示8×H200+SGLang v0.5.9环境下，Hybrid（Kimi Linear、MiMo-V2-Flash、Qwen3.5-397B、Ring-2.5-1T）与Dense（MiniMax-M2.5、Qwen3-235B）共6个模型在1K/8K/32K/128K四种输入长度下的KV吞吐Φ_kv（Gbps）。
+
+**核心数据对比**：Dense模型吞吐显著高于Hybrid，MiniMax-M2.5在32K达峰值59.93 Gbps、Qwen3-235B达33.35 Gbps；而Hybrid模型多停留在1–8 Gbps区间，Ring-2.5-1T更随序列增长从7.27降至1.46 Gbps，呈反相关趋势。
+
+**技术结论**：该表定量证明下一代大模型（尤其Hybrid MoE）单卡/单实例KVCache吞吐有限，跨数据中心传输将成瓶颈。
+
+**论文作用**：与Figure 3部署拓扑呼应，为PrfaaS-PD提出"Prefill/Decode分离+RDMA与Ethernet分层互联+混合前缀缓存池"提供关键带宽实测依据，支撑全文"跨机房KVCache调度"的核心理论与系统设计。
 
 ### Table 5 (p.11) ⭐深度解读
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-tab05.png]]
@@ -110,13 +120,11 @@ tags: [kv-cache]
 > KVCache size S kv , prefill latency T prefill , and KV throughput Φ kv of the internal 1T hybrid model at various input lengths. Prefill latency is benchmarked on 8 × H200 with in-house vLLM [ 28 ].
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 5 联合解读**
+> 【图文联合解读】**核心对象与数据**：表给出 1T 混合模型在 1K/8K/32K/128K 输入下的三项实测——KVCache 大小 S_kv 从 190.8 MiB 单调升至 2316.3 MiB（约 12×）；prefill 延迟 T_prefill 由 0.44 s 升至 7.40 s，呈超线性增长（≈17×）；KV 吞吐 Φ_kv 由 3.61 Gbps 降至 2.62 Gbps，长序列下传输效率明显下滑。
 
-1) **核心数据**：内部 1T 混合模型在 4 种输入长度（1K/8K/32K/128K）下的 KVCache 体积分别为 190.8/308.9/701.3/2316.3 MiB，预填充时延 0.44/0.72/1.84/7.40 s，KV 吞吐 3.61/3.59/3.19/2.62 Gbps。
+**论证结论**：长序列 KVCache 体积庞大、prefill 计算昂贵，使跨数据中心传输 KV 比本地重算更划算；Φ_kv 随序列增长下降进一步表明，长上下文场景正是跨 DC 方案的优势区间。
 
-2) **关键结论**：随序列长度增长，KVCache 呈超线性膨胀（1K→128K 约 12×），预填充时延近 17× 跃升，而 KV 吞吐反而下降至 2.62 Gbps——单条 KVCache 即逼近甚至超过典型跨数据中心专线带宽，为论文"1T 级模型 KVCache 必须跨 DC 传输"提供量化依据。
-
-3) **方法链作用**：作为后文 Figure 5 网格搜索的输入参数，固定模型侧 KV 体积与生成速率，为 PD 拆分、跨 DC 调度等优化变量提供基准工作负载。
+**论文链路作用**：为后续成本模型提供 S_kv、Φ_kv 的硬件基线输入，直接决定跨 DC vs. 本地 prefill 的临界距离 t*，是支撑"prefill-as-a-service"经济性论证的关键实测依据。
 
 ### Table 6 (p.12) ⭐深度解读
 ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-tab06.png]]
@@ -124,13 +132,13 @@ tags: [kv-cache]
 > Comparison of optimal configurations across PrfaaS-PD, homogeneous PD, and naive heterogeneous PD deployments.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 6 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1）核心数据**：对比 PrfaaS-PD、Homogeneous PD、Naive Heterogeneous PD 三种部署的最优配置。PrfaaS-PD 取阈值 t=19.4K，实例池 N=4/3/5，TTFT 均值/P90 为 2.22/3.51 s，三阶段服务率 Θ=1.61/1.64/3.91 req/s，Λ_max=3.24 req/s；Homogeneous PD（9/3 实例）Λ_max 仅 2.11；Naive Heterogeneous（4/—/8）TTFT 最低（1.74 s）但 Λ_max 仅 2.45。归一化吞吐比 1.54× / 1.00× / 1.16×。
+该表横向对比三种部署的最优配置：PrfaaS-PD（4/3/5拆分）、同构PD（0/9/3）、朴素异构PD（4/—/8）。关键数据：PrfaaS-PD以阈值 t=19.4K 划分跨域流量，最大吞吐量 Λ_max=3.24 req/s，达同构PD（2.11）的1.54×、朴素异构PD（2.45）的1.32×；TTFT均值2.22s、P90为3.51s，均显著优于同构PD（4.44/9.73s）。
 
-**2）关键结论**：PrfaaS-PD 以 1.54× 显著优于传统 Homogeneous PD，且比 Naive Heterogeneous PD（1.16×）多 33% 吞吐，证明显式分离跨数据中心 PrfaaS 实例池的必要性——单靠阶段异构部署增益有限。
+原文借此论证：跨数据中心承载prefill-as-a-service能更精细地拆分prefill与decode节点配比，使受限资源（prefill）利用率提升，从而突破单DC内的负载均衡瓶颈；且相对仅做节点角色分离的朴素异构PD仍多获32%吞吐增益，证明**跨域KV cache传输**是增益的关键来源，而非单纯的PD解耦。
 
-**3）论文作用**：作为方法核心实验的"压轴定量证据"，支撑"PrfaaS 跨数据中心共享 KV-cache"主线，论证新架构在 SLO 满足下的容量优势。
+该表作为论文核心实验结论，量化支撑了"下一代模型KV cache须跨DC"的主张，是PrfaaS-PD调度策略有效性的最终验证节点。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

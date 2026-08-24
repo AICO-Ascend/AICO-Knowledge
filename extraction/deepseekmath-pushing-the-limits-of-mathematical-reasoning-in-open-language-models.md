@@ -30,11 +30,11 @@ tags: []
 > Top1 accuracy of open-source models on the competition-level MATH benchmark
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（Figure 1）：**
+> 【图文联合解读】图1展示2023-02至2024-01开源模型MATH Top@1走势：LLaMA1-65B（10.6%）→WizardMath-70B（22%）→Qwen-14B（24.5%）→Mistral-7B（28.5%）→Llemma-34B（31.5%）→Qwen-72B（35.2%），DeepSeekMath-7B（红星）跃至51.7%，超越GPT-4早期版（42.5%），逼近GPT-4 API与Gemini-Ultra（≈52–53%）。
 
-该图以时间为横轴，展示开源模型在MATH竞赛级基准Top1准确率的变化：LLaMA1-65B约10.6%（2023初）→WizardMath约21%（2023末），并用三条水平参考线标示闭源前沿——GPT-4早期版约42%、GPT-4 API约50%、Gemini-Ultra约54%。虚线趋势显示开源进步明显但仍落后闭源达2–3倍差距。
+原文以此论证：仅用7B参数与高质量数学语料即可匹敌百亿级闭源模型，验证"数据/方法杠杆≫纯扩模型"。
 
-作为论文**开篇动机图**，此图直观论证"开源模型在数学推理上仍未逼近前沿"这一核心问题，为后续提出DeepSeekMath填补这一能力缺口、突破开源数学推理上限的立题与实验链路提供必要的前提铺垫。
+该图为论文开篇锚定DeepSeekMath-7B的性能标杆，并衔接表1（语料消融）与后续方法/实验论证链。
 
 ### Figure 2 (p.5) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig02.png]]
@@ -43,15 +43,7 @@ tags: []
 > An iterative pipeline that collects mathematical web pages from Common Crawl.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图1解读：**
-
-图示DeepSeekMath从Common Crawl采集数学网页的迭代流水线：①以种子数学语料训练fastText分类器；②从全网召回数学网页构建Math Corpus；③挖掘高密度数学域名；④新域名回灌至第②步形成闭环迭代。
-
-**图2原文论点：**
-通过"种子→分类器→域名发现"自举闭环，无需昂贵人工标注即可自动化、规模化地从无标注网页扩展高质量数学数据，验证数据规模与质量可兼得。
-
-**图3链路作用：**
-该流程产出120B token数学预训练语料，是DeepSeekMath-Base 7B训练的数据基石，并与下游GRPO强化学习协同，最终奠定模型数学推理的领先性能。
+> 【图文联合解读】图示从Common Crawl 400亿HTML页面中迭代挖掘数学网页的闭环流程：①训练FastText分类器→②召回数学相关网页→③发现数学相关新域名→④人工标注URL路径，结果回灌Math Seed并循环。原文借此论证"种子扩充→分类器更准→召回更全→新域被发现"的自我增强数据飞轮机制。该管道为DeepSeekMath-Base 7B产出120B token级高质量数学预训练语料，是Table 2中数学推理性能领先的关键数据基础，串联起"数据-训练-评测"全链路。
 
 ### Figure 3 (p.7) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig03.png]]
@@ -81,7 +73,13 @@ tags: []
 > Demonstration of PPO and our GRPO. GRPO foregoes the value model, instead
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图分上下两部分对比PPO与GRPO流程。PPO由策略模型对问题q采样单输出o，经Reference（KL）、Reward（r）、Value（v）三模型后用GAE计算优势A；GRPO对同一q采样G个输出{o₁…o_G}，仅用Reference与Reward，通过Group Computation由组内奖励{r₁…r_G}直接生成{A₁…A_G}，彻底取消Value模型。颜色上黄色为训练模型、蓝色为冻结模型。该图论证GRPO以组分数统计量替代Value基线，可显著节省显存与算力，构成论文RLHF训练阶段的方法基础。
+> 【图文联合解读】**图文联合解读**
+
+图分上下两栏对比 PPO 与 GRPO 流程。PPO（上）含策略、参考、奖励、价值四个模型，对问题 *q* 生成单输出 *o*，由奖励模型与 KL 计算得 *r*、价值模型得 *v*，再经 GAE 输出优势 *A*；GRPO（下）省去价值模型，对同一 *q* 采样 *G* 个输出（*o*₁…*o*_G），仅用参考模型计算 KL、奖励模型打分 *r*₁…*r*_G，由 "Group Computation" 以组内分数均值作基线直接生成 A₁…A_G。
+
+**关键论证**：GRPO 以组内相对奖励替代逐状态价值估计，省去价值模型，显存/算力显著降低，且更契合数学题"一题多解"的群体奖励特性。
+
+**论文作用**：该图是方法链路核心，直观支撑 DeepSeekMath 在 RL 阶段采用 GRPO 而非 PPO 的设计选择，为后续 R1-Zero 式实验提供算法依据。
 
 ### Figure 5 (p.19) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig05.png]]
@@ -90,18 +88,13 @@ tags: []
 > Performance of the DeepSeekMath-Instruct 1.3B model, which was further trained
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图5图文联合解读**
 
-该图为 DeepSeekMath-Instruct 1.3B 模型在 GSM8K 基准上、采用不同方法继续训练 0–9000 步的准确率曲线对比。可见至少四条曲线：
+**对象**：DeepSeekMath-Instruct 1.3B经四种方法（RFT/Online RFT/GRPO+OS/GRPO+PS）继续训练约9000步，在GSM8K（左，56–66%）与MATH（右，27–30.5%）上的准确率（Acc）随训练步数曲线。
 
-- **蓝色方法**表现最佳，从约 56.5% 上升至 ~65–66%；
-- **橙色方法**次之，最终达 ~64%；
-- **Online RFT（绿色）**波动较大，由 ~56.5% 提升至 ~62–63%；
-- **RFT（紫色）**几乎停滞，长期徘徊在 59–60%。
+**量化对比**：GRPO+PS（蓝）在两基准全程领先——GSM8K峰值≈65.5%（约5000–7000步），MATH峰值≈30.5%（约4000–5000步）；GRPO+OS（橙）次之（约64% / 30%）；Online RFT（绿）波动较大但仍有提升（约62% / 29%）；离线RFT（紫）全程近乎停滞，GSM8K稳定在60%附近、MATH仅约28%。
 
-**关键结论**：原文据此论证——在 SFT 模型基础上，单纯的离线 RFT 已接近性能天花板（甚至饱和），而引入在线探索/采样的方法（如 Online RFT 及更强变体）能持续突破上限，验证了"在线强化"对数学推理进一步提升的必要性。
-
-**论文链路作用**：该图作为消融/方法对比证据，支撑论文主张的 GRPO 等在线策略优于 RFT 的核心论点，衔接其整体方法（监督 → RFT → Online RFT/GRPO）的演进叙事。
+**论证作用**：该消融实验证明，在线GRPO算法显著优于传统拒绝采样微调，且PS（正例策略）带来稳定增益。它直接支撑论文最终选用GRPO作为RL主干方法，构成"SFT→GRPO强化学习"方法链路中的关键实证环节。
 
 ### Figure 6 (p.20) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig06.png]]
@@ -110,13 +103,15 @@ tags: []
 > Performance of iterative reinforcement learning with DeepSeekMath-Instruct 7B on
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图6联合解读**
 
-该图展示 DeepSeekMath-Instruct 7B 在 GSM8K 与 MATH 上三轮迭代 RL 的训练曲线（步数 0–5300）。GSM8K 准确率从 Iteration-0 起点 ~83% 提升至 ~86%，Iteration-1 起步 ~87%、峰值 ~88%，Iteration-2 起步 ~87%、峰值 ~89%；MATH 从 ~46.8% 经 ~49% 升至 ~50.5%，三轮峰值均逼近 52%。
+该图展示DeepSeekMath-Instruct 7B在GSM8K（左）与MATH（右）两个基准上三次迭代RL的准确率-训练步数曲线。
 
-核心结论：**每轮迭代起点显著高于上一轮末值，证明 RL 切实带来能力提升；但迭代间增益边际递减**（GSM8K 仅 +1–1.5pp，MATH 仅 +1.5–2pp）。
+**具体数据**：GSM8K上，迭代0从约82.8%升至约87%后回落至约86%；迭代1在87–88%区间波动并出现约88.2%峰值；迭代2稳步攀升至约89%。MATH上，迭代0从约46.8%升至约50%后回落至约49%；迭代1峰值约52.3%；迭代2稳定在约51.5%。三条曲线呈"迭代2≥迭代1≥迭代0"的单调递进，未见饱和迹象。
 
-方法链作用：该图为"为何需要 GRPO+迭代 SFT 融合"提供经验依据——纯迭代 RL 收益趋缓、且训练步数逐轮增加（3000→5000+），论文据此提出用新 SFT 数据重置 RL 起点，突破 RL 自身天花板。
+**关键结论**：论文据此论证GRPO迭代强化学习可在SFT基础上持续获得稳定增益（约+6.2点GSM8K、约+5.5点MATH）。
+
+**链路作用**：作为RL阶段核心实证，验证论文"用当前最优策略生成新SFT数据→再启动下一轮RL"的闭环有效性，是支撑整个两阶段迭代训练范式的关键证据。
 
 ### Figure 7 (p.21) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-fig07.png]]
@@ -125,9 +120,7 @@ tags: []
 > The Maj@K and Pass@K of SFT and RL DeepSeekMath 7B on GSM8K and MATH
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-图示 GSM8K 上 Maj@K 与 Pass@K 随候选数 K（1→64，温度 0.7）的变化：Maj@K-Instruct（紫，81.5%→89.6%）与 Maj@K-RL（橙，88%→91%）在 K≥8 后趋于平台；Pass@K-Instruct（蓝，88.2%→97.4%）与 Pass@K-RL（绿，81.5%→99.2%）随 K 陡升。原文据此论证：**RL 显著提升 Maj@K**（橙高于紫约 1.4 个百分点），但对 Pass@K 无明显增益，说明 RL 改善的是多数投票的可靠性，而非单条解的正确率或解空间覆盖。该图是论文揭示"RL 主要强化自一致投票稳定性"这一核心增益模式的关键证据。
+> 【图文联合解读】图示温度0.7的DeepSeekMath‑7B：K=1至64时，Instruct（SFT）与RL在GSM8K、MATH上的Maj/Pass。RL使Maj@64由约89.5%升至91.0%、59.8%升至60.8%；Pass@64却由99.0%降至97.3%、87.0%降至86.2%，其余K优势不稳定。说明RL强化高共识答案、改善多数投票，却未提升至少一次命中的概率。该图处于SFT→RL→多样本评测链，检验后训练优化的是答案收敛还是候选覆盖。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -137,7 +130,9 @@ tags: []
 > | Performance of DeepSeek-LLM 1.3B trained on different mathematical corpora, evalu- ated using few-shot chain-of-thought prompting. Corpus sizes are calculated using our tokenizer with a vocabulary size of 100K.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表1对比DeepSeek-LLM 1.3B在五种语料（含120.2B tokens的DeepSeekMath Corpus及Proof-Pile-2 51.9B、OpenWebMath 13.6B、MathPile 8.9B、无数学预训练基线）下8项基准（GSM8K、MATH、OCW、SAT、MMLU STEM、CMATH、Gaokao两套）的few-shot CoT准确率。DeepSeekMath语料以GSM8K 23.8%、MATH 13.6%、SAT 56.3%、CMATH 41.5%等全面领先，体量更小的Proof-Pile-2仅GSM8K 14.3%、MATH 11.2%。该表作为论文方法链路起点，验证其120B数学语料质量优于既有开源方案，为后续SFT/RL训练DeepSeekMath-RL奠定数据基座。
+> 【图文联合解读】**Table 1 联合解读**
+
+Table 1 对比 DeepSeek-LLM 1.3B 在 No Math Training 基线及四种数学语料（MathPile 8.9B、OpenWebMath 13.6B、Proof-Pile-2 51.9B、DeepSeekMath Corpus 120.2B tokens）下，8 个基准的 few-shot CoT 准确率。DeepSeekMath Corpus 在所有基准上均最优：GSM8K 23.8%、MATH 13.6%、OCW 4.8%、SAT 56.3%、MMLU STEM 33.1%、CMATH 41.5%、Gaokao MathCloze 5.9%、Gaokao MathQA 23.6%，全面超越 Proof-Pile-2 等语料。原文借此论证：高质量、大规模、多样化数学语料是模型数学推理能力提升的关键，为后续基于此语料进行 GRPO 强化学习训练 DeepSeekMath 7B 提供数据基础，构成全文"数据→SFT→RL"方法链路的起点。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab02.png]]
@@ -145,13 +140,7 @@ tags: []
 > | Comparisons between DeepSeekMath-Base 7B and strong base models on English and Chinese mathematical benchmarks. Models are evaluated with chain-of-thought prompting. Minerva results are quoted from Lewkowycz et al. (2022a).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表2图文联合解读**
-
-表2在8项英中数学基准（GSM8K / MATH / CollegeMath / CMATH / MGSM-zh / Gaokao-Math / AGIEval-Math-zh / CEval-Math）上以CoT评测，分两组：闭源Minerva 7B/62B/540B；开源Mistral 7B、Llemma 7B/34B与**DeepSeekMath-Base 7B**。
-
-**关键数据**：DeepSeekMath-Base 7B以**64.2%、36.2%、15.4%、84.4%、56.5%、71.7%、20.3%、35.3%**全部加粗领先开源模型；其中英文GSM8K(64.2% vs 58.8%)与MATH(36.2% vs 33.6%)两项甚至**反超**参数规模大77倍的Minerva 540B，中文基准同样全面领先Llemma 34B。
-
-**论证作用**：该表是全文核心实验证据——为Figure 2"数学网页迭代采集管线"的有效性背书：仅靠高质量数据+继续预训练，7B开源模型即可逼近/超越闭源专用数学大模型，支撑"开源可追平闭源"的核心论点。
+> 【图文联合解读】该表横向对比 DeepSeekMath-Base 7B 与闭源 Minerva（7B/62B/540B）以及开源 Mistral 7B、Llemma（7B/34B）在 4 个英文+4 个中文数学基准上的 CoT 表现。数据显示：DeepSeekMath-Base 7B 以 64.2%、36.2%、15.4%、84.4%、56.5%、71.7%、20.3%、35.3%（全部加粗）在 8 个基准上同时刷新 SOTA——全面超越参数约 77 倍的 Minerva 540B（最高 63.9%）和 5 倍大的 Llemma 34B（最高 56.1%）。论文借此论证"高质量数学预训练语料可大幅压缩模型参数差距"，该表是整条方法链路的"基座证明"，为后续指令微调（SFT）与 RL 阶段提供起点并锚定性能上限。
 
 ### Table 3 (p.9) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab03.png]]
@@ -159,11 +148,7 @@ tags: []
 > | Few-shot evaluation of base models’ ability to solve mathematical problems using tools and the ability to conduct informal-to-formal theorem proving in Isabelle.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表横向对比 6 个基础模型（含 7B/34B 两种规格）在 4 项 Few-shot 任务上的得分：GSM8K+Python、MATH+Python、miniF2F-valid、miniF2F-test。DeepSeekMath-Base 7B 以 66.9% / 31.4% / 25.8% / 24.6% 全面领先，同时优于 Llemma 34B（64.6%/26.3%/21.0%/21.3%）和 CodeLlama 34B（52.7%/23.5%/18.5%/18.0%），而其参数量仅为其约 1/4–1/5。
-
-关键结论：仅 7B 规模便在"工具辅助解题"与"Isabelle 非形式→形式定理证明"两类任务上同时超越更大对手，证明高质量数学专用预训练语料可有效替代纯规模扩张。
-
-在论文中的作用：作为基础模型能力基线评估的核心证据，佐证"数据驱动优于模型缩放"的方法论主张，为后续 RL 与 SFT 阶段提供强起点。
+> 【图文联合解读】该表少样本评测6个基座模型，分两类任务：「带Python工具解题（GSM8K/MATH）」与「Isabelle形式化证明（miniF2F）」。核心数据：DeepSeekMath-Base 7B以66.9%/31.4%/25.8%/24.6%四指标全面领跑，分别超过Llemma-34B（64.6%/26.3%/21.0%/21.3%），并碾压Mistral 7B与两档CodeLlama。论文借此论证：基于数学网络语料的预训练不仅提升纯推理，还显著增强「工具调用」与「非形式→形式化证明」这两项被低估的能力，验证DeepSeekMath作为"通用数学基座"的定位，为后续指令微调与RL阶段奠定更高起点。
 
 ### Table 4 (p.9) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab04.png]]
@@ -171,13 +156,11 @@ tags: []
 > | Evaluation on natural language understanding, reasoning, and code benchmarks. DeepSeek-Coder-Base-v1.5 † is the checkpoint right before learning rate decay, which is used to train DeepSeekMath-Base. On MMLU and BBH, we use few-shot chain-of-thought prompting. On HumanEval and MBPP, we evaluate mod
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**注意**：原文引用段落实际讲解的是 Figure 4（GRPO 示意图），并非 Table 4，故以下解读依据表格图像及 caption。
+> 【图文联合解读】该表对比四个7B模型在MMLU、BBH、HumanEval、MBPP上的表现。DeepSeekMath-Base在BBH以59.5%最优，MMLU达54.9%，代码能力略低于完整版Coder基座（HumanEval 40.9% vs 43.2%）。
 
-**核心数据**：对比 4 个 7B 模型在 MMLU、BBH、HumanEval、MBPP 上的表现。Mistral 在 MMLU 最高（62.4%）但代码能力弱（HumanEval 28.0%）；DeepSeekMath-Base 在 BBH 最高（59.5%），MMLU 达 54.9%，相比其训练起点 DeepSeek-Coder-Base-v1.5† 分别提升 +12.0 与 +16.6 个百分点；代码指标较 v1.5 略降（HumanEval 43.2%→40.9%，MBPP 60.4%→52.6%）。
+关键结论：相比起点Coder-v1.5†（学习率衰减前检查点），数学专项训练使通用推理显著提升（MMLU 42.9%→54.9%，BBH 42.9%→59.5%），且代码能力基本保持，证明120B数学token训练未灾难性遗忘通用能力。
 
-**论证结论**：数学专项训练未损害通用理解/推理能力，反而相对基座大幅增强；代码能力仅小幅回落，证明知识遗忘可控。
-
-**论文链路作用**：作为"实验链路"中的能力保留性证据，支撑后续 GRPO 强化学习训练所选基座（DeepSeekMath-Base）的合理性，说明从代码基座经数学继续预训练得到的模型具备均衡的综合能力。
+该表支撑论文"数学微调不损害通用能力"的核心论点，通过对照起点与最终模型，体现整条训练链路的全面增益。
 
 ### Table 5 (p.12) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab05.png]]
@@ -185,13 +168,7 @@ tags: []
 > | Performance of Open- and Closed-Source models with both Chain-of-Thought and Tool-Integrated Reasoning on English and Chinese Benchmarks. Scores in gray denote majority votes with 32 candidates; The others are Top1 scores. DeepSeekMath-RL 7B beats all open- source models from 7B to 70B, as well as
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5 对比开源/闭源模型在 CoT 与 TIR 两种范式下于 GSM8K、MATH 及中文基准的 Top1 成绩（灰字为 32 候选 majority vote）。
-
-**核心数据**：DeepSeekMath-RL 7B 在 CoT 下取得 88.2%/51.7%/79.6%/88.8%，TIR 下取得 86.7%/58.8%/78.4%/87.6%，全面超越 7B–70B 开源模型（如 MetaMath 70B 仅 82.3%/26.6%）及多数闭源模型，仅弱于 GPT-4 与 Gemini Ultra。
-
-**技术结论**：仅以 GSM8K 与 MATH 的 CoT 数据做 RL 微调，RL 版即在所有基准上稳定优于 Instruct 版（如 MATH 由 46.8%→51.7%、CMath 由 73.2%→79.6%），证明 GRPO 显著提升数学推理及跨任务、跨语种泛化能力。
-
-**论文作用**：与 Figure 5 消融互补，构成"方法→结果"的主实验证据链，支撑"7B 开源模型以低成本超越大模型"的核心论点。
+> 【图文联合解读】Table 5对比CoT与Tool-Integrated两类推理范式下开源/闭源模型在GSM8K、MATH及两个中文基准上的表现。CoT设定下，DeepSeekMath-RL 7B以88.2%/51.7%（GSM8K/MATH Top1）全面超越7B–70B开源模型及多数闭源模型（如GPT-3.5仅80.8%/34.1%）；工具推理下同样以86.7%/58.8%领先开源阵营。作为核心实验证据，该表证明仅在GSM8K与MATH的CoT数据上做RL训练，即可在全部基准稳定超越纯SFT的DeepSeekMath-Instruct 7B（82.9%→88.2%、46.8%→51.7%），有力支撑"RL阶段显著增益于SFT"这一关键技术结论。
 
 ### Table 6 (p.16) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab06.png]]
@@ -199,9 +176,9 @@ tags: []
 > | Investigation of how code affects mathematical reasoning under different training settings. We experiment with DeepSeek-LLM 1.3B, and evaluate its mathematical reasoning performance without and with tool use via few-shot chain-of-thought prompting and few-shot program-of-thought prompting, respect
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**Table 6 图文联合解读**
 
-该表以 DeepSeek-LLM 1.3B 为基座，对比"无继续训练、两阶段（General/Code→Math）、单阶段（Math 或 Code+Math 混合）"五类设置，在 GSM8K/MATH/CMATH 三个基准上"无工具（CoT）"与"有工具（PoT+Python）"的准确率。关键数据：两阶段"Code→Math"无工具推理最高（21.9%/15.3%/39.7%），证明代码预训练显著增强纯链式数学推理；Code+Math 混合训练在有工具下最优（19.7%/13.5%），表明代码与数学混合最利于 Python 工具调用。该消融为论文核心论点——"代码数据是数学预训练的关键要素"——提供量化依据，直接支撑 DeepSeekMath-Base 数据配比及"先代码后数学"两阶段训练流程的设计。
+Table 6 用 DeepSeek-LLM 1.3B 对比 5 种训练设置在 GSM8K/MATH/CMATH 及对应 +Python 工具版本上的准确率。两阶段 Code→Math 在无工具下最优（GSM8K 21.9%、MATH 15.3%、CMATH 39.7%）；一次性 Code&Math 混合训练在使用 Python 工具下最优（19.7%、13.5%）。关键结论：代码预训练显著提升数学推理，且代码能力是 PoT 工具调用的必要前提——无代码训练时，引入工具反而使性能下降（如 GSM8K 19.1%→+Python 14.3%）。该消融为论文"代码+数学联合预训练"的核心路线提供了直接经验支撑。
 
 ### Table 7 (p.17) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab07.png]]
@@ -209,13 +186,9 @@ tags: []
 > | Investigation of how different settings of code and math training affect model perfor- mance of language understanding, reasoning, and coding. We experiment with DeepSeek-LLM 1.3B. We evaluate the models on MMLU and BBH using few-shot chain-of-thought prompting. On HumanEval and MBPP, we conduct z
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 7 解读**
+> 【图文联合解读】**Table 7 图文联合解读**
 
-**1) 核心对象与数据**：以 DeepSeek-LLM 1.3B 与 DeepSeek-Coder-Base-v1.5 7B 为基座，对比三种训练设置（无数学训练 / MathPile / ArXiv-RedPajama）在中英文基准上的表现。其中 Coder 7B 无数学训练即达 GSM8K 29.0%、MATH 12.5%、CMATH 45.9%，远超 1.3B 的 2.9%/3.0%/12.3%；加入 MathPile 或 ArXiv 数据后，多数指标不升反降（Coder GSM8K 降至 23.6%/28.1%）。
-
-**2) 关键技术结论**：单纯堆砌数学网页语料对数学推理提升有限甚至有害，而代码预训练却带来显著增益，说明代码能力对数学推理迁移更有效。
-
-**3) 论文链路作用**：为 DeepSeekMath 数据策略提供消融依据——否定"增大通用数学语料"的路径，转而强调数据质量与精选的重要性。
+该表对比 DeepSeek-LLM 1.3B 与 DeepSeek-Coder-Base 7B 在"No Math / MathPile / ArXiv-RedPajama"三种数学语料设置下，于 GSM8K、MATH、CMATH、Gaokao 等 8 项基准的成绩。**关键发现**：① 1.3B 无数学训练时 GSM8K 仅 2.9%，而 7B 代码基模型无数学训练即达 29.0%，验证代码预训练对数学推理的显著增益；② ArXiv-RedPajama 真实网页语料在多数任务上优于 MathPile 合成语料（如 1.3B 的 CMATH 由 1.2% 升至 7.4%）。该表为论文"代码与数学语料协同驱动"的核心动机提供了关键消融证据。
 
 ### Table 8 (p.17) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab08.png]]
@@ -223,13 +196,11 @@ tags: []
 > | Effect of math training on different arXiv datasets. Model performance is evaluated with few-shot chain-of-thought prompting.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 解读**
+> 【图文联合解读】**核心对象与数据**：表对比 DeepSeek-LLM 1.3B 与 DeepSeek-Coder-Base-v1.5 7B 在"无数学训练/MathPile/ArXiv-RedPajama"三种 arXiv 语料下，于 GSM8K、MATH、OCW、SAT、MMLU STEM、CMATH、Gaokao 等中英文基准上的少样本 CoT 得分。1.3B 模型加入数学语料后多数指标下滑（如 GSM8K 2.9%→2.7%、CMATH 12.3%→1.2%）；7B Coder 表现参半，SAT 从 40.6% 升至 50.0%，但 GSM8K 由 29.0% 降至 23.6%。
 
-**结构数据**：对比 1.3B DeepSeek-LLM 与 7B DeepSeek-Coder-Base-v1.5 在三种训练条件（无数学训练 / MathPile / ArXiv-RedPajama）下，于 GSM8K、MATH、OCW、SAT、MMLU STEM 及 CMATH、Gaokao 等中英文 8 个基准上的 few-shot CoT 表现。
+**论证结论**：仅以现有通用数学语料继续预训练，并不能稳定提升数学推理能力，反而常损害泛化性能，说明数据筛选与质量远比数量关键。
 
-**关键结论**：仅用现有 MathPile 或 ArXiv-RedPajama 等数学语料继续训练，相较无数学训练基线（如 7B 模型 GSM8K 29.0%→23.6%/28.1%，MMLU STEM 38.1%→35.8%/35.2%）整体无明显增益，甚至部分指标下降，说明通用数学语料存在噪声大、质量参差的问题。
-
-**论文作用**：作为数据构建章节的动机实验，论证了"直接抓取数学数据不足以提升推理能力"，为后续 DeepSeekMath 设计基于 LLM 评分与去重的高质量数据 pipeline 提供必要性支撑。
+**论文作用**：作为 DeepSeekMath 提出高质量数学语料构造与筛选流程的动机铺垫，凸显改进数据策略的必要性。
 
 ### Table 9 (p.17) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab09.png]]
@@ -237,13 +208,13 @@ tags: []
 > | Effect of math training on different arXiv corpora, the base model being DeepSeek- Coder-Base-v1.5 7B. We evaluate informal-to-formal proving in Isabelle.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 9 图文联合解读**
+> 【图文联合解读】**图文联合解读（Table 9）**
 
-该表以 DeepSeek-Coder-Base-v1.5 7B 为基座，对比了三种 arXiv 语料在 Isabelle "informal-to-formal" 证明任务（miniF2F valid/test）上的表现：无数学训练 20.1%/21.7%，加入 MathPile 后反而降至 16.8%/16.4%，ArXiv-RedPajama 进一步掉到 14.8%/11.9%。
+1) **核心对象与数据**：以DeepSeek-Coder-Base-v1.5 7B为基座，在Isabelle上做非形式化→形式化证明评测，对比三种arXiv语料设置在miniF2F-valid/test上的通过率：无数学训练 20.1%/21.7%、MathPile 16.8%/16.4%、ArXiv-RedPajama 14.8%/11.9%。
 
-**关键结论**：通用 arXiv 数学语料预训练对形式化证明任务呈**负向作用**，非形式数学推理能力无法迁移到 Isabelle 形式证明，甚至可能损害模型原有的代码/逻辑能力。
+2) **关键技术结论**：结果反直觉——不进行数学训练反而最优，加入数学数据持续损害Isabelle形式证明能力。这表明通用数学预训练与形式化证明所依赖的代码/逻辑能力存在权衡，印证DeepSeekMath"以代码为锚、仅针对性补数学"路线的必要性。
 
-**论文作用**：该消融结果为作者的核心方法论（精细的数学数据筛选与处理管线）提供了反面动机——证明单纯堆叠未加工的网络数学语料不可行，从而支撑其后提出的高质量数据构建策略与整体训练链路。
+3) **整体链路作用**：为后续保留代码底座、仅注入高质量数学语料的训练方案提供消融依据，支撑方法设计中的能力权衡取舍。
 
 ### Table 10 (p.19) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab10.png]]
@@ -251,13 +222,15 @@ tags: []
 > | The data source and gradient coefficient of different methods. 𝑃 𝑠𝑓𝑡 denotes the data distribution of supervised fine-tuning datasets. 𝜋 𝜃 𝑠𝑓𝑡 and 𝜋 𝜃 denote the supervised fine-tuned model and the real-time policy model during the online training process, respectively.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像与 caption 不匹配提示**：caption 描述的是"各方法的数据来源与梯度系数对比表"（涉及 P_sft、π_θ_sft、π_θ 等符号），但实际呈现的是 **RFT、Online RFT、GRPO+OS、GRPO+PS 四种方法在 GSM8K 与 MATH 上的训练准确率曲线**（横轴 0–~9000 steps），并非表格。以下按图像实际内容解读：
+> 【图文联合解读】**注意：图片内容与表标题不匹配。** 标题描述的是"数据来源与梯度系数"的表格，但实际图片显示的是**两组训练准确率曲线**（左：GSM8K，右：MATH），对比 RFT（紫）、Online RFT（绿）、GRPO+OS（橙）、GRPO+PS（蓝）四种方法随训练步数的表现。
 
-1) **结构/量化数据**：GSM8K 面板——GRPO+PS（蓝）峰值约 66%，GRPO+OS（橙）约 64%，Online RFT（绿）约 62%，RFT（紫）约 60%；MATH 面板——GRPO+PS 约 30%，GRPO+OS 约 29.5%，Online RFT 约 29%，RFT 约 28%。
+**1) 核心对象与量化数据：**
+- GSM8K（Y 轴 ≈58–66%）：GRPO+PS 收敛至约 65% 最高；GRPO+OS 约 64%；Online RFT 约 62%；RFT 最低约 60%。
+- MATH（Y 轴 ≈27–31%）：GRPO+PS 约 30.5% 领先；GRPO+OS 约 30%；Online RFT 约 29%；RFT 约 28%。
 
-2) **关键结论**：四条曲线在两基准上排序一致（PS > OS > Online RFT > RFT），证明采用**实时策略 π_θ 采样 + 拒绝式微调**的 GRPO+PS 训练效率与最终性能最优。
+**2) 论证结论：** GRPO+PS（采用 $P_{sft}$ 与实时策略 $\pi_\theta$ 混合梯度系数）始终优于 GRPO+OS、Online RFT 与纯 RFT，说明加入 SFT 数据梯度项对在线强化学习在数学推理任务上具有显著增益。
 
-3) **链路作用**：该曲线图为论文 GRPO 改进路线（PS/OS/RFT 消融）提供**训练动态证据**，支撑"在线策略采样优于离线 SFT 数据"的核心方法论主张。
+**3) 链路作用：** 支撑论文核心观点——**GRPO 引入 SFT 数据源能突破纯在线 RL 的上限**，为"将 SFT 数据复用进 RL 训练流程"这一方法选择提供定量实验依据。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

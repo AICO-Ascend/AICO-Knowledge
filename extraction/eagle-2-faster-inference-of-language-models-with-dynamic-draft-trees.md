@@ -30,7 +30,13 @@ tags: [speculative]
 > Speedup ratios of different methods at tempera- ture=1. For speculative sampling, the Vicuna series uses
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图1为temperature=1下四种LLM（Vicuna 7B/13B、LLaMA2-Chat 7B/13B）三种lossless加速方法的推理加速比柱状图。数据：Vicuna 7B为3.05x(EAGLE-2)/2.13x(EAGLE)/1.50x(投机采样)；Vicuna 13B为3.80x/2.32x/1.62x；LLaMA2-Chat 7B为3.19x/2.22x（投机采样N/A）；LLaMA2-Chat 13B为3.92x/2.68x（N/A）。原文借该图论证两点：①EAGLE-2的动态草稿树机制在全部模型上稳定超越EAGLE与投机采样；②在保证输出分布不变前提下仍取得3-4倍显著加速。该图作为论文首图，对全文方法部分起总览性铺垫作用，为Table 1的细粒度对比与动态草稿树算法阐述建立直观性能基准。
+> 【图文联合解读】**图文联合解读：**
+
+**1) 核心数据**：该图为温度=1（非贪婪采样）下四种目标模型（Vicuna 7B/13B、LLaMA2-Chat 7B/13B）上三种加速方法的推理加速比对比柱状图。EAGLE-2 分别取得 3.05×、3.80×、3.19×、3.92×，均显著高于 EAGLE（2.13×/2.32×/2.22×/2.68×）和 Speculative sampling（仅 Vicuna 系列为 1.50×、1.62×，LLaMA2-Chat 因无合适 draft 模型标 N/A）。
+
+**2) 关键结论**：在非贪婪设置下，EAGLE-2 相对 EAGLE 仍有 1.4×–1.5× 的提升，验证了"动态 draft tree"机制比静态 draft tree 在采样场景下更优；而 Medusa 等方法因放宽接受条件、无法保证输出分布一致性，故未参与比较。
+
+**3) 论文作用**：作为首页 Figure 1，是 EAGLE-2 方法有效性的"第一印象"证据，与 Figure 2（temperature=0 贪婪场景）互补，共同构成论文对动态 draft 树在两种采样模式下普适加速能力的核心实验支撑。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig02.png]]
@@ -41,7 +47,7 @@ tags: [speculative]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图2对比了EAGLE-2与四种基线方法（EAGLE、Medusa、Lookahead、Speculative sampling）在7个模型（Vicuna 7B/13B、LLaMA2-Chat 7B/13B/70B、LLaMA3-Instruct 8B/70B）上的推理加速比（temperature=0）。量化显示：EAGLE-2在Vicuna 13B达**4.26×**峰值，所有模型稳定在**3.29×–4.26×**，系统性地领先EAGLE（2.72×–3.07×）、Lookahead（1.43×–1.61×）与Medusa/Spec Sampling。原文借此论证动态草稿树带来的稳定且显著的加速收益，构成论文核心实验证据，支撑"EAGLE-2为当前最快推测解码方法"的结论，并衔接Table 1的扩展对比。
+图2展示温度=0下，五种加速方法（EAGLE-2、EAGLE、Medusa、Lookahead、Speculative sampling）在7个LLM上的加速比。EAGLE-2在所有模型上均最优：Vicuna 7B/13B为3.62x/4.26x，LLaMA2-Chat 7B/13B/70B为3.43x/4.21x/3.51x，LLaMA3-Instruct 8B/70B为3.46x/3.29x；EAGLE居次（约2.7–3.0x）；Medusa仅适用于Vicuna（约1.9–2.1x）；Lookahead与Speculative sampling分别约1.4–1.6x和1.4–1.9x，且后者在LLaMA2-Chat 7B/13B及LLaMA3 8B上标记N/A。该图作为核心实验证据，验证了动态草稿树相比固定草稿（speculative sampling）和单链扩展（Lookahead）的全面优势，并支撑后续Table 2对大模型τ值与加速比的进一步分析。
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig03.png]]
@@ -50,7 +56,9 @@ tags: [speculative]
 > Comparison of standard speculative sampling and EAGLE. For simplicity, EAGLE’s tree-structured draft is shown only in the verification stage, while the illustration of the drafting stage uses a chain-structured draft. Here, ti denotes the i-th token embedding, and fi denotes the i-th feature vector in the second-to-top-layer of LLM before LM head. the token sequence ta, ta+1, · · · , tb. Speculati
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】草稿阶段(a)：标准方法对token(t2,t3→t4→t5)链式自回归；EAGLE额外引入上一层特征f1,f2，自回归预测f3,f4后映射为token。验证阶段(b)：标准方法链式校验t4→t5，单分支接受；EAGLE改用树结构(t4分支为t5、t6)，由原LLM一次性并行验证，可同时接受多token。论文以此图论证核心方法学结论：①特征级自回归降低草稿难度，②动态草稿树扩展一次验证的接受基数，构成EAGLE-2"特征预测+树形验证"双层加速推理框架的可视化基础，后续实验均围绕二者带来的端到端加速展开验证。
+> 【图文联合解读】**图文联合解读**
+
+图3分(a)草稿、(b)验证两阶段对比标准投机采样与EAGLE：(a)中标准法仅以token t₂,t₃串行经"Token自回归草稿模型"生成t₄、t₅；EAGLE额外引入LLM倒数第二层特征f₁,f₂,f₃，作为"特征自回归草稿模型"输入，联合预测f₃→t₄、f₄→t₅。(b)中标准法对链式草稿(t₄,t₅)逐一验证，接受t₄而拒绝t₅；EAGLE采用动态树形草稿（如t₄分叉出t₅,t₆），单次LLM前向即可并行验证多候选，使t₄、t₆同时被接受。该图直观论证了"特征级自回归预测+动态树形草稿验证"是EAGLE-2相较传统投机采样提升接受率、加速推理的核心机制，是后续消融与基准实验的逻辑起点。
 
 ### Figure 4 (p.3) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig04.png]]
@@ -59,9 +67,13 @@ tags: [speculative]
 > Differences between EAGLE and EAGLE-2. EA- GLE always uses a fixed draft shape. When the query is “10+2=”, the next token is very likely to be correctly pre- dicted as “1”. However, with a static draft tree, EAGLE would still add two candidates, even though the probability of the other candidate “3” being correct is very low. EAGLE- 2, on the other hand, adjusts the shape of draft tree based on th
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 4）：**
 
-图4下半部对比了EAGLE与EAGLE-2的草稿树结构。EAGLE对"10+2"生成两分支"="和"+"，再对"10+2="静态地生成两分支"1"和"3"；EAGLE-2同样生成"="、"+"两分支，但识别到"1"高置信后，动态沿"="延伸出链式节点"1→2"。原文以此论证：**EAGLE-2依据置信度自适应调整草稿树形状**，将算力集中在高概率路径上，避免在低概率候选（如"3"）上浪费验证开销。该图作为方法论示例，引出后文提出的动态草稿树（dynamic draft tree）机制，是EAGLE-2相较EAGLE实现进一步加速加速比的核心创新证据。
+1) **核心结构**：图中以"10+2="为查询，分两栏对比——左侧EAGLE从该前缀并行扩展4个同层候选 token（"="、"+"、"1"、"3"），呈固定宽度草稿树；右侧EAGLE-2先输出高置信度 token "1"，再沿"1"向下延伸出"2"，形成动态深度优先的树形分支。
+
+2) **技术结论**：EAGLE的静态树形在"10+2="场景下仍生成低概率候选项"3"，浪费验证开销；EAGLE-2依据草稿模型置信度自适应调整树形（宽→深），将算力集中于高概率路径，提升单次验证接受率。
+
+3) **论文作用**：作为EAGLE-2方法核心创新（Dynamic Draft Tree）的可视化动机图，引出后文基于置信度阈值的动态树构建算法，是连接EAGLE基础框架与EAGLE-2加速方案的桥梁。
 
 ### Figure 5 (p.3) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig05.png]]
@@ -70,13 +82,11 @@ tags: [speculative]
 > Overall, the acceptance rate of draft tokens is position-dependent, with the highest acceptance rate at position P1 and the lowest at position P6. Draft tokens in the upper left side of the draft tree (such as position P1) have higher acceptance rates, while those in the lower 3
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**1) 核心对象与数据：** 图(a)为草稿树结构——Query根节点分支为P1/P2，再分至P3-P6共6个位置；图(b)散点图显示各位置token接受率分布，P1约70%点接近1.0，P2中位数降至约0.3，P3-P6散布明显下移；图(c)排序曲线与y=x虚线对比，中段下凹。
 
-**1) 核心对象与数据：** 图(a)为二元draft树结构（Query→P1/P2→P3–P6，共6个叶子位置）；图(b)为散点图，纵轴Accept Rate(0–1)，横轴Position(1–6)，每点对应一次query。量化趋势：P1接受率密集集中在~1.0（全图最高），P2次之（约0.4–0.9），P3分散于0.2–0.5，P4、P6普遍跌至0.0–0.2（最低），P5相对偏高（0.2–0.9）。
+**2) 关键技术结论：** 接受率呈强位置依赖——树上层/左侧(P1)最高，树深层/右侧(P6)最低，验证原文"upper left side…higher acceptance rates"判断。
 
-**2) 关键结论：** draft token接受率具有显著的**位置依赖性**——左上（浅层、靠左分支）token接受率高，深层（尤其P6）接受率低。说明并非所有draft位置同等有价值。
-
-**3) 在论文中的作用：** 该图是EAGLE-2从静态树转向**动态draft树**的核心动机证据：既然接受率随位置差异巨大，等宽静态扩展浪费算力；动态树据此对高接受率分支多扩展、低接受率分支少扩展，从而提升speculative decoding的整体加速比。
+**3) 论文中作用：** 作为EAGLE-2动态草稿树的核心动机证据，说明EAGLE-1的静态均匀树非最优，应依据各位置历史接受率动态扩展高接受率分支、剪除低接受率分支，从而提升整体加速比。
 
 ### Figure 6 (p.4) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig06.png]]
@@ -85,13 +95,13 @@ tags: [speculative]
 > Average acceptance rates for different confidence score intervals of the draft model. The red dashed line connects (0,0) and (1,1) to aid in visual assessment. The original LLM is Vicuna 7B. aspects: how to expand the draft tree (Section 4.1) and how to rerank draft tokens (Section 4.2). During the expansion phase, we input the most promising nodes from the latest layer of the draft tree into the 
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图6图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1）核心对象与数据**：横轴为draft模型输出的置信度（0–1，分10个区间），纵轴为目标LLM Vicuna 7B在同一置信度区间内的实际接受率。蓝色柱体沿红色虚线 y=x 近似单调递增——置信度≈1.0区间接受率约0.98，最低区间（≈0.0–0.05）接近0.00。
+图6（右半）为柱状图，横轴为草稿模型置信度（0–1.0，分箱约20档），纵轴为目标LLM（Vicuna 7B）的实际接受率（0–1.0）。蓝色柱条与红色虚线 y=x 高度贴合：低置信区间（≈0.1）接受率约0.1，中段（≈0.5）约0.5，高置信（≈0.9–1.0）升至0.8–1.0，表明草稿模型置信度与真实接受率呈近线性、校准良好。
 
-**2）关键技术结论**：置信度与接受率高度正相关、几近线性；中段（0.4–0.6）柱体略超对角线，说明draft模型的置信度略偏保守但具有强校准性，可作为token排序与节点筛选的可靠信号。
+**技术结论：** 验证了草稿模型输出的置信分数可作为可靠信号，用于预测哪些draft token易被目标模型接受。
 
-**3）在论文中的作用**：为§4.1（动态扩展draft tree）与§4.2（draft token重排）提供经验支撑——按置信度从最新一层中挑选"最有希望"的节点送入下一轮扩展的做法是合理且有保障的。
+**链路作用：** 该图为第4.1节动态草稿树扩展（挑选高置信节点继续展开）与第4.2节重排序（按置信度加权）提供定量依据，是EAGLE-2"置信驱动"投机解码框架的实证基石。
 
 ### Figure 7 (p.5) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig07.png]]
@@ -100,11 +110,11 @@ tags: [speculative]
 > Illustration of EAGLE-2. The numbers beside the edges represent the confidence scores of the draft model, and the numbers in brackets within the blocks represent the value of the nodes. During the expansion phase, we select the top 2 nodes with the highest value from the current layer (orange blocks) as inputs to the draft model and connect the generated tokens (green blocks) to the draft tree. In
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**【对象与结构】** 动态草稿树：根"It(1.0)"分叉为is/has双层；橙色top-2节点(a=0.48, to=0.14)作扩展输入，生成绿色子节点good/nice/be/do；Rerank后保留top-8蓝色节点(It,is,has,a,the,to,good,be)，扁平为1D序列后按树结构构建仅可见祖先节点的注意力掩码。
+> 【图文联合解读】**图文联合解读：**
 
-**【技术结论】** 局部扩展(top-2选节点)与全局重排(top-8选草稿)解耦，使草稿树依据上下文动态自适应生成多条高置信候选，而非依赖预设静态结构。
+图示EAGLE-2两阶段流程：①扩张（Top-2）——以"It(1.0)"为根，按草稿模型置信度（0.6/0.2/0.8/0.1…）动态建树，从当前层选top-2高值节点 a(0.48)、to(0.14) 继续扩展生成绿块子节点 good/nice/be/do；②重排序（Top-8）——对全树节点按值排序后取 [It, is, has, a, the, to, good, be] 展平为1D序列，并配合树状 attention mask，使每 token 仅可见其祖先节点，保证分支互不可见。
 
-**【论文作用】** 直观看]<]minimax[>[展示EAGLE-2相对EAGLE"动态草稿树"的核心创新，支撑其以更少草稿模型调用换取更高接受率与推理加速比的实验结论。
+该图论证了 EAGLE-2 的核心技术：动态草稿树通过"扩张深化—重排保连通—树状掩码保障并行验证正确性"，在保持 speculative decoding 正确性的同时显著提升接受率与速度，是论文区别于 EAGLE-1（静态树）的关键方法论支撑，也直接服务于 §5 在 Vicuna、LLaMA2/3 多模型上的加速实验。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -114,13 +124,13 @@ tags: [speculative]
 > Speedup ratios and average acceptance lengths τ of different methods. V represents Vicuna, L2 represents LLaMA2-Chat. SpS denotes standard speculative sampling, with its draft model being Vicuna-68M. Methods like Medusa relax acceptance conditions under non-greedy settings, which do not guarantee lo
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 联合解读**
+> 【图文联合解读】**Table 1 图文联合解读**
 
-① **结构与数据**：展示 SpS/PLD/Medusa/Lookahead/Hydra/EAGLE/EAGLE-2 共 7 种方法，在 Vicuna 与 LLaMA2-Chat 7B、13B 四模型、6 任务（MT-bench、HumanEval、GSM8K、Alpaca、CNN/DM、Natural Ques.）、T=0 与 T=1 下的加速比及平均接受长度 τ。EAGLE-2 全面领先：T=0 下 V 13B 均值 4.04×（τ=4.65），L2 13B 4.10×（4.68）；T=1 下 V 13B 3.65×、L2 13B 3.88×，均显著超越 PLD（1.36–1.70×）、Hydra、EAGLE。
+**1) 核心对象与结构**：表格在 T=0 与 T=1 两档下，对比 Vicuna/LLaMA2-Chat（7B、13B）在 6 个基准（MT-bench、HumanEval、GSM8K、Alpaca、CNN/DM、Natural Ques.）上的加速比与平均接受长度 τ，涵盖 SpS、PLD、Medusa、Lookahead、Hydra、EAGLE、EAGLE-2 共 7 种方法。量化结果：EAGLE-2 在 V 13B 上 Mean speedup 达 4.04x（τ=4.65，T=0）、3.65x（T=1），V 7B 达 3.39x/2.94x，均为各列最高；HumanEval 单项最高 5.00x（L2 13B, T=0）。
 
-② **关键结论**：动态草稿树在保证 lossless 加速前提下，使 EAGLE-2 速度与接受长度同时跃升；Medusa 因放宽接受条件不保证 lossless，表中仅作参考而不与 EAGLE-2 直接对比。
+**2) 关键结论**：在保证无损采样的前提下，EAGLE-2 相对 EAGLE 再提升约 30–40%（如 V 7B：2.78x→3.39x），显著优于 Hydra（2.55x）、SpS（1.76x），验证动态草稿树在更长 τ 下仍能保持高接受率。
 
-③ **论文作用**：与图 1 互补——图 1 仅展示 T=1 子集，本表提供多模型、多任务、双温度的完整 benchmark，是 EAGLE-2 优越性的核心量化证据。
+**3) 论文作用**：作为方法部分提出的核心实验证据，与 Fig.1/2 互补，量化支撑"动态草稿树带来无损加速领先"的全文论点。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-tab02.png]]
@@ -128,13 +138,13 @@ tags: [speculative]
 > Speedup ratios and average acceptance lengths τ with LLaMA2-Chat 70B, LLaMA3-Instruct 70B, and LLaMA3-Instruct 8B as the original LLMs, with the tem- perature set to 0, on the MT-bench dataset.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-该表在 MT-bench（temperature=0）上对比三类目标模型的加速比与平均接受长度 τ：LLaMA2-Chat 70B 上 PLD/Lookahead/EAGLE 仅 1.31–3.01×，而 **EAGLE-2 达 3.51×（τ=4.48）**；LLaMA3-Instruct 70B 与 8B 上 EAGLE-2 分别取得 3.29×（τ=4.16）与 **3.46×（τ=4.53）**，均优于 EAGLE 的 2.83×/2.72×。
+Table 2 在 MT-bench（temp=0）上对比三种原模型下各推测解码方法的加速比与平均接受长度 τ。LLaMA2-Chat 70B 下 PLD 1.31×、Lookahead 1.52×、EAGLE 3.01×(τ=3.81)、**EAGLE-2 3.51×(τ=4.48)**；LLaMA3-Instruct 70B 下 EAGLE 2.83× → EAGLE-2 **3.29×**；LLaMA3-Instruct 8B 下 EAGLE 2.72× → EAGLE-2 **3.46×**。
 
-原文借此论证两点关键结论：①EAGLE-2 的动态草稿树机制相对前作 EAGLE 稳定带来约 0.4–0.7× 的额外加速；②接受长度的同步提升（τ↑约 0.5）说明草稿质量与树扩展策略有效。
+关键结论：动态 draft tree 使 EAGLE-2 在三档模型上均稳定超越 EAGLE，加速比提升约 0.46–0.74×，τ 同步上升，验证其在不同规模 LLM 上的通用性。
 
-在论文链路中，该表作为核心定量证据，与 Figure 2 互补，完整支撑"动态草稿树显著加速 LLM 推理"的实验结论。
+该表作为论文核心实验证据，定量支撑"动态树优于静态树"的核心论点，与 Fig.2 趋势互补，构成 EAGLE-2 方法有效性的实证基础。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-tab03.png]]
@@ -142,16 +152,15 @@ tags: [speculative]
 > Ablation experiment results with temperature set to 0 on Vicuna 7B. “w/o value” indicates not using value and directly using confidence, “w/o reranking” indicates not performing reranking, and “w/o both” indicates neither value nor reranking is used.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】注意：题目标注为 Table 3（消融实验），但所给图片实际展示的是 Table 2（速度对比表），与 caption 不一致。以下基于图片真实内容解读：
+> 【图文联合解读】
 
-**1) 核心对象与数据**
-表格列出三种模型（LLaMA2-Chat 70B、LLaMA3-Instruct 70B、LLaMA3-Instruct 8B）在不同方法下的加速比 Speedup 与平均接受长度 τ。具体数值：LLaMA2-Chat 70B 上 PLD 1.31×(τ=1.39)、Lookahead 1.52×(τ=1.64)、EAGLE 3.01×(τ=3.81)、EAGLE-2 3.51×(τ=4.48)；LLaMA3-Instruct 70B 上 EAGLE 2.83×、EAGLE-2 3.29×；LLaMA3-Instruct 8B 上 EAGLE 2.72×、EAGLE-2 3.46×。
+⚠️ **图与 caption 不符**：caption 写的是 Vicuna 7B 消融实验（w/o value / w/o reranking），但图片实际呈现的是 EAGLE-2 与基线/前身的主结果对比表，而非消融表。
 
-**2) 关键结论**
-EAGLE-2 在所有模型与规模上均取得最高加速比与最长接受长度 τ，相对 EAGLE 在 70B 量级上提升约 0.5×，证明动态 draft tree 带来稳定的加速增益，且 τ 的同步提升说明增益来源于 draft 质量的提升而非仅靠并行。
+① **结构与数据**：列含 Model / Method / Speedup / τ（平均接受长度）。**LLaMA2-Chat 70B** 上：PLD 1.31x、Lookahead 1.52x、EAGLE 3.01x、EAGLE-2 **3.51x**（τ 由 1.39 升至 4.48）；**LLaMA3-Instruct 70B**：EAGLE-2 3.29x vs EAGLE 2.83x；**LLaMA3-Instruct 8B**：EAGLE-2 3.46x vs EAGLE 2.72x。
 
-**3) 在论文中的链路作用**
-作为主结果表，用具体量化数据证明 EAGLE-2 相对基线（PLD/Lookahead）与前作 EAGLE 的全面领先，构成支撑论文"动态草稿树"核心贡献的关键证据。
+② **关键论证结论**：EAGLE-2 在 70B / 8B、不同架构上均稳定优于 PLD、Lookahead、EAGLE；τ 同步增大证明动态草稿树显著提升了 token 平均接受长度，从而兑现更高的推理加速比。
+
+③ **在论文中的作用**：作为主结果表，定量建立 EAGLE-2 跨规模/跨架构的普适优越性，是支撑"动态草稿树 + 重排序"全文方法的核心实证。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -256,15 +256,27 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 11,
+    "caption": "MoE component to process group mapping.",
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab01.png"
+   },
+   {
     "num": 2,
     "page": 15,
     "caption": "Contrasting parallelism requirements of attention and MoE layers within a single Transformer block.",
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab02.png"
    },
    {
+    "num": 3,
+    "page": 20,
+    "caption": "Memory breakdown per GPU for DeepSeek-V3 with BF16 training (PP 4 × VPP 4 × EP 64 , 256 GPUs).",
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab03.png"
+   },
+   {
     "num": 4,
     "page": 23,
-    "caption": "summarizes the memory reduction achieved by different recomputation targets for the DeepSeek-V3 configuration in Table 3 .",
+    "caption": "Memory reduction per GPU from fine-grained recomputation for DeepSeek-V3 (PP​4×VPP​4×EP​64, 256 GPUs).",
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab04.png"
    },
    {
@@ -517,13 +529,13 @@
    },
    {
     "num": 4,
-    "page": 10,
+    "page": 0,
     "caption": "Preliminary results on GLM-5 (744B) with training-free IndexCache.",
     "path": "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab04.png"
    },
    {
     "num": 5,
-    "page": 18,
+    "page": 17,
     "caption": "Evaluation results of training-free similarity-based searched pattern.",
     "path": "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab05.png"
    }
@@ -1015,7 +1027,7 @@
    {
     "num": 2,
     "page": 7,
-    "caption": "Perplexities (PPLs; ↓ ) and variances of the NELBO Var X ,t [ L BD ( X ; θ )] (Var. NELBO; ↓ ). Models are trained on LM1B using a linear schedule for 65B tokens, then finetuned for 10B tokens.",
+    "caption": "Perplexities (PPLs; ↓) and variances of the NELBO Var𝐗,t​[ℒBD​(𝐗,θ)] (Var. NELBO; ↓). Models are trained on LM1B using a linear schedule for 65B tokens, then finetuned for 10B tokens.",
     "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab02.png"
    },
    {
@@ -1092,6 +1104,12 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 6,
+    "caption": "Decoding speedup over baseline and average acceptance length ( τ ) on Qwen3 models with thinking mode disabled and a",
+    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab01.png"
+   },
+   {
     "num": 2,
     "page": 7,
     "caption": "Decoding speedup over baseline and average acceptance",
@@ -1110,10 +1128,22 @@
     "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab05.png"
    },
    {
+    "num": 6,
+    "page": 8,
+    "caption": "5-layer draft model has the best average speedup. All",
+    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab06.png"
+   },
+   {
     "num": 7,
     "page": 8,
     "caption": "More hidden features from target model increases the",
     "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab07.png"
+   },
+   {
+    "num": 8,
+    "page": 8,
+    "caption": "Ablation study of training–inference block size (BS)",
+    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab08.png"
    },
    {
     "num": 9,
@@ -1138,6 +1168,12 @@
     "page": 12,
     "caption": "vLLM results for Qwen3.5-9B. Each cell reports DFlash",
     "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab12.png"
+   },
+   {
+    "num": 13,
+    "page": 13,
+    "caption": "Randomly sample anchor tokens to construct masked",
+    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab13.png"
    }
   ],
   "formulas": []
@@ -1558,12 +1594,6 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 3,
-    "caption": "Performance comparison across different vision-text joint-training strategies. Early fusion with a lower vision ratio yields better results given a fixed total vision-text token budget.",
-    "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-tab01.png"
-   },
-   {
     "num": 2,
     "page": 4,
     "caption": "Cross-Modal Transfer: Vision RL Improves Textual Knowledge Benchmark Before Vision-RL After Vision-RL Improvement",
@@ -1571,7 +1601,7 @@
    },
    {
     "num": 3,
-    "page": 7,
+    "page": 6,
     "caption": "Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.",
     "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-tab03.png"
    },
@@ -1720,10 +1750,34 @@
     "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig301.png"
    },
    {
+    "num": 401,
+    "page": 17,
+    "caption": "AI Core 架构及各层级 SRAM 示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig401.png"
+   },
+   {
+    "num": 402,
+    "page": 18,
+    "caption": "Cube Core 处理架构示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig402.png"
+   },
+   {
     "num": 403,
     "page": 18,
     "caption": "Cube Core 支持的数值精度示意",
     "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig403.png"
+   },
+   {
+    "num": 404,
+    "page": 19,
+    "caption": "HiF8 数值精度",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig404.png"
+   },
+   {
+    "num": 405,
+    "page": 21,
+    "caption": "Vector Core 架构示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig405.png"
    },
    {
     "num": 406,
@@ -1732,16 +1786,64 @@
     "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig406.png"
    },
    {
+    "num": 407,
+    "page": 23,
+    "caption": "NDDMA 指令",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig407.png"
+   },
+   {
+    "num": 408,
+    "page": 24,
+    "caption": "昇腾 950 新同步机制代码示例",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig408.png"
+   },
+   {
     "num": 409,
     "page": 25,
     "caption": "昇腾 950 内存层次示意图",
     "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig409.png"
    },
    {
+    "num": 410,
+    "page": 27,
+    "caption": "Non-allocate （ L2 hint ）典型应用场景示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig410.png"
+   },
+   {
     "num": 411,
     "page": 27,
     "caption": "STARS2.0 架构示意图",
     "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig411.png"
+   },
+   {
+    "num": 412,
+    "page": 31,
+    "caption": "URMA 异步访存通信的过程示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig412.png"
+   },
+   {
+    "num": 413,
+    "page": 32,
+    "caption": "UB Memory 同步访存语义地址通信过程示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig413.png"
+   },
+   {
+    "num": 414,
+    "page": 33,
+    "caption": "CCU 架构示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig414.png"
+   },
+   {
+    "num": 415,
+    "page": 34,
+    "caption": "UB On Chip Switch 转发示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig415.png"
+   },
+   {
+    "num": 416,
+    "page": 35,
+    "caption": "PCIe 5.0 架构示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig416.png"
    },
    {
     "num": 417,
@@ -1754,15 +1856,27 @@
     "page": 36,
     "caption": "昇腾 950 访问 CPU 超大内存池示意图",
     "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig418.png"
+   },
+   {
+    "num": 419,
+    "page": 37,
+    "caption": "昇腾 950 直接访问超大存储资源池示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig419.png"
+   },
+   {
+    "num": 420,
+    "page": 38,
+    "caption": "昇腾超节点基于 UB Switch 转换为以太网与以太世界互通示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig420.png"
+   },
+   {
+    "num": 421,
+    "page": 39,
+    "caption": "昇腾芯片支持以太网与以太世界互通示意图",
+    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig421.png"
    }
   ],
   "tables": [
-   {
-    "num": 101,
-    "page": 5,
-    "caption": "关键术语",
-    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-tab101.png"
-   },
    {
     "num": 301,
     "page": 13,
@@ -1924,7 +2038,7 @@
    {
     "num": 1,
     "page": 3,
-    "caption": "shows the shapes of input, output, and weight ten- sors of the various operations. Each transformer block first computes self-attention on a given input X . Typically, multi- head attention is used, but we consider only one head for simplicity of exposition. A linear transformation preproj over X (u",
+    "caption": "Shapes of the input, weight, and output tensors in a transformer decoder block. B, L and H denote batch size, embedding (aka hidden) size and sequence length (L=1 during decode, except for attention).",
     "path": "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-tab01.png"
    },
    {
@@ -2157,6 +2271,12 @@
    }
   ],
   "tables": [
+   {
+    "num": 1,
+    "page": 5,
+    "caption": "Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.",
+    "path": "assets/crops/kimi-vl-technical-report-tab01.png"
+   },
    {
     "num": 2,
     "page": 5,
@@ -2398,6 +2518,12 @@
     "page": 20,
     "caption": "A case study of R1 and S EARCH -R1.",
     "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab09.png"
+   },
+   {
+    "num": 10,
+    "page": 22,
+    "caption": "Search-R1 case study 1 (successful): Search-R1 conduct multi-step reasoning, search, with self-verification and finally answer the question.",
+    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab10.png"
    }
   ],
   "formulas": []
@@ -2597,12 +2723,6 @@
     "page": 31,
     "caption": "Downstream Benchmarks for OLMoE.",
     "path": "assets/crops/hyper-connections-tab14.png"
-   },
-   {
-    "num": 15,
-    "page": 33,
-    "caption": "Results on downstream benchmarks for 1B models.",
-    "path": "assets/crops/hyper-connections-tab15.png"
    }
   ],
   "formulas": []
@@ -2728,6 +2848,12 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 9,
+    "caption": "Statistics of the pretraining data.",
+    "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab01.png"
+   },
+   {
     "num": 2,
     "page": 15,
     "caption": "Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red .",
@@ -2742,7 +2868,7 @@
    {
     "num": 4,
     "page": 17,
-    "caption": "Ablation Study: Global Parser vs. Normal. Performance comparison on downstream tasks. Both models aim for a target compression ratio of R = 4 . The Global Parser achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.",
+    "caption": "Ablation Study: Global Parser vs. Normal. Performance comparison on downstream tasks. Both models aim for a target compression ratio of R=4. The Global Parser achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.",
     "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab04.png"
    },
    {
@@ -3085,16 +3211,16 @@
   ],
   "tables": [
    {
-    "num": 2,
-    "page": 12,
-    "caption": "Results with Local Knowledge Base.",
-    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab02.png"
+    "num": 1,
+    "page": 7,
+    "caption": "Examples of the synthetic questions, where red indicates injected facts and cyan represents fuzzed content.",
+    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab01.png"
    },
    {
-    "num": 4,
-    "page": 13,
-    "caption": "Results on GAIA, xBench-DeepSearch, and Frames. The results are evaluated with LLM- as-Judge. For baselines, we run the corresponding official codes for 4 seeds and report Avg@4 and Pass@4.",
-    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab04.png"
+    "num": 3,
+    "page": 12,
+    "caption": "Results with Web-based Search and Browsing.",
+    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab03.png"
    },
    {
     "num": 5,
@@ -3327,6 +3453,12 @@
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab23.png"
    },
    {
+    "num": 25,
+    "page": 73,
+    "caption": "j Arena-Hard is an open-ended evaluation benchmark specifically designed to assess",
+    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab25.png"
+   },
+   {
     "num": 27,
     "page": 0,
     "caption": "The CLUEWSC (Chinese Language Understanding Evaluation Benchmark - Winograd Schema Challenge) is a specialized task within the CLUE benchmark suite designed to evaluate a model’s commonsense reasoning and contextual understanding capabilities in Chinese.",
@@ -3349,6 +3481,12 @@
     "page": 0,
     "caption": "An example of C-SimpleQA. It measures a model’s ability to answer short, fact-seeking questions in Chinese with precise, verifiable correctness.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab31.png"
+   },
+   {
+    "num": 32,
+    "page": 78,
+    "caption": "j An example of math evaluation, which applies to AIME, MATH, and CNMO. These",
+    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab32.png"
    }
   ],
   "formulas": []
@@ -3622,12 +3760,6 @@
     "page": 8,
     "caption": "Time in seconds per 0.1k training steps for the order-embedding model.",
     "path": "assets/crops/root-mean-square-layer-normalization-tab08.png"
-   },
-   {
-    "num": 9,
-    "page": 9,
-    "caption": "Training error rate for the ConvPool- CNN-C model.",
-    "path": "assets/crops/root-mean-square-layer-normalization-tab09.png"
    }
   ],
   "formulas": []
@@ -4146,12 +4278,6 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 7,
-    "caption": "Mean TTFT latency (in seconds) ( ↓ ) for varying video lengths at a fixed request rate of 1 request/sec. Results are averaged over 100 Video-MME samples. EPD achieves the lowest latency across all video lengths.",
-    "path": "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab01.png"
-   },
-   {
     "num": 2,
     "page": 8,
     "caption": "Comparison of the maximum number of images supported per request for various image resolutions across different models. Higher values are better; best values in each row are italicized.",
@@ -4463,7 +4589,7 @@
    {
     "num": 4,
     "page": 19,
-    "caption": "Conﬁgurations for diﬀerent model sizes, number of layers, and hidden dimensions (HD) across Figures 2, 3, 4.",
+    "caption": "Configurations for different model sizes, number of layers, and hidden dimensions (HD) across Figures 2, 3, 5.",
     "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab04.png"
    },
    {
@@ -4471,6 +4597,12 @@
     "page": 23,
     "caption": "Model configurations for Figure 5 related to memory allocated with different ZeRO configurations.",
     "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab08.png"
+   },
+   {
+    "num": 10,
+    "page": 24,
+    "caption": "Model conﬁgurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.",
+    "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab10.png"
    }
   ],
   "formulas": []
@@ -4590,7 +4722,7 @@
    {
     "num": 1,
     "page": 8,
-    "caption": "Weak-scaling throughput for GPT models ranging from 1 billion to 1 trillion parameters.",
+    "caption": "shows the model configurations along with the achieved FLOP/s (both per GPU and aggregate over all GPUs). We see super- linear scaling to 3072 A100 GPUs (384 DGX A100 nodes), since GPU utilization improves as the models get larger (larger matrix multiplications) without significant increase in the c",
     "path": "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab01.png"
    },
    {
@@ -4673,6 +4805,12 @@
     "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab03.png"
    },
    {
+    "num": 5,
+    "page": 7,
+    "caption": "Development set results for MNLI, QQP, SQuAD 1.1 and SQuAD 2.0 and test set results for RACE. The trained tokens represents",
+    "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab05.png"
+   },
+   {
     "num": 6,
     "page": 11,
     "caption": "Hyperparameters for ﬁnetuning BERT model on down-",
@@ -4698,7 +4836,7 @@
    {
     "num": 1,
     "page": 3,
-    "caption": "The decoder-only Transformer for LLMs.",
+    "caption": "Fig. 1: The decoder-only Transformer for LLMs.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig01.png"
    },
    {
@@ -4768,6 +4906,12 @@
     "page": 0,
     "caption": "TABLE IX: The summary of Non-Transformer Architectures.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab09.png"
+   },
+   {
+    "num": 10,
+    "page": 23,
+    "caption": "Comparison of Memory Management Techniques for KV Cache",
+    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab10.png"
    },
    {
     "num": 11,
@@ -5024,7 +5168,7 @@
    {
     "num": 4,
     "page": 9,
-    "caption": "Latency breakdown for specula- tive decoding with a token tree of 32 queries, whose tree topology is from Medusa (Cai et al., 2024). U means unpaged memory.",
+    "caption": "Latency breakdown for speculative decoding with a token tree of 32 queries, whose tree topology is from Medusa (Cai et al. 2024). U means unpaged memory.",
     "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig04.png"
    },
    {
@@ -5102,10 +5246,22 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 2,
+    "caption": "Comparison of efficiency in sequence-based CoT (Wei et al., 2022) and tree-based ToT (Yao et al., 2023) decoding for a reasoning task. The task is sort- ing 128 numbers from Besta et al. (2023). The total gen- erated tokens of CoT is only 525 while 38 , 315 in ToT, resulting in inefficiency in end-t",
+    "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab01.png"
+   },
+   {
     "num": 3,
     "page": 8,
     "caption": "Comparison of baselines and D E FT. Attention kernels of baselines are implemented to fit its memory management. Therefore, for a fair comparison with baselines, we implement D E FT-Node and D E FT-Flatten that fit both paged (Kwon et al., 2023)/unpaged memory management.",
     "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab03.png"
+   },
+   {
+    "num": 4,
+    "page": 8,
+    "caption": "Workloads generation . ToT-BFS stands for Tree-of-Thoughts (Yao et al., 2023) using breadth-first search. APPS (Hendrycks et al., 2021) is a competitive programming problem dataset. Medusa (Cai et al., 2024) is a speculative decoding framework. “GoT” stands for Graph-of-Thoughts (Besta et al., 2023)",
+    "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab04.png"
    },
    {
     "num": 5,
@@ -5140,7 +5296,7 @@
    {
     "num": 10,
     "page": 18,
-    "caption": "Technique list of D E FT. What we propose is in red . The details of the first four techniques are in Section 3.3, while the details of the following techniques are discussed in this chapter.",
+    "caption": "Technique list of DeFT. What we propose is in red. The details of the first four techniques are in Section 3.3, while the details of the following techniques are discussed in this chapter.",
     "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab10.png"
    },
    {
@@ -5293,6 +5449,12 @@
     "page": 7,
     "caption": "Comparison of operation runtimes between cost model estimation and real-world measurements.",
     "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-tab02.png"
+   },
+   {
+    "num": 3,
+    "page": 9,
+    "caption": "Performance P of GEMV and network kernels with different resource utilization R .",
+    "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-tab03.png"
    },
    {
     "num": 4,
@@ -5488,6 +5650,12 @@
    }
   ],
   "tables": [
+   {
+    "num": 1,
+    "page": 11,
+    "caption": "Architectural comparison between Kimi K2 and Kimi K3.",
+    "path": "assets/crops/kimi-k3-open-frontier-intelligence-tab01.png"
+   },
    {
     "num": 2,
     "page": 27,
@@ -5901,6 +6069,18 @@
     "path": "assets/crops/a-survey-of-large-language-models-tab08.png"
    },
    {
+    "num": 9,
+    "page": 32,
+    "caption": "Basic statistics of the required number of GPUs, tuning time, batch size (denoted as BS) per device (full tuning and LoRA tuning), and inference rate (the number of generated tokes per second). Our experiments are conducted based on two Linux servers having 8 A800-80G SXM4 GPUs with 6 NVSwitch and 8",
+    "path": "assets/crops/a-survey-of-large-language-models-tab09.png"
+   },
+   {
+    "num": 10,
+    "page": 34,
+    "caption": "Results of instruction-tuning experiments (all in a single-turn conversation) based on the LLaMA (7B) and LLaMA (13B) model under the chat and QA setting. We employ four instruction improvement strategies on the Self- Instruct-52K dataset, i.e., enhancing the complexity ( w/ complexity ), increasing",
+    "path": "assets/crops/a-survey-of-large-language-models-tab10.png"
+   },
+   {
     "num": 11,
     "page": 45,
     "caption": "Typical LLM utilization methods and their key points for ICL, CoT, and planning. Note that the key points only highlight the most important technical contribution.",
@@ -5913,10 +6093,22 @@
     "path": "assets/crops/a-survey-of-large-language-models-tab12.png"
    },
    {
+    "num": 13,
+    "page": 48,
+    "caption": "Example instructions collected from [447, 457]. The blue text denotes the task description, the red text denotes the contextual information, the green text denotes the demonstrations, and the gold text denotes the prompt style.",
+    "path": "assets/crops/a-survey-of-large-language-models-tab13.png"
+   },
+   {
     "num": 14,
     "page": 57,
     "caption": "Representative basic and advanced abilities and corresponding representative datasets for evaluating.",
     "path": "assets/crops/a-survey-of-large-language-models-tab14.png"
+   },
+   {
+    "num": 15,
+    "page": 63,
+    "caption": "A category of existing evaluation work. “General” denotes that the evaluation focuses on an overall performance of multiple abilities. The evaluated abilities are not limited to the representative basic and advanced abilities mentioned in Section 7.1 and 7.2.",
+    "path": "assets/crops/a-survey-of-large-language-models-tab15.png"
    },
    {
     "num": 16,
@@ -6095,7 +6287,7 @@
    {
     "num": 2,
     "page": 5,
-    "caption": "Execution time of kernels for vary- ing input lengths, with a uniform batch size of 1 and 16 heads.",
+    "caption": "Execution time of kernels for varying input lengths, with a uniform batch size of 1 and 16 heads.",
     "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig02.png"
    },
    {
@@ -6131,12 +6323,6 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 8,
-    "caption": "Ablation study on the hybrid ratio of KDA to MLA attention and other key components. We list the training and validation perplexities (lower is better) for comparison. The best-performing model, used in our final experiments, is highlighted in gray.",
-    "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab01.png"
-   },
-   {
     "num": 2,
     "page": 9,
     "caption": "Model configurations and hyperparameters for scaling law experiments.",
@@ -6155,12 +6341,6 @@
     "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab04.png"
    },
    {
-    "num": 5,
-    "page": 12,
-    "caption": "Comparisons of Kimi Linear with MLA, GDN-H, and Kimi Linear (RoPE) across long-context benchmarks. The last column reports the overall average ( ↑ ). All models is trained on 1.4T tokens. Best per-column results are bolded .",
-    "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab05.png"
-   },
-   {
     "num": 6,
     "page": 14,
     "caption": "An overview of attention mechanisms in their mathematically equivalent recurrent ( o t ) and parallel ( O ) forms. We omitted the normalization term and β t to achieve a more concise representation. The function ϕ refers to the infinite-dimensional feature space corresponding to the exponential kern",
@@ -6174,7 +6354,7 @@
    },
    {
     "num": 8,
-    "page": 28,
+    "page": 0,
     "caption": "Performance of Kimi-Linear-Base and Moonlight-Base across diverse tasks.",
     "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab08.png"
    }
@@ -6394,6 +6574,12 @@
     "page": 1,
     "caption": "xDeepServe Architecture over CloudMatrix384 SuperPod.",
     "path": "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig01.png"
+   },
+   {
+    "num": 2,
+    "page": 6,
+    "caption": "An Overview of CloudMatrix384 SuperPod and Ascend 910C NPU Chip. A Cloud- Matrix384 SuperPod has 48 servers and 384 Ascend 910C NPU chips in total. A single 910C NPU chip has two dies interconnected via high-bandwidth NoC. The chip uses the decoupled DaVinci architecture, including independent AI cu",
+    "path": "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig02.png"
    },
    {
     "num": 3,
@@ -6763,12 +6949,6 @@
     "page": 5,
     "caption": "Experimental Results on math reasoning benchmarks(Accuracy %).",
     "path": "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab01.png"
-   },
-   {
-    "num": 2,
-    "page": 6,
-    "caption": "Experimental Results on SWE-Bench Verified (Accuracy %).",
-    "path": "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab02.png"
    },
    {
     "num": 3,

@@ -71,11 +71,15 @@ tags: [rl]
 > The strong scaling trend. Dotted lines indicate ideal linear scaling. verl consistently encounters OOM with 32k context length and the 32B model so the data points are missing. 8
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图4联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-图4以2×2子图展示强扩展性实验，对比AREAL（蓝实线）与verl（橙虚线）在GPU数从128增至512时的吞吐量，纵轴约18k–37k tokens/秒，覆盖7B/32B模型与16k/32k上下文四种组合。AREAL扩展接近理想线性线，32B模型下吞吐由约18k提升至35k；verl斜率显著偏低，且在32B+32k上下文时直接OOM导致数据缺失。
+该图展示 AReaL 与 verl 在强扩展（strong scaling）下的吞吐量对比，纵轴为 token/s，横轴为 GPU 数；6 个子图按模型规模（1.5B/7B/32B）×上下文长度（16k/32k）排列。
 
-该图用以论证AREAL异步RL框架的扩展性优势：在更大模型、更长上下文场景下仍保持近线性加速比，而同步基线verl已触及显存瓶颈，从而为论文"大规模异步RL可行且高效"的核心结论提供关键实证支撑。
+**关键数据**：以 7B/32k 为例，GPU 从 64 增至 512 时，AReaL 由约 19k 升至 103k token/s（接近理想线性虚线），而 verl 仅由 19k 升至 38k；在 1.5B/16k 下，AReaL 在 256 GPU 处达 ~155k，约为 verl（67k）的 2.3 倍。
+
+**核心结论**：AReaL 的扩展效率显著优于 verl，且更贴近理想线性；更重要的是，32B/32k 配置下 verl 因 OOM 缺失数据点，而 AReaL 仍可在 256→512 GPU 间保持 ~18k→35k 的近线性增长，验证其异步架构在大模型长序列下的内存与并行优势。
+
+**作用**：该图是论文"系统效率"章节的实证支柱，证明 AReaL 异步 RL 框架在保证训练可行性的同时具备良好的可扩展性，为后续 Table 4 中 AIME24/25 等基准的优异结果提供了算力与吞吐基础。
 
 ### Figure 5 (p.9) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig05.png]]
@@ -84,13 +88,13 @@ tags: [rl]
 > Ablation studies of the decoupled PPO objective and staleness control with a 1.5B model on math reasoning tasks. Both algorithmic choices are essential. With a moderate staleness value and the decoupled objective, training progress can be accelerated by over 2× while maintaining final evaluation performance.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（图5，p.9）**
+> 【图文联合解读】**图5联合解读：**
 
-**1）核心对象与数据：** 三面板消融实验，基于1.5B模型在数学推理任务上的训练。(a)(b)分别为naive PPO与解耦目标（式5）下MaxStaleness∈{0,1,2,4,8,16,∞}的奖励曲线；(c)为有效吞吐量条形图，定量数据为128.7→269.3→356.6→356.6→371.7→382.4→396.8 k tokens/s，随staleness单调递增。
+图5基于1.5B模型在数学推理任务上做了三组消融：(a) naïve PPO学习曲线显示staleness=0/1训练奖励最高(≈-0.7)，staleness=16/∞仅≈-1.5；(b) 加入解耦目标(eq.5)后，staleness=2/4反而追平甚至略优于0/1；(c) 有效吞吐随staleness单调上升——0→128.7、1→269.3、2→356.6、4→356.6、8→371.7、16→382.4、∞→396.8 (k tokens/s)。
 
-**2）关键结论：** 仅增大staleness会劣化naive PPO（曲线发散、奖励下降）；而解耦目标使所有staleness曲线紧贴η=0 oracle，性能几乎无损。二者结合即"适度staleness+解耦目标"可获得>2×训练加速且保持最终评估性能——证实两个算法选择缺一不可。
+**技术结论**：解耦目标与适度staleness缺一不可。naïve PPO对异步延迟高度敏感；解耦目标使算法对staleness鲁棒，二者协同可在staleness=2~4时实现>2×加速(吞吐128.7→356+)且维持最终性能。
 
-**3）论文链路作用：** 该图为AREAL异步RL框架的核心算法决策提供实证：它把"解耦PPO目标"与"staleness容忍度"确立为系统级最优配置，支撑后文大规模实验的高吞吐-高性能主张，是方法论可行性的关键消融证据。
+**论文作用**：作为关键消融，验证AREAL异步框架两条核心算法设计（解耦PPO目标 + staleness控制）的必要性与协同增益，为后续大规模实验提供方法论支撑。
 
 ### Figure 6 (p.10) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig06.png]]
@@ -99,7 +103,7 @@ tags: [rl]
 > Ablation studies on system optimizations. experimental setup, we configured 32 micro-batches for the standard setting and established a token budget of 32,768 per micro-batch for the dynamic batching approach. As demonstrated in Figure 6a, dynamic batching yields an average of 30% throughput improvements across various model sizes.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图6(b)展示中断式生成消融：1.5B模型吞吐量231k vs 207k tokens/s，7B为130k vs 111k，可中断机制带来约12%–17%提升。结合未渲染的图6(a)：动态批处理在1B/7B/32B较常规批处理分别达427.4/454.7/387.7 vs 404.4/303.1/283.0 TFLOPs/GPU，平均~30%吞吐增益。两图共同量化验证AREAL的两项系统优化——动态微批次分配与可中断生成——均显著提升吞吐，在论文方法链中为异步RL框架的工程可行性提供关键实验支撑。
+> 【图文联合解读】图6通过两组消融实验量化两项系统优化：(a)动态微批次分配在1B/7B/32B模型上吞吐量达427.4/454.7/387.7 TFLOPs/GPU，较常规批处理(404.4/303.1/283.0)平均提升约30%；(b)可中断生成在1.5B/7B上吞吐达231k/130k tokens/s，比非中断方案(207k/111k)提升12%–17%。两图共同论证动态微批次与可中断生成均显著加速，验证AREAL异步RL框架在大规模语言推理训练中的工程可行性，为其系统设计提供关键量化支撑。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -109,9 +113,13 @@ tags: [rl]
 > End-to-End Performance Comparison. We evaluate on the AIME24 benchmark for math and LiveCodeBench (8/1/24-2/1/25) for coding. We limit the maximum generation length to 32K tokens and sample 32 responses per question, reporting the average pass@1 accuracy. * represents the best known reproducible res
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 联合解读**
+> 【图文联合解读】**Table 1 图文联合解读**
 
-表1在AIME24（1.5B/7B）与LiveCodeBench（14B/32B）上对比AReaL与VeRL、Sync.AReaL，统一32K长度、32样本、平均pass@1。AReaL精度与最优基线持平或略优：42.2 vs 43.1*（1.5B）、63.1 vs 63.0（7B）、58.1 vs 57.9*（14B）、61.0 vs 61.2（32B），但训练小时数显著降低：14.8 vs 33.6（1.5B）、25.4 vs 57.7（7B）、21.9 vs 44.4（14B）、31.1 vs 51.1（32B），普遍约2×加速。该表直接量化证明论文核心结论——"异步RL以一半训练时间达到同等精度"，呼应Figure 1对推理设备闲置的诊断，确立AReaL在效率–性能权衡上的优势。
+表1对比 basemodel / VeRL / Sync.AReaL / AReaL 在 1.5B–32B 四个规模上、针对 AIME24（数学）与 LiveCodeBench（代码）的 pass@1、节点数、PPO 步数与训练小时数。
+
+**关键数据**：AReaL 在准确率与基线相当或更优（7B 63.1 vs Sync 63.0；14B 58.1 vs VeRL 57.9*；32B 61.0 vs 61.2）的同时，将训练耗时近乎砍半（1.5B 33.6→14.8h、7B 52.1→25.4h、14B 44.4→21.9h、32B 46.4→31.1h）。
+
+**论文作用**：作为端到端系统级实证，验证异步 RL 设计（图1所述 rollout/训练流水线重叠）在跨规模、跨任务下均能保精度并显著提升训练效率，直接支撑论文核心效率主张。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab02.png]]
@@ -119,13 +127,19 @@ tags: [rl]
 > Evaluation scores when varying data staleness, comparing performance with and without the decoupled objective. Numbers within ± 1 of the oracle score are underlined.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表2图文联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-表2在Max.Stale∈{0(Oracle),1,2,4,8,16,∞}下，对比AIME24/25、AMC23、MATH500四个基准在使用/不使用解耦目标(W/o/With)时的得分，Oracle分别为42.0/32.9/84.4/89.2。
+**1) 表的核心对象与结构**
 
-**核心结论：** 无解耦目标时，性能随陈旧度增大显著衰减（如AIME24在Stale=4仅23.3、∞为34.0）；引入解耦目标后表现稳健，多数cell与Oracle差距≤1（图中下划线标示，如AIME24在Stale=4仍达42.2、AMC23在Stale=4为85.1）。
+该表展示AREAL在四个数学基准（AIME24、AIME25、AMC23、MATH 500）上、按最大数据陈旧度（1, 2, 4, 8, 16, ∞）分组，对比"不使用/使用解耦目标（W/o vs With）"的评估得分；陈旧度=0为Oracle同步基线（42.0 / 32.9 / 84.4 / 89.2），下划线标注与Oracle相差±1以内的得分。
 
-**方法作用：** 异步RL系统中训练端不可避免消费陈旧 rollout 数据，该表实证解耦目标可有效抑制staleness带来的优化偏差，为AREAL异步生成-训练架构的可行性提供关键实验支撑。
+**2) 关键技术结论**
+
+去掉解耦目标后，性能随陈旧度增大急剧恶化——例如AIME24在陈旧度=4时骤降至23.3（远低于Oracle 42.0），AIME25同步跌至23.1；引入解耦目标后，各陈旧度下得分几乎贴近Oracle（AIME24在陈旧度=4仍达42.2，下划线），证明解耦目标对陈旧数据具有强鲁棒性。
+
+**3) 在论文方法链中的作用**
+
+该表是AREAL异步RL框架可行性的核心实证，支撑了"解耦生成与训练目标即可容忍异步带来的数据陈旧"这一关键论点，使系统在保持接近同步（Oracle）水平的前提下获得吞吐增益。
 
 ### Table 4 (p.25) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab04.png]]
@@ -135,11 +149,7 @@ tags: [rl]
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 4 图文联合解读**
 
-Table 4 横向对比 1.5B/7B 基模型与同步、异步 AReaL 在 AIME24/25、AMC23、MATH 500 上的表现。1.5B 基线 29.3/24.4/71.0/84.3 → 异步 AReaL 升至 42.2/32.0/85.1/89.5；7B 基线 54.3/41.7/89.5/92.8 → 升至 63.1/47.3/93.6/94.3。
-
-**关键结论**：异步 AReaL 与同步版精度几乎持平，多项指标略优（如 AMC23：1.5B +0.7、7B +0.4；MATH 500：7B +0.1），且均显著优于基模型（1.5B AIME24 提升 12.9，7B 提升 8.8）。
-
-**论文作用**：此表与 Figure 4（强可扩展性）构成"精度+效率"双重证据链，支撑 AReaL 核心论点——异步训练机制在可扩展性优势的同时未牺牲模型准确率，验证系统设计的有效性。
+该表对比1.5B与7B模型在AIME24/25、AMC23、MATH500四道数学基准上的三组配置（basemodel、Sync. AReaL、AReaL异步）。7B模型上，异步AReaL相对基线提升显著（AIME24 +8.8、AIME25 +5.6），且与同步版性能基本持平（AIME24 63.1 vs 63.0；MATH500 94.3 vs 94.2）。该表与图4强扩展性形成互补：图4证明异步框架获得更高吞吐，本表则验证异步训练不损失模型精度。它是论文"异步RL核心贡献"的关键有效性证据，支撑了方法在规模与质量上的双重优势。
 
 ### Table 5 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab05.png]]
@@ -147,15 +157,11 @@ Table 4 横向对比 1.5B/7B 基模型与同步、异步 AReaL 在 AIME24/25、A
 > Results on coding benchmarks. Model LiveCodeBench v5 Codeforces CodeContests
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读（Table 5）：**
+> 【图文联合解读】**Table 5 数据**：展示 6 个模型在 3 项编程基准（LiveCodeBench v5、Codeforces 评分/通过率、CodeContests）的成绩。14B 组：base 53.4/1801·95.8%/32.0、Sync 56.7/1845·96.4%/37.0、AReaL 58.1/1840·96.3%/35.9；32B 组：57.4/1839·96.3%/34.3、61.2/1911·96.9%/36.3、61.0/1889·96.7%/36.5。
 
-**注：** 您提供的原文讲解段落对应的是 *Figure 5（消融实验）*，与本图 *Table 5* 并非同对象；以下基于图片内容解读 Table 5。
+**关键结论**：异步 AReaL 14B 在 LiveCodeBench 较 base 提升 +4.7（53.4→58.1），且反超 32B base（57.4）；32B 下异步与同步基本持平（61.0 vs 61.2），编码任务上未损失性能。
 
-**核心数据：** 表5对比 base / Sync. AReaL / AReaL 三档模型在 LiveCodeBench v5、Codeforces、CodeContests 上的结果。14B 组：AReaL 在 LiveCodeBench 以 58.1 领先（+4.7 vs base 53.4）；32B 组：Sync. AReaL 在 LiveCodeBench 61.2、Codeforces 1911/96.9% 居首，AReaL 在 CodeContests 36.5% 最高。
-
-**关键结论：** 异步 AReaL 相对同步版在 LiveCodeBench 提升（14B +1.4）；32B 整体优于 14B，验证异步 RL 系统在代码推理任务上的可扩展性。
-
-**整体作用：** 与 Figure 5 消融（算法设计）互补，Table 5 提供真实编程基准上的最终性能证据，闭环支撑"异步 RL + 解耦目标"完整方法链。
+**论文作用**：与 Figure 5（数学消融）互补，证明异步 RL 框架在编码推理任务同样有效，验证方法跨域通用性与可扩展性。
 
 ### Table 6 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab06.png]]
@@ -163,13 +169,20 @@ Table 4 横向对比 1.5B/7B 基模型与同步、异步 AReaL 在 AIME24/25、A
 > Generalization results on DeepSeek-Distilled-Llama-8B across math benchmarks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 6 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与数据**：表6展示DeepSeek蒸馏Llama在数学基准上的泛化对比（注意：caption写8B，但可见行为14B与32B模型）。三个数据列对应不同数学基准得分。14B：base 53.4/32.0、Sync AReaL 56.7/37.0、AReaL异步版58.1/35.9；32B：base 57.4/34.3、Sync 61.2/36.3、AReaL异步61.0/36.5。
+⚠️ **说明**：所引原文段落实际讨论的是 **Figure 6（系统优化消融：动态批处理+30%吞吐、可中断生成+12–17%）**，而非 Table 6。以下按图片实际内容解读。
 
-**2) 关键结论**：异步AReaL相较base模型在14B上提升约4.7分（53.4→58.1），32B上提升3.6分（57.4→61.0），且与同步版本得分基本持平（14B甚至略超），证明异步训练未牺牲泛化质量。
+**1) 表格核心对象与数据**
+Table 6 对比 DeepSeek 蒸馏 Llama 在 **14B** 与 **32B** 三种设置下的数学泛化结果（三列依次为：基准准确率、生成长度/格式率、另一基准得分）：
+- 14B：基座 53.4 → Sync AReaL 56.7 → Async AReaL **58.1**
+- 32B：基座 57.4 → Sync AReaL **61.2** → Async AReaL 61.0
 
-**3) 在论文中的作用**：该表是方法验证的关键支撑——在系统效率（图6消融的吞吐优化）之外，证明AReaL异步RL范式在数学推理任务上保持了与同步RL相当甚至更优的最终性能，强化了"效率-效果兼得"的核心论点。
+**2) 关键结论**
+异步 AReaL **不牺牲推理质量**：32B 与同步版几乎持平（61.0 vs 61.2），14B 反超同步版 +1.4、远超基座 +4.7；长度/格式率亦保持稳定。
+
+**3) 在论文方法链中的作用**
+与 Figure 6 的工程加速消融互补——图6证明"快"，本表证明"好"，共同闭环论证：**异步 RL 框架兼具系统吞吐增益与跨规模泛化能力**。
 
 ### Table 7 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab07.png]]
@@ -177,13 +190,13 @@ Table 4 横向对比 1.5B/7B 基模型与同步、异步 AReaL 在 AIME24/25、A
 > Staleness-throughput trade-off on small-scale academic setup.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 7 图文联合解读**
+> 【图文联合解读】# Table 7 联合解读
 
-该表以 DeepSeek-Distilled-Llama-8B 为基线，对比 AReaL 在两个超参设置（η=4 与 η=8）下于 AIME24/AMC23/MATH500/AIME25 四项数学基准上的准确率：基线 50.4/84.2/89.1/23.3；η=4 提升至 58.4/92.3/92.2/42.6；η=8 仍达 57.2/91.5/91.9/41.6。
+**1) 核心对象与数据：** 表中对比基线模型与两种不同陈旧度阈值（η=4、η=8）下 AReaL 微调模型在 AIME24、AMC23、MATH500、AIME25 四个数学推理基准上的表现。η=4 取得 58.4/92.3/92.2/42.6，η=8 为 57.2/91.5/91.9/41.6，均显著优于 DeepSeek-Distilled-Llama-8B 基线的 50.4/84.2/89.1/23.3。
 
-**关键结论**：在小型学术配置（DeepSeek-Qwen-1.5B、8k 上下文、batch 64×16、8 GPU）下，将 η（staleness）从 4 翻倍至 8，性能仅下降约 1 个百分点，表明 AReaL 对异步带来的陈旧性高度鲁棒，与大规 Table 2 的结论一致。
+**2) 关键结论：** η=4 略优于 η=8，表明在小规模学术设置下较小的 staleness 阈值带来更稳定的策略优化收益；同时验证了大规模设置（Table 2）中"陈旧度—吞吐权衡"的初步结论可迁移至少 GPU 场景。
 
-**作用**：在小规模下复现 staleness–throughput 权衡实验，验证了系统对异步陈旧性的容忍度，为大规工业部署中提高吞吐量（允许更大 η）提供了可推广的实证支撑。
+**3) 论文链路作用：** 该表是"小规模可复现性验证"实验，连接 Table 2（大规模主结果）与消融结论，证明 AReaL 在 8 GPU、1.5B 模型等受限资源下仍有效，强化了系统设计的通用性与鲁棒性论证。
 
 ### Table 8 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab08.png]]
@@ -191,11 +204,13 @@ Table 4 横向对比 1.5B/7B 基模型与同步、异步 AReaL 在 AIME24/25、A
 > Staleness-throughput trade-off using RLOO algorithm. Model AIME24 AIME25 AMC23 MATH500 Throughput
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**核心内容**：表格对比 DeepSeek-Distilled-Qwen-1.5B 基线与 η∈{0,1,2,4,8,16} 共 6 个 AREAL RLOO 变体在 AIME24、AIME25、AMC23、MATH500 上的准确率及训练吞吐量（k tokens/s）。
+> 【图文联合解读】**Table 8 解读**
 
-**关键结论**：吞吐量随 η 单调上升（27.1k → 52.0k）；准确率 η=4 达峰（AIME24=34.1、AIME25=28.1，MATH500=86.9），η=8 跌至谷底（29.9/23.2），η=16 回升（32.8/25.9）；所有 RL 版本均显著优于无 RL 基线（29.3/24.4）。
+**1）核心对象与数据**：表格展示 RLOO 算法下，1.5B 模型在不同 staleness η∈{0,1,2,4,8,16} 时于 AIME24/25、AMC23、MATH500 上的准确率与吞吐量。吞吐量随 η 增大从 27.1k 升至 52.0k（近翻倍）；准确率波动小，AIME24 介于 29.9–34.1，MATH500 稳定在 86 左右；η=4 取得 AIME24/25 峰值（34.1/28.1）；即使 η=16 仍优于基线 DeepSeek-Distilled-Qwen-1.5B（32.8 vs 29.3）。
 
-**论文作用**：作为附录 C.4 消融，与正文 PPO 陈旧性实验呼应，论证 RLOO 对异步陈旧训练的容忍性优于 PPO，支撑 AREAL 异步 RL 框架可行性的核心论断。
+**2）技术结论**：佐证 RLOO 对异步训练具有更好的容忍度——高 staleness 带来近一倍吞吐增益，性能却几乎无损。
+
+**3）论文链路作用**：作为 C.4 节补充实验，配合 Table 7（PPO）共同扩展 AReaL 异步框架对多种 RL 算法（RLOO/PPO）兼容性的实证支撑，强化"异步化不牺牲收敛质量"的核心主张。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

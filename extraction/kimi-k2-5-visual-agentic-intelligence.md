@@ -30,21 +30,13 @@ tags: [multimodal]
 > Kimi K2.5 main results. 1
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## Figure 1 图文联合解读
+> 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与数据：**
-该图为多面板条形图，对比 Kimi K2.5（蓝色 K 标）与 Claude Opus 4.5、Gemini 3 Pro 及另两款模型在四大类基准上的得分：
-- **Coding – SWE-bench Verified**：K2.5 = 76.8，其余为 80.0 / 80.9 / 76.2
-- **Coding – SWE-bench Multilingual**：K2.5 = 73.0（最高），余为 72.0 / 77.5 / 65.0
-- **Video – VideoMMBU**：K2.5 = 86.6（领先），余为 85.9 / 84.4 / 87.6
-- **Video – LongVideoBench**：K2.5 = 79.8（大幅领先），余为 76.5 / 67.2 / 77.7
-另有 SearchQA（76.1 vs 63.2）与视频类基准（87.7 vs 88.5）的局部对比。
+图1以四组共10项基准对比 Kimi K2.5 与 GPT-5.2 (xhigh)、Claude Opus 4.5、Gemini 3 Pro：**Agents** 三项（Humanity's Last Exam 50.2、BrowseComp 74.9、DeepSearchQA 77.1）、**Coding** 两项（SWE-bench Verified 76.8、Multilingual 73.0）、**Image** 三项（MMMU Pro 78.5、MathVision 84.2、OmniDocBench 1.5 88.8）、**Video** 两项（VideoMMMU 86.6、LongVideoBench 79.8）。
 
-**2) 关键论证结论：**
-K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取得 SOTA，在 SWE-bench Verified 上接近最优，证明其在视觉-智能体（coding + video）双线均具竞争力。
+关键论证：Kimi K2.5 在 **Agents 类别 3/3 全胜**（BrowseComp 超第二名 9.1 分），Video 与 Image 多项夺冠，量化支撑其"visual-agentic intelligence"核心卖点；在 SWE-bench Verified（76.8 vs Claude 80.9）上略弱，提示 Coding 仍有提升空间。
 
-**3) 在论文中的作用：**
-作为首页总览图，定量支撑论文核心卖点——"visual-agentic intelligence"，为后续 Table 1 的联合训练策略消融提供基线锚点。
+论文作用：作为首页总览图，锚定 Table 1 联合训练消融基线，并以横向对标建立"全能型 agentic 模型"定位。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png]]
@@ -53,13 +45,13 @@ K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取�
 > Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve, demonstrating that zero-vision activation paired with long-running RL is sufficient for acquiring robust visual capabilities.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图2联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-**① 核心数据**：图含两条RL训练曲线。左图MMMU Pro（粉）起点≈0.71–0.72，随RL FLOPs攀升并逼近≈0.76虚线参考；右图（绿）起点≈0.69，最终稳定在≈0.78左右，基线虚线位于≈0.70。两条曲线均呈持续上升趋势并伴随明显振荡收敛。
+1）**核心数据**：图含两条以 RL FLOPs 为横轴、Accuracy 为纵轴的训练曲线。左图（MMMU Pro，粉线）从基线 ~0.713 持续爬升至 ~0.755–0.760；右图（绿色，另一视觉基准）从 ~0.698 攀升至 ~0.78，两条虚线分别标注起止水平。两条曲线均呈单调上升趋势，验证随 RL 计算量扩展性能持续改善。
 
-**② 关键结论**：作者以"minimal zero-vision SFT"为起点，仅靠加大视觉RL算力即在两个基准上获得显著且单调的增益（MMMU Pro +4–5pp，右图 +8–9pp），证明无需预先大量视觉微调，长程RL即可"涌现"出鲁棒的视觉能力。
+2）**关键结论**：在仅经过极少量"zero-vision SFT"的起点上，仅依靠长程视觉 RL 即可获得稳健视觉能力——视觉涌现无需依赖大规模视觉 SFT，RL FLOPs 本身是性能提升的关键杠杆。
 
-**③ 方法链路作用**：此图为全文核心证据——支撑"文本能力先于视觉激活、视觉能力由RL后激活获得"的设计哲学，与Table 2的跨模态迁移结果呼应，共同论证MoE+RL的后训练范式无需显式视觉SFT即可获得多模态智能。
+3）**论文作用**：作为核心实证证据，支撑全文"zero-vision activation + 长程 RL" 的方法论主张，并与 Table 2 的跨模态迁移结果形成"视觉能力—文本能力同源提升"的互补论证，构成 K2.5 视觉智能后训练范式的关键一环。
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig03.png]]
@@ -79,13 +71,13 @@ K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取�
 > In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as train- ing progresses. At the same time, the level of parallelism during training also gradually increases. many subagents without meaningful task decomposition. By rewarding completed subtasks, r finish enforces feasibility and guides the policy toward valid and effective decompositions.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图4 图文联合解读**
+> 【图文联合解读】**图4联合解读**
 
-图含左右两子图，横轴均为 RL flops。左图（Training Accuracy vs Steps）以散点+红色平滑曲线呈现训练准确率，由初始约 36% 平滑上升至末段约 64%；右图（Average Parallelism vs Steps）显示平均并行度：初期约 8.5、中段长期平稳徘徊于 7.5–9、后期加速攀升至约 14。
+该图由左右两幅散点+平滑曲线图构成，横轴均为 RL flops。左图"Training Accuracy vs Steps"显示训练准确率从约 36% 单调平稳上升至约 63%；右图"Average parallelism vs Steps"显示平均并行度先在 8 附近小幅波动、中段保持平稳，后期急剧攀升至约 14。
 
-该图以双指标共演化论证两点核心结论：① 并行 Agent 强化学习训练过程平稳收敛、无发散崩溃，证明 r_finish 等奖励机制驱动的训练可行性；② 准确率与并行度同向增长，说明模型不仅"答对任务"，还主动学习提升任务分解的并行深度，回应了正文中"避免无意义切分过多子智能体"的设计目标——分解是有效而非冗余的。
+原文借此论证：在并行智能体 RL 环境中，对已完成子任务施加 r_finish 奖励，既能持续提升任务完成准确率，又能驱动策略学到更深入、有意义的任务分解（并行度上升），从而避免"无意义切分多个子代理"的退化解。
 
-在论文方法链中，该图承担 RL 后训练阶段"策略正确性 + 并行分解合理性"的双重实证支撑，为后续 agentic 能力评测提供训练可信度背书。
+在论文整体链路中，该图作为方法有效性证据，支撑第6页关于"奖励机制引导有效分解"的核心论点，为后续 Table 4 的 SOTA 结果提供训练动态层面的合理化解释。
 
 ### Figure 5 (p.10) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig05.png]]
@@ -94,13 +86,13 @@ K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取�
 > Comparison of model performance and token usage for Kimi K2 Thinking following token-efficient RL. compromise alleviates memory pressure, it does not fundamentally resolve the load imbalance caused by multimodal input sizes. More critically, it precludes the direct reuse of parallel strategies that have been highly optimized for text-only training.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（≤220字）：**
 
-1) **图表内容**：左雷达图为"Performance (%)"，覆盖 AIME2025、GPQADIAMOND、HMMT25_Feb/Nov、MMLUPro、LiveCodeBenchV6 及 Overall 共 7 个基准；Toggle 前（灰虚线）vs 后（蓝实线）显示 5 项提升（如 LiveCodeBenchV6 +2.2%、AIME2025 +1.1%）、2 项下降（GPQADIAMOND −1.0%、MMLUPro −2.0%），Overall +0.3%。右雷达图为"Token Usage"，7 项全部减少（绿标 0 增加），幅度 −745 至 −8127 tokens，Overall 节省 4791。
+图示双雷达图对比Kimi K2 Thinking在token-efficient RL前后于7项基准（含HMMT25系列、AIME2025、GPQADIAMOND、LiveCodeBenchV6、MMLUPro及Overall）上的表现。
 
-2) **关键结论**：token-efficient RL 在 7 个基准上**全部**显著降低 token 消耗，同时整体性能仅微涨 0.3%，证明"省 token 不损精度"。
+**左图（性能）**：5升2降——LiveCodeBenchV6 +2.2%、AIME2025 +1.1%、HMMT25_Nov +0.8%、Overall +0.3%为正向；MMLUPro −2.0%、GPQADIAMOND −1.0%为退化。**右图（token消耗）**：7项全部下降，幅度−817至−8127，Overall削减−4791，无任何一项增长。
 
-3) **论文作用**：作为方法有效性的核心证据，支撑 Kimi K2 Thinking "降本保效"的核心卖点，为后续推理效率与多模态训练优化提供量化锚点。
+论文据此论证：token-efficient RL可在几乎不损伤（仅2项小幅退化）的前提下系统压缩输出token，实现推理效率与能力兼得。该图是支撑K2 Thinking"可控思考预算"训练范式的核心定量实证，并为Table 5的横向对比提供方法学锚点。
 
 ### Figure 6 (p.14) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig06.png]]
@@ -109,13 +101,13 @@ K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取�
 > The word cloud visualizes heterogeneous K2.5-based sub-agents dynamically instantiated by the
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**注意**：所提供图片实为一张性能对比表格，与caption所述"词云"不符，以下按图像实际内容解读。
+> 【图文联合解读】**说明**：所给图片实为 **Table 6（性能对比表）**，而非 Figure 6 的词云。图 6 词云本身未呈现，以下基于表格内容做联合解读。
 
-该表横向比较K2.5 Agent Swarm、Kimi K2.5、Claude Opus 4.5、GPT-5.2、GPT-5.2 Pro在三项基准上的得分：BrowseComp为78.4/60.6/37.0/65.8/77.9；WideSearch为79.0/72.7/76.2/—/—；In-house Swarm Bench为58.3/41.6/45.8/—/—。
+**核心数据**：在三个 agentic 搜索基准上，K2.5 Agent Swarm 均居首位——BrowseComp 78.4（vs Kimi K2.5 60.6、Claude Opus 4.5 37.0、GPT-5.2 65.8、GPT-5.2 Pro 77.9）、WideSearch 79.0（vs 72.7/76.2）、自建 Swarm Bench 58.3（vs 41.6/45.8）；其中在 Swarm 专用基准上领先优势最大（+16.7 vs K2.5）。
 
-论证结论：Agent Swarm相对Kimi K2.5基座在BrowseComp提升17.8分、In-house Swarm Bench提升16.7分，且在BrowseComp以78.4超越GPT-5.2 Pro（77.9），证明Orchestrator动态调度多异构子代理的架构有效。
+**论证结论**：Orchestrator 动态实例化的异构子代理（即图 6 词云所可视化的能力分布）确实转化为可量化的检索增益；多代理编排显著优于单模型，验证了 Swarm 架构的有效性。
 
-整体作用：作为论文方法链路的终点证据，量化呈现"Orchestrator+子代理群"框架相比单模型基座与同级前沿模型的综合优势。
+**论文作用**：作为方法链路下游的关键实验证据，证明 K2.5 Agent Swarm 在 agentic 任务上同时超越开源单模型与闭源商业基线，支撑"动态编排+异构子代理"的核心贡献。
 
 ### Figure 7 (p.14) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig07.png]]
@@ -124,11 +116,7 @@ K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取�
 > Comparison of Kimi K2.5 performance un- der Agent Swarm and Discard-all context management in BrowseComp. (60.6%) and surpassing even GPT-5.2 Pro (77.9%). Similarly, WideSearch sees a 6.3% improvement (72.7% → 79.0%) on Item-F1, enabling K2.5 Agent Swarm to outperform Claude Opus 4.5 (76.2%) and establish a new state- of-the-art. The gains are most pronounced on In-house Swarm bench (16.7%), where
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图7实质为一张多基准成绩对比表**（caption仅提BrowseComp，但实际涵盖三项）：列依次为K2.5 Agent Swarm、K2.5 单代理基线（即Discard-all）、Claude Opus 4.5、GPT-5.2、GPT-5.2 Pro；行依次为 BrowseComp（78.4 / 60.6 / 37.0 / 65.8 / 77.9）、WideSearch（79.0 / 72.7 / 76.2 / — / —）、In-house Swarm Bench（58.3 / 41.6 / 45.8 / — / —）。
-
-**技术结论**：Agent Swarm在三项基准上均大幅超越Discard-all基线——BrowseComp +17.8、WideSearch +6.3、Swarm +16.7，并在BrowseComp上反超GPT-5.2 Pro（77.9）、远超Claude Opus 4.5（37.0），印证"Orchestrator主动上下文分片优于被动压缩"。
-
-**在论文中的作用**：作为核心实验证据，验证多代理编排方法相较单代理上下文管理的有效性，并完成K2.5与顶级闭源模型的横向定位。
+> 【图文联合解读】图7以三行三基准对比K2.5 Agent Swarm与Discard-all版K2.5及主流闭源模型得分：BrowseComp 78.4 vs 60.6（+17.8），超GPT-5.2 Pro（77.9）；WideSearch 79.0 vs 72.7（+6.3），超Claude Opus 4.5（76.2）；自研Swarm Bench 58.3 vs 41.6（+16.7），亦超Claude（45.8）。核心结论为Agent Swarm上下文管理相对Discard-all带来稳定且显著的全面增益，使其在三项任务上均超越顶级闭源对手。在论文链路中，该图作为关键消融/对比证据，定量证明Swarm多智能体架构与上下文管理是K2.5刷新SOTA的核心机制驱动。
 
 ### Figure 8 (p.15) ⭐深度解读
 ![[assets/kimi-k2-5-visual-agentic-intelligence-p15.png]]
@@ -249,52 +237,29 @@ Kimi K2.5 augments its native visual perception with **external tool calls** to 
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
-### Table 1 (p.3) ⭐深度解读
-![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab01.png]]
-> [!quote] caption
-> Performance comparison across different vision-text joint-training strategies. Early fusion with a lower vision ratio yields better results given a fixed total vision-text token budget.
-
-> [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像无法辨认**：裁图仅显示表标题与页眉"Kimi K2.5 Technical Report"，表格的具体行/列与数值未呈现，以下解读仅依据原文 caption。
-
-**1) 核心对象**：该表对比多种"视觉-文本联合训练"策略（即不同的融合时机 early/late fusion 与视觉 token 占比配置），控制变量为"固定视觉-文本总 token 预算"，输出某项任务性能分数。
-
-**2) 关键结论**：在总 token 预算一致时，采用**早融合（early fusion）**并**降低视觉 token 占比**的策略组合取得最佳结果，说明图文信息在浅层即交互、并为视觉让出更多文本容量，比后期拼接或高视觉占比更优。
-
-**3) 论文作用**：作为消融依据，为 K2.5 选定"早融合 + 低视觉比例"的联合训练范式提供经验支撑，是其视觉能力接入主模型训练链路中的关键设计决策证据。
-
 ### Table 2 (p.4) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab02.png]]
 > [!quote] caption
 > Cross-Modal Transfer: Vision RL Improves Textual Knowledge Benchmark Before Vision-RL After Vision-RL Improvement
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
+> 【图文联合解读】该表对比三个纯文本基准在视觉RL前后的表现：MMLU-Pro 84.7→86.4（+1.7），GPQA-Diamond 84.3→86.4（+2.1），LongBench v2 56.7→58.9（+2.2）。核心结论：在视觉任务上做RL反向提升了文本知识能力，揭示视觉—语言间的正向跨模态迁移效应。与Figure 2（视觉能力随RL FLOPs增长）互补，共同支撑"零视觉SFT叠加长程视觉RL"的有效性——收益不仅体现于视觉基准，亦外溢至纯文本知识。
 
-Table 2 对比 Vision-RL 前后三个文本基准表现：MMLU-Pro 84.7→86.4（+1.7）、GPQA-Diamond 84.3→86.4（+2.1）、LongBench v2 56.7→58.9（+2.2），均升 1.7–2.2 分。
-
-该表论证关键结论：在最小化零视觉 SFT 启动后，长程视觉 RL 不仅获得视觉能力，还通过跨模态正向迁移，同步提升纯文本知识与长上下文理解，证伪"视觉训练损害语言能力"的传统担忧。
-
-论文链路中，本表承接 Figure 2 对视觉能力随 RL FLOPs 持续增长的展示，将结论从单模态延伸到跨模态迁移维度，为作者"零视觉激活 + 长程视觉 RL"训练范式提供文本侧量化支撑，证明视觉与语言能力可协同增益。
-
-### Table 3 (p.7) ⭐深度解读
+### Table 3 (p.6) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab03.png]]
 > [!quote] caption
 > Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**说明：所提供图片实际为论文第6页正文（含"Prompt Construction for Parallel-agent Capability Induction"段落及§4.1 "Foundation: Kimi K2 Base Model"），并非Table 3本体。Table 3实际位于第7页。以下仅依据caption与上下文推断解读。**
 
-⚠️ 图片仅显示页眉"K Kimi K2.5 Technical Report"与 Table 3 的标题行，表格本体（各阶段的 Data、Tokens、Seq Len、Trainable 模块）未在截图中呈现，故具体数值无法从图像读取，以下解读依据标题语义与上下文推断。
+**Table 3 联合解读：**
 
-**1) 核心对象与结构**
-Table 3 以"训练阶段"为行，列出四列量化维度：数据组成（多模态/智能体任务配比）、训练 token 量级、上下文序列长度、可训练参数范围（冻结 vs 解冻）。它本质是一份"训练配方总览表"，把多阶段 pipeline 压缩为可对比的规格清单。
+1）**核心对象与结构**：表格纵列四个维度——训练阶段、数据组成、token总量、序列长度、可训练组件；横向对照SFT/RL等阶段，体现由基础模型（Kimi K2：1.04T总参/32B激活，15T预训练token）到后训练的演进。
 
-**2) 论证的关键技术结论**
-通过对照各阶段 token 量与可训练组件占比，论文据此说明：智能体能力（如 Figure 3 中可训练的 orchestrator + 冻结子代理）并非靠堆通用预训练数据获得，而是依赖后期针对 agentic 轨迹的小规模、组件选择性训练。
+2）**关键技术结论**：原文据其论证——基础能力来自万亿级MoE预训练，后训练阶段通过可控token量级与序列长度配置，对orchestrator进行视觉-智能体能力的渐进注入，同时冻结sub-agent以稳定分布式执行。
 
-**3) 在论文中的作用**
-该表位于方法章节，向下衔接数据构造、训练策略与消融实验，是读者快速理解"视觉 + 智能体"能力来源的入口；同时为后续基准评测的能力归因提供训练侧解释依据。
+3）**论文链路作用**：承接§4.1基础模型说明，向下衔接"parallel-agent capability induction"的提示构造与训练流水线，是方法章中连接foundation与agent swarm训练的关键资源配置总览表。
 
 ### Table 4 (p.12) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab04.png]]
@@ -302,7 +267,14 @@ Table 3 以"训练阶段"为行，列出四列量化维度：数据组成（多�
 > Performance comparison of Kimi K2.5 against open-source and proprietary models. Bold denotes the global SOTA; Data points marked with * are taken from our internal evaluations. † refers to their scores of text-only subset.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 4 将 Kimi K2.5 与 Claude Opus 4.5、GPT-5.2 (xhigh)、Gemini 3 Pro 等专有模型及 DeepSeek-V3.2、Qwen3-VL-235B-A22B 等开源模型，在推理/编码/智能体/图像四大类共 40 余基准上系统对比。K2.5 在智能体类全面领先：BrowseComp 60.6、BrowseComp (Agent Swarm) 78.4、WideSearch (Agent Swarm) 79.0 均为全球 SOTA；图像类 InfoVQA 92.6、CharXiv 77.5、编码 LiveCodeBench v6 85.0 亦夺冠。原文结合 Figure 4 论证：并行智能体 RL 训练中精度与并行度同步上升，"奖励完成子任务"机制引导策略学会有效任务分解。该表处于论文实验链终端，为"并行 RL→有效子任务分解→代理能力领先"核心论点提供量化证据。
+> 【图文联合解读】**1) 表格结构与数据**
+该表横向对比 K2.5 与 5 个模型（Claude Opus 4.5、GPT-5.2 xhigh、Gemini 3 Pro、DeepSeek-V3.2、Qwen3-VL-235B）在 4 类 30 余项基准的成绩，加粗为全球 SOTA。K2.5 多项领先：数学 AIME 96.1、HMMT 95.4、GPQA-Diamond 87.6；Agentic BrowseComp 60.6→(w/ctx)74.9→(Swarm)78.4、WideSearch(Swarm) 79.0、Seal-0 57.4；图像 OCRBench 92.3、InfoVQA 92.6、WorldVQA 46.3、MathVista 90.1。
+
+**2) 原文论证的关键结论**
+(1) K2.5 与头部闭源持平或领先；(2) 仅 K2.5 报告的 Agent Swarm 列（BrowseComp 78.4、WideSearch 79.0）直接验证"并行智能体 RL"对长程浏览/搜索的提升；(3) 图像多任务领先证明多模态联合训练有效。
+
+**3) 在论文中的作用**
+作为主实验表，承接 Figure 4 的并行 RL 设计，在通用/智能体/视觉三维度系统验证方法有效性，支撑 K2.5 为全面型 agentic-visual 模型的最终结论。
 
 ### Table 5 (p.13) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab05.png]]
@@ -310,13 +282,13 @@ Table 3 以"训练阶段"为行，列出四列量化维度：数据组成（多�
 > Performance and token efficiency of some reasoning models. Average output token counts (in thousands) are shown in parentheses.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 5 图文联合解读**
+> 【图文联合解读】**表5核心对象**：横向对比 Kimi K2.5（token-efficient RL 后）、Kimi K2 Thinking、Gemini-3.0 Pro、DeepSeek-V3.2 Thinking 在 7 项推理基准（AIME 2025、HMMT Feb/Nov 2025、IMO-AnswerBench、LiveCodeBench、GPQA Diamond、HLE-Text）上的得分与括号内平均输出 token 数（千）。
 
-**1) 核心对象与数据**：Table 5 对比 Kimi K2.5、Kimi K2 Thinking、Gemini-3.0 Pro、DeepSeek-V3.2 Thinking 四款模型在 7 个推理基准（AIME 2025、HMMT Feb/Nov 2025、IMO-AnswerBench、LiveCodeBench、GPQA Diamond、HLE-Text）上的得分与平均输出 token（括号内，千计）。
+**关键数据**：K2.5 在 AIME 2025（96.1,25k）、HMMT Feb 2025（95.4,27k）、HLE-Text（31.5,24k）等 6/7 项以更少 tokens 击败原版 K2 Thinking（如 94.5,30k）；相较 Gemini-3.0 Pro，token 略多 2–10k，但在 AIME 2025、HLE-Text 准确率反超；同时全面领先 DeepSeek-V3.2 Thinking。
 
-**2) 关键技术结论**：Kimi K2.5 在全部 7 项任务上得分均高于 Kimi K2 Thinking，同时输出 token 显著更少（AIME：96.1/25k vs 94.5/30k；IMO：81.8/36k vs 78.6/37k；HLE-Text：31.5/24k vs 23.9/29k）。这定量证明 token-efficient RL 可同步实现性能提升与推理成本压缩。
+**技术结论**：token-efficient RL 在不损失甚至提升准确率前提下压缩 15–30% 输出长度，实现性能—效率兼得。
 
-**3) 论文链路作用**：与 Figure 5 互为表里，以数据支撑"K2.5 更高分、更少 token"的核心卖点，是论证 token-efficient RL 方法有效性的关键实验证据。
+**论文作用**：作为 Figure 5 的姊妹实证，在方法链末端验证 token 经济性主张，回应"长 CoT 部署成本高"的隐忧。
 
 ### Table 6 (p.14) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab06.png]]
@@ -324,7 +296,13 @@ Table 3 以"训练阶段"为行，列出四列量化维度：数据组成（多�
 > Performance comparison of Kimi K2.5 Agent Swarm against single-agent and proprietary baselines on agentic search benchmarks. Bold denotes the best result per benchmark.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表6对比K2.5 Agent Swarm与单agent及专有基线在3项agentic search基准上的表现：BrowseComp 78.4（最高，>GPT-5.2 Pro 77.9）、WideSearch 79.0（最高，>Claude Opus 4.5 76.2）、In-house Swarm Bench 58.3（最高），三项均加粗领先。BrowseComp上较单agent K2.5（60.6）提升17.8分，内部Swarm Bench提升16.7分。该表作为核心实验证据，支撑Orchestrator动态调度异构子agent的Swarm范式同时优于单一推理与闭源强基线，是论文Agent Swarm方法主张的关键验证。
+> 【图文联合解读】**图文联合解读（Table 6）**
+
+**核心数据**：在三个智能体搜索基准上对比 K2.5 Agent Swarm 与单智能体基线（Kimi K2.5）及专有模型（Claude Opus 4.5、GPT-5.2、GPT-5.2 Pro）：BrowseComp 78.4 vs 60.6 / 37.0 / 65.8 / 77.9；WideSearch 79.0 vs 72.7 / 76.2（GPT 列缺测）；In-house Swarm Bench 58.3 vs 41.6 / 45.8（GPT 列缺测）。三个最高分（粗体）全部归于 K2.5 Agent Swarm。
+
+**关键结论**：Agent Swarm 在所有基准上同时超越单智能体 K2.5 与最强专有基线（BrowseComp 略胜 GPT-5.2 Pro，WideSearch/In-house 大幅领先 Claude Opus 4.5），论证了多智能体协同相对单体推理与闭源前沿模型的结构性优势。
+
+**论文作用**：作为第 14 页核心定量证据，与 Figure 6（异构子智能体词云）共同支撑"K2.5 通过动态多智能体编排获得 agentic intelligence"的方法论主张，闭环全文"视觉智能体"主题。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

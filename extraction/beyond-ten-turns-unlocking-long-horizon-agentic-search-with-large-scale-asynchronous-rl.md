@@ -189,27 +189,38 @@ Figure 10 展示 ASearcher-Local-14B 在约 220 训练步内三个行为指标�
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
-### Table 2 (p.12) ⭐深度解读
-![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab02.png]]
+### Table 1 (p.7) ⭐深度解读
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab01.png]]
 > [!quote] caption
-> Results with Local Knowledge Base.
+> Examples of the synthetic questions, where red indicates injected facts and cyan represents fuzzed content.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 解读：**
+> 【图文联合解读】**说明**：所提供图片并非 Table 1 本身，而是论文第 3.2.2 节"Data Synthesis Agent"的正文段落（含 Fig. 4 引用），与 Table 1 的内容不对应。以下基于原文 caption 与正文对 Table 1 进行解读：
 
-**1) 核心对象与数据**：表对比 Qwen-2.5/R1-Searcher/Search-R1/ASearcher 在 4 个 Multi-Hop（2WikiMQA、HotpotQA、Bamboogle、Musique）+ 3 个 Single-Hop（NQ、TriviaQA、PopQA）共 7 个 QA 基准上的 F1/LasJ，以 7B 与 14B/32B 两档报告。ASearcher-Local-7B 平均 F1=58.0、LasJ=61.0，为 7B 之最；尤其 2WikiMQA F1=72.3，较 R1-Searcher-7B（64.0）高 8.3 分；并以 7B 规模接近 Search-R1-32B 的 58.7。
+**1) Table 1 核心对象与结构**
+Table 1 展示的是数据合成智能体生成的合成问答样本示例。表格通过两种颜色编码标注内容：红色高亮为"injected facts"（注入事实），青色高亮为"fuzzed content"（模糊化内容），直观呈现了从种子问题到高复杂度问题的迭代改写过程，以及每一步新增的支持事实。
 
-**2) 关键结论**：论证 ASearcher 即使仅用本地检索（无网页浏览）仍能完成长程多跳搜索，能力来源于其异步 RL 训练的多轮 Agent 设计，而非依赖 web 工具或外部 LLM。
+**2) 原文论证的关键技术结论**
+该表用于支撑 §3.2.2 的核心论点——合成数据通过**逐步注入事实 + 模糊化改写**两条动作路径，可严格对齐可靠来源并持续提升问题复杂度；supporting facts 列表的同步维护保证了合成 QA 对的质量可验证。
 
-**3) 整体作用**：与 Figure 2 互补——前者证明网页 Agent 范式，后者隔离检索变量，证明方法本身（而非工具）带来增益，强化"长程 Agentic 搜索"的论文核心论点。
+**3) 在论文整体链路中的作用**
+Table 1 是数据合成流水线的可视化证据，向下承接 RL 训练所需的复杂长程搜索数据，为 ASearcher-Web-QwQ 在 GAIA/xBench 上 +15.0/+22.4 的性能跃升提供数据质量背书。
 
-### Table 4 (p.13) ⭐深度解读
-![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab04.png]]
+### Table 3 (p.12) ⭐深度解读
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab03.png]]
 > [!quote] caption
-> Results on GAIA, xBench-DeepSearch, and Frames. The results are evaluated with LLM- as-Judge. For baselines, we run the corresponding official codes for 4 seeds and report Avg@4 and Pass@4.
+> Results with Web-based Search and Browsing.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表4在GAIA、xBench-DeepSearch、Frames三基准上对比ASearcher与Search-R1、DeepResearch、Simple DS、Search-o1等的Avg@4/Pass@4，按7B与14B/32B分组。7B组ASearcher-Local-7B以59.0/62.9最优；14B组ASearcher-Web-14B以61.5/64.5居首，Avg@4反超32B Search-o1（55.8/64.9）；Web变体亦全面优于DeepResearch-7B。作为论文核心主实验，证明异步RL使中小模型在长程搜索任务上达到甚至超越32B级基线，且兼容local与web检索，是方法有效性的关键证据。
+> 【图文联合解读】**Table 3 图文联合解读：**
+
+该表对比7B与14B/32B模型在**真实Web搜索**环境下，于多跳QA（2WikiMQA/HotpotQA/Bamboogle/Musique）与单跳QA（NQ/TriviaQA/PopQA）上的F1与LasJ表现，区分local与web两种训练设置。
+
+**量化亮点**：ASearcher-Web-14B在2WikiMQA上F1达**76.1**（全表最高）、HotpotQA **80.7**、Bamboogle 68.5；其平均F1为**61.5**，高于Search-o1（QwQ-32B）的55.8、Simple DS-QwQ的58.4，更远超QwQ-32B直接生成的42.1。7B阵营中ASearcher-Web-7B平均58.6，亦优于Search-R1-7B的56.9和DeepResearcher-7B的54.9。
+
+**论证结论**：表3证明端到端异步RL在**开放Web（含噪声、动态页面）**环境中依然有效，Web版ASearcher在平均指标上接近甚至略超Local版本，验证了方法从封闭语料到真实网络的迁移能力。
+
+**整体作用**：与Figure 3的定性案例互补——图3展示复杂查询的行为优势，表3给出多基准量化证据，共同支撑"长视野异步RL+Web检索"的核心叙事。
 
 ### Table 5 (p.14) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab05.png]]
@@ -217,11 +228,7 @@ Figure 10 展示 ASearcher-Local-14B 在约 220 训练步内三个行为指标�
 > Pass@1 results of ASearcher-Web-QwQ-v2 and baselines, evaluated on GAIA [ 24 ], xBench- DeepSearch [ 41 ], Frames [ 14 ], and HLE-500 [ 19 ]. † indicates results are obtained from official reports.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表格内容**：对比 ASearcher-Web-QwQ-v2 与商业深度研究 agent、通用 LLM 在 GAIA、xBench-DeepSearch、Frames、HLE-500 四基准上的 Pass@1，分三组排列。
-
-**关键结论**：基础版 58.7/51.1/74.5/21.5 弱于 OpenAI-o3 (70.5/66.7/84.0) 与 Claude-4-Sonnet (68.3/64.6/80.7)；加入 K=16 测试时搜索后跃升至 71.8/75.0/83.4/24.6，xBench 显著超越 Kimi-Researcher (69.0) 与 OpenAI DR (26.6)，GAIA 超过 Claude-4 (68.3) 与 OpenAI DR (67.0)。
-
-**论文作用**：作为最终基准证据，证明异步 RL 训练 + 测试时搜索的组合可使开源 32B 模型与顶级闭源/商业深度研究 agent 正面抗衡，验证长程智能体搜索方案整体有效性。
+> 【图文联合解读】Table 5对比ASearcher-Web-QwQ-v2与基线在GAIA、xBench-DeepSearch、Frames、HLE-500的Pass@1（注：当前图片仅显示基线行，ASearcher自身数据未呈现）。基线分两类：商业深度研究代理（Kimi-Researcher：69.0/78.8/26.9；OpenAI DeepResearch：67.0/26.6）与通用LLM+工具（OpenAI-o3最强：70.5/66.7/84.0/20.2；Claude-4-Sonnet：68.3/64.6/80.7/20.3；DeepSeek-R1：-/55.0/82.0/24.8；Qwen3-235B：45.6/46.0/-/20.0；Qwen3-30B最弱：35.9/32.0/56.4/13.2）。原文以此论证：异步RL+合成数据框架使QwQ基座在多跳长程搜索任务上比肩甚至超越o3、DeepResearch等顶级闭源代理，验证方法有效性。该表是论文实验链路核心证据，支撑"开源小模型可逼近闭源深度搜索智能体"的关键结论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -30,7 +30,7 @@ tags: [kv-cache]
 > Contrasting full KV recompute, prefix caching, full KV reuse, and CacheBlend’s selective KV recompute. full KV recompute (Figure 1(a)). Despite many optimizations, the delay and computation of prefill grow super-linearly with the input length, and can easily slow down the service, especially on long LLM inputs (e.g., in RAG) [11, 53, 60].
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图中将“块1+块2+块3”的KV生成分为4种：①全量重算3块，最慢但质量高；②仅复用块1前缀缓存，重算块2–3；③全量复用3块KV、忽略跨块注意力，速度快但质量低；④CacheBlend全量复用，仅选择性重算少量KV，速度提升明显且质量良好。该图用于引出速度—质量权衡，并作为后续实验基线。
+> 【图文联合解读】图1由四个子图横向对比四种KV缓存策略：(a)完整KV重算——对全输入做prefill，最慢但质量好；(b)前缀缓存——仅复用前缀KV，略快且质量好；(c)全KV复用——直接拼接各块KV并忽略跨注意力，虽快但质量低；(d)CacheBlend（本文）——复用全部KV但仅选择性重算其中一小部分，实现"又快又好"。原文借此构建"速度-质量"二维权衡空间，明确指出前三类方案各有缺陷：全重算延迟超线性增长，RAG场景下尤为严重；前缀缓存收益有限；全复用损害质量。从而论证CacheBlend选择性重算同时兼得两端收益的必要性，为全文核心方法定位与动机奠基。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig02.png]]
@@ -39,9 +39,13 @@ tags: [kv-cache]
 > Generation quality improves as more text chunks are retrieved. and fetch top-k relevant chunks from the database, based on the least L2 distance between the embeddings of the query and the chunk respectively. Figure 2 shows the generation quality, measured using a standard F1-score metric, with an increasing number of selected text chunks. We can see that the quality improves significantly as more
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图2双子图：Musique(a)与2WikiMQA(b)，横轴为输入相关chunks数(1–45/1–35)，纵轴F1-Score。对比Full KV recompute含跨块注意力(蓝实线)与Full KV reuse无跨块注意力(橙虚线)：Musique上蓝线从0.19升至0.32峰值(25块)后微降，橙线在5块处达0.23后持续下滑至0.16；2WikiMQA蓝峰0.31(30块)，趋势一致。
+> 【图文联合解读】## 图文联合解读
 
-论文借此论证：检索chunks越多质量越高，但若无跨块注意力，单纯KV复用质量反随chunks数增加而下降。图内直接标注"跨块注意力增益"，是CacheBlend提出"选择性KV重算+跨块融合"方案的核心动机，为后续方法设计及效率/质量权衡实验提供立论基础。
+**核心对象与数据**：图2含两个子图——(a) Musique、(b) 2WikiMQA数据集，横轴为LLM输入的相关文本块数(5–45/5–35)，纵轴为F1-Score(0.15–0.35)。对比两条曲线：蓝色实线（Full KV recompute，带跨块attention）随块数增加F1持续上升，Musique在约25块时峰值≈0.32，2WikiMQA在约30块时峰值≈0.32；橙色虚线（Full KV reuse，无跨块attention）基本持平于0.20–0.23，甚至后期略降。两线间标注的垂直箭头即"跨块attention带来的收益"。
+
+**论证的关键结论**：检索的文本块越多，生成质量越高；但若仅复用各块独立预计算的KV cache而不重新融合跨块attention，质量增益受限；跨块attention是性能提升的关键。
+
+**在论文中的作用**：该图作为CacheBlend的核心动机实验，证明"全量KV重算"虽质量最优但代价高、"全量KV复用"虽快但丢质量，从而为后续提出的"选择性KV重算融合"方案（兼顾质量与速度）提供立论依据。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig03.png]]
@@ -52,11 +56,12 @@ tags: [kv-cache]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图(c)展示"Full KV reuse"方案：两块预存的KV缓存（Chunk1、Chunk2）直接拼接Query送入LLM，不做任何重计算。输出示例显示，面对FIFA世界杯类查询，模型仅给出"梅西、C罗知名"等表面信息（红色❌），未能融合两chunk内容得出正确答案。
+图(a)展示典型LLM输入结构：Chunk1（Messi进13球）+Chunk2（Cristiano进8球）+Query"谁进球更多"。
+(b)完整KV重算时，模型输出正确答案"Messi进球多于Cristiano"（✓）；
+(c)完整KV复用时，模型却开始ramble，输出"该问题关于世界杯……Messi与Ronaldo的名字广为人知……"（✗）。
+原因在于复用两段KV cache时，**丢失了chunk间的cross-attention**——模型无法跨块比较"Messi的13"与"Cristiano的8"。
 
-**原文结论**：完整复用KV虽省时，但忽略了chunk间的cross-attention，导致跨块信息无法交互，产生事实性错误。
-
-**论文作用**：此图与图(b)"Full KV recompute"形成对比——前者慢而正确、后者快而错——共同揭示RAG场景中KV复用的核心矛盾（效率 vs 准确性），从而为CacheBlend提出"选择性KV重计算以恢复跨块注意力"的方法提供直接动机与问题定义。
+论文借此论证：纯KV复用会损害答案正确性，从而为**CacheBlend**所采用的"选择性KV重算+部分复用融合"策略提供了核心动机——既保留跨块注意力以保证正确率，又避免完全重算的开销，达成速度与精度的折中。
 
 ### Figure 4 (p.5) ⭐深度解读
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig04.png]]
@@ -80,7 +85,13 @@ tags: [kv-cache]
 > Illustrated contrast between (a) full KV recompute and (b) selective KV recompute on one layer. 0 10 20 30 40 50
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图中为第 \(i\) 层的选择性重算：输入经 \(Q_i\) 与按 token 存储的 \(K_i\) 相乘生成注意力矩阵，再乘 \(V_i\)，得到第 \(i+1\) 层输入；图中明确标出仅重算 2 个 token 的 KV，而非整层 token。它说明 CacheBlend 在保留注意力知识融合效果的同时，以少量重算降低计算量和时延。该图是 RAG 缓存复用机制的结构示意，连接其性能与精度实验，并非结果数据图。
+> 【图文联合解读】**图5解读（CacheBlend机制图）**
+
+**1）核心对象与结构**：展示单层 Transformer 内 QKV 注意力计算的两种方式。(a) Full KV recompute：全部 token 的 K_i、V_i 均重新计算（深灰块），与 Q_i 相乘生成完整 Attn Matrix；(b) Selective KV recompute：仅对 K_i、V_i 中**2 个选中 token** 深色重算，其余浅色"Re-used"直接复用缓存 KV，从而以极小重算量（仅2 token）维持注意力输出。
+
+**2）论证的关键结论**：CacheBlend 不必像全量重算那样耗费全部 token 的 QKV 前向，只需选择性重算少数关键 token 的 KV 即可修正朴素缓存融合带来的精度损失，实现"算力开销 ≪ 精度损失"，为 RAG 场景下低延迟复用多文档 KV cache 提供微观机制依据。
+
+**3）链路作用**：该图属于方法核心机制图（Fig 5–9），将"KV cache 融合"的具体注意力计算过程可视化，为后续 Fig 10–12 的端到端延迟-吞吐性能提升提供机理支撑。
 
 ### Figure 6 (p.6) ⭐深度解读
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig06.png]]
@@ -106,9 +117,11 @@ tags: [kv-cache]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图7以CDF形式刻画Mistral-7B（4/5/6层）、Yi-34B（10/11/12层）、Llama-70B（4/5/6层）相邻层间KV偏差的分布。三组曲线高度重合，绝大部分token的KV偏差集中在0–20以内（约90%分位数），三条曲线几乎完全重叠，说明跨相邻层的KV值变化极小、分布近似一致。
+图示三模型连续层的KV偏差CDF分布：Mistral-7B(层4-6)、Yi-34B(层10-12)、Llama-70B(层4-6)，横轴分别约0–60、0–75、0–60。三图均呈现陡升长尾形态——CDF在偏差≈20–30处迅速趋近1.0，仅极少数token的偏差延伸至60–75。
 
-该图用以论证：**LLM各层KV缓存对最终输出贡献稳定，仅靠缓存拼接近似已足够**，无需逐token重算全部层。这正是CacheBlend"选择性少层重算+缓存融合"策略的实验依据——既然偏差小，少量层（如每16层中只重算1层）即可修正拼接误差，从而在RAG长上下文场景下实现KV缓存复用与加速推理，构成论文方法链路的关键支撑图。
+**论证结论**：相邻层间及跨模型间KV偏差分布高度一致，表明绝大多数token前后层生成的KV近似相同，仅个别"长尾"token显著偏离。该CDF为CacheBlend核心策略——**选择性重算长尾token的KV、复用其余缓存**——提供了直接的量化实证。
+
+**链路作用**：该图以分布视角证实"KV偏差集中在少量关键token"，从而支撑全文选择性KV融合方案，使其区别于全量重算，在保持生成质量的同时显著加速RAG推理。
 
 ### Figure 8 (p.7) ⭐深度解读
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig08.png]]
@@ -117,13 +130,16 @@ tags: [kv-cache]
 > Rank correlation of the KV deviation per token be- tween two consecutive layers. expensive and defeats the purpose of selective KV recom- pute. Instead, we observe that the HKVD tokens on different layers are not independent:
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## 图文联合解读
+> 【图文联合解读】## Figure 8 图文联合解读
 
-**1) 核心对象与数据：** 该图展示三个模型（Mistral-7B、Yi-34B、Llama-70B）中，相邻层间每个 token 的 KV 偏差的 Spearman 秩相关系数。横轴为不同层对（如 5 vs. 6、12 vs. 13、31 vs. 32 等），纵轴 0–1.0。三组柱形均接近 1.0（≈0.97–1.00），且跨浅层、中层、深层层对均保持极高相关性。
+**1) 核心对象与数据**
+该图以三组柱状图分别展示 Mistral-7B（4 对层：5/6、12/13、21/22、31/32）、Yi-34B（5/6、16/17、31/32、46/47）与 Llama-70B（11/12、21/22、41/42、61/62）中**相邻层间逐 token KV 偏差的 Spearman 秩相关系数**。三个模型在所有采样层对上的秩相关均稳定在 **≈0.95–1.0** 区间，接近完全正相关。
 
-**2) 关键论证结论：** 原文据此指出，HKVD（高 KV 偏差）token 在不同层并非独立，其分布在相邻层间高度一致；因此只需识别少数 token 即可在全层做选择性重算，避免逐层独立选取带来的额外开销。
+**2) 关键技术结论**
+HKVD（高 KV 偏差）token 在不同层之间**并非独立**：一旦某 token 在某一层被识别为"重要"，其相邻层几乎必然也属于重要 token。这一强跨层相关性为后续策略提供了统计支撑——无需对每层独立、逐 token 重算 KV 偏差。
 
-**3) 在方法中的作用：** 该图为 CacheBlend 的"选择性 KV 重计算 + 缓存融合"策略提供统计依据——HKVD 的层间相关性正是该策略得以在保证生成质量前提下大幅降低重算量的核心前提。
+**3) 在论文方法链路中的作用**
+该结论直接支撑 CacheBlend 的**选择性 KV 重算（selective KV recompute）** 设计：可利用层间秩相关，仅在少量代表层中识别关键 token，并将其"扩散"应用到相邻层缓存，从而**以极低开销完成关键 KV 的重计算与融合**，避免全 token、全层重算带来的高昂代价，是 CacheBlend 实现"快"的核心经验依据之一。
 
 ### Figure 9 (p.7) ⭐深度解读
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig09.png]]
@@ -134,9 +150,11 @@ tags: [kv-cache]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图9展示CacheBlend逐层HKVD（高KV偏差）token的级联筛选机制。结构上：每层对"Updated KV"与"Precomputed KV"做KV偏差计算（柱状图），筛出HKVD tokens。Layer 1全量重算以建立初始HKVD集合，Layer 2仅在前层HKVD子集内重算3个token并再次筛选，后续层继续级联。浅色格代表Re-used，深色代表Re-computed。
+1) **核心对象与结构**：图示三层（Layer 1–3）双行结构，上行"Updated KV"、下行"Precomputed KV"。Layer 1全量重算所有token，Layer 2仅重算3个token，Layer 3仅重算2个token。流程为：底层KV deviation（黑色条形图）→ 选取HKVD token（Selected列）→ 送入上一层重算。浅色立方=Re-used（缓存复用），深色立方=Re-computed（重算）。
 
-原文借此论证：层间级联选择使重算规模逐层收敛至极少数token，被复用缓存的偏差仍受控，从而兼顾精度与速度。该机制是CacheBlend在RAG长上下文场景下"高比例缓存复用+极少增量重算"这一核心加速方案的关键环节，使预填充计算量显著降低而生成质量几乎无损。
+2) **论证的关键结论**：验证逐层递归选择HKVD token策略——仅基于上一层选出的高偏差子集计算当前层偏差并选择性重算，使每层重算量递减，无需全层重算即可获得完整KV。
+
+3) **在论文中的作用**：作为CacheBlend选择性重算机制的核心可视化，支撑其"逐层级联HKVD选择→少量重算+大量缓存复用"的效率论证，是方法相比全量重算显著提速的关键证据。
 
 ### Figure 10 (p.8) ⭐深度解读
 ![[assets/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-p08.png]]
@@ -246,15 +264,14 @@ CacheBlend exploits **pipelining of KV loading and selective recomputation** so 
 > CacheBlend’s outperforms baselines when using RAM and slower disks
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**Figure 17 图文联合解读**
+> 【图文联合解读】**图示内容**
+两幅散点图对比CPU RAM（左）与Slow Disk 4Gbps（右）下四种方法的TTFT（0–3s）与F1-Score（0–0.4）。RAM场景TTFT≈0.7s、F1≈0.32，质量与Prefix Caching/Full Recomp（F1≈0.33）持平但延迟仅其1/3；Full KV Reuse TTFT最低（0.15s）但F1仅≈0.15。Slow Disk场景TTFT≈1.3s、F1≈0.32，仍优于Full KV Reuse（F1≈0.15）并与另两方法持平。
 
-该图以两个散点图（CPU RAM、Slower Disk 4Gbps）对比四种方法，横轴为 TTFT（首 token 延迟，秒），纵轴为 F1-Score：CacheBlend（红方）、Full KV Reuse（橙×）、Prefix Caching（蓝圆）、Full Recomp（蓝三角）。
+**技术结论**
+论文借此论证：CacheBlend在不同存储介质下均能以更低延迟保持与全重计算相当的高质量输出，突破"低延迟必损质量"瓶颈。
 
-**关键数据**：RAM 下 CacheBlend TTFT≈0.6s、F1≈0.32；Prefix Caching 与 Full Recomp TTFT 2.0–2.4s、F1≈0.32；Full KV Reuse TTFT 0.2s 但 F1 仅 0.15。慢盘场景下 CacheBlend TTFT≈1.3s、F1≈0.32，仍低于 Prefix Caching/Full Recomp 的 2.0s。
-
-**技术结论**：CacheBlend 在与重计算相当的 F1 下，TTFT 显著降低，构成 Pareto 最优，验证即便 KV 缓存存于较慢存储，仍能兼顾速度与生成质量。
-
-**论文作用**：此图为实验链路中存储介质敏感性实验，支撑"KV 复用+部分重算"机制在不同硬件条件下的鲁棒性结论。
+**论文作用**
+属实验评估中的稳健性/泛化性验证环节，证明方法不依赖特定硬件即可在速度-质量维度取得帕累托最优，强化了全文核心卖点。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

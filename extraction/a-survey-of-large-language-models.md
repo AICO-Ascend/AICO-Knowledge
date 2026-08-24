@@ -54,13 +54,7 @@ tags: []
 > The basic principle underlying GPT models is to compress the world knowledge into the decoder-only
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-**1）核心对象与结构：** 图中以时间轴串联GPT-1(2018.06)→GPT-2(2019.02)→GPT-3(2020.05)→Codex(2021.07)→GPT-3.5(2022.03)→GPT-4(2023.03)，并下挂两条虚线支链：一条经 code-davinci-002 → text-davinci-002（+instruction）→ text-davinci-003（+RLHF）→ gpt-3.5-turbo（+chat）；另一条延伸至GPT-4 Turbo与GPT-4 Turbo with vision(2023.09)。ChatGPT横跨GPT-3.5与GPT-4。
-
-**2）关键论证结论：** GPT系列沿"decoder-only生成式预训练→规模化→上下文学习→代码专门化→指令微调→RLHF对齐→对话/多模态"路径演进，体现decoder-only架构与人类对齐技术是LLM能力跃迁的两大核心驱动力。
-
-**3）论文中的作用：** 为综述提供GPT系发展时间锚点，作为代表性LLM案例支撑后续方法分类与能力分析。
+> 【图文联合解读】图4以时间线展示OpenAI GPT系列技术演化，含三分支结构：主干GPT-1(2018.06)→GPT-2(2019.02)→GPT-3(2020.05)→Codex(2021.07)→GPT-3.5(2022.03)→GPT-4(2023.03)；对齐链code-davinci-002→text-davinci-002/003→gpt-3.5-turbo；GPT-4 Turbo(2023.09)扩展长上下文与视觉。实线=官方继承证据，虚线=关联推断。原文借此论证GPT遵循"decoder-only预训练→规模缩放→in-context learning→代码预训练→指令/RLHF对齐→多模态"演进范式，作为后续预训练、对齐、能力评测章节的方法论奠基图谱。
 
 ### Figure 5 (p.12) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig05.png]]
@@ -69,13 +63,11 @@ tags: []
 > Public API of LLMs. Instead of directly using the model copies, APIs provide a more convenient way for common users to use LLMs, without the need of running the model locally. As a representative interface for using LLMs, the APIs for the GPT-series models [46, 55, 66, 105] have been widely used for both academia and industry19.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**【图文联合解读·图5 LLaMA进化图】**
+> 【图文联合解读】图5是以LLaMA为根节点的衍生模型演化树，约含30余个变体。结构上：①红色虚线表示"继续预训练"路径（如Chinese-LLaMA、Open-Chinese-LLaMA）；②绿色实线为指令微调中的"模型继承"，蓝色为"数据继承"（如Alpaca用合成数据、Vicuna用chat数据）；③黄/白框区分参数高效微调与全参数微调；④底部涵盖数学、金融、医学、法律、教育、双语六大领域，右侧虚线框归集多模态变体（LLaVA、MiniGPT-4等）。
 
-**1) 核心对象与结构：** 以LLaMA为根节点的有向进化图，共30+变体，按4类边演化——①红虚线"继续预训练"派生Chinese-LLaMA、BiLLa、Panda等中文化版本；②绿/蓝实线"模型/数据继承"对应指令微调，衍生Alpaca、Vicuna、BELLE、Ziya、Chinese-Alpaca等；③任务/领域适配支线（含图标分类：数学Goat、医疗ChatMed、法律Lawyer LLaMA、TaoLi等）+RLHF线（PKU-Beaver）；④虚线框内为多模态扩展（LLaVA、MiniGPT-4、OpenFlamingo、VisionLLM）。
+该图论证三点结论：(1)开源基模LLaMA催生庞大衍生生态；(2)训练数据与微调策略是模型分化的核心轴；(3)LLaMA已向垂直领域与多模态双向扩展。
 
-**2) 关键论证：** 原图集中论证——开源LLaMA通过"继续预训练+指令微调+任务适配+多模态扩展"四条路径，在数月内引爆社区生态，验证了开源模型相对闭源在迭代速度与跨域扩散上的显著优势。
-
-**3) 论文作用：** 作为开源生态爆炸式发展的具象证据，支撑全文核心论点"开源驱动LLM快速迭代与领域/模态扩散"，并串联方法论章节对指令微调、RLHF、领域适配、多模态技术的讨论。
+在论文整体方法链中，此图作为开源LLM生态的"可视化快照"，与Table 5（模型配置详情表）互补，从宏观分布与微观参数两个尺度支撑"开源驱动快速迭代"的中心论点。
 
 ### Figure 7 (p.18) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig07.png]]
@@ -84,11 +76,11 @@ tags: []
 > Filtering and Selection. To remove low-quality data from the collected corpus, existing work generally adopts two ap- proaches, namely classifier-based and heuristic-based. The former approach trains a selection classifier based on high- quality texts and leverages it to identify and filter out low- quality data. Typically, these methods train a binary classi- fier using positive instances that ar
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图7展示LLM预训练前的**6阶段数据预处理流水线**：①原始语料（网页/书籍/代码等）→②过滤筛选（语言/度量/统计/关键词四类启发式规则）→③去重（句级、文档级、集合级）→④隐私脱敏（检测并移除PII）→⑤分词（SentencePiece、Byte-level BPE等）→⑥得到可直接喂入训练的token序列。
+> 【图文联合解读】**核心结构**：图7以6阶段流水线呈现LLM预训练数据预处理全流程——Raw Corpus（网页、图书、论文、GitHub等多源原始语料）→ Filtering & Selection（语言/指标/统计/关键词四类过滤）→ De-duplication（句级/文档级/集合级去重）→ Privacy Reduction（检测并替换PII）→ Tokenization（复用/SentencePiece/BPE）→ Ready to pre-train（输出数值token序列）。每阶段均以"Alice is writing a paper about LLMs."为例演示具体操作（如删除脏字、划线去重、Replace替换人名、Encode编码）。
 
-**原文论证**：高质量语料是预训练基础；过滤阶段采用分类器式与启发式两种互补策略，可显著降噪提质。
+**关键技术结论**：原文指出过滤筛选分classifier-based与heuristic-based两类，前者训练二分类器以高质量文本为正例识别低质数据；去重与隐私脱敏在多粒度执行以提升数据纯净度与合规性。
 
-**论文作用**：作为数据准备章节的方法总览图，将文本采集到模型训练的全链路可视化，奠定后续分词、模型架构与训练策略论述的事实基础。
+**论文作用**：该图作为第2章"Pre-training Data"的方法总纲，将散落于各小节的清洗、去重、脱敏、分词技术整合为端到端流程，为后续章节讨论各模型（Gopher、GPT-3、LLaMA等）的具体数据策略提供统一参照框架。
 
 ### Figure 8 (p.20) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig08.png]]
@@ -124,21 +116,16 @@ tags: []
 > Adapter Tuning. Adapter tuning incorporates small neural network modules (called adapter) into the Transformer mod- els [406]. To implement the adapter module, a bottleneck architecture has been proposed in [406, 407], which first compresses the original feature vector into a smaller di- mension (followed by a nonlinear transformation) and then recovers it to the original dimension. The adapter mo
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 13，p.43）**
 
-图13展示了四种参数高效微调（PEFT）方法的结构对比：
+**① 核心对象与结构**  
+图示对比四种 PEFT 方法的 Transformer 接入方式：(a) Adapter Tuning — 每层在 MHA→FFN 之间、FFN 之后各嵌一个瓶颈 Adapter 模块；(b) Prefix Tuning — 在 Layer #1~#N 各层前均注入可训练 Prefix 向量；(c) Prompt Tuning — 仅在输入端前置一个 Prompt，深层不再附加；(d) LoRA — 在每层旁并行接入低秩矩阵对 W_up / W_down。
 
-**(a) Adapter Tuning**：在每个Transformer层的MHA与FFN之后各插入一个瓶颈结构的Adapter模块（绿色），仅训练新增的小模块参数。
+**② 原文技术结论**  
+四种方案的差异本质在于"可训练参数注入位置"：层内瓶颈（Adapter）、逐层前缀（Prefix）、输入级提示（Prompt）、并行低秩分解（LoRA），均冻结原模型主体，仅训练极少附加参数即可适配下游任务。
 
-**(b) Prefix Tuning**：在每一层输入前拼接可训练前缀向量（红色），冻结原模型参数。
-
-**(c) Prompt Tuning**：仅在输入层最前端添加可学习Prompt（黄色），不侵入各层结构，最轻量。
-
-**(d) LoRA**：在权重矩阵旁并行低秩分解矩阵（W_up、W_down，橙色），推理时可合并。
-
-**论证结论**：四种方法的核心思想一致——冻结预训练LLM绝大部分参数，仅微调极少量新增参数（Adapter、前缀、Prompt或低秩矩阵），即可适配下游任务。
-
-**论文作用**：作为第43页"Parameter-Efficient Fine-Tuning"小节的核心图示，与Table 4的定量对比呼应，为后续章节讨论指令微调与RLHF的成本权衡提供方法论支撑，是LLM高效适配技术的总览入口。
+**③ 论文整体作用**  
+作为 Adaptation 章节的核心对比图，为读者建立 PEFT 方法全景认知，支撑后续"参数高效微调显著降低大模型部署与适配成本"的论述。
 
 ### Figure 16 (p.54) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig16.png]]
@@ -147,13 +134,13 @@ tags: []
 > In this paradigm, there are typically three components: task planner, plan executor, and environment36. Specifically, task planner, which is played by LLMs, aims to generate the whole plan to solve a target task. The plan can be presented in various forms, e.g., an action sequence in the form of natural language [432] or an executable program written in programming language [436]. The LLM-based ta
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（Figure 16）：**
+> 【图文联合解读】**图文联合解读：**
 
-图示 **Planning Framework** 含三大核心组件——**Task Planner (LLM)**、**Plan Executor**、**Environment**，并附 Memory、Tool 两个辅助模块。流程为：Task→LLM 生成 Plan→Executor 输出 Action 作用于 Environment→Environment 经 Feedback 回传 Planner 触发 plan refine→最终输出 Result。底部按 **Internal(LLM 自身)** 与 **External(Human / World / Others)** 对组件分类。
+该图展示LLM提示式规划的三组件闭环：**Task Planner(LLM)** 输出Plan→**Plan Executor** 执行Action→作用于**Environment**；执行结果通过**Feedback**回传Planner实现"generate & refine"迭代，最终输出Result。Environment分内部(LLM/Memory)与外部(Human/World/Other/Tool)两类。
 
-原文据此论证：LLM 可作为 task planner，生成自然语言动作序列或可执行程序形式的多步整体方案，闭环反馈支持计划的迭代修正与泛化。
+论文借此论证：LLM作为任务规划器，可生成自然语言动作序列或可执行程序，通过人–机–世界反馈循环，将单步推理扩展为多步复杂任务求解。
 
-作用上，该图作为论文**规划范式的总纲（统一形式化框架）**，为后文具体方法（zero-shot / few-shot / CoT 规划、ReAct 等）提供一致的组件划分与交互参照。
+在论文方法链中，该图为第4章"规划与决策"提供统一形式化框架，与Tool use、Memory、Reflection等子节并列，支撑后续实验评估中"复杂任务解决能力"的论证。
 
 ### Figure 17 (p.59) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-fig17.png]]
@@ -162,13 +149,7 @@ tags: []
 > Hallucination widely occurs in existing LLMs, even the most superior LLMs such as GPT-4 [46]. Furthermore, existing work shows that LLMs encounter difficulties in recognizing the hallucinated con- tent in text [604], even the powerful ChatGPT. Additionally, beyond language tasks, a recent study has shown that large vision-language models (LVLM) also face challenges with hallucination, i.e., genera
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（图17）：**
-
-该图以两组人机对话并排对比两类幻觉：**(a)内在幻觉**——输入"Bob之妻Amy、之女Cindy，谁是Cindy对Amy的关系？"，模型却答"Cindy是Amy的**daughter-in-law**（儿媳）"（红字标注），与输入直接矛盾，应为孙女关系；**(b)外在幻觉**——被问及"RLHF含义"时，模型将其臆造为"Rights, Limitations, Harms, and Freedoms"（红字），却正确解释了LLM，无中生有。
-
-**论证结论：** 幻觉不仅在GPT-4等顶尖LLM中普遍发生，且模型自身难以识别文本中的幻觉内容。
-
-**章节作用：** 作为第59页"幻觉挑战"小节的关键实证样例，与LVLM幻觉引用[604]共同支撑作者对可信度风险的定性论述，引导后续缓解策略章节。
+> 【图文联合解读】图17以两组对话展示LLM幻觉：(a)内在幻觉——输入"Bob之妻Amy、之女Cindy"的事实后，LLM却答"Cindy是Amy的儿媳"，与输入直接矛盾；(b)外在幻觉——问RLHF含义时，LLM凭空编造其代表"Rights, Limitations, Harms, and Freedoms"（实为Reinforcement Learning from Human Feedback）。原文借此定性论证：幻觉在GPT-4等顶级LLM中仍频发，且模型难以自识别已生成的幻觉内容。该图作为现象级案例证据，铺垫后文对幻觉分类（内在/外在）、检测与缓解方法的系统综述，是论述"可靠性挑战"这一关键议题的视觉锚点。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -178,7 +159,9 @@ tags: []
 > Statistics of large language models (having a size larger than 10B in this survey) in recent years, including the capacity evaluation, pre-training data scale (either in the number of tokens or storage size) and hardware resource costs. In this table, we only include LLMs with a public paper about t
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表汇总2019.10–2023.10间50余个>10B LLM，按公开/闭源两栏纵向排列，列出参数量（11B–1200B）、预训练数据（1T–3.2T tokens）、硬件（A100/A800、TPU v3/v4）、训练时长与ICL/CoT评估、IT与RLHF适配情况。原文借此论证三大趋势：①参数与数据双轨扩张（GLaM达1200B、Skywork达3.2T tokens）；②能力沿"基模型→IT→RLHF"逐级跃迁，GPT-4、LLaMA2、QWEN、Baichuan2同步具备IT+RLHF；③开源生态加速追赶。作为全文实证基础，该表支撑论文对LLM规模阈值（>10B）的界定、能力演进分类与发展阶段划分，为后续训练方法与涌现能力讨论提供量化锚点。
+> 【图文联合解读】该表汇总了2019年10月至2023年10月间30余款≥10B参数的大语言模型（含开源与闭源），纵向分栏为：发布时间（Oct-2019→Oct-2023）、参数量（11B起，闭源最大GLaM 1200B、PanGu-Σ 1085B）、基模型、Adaptation（IT/RLHF）、预训练数据规模（最高3.2T tokens）、算力配置（64–4480块GPU/TPU）、训练时长及ICL/CoT评估。
+
+数据揭示三条量化趋势：①模型规模从10B级跃升至千亿–万亿级；②训练数据从1T tokens扩展至3T+；③2022年后IT与RLHF成为主流对齐范式。论文借此论证"规模扩张＋人类反馈对齐"是LLM能力跃迁的核心驱动力，为后续预训练、微调与对齐章节提供量化全景基础。
 
 ### Table 2 (p.13) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab02.png]]
@@ -186,13 +169,7 @@ tags: []
 > Statistics of commonly-used data sources.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**联合解读：**
-
-该表系统梳理了LLM预训练常用的12个公开数据集，结构为四列：数据集名称（含引用）、存储容量、数据来源、更新时间。量化层面：容量跨度从BookCorpus的5GB到Pushshift.io的2TB、ROOTS的1.6TB、the Pile与C4各800GB；来源构成上，CommonCrawl派生数据占4席（C4、CC-Stories-R、CC-NEWS、REALNEWs，共约1029GB），Reddit链接2席，Books、Wikipedia、Codes各1席，另有2个综合性语料。
-
-原文以此论证三点关键技术结论：①预训练语料呈高度**多样化**（书、网页、百科、代码混合），避免单一分布偏差；②**CommonCrawl**是规模最大且最经济的原始数据池，但需经清洗方可使用（故C4、CC-NEWS等衍生集才进入主流）；③**时间新鲜度参差**（2015–2023）说明数据持续滚动更新，是LLM知识时效性的关键保障。
-
-在论文整体链路中，该表位于"数据准备"章节，作为后续讨论清洗、去重、质量过滤、配比策略的事实依据与基准参考，支撑作者对数据工程是LLM训练核心瓶颈之一的论断。
+> 【图文联合解读】表2以“语料库—规模—来源—更新时间”统计12种常用数据：BookCorpus为5 GB；C4 800 GB、CC‑Stories‑R 31 GB、CC‑NEWS 78 GB、REALNEWS 120 GB，均来自CommonCrawl；OpenWebText 38 GB、Pushshift.io 2 TB源于Reddit链接；Wikipedia 21 GB；Pile 800 GB、ROOTS 1.6 TB，更新时间横跨2015—2023年。表2说明大模型预训练依赖多源、TB级数据，覆盖面、清洗、配比与时效性至关重要；它是后续数据处理与训练讨论的资源底座，并非单项实验结果。
 
 ### Table 3 (p.14) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab03.png]]
@@ -200,13 +177,7 @@ tags: []
 > A detailed list of available collections for instruc- tion tuning.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 解读**
-
-该表按 **Task / Chat / Synthetic** 三类汇总指令微调数据集：Task 类 7 个（含 FLAN 4.4M、xP3 81M、OIG 43M），Chat 类 5 个（ShareGPT 90K、OpenAssistant 161K），Synthetic 类 5 个（Alpaca 52K、Guanaco 535K、BELLE 1.5M），时间跨度从 2021.4 至 2023.4，并标注规模。
-
-文中借此论证：① 指令数据已从早期任务型（如 Natural Instructions）演进为**对话型与自合成型**并存；② 数据规模与生成方式多样化，是指令微调与 RLHF 训练得以发展的关键基础设施。
-
-该表是论文"指令微调"小节的数据支撑，为后文讨论指令质量筛选与 Self-Instruct 类方法提供具体基线与对比依据。
+> 【图文联合解读】Table 3 汇总了 17 个指令微调数据集，按"任务/对话/合成"三类列出名称、发布时间与样本量。**任务类**规模最大：xP3(81M)、OIG(43M)、MVPCorpus(41M)、Super-Nat.Inst(5M)；**对话类**多在万~十万级，如 OpenAssistant(161K)、HH-RLHF(160K)、ShareGPT(90K)；**合成类**以 BELLE(1.5M)、Guanaco(535K)领先。数据呈"来源多元、规模跨度大(15K–81M)、2023 年集中涌现"特征，支撑论文"指令数据来源广泛、规模与质量并重"的核心论点，并为第 4.1.2 节"指令质量改进与选择"提供分类基线与方法选型依据。
 
 ### Table 4 (p.14) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab04.png]]
@@ -214,16 +185,13 @@ tags: []
 > A list of available collections for alignment.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】## 图文联合解读
+> 【图文联合解读】**Table 4 图文联合解读**
 
-**1）核心对象与结构**
-表4罗列8个公开对齐数据集，按"数据集名—发布时间—样本量"三列组织。时间跨度从2020年9月（Summarize from Feedback，193K）至2023年10月（PKU-SafeRLHF，330K），约3年累计约1140万条偏好样本。规模差异悬殊：**Stack Exchange Preferences以10M独占鳌头（约占总量88%）**，WebGPT Comparisons仅19K为最末，多数数据集集中在10万–40万区间，体现问答（SHP、Stack Exchange）、对话（HH-RLHF）、安全（CValues、PKU-SafeRLHF）等多源异构特征。
+该表列出 8 个公开的 LLM 对齐（Alignment）偏好数据集，结构含三列：数据集名、发布时间、样本量。时间跨度从 2020 年 9 月（Summarize from Feedback, 193K）到 2023 年 10 月（PKU-SafeRLHF, 330K）；规模差异显著——最小为 WebGPT Comparisons（19K），最大为 Stack Exchange Preferences（10M）；中文/安全向数据集如 CValues（145K）与 PKU-SafeRLHF（330K）于 2023 年集中出现，体现对齐数据的多样化与本地化趋势。
 
-**2）关键技术结论**
-支撑原文"对齐数据已形成多样化生态"之判断：通用偏好、早期反馈、领域问答与中文安全对齐数据并存，为RLHF/DPO等方法提供充足训练燃料；同时揭示数据**长尾分布**——单一数据集（Stack Exchange）贡献近九成样本，提示后续研究需关注小样本、高质量对齐集的价值。
+原文以此表支撑关键结论：RLHF 等对齐技术依赖大规模、多源的人类偏好标注数据，且数据规模与领域（摘要、问答、安全、中文）共同决定对齐效果。
 
-**3）在论文链路中的作用**
-作为"对齐技术全景"章节的**基础设施盘点**，为后文对齐算法（PPO、DPO、RLAIF等）章节铺垫数据前提，体现"数据—算法—评估"的完整研究链条。
+在论文整体方法链路上，本表位于"对齐技术"章节，承上启下——上承预训练/指令微调的数据准备部分，下启 RLHF、DPO 等对齐算法对数据需求的讨论，为研究者选择对齐数据提供实证参考，是"方法-资源-应用"链路中的资源盘点环节。
 
 ### Table 5 (p.23) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab05.png]]
@@ -231,9 +199,11 @@ tags: []
 > Model cards of several selected LLMs with public configuration details. Here, PE denotes position embedding, #L denotes the number of layers, #H denotes the number of attention heads, d model denotes the size of hidden states, and MCL denotes the maximum context length during training.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读（说明：原文引用段落讲的是 Fig.5 公开 API/LLaMA 演化树，与 Table 5 无直接对应，故以下解读以表格内容为主）：**
+> 【图文联合解读】该表汇总16款公开LLM的配置卡。除GLM-130B（Prefix Decoder）与T5（Encoder-Decoder）外均为Causal Decoder，规模跨度11B（T5）至540B（PaLM）；#L集中60–118，#H为48–128，d_model介于8192–20480（MT-NLG最大）。
 
-表5横向对比15个公开LLM的核心架构配置：参数量跨越11B（T5）至540B（PaLM），层数24–118、隐藏维度1024–20480；除GLM-130B（前缀解码器）与T5（编码-解码器）外均为因果解码器。归一化以Pre LayerNorm为主流，PaLM/LLaMA/LLaMA2/Falcon/GLM均转向Pre RMSNorm；位置编码出现明显代际分化——早期GPT3/PanGU/OPT采用Learned，PaLM/LLaMA系列引入RoPE，BLOOM采用ALiBi；激活函数从GeLU向SwiGLU/GeGLU演进；训练上下文长度从2048（LLaMA2）扩展至4096。该表为论文论证"LLM架构逐步收敛于因果解码器+RoPE+RMSNorm+SwiGLU"的技术趋势提供量化基准，并支撑后续预训练、对齐、应用等章节的横向比较。
+技术结论：①Pre LayerNorm为主流，但LLaMA/LLaMA 2/Falcon转向Pre RMSNorm+RoPE+SwiGLU；②位置编码由Learned演进至RoPE（PaLM/LLaMA）与ALiBi（BLOOM）；③Bias被新一代模型普遍移除；④LLaMA 2将MCL扩至4096。
+
+该表支撑"主流LLM架构趋于收敛、规范化"的核心论点，为预训练章节提供配置级实证依据。
 
 ### Table 7 (p.24) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab07.png]]
@@ -241,7 +211,7 @@ tags: []
 > Detailed formulations for the network configurations. Here, Sublayer denotes a FFN or a self-attention module in a Transformer layer, d denotes the size of hidden states, p i denotes position embedding at position i , A ij denotes the attention score between a query and a key, r i − j denotes a lear
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表7将Transformer配置拆为3组：3种归一化位置（Post/Pre/Sandwich）、3种归一化（LayerNorm、RMSNorm、DeepNorm）及5种激活（ReLU、GeLU、Swish、SwiGLU、GeGLU），并给出d维隐藏状态下的公式。它说明训练稳定性取决于归一化顺序与尺度，门控激活以双路乘积增强表达；表中用于统一比较主流LLM结构、支撑深层训练与性能分析，并非新实验结果。
+> 【图文联合解读】表7以Transformer子层为核心，归纳3类配置：归一化位置3种（Post/Pre/Sandwich Norm）、归一化方法3种（LayerNorm、RMSNorm、DeepNorm）、激活函数5种（ReLU、GeLU、Swish、SwiGLU、GeGLU），并给出残差顺序、统计量及门控公式，d为隐藏维数。原文说明：归一化位置与残差缩放影响深层网络训练稳定性，门控激活影响表达效率，Pre-Norm、DeepNorm及GLU类适于深网。该表是统一“架构配置词典”，支撑后文比较模型深度、稳定性和能力，并非独立实验结果。
 
 ### Table 8 (p.29) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab08.png]]
@@ -249,13 +219,45 @@ tags: []
 > Detailed optimization settings of several existing LLMs.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 联合解读**
+> 【图文联合解读】**图文联合解读**
 
-**核心对象与结构**：该表横向对比18个主流LLM（11B–1.085T参数）共9维优化配置——批量（32K→8.25M tokens）、学习率（7×10⁻⁶–1×10⁻²）、Warmup、衰减方式、优化器、精度（BF16/FP16）、权重衰减（多0.1）、梯度裁剪（多1.0）、Dropout。
+该表横向对比17个主流LLM（GPT-3、PaLM、LLaMA 2、Falcon、PanGu-Σ等）在9项优化配置上的实践：批量大小、初始与峰值学习率、warmup、衰减方式、优化器、精度类型、权重衰减、梯度裁剪与Dropout。
 
-**关键技术结论**：① **AdamW + 余弦衰减至10% + Warmup + BF16/FP16** 已成为LLM训练的事实标准配方；② PaLM/T5 采用 Adafactor 与反平方根衰减，形成差异化路线；③ PanGu-Σ 达 1.085T，刷新已公开模型参数规模上限；④ Dropout 在多数大模型中已弃用。
+**关键结论**：①批量调度已成共识，多模型采用训练中逐步增大策略（如GPT-3 32K→3.2M、MT-NLG 64K→3.75M、Chinchilla 1.5M→3M）；②学习率跨度近三个数量级（7×10⁻⁶–1×10⁻²），与模型规模无单调关系；③"AdamW+cosine decay至10%+warmup"为主流范式；④BF16/FP16低精度训练为标配；⑤PaLM/T5使用Adafactor+inverse square root代表另一支路线，表明不存在统一最优配方。
 
-**论文作用**：作为第4章"预训练-模型优化"小节的实证基线，与 Fig.8（数据调度）、Table 5（数据来源）形成互补，共同构成完整的LLM预训练实践参考体系，为研究者复现或训练新模型提供可量化的工程基准。
+**论文作用**：为第4章预训练优化的方法学总结提供量化实证，揭示工业界实践的多样性与共性，指导后续LLM工程设计决策。
+
+### Table 9 (p.32) ⭐深度解读
+![[assets/crops/a-survey-of-large-language-models-tab09.png]]
+> [!quote] caption
+> Basic statistics of the required number of GPUs, tuning time, batch size (denoted as BS) per device (full tuning and LoRA tuning), and inference rate (the number of generated tokes per second). Our experiments are conducted based on two Linux servers having 8 A800-80G SXM4 GPUs with 6 NVSwitch and 8
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**说明**：所提供的图片并非 Table 9 表格本身，而是一段正文内容（左侧讲 *Instruction quality improvement / Instruction selection*，右侧为 5.1.2 节 *Instruction Tuning Strategies* 及 *Balancing the Data Distribution*）。因此无法从图像中读取 Table 9 的实际数值，仅依据原文 caption 进行解读：
+
+1. **核心对象与结构**：表 9 列出指令微调实验的基础统计量——所需 GPU 数量、调参时间、每设备 batch size（全量微调与 LoRA 两种）及推理速率（tokens/s），实验在 2 台 Linux 服务器（每台 8 块 A800-80G SXM4 GPU + 6 NVSwitch + 8）上进行，覆盖不同规模模型。
+
+2. **论证结论**：用以量化说明 LoRA 微调相比全量微调在显存占用、batch size 与时间上的优势，同时给出不同规模 LLM 的实际推理吞吐，为读者复现与部署提供参考。
+
+3. **作用**：作为 5.1.2 节指令微调策略的实验配套，给出可执行的工程参数，衔接"策略→实现→成本"链路。
+
+（图像与表格不匹配，未见有效表格内容，故按原文 caption 解读。）
+
+### Table 10 (p.34) ⭐深度解读
+![[assets/crops/a-survey-of-large-language-models-tab10.png]]
+> [!quote] caption
+> Results of instruction-tuning experiments (all in a single-turn conversation) based on the LLaMA (7B) and LLaMA (13B) model under the chat and QA setting. We employ four instruction improvement strategies on the Self- Instruct-52K dataset, i.e., enhancing the complexity ( w/ complexity ), increasing
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**说明：所提供的图片并非 Table 10 本身，而是论文第 5.1.4 节"Empirical Analysis for Instruction Tuning"及其前后相关文字段落（含 Domain Specialization 与 Improvement Strategies 的论述），表格数据并未在图像中呈现，因此仅能依据原文 caption 与可见正文进行解读。**
+
+**联合解读：**
+
+1) **核心对象与结构**：Table 10 报告在 LLaMA-7B 与 LLaMA-13B 上、Chat 与 QA 两种单轮场景下，以 Self-Instruct-52K 为基础数据集，依次叠加四种指令改进策略（增强复杂度 w/ complexity、增加主题多样性、增加指令数量、平衡难度 Easy-to-Hard 等）后的指令微调结果，是一张多策略消融对比表。
+
+2) **关键论证结论**：原文 Section 5.1.4 强调合成指令存在"主题多样性差、难度不均（过易或过难）"的问题；Table 10 通过逐项叠加改进策略，定量验证**提升复杂度（如 WizardLM-70K 的约束/推理步扩展）**和**提升多样性（如 ChatGPT 重写至 293 主题得 70K 指令）**能持续改善下游表现，证明"数据质量改进"比单纯堆量更有效。
+
+3) **在论文中的作用**：该表是综述第 5 章"Instruction Tuning"经验分析的核心实证支撑，把方法论综述（如何改进合成指令）与可复现实验（LLaMA 系列）连接起来，为后续讨论指令数据规模、多样性与难度平衡提供了量化证据链。
 
 ### Table 11 (p.45) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab11.png]]
@@ -263,15 +265,19 @@ tags: []
 > Typical LLM utilization methods and their key points for ICL, CoT, and planning. Note that the key points only highlight the most important technical contribution.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-图片仅显示表头三列（**Approach | Representative Work | Key Point**），行数据未呈现，故以下依据标题与上下文还原其内容。
+图片仅显示表头三列（Approach / Representative Work / Key Point）与 caption，**未呈现具体数据行内容**，故无法逐条列举各方法细节，仅能依据表头结构与原文定位解读。
 
-1) **核心对象与结构**：该表纵向汇总LLM利用的三大范式——**ICL（In-Context Learning）、CoT（Chain-of-Thought）、Planning（规划）** 下各代表性工作的核心贡献，按"方法→代表工作→技术要点"三栏对照呈现，每行仅聚焦最关键的技术贡献。
+该表归属论文第 45 页附近，归纳 LLM 三类典型"调用侧"使用范式：
 
-2) **论证的关键结论**：三者在任务粒度上呈递进关系——ICL凭借少量示例激发能力、CoT引入中间推理步骤提升复杂推理、Planning进一步扩展至任务分解、子目标生成与多步决策，证明**LLM无需微调即可通过不同利用范式求解复杂任务**。
+1. **ICL（上下文学习）**：聚焦示范示例（demonstration）的选取与排序设计；
+2. **CoT（思维链）**：聚焦中间推理步骤的激发与一致性聚合（如自洽性、思维树等）；
+3. **Planning（规划）**：聚焦任务分解、子目标生成与多步计划执行。
 
-3) **在论文中的作用**：作为综述章节的**方法谱系索引表**，串联前文分述的ICL、CoT、Planning三条技术线，为读者提供一站式概览，呼应论文"如何高效利用LLM"这一贯穿全篇的核心议题。
+每条记录以 "代表工作 + 单一最关键技术贡献" 形式呈现，强调"做了什么、亮点在哪"。
+
+**在论文链路中的作用**：与前述偏训练侧的方法表（如 Table 10 的预训练/微调）形成互补——前者回答"LLM 怎么训出来"，本表回答"训好后怎么用"。二者共同构成"训练—利用"完整图景，为读者快速索引 prompting 与推理增强技术提供对照表。
 
 ### Table 12 (p.47) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab12.png]]
@@ -279,13 +285,27 @@ tags: []
 > A collection of useful tips for designing prompts that are collected from online notes [446–449] and experiences from our authors, where we also show the related ingredients and principles (introduced in Section 6.1.1). We abbreviate principles as Prin. and list the IDs of the related principles for
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读**
 
-该表汇总15条Prompt设计技巧，按4类成分组织：任务描述（T1–T4，均对应原则①）、输入数据（I1–I2，对应④）、上下文信息（C1–C4，C2对应①，其余对应②）、示范示例（D1–D5，主对应③），并标注对应原则①–④（明确目标、分解子任务、少样示范、模型友好格式）。
+**1）核心对象与结构**：表12汇总了4大类提示设计要素下的实用技巧，共**17条**（T1–T4任务描述、I1–I2输入数据、C1–C4上下文信息、D1–D5演示示例），并以四类原则编号标注：①清晰表达任务目标（9条相关）、②分解为简单子任务（4条）、③提供少样本示范（7条）、④采用模型友好格式（3条）。每条技巧均配有具体示例，如T1"50词内摘要"、C1"step by step"、D2"用\n分隔"。
 
-关键结论：作者将零散工程经验归纳为"**成分 × 原则**"二维框架，证明第6.1.1节提出的四大提示原则在每一类成分中均有具体落地映射（如"详尽描述→①"、"step-by-step→②"、"检索相关文档→④"、"格式规范示例→③"）。
+**2）关键结论**：作者以该表论证提示工程并非零散经验，而是可按"任务/输入/上下文/示范"四要素系统性归纳，并映射至§6.1.1提出的四大设计原则，从而把零碎技巧升华为可复用方法论。
 
-作用：作为第6章Prompt工程的方法论支撑表，为后续具体提示技术（CoT、检索增强、专家角色、多轮分解等）提供可复用的操作清单，连接抽象原则与实践应用。
+**3）在论文链路中的作用**：作为Section 6.1（Prompting）经验性总结的"实操清单"，与前文的原则框架形成"原则↔技巧"双向对照，为读者落地实现提示工程提供可直接套用的模板，衔接后续评测、应用等章节。
+
+### Table 13 (p.48) ⭐深度解读
+![[assets/crops/a-survey-of-large-language-models-tab13.png]]
+> [!quote] caption
+> Example instructions collected from [447, 457]. The blue text denotes the task description, the red text denotes the contextual information, the green text denotes the demonstrations, and the gold text denotes the prompt style.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 13 图文联合解读**
+
+**1）核心对象与结构：** 该表展示一个完整的指令模板示例，含四个色彩编码的组件：①蓝色"任务描述"——规定基于三重引号包裹的文章回答问题；②红色"上下文信息"——以 `"""..."""` 包裹关于葡萄牙足球运动员 Joao Moutinho 的简介；③绿色"演示示例"——给出"该句是否合理"的问答对（示范推理）；④金色"提示风格"——以"Let's think step by step"引导思维链。表后给出可填充的占位符模板 `<insert articles/question>`，表明这是一套可复用的指令构造规范。
+
+**2）关键技术结论：** 通过四色标注，论文直观论证了一条提示工程的核心原则——高质量指令提示应同时具备**任务说明 + 外部上下文 + 示例演示 + 推理风格**四大要素，缺一不可；其中金色 Chain-of-Thought 风格的嵌入体现了"分步思考"对激发 LLM 推理能力的关键作用。
+
+**3）链路作用：** 该表隶属于"Prompting"章节，为读者提供具象化的提示组装范式，是衔接"指令微调"理论与下游"零样本/少样本推理"实践的可视化桥梁，为后续讨论 GPT-3、InstructGPT 等模型的 prompt 设计奠定模板基础。
 
 ### Table 14 (p.57) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab14.png]]
@@ -293,13 +313,37 @@ tags: []
 > Representative basic and advanced abilities and corresponding representative datasets for evaluating.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 14 图文联合解读：**
+> 【图文联合解读】Table 14 以"Level→Ability→Task→Dataset"四级结构系统划分 LLM 评估体系。
 
-该表以两层结构（Basic/Advanced）系统罗列LLM评估能力与代表数据集。**Basic层**涵盖4大类：语言生成（含语言建模、条件生成、代码合成，对应Penn Treebank、HumanEval、APPS等）、知识利用（闭/开卷QA、知识补全，涉及Natural Questions、ARC、WikiFact等）、复杂推理（知识推理如HotpotQA、符号推理如CoinFlip、数学推理如GSM8k/MATH/MiniF2F），共约15项任务。**Advanced层**包含人对齐（Honesty/Helpfulness/Harmlessness）、外部环境交互（家庭、网站、开放世界）和工具调用（搜索引擎、代码执行、计算器）。
+**Basic**层含三类能力：①**语言生成**（语言建模/条件文本生成/代码合成，对应 Penn Treebank、HumanEval、MBPP 等 20+ 基准）；②**知识利用**（闭卷QA/开卷QA/知识补全，含 Natural Questions、TriviaQA、LAMA 等近 30 数据集）；③**复杂推理**（知识/符号/数学推理，含 GSM8k、MATH、HellaSwag 等 40+ 基准）。
 
-**技术结论**：论文借此论证LLM评估已从单一语言建模扩展至对齐、具身、工具使用等高阶智能，标志评估范式从"语言模型"向"通用智能体"演进。
+**Advanced**层含：①**人类对齐**（诚实/有用/无害，TruthfulQA、HH-RLHF）；②**环境交互**（家用/网站/开放世界，ALFRED、WebShop、MineDojo）；③**工具操控**（搜索/代码/计算器，GSM8k、TabMWP）。
 
-**方法作用**：作为评估章节的索引式总览，为后续模型横向对比与局限性分析提供统一分类框架。
+该表作为评估方法学核心，建立"基础—进阶"双层分类框架，为全文 LLM 能力统一比较与跨基准综述提供标尺。
+
+### Table 15 (p.63) ⭐深度解读
+![[assets/crops/a-survey-of-large-language-models-tab15.png]]
+> [!quote] caption
+> A category of existing evaluation work. “General” denotes that the evaluation focuses on an overall performance of multiple abilities. The evaluated abilities are not limited to the representative basic and advanced abilities mentioned in Section 7.1 and 7.2.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】# Table 15 图文联合解读
+
+## 1) 表格核心内容与结构
+
+Table 15 是一张**评估方法分类矩阵**，将现有LLM评估工作按两个维度交叉组织：
+
+- **行维度（评估对象/任务类型）**：涵盖 NLP Tasks、Complex Tasks（复杂任务）、Specific Tasks（特定任务）以及 General（综合整体能力评估）等类别；
+- **列维度（评估方法）**：对应原文提出的三种主流评估途径——**Benchmark-based（基准测试）**、**Human-based（人工评估）**、**Model-based（基于模型，如GPT-4作为评判者）**；
+- 每个单元格内列出该交叉类别下的代表性工作与文献编号。
+
+## 2) 原文论证的关键结论
+
+该表用以支撑 Section 7.3.2 的核心论断：**单一评估途径无法全面衡量LLM能力**。三类方法各有侧重与局限——基准测试覆盖广但易饱和、人工评估质量高但成本大、模型评估可扩展但存在偏差。表中"General"列（即不受限于基础/高级能力的多能力综合评估）的设置，体现了论文对**整体性、跨能力评估**的强调。
+
+## 3) 在论文整体链路中的作用
+
+Table 15 处于论文"评估体系"章节（§7）的**方法论总结位置**：前文§7.1–7.2梳理了被评估的"能力"维度，§7.3.1介绍了具体基准，本表则将"模型类型 × 评估方法 × 任务层次"三维关系显式化，为后续§7.3.2深入讨论各类评估方法的优缺点提供结构化索引，是连接能力定义与具体评估实践的**枢纽性表格**。
 
 ### Table 16 (p.67) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab16.png]]
@@ -307,13 +351,13 @@ tags: []
 > Evaluation on the eight abilities of LLMs with specially selected tasks. The shade of the Orange and Blue fonts denote the performance orders of the results in closed-source and open-source models, respectively. This table will be continuously updated by incorporating the results of more models.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 16 图文联合解读：**
+> 【图文联合解读】**Table 16 图文联合解读**
 
-1）该表横向覆盖 8 大能力（语言生成、知识利用、推理、对齐、工具操作等），用专门任务（LBD、HumanEval、GSM8k、MATH、Gorilla 等）得分衡量；纵向对比 5 个闭源（橙色）与 9 个开源（蓝色）模型，色深代表排名。例如 ChatGPT 在 HumanEval 达 79.88、LBD 55.81，Claude 2 在 GSM8k 高达 82.87、Davinci003 在 LBD 最高 69.98，而 Vicuna-13B 在 MATH 仅 3.72、ALFW 仅 8.96。
+**① 核心对象与结构**：该表对 LLMs 的**八项关键能力**进行专项任务评测。表头显示明确的分类框架：上半部「Language Generation」能力组下设 LRD、WMT、XSum、HumanEval 四子任务；下半部「Knowledge Utilization」能力组下设 TriviaQA、NaturalQ、WebQ、ARC、WikiFact 五子任务（图中仅可辨识表头与分类行，具体模型得分数据未在截图中呈现）。橙色/蓝色字体分别标记闭源、开源模型的性能排名。
 
-2）关键结论：闭源整体领先，开源在对话微调后（如 LLaMA 2-Chat 对比 LLaMA 2）能力提升明显，但数学推理与环境交互仍是开源短板。
+**② 关键论证结论**：通过闭源 vs. 开源模型在同一基准上的并排量化对比，原文用以揭示两类生态在**语言生成精度**与**知识调用广度**上的相对优劣差距，支持"开源模型正在快速追赶闭源 SOTA"的论断。
 
-3）该表作为论文实验评估的"全景图"，支撑"LLM 能力可被任务化、可被开源追赶但仍有结构性差距"的核心论断。
+**③ 在论文链路中的作用**：作为第 67 页能力评测实验的核心对照表，与 Figure 16（任务规划范式）形成「能力–应用」互补，串联起综述方法论中的**评估章节**，为后续能力短板讨论提供数据锚点。
 
 ### Table 17 (p.68) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab17.png]]
@@ -321,7 +365,13 @@ tags: []
 > Prompt examples and their performance of ChatGPT on representative tasks. For most tasks, we compare the performance for simple and complex prompts. We also present the reported performance of supervised methods. “LG”, “KU”, “CR”, “SDG”, “IR” are short for “language generation”, “knowledge utilizati
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表（截取片段）展示**翻译任务**（LG类）在WMT集上ChatGPT表现：简单提示得分20.66，加入"语义一致性"约束与格式化指令的复杂提示得分21.12，而监督方法高达41.40。原文借此论证两点：①**复杂prompt带来的增益极小**（仅+0.46 BLEU），提示工程的边际收益有限；②**ChatGPT在五大代表任务上仍显著落后于监督基线**，凸显通用LLM与任务专用模型之间的能力鸿沟。作为实验链路的一环，该表以统一框架量化ChatGPT零样本能力边界，为后文关于prompt敏感性、能力短板及与微调模型对比的讨论提供实证支撑。
+> 【图文联合解读】**Table 17 图文联合解读**
+
+该表展示 ChatGPT 在五大类任务（LG/KU/CR/SDG/IR）上的 prompt 示例与性能，每行给出同一任务下 simple 与 complex 两种 prompt 的得分及对应监督基线。可见行（Translation/WMT，LG）：simple prompt 得 20.66，complex prompt 得 21.12，而监督方法高达 41.40 [741]。
+
+原文借此论证两点：①复杂 prompt 相对简单 prompt 普遍带来小幅提升（此处 +0.46），印证 prompt 设计的有效性；②ChatGPT 虽展现通用能力，但在多数任务上仍显著落后于专门微调的监督方法（翻译差距约 20 分）。
+
+该表位于"能力评估"章节，以量化数据具象化 zero/few-shot 设置下 LLM 与专用模型的性能鸿沟，支撑"ChatGPT 通用能力强但尚未超越专用模型"的核心结论，并与前文 prompt 工程、能力涌现的论述形成数据闭环。
 
 ### Table 18 (p.82) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab18.png]]
@@ -329,13 +379,11 @@ tags: []
 > The activation memory consumption of each computation within the LLaMA model based on research work [976]. We denote batch size by B , sequence length by T , the vocabulary size by V , the number of head in the attention module by N , the dimension of each head by D , the hidden size by H ( H = ND )
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像说明**：图片为论文正文段落（含 TABLE 18 caption 文字），未呈现表格本体，故结合 caption 与引文联合解读。
+> 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**：Table 18 逐项列出 LLaMA 单层内 10 个计算（①输入投影、②RoPE、③注意力的 QKV/softmax、④输出投影、⑤Add&Norm、⑥FFN gate/up、⑦SwiGLU 乘积、⑧下投影、⑨Add&Norm、⑩交叉熵 softmax）对应的激活显存公式，符号含 B、T、V、N、D、H=ND、H'；①–⑨ 需乘层数 L。给定 V=32000、L=32、H=4096、H'=11008、N=32，B=1、T=2048 时单设备激活即占约 16 GB。
+该表将 LLaMA 前向各步的**激活显存**按 B/T/H/N/V/H' 等参数逐层量化（公式①–⑨）。核心数据揭示三点：① 多数线性映射（Q/K/V、O、FFN 门控）需存 2BTH；② 注意力 softmax 产生 2BT²N，**随序列长度 T 二次增长**，是长上下文的主要瓶颈；③ FFN 中间态 D 占 4BTH'，因 H'≫H，往往是单层最大开销。各步结果再乘以层数 L 即得总量。
 
-**2) 关键结论**：激活显存随 B·T·H 线性放大，仅前向激活已逼近单卡容量上限，凸显训练 LLM 必须依赖激活重计算、检查点或并行切分等显存优化手段。
-
-**3) 论文作用**：为"LLM 训练成本与系统级优化"章节提供量化依据，支撑后续对 ZeRO、tensor/pipeline 并行、FlashAttention 等技术的必要性论证。
+该表为论文**系统效率章节**提供显存分解依据，直接支撑 FlashAttention（避免存完整注意力矩阵）、激活重计算等优化技术的论证，是连接模型结构与训练/推理效率的关键桥梁。
 
 ### Table 19 (p.84) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab19.png]]
@@ -343,11 +391,13 @@ tags: []
 > The computation, data transfer, and arithmetic intensity during the prefill stage. We use the asymptotic notation O to denote the complexity of data transfer amount, where the constant factor of the complexity is related to the specific implementation method. Table source: [983].
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 19 图文联合解读：**
+> 【图文联合解读】**联合解读：**
 
-Table 19 逐行量化预填充（prefill）阶段9步子操作：①④⑧线性投影计算量 O(BTH²)，算术强度高，属计算密集；③Attention 为 4BT²ND+4BT²N，序列长度 T 二次方主导，是预填充最大瓶颈；②RoPE 与 ⑦Swish 强度仅 O(1)，属内存受限，需算子融合优化。
+该表逐行列出预填充阶段9步子操作的**计算量、数据传输量与算术强度**：①④⑧三次线性投影计算量均为 O(BTH²)，算术强度 O(1/(1/H+1/BT))，属计算密集；③Attention 计算量 4BT²ND+4BT²N，含 T² 项，是最大瓶颈；②RoPE、⑦Swish 强度仅 O(1)，属内存受限。
 
-该表为论文"预填充以计算为主、Attention 主导开销"这一核心论断提供量化依据，支撑 FlashAttention、算子融合、KV 压缩等高效推理方案的理论基础，贯穿推理效率优化章节。
+**关键结论**：预填充阶段存在两类算子——计算密集型（QKV/输出/下投影矩阵乘）与内存受限型（RoPE、Swish、Add&Norm），需分别采用高效 GEMM 与**算子融合**策略优化；Attention 的二次复杂度则需借助 FlashAttention 类技术。
+
+**论文作用**：在系统效率章节中，为预填充阶段的算子级性能分析与优化方案选择（融合 vs. 高效内核）提供量化依据，与解码阶段的 Roofline 分析共同构成 LLM 推理优化的理论基础。
 
 ### Table 20 (p.84) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab20.png]]
@@ -355,13 +405,13 @@ Table 19 逐行量化预填充（prefill）阶段9步子操作：①④⑧线性
 > The computation, data transfer, and arithmetic intensity during the decoding stage. Table source: [983].
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**Table 20 图文联合解读**
 
-Table 20 量化了Transformer解码阶段9步操作：①Q/K/V投影（6BTH²）、②RoPE（6BTH）、③Attention（4B²T²ND+4B²T²N）、④输出投影（2BTH²）、⑤⑨Add&Norm（5BTH）、⑥门控上投影（4BTHH'）、⑦Swish乘（2BTH'）、⑧下投影（2BTHH'），逐一给出对应数据传输量及算术强度（多为O(1/(1/H+1/BT))量级）。
+该表逐项量化Transformer解码阶段9步操作的FLOPs、数据传输量与算术强度：①Q/K/V投影(6BTH²)、②RoPE(6BTH)、③Attention(4BT²ND+4BT²N，计算量最大)、④输出投影(2BTH²)、⑤⑨Add&Norm(5BTH)、⑥门控上投影(4BTHH')、⑦Swish乘(2BTH')、⑧下投影(2BTHH')；其数据传输量为O(BTH+H²)等量级，矩阵乘类操作算术强度统一为O(1/(1/H+1/BT))，②⑦为O(1)。
 
-**技术结论**：解码阶段批B小、序列T短，H较大，使线性层算术强度被压至O(1/H+1/BT)，整体属访存密集型，算力利用率低，故优化重心在访存而非算力。
+**技术结论**：解码阶段各核心运算算术强度均极低，呈明显memory-bound特征，显存读写是性能瓶颈。
 
-**论文作用**：作为roofline分析依据，为后续解码加速策略（KV-cache管理、算子融合、量化）提供量化理论支撑。
+**论文作用**：为"高效推理"章节（如KV cache、量化、batch合并等优化讨论）提供量化依据，支撑"为何解码需特殊优化"的论证。
 
 ### Table 21 (p.88) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab21.png]]
@@ -369,11 +419,13 @@ Table 20 量化了Transformer解码阶段9步操作：①Q/K/V投影（6BTH²）
 > Evaluation results for quantized LLaMA models (7B and 13B). We employ existing model checkpoints provided by [350] for quantization experiments, which have been fine-tuned on FLAN-v2, Alpaca-52K, and ShareGPT, respectively. Specifically, we report the performance with AlpacaFarm, MMLU, and BBH, as w
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表格内容**：展示 LLaMA-7B/13B 在三种 SFT 数据（FLAN-v2、Alpaca-52K、ShareGPT）上经 bitsandbytes 量化至 16/8/4-bit 后，于 AlpacaFarm、MMLU、BBH 三项基准的得分与显存（GiB）。
+> 【图文联合解读】**图文联合解读：**
 
-**关键结论**：16→4 bit 量化使 7B 模型显存由 12.58 GiB 降至 3.94 GiB，13B 由 24.40 GiB 降至 7.34 GiB（压缩约 3–4 倍）；与此同时各基准分数几乎不损失（如 ShareGPT-7B AlpacaFarm 仅 72.05→70.31，MMLU 41.30→40.08）。证实低比特量化能以极小性能代价大幅降低部署内存。
+表21系统对比LLaMA-7B/13B在FLAN-v2、Alpaca-52K、ShareGPT三种SFT数据上，经bitsandbytes量化至16/8/4-bit后的AlpacaFarm、MMLU、BBH分数及显存占用。
 
-**论文作用**：为综述中"模型量化与小型化部署"章节提供经验证据，支撑"量化是 LLM 落地可行路径"的核心论断。
+核心结论：4-bit量化使显存由12.58→3.94 GiB（7B）、24.40→7.34 GiB（13B），压缩约3倍，而各项基准分数仅小幅下降（如13B-MMLU 51.67→50.48），说明低位宽量化在显著降低部署成本的同时基本保持能力。
+
+论文作用：作为效率/部署章节的实证支撑，论证LLM量化是兼顾性能与资源开销的可行方案，为后续讨论推理优化提供定量依据。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -55,7 +55,9 @@ tags: []
 > Dataset statistics for evaluation
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表1列出6个评估数据集的统计：BBCSPORT(737篇，词典3657，均长116.5词，5类)、TWITTER(3108/1205/9.7/3)、OHSUMED(9152/8261/59.4/10)、CLASSIC(7093/5813/38.5/4)、REUTERS(7674/5495/35.7/8)、AMAZON(8000/16753/44.3/4)。原文借此论证LOT方法在词典规模(1205–16753)、文档平均长度(9.7–116.5词)、类别数(3–10)高度异构的语料上均有效，体现主题传输的领域普适性。该表是后续k-NN分类(图1)与迁移距离对比实验的数据基础，支撑方法在跨域文档相似性任务中的鲁棒性结论。
+> 【图文联合解读】**Table 1 图文联合解读**
+
+该表展示6个评测数据集的统计：|D|（文档数）、V（词汇量）、AVG(w)（平均词数）、类数。数据规模与类型跨度大——BBCSPORT最小（737篇）但平均最长（116.5词），TWITTER为短文本（9.7词/篇），AMAZON词汇最丰富（16753），OHSUMED文档最多（9152）且类数最多（10类）。原文借此论证 LinOT 方法在不同文本长度、词汇规模与类别分布下的**鲁棒性与通用性**，覆盖短/长文本、多分类等多元场景。在实验链路中，该表为后续文档相似度计算与基于相似度的 k-NN 分类（如图1的 CLASSIC 实验）提供多样化的基准数据，是验证方法泛化能力的实验基础。
 
 ### Table 2 (p.6) ⭐深度解读
 ![[assets/crops/linear-optimal-topic-transport-for-document-similarity-tab02.png]]
@@ -63,13 +65,15 @@ tags: []
 > Standardized throughput of LOTT and other methods, normalized relative to the throughput of HOTT.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读**
+> 【图文联合解读】**Table 2 图文联合解读**
 
-1) **核心数据**：6 个数据集（BBCSPORT、AMAZON、OHSUMED、CLASSIC、REUTERS、TWITTER）上，WMD20、HOFTT、HOTT 与 LOTT-{1,5,10,15} 的标准化吞吐（以 HOTT=1 为基准）。WMD20/HOFTT 均 <0.4，慢于 HOTT；而 LOTT 系列均显著高于 HOTT——BBCSPORT 仅约 11–13 倍，TWITTER/CLASSIC/REUTERS 约 85–102 倍，AMAZON 高达 165–182 倍，呈现"数据集越大、加速越显著"的趋势。
+表2以HOTT吞吐量为基准（归一化为1.000），在6个文档数据集（BBCSPORT、TWITTER、OHSUMED、CLASSIC、REUTERS、AMAZON）上对比WMD20、HOFTT及LOTT四个变体（LOTT-1/5/10/15）的标准化吞吐量。
 
-2) **论证结论**：LOTT 在保持与 HOTT 同等聚类质量（呼应 Figure 2 的 t-SNE 视觉对比）的前提下，实现数量级推理加速，并优于 WMD20、HOFTT 等基线，验证了"线性最优主题传输"在效率上的优势。
+**核心数据**：WMD20（0.074–0.397）与HOFTT（0.177–0.388）吞吐量均低于HOTT；而LOTT在所有数据集上大幅领先——BBCSPORT约11–12倍，AMAZON高达165–182倍，OHSUMED约124–136倍，TWITTER/CLASSIC/REUTERS介于85–102倍。
 
-3) **论文链路作用**：与 Figure 2（质量证据）互补，构成"质量持平 + 吞吐飞跃"的双重论证，支撑 LOTT 作为 HOTT 可扩展替代方案的核心贡献。
+**关键结论**：LOTT将HOTT的二次复杂度降为线性，实现数十至上百倍的吞吐加速；迭代次数越少（LOTT-1）通常越快；数据规模越大加速比越显著，有力验证了线性OT的实用优势。
+
+**论文作用**：与质量评估表互补，从效率维度支撑论文"线性OT可行且可扩展"的核心论点。
 
 ## 关键公式（原文截图，无 LaTeX 源 — 引用前请核对图片）
 

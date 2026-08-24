@@ -30,13 +30,9 @@ tags: []
 > Illustrations of Residual Connection Paradigms. This figure compares the structural
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】图1对比三种残差连接结构：(a)标准残差——$x_l$经Layer $\mathcal{F}$后与自身相加得$x_{l+1}$；(b)HC引入Res/Pre/Post三个可学习映射$\mathcal{H}_l^{\text{res}}$、$\mathcal{H}_l^{\text{pre}}$、$\mathcal{H}_l^{\text{post}}$，作用于多流隐层$\mathbf{h}$；(c)mHC对上述三映射施加流形投影约束$\mathcal{P}_{\mathcal{M}^{\text{res}}}$、$\mathcal{P}_{\mathcal{M}^{\text{pre}}}$、$\mathcal{P}_{\mathcal{M}^{\text{post}}}$。
 
-该图对比三种残差连接结构：(a) 标准残差——单条恒等旁路，x_l 经 Layer F 后与 x_l 简单相加得 x_{l+1}；(b) Hyper-Connections (HC)——引入三个可学习映射（橙色 H_l^pre、H_l^post、H_l^res），将单流扩展为多流并通过 Pre/Post/Res Mapping 混合；(c) mHC——在 HC 基础上对三个映射分别施加流形投影算子 P_M（绿色框），即 P_M^pre(H_l^pre)、P_M^post(H_l^post)、P_M^res(H_l^res)。
-
-原文借此论证关键技术结论：HC 的 Res Mapping 矩阵若不加约束，其行和可能偏离 1、破坏残差流的尺度稳定性，导致训练振荡；mHC 将映射投影到（如双随机矩阵）流形上，从而稳定残差信号幅度。
-
-在论文中的作用：作为开篇 Figure 1，它奠定全文方法框架，使后续 Table 1 的消融实验与正文中关于"流形约束带来收敛稳定性与性能增益"的论证得以直观对照。
+该图直观论证：mHC通过投影约束使残差路径趋近恒等、Pre/Post映射近似正交，从而稳定收敛、提升性能；作为开篇框架图，为Table 1消融实验与"流形约束带来性能增益"的核心论点建立结构基线。
 
 ### Figure 2 (p.7) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig02.png]]
@@ -82,7 +78,7 @@ tags: []
 > Training Stability of Manifold-Constrained Hyper-Connections (mHC). This figure
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图5在27B模型、5万步内比较Baseline、HC与mHC。左图以Baseline损失差为0；mHC由约−0.06回升至−0.021，HC回升更快、约至−0.015。右图mHC梯度范数由约0.13缓降至0.04，明显低于在0.09–0.18间剧烈波动并多次触及0.20的HC，且后期趋近Baseline。说明流形约束可抑制梯度爆炸、提升训练稳定性，同时维持更低损失；该图是mHC稳定性设计与后续性能实验之间的关键验证。
+> 【图文联合解读】基于27B模型、0–5万步，对比Baseline、HC与mHC：(a) mHC相对基线的训练损失差由约−0.06收敛至−0.021，HC仅约−0.015，表明mHC损失更低；(b) mHC梯度范数由0.20平稳降至0.08并接近基线0.04，HC则在0.10–0.18间剧烈波动。该图是优化侧诊断，验证流形约束缓解HC梯度不稳定，使理论设计转化为更可靠、可扩展的训练。
 
 ### Figure 6 (p.13) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig06.png]]
@@ -93,11 +89,11 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图6(b) Token Scaling Curve 解读**
 
-**对象与数据**：图(b)为双面板折线图，横轴为FLOPs（≈1–5×10²¹）。左面板"Absolute Loss Gap"以Baseline归零为参考，mHC曲线从约-0.024单调上升至-0.015；右面板"Relative Loss Ratio"中Baseline锁定100%，mHC由98.8%升至99.15%，两者均表明mHC在各token预算下Loss始终更低。
+**核心数据**：横轴FLOPs从1×10²¹扩至4×10²¹共4个采样点；mHC绝对损失差由约-0.024单调升至-0.015（差距缩小），相对损失比由约98.6%升至99.2%（优势增强），Baseline恒为0/100%。
 
-**技术结论**：mHC的增益在数据规模维度上**持续存在但略有收敛**，说明Baseline仅能通过更多token部分追赶，无法反超，验证了mHC改进的稳健性。
+**关键结论**：随训练token规模扩大，mHC相对Baseline的优势比例保持稳定且略升，说明其增益不会被数据规模稀释，具备良好的token维可扩展性。
 
-**论文作用**：与(a) Compute Scaling Curve互为补充，从**参数量（3B→27B）**与**数据量**两轴联合证明mHC在全规模上可扩展，是支撑其"适用于生产级预训练"主张的核心缩放性证据。
+**论文作用**：与图(a)Compute Scaling构成"算力–数据"双轴可扩展性证据，从训练量维度进一步支撑"mHC在各规模下均稳定优于Baseline"的核心主张，强化方法有效性。
 
 ### Figure 7 (p.14) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig07.png]]
@@ -135,16 +131,11 @@ tags: []
 > | Ablation Study of HC Components. When a specific mapping ( H pre
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】表1对HC三组件（$\mathcal{H}_l^{\text{res}}$残差映射、$\mathcal{H}_l^{\text{pre}}$前置映射、$\mathcal{H}_l^{\text{post}}$后置映射）做逐步消融，量化Absolute Loss Gap：无组件为0.0；仅启残差→−0.022；再启前置→−0.025；三者全启→−0.027。禁用某组件时分别以恒等矩阵、单位全1、均匀1/n的固定映射保维。
 
-**1) 表的核心结构与数据**
-该表为HC（Hyper-Connections）三组件的消融实验，纵列为三种可学习映射：$\mathcal{H}_l^{\text{res}}$（残差映射）、$\mathcal{H}_l^{\text{pre}}$（前置映射）、$\mathcal{H}_l^{\text{post}}$（后置映射），横列为绝对损失差（Absolute Loss Gap）。具体量化结果：基线无任何映射为 **0.0**；单独加入 $\mathcal{H}_l^{\text{res}}$ 为 **−0.022**；再叠加 $\mathcal{H}_l^{\text{pre}}$ 为 **−0.025**；三者全部启用为 **−0.027**。
+**原文论证**：流形约束下三动态映射协同贡献性能增益，无单一组件可替代；其中残差映射贡献最大（−0.022），前置与后置映射进一步增强收敛稳定性，缺一不可。
 
-**2) 原文论证的关键结论**
-残差映射贡献最显著（−0.022），前置与后置映射虽增益较小但持续有效，说明HC框架中三个映射呈协同互补关系，任一组件不可被固定替代（统一权重或恒等矩阵）所取代，验证了联合可学习设计的必要性。
-
-**3) 在论文整体中的作用**
-作为方法可信度的组件级证据，承接前文方法定义，向下游ImageNet等大规模实验延伸——证明HC的增益并非源于单一组件，而是源自三映射的端到端联合优化。
+**论文链路作用**：承接开篇Figure 1建立的残差连接方法框架，本表以逐步消融量化验证HC各组件不可或缺，为后续流形约束机制设计提供实证支撑。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-tab02.png]]
@@ -152,7 +143,11 @@ tags: []
 > | Comparison of Memory Access Costs Per Token. This analysis accounts for the overhead introduced by the residual stream maintenance in the forward pass, excluding the internal I/O of the layer function F .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表量化对比 Residual Connection 与 Hyper-Connections 的逐 token 内存读写开销（不含层函数 F 内部 I/O）。Residual 总 I/O 仅 Read 2C、Write C；HC 经 5 步操作（H^pre/H^post/H^res 计算与 Residual Merge）后总 I/O 达 Read (5n+1)C+n²+2n、Write (3n+1)C+n²+2n，额外开销与残差流数 n 成正比。原文借此论证 HC 多残差流维护带来可控但显著的内存成本，为 Manifold-Constrained 优化提供动机；它衔接 Fig 2 的训练不稳定性分析，支撑"HC 有效但需工程改进"的核心论证链。
+> 【图文联合解读】**表2图文联合解读**
+
+表2按操作步骤拆解Residual与HC每token的内存读写。Residual仅"Residual Merge"一步：读2C、写C。HC含5步——计算三映射(读nC/写n²+2n)、𝓗^pre(读nC+n/写C)、𝓗^post(读C+n/写nC)、𝓗^res(读nC+n²/写nC)、Merge(读2nC/写nC)——总计读(5n+1)C+n²+2n、写(3n+1)C+n²+2n（n为残差流数）。
+
+**关键结论**：HC引入n路并行残差流，前向内存I/O随n近似线性放大，开销可控且不含反向梯度。**作用**：作为理论分析，量化证明mHC以多项式级内存代价换取多流残差表达力，为其在大型Transformer中实际部署提供可扩展性依据。
 
 ### Table 3 (p.11) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-tab03.png]]
@@ -160,13 +155,11 @@ tags: []
 > | Stored and Recomputed Intermediate Activations We list per token activation pre- served for the backward pass and the transient activation recomputed in 𝐿 𝑟 consecutive layers. Layer 𝑙 0 represents the first layer in 𝐿 𝑟 layers and layer 𝑙 is in [ 𝑙 0 , 𝑙 0 + 𝐿 𝑟 − 1 ] .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读：**
+> 【图文联合解读】Table 3 列出 mHC 反向传播两类激活的存储策略：①持久存储——仅每 L_r 层首个块输入 **x_{l₀}**（nC/token）常驻显存；②块内瞬时重算——F(H_l^{pre}x_l, W_l)、x_l、H_l^{pre}x_l、RMSNorm(·) 输出均在 L_r 连续层内重算，共 (n+2)C/token。
 
-表3列出 mHC 反向传播中需存储与重算的中间激活（每 token）：① **x_{l₀}**，大小 nC，**每 L_r 层常驻一次**；② **F(𝓗_l^pre x_l, 𝒲_l)**，大小 C，**逐层存储**；③ **x_l、𝓗_l^pre x_l、RMSNorm(𝓗_l^pre x_l)**，大小依次为 nC、C、C，**仅在 L_r 块内临时重算**。
+原文据此论证总显存≈nC·⌈L/L_r⌉+(n+2)C·L_r，对 L_r 求导得最优块长 L_r*≈√(nL/(n+2))（式 20），在持久与瞬时开销间取得最优。
 
-由此推得：重算块引入瞬时显存 (n+2)C·L_r（峰值），常驻部分为 nC·⌈L/L_r⌉；最小化二者之和得 **L_r* ≈ √(nL/(n+2))**，在重算粒度与常驻存储间取得最优。
-
-该式为 mHC 工程实现中块长 L_r 的选取提供量化依据，是连接算法设计与显存高效部署的关键桥梁。
+该表为 mHC 块级重算设计提供显存账本，是推导 Eq.20 最优块长的依据，证明该策略既保证可微反向又将峰值显存压至 O(√nL)，是论文工程落地的关键支撑。
 
 ### Table 4 (p.13) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-tab04.png]]
@@ -174,14 +167,15 @@ tags: []
 > | System-level Benchmark Results for 27B Models. This table compares the zero- shot and few-shot performance of the Baseline, HC, and m HC across 8 diverse downstream benchmarks. m HC consistently outperforms the Baseline and surpasses HC on the majority of benchmarks, demonstrating its effectivenes
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**1) 核心对象与数据**
-Table 4对比27B规模下Baseline、HC、mHC三种方案在8项下游任务(BBH/DROP/GSM8K/HellaSwag/MATH/MMLU/PIQA/TriviaQA)的零/少样本表现。mHC在7/8项上同时超越Baseline与HC,如BBH 51.0 vs 48.9/43.8、DROP 53.9 vs 51.6/47.0、TriviaQA 57.6 vs 56.3/54.3;仅MATH上HC以26.4略胜mHC的26.0。
+> 【图文联合解读】**Table 4 图文联合解读**
 
-**2) 关键结论**
-原文据此论证:在大规模预训练场景下,将超连接约束到双随机流形(mHC)相较原始HC能持续带来更优的下游性能,验证流形约束在大模型上的有效性。
+⚠️ **说明**：当前图片仅包含表格标题与表头行（Benchmark、# Shots），未显示 Baseline/HC/mHC 三行实际数值，故以下解读基于可读结构与原文 caption。
 
-**3) 在论文中的作用**
-该表作为"大规模预训练实际增益"的系统级证据,承接架构消融(Table 3)与训练开销分析(通信-计算重叠),共同支撑mHC"以极低额外成本换取一致性能提升"的核心论断。
+1. **核心对象与结构**：在 27B 规模下，对 Baseline、HC、mHC 三种架构在 8 个下游基准上做系统级评测，覆盖 BBH(EM,3-shot)、DROP(F1,3-shot)、GSM8K(EM,8-shot)、HellaSwag(Acc,10-shot)、MATH(EM,4-shot)、MMLU(Acc,5-shot)、PIQA(Acc,0-shot)、TriviaQA(EM,5-shot)。
+
+2. **关键技术结论**：mHC 在大规模预训练中持续优于 Baseline，并在多数任务上超越 HC，证明流形约束在保留 HC 表达力的同时有效缓解了大尺度下的稳定性/可学习性问题。
+
+3. **在论文中的作用**：作为 mHC 规模化有效性的主实验证据，与 Fig.4 的 DualPipe 通信重叠优化共同构成"算法 + 系统"完整落地闭环，支撑 mHC 作为 HC 即插即用替代的工程主张。
 
 ### Table 5 (p.19) ⭐深度解读
 ![[assets/crops/hc-manifold-constrained-hyper-connections-tab05.png]]
@@ -189,11 +183,9 @@ Table 4对比27B规模下Baseline、HC、mHC三种方案在8项下游任务(BBH/
 > | Detailed Model Specifications and Hyper-parameters. This table presents the architec- tural configurations for the 3B, 9B, and 27B models based on the DeepSeek-V3 (Liu et al., 2024b) architecture. It outlines the specific hyper-parameters for m HC and HC, including the residual stream expansion an
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图联合解读（Table 5）**
+> 【图文联合解读】表格展示DeepSeek-V3架构下3B/9B/27B及3B-1T扩展模型配置：总参2.97B/9.18B/27.0B，活动参612M/1.66B/4.14B；层数12/18/30，隐藏维1280/1920/2560，FFN维896/1280/1536；MoE为64/64/72路由专家（激活6+共享2），注意头16/24/32；统一采用MLA、RoPE(θ=10000)、RMSNorm及Loss-Free负载均衡。
 
-表5列出3B/9B/27B三组及3B@1T对照组（均基于DeepSeek-V3架构）的详细配置：总参量2.97B/9.18B/27.0B，层数12/18/30，路由专家64/64/72（激活6+共享2），隐藏维1280/1920/2560；统一采用MLA注意力、RoPE(θ=10000)、Loss-Free负载均衡、RMSNorm(ε=1e-20)。
-
-该表支撑mHC与HC的多规模对比实验——通过锁定架构基线排除结构差异，证明mHC的残差流扩展与Sinkhorn-Knopp约束在不同参数量级下均稳定有效（即"方法增益可归因于设计本身而非规模"）。在论文链路中，它是从理论创新过渡到3B→9B→27B实证验证的**统一配置对照表**，是Figure 5训练稳定性曲线得以成立的前置条件。
+作用：①为mHC/HC残差流扩展与Sinkhorn-Knopp约束提供可复现基线；②证明mHC在612M–4.14B活动参数、12–30层多档规模下均稳定可训练；③与Figure 5稳定性曲线及下游评测共同构成方法验证证据链。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

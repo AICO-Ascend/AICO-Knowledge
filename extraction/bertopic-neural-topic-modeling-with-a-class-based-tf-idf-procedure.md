@@ -44,11 +44,15 @@ tags: []
 > Ranging from 10 to 50 topics with steps of 10, topic coherence (TC) and topic diversity (TD) were calculated at each step for each topic model. All results were averaged across 3 runs for each step. Thus, each score is the average of 15 separate runs.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】图中未呈现Table 1的实际数值，仅显示其caption与5.3节正文段落。据caption，该表记录各主题模型在10–50个主题（步长10）下的TC（topic coherence）与TD（topic diversity）得分，每个数值是5档×3次共15次运行的均值。
+> 【图文联合解读】**Table 1 图文联合解读**
 
-正文表明，TC/TD是评估主题质量的代理指标，结合NPMI用于横向对比BERTopic与LDA、CTM、Top2Vec等基线在一致性与多样性上的表现；同时指出NPMI与人类判断的相关性可能仅对经典模型成立，对神经主题模型未必可靠。
+⚠️ 图像仅含表注与正文段落，表格数值未在裁图中呈现，以下解读依据表注及上下文：
 
-该表作为§5.3 Evaluation的核心量化结果，支撑BERTopic在主题质量与多样性上的相对优势论证，回应引言中"提升一致性同时保留多样性"的核心主张。
+1) **核心对象与结构**：在 10/20/30/40/50 五个主题数档位上，对每个主题模型分别计算主题一致性（TC，使用 NPMI）与主题多样性（TD），每档 3 次运行取平均，故每格得分代表 15 次独立运行的均值。
+
+2) **论证的关键结论**：作者借此横向比较 BERTopic（含 USE/Doc2Vec/MiniLM/MPNet 四种语言模型）、Top2Vec、CTM 及 LDA Sequence 等模型在不同主题数下的 TC–TD 平衡；同时承认 NPMI 与人工判读的相关性或仅适用于经典模型，对神经主题模型未必成立（Hoyle et al., 2021）。
+
+3) **在论文中的作用**：Table 1 构成第 5 节"实验评估"的核心量化证据，支撑 BERTopic 在保留主题多样性的同时维持高一致性的主张，并为后文（如图 1 的运行时间对比）提供质量基线。
 
 ### Table 2 (p.6) ⭐深度解读
 ![[assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab02.png]]
@@ -56,17 +60,15 @@ tags: []
 > Using four different language models in BERTopic, coherence score (TC) and topic diversity (TD) were calculated ranging from 10 to 50 topics with steps of 10. All results were averaged across 3 runs for each step. Thus, each score is the average of 15 separate runs.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：图像中 Table 2 的标题与 6.1、6.3 节正文清晰可见，但表格的数值内容并未呈现于该截图中，故数值细节仅依据原文 caption 推断。
+> 【图文联合解读】**Table 2 图文联合解读：**
 
----
+表2在三个数据集（20NG、BBC News、Trump）上对比BERTopic嵌入USE、Doc2Vec、MiniLM、MPNET四种语言模型后的TC（一致性）与TD（多样性），数值为10–50话题各3次共15次运行的均值。
 
-**图文联合解读（≤220字）**
+**量化结果**：20NG上Doc2Vec双优（TC=.173、TD=.871）；BBC上MiniLM TC最高(.170)、Doc2Vec TD最高(.819)；Trump集整体偏低，Doc2Vec TC出现负值(-.088)，USE与MPNET TC仅约.05–.07。
 
-**1) 表格结构（基于 caption）**：行为 4 种语言模型，列为主题一致性（TC）与主题多样性（TD），主题数从 10 到 50、步长 10，每格为 3 次运行均值（共 15 次）。
+**关键结论**：BERTopic性能显著依赖底层嵌入，无单一通用最优模型；Doc2Vec利于一致性却牺牲多样性，MiniLM/MPNET则较均衡。
 
-**2) 支撑的关键技术结论**：在 6.2 节（"mains competitive regardless of the embedding model"）语境下，该表用以论证 BERTopic 对嵌入模型选择不敏感——因其将文档嵌入与词-主题分布构建解耦，嵌入步骤可灵活替换。
-
-**3) 在论文整体链路中的作用**：作为"模块化设计"主张的实证依据，衔接 6.1 节整体性能对比与 6.3 节动态主题建模的灵活性论述，凸显 BERTopic 方法的工程可替换性。
+**论文作用**：该表支撑核心论点——c-TF-IDF流程与嵌入解耦，证明BERTopic框架通用、嵌入可替换，是方法可扩展性的关键实证。
 
 ### Table 3 (p.6) ⭐深度解读
 ![[assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab03.png]]
@@ -74,13 +76,13 @@ tags: []
 > The topic coherence (TC) and topic diversity (TD) scores were calculated on dynamic topic model- ing tasks. The TC and TD scores were calculated for each of the 9 timesteps in each dataset. Then, all results were averaged across 3 runs for each step. Thus, each score represents the average of 27 val
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**Table 3 解读**
 
-该表对比 **LDA Sequence、BERTopic、BERTopic-Evolve** 三种方法在**动态主题建模（DTM）**任务上的 **TC（主题一致性）** 与 **TD（主题多样性）** 得分，每个数值为 9 个时间步 × 3 次运行共 27 个结果的均值，应分两组数据集呈现。
+**① 核心对象与结构**：表比较 LDA Sequence、BERTopic、BERTopic-Evolve 三种方法在动态主题建模任务上的主题一致性（TC）与主题多样性（TD）得分；右侧两组指标对应两个数据集，每个数值为 27 次（9 时间步×3 次运行）平均。BERTopic 系列在 TC 上大幅领先 LDA（如 .079 vs .009），BERTopic-Evolve 在首数据集 TD 上最高（.863），BERTopic 在第二数据集 TC 上最高（.231）。
 
-**核心结论**：BERTopic 显著优于 LDA Sequence——首组数据 TC 由 .009 提升至 **.079**，TD 由 .715 提升至 **.862**；次组数据 TC 由 .173 升至 **.231**（加粗为最佳）。BERTopic-Evolve 与 BERTopic 表现几近持平（.079/.226 vs .079/.231），表明动态演化版本未以牺牲质量为代价。
+**② 关键结论**：BERTopic 及其-Evolve 变体在动态主题场景下，主题质量（一致性）显著优于传统 LDA Sequence；Evolve 机制进一步提升多样性，证明其在时序主题追踪中的有效性。
 
-**作用**：作为论文主实验证据之一，量化支撑 BERTopic 凭借 class-based TF-IDF 流程，在主题一致性与多样性上对传统 LDA 的双重超越，奠定其"神经主题建模新范式"的核心论点。
+**③ 实验链路作用**：作为对 BERTopic 应用于 dynamic topic modeling 的实证支撑，验证该方法不仅适用于静态语料，也能稳健处理时序演化语料。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

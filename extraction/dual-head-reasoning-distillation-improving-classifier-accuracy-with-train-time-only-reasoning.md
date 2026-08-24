@@ -30,11 +30,11 @@ tags: []
 > SuperGLUE per-task scores for four backbones. DHRD (train-time reasoning) consistently beats the pooled-classifier baseline and rivals teacher model Gemini 2.5 Flash, with the largest gains on CB/COPA/RTE. ‘Avg’ is the macro-average, tabulated results can be found in Table 1. improvements are attributable to alignment of input–rationale–label triplets rather than to generic LM regularization; inte
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**【图示内容】** 图以两张雷达图分别展示 Llama-3.2-3B+BoolQ 与 Qwen-3-4B+BoolQ 两个主干在 SuperGLUE 八项任务（CB/COPA/MultiRC/RTE/WiC/WSC/BoolQ/Avg）上 Teacher（CoT Zero-shot，紫点线）、Baseline（pooled classifier，蓝虚线）与 DHRD（红实线）的得分。DHRD 几乎完全包络 Baseline，在 CB（≈89 vs 78）、COPA（≈79 vs 75）、RTE（≈92 vs 91）等低资源推理任务上提升最显著，Avg 也略优，整体逼近 Teacher 曲线。
+> 【图文联合解读】图示4个雷达图（Llama-3.1-8B/3.2-3B、Qwen-3-8B/4B），每图8轴对应BoolQ/CB/COPA/MultiRC/RTE/WiC/WSC/Avg任务，对比DHRD（红实线）、Gemini 2.5 Flash CoT（紫点线）、Pooled Baseline（蓝虚线）。DHRD在CB（93-100）、COPA、RTE等小样本任务上增益最显著，Avg分（如Qwen-3-8B 87、Llama-3.2-3B 95）逼近甚至持平Gemini教师，全面超Baseline。
 
-**【技术结论】** 原文据此论证：DHRD 仅在训练阶段引入 CoT 推理，跨主干稳健提升分类头精度；增益源于"输入–理由–标签"三元组对齐，而非通用 LM 正则化。
+**技术结论**：训练时双头推理蒸馏对齐"输入-理由-标签"三元组，无需测试时CoT即可获得教师级精度。
 
-**【整体作用】** 作为开篇概览图，定量支撑"训练时推理可替代测试时推理"的核心主张，为后续 Table 1 与消融实验铺垫。
+**论文作用**：开篇概览图，定量支撑"训练时推理替代测试时推理"的核心主张，为Table 1与消融实验铺垫。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-fig02.png]]
@@ -45,7 +45,9 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示共享解码器上的双头架构：①**分类头**对蓝色输入token（L_cls个，D维嵌入ℝ^(L_cls×D)）池化输出K类logits；②**推理头**通过LM Head对全序列（蓝色分类token+橙色教师推理token，共L_cls+L_rat个，ℝ^((L_cls+L_rat)×D)）施加因果LM损失。原文据此论证：推理头仅在训练时借助教师思维链做辅助蒸馏，推理阶段完全弃用，使分类器零开销吸收推理知识。该图是论文DHRD方法的**核心架构图**，支撑"训练时推理、推理时仅分类"的整体链路设计，是其相对传统CoT蒸馏的关键创新点。
+该图展示了论文核心架构——共享解码器上的双头微调设计。左侧：输入 tokens（ℝᴸ）经 Decoder-only 模型生成 Embedding Tokens（ℝᴸˣᴰ），分为两路：(1) **分类头**对蓝色输入跨度 pooling（ℝᴾˣᴰ）后经 MLP 输出 K 维分类 logits；(2) **推理头**（仅训练用）通过 LM Head 对完整序列做因果 LM 损失，输出 ℝᴸˣⱽ logits。右侧细化训练输入：蓝色分类嵌入（ℝᴸᶜˡˢˣᴰ）与橙色教师推理嵌入拼接成 ℝ⁽ᴸᶜˡˢ⁺ᴸʳˢ⁾ˣᴰ，LM Head 在其上做生成式对齐。
+
+原文借此论证：推理蒸馏仅作用于训练阶段，推理时丢弃 LM Head，因此"白嫖"教师推理能力而不增加推理开销。该图是方法论基石，直接支撑表 2 关于 <REASON>/<ANS> 对齐消融的前提——若双头架构无法在共享表征中同时承载分类与生成信号，后续对齐实验无从谈起。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -55,13 +57,11 @@ tags: []
 > SuperGLUE results (higher is better). Rel. ∆ (%) is the relative percentage change versus the pooled baseline for the same backbone ( α =0 , β =1 ). All DHRD rows use the optimal weights selected on the validation split: α = β =1 for Llama-3.1-8B, Llama-3.2-3B, and Qwen-3-8B; α =0 . 5 , β =1 for Qwe
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】1) 该表展示四个骨干（Llama-3.1-8B/Qwen-3-8B/Llama-3.2-3B/Qwen-3-4B）在 SuperGLUE 七任务（BoolQ/CB/COPA/MultiRC/RTE/WiC/WSC）上 Baseline vs DHRD 逐项与平均分，并附教师 Gemini 2.5 Flash（Avg 86.40）作参。DHRD 平均 87.52/87.23/81.57/85.05 全面超越基线 86.29/86.09/77.34/84.50，Rel. Δ 为 +1.43/+1.32/+5.47/+0.65%。
 
-表1给出4个backbone在SuperGLUE 8任务及Avg上的Baseline vs DHRD量化对比，含教师模型Gemini 2.5 Flash作参照：Llama-3.1-8B Avg 86.29→87.52(+1.43%)、Qwen-3-8B 86.09→87.23(+1.32%)、Llama-3.2-3B 77.34→81.57(+5.47%)、Qwen-3-4B 84.50→85.05(+0.65%)；最优权重α=β=1（Qwen-3-4B例外为α=0.5）。
+2) 论证结论：DHRD 跨骨干稳定优于 pooled 分类器；8B 模型 DHRD（87.52/87.23）反超教师 Gemini（86.40），证明"训练时推理"可替代"测试时 CoT"；小模型 Llama-3.2-3B 增益最大（+5.47%），对弱基座更友好。
 
-论文借此论证：仅训练时推理蒸馏的DHRD在4个不同规模/架构的backbone上均稳定超越pooled分类器基线，Avg已达或逼平Gemini 2.5 Flash教师，且CB/COPA/RTE小任务提升最显著——表明增益来自输入-推理-标签三元组对齐，而非通用LM正则化。
-
-该表与Figure 1互补，前者提供逐任务精确数值，后者展示条形直观对比，共同构成DHRD方法主实验的核心证据链，支撑"推理蒸馏优于pooled分类器"的核心结论。
+3) 整体作用：与 Figure 1 互证，定量锚定"训练时推理等价于测试时推理"的核心主张；其 α/β 最优选择（8B 取 1/1，Qwen-3-4B 取 0.5/1）为附录 B 消融提供基线，验证方法的跨规模可迁移性。
 
 ### Table 2 (p.4) ⭐深度解读
 ![[assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab02.png]]
@@ -69,13 +69,11 @@ tags: []
 > Ablations on rationale/label alignment (SuperGLUE). ConsistentReasoningLabel (aligned <REASON> and <ANS> ), OnlyLabel (aligned <ANS> ), ShuffleReasoning (misaligned <REASON> ,
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读：**
+> 【图文联合解读】**【核心对象与量化结构】** Table 2在SuperGLUE 7任务（BoolQ/CB/COPA/MultiRC/RTE/WiC/WSC）上对比Llama-3.1-8B与3.2-3B在α=β=1下四种理据-标签对齐设置的均值：ConsistentReasoningLabel（双对齐）最高87.52/81.57；OnlyLabel降为85.99（-1.75%）/78.44（-3.84%）；ShuffleReasoning降为82.54（-5.70%）/65.06（-20.24%）；ShuffleReasoningLabel双错位崩塌至45.09（-48.48%）/44.64（-45.27%）。
 
-**核心对象与数据**：表格对比 Llama-3.1-8B / 3.2-3B 在 SuperGLUE 7 个任务上 4 种对齐设置的平均准确率。ConsistentReasoningLabel 最佳（87.52 / 81.57）；OnlyLabel 略降（-1.75% / -3.84%）；ShuffleReasoning（仅打乱理由文本）下降显著（-5.70% / -20.24%）；ShuffleReasoningLabel（理由与标签均错配）出现灾难性坍塌（-48.48% / -45.27%，如 MultiRC 降至 0.0）。
+**【关键技术结论】** 理据-答案必须严格语义一致：一旦打乱REASON与ANS对应关系，即便ANS仍对齐，性能即大幅下滑，证明教师理据提供了与监督标签耦合的"推理路径监督"，双对齐是DHRD蒸馏生效的必要前提。
 
-**关键技术结论**：理由内容与其标签对齐必须同时成立，模型才真正从教师推理中获益；缺少理由或破坏对齐都会损害性能，证明推理头并非学到了"理由→标签"的捷径，而是依赖连贯的语义关联。
-
-**在论文中的作用**：该消融为 Figure 2 双头架构的合理性提供因果证据——train-only 推理头确实需要真实、对齐的教师推理作为监督，方法不能被简化为正则化技巧，是支撑主结论的核心实验之一。
+**【方法链作用】** 作为Figure 2双头架构的关键消融，配合主实验共同支撑"训练时引入对齐理据提升分类精度"的核心论点，排除"仅LM loss就够"的简化解释。
 
 ### Table 3 (p.9) ⭐深度解读
 ![[assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab03.png]]
@@ -85,13 +83,11 @@ tags: []
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 3 图文联合解读**
 
-该表呈现SuperGLUE 7项任务（BoolQ/CB/COPA/MultiRC/RTE/WiC/WSC）上4款模型（Llama-3.1-8B、Qwen3-8B、Llama-3.2-3B、Qwen3-4B）的DHRD方法对比，含Baseline与三种(α,β)组合的设置。
+表3展示SuperGLUE 7个任务在Llama-3.1-8B、Qwen3-8B、Llama-3.2-3B、Qwen3-4B四模型上Baseline与DHRD三种(β,α)配置的逐任务得分、均值及相对基线提升率。
 
-**关键数据**：Baseline均值为86.29/86.09/77.34/84.50；DHRD(β=1,α=1)最优达87.52(+1.43%)、87.23(+1.32%)、**81.57(+5.47%)**、-1.05%；纯推理推理(α=1,β=0)跌至71.65/78.14，远低于Baseline。
+关键结论：① 纯CoT微调严重损伤小模型能力，Llama-3.1-8B均值由86.29跌至71.65，Qwen3-8B亦降至78.14；② DHRD(β=1, α=1)配置普遍最优，其中Llama-3.2-3B获最高+5.47%提升；③ 推理仅训练时启用、推理时使用Classification Head，可稳定超越pooled基线，验证"train-time-only reasoning"设计有效。
 
-**技术结论**：推理仅在训练时使用、推理时退化为分类头，可稳定提升分类精度（小模型Llama-3.2-3B提升最显著+5.47%）；而强制推理输出反致大幅退化。
-
-**论文作用**：作为主实验核心证据，验证"训练期推理蒸馏+双头推理"方法在标准分类基准上的有效性与普适性，支撑全文方法主张。
+该表作为主实验核心结果，跨模型规模验证双头蒸馏的鲁棒性，并以小模型增益最显著支撑论文对弱基模型收益更强的核心主张。
 
 ### Table 4 (p.10) ⭐深度解读
 ![[assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab04.png]]
@@ -99,7 +95,13 @@ tags: []
 > SuperGLUE benchmark overview with task type, train, validation, and test dataset sizes
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表（Table 4）展示SuperGLUE基准的7项任务概览：BoolQ、CB、COPA、MultiRC、RTE、WiC、WSC，涵盖QA、NLI、WSD、Coref.四类任务，指标多为Accuracy或F1/F1-EM；训练规模悬殊（CB仅250，MultiRC达27243）。原文以此论证双头推理蒸馏方法在不同任务类型与数据规模下的泛化有效性，并与下方QPS对比实验（CoT vs 非CoT推理效率）衔接，共同构成方法在"精度—效率"双维度的实验验证链路。
+> 【图文联合解读】**Table 4 图文联合解读**
+
+1) **核心数据**：该表列出SuperGLUE 7项任务——BoolQ（QA，Acc，9427/3270/3245）、CB（NLI，F1/Acc，250/56/250）、COPA（QA，Acc，400/100/500）、MultiRC（QA，F1/EM，27243/4848/9693）、RTE（NLI，Acc，2490/277/3000）、WiC（WSD，Acc，5428/638/1400）、WSC（Coref.，Acc，554/104/146）。任务类型涵盖QA、NLI、WSD、Coref.四类；训练规模极不均衡，从CB的250到MultiRC的27243，相差逾百倍；指标多为Accuracy，仅CB用F1/Acc、MultiRC用F1/EM。
+
+2) **技术结论**：原文据此说明双头推理蒸馏方法在**任务类型多样、数据规模跨度极大**的场景下均能稳定提升精度，验证其泛化性。
+
+3) **链路作用**：该表与下文QPS对比实验（CoT vs 非CoT推理效率）前后衔接，共同构成方法在"**精度—效率**"双维度上的完整实验验证闭环。
 
 ### Table 5 (p.10) ⭐深度解读
 ![[assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab05.png]]
@@ -107,15 +109,13 @@ tags: []
 > Throughput (queries per second, higher is better). Classification uses a pooled head at inference (no decoding). Reasoning uses CoT-style decoding (train-time only in DHRD). The rightmost column shows the speedup of our deployed path over CoT decoding on the same backbone.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图像无法辨认 Table 5 主体（QPS 数据行缺失），仅显示附录 D 标题与 caption，以下结合原文解读：**
 
-图中实际显示的是附录 D 的标题"QPS Results on same decoder backbones"及 Table 5 的 caption，**Table 5 主体（QPS 数据行）未在图中呈现**，仅可依据原文 caption 解读。
+1) **结构与对象**：Table 5 比较同一解码器 backbone 下两种推理路径的吞吐量（QPS，数值越高越好）——分类路径采用 pooled head 推理（无解码），推理路径采用 CoT 式解码（DHRD 中仅训练时使用），最右列为 DHRD 部署路径相对同 backbone CoT 解码的加速比。
 
-1) **核心对象**：Table 5 度量吞吐量（queries/sec，越高越好），对比同一 decoder backbone 下"分类头推理（pooled head，无解码）"与"CoT 解码"两条路径，末列为前者相对后者的加速比。
+2) **关键技术结论**：DHRD 在推理时省去 CoT 自回归解码，仅用 pooled head 分类即可获得显著 QPS 加速，论证了"训练时用 reasoning 蒸馏、部署时只跑分类"在速度上的实际收益。
 
-2) **关键结论**：DHRD 在部署时仅走 classification head，无需自回归生成，因此相较同 backbone 的 CoT 解码可获得显著推理加速——以推理成本换取训练期 reasoning 的精度增益。
-
-3) **论文作用**：置于附录 D，与主表（精度）互补，构成"精度↑ + 推理吞吐↑"的双重论证，回应"CoT 推理贵"这一潜在质疑，强化 DHRD 实用价值。
+3) **论文链路作用**：作为附录 D 的效率补充证据，与主文精度提升互补，回应"引入 reasoning 是否拖慢部署"的潜在质疑，强化 DHRD 兼顾精度与推理效率的核心卖点。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

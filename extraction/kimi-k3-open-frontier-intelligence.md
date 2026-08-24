@@ -30,7 +30,13 @@ tags: []
 > Kimi K3 main results. 1https://huggingface.co/moonshotai/Kimi-K3[cs.CL] 7 Aug 2026
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图1为多面板水平柱状对比图，Kimi K3以蓝色高亮、Fable 5/Opus 4.8/GPT-5、5.6 Sol/GLM-5.2为基线，覆盖12项Coding与通用/视觉Agent基准。在可见面板中，Kimi K3于FrontierSWE(81.2)、SWE-Marathon(42.0)、AutomationBench(30.8)三项夺魁，对GLM-5.2最大领先近17分；仅ZeroBench w/tool(41.0)略逊于Fable 5(46.0)。该图置于首页，作为全文方法-实验链路的开篇主结果，集中论证Kimi K3在编码与Agent推理上达到开源前沿水平，为后续章节提供核心实证锚点。
+> 【图文联合解读】**图文联合解读：**
+
+图1分"Coding"与"General & Visual Agents"两栏共12基准（DeepSWE、Kimi Code Bench 2.0、Terminal-Bench 2.1、ProgramBench、FrontierSWE、SWE-Marathon、GDPval-AA v2 Elo、BrowseComp、AutomationBench、JobBench、CharXiv w/ tool、ZeroBench Pass@5），以横向条形对比Kimi K3与GPT-5.6 Sol、Opus 4.8、Fable 5、GLM-5.2得分，K3以蓝色高亮。
+
+**技术结论：** K3在ProgramBench(77.8)、FrontierSWE(81.4)、SWE-Marathon(42.0)、BrowseComp(91.2)、AutomationBench(30.8)居首；Terminal-Bench(88.3)、Kimi Code Bench(72.9)、CharXiv(91.3)、JobBench(54.3)紧追Fable 5；DeepSWE(67.5)居第4、GDPval-Elo(1686)居中。论证K3在编码与代理任务达开源前沿、与闭源SOTA相当但未全面超越。
+
+**论文作用：** 开篇主结果图，定量锚定K3前沿定位，为后续方法/实验论证提供基准锚点。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig02.png]]
@@ -48,11 +54,11 @@ tags: []
 > Lower-bounded decay and its effect on chunkwise KDA computation. (a) Kimi Linear uses an unbounded negative-Softplus mapping, whereas Kimi K3 bounds the log-decay with a scaled sigmoid; the curves show A = 0 and gmin = −5. (b) Kimi Linear evaluates each diagonal tile with an explicit position-pair computation, while the bounded range in Kimi K3 allows all causal tiles to use dense Tensor Core matr
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图(b)核心对象**：两个4×4分块矩阵对比KDA分块计算。Kimi Linear：主对角线4个橙色"Position-pair Diagonal"块需显式位置对计算，下三角6格用蓝色Tensor Core；Kimi K3：经log-decay下界化后，全部10个因果块（主对角+下三角）统一为蓝色Tensor Core稠密矩阵乘，白色上三角保留因果掩码。
+> 【图文联合解读】**图(a)** 展示对数衰减参数化对比（A=0）：Kimi Linear 用 g = -e^A·Softplus(z)（灰线无下界，z→-∞ 时趋于-∞）；K3 改用 g = g_min·Sigmoid(e^A·z)（红线在 g_min = -5 处饱和）。**图(b)** 展示 chunkwise KDA 对角块差异：Kimi Linear 中对角橙色块须显式位置对计算、非对角蓝色块才用 Tensor Core；K3 因衰减有下界，所有因果块统一为蓝色 Tensor Core 稠密矩阵乘法。
 
-**论证的技术结论**：log-decay下界化（sigmoid钳至g_min=-5）使对角块不再需要特殊计算路径，所有因果块均可纳入Tensor Core加速，硬件利用率显著提升，复杂度从"对角线特殊+其余稠密"简化为"统一稠密GEMM"。
+**论证结论**：对衰减施加下界约束，可消除"位置对 vs 稠密"的混合计算模式，统一为 Tensor Core 密集 GEMM，同时改善数值稳定性。
 
-**论文整体作用**：这是K3相对Kimi Linear的核心工程优化之一，支撑其在大规模长序列训练/推理中的硬件效率，是"前沿智能"得以在KDA架构上落地实现的关键链路。
+**论文作用**：作为 K3 相对 Kimi Linear 核心架构改进（数值稳定 + 训练效率）的可视化证据，支撑其"chunkwise 加速、长上下文可扩展"的方法级主张，属于方法论章节的关键图示。
 
 ### Figure 4 (p.7) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig04.png]]
@@ -74,13 +80,11 @@ tags: []
 > Illustration of Quantile Balancing with m = 8 tokens, n = 4 routed experts, and k = 1 selected expert per token. (a)
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】【核心对象】图5以 m=8 token、n=4 routed experts、k=1 为示例，三栏展示路由均衡全流程：(a) 原始 Top-1 路由产生负载 (4,3,1,0)，E₁ 过载、E₄ 空载；(b) Quantile Balancing 阶段按列对 token-专家得分设分位阈值（红色虚线），红星标记每列入选 token；(c) 重路由后每专家恰承接 2 token，负载严格均匀 (2,2,2,2)。
 
-该图展示Quantile Balancing路由机制的核心步骤：m=8 token、n=4 routed experts、k=1选一。(a) 标准Top-k产生负载(4,3,1,0)严重倾斜；(b) 图中灰色横杠为各margin $s_{i,j}+b_j-\alpha_i$，红色虚线为新偏置阈值$\widehat{b}_j^{(t+1)}$，置于第(q+1)大margin处，使每列恰q=2个margin越过；(c) 经此重新路由后，t1–t8被均匀分给E1–E4，每专家恰收2 token。
+【技术结论】论证分位均衡可将偏斜的 Top-k 分配转化为均匀分配，避免过热专家过拟合、空闲专家欠训练，保障 MoE 专家利用率与训练稳定性。
 
-**论证结论：** Quantile Balancing通过对每专家偏置的"分位数截断"，将不均衡Top-k路由强制转化为均匀分配，从根本上抑制过热/饿死专家。
-
-**论文作用：** 作为Kimi K3稀疏MoE路由层关键算法可视化证据，支撑其大规模专家并行训练中负载均衡与训练稳定性的方法论主张。
+【论文作用】作为 MoE 负载均衡机制的可视化证据，与辅助偏置损失互补，支撑稀疏激活模型在大规模训练中的基础设施论证。
 
 ### Figure 6 (p.9) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig06.png]]
@@ -89,13 +93,13 @@ tags: []
 > Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lower gradient norms with fewer spikes, indicating more stable optimization. 9
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Figure 6 图文联合解读**
 
-该图呈现预训练消融阶段视觉塔梯度范数随训练步（7k–22k+）的完整轨迹，对比MoonViT-3D（蓝，SigLIP初始化）与MoonViT-V2（红，从零训练）。MoonViT-3D多次出现0.5–0.75的高尖峰，尤其集中在14k–15k步处；而MoonViT-V2梯度主体低于0.2，尖峰稀少且小，仅在22k附近出现约0.4的脉冲。
+**(1) 核心数据：** (a)展示7k–30k训练步两种视觉塔梯度范数全程曲线；(b)放大14k–16k区间。蓝色MoonViT-3D（SigLIP初始化）全程频繁出现0.4–0.75的尖峰，放大图显示其基线约0.02–0.03、尖峰达0.1–0.15。红色MoonViT-V2（从零训练）基线始终≤0.02，仅约22k步出现一次~0.4的孤立尖峰，其余区段近乎平坦。
 
-此图论证的核心结论：**从零训练的MoonViT-V2优化更稳定、梯度更可控**，显著优于基于SigLIP初始化的MoonViT-3D方案。
+**(2) 技术结论：** V2从头训练相比SigLIP初始化方案，梯度范数更低、尖峰显著更少，优化过程明显更稳定——为"放弃强视觉预训练权重、重新设计原生视觉编码器"这一关键决策提供量化稳定性证据。
 
-在论文整体方法链路中，它为"弃用外部预训练初始化、改用从零训练视觉编码器"的架构决策提供了直接的训练稳定性实证，是MoonViT-V2最终取代MoonViT-3D成为默认视觉塔的关键支撑证据之一。
+**(3) 在论文中的作用：** 作为预训练消融（pre-training ablation）的客观度量，与下游任务性能互补，从训练动力学角度背书MoonViT-V2架构选择，强化"原生从头设计优于借用预训练初始化"的整体方法论主张。
 
 ### Figure 7 (p.11) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig07.png]]
@@ -104,13 +108,13 @@ tags: []
 > Fitted scaling-law curves for Kimi K2 and Kimi K3. Kimi K3 achieves 2.5× gain in scaling efficiency over Kimi K2.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图7联合解读**
 
-1) **核心对象与结构**：图示为对数–对数坐标系下的两条拟合 scaling-law 曲线（虚线），横轴为训练 FLOPs（10²¹ 刻度可见），纵轴为评估损失。蓝色虚线为 Kimi K2，红色虚线为 Kimi K3，每条曲线上标有星号表示实测数据点。两曲线整体平行下移，K3 在相同 FLOPs 下损失更低，或达到相同损失所需计算量约为 K2 的 1/2.5。
+1. **核心对象与结构**：双对数坐标图，横轴为训练FLOPs（≈5×10¹⁹–2×10²¹），纵轴为Validation Loss。蓝色（K2）与红色（K3）两条拟合直线近似平行，K3整体左移；图中以"2.5×"标注在等Loss水平上K3相对K2的横向FLOPs位移比，数据点（星标）紧贴拟合线。
 
-2) **关键结论**：以 2.5× 的横向位移定量证明 K3 在 scaling efficiency 上相较 K2 取得显著增益，即每单位算力可获得更优模型质量，验证了 K3 架构/训练方案的有效性。
+2. **关键技术结论**：K3在保持幂律scaling形式的同时，仅需K2约40%的算力即可达到相同验证损失，即scaling efficiency提升2.5×，证明K3的架构/训练改进切实转化为计算–性能收益。
 
-3) **论文作用**：该图位于实验论证环节，作为支撑 K3 跨入 "open frontier intelligence" 主张的核心定量证据之一，将抽象的"更强"转化为可测量的计算效率提升，为 K3 资源分配决策与代际跃迁论断提供经验依据。
+3. **在论文中的作用**：作为method链路的关键经验证据，定量支撑"open frontier intelligence"的核心主张——K3并非单纯扩规模，而是以更高效scaling曲线实现前沿能力，呼应全文优化Muon、优化器、合成数据等改进的累积效果。
 
 ### Figure 8 (p.13) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig08.png]]
@@ -119,11 +123,13 @@ tags: []
 > Scores and the average assistant steps across a variety of public and in-house evaluations during RL. By scaling RL FLOPs, tool-call steps scale up consistently, accompanied by a comprehensive improvement in the model’s overall capability.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（图8）：**
+> 【图文联合解读】**图文联合解读：**
 
-图8为2×2四宫格双轴折线图，覆盖Web Development、Agentic Search、Agentic Chart Understanding、Agentic Visual Puzzles四项评测。横轴为RL FLOPs，蓝实线（左轴）为得分(%)，红虚线（右轴）为平均助手步数。量化趋势：Web Development得分由~10%升至~80%、步数~5→10；Agentic Chart Understanding得分~30%→70%、步数~3→6；Agentic Visual Puzzles得分~40%→80%；Agentic Search得分~10%→60%；四任务步数整体均随FLOPs同步增长。
+图8由2×4共8个子图构成，横轴为RL FLOPs（强化学习计算量），纵轴双轴显示：蓝色实线为Score(%)、红色虚线为Avg. steps（平均工具调用步数），覆盖Coding Experience、General Tool Use、Web Development、Agentic Search、Professional Workflows、Office Deliverables、Agentic Chart Understanding与Agentic Visual Puzzles八类评测。随着RL FLOPs自左向右放大，绝大部分子图中两条曲线呈协同上升趋势——例如Professional Workflows与Office Deliverables的分数从约30%爬升至80%以上，Avg. steps同步由低位升至高位；Agentic Visual Puzzles与Coding Experience亦呈近似单调递增的强相关，General Tool Use的Avg. steps增幅显著。仅Web Development与Agentic Search波动较大，但整体仍呈正相关。
 
-原文据此论证**"RL FLOPs扩展→工具调用步长与综合能力协同提升"**这一核心scaling结论。该图与Figure 7互补，构成论文"算力驱动Agentic能力与推理深度共增长"主线论断的关键实证，支撑Kimi K3以RL为后训练主要杠杆的方法学定位。
+**论证结论：** 原文据此说明"RL算力规模化→工具调用链路变长→综合能力全面提升"，建立了"长链工具使用+能力增益"的可扩展关系。
+
+**论文作用：** 作为RL scaling实验的核心证据，支撑"Kimi K2在RL阶段涌现更深层智能体行为"的论点，与Figure 7/9的tool-use统计、benchmark总分构成RL训练链路的完整佐证。
 
 ### Figure 9 (p.15) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig09.png]]
@@ -147,9 +153,7 @@ tags: []
 > Completion curves on Camera Repair Management System, a black-box system replication task in which the agent reconstructs a hidden 3D-camera repair system as a web application through oracle queries. Completion denotes verifier-assessed task progress. 5
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】1) 图中4条阶梯曲线比较黑盒“相机维修管理系统”的复现进度：工具调用从50%推进至100%，完成度由验证器评估；终值约为红/橙90、紫82、蓝81、绿52。  
-2) 曲线表明，代理借助 oracle 查询可逐层还原隐藏的3D维修系统及Web应用，但过程是阶段性的，代理能力决定完成效率与上限。  
-3) 该实验构成“黑盒探测—工具执行—系统复现—验证评测”链路，证明方法可处理开放式长程应用复制。
+> 【图文联合解读】图示四模型在"Camera Repair Management System"黑盒系统复现任务上的完成度曲线（验证器评分，横轴为归一化工具调用进度）。Kimi K3以得分1.000成为唯一达100%完成度的模型，且在约90%–100%区间出现陡峭跃升；Opus 4.8（0.918）与GPT-5.5（0.893）分别止于约92%、89%并在末段趋于平台；Kimi K2.6仅0.560，封顶约56%。论文借此论证：Kimi K3在长程黑盒逆向与复杂Web复现中具备最高的探索—收敛效率，曲线末端跃升表明其在工具调用后期仍能持续突破。该图是支撑"前沿智能体能力"主张的核心实证之一。
 
 ### Figure 11 (p.19) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig11.png]]
@@ -171,13 +175,11 @@ tags: []
 > Fine-grained prefix caching within a physical cache block. A 6144-token physical block contains twelve 512-token hash blocks, with cached MLA blocks shown in blue and empty blocks in light gray. The markers below show the KDA checkpoint status at each hash boundary. An open circle (◦) denotes a boundary without a stored checkpoint, a gray dot (•) denotes a persisted KDA checkpoint, and an orange d
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**1) 核心对象与结构：** 1个6144-token物理块划分为12个512-token哈希块；MLA KV行前5块蓝色（已缓存）、后7块浅灰（空）；KDA检查点行在第5块边界B=2560处标橙色命中点，第4块为灰色持久checkpoint，其余位置为开圈（无checkpoint）。
 
-**① 核心对象与结构：** 1个6144-token物理块被切分为12个512-token的prefix-hash子块，其中前5块为蓝色（已缓存的MLA块，对应B=2560/512=5），后7块为浅灰色（空块）；下方12个标记对应每个hash边界的KDA checkpoint状态（○=无checkpoint，●=已持久化，橙色●=在B=2560处命中）。
+**2) 关键技术结论：** 命中B=2560时，从checkpoint恢复KDA状态、对部分MLA块执行copy-on-write，[0,B)区间零重算即可续prefill——证明512-token粒度的细粒度哈希前缀缓存与KDA状态持久化可协同工作，避免整块重新计算，实现按哈希边界的增量恢复。
 
-**② 关键结论：** KDA checkpoint稀疏分布且通常与对话轮次边界对齐；新请求到达B=2560时，以copy-on-write方式复用前5个MLA hash块与该处KDA checkpoint，对区间[0, B)实现零重算（zero-recompute）即可直接续写prefill。
-
-**③ 在论文中的作用：** 展示"细粒度prefix caching + 状态checkpoint"的协同机制，是Kimi K3长上下文推理高效prefill恢复与KV复用方案的核心可视化证据。
+**3) 论文作用：** 该图是"细粒度前缀缓存+KDA增量恢复"机制的可视化证据，与相关章节共同支撑系统级增量推理管线设计，论证检查点粒度选择（512-token哈希块）的工程合理性。
 
 ### Figure 13 (p.32) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig13.png]]
@@ -199,11 +201,13 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**：该图为AttnRes算子GPU kernel优化的纵向case study，横轴为优化耗时（小时，约15–20h区间），纵轴为相对加速比。四条阶梯状轨迹分别对应四个模型的迭代优化过程，×号标记为单次尝试散点，水平虚线表示各自达到的最高性能平台：Kimi K3（红）**+59.7%**、Claude Fable 5（蓝）**+57.1%**、GPT-5.5（绿）**+30.8%**、GPT-5.6 Sol（深红）**+17.3%**。
+该图为 AttnRes GPU kernel 优化任务的案例研究，纵轴为性能得分（0–64.1），横轴为有效工作时间（Active hours，0–22h），以阶梯线追踪四个模型的迭代优化轨迹。
 
-**2) 关键技术结论**：Kimi K3在约17h即触及性能天花板，最终加速比领先第二名约2.6个百分点、领先GPT系列25–42个百分点；其轨迹爬升更快、平台更早稳定，说明该模型在编译反馈—profiling—改写循环中具备更高效的多轮迭代搜索与"通过"判定能力，而GPT-5.6 Sol虽耗时相近却仅获+17.3%，凸显Kimi K3在底层算子优化任务上显著优于同期前沿闭源模型。
+**核心数据**：Kimi K3（红线）增长最快，约第 3 小时起步，第 5 小时已达 ~40%，第 15 小时封顶 ~60（+59.7%）；Claude Fable 5（蓝线）约第 4 小时起跑，第 15 小时达 ~57（+57.1%）；GPT-5.5（绿线）缓慢爬升至 ~30 后长期平台期（+30.8%）；GPT-5.6 Sol（深红线）全程落后，仅在第 20 小时达到 ~17（+17.3%）。
 
-**3) 在论文链路中的作用**：作为Figure 14 case study，它与上游基准评测互补，从"过程性"维度具象化K3的智能边界——不再仅给出最终分数，而是展示模型在长时程、需工具反馈的复杂系统工程任务中的探索效率与上限突破能力，支撑"开放前沿智能"（open frontier intelligence）这一核心论断。
+**关键结论**：原文以"前期加速+最终峰值"双重优势论证 Kimi K3 在长周期、迭代式深度优化任务中兼具探索效率与求解质量，显著优于同梯队模型。
+
+**论文作用**：作为 frontier intelligence 的实证切片，支撑"K3 在开放式研究/工程难题上达到人类专家级推理"的整体论断。
 
 ### Figure 15 (p.34) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig15.png]]
@@ -231,19 +235,27 @@ tags: []
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
+### Table 1 (p.11) ⭐深度解读
+![[assets/crops/kimi-k3-open-frontier-intelligence-tab01.png]]
+> [!quote] caption
+> Architectural comparison between Kimi K2 and Kimi K3.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 1 解读**
+
+**核心对象与数据：** 对比 K2/K3 架构参数及 Δ 变化。K3 多维扩容：总参 1.04T→2.78T（↑167%）、激活参 32.6B→104.2B（↑220%）、层数 61→93（↑52%）、路由专家 384→896（↑133%）、每 token 激活专家 8→16（↑100%）、共享专家 1→2、注意力头 64→96（↑50%）；隐藏维 7,168 与词表 160K 持平。K3 新增 Latent MoE（3584，0.5×）、401M ViT（27 层/patch 14/12 头）、混合 KDA–MLA 注意力（69 KDA + 24 MLA）、SiTU-GLU 激活函数，训练上下文 128K→1M（8×）。
+
+**技术结论：** K3 在多维参数规模大幅扩容之上，引入 Latent MoE、混合注意力、原生 ViT 与超长上下文等架构创新，论证"开放前沿智能"源于规模与架构的双重跃迁。
+
+**论文作用：** 作为整篇方法/实验链路的架构基线，定量锚定 Fig.1 主结果对比所依赖的容量上限与结构差异。
+
 ### Table 2 (p.27) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-tab02.png]]
 > [!quote] caption
 > Performance comparison of Kimi K3 against proprietary and open-source models. Bold denotes the best result for each benchmark and underline the second-best. Unless otherwise noted, Kimi K3 results are obtained with reasoning effort set to max and temperature equal to 1 . 0 . For HLE-Full, MMMU-Pro, 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
-
-该表分三大类共30余项基准（推理知识4项、编码8项、Agentic约20项），横向对比Kimi K3（max）与其余五个模型（Claude Fable 5、GPT-5.6 Sol、Claude Opus 4.8、GPT-5.5及开源GLM-5.2），HLE-Full等以"无工具/有工具"双数值呈现。
-
-**关键结论**：Kimi K3在Agentic类全面领跑，BrowseComp 91.2、DeepSearchQA 95.0、MCPMark 94.5、Harvey Lab-AA 94.6等均为最佳；编码侧SWE-Marathon 42.0、ProgramBench 77.8居首；推理侧AA-LCR 74.7第一，但GPQA（93.5，次优）、HLE-Full w/ tools（56.0）仍弱于GPT-5.6 Sol（94.1/63.0）。这表明Kimi K3在开放权重条件下已对齐闭源前沿，尤其在长程Agent与工具使用上突破明显，纯知识推理仍是与GPT系列的差距所在。
-
-**论文作用**：Table 2是方法链路终点——验证token/channel/layer混合架构（图2）配合原生视觉通路后，模型在真实工作流基准上达到前沿，是主张"开放权重对标闭源"的核心证据。
+> 【图文联合解读】Table 2将Kimi K3（max推理强度）与Claude Fable 5、GPT-5.6 Sol、Opus 4.8、GPT-5.5四个闭源模型及开源GLM-5.2在推理/知识、编码、代理三大类约30项基准上系统对比。**K3在代理类全面领先**：BrowseComp 91.2、DeepSearchQA 95.0、ResearchRubrics 76.2、MCPMark-Verified 94.5、Harvey Lab-AA 94.6、AutomationBench 30.8、SpreadsheetBench 2 34.8、τ³-Banking 33.4等均居首位；**编码**拿下ProgramBench 77.8、SWE-Marathon 42.0；**推理**与GPT-5.6 Sol互有胜负（GPQA 93.5平GPT-5.5，AA-LCR 74.7居首）。该表是论文核心实证，支撑"开源权重模型可达前沿、与最强闭源模型正面竞争"的主张，并凸显K3在长程工具调用与代理任务上的相对优势。
 
 ### Table 3 (p.29) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-tab03.png]]
@@ -251,13 +263,7 @@ tags: []
 > Results on our in-house benchmarks. Bold denotes the best reported result per benchmark; “-” denotes scores not yet included in this report. Unless otherwise noted, models are evaluated at maximum reasoning effort (GPT-5.5 at xhigh); harness assignments are shown in the Harness column. a 13 fallback
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-1) **结构与核心数据**：Table 3 将Kimi K3在三类自建基准（Coding/General Agent/Conversational）上与Claude Fable 5、GPT-5.6 Sol、Claude Opus 4.8、GPT-5.5及开源GLM-5.2做量化对照。Kimi K3在Coding Experience(59.9)、CLIF(52.4)、Swarm(76.3)、Deep Research(90.0)四项加粗最优；GPT-5.6 Sol横扫8项Agent基准（如KAET 85.4、Online 84.0、DECK 74.7）；GPT-5.5在Faithfulness 86.5领先；Claude Fable 5在MIRA 72.9、Chat All-in-One 88.0占优。
-
-2) **关键结论**：Kimi K3以开源权重身份全面逼近顶级闭源模型，并在深度研究类任务实现SOTA；多harness交叉（Claude Code/Kimi Code/Codex等）验证方法稳健。
-
-3) **论文作用**：与公开榜单表互补，作为"K3达到开源前沿智能"核心叙事的收口实证。
+> 【图文联合解读】表3对比Kimi K3与Claude Fable 5/Opus 4.8、GPT-5.6 Sol/5.5及开源GLM-5.2在Coding、General Agent、Conversational三类共15项自研基准的得分,各任务附不同harness。关键结论:Kimi K3在Coding Experience(59.9)、CLIF(52.4)、Swarm Bench(76.3)、Deep Research(90.0)等7项夺最佳,逼近或超越闭源SOTA;而通用Agent赛道多由GPT-5.6 Sol领跑(MIRA 52.0、KWV 66.9等),显示K3在长程工具调用类任务上仍有差距。该表作为论文实验收束,用统一评估框架量化证明K3已达开源前沿并具竞争力,同时诚实暴露相对短板。
 
 ### Table 4 (p.29) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-tab04.png]]
@@ -265,13 +271,13 @@ tags: []
 > Results on the in-house Kimi Webdev Bench: Kimi K3 (max) against Claude Opus 4.8 (max), both run with the Claude Code harness. The comparison is performed under blind expert judging, where experts score each output on code quality, feature completeness, visual fidelity, and interaction experience wi
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**注**：表标题描述的是 Kimi K3 vs Claude Opus 4.8 在 Webdev Bench 上的对比，但图片实际展示的是跨 17 项基准的全面对比表，与 caption 不完全一致；引用段落亦为 Figure 4 内容（非本表）。以下按图片实际内容解读。
+> 【图文联合解读】**注意**：图中所见为多基准综合评测表（含 Coding/Agent/Conversation 三类），与 caption 所述"Webdev Bench 的 Win/Tie/Lose 偏好对比"并不一致；以下按图像实际内容解读：
 
-**1) 结构与数据**：表格分 Coding Experience（Kimi Code Bench 2.0、Coding Experience）、General Agent Experience（24/7 ClawBench 2.0、MIRA、KAET、CLIF、Agentic Vision、Swarm、Online、Deep Research、Finance、KWV、DECK、Agent Behavior，共 12 项）、Conversational Experience（Faithfulness、Chat All-in-One）三类，共 17 个基准；列含 Harness 与 6 个模型（Kimi K3、Claude Fable 5、GPT-5.6 Sol、Claude Opus 4.8、GPT-5.5、GLM-5.2）。Kimi K3 在 Coding Experience(Claude Code) **59.9**（最高）、CLIF **52.4**、Swarm **76.3**、Deep Research **90.0** 上领先；KAET 85.4、Agent Vision 82.9 等由 GPT-5.6 Sol 居首。
+**1）核心对象与数据**：横向对比 Kimi K3 (max)、Claude Fable 5/Opus 4.8、GPT-5.6 Sol/5.5（Proprietary）与开源 GLM-5.2（Open Weight），覆盖 14 个基准。Kimi K3 关键得分：Code Bench 73.7、Code Exp (Claude Code) **59.9**（领先）、KAET 83.5、CLIF **52.4**（领先）、Swarm **76.3**（领先）、Deep Research **90.0**（领先）、Faithfulness 85.5、Chat All-in-One 85.2。
 
-**2) 论证结论**：体现 K3 在编码与通用 Agent 任务上具备前沿竞争力，多项 harness 下达到 SOTA 或并列。
+**2）关键结论**：Kimi K3 在编程、Agent、对话三类任务上与闭源前沿模型互有胜负并多次居首（如 Deep Research、Swarm、CLIF），整体大幅领先开源 GLM-5.2。
 
-**3) 在论文中的作用**：作为综合能力评测总表，支撑"开放前沿智能"的全栈定位结论。
+**3）实验链路作用**：作为主结果总览表，为论文"开放权重达到前沿智能"的核心论点提供跨域定量证据。
 
 ### Table 5 (p.32) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-tab05.png]]
@@ -279,15 +285,11 @@ tags: []
 > Headline independent third-party evaluations of Kimi K3 (as of July 23, 2026). Bold denotes the best result per benchmark and underline the second best. Baseline scores are as reported by each source under its own evaluation setup a Text Arena entry is the xhigh variant listed on the leaderboard. b 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**注：** 引用段落实为 Figure 5（Quantile Balancing 示意图）caption，与 Table 5 内容不对应，故以下解读严格基于表格本身。
+> 【图文联合解读】**【结构与数据】** Table 5对比Kimi K3与Claude Fable 5、GPT-5.6 Sol、Claude Opus 4.8、GPT-5.5及开源GLM-5.2在5项第三方基准的表现。Kimi K3以1,678 Elo登顶WebDev Arena(#1/99);Vals Index 74.7(#2/39)、Text Arena 1,486(#8/200)均第二;AA Index 57.1、Agent Arena 9.1列第三,五项稳入前三。
 
-**Table 5 图文联合解读：**
+**【关键结论】** 论文据此论证:作为开放权重模型,Kimi K3在编码(WebDev)上反超所有闭源对手,综合智能评测达前沿前列,实现"开源前沿智能"。
 
-Table 5 给出 Kimi K3 截至 2026.7.23 在 6 项独立第三方基准上与 5 个模型（Claude Fable 5、GPT-5.6 Sol、Claude Opus 4.8、GPT-5.5、GLM-5.2；前 4 为闭源，GLM-5.2 为开源权重）的横向对比。量化结果：Artificial Analysis v4.1 = 57.1（#4/580）；Vals Index = 74.7（#2/39，次席）；WebDev Arena = 1,678 Elo（#1/99，榜首）；Text Arena = 1,486（#8/200，次席）；Agent Arena = 9.1（#4/37）。Claude Fable 5 在 5 项中 4 项夺魁，K3 主观 Arena 表现尤为突出。
-
-**关键结论：** K3 作为 Open Weight 类模型，在人类偏好类榜单已追平甚至超越顶级闭源，整体逼近闭源前沿，从而实证"开源前沿智能"的论文核心主张。
-
-**论文作用：** 作为模型最终对外公布的第三方能力背书，与 Figure 5 的 Quantile Balancing 等训练/架构技术创新章节前后呼应——"方法创新 + 独立评测"共同构成论文"open frontier intelligence"主张的完整证据链。
+**【论文作用】** 位于评估章节,串联前文MoE与Quantile Balancing等方法创新,为"Open Frontier Intelligence"主张提供核心实证,证明产出可对标GPT-5与Claude旗舰模型。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

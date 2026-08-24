@@ -30,7 +30,13 @@ tags: [speculative, training]
 > Scaling law evaluated on the MT-bench using LLaMA-Instruct 3.1 8B as the target model, with the x-axis representing the data scale relative to ShareGPT.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图含上下两幅折线图，以LLaMA-3.1-8B-Instruct为target、在MT-bench上对比EAGLE-2（红）与EAGLE-3（蓝），x轴为1/2/4/8×ShareGPT。上图Speedup：EAGLE-3由~3.7单调升至~4.4，EAGLE-2在~3.2处趋于饱和；下图Accept length：EAGLE-3由~5.2升至~6.1，EAGLE-2始终贴近~4.1。图用以论证：EAGLE-3的新架构打破了前作随数据增大迅速饱和的瓶颈，首次呈现持续上升的scaling law。作为开篇Figure，它奠定全文核心动机——更多训练数据带来更大加速收益，为后续架构设计、训练策略与实验验证提供支撑。
+> 【图文联合解读】**图文联合解读**
+
+图1含两条子图：上图为**Speedup**、下图为**Accept length**，横轴均为训练数据相对ShareGPT的倍数（1/2/4/8×），评测任务为MT-bench，目标模型为LLaMA-3.1-8B-Instruct。红色EAGLE-2在两指标上几近饱和（speedup≈3.1→3.3，accept≈4.0→4.2），蓝色EAGLE-3则随数据量单调递增（speedup 3.7→4.4，accept length 5.2→6.1）。
+
+论文据此论证：**EAGLE-3的新架构突破了EAGLE-2因特征预测受限导致的数据扩展瓶颈**，首次在投机解码中观察到持续可扩展的scaling curve，而此前工作从未出现。
+
+作用上，该图作为开篇核心证据，定调全文研究动机——通过设计层面的创新解锁test-time training scaling能力，为后续方法细节、全模型/全任务加速比实验（Figure 2）以及与EAGLE、EAGLE-2的全面对比奠定前提。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig02.png]]
@@ -48,13 +54,13 @@ tags: [speculative, training]
 > Illustration of training-time test (the bottom part) and its comparison with other draft methods (the upper and middle parts). f denotes the feature, t denotes the token, and a represents the unconstrained vectors.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图3 联合解读**
+> 【图文联合解读】**图3联合解读**
 
-1) **核心结构**：图分三层对比。上层EAGLE：训练Step1用真实特征f_t预测f̂_{t+1}、t̂_{t+2}（含l_fea、l_token双损失），测试Step2串行自回归f̂→t̂；中层EAGLE+l_fea去除版：改输出无约束向量â，仅l_token，但测试时t̂_{t+3}≉ t_{t+3}（红错号）暴露训练-测试失配；底层EAGLE-3（training-time test）：训练时把Step1预测的â_{t+1}回灌为Step2输入（红虚线箭头"Training-time test"），使训练/测试一致，Step2输出t̂_{t+3}≈t_{t+3}。
+1) **核心对象**：三幅上下对照的draft流程图。上为原EAGLE：Training时以特征序列$f_1\cdots f_t$输入Draft模型，Step1输出$\hat f_{t+1}$（$l_{fea}$），Step2经LM head输出$\hat t_{t+2}$（$l_{token}$）。中为EAGLE+$l_{fea}$去除：改用无约束向量$\hat a_{t+1}$，Test时$\hat t_{t+3}\neq t_{t+3}$（红字标错）。下为EAGLE-3：Training/Test均执行Step1→Step2自回归，并以红色虚线"Training-time test"将Step1预测$\hat a_{t+1}$回灌为Step2输入。
 
-2) **关键结论**：原文指出EAGLE训练用真特征、测试用预测特征，存在分布偏移；将Step1纳入训练循环后，模型学会在自身预测误差下仍保持稳定，使增加训练数据的收益更显著，验证了training-time test的必要性。
+2) **关键结论**：去掉特征预测会暴露train-test分布失配；将Step1纳入训练后，8×数据下α-α由~0.78升至~0.80、SP由~0.69升至~0.78，证明训练分布与测试对齐才能让数据规模转化为draft接受率增益。
 
-3) **论文作用**：作为EAGLE-3方法论核心图，奠定"训练模拟推理时自回归"原则，衔接后续消融与scaling实验，为EAGLE-3在更大数据/模型下的加速增益提供机制依据。
+3) **作用**：作为EAGLE-3的核心创新，支撑"scaling law"与相对EAGLE-2的1.4×延迟加速结论。
 
 ### Figure 4 (p.2) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png]]
@@ -63,11 +69,7 @@ tags: [speculative, training]
 > We can address this issue by incorporating Step 1 into the training process (the bottom of Figure 3). Using this method, the benefits of increasing training data become more pronounced. We name this technique as training-time test. EAGLE and speculative sampling methods such as Medusa (Cai et al., 2024) reuse the top-layer fea- tures of the target model, specifically the features immediately befor
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-图4横轴为相对ShareGPT的训练数据规模（1/2/4/8倍），纵轴为接受率0-α，对比EAGLE、EAGLE-3及去掉特征预测的EAGLE三条曲线。EAGLE从约0.755升至0.784即饱和；EAGLE-3起点最低（≈0.722）但斜率最陡，于4倍处反超原EAGLE并达≈0.801；无特征预测版本始终居前（8倍≈0.812）。
-
-该图印证原文关键结论：原EAGLE对数据扩展几乎无感，而采用"training-time test"将Step 1融入训练后，数据扩展收益被显著放大，使EAGLE-3在大数据规模下超越基线。此图作为支撑"训练-测试一致性"核心设计的可扩展性证据，串联起方法动机与后续加速比的实验链。
+> 【图文联合解读】图4左侧给出EAGLE训练/测试两阶段流程（特征f_t预测f̂_{t+1}，再经LM head预测token）；右侧两折线图横轴为ShareGPT 1×–8×数据量下的接受率：EAGLE（红）较平稳；无特征预测版（黄）左图升至≈0.81但右图仅≈0.2–0.3；EAGLE-3（蓝）起点最低但随数据增速最快，8×时反超达≈0.80/0.78。原文据此论证：将测试时推理结构（Step1特征预测）纳入训练（training-time test）可显著放大数据扩展收益，是EAGLE-3关键改进。该图与Figure 3方法图互补，配合Table 4吞吐数据共同构成"训练时测试"有效性的完整证据链。
 
 ### Figure 5 (p.4) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig05.png]]
@@ -76,13 +78,13 @@ tags: [speculative, training]
 > Diagram of the EAGLE-3 inference pipeline, illustrating the three steps of the draft model. l, m, and h represent the low, middle, and high-level features of the target model, respectively. e denotes the embedding. 3 EAGLE-3
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-1) **核心结构**：左为冻结的Target Model，经Embedding、两层Decoder Layer后输出低/中/高层特征 $l_{how}, m_{how}, l_{can}, m_{can}$（高层 $h$ 未在图中绘出）；右为Draft Model的三步流水线——① FC Layer融合目标特征 $g$ 与上下文embedding $e$；② Decoder Layer自回归展开序列；③ 仅LM Head扩展为多分支候选树（"can"/"I"/"do"）。
+该图展示EAGLE-3推理流水线的双塔结构：左侧为目标模型，自Embedding经多层Decoder依次输出低(l)、中(m)、高(h)三级特征及嵌入e；右侧为草稿模型的三步骤（①②③），每步通过FC层+Decoder层+LM Head自回归预测候选token（can/I/do/it），输入融合多级特征与token嵌入。
 
-2) **关键论证**：EAGLE-3通过**训练时测试**让Draft Model直接消费Target Model的**多层特征（l/m/h）**而非仅末层hidden state，并以三层架构（FC→Decoder→LM Head）实现"特征融合→序列自回归→树状并行候选"解耦，使草稿生成既保留目标模型语义信息、又获得高吞吐候选。
+该图论证的关键结论：相较EAGLE/EAGLE-2仅复用顶层特征，EAGLE-3同时融合低、中、高三级特征与嵌入，使小容量草稿模型更精准逼近大模型分布，提高投机解码接受率。
 
-3) **论文作用**：该图是EAGLE-3方法论的核心可视化，明确其相对EAGLE/EAGLE-2的**架构增量**（三层管线+多层级特征输入+训练时测试策略），为后续消融与加速比实验提供机制依据，是理解后续图6、图7 tree attention与训练流程的基础。
+在论文链路中，此图是方法部分的核心架构图，与Table 5的吞吐量加速实验相互印证，构成从"单层特征→多层特征+训练时测试"方法演进的关键可视化证据。
 
 ### Figure 6 (p.5) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig06.png]]
@@ -91,11 +93,20 @@ tags: [speculative, training]
 > All attention masks are diagonal, except when the original training data is used as the key. Using matrix multiplication in this case would result in significant computational waste, so we can use vector dot products to calculate the attention score only for the corresponding positions. HASS (Zhang et al., 2024) and EAGLE-3 both make similar modifications to the attention mecha- nism to simulate t
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】## Figure 6 图文联合解读
 
-图示展示训练时测试的三个注意力因果mask：①原生训练步（3×3，token 为 How/can/I）为全下三角，每 query 关注全部前置 key；②两个模拟步（依次 3×6、3×9）随 draft token（蓝/黄色，与原句"How can I are we do…"等灰色训练 token 区分）注入，mask 由稠密退化为严格对角——仅 query=key 处标✓，其余置零。
+**1) 核心对象与结构：**
+图示三个下三角（causal）掩码矩阵，对应训练时测试的三个步骤：
+- **第一步**（左上，3×3）：原始训练步，Query/Key 均为真实 token "How/can/I"（灰色），构成标准下三角掩码；
+- **第二步**（右上，3×6）：模拟步 1，新增蓝色预测 token "are/we/do" 作为 Query，Key 扩展至 6 个；
+- **第三步**（右下，3×9）：模拟步 2，再追加黄色预测 token "you/help/it"，Key 扩展至 9 个；
+- 左侧两棵 token 树（蓝、黄分支）对应采样得到的扩展树状结构，红勾标记有效注意力位置。
 
-它论证：仅当 key 源自原始训练数据才需全下三角矩阵乘；模拟 draft 阶段用向量点积按位计算即可，避免对角化稀疏矩阵的算力浪费。该稀疏化改造与 HASS 类似，共同支撑 EAGLE-3 在训练—测试一致性模拟下训练 draft 模型，从而在推理时实现低开销的多 token 预测加速。
+**2) 关键技术结论：**
+所有掩码均保持下三角因果性；当 Query 为训练数据（灰色）时，注意力分数仅分布在原 token 位置，故可用 **向量点积**替代完整矩阵乘法以避免计算浪费；模拟 token 呈**对角线**稀疏模式，实现并行多 token 草稿训练。
+
+**3) 论文链路作用：**
+该图是 EAGLE-3 "训练时测试" 策略的可视化基石，阐明如何在一次前向中同时监督多个采样分支的注意力计算，使 head 模型能在一轮训练内学习多 token 预测，为后续 tree attention 推理加速（Fig 7）与加速比实验提供机制支撑。
 
 ### Figure 7 (p.8) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig07.png]]
@@ -104,13 +115,11 @@ tags: [speculative, training]
 > Acceptance rate of EAGLE and EAGLE-3 on MT-bench, with the target model being LLaMA-
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图7联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 7）**
 
-1）**核心对象与数据**：横轴为0-α至7-α（即在已接受前序token条件下，输入含n个估计特征后的接受率），纵轴为接受率。EAGLE（红）从0-α的≈0.71急剧衰减：1-α≈0.64、3-α≈0.57、6-α降至≈0.51，整体跌幅约20%；而EAGLE-3（蓝）始终稳定在0.78–0.81区间，几乎无衰减，6-α处反达峰值≈0.81。
+图7展示EAGLE（红）与EAGLE-3（蓝）在MT-bench上、目标模型LLaMA 3.1 8B下的token接受率，横轴0-α到7-α表示输入0–7个估计特征且前序token全被接受。量化对比：EAGLE-3全程稳定于0.78–0.81；EAGLE则由0-α的0.71骤降至6-α的0.51，呈明显衰减。
 
-2）**论证的关键结论**：随估计特征数n增加，传统EAGLE因仅依赖last-token特征而出现严重的接受率雪崩；EAGLE-3通过训练时即采用test-time多特征输入，使其在自投机多步生成中保持高且平稳的接受率，二者差距随n增大而显著扩大。
-
-3）**作用**：为EAGLE-3"训练-测试一致性"设计提供了直接定量证据，是论证其推理加速效果优于EAGLE的核心实验之一。
+原文借此论证关键结论：**多层级（低/中/高层）特征输入不损害EAGLE-3的接受率**，而EAGLE因额外特征带来性能下降。该图直接支撑三层管线+多特征融合的架构设计，承上启下，衔接方法论与后续图8加速比/吞吐评测，是EAGLE-3核心增量的关键实验证据。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -120,15 +129,7 @@ tags: [speculative, training]
 > Speedup ratios and average acceptance lengths τ of different methods. V represents Vicuna, L31 represents LLaMA-Instruct 3.1, L33 represents LLaMA-Instruct 3.3, and DSL represents DeepSeek-R1-Distill-LLaMA. SpS denotes standard speculative sampling, with its draft model being Vicuna-68M. Methods lik
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 图文联合解读：**
-
-表1在Temperature=0/1两种设置下，对V 13B、L31-8B、L33-70B、DSL-8B四类目标模型，在MT-bench、HumanEval、GSM8K、Alpaca、CNN/DM五个基准上对比SpS、PLD、Medusa、Lookahead、Hydra、EAGLE(-2/-3)各方法的**加速比**与**平均接受长度τ**。
-
-**关键量化数据**：T=0（lossless）下，EAGLE-3在V 13B上均值加速达**5.51x**（τ=6.62），HumanEval上τ峰值**7.54**；L33-70B均值4.12x；DSL-8B在GSM8K上加速比最高（呼应正文"DeepSeek在数学推理集表现例外"的论述）。
-
-**论证的技术结论**：EAGLE-3在lossless条件下全面领先所有基线（含EAGLE-2、Hydra），且τ峰值近7.5，表明其drafting机制质量显著优于前辈方法；并以Medusa（非lossless）作反衬，凸显本文方法的严谨性。
-
-**在论文整体中的作用**：与Figure 1（MT-bench上的scaling law曲线）相互印证，构成"scaling曲线 + 多基准全模型量化对比"的实验双支柱，支撑"训练时数据扩展+多任务泛化"这一核心方法论的有效性主张。
+> 【图文联合解读】表1在温度0/1下比较V13B、L31-8B、L33-70B、DSL-8B在MT-bench、HumanEval、GSM8K、Alpaca、CNN/DM上的加速比与平均接受长度τ。温度0时，EAGLE-3在V13B均值5.51×、τ6.62，EAGLE-2为4.22×、4.83；其在L31/L33/DSL均值4.44/4.12/4.16×，τ6.23/5.88/5.84。温度1仍领先，说明长接受序列带来稳定加速。该表衔接Fig.1数据扩展与Fig.2部署评测，验证跨模型优势。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab02.png]]
@@ -136,13 +137,13 @@ tags: [speculative, training]
 > Ablation study results with LLaMA-Instruct 3.1 8B as the target model. “Remove fea con” refers to the first improvement of EAGLE-3, which removes the feature prediction constraint. “Fused features” refers to the second improvement of EAGLE-3, where low, middle, and high-level feature fusion replaces
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与数据：** 以 LLaMA-Instruct 3.1 8B 为目标模型，依次叠加两项改进——"+ remove fea con"（去除特征预测约束）和 "+ fused features"（低/中/高层特征融合）。MT-bench 上加速比由 EAGLE-2 的 **3.16×**（τ=4.05）逐步升至 **3.82×**→**4.40×**（τ=6.13）；GSM8K 上由 **3.39×**（τ=4.24）升至 **3.77×**→**4.48×**（τ=6.23）。每步均带来 ~0.6–0.7× 的加速增益。
+1) **核心数据**：以 LLaMA-3.1-8B-Instruct 为目标模型，三行渐进消融对比——EAGLE-2 基线在 MT-bench/GSM8K 上加速比为 3.16x/3.39x（接受长度 τ=4.05/4.24）；加入"移除特征约束"后升至 3.82x/3.77x（τ=5.37/5.22）；再加"多层级特征融合"（即完整 EAGLE-3）达 4.40x/4.48x（τ=6.13/6.23）。
 
-**2) 关键结论：** 论证两项改进均有效——去除特征约束提高草稿接受率，多层特征融合进一步丰富表征信息，二者叠加使加速比相对 EAGLE-2 提升约 **39%（MT-bench）** 与 **32%（GSM8K）**。
+2) **关键技术结论**：两项改进均带来单调提升，特征融合收益最大，使 MT-bench 加速比相对 EAGLE-2 提升约 39%、τ 提升 ~51%，证明去除约束与多层级融合均不可或缺。
 
-**3) 在论文中的作用：** 作为消融实验，定量分离 EAGLE-3 相对 EAGLE-2 的两个核心改进各自的贡献，为"训练时测试"策略的有效性提供可分解的实证支撑。
+3) **论文作用**：作为核心消融实验，定量验证 EAGLE-3 两大设计选择的有效性，与 Figure 2 的端到端对比互补，构成方法合理性的关键证据链。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab03.png]]
@@ -150,7 +151,13 @@ tags: [speculative, training]
 > Throughput improvement under different batch sizes on H100 and LLaMA-Instruct 3.1 8B for the MT- Bench dataset, with SGLang without speculative sam- pling as the baseline (1.00x). The experiments were conducted by the SGLang team.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表对比EAGLE与EAGLE-3在H100、LLaMA-3.1-8B、MT-Bench上batch size 2–64的吞吐量加速比（基线SGLang=1.00×）。数据上，EAGLE在bs=2达1.40×，随bs增大迅速衰减至0.88–0.99×，大batch下甚至低于基线；而EAGLE-3在所有batch下均稳定领先，bs=4峰值1.82×，bs=64仍维持1.38×，较EAGLE同batch提升约0.34–0.50×。该结果有力佐证training-time test（TTT）技术使草稿模型在大batch高并发场景下保持高效加速，验证了论文"训练时测试"这一核心方法在真实服务负载下的实用价值与扩展性。
+> 【图文联合解读】**图文联合解读：**
+
+**1）核心对象与数据：** 表3对比 EAGLE 与 EAGLE-3 在 H100、LLaMA-3.1-8B、MT-Bench 上，批量为 2–64 时的吞吐量加速比（基线 SGLang=1.00×）。EAGLE 仅在小批量（2–4）保持 1.38–1.40× 增益，批量≥16 后普遍降至 0.88–1.02×；EAGLE-3 全批量均显著领先，最低仍达 1.32×（batch=32），峰值 1.82×（batch=4）。
+
+**2）关键技术结论：** 证明 EAGLE-3（结合训练时测试）相对 EAGLE 在高并发场景下优势扩大——传统推测解码在大批量下易失效，EAGLE-3 的训练时测试机制有效突破此瓶颈。
+
+**3）实验链路作用：** 与 Figure 3 的方法示意图呼应，验证训练时测试在实际部署（大批量推理）中的工程价值，为论文核心方法提供端到端部署证据。
 
 ### Table 4 (p.8) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab04.png]]
@@ -160,11 +167,11 @@ tags: [speculative, training]
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**1）表格内容**：Table 4 对比 EAGLE 与 EAGLE-3 在 LLaMA-Instruct 3.1 8B 模型、MT-bench 数据集、H100 上、batch size 从 2 到 64 的吞吐加速比。EAGLE-3 加速比稳定在 **1.32x–1.82x**（如 BS=2 时 1.81x，BS=64 时 1.38x）；而 EAGLE 加速比随 batch 增大急剧衰减（BS=2 时 1.40x，BS≥16 后跌至 **0.88x–0.99x**，反而慢于基线）。
+1）该表展示 EAGLE 与 EAGLE-3 在 H100 上对 LLaMA-Instruct 3.1 8B 跑 MT-bench 的吞吐加速比（batch size=2…64）。EAGLE 由 1.40x 单调下滑至 0.99x，batch≥24 时跌破 1x；EAGLE-3 始终保持 1.32x–1.82x 加速，全区间领先 0.4–0.5x 左右。
 
-**2）论证结论**：EAGLE-3 在高并发场景下仍能持续提供有效加速，而 EAGLE 在大 batch 时基本失效，验证了 training-time test 等改进使 EAGLE-3 的加速能力在高 batch 区间依然保持。
+2）关键结论：随着 batch 增大、EAGLE 的 top-layer feature 复用策略因分布偏移而失效，加速比归零；而 EAGLE-3 借助 training-time test 把测试阶段纳入训练，缓解该问题，使其在高并发下仍稳定提速 1.3x 以上。
 
-**3）论文作用**：此表补强了 EAGLE-3 的实验证据链，配合 Figure 4 所述训练时测试技术，证明该方法在单请求（batch=1，低延迟）与高吞吐（高 batch）两类部署场景下均优于 EAGLE，体现其工程实用性与全面性。
+3）实验链路作用：与 acceptance length、loss 曲线互证，将"训练-测试一致性"从离线质量指标延伸至 SGLang 在线服务性能，闭合算法→系统的证据链。
 
 ### Table 5 (p.8) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab05.png]]
@@ -172,7 +179,13 @@ tags: [speculative, training]
 > Throughput improvement under different batch sizes on A100 and LLaMA-Instruct 3.1 8B for the MT- Bench dataset, with vLLM without speculative sampling as the baseline (1.00x).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表5对比EAGLE与EAGLE-3在batch size 2-56下相对vLLM基线的吞吐加速比：EAGLE-3从bs=2的1.75x平稳降至bs=56的1.01x，全程≥1.00x；EAGLE仅在bs≤24有效，bs=32起跌破基线（0.93x→0.71x）。结合Figure 5所示机制——低/中/高层特征融合与三步树扩展草稿——印证了EAGLE-3草稿质量提升使其在高batch下仍维持正收益，构成论文证明方法可扩展性、走向实际部署的关键实验。
+> 【图文联合解读】**Table 5 联合解读：**
+
+**① 核心数据**：在 A100 + LLaMA-3.1-8B + MT-Bench 上，以 vLLM 无投机采样为基线（1.00x），对比 EAGLE 与 EAGLE-3 在 batch size 2/4/8/16/24/32/48/56 下的吞吐加速比。EAGLE-3 依次为 1.75x/1.68x/1.58x/1.49x/1.42x/1.36x/1.21x/1.01x；EAGLE 为 1.30x/1.25x/1.21x/1.10x/1.03x/0.93x/0.82x/0.71x。
+
+**② 关键结论**：批越大加速越小，但 EAGLE-3 始终优于 EAGLE；EAGLE 在 batch≥32 即跌破 1.0x（变慢），而 EAGLE-3 在 batch=56 仍保持 1.01x，证明其训练期测试（training-time test）融合多层级特征带来更强的批大小鲁棒性。
+
+**③ 论文作用**：作为方法有效性的吞吐维度实证，对应 Figure 5 流程，支撑 EAGLE-3 在高并发服务场景的部署优势。
 
 ## 相关论文
 

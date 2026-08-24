@@ -47,9 +47,11 @@ tags: [speculative]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示Medusa的树形注意力（Tree Attention）机制：左侧为候选树——根节点（Root）下挂Head1的两个token "It/I"，每个再分支出Head2的"is/./the"三选项，构成2×3共6条候选路径；右侧为对应的**Tree Mask矩阵**（8列Key对应候选序列，行对应Query），每行仅在与自身及祖先token对应的位置打勾（如查询"the"可关注"It/is/./the"），形成稀疏的因果掩码。
+图示Medusa候选树与Tree Mask的对应关系。左侧树结构自顶向下展开：Head 1产出2个候选（It/I）置于位置1-2；Head 2产出3个候选（is/'/the），分别置于位置2-4与位置5-7（第二层），颜色按Key行标识。右侧7×7 Tree Mask为稀疏下三角模式，每行候选仅勾选其前缀节点（如第4行仅勾选第1、4列），实现一次前向并行验证。
 
-原文据此论证：凭借MEDUSA多头输出天然的分层预测结构，自顶向下构建候选树，可使单次前向传播**并行验证多条续写**；该稀疏掩码是Medusa推测解码管线中实现批量验证的关键组件，相较Miao等自底向上合并草稿候选的方法，更契合多头预测的分叉特性，从而在保证准确性的同时显著加速推理。
+**原文论证：** 与Miao等、SpecTr自底向上合并draft候选不同，Medusa利用多头预测的结构性自顶向下建树，使Tree Attention能在一个forward pass中并行校验所有分支。
+
+**论文作用：** 该机制是Medusa加速的核心——将多head并行预测与Tree Attention结合，把串行自回归解码压缩为单次并行校验，为后续冻结backbone训练策略与吞吐加速实验提供基础。
 
 ### Figure 3 (p.7) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig03.png]]
@@ -171,11 +173,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Llama-33B operators on A100-80GB-PCIe. 1 10 100 1k 10k
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图11核心**：Llama-33B在A100-80GB-PCIe上的Roofline图，横轴算术强度1→10k FLOP/Byte，纵轴性能10G→100T FLOP/s；红虚线为312 TFLOP/s计算上限，蓝虚线为1935 GB/s带宽斜线（交叉点ridge）。六类算子（qkv/mlp、up·gate·down、qk·pv）分init（prefill）与ar（decode）两阶段。ar阶段点几乎全集中在强度~1、低于ridge的带宽受限区（10G–1T FLOP/s），远未触及计算上限。
+> 【图文联合解读】**图文联合解读（≤220字）：**
 
-**论证结论**：LLM推理（尤其自回归decode）为memory-bound而非compute-bound，硬件算力大量闲置。
+该Roofline图横轴运算强度1→10k FLOP/Byte，纵轴10G→300T FLOP/s；蓝虚线1935 GB/s带宽上限，红虚线312 TFLOP/s算力上限。qk/pv ar（棕×）密集聚集于强度≈1、性能仅0.07–2T的强内存受限区；up/gate/down ar（红×）位于强度3–20、性能3–10T，同样受带宽制约；qkv mlp ar（橙×）与qk/pv init（紫×）位于强度30–100的过渡区；qkv mlp init（蓝×）、up/gate/down init（绿×）则集中于强度≥300、紧贴312 TFLOP/s的算力受限区。
 
-**论文作用**：为Medusa多head并行猜测与验证提供硬件动机——将decode批量化、提升算术强度，向compute-bound区域迁移，从而释放被浪费的算力、加速推理。
+**技术结论**：ar解码阶段qk/pv注意力算子严重受内存带宽瓶颈限制，几乎未触及A100算力上限。
+
+**论文作用**：作为硬件瓶颈量化证据，为Medusa多解码头方案提供动机——通过一次前向预测多token，提升ar阶段算术强度，突破带宽墙。
 
 ### Figure 12 (p.19) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig12.png]]
@@ -184,7 +188,7 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Llama-7B operators on A40. 19
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图12为Llama-7B在A40上的Roofline模型：横轴运算强度1→10k (FLOP/Byte)，纵轴性能10G→100T (FLOP/s)；蓝虚线为带宽上限696 GB/s，红虚线为算力上限149.7 TFLOP/s，绿竖线标示转折点（≈200）。图中标注六类算子（qkv、mlp、up/gate/down、qk/pv）在init与ar两阶段的位置：qk/pv的ar阶段落在强度≈1、性能仅10G–1T的强内存受限区，远低于带宽线；qkv/mlp矩阵运算则位于强度≈100、性能10T+的算力受限区。结合图11，本图量化说明ar解码阶段注意力算子严重受内存带宽制约，论证了Medusa多解码头方案通过单次前向预测多token、提升算术强度以突破该瓶颈的必要性。
+> 【图文联合解读】图测的是 Llama‑7B 在 A40 上 QKV/MLP、up/gate/down、QK/PV 三组算子的 init/AR Roofline 点：强度约1–3000 FLOP/B，性能约0.04–130 TFLOP/s；带宽与算力屋顶分别为696 GB/s、149.7 TFLOP/s，拐点约215 FLOP/B。交点左侧的AR，尤其是强度约1的QK/PV（≤0.7 TFLOP/s），明显受带宽限制；高强度init算子则接近计算峰值，说明逐token瓶颈是访存。该图用于连接算子分析、Medusa多头并行提出候选并树式验证多token的动机，以及端到端加速实验。
 
 ### Figure 13 (p.20) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig13.png]]
@@ -193,11 +197,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Llama-13B operators on A40. 1 10 100 1k 10k
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图13为Llama-13B在A40上的算子roofline图。横轴运算强度1–1000，纵轴性能10G–100T；红色虚线~150TF为A40算力峰值，蓝色虚线为带宽屋顶。数据分三簇：低强度(~1)棕色×约50G–700G，属显存受限；中强度橙色×约0.7–3T，处于过渡区；高强度(~100–200)紫色×达10–30T，逼近算力上限。
+> 【图文联合解读】**图文联合解读：**
 
-原文论证：(1)基座LLM推理为memory-bound，受限于带宽屋顶；(2)Medusa新增多个解码头，将负载推向高强度区、靠近计算峰值，从而利用原本闲置的算力。
+1) 该图为 Llama-13B 在 A40 上的算子 Roofline 图，横轴运算强度(1–10k FLOP/Byte)，纵轴性能(10G–100T FLOP/s)；含 696 GB/s 内存带宽天花板(蓝虚线)、149.7 TFLOP/s 算力天花板(红虚线)及脊点 ≈200(绿虚线)；六类算子（qkv/mlp、up/gate/down、qk/pv 的 init 与 ar 版本)以散点分布。
 
-在论文中的作用：为"Medusa把负载由访存瓶颈推向算力饱和区"提供算子级roofline建模支撑，解释其多预测头并行解码的加速机理。
+2) AR(自回归)算子集中于 <200 FLOP/Byte 低强度区，贴带宽天花板运行，属 memory-bound；init(预填)算子位于高强度区(>1k)，贴算力天花板，属 compute-bound。
+
+3) 该图论证 AR 解码阶段 A40 算力严重富余，Medusa 多解码头可借此并行预测多 token 而不撞算力瓶颈，支撑论文"以空闲算力换访存带宽"的核心加速逻辑。
 
 ### Figure 14 (p.20) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig14.png]]
@@ -206,7 +212,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Llama-33B operators on A40. 20
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图14为Llama-33B在A40上的Roofline模型：横轴为运算强度，纵轴为FLOP/s（对数刻度）。红色虚线标A40峰值算力约100T FLOP/s，蓝色斜线表示内存带宽天花板。橙色×簇集中于强度≈1、性能50G–1T FLOP/s（LayerNorm、attention等访存受限算子）；紫色×簇位于强度≈50–80、性能10–30T FLOP/s（GEMM等计算受限算子）。论文借此论证：访存受限算子远未触及算力峰值，是LLM推理瓶颈；Medusa多头并行预测可聚合访存受限运算、提升等效运算强度并向计算受限区迁移，为其加速框架提供硬件层动因。
+> 【图文联合解读】**图14图文联合解读**
+
+图14为Llama-33B在A40上的Roofline模型：横轴为算术强度(FLOP/Byte, 对数1–10k)，纵轴为性能(FLOP/s, 对数10G–100T)，标出A40的696 GB/s带宽线(蓝虚)、149.7 TFLOP/s算力峰(红虚)及二者交点≈215 FLOP/Byte(绿竖虚线)。共绘制6类算子：qk/pv_ar(棕)位于强度≈1、性能仅50M–500M FLOP/s，严重memory-bound；qk/pv_init(紫)、qkv_mlp_ar(橙)、up_gate_down_ar(红)处于强度5–150、1–100T的过渡/带宽侧；仅qkv_mlp_init(蓝)与up_gate_down_init(绿)在强度>200处贴近149.7T上限，属compute-bound。
+
+**关键论证**：自回归解码阶段qk/pv等注意力算子被内存带宽锁死，单纯堆参数无法提升token吞吐；因此需借助Medusa多头并行预测+树形验证来掩盖该memory-bound延迟。
+
+**链路作用**：以硬件roofline量化瓶颈，为后续Medusa加速比与吞吐实验提供根因依据，串联"瓶颈分析→多头解码方案→实测加速"的论证闭环。
 
 ### Figure 15 (p.21) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig15.png]]
@@ -215,11 +227,16 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Llama-7B operators on A6000. 1 10 100 1k 10k
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**核心对象与结构**：Llama-7B 在 A6000 上的算子级 roofline 图。X 轴为算子强度 FLOP/Byte（1→10k，对数），Y 轴为性能 FLOP/s（10G→100T，对数）；红线 181 TFLOP/s 为算力天花板，蓝线 768 GB/s 为带宽上界，绿线约 270 处为岭点；×标记涵盖 qkv、mlp up/gate/down、qk/pv 等算子在 init（prefill）与 ar（decode）两种工作点。
+> 【图文联合解读】**图15联合解读（Llama-7B Roofline on A6000）**
 
-**关键结论**：qk/pv 等注意力算子在两种阶段均落在左坡 ~1 FLOP/Byte、低性能 30G–700G 区，呈带宽受限；mlp up/gate/down 集中于高强度 50–300 FLOP/Byte 处逼近峰值；decode 阶段算子强度普遍低于岭点，整体深陷 memory-bound 区域。
+1) **核心对象与数据**：Roofline图，横轴为算术强度1–10k FLOP/Byte，纵轴性能10G–100T+ FLOP/s（log）；带宽上限768GB/s（蓝），算力上限181 TFLOP/s（红），拐点约在~200 FLOP/Byte附近。标注6类算子×两阶段：qkv/mlp、up/gate/down、qk/pv 的 init（prefill）与 ar（decode）。
 
-**论文作用**：以 roofline 量化论证 autoregressive decode 受带宽而非算力制约，多头并行验证不会加剧计算压力，为 Medusa 多解码头加速方案提供算子级理论与实验支撑。
+2) **关键技术结论**：
+- **init 阶段**（蓝/绿/紫）集中右侧算力受限区，性能≈100T FLOP/s，逼近181 TFLOP/s 峰值 → compute-bound；
+- **ar 阶段** qkv/mlp、up/gate/down（橙/红）贴带宽线 → memory-bound；
+- **qk/pv ar**（棕）强度仅~1 FLOP/Byte，性能仅0.1–1 TFLOP/s，严重欠载，是 decode 端最关键瓶颈。
+
+3) **在论文中的作用**：该图定量证明 LLM 自回归阶段受内存带宽而非算力限制，而多 head 并行预测（Medusa）可一次前向摊销 memory-bound 开销，是其加速方案的核心动机与硬件层依据。
 
 ### Figure 16 (p.21) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig16.png]]
@@ -228,7 +245,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Llama-13B operators on A6000. 21
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图是Llama-13B在A6000上的Roofline图：横轴运算强度1–10k FLOP/Byte、纵轴性能10G–100T FLOP/s（均对数），蓝虚线为768 GB/s带宽天花板，红虚线为181 TFLOP/s算力上限。算子（qkv、mlp、up/gate/down、qk/pv）以×标于init（prefill）和ar（decode）两工况。ar解码算子集中于~1 FLOP/Byte、性能仅40–700G FLOP/s，受带宽严重制约；init预填充算子沿斜线攀升至5–40T FLOP/s，已逼近算力上限。关键结论：自回归解码为内存瓶颈，单token串行访存浪费算力——这正是Medusa多头并行解码的实证动机：一次预测多token以摊薄权重加载开销、提升带宽利用率，构成论文"多解码头加速框架"的核心论证依据。
+> 【图文联合解读】**图16联合解读：Llama-13B 在 A6000 上的 Roofline 算子画像**
+
+**1) 核心对象与数据：** 横轴为算子强度（FLOP/Byte, 1–10k 对数轴），纵轴为实测性能（FLOP/s, 10G–100T+）。蓝虚线为 A6000 显存带宽屋顶 768 GB/s，红虚线为算力屋顶 181 TFLOP/s，二者交点（绿色竖线）位于约 236 FLOP/Byte。图上标注 6 类算子 × 两阶段（init/ar）：qkv·mlp（蓝/橙）、up·gate·down（绿/红）、qk·pv（紫/棕）。
+
+**2) 关键结论：** init 阶段算子（qkv/mlp/up/gate/down）密集聚集于右侧 ~181 TFLOP/s 屋顶线，呈 compute-bound；而 ar 阶段 qk/pv（注意力）算子严重偏向左侧，强度仅 ~1 FLOP/Byte、实测仅 ~40 GFLOP/s，与屋顶存在 3–4 个数量级落差，暴露自回归解码中注意力访存瓶颈巨大。
+
+**3) 在论文中的作用：** 该 Roofline 为 Medusa 的多头投机解码提供量化动机——通过 tree attention 将多候选 token 的 qk/pv 批处理，等效提高注意力算子的算术强度，使其从 memory-bound 推向 compute-bound 区，从而释放 GPU 算力，支撑后续约 2× 吞吐加速的实验结论。
 
 ### Figure 17 (p.22) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig17.png]]
@@ -267,13 +290,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > FLOP/s vs. Operational Intensity of attention matrix multiplication with sequence length 1024. 1 10 100 1k 10k
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图19解读：**
+> 【图文联合解读】**图文联合解读：**
 
-1）图为 Llama 33B 在序列长度 1024 下，注意力矩阵乘法（QK/PV 投影）的 Roofline 模型：横轴为算术强度（1–30+），纵轴为实测 FLOP/s（10G–100T+）。红色虚线为硬件峰值算力约 300T FLOP/s，蓝色虚线为显存带宽上限。灰色点（强度≈1）处于带宽受限区，仅达 100G–1T FLOP/s；橙色点（强度≈10）约 5–50T；紫色点（强度≈20–30）约 30–80T，整体均远低于算力峰值线。
+**1) 图示对象与数据：** Llama 33B 在 A100 80GB PCIe 上的 roofline 分析，横轴为 Operational Intensity（1–10k FLOP/Byte），纵轴为 Performance（10G–100+T FLOP/s）。蓝色虚线为内存带宽上界 1,935 GB/s，红色虚线为计算峰值 312 TFLOP/s，绿色竖线标示脊点。灰色点（ar 自回归 qk/pv）位于强度≈1、约1T FLOP/s；橙色到紫色 Medusa 候选数 16/32/48/64/80/96/112 的 qk/pv 点集中在强度 15–50、性能 5–80T FLOP/s 区间。
 
-2）该图论证：注意力层属 memory-bound，其瓶颈在于权重加载而非算力，因此通过多 token 投机解码可摊销访存开销、获得加速——为 Medusa 的核心动机提供硬件层面依据。
+**2) 关键技术结论：** 所有 Medusa qk/pv 注意力点均贴附在蓝色内存带宽线上，远低于 312 TFLOP/s 计算上限，且未越过脊点——表明即便候选数增至 112，qk/pv 注意力仍严格处于**带宽受限**区，其开销被显存带宽余量掩盖，不挤占计算资源。
 
-3）与 Fig.20（线性层分析）共同支撑论文"M 型推理应以减少访存为目标"的主张，奠定多解码头方法论的硬件合理性。
+**3) 在论文中的作用：** 与 MLP 层计算受限的图互补，从硬件 roofline 层面定量解释 Medusa 加速来源——注意力验证代价由带宽吸收、MLP 层靠更多 token/step 利用计算能力，构成核心实验证据链，支撑"多解码头几乎无额外计算开销"的关键设计论断。
 
 ### Figure 20 (p.24) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig20.png]]
@@ -282,13 +305,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > FLOP/s vs. Operational Intensity of Linear layers. 24
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 20）**
 
-1) 该图为 Llama 33B 在 A100 上 up/gate/down 线性层的 roofline 图。横轴 Operational Intensity 约 0.7–30+，纵轴 FLOP/s 从 10G 跨越至 100T 以上；灰色低候选数点紧贴蓝色带宽边界斜线（~1T→10T），橙色与紫色高候选数点在强度 ~20–30 处抬升至 ~20T–100T，向红色虚线代表的算力天花板（约 200T+）逼近。
+**核心对象与结构**：Llama 33B 在 A100 80GB PCIe 上线性层的 Roofline 模型。双对数坐标，横轴为运算强度（FLOP/Byte, ~0.5–10k），纵轴为实测 FLOP/s（10G–1000T）。蓝色虚线为内存带宽上界 1,935 GB/s，红色虚线为算力上界 312 TFLOP/s，绿色垂线约在 140–150 FLOP/Byte 标出山脊点。散点按 up/gate/down 在不同 SPEC（16/32/48/64/80/96/112）及 AR 模式采集。
 
-2) 原文以此论证：随 Medusa 接受候选数从 16 增至 112，每字节权重/KV 上执行的 FLOP 增多，kernel 由带宽受限区向右上方迁移；高候选时 MLP 线性层几近饱和 A100 Tensor Core（312 TFLOP/s 上限），说明额外投机验证是"免费算力"，可被线性层摊销利用。
+**技术结论**：SPEC≤48 的小规模线性层沿蓝色带宽斜线线性攀升，呈典型 memory-bound；SPEC≥64 后趋于饱和、逼近 312 TFLOP/s 红色极限，转为 compute-bound。该图以硬件实测定量划分了两类线性层的瓶颈区间。
 
-3) 与 Fig. 19（qk/pv 注意力仍处于带宽限以下）互补，从硬件 roofline 层面定量解释 Medusa 推理加速的来源——验证开销在 MLP 层被计算能力吸收，构成论文核心实验证据链。
+**在论文中的作用**：为 Medusa 多头并行预测提供理论支撑——Medusa head 等小线性层属 memory-bound，通过一次前向预测多 token 再批量验证，可显著压低访存次数，正是论文提升多步解码吞吐的核心动机。
 
 ### Figure 21 (p.26) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig21.png]]
@@ -341,13 +364,11 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Comparison of various M EDUSA -2 models. The first
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**Table 1 联合解读**
 
-该表横向对比了四种基座模型（Vicuna-7B、Zephyr-7B、Vicuna-13B、Vicuna-33B）上 MEDUSA-2 的关键指标：准确率（3.01–3.51）、开销（1.18–1.27）、质量评分（6.18–7.25，括号内为相对基线的偏差，幅度仅 ±0.14，几乎无损），以及与投机解码的速度比 S_SpecDecoding（1.47–1.60）和 S_MEDUSA（2.35–2.83）。表中 S_MEDUSA 在所有模型上一致高于 S_SpecDecoding，最高在 Vicuna-7B/13B 达 2.83×。
+该表对比了 4 个 Medusa-2 模型（Vicuna-7B、Zephyr-7B、Vicuna-13B、Vicuna-33B）的关键指标：(1) 接受率 3.01–3.51；(2) 多头开销 1.18–1.27；(3) 生成质量几乎无损（相对基线 −0.14 至 +0.05）；(4) Medusa 加速比 *S*₋MEDUSA 达 2.35–2.83×，而传统投机解码 *S*₋SpecDecoding 仅 1.47–1.60×（Zephyr-7B 因非贪婪设置未测）。
 
-原文据此论证两点关键技术结论：①多解码头并行预测+树注意力机制带来的速度增益远优于传统投机解码（约 1.6–1.9× 的提升）；②加速几乎不牺牲生成质量，质量评分偏差均落在 ±0.15 以内。
-
-在论文整体链路中，该表处于"方法验证"环节——配合 Figure 1 的多 head 结构示意图，用量化数据证明 MEDUSA 框架在不同规模/类型基座上的通用性与有效性，是支撑"简单框架即可显著加速 LLM 推理"核心主张的关键实验证据。
+原文借此论证：**Medusa-2 在 7B–33B 全规模上均显著优于投机解码，且不牺牲输出质量**，验证了多头并行预测方案对不同基座模型的通用性与鲁棒性。在论文链路上，该表位于实验核心，承担"主要速度–质量权衡"的主结果展示，为前文 Figure 1 提出的 tree-attention 多头机制提供了端到端的量化证据，支撑 Medusa 作为即插即用加速框架的核心结论。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab02.png]]
@@ -355,7 +376,9 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Comparison of Different Settings of Vicuna-7B. Quality
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表比较 Vicuna‑7B 的四种设置：Baseline、直接微调及 MEDUSA‑1/‑2。质量分分别为6.17、5.925、6.23、6.18；加速倍率为N/A、N/A、2.18、2.83。它说明直接微调损害质量，而MEDUSA头在基本保质的同时显著提速，‑2更偏向速度。实验中该表作为配置对比，连接训练方案与部署加速，验证速度提升并非以明显质量下降为代价。
+> 【图文联合解读】1) 表比较 Vicuna‑7B 的基线、直接微调、MEDUSA‑1/‑2：质量为 6.17、5.925、6.23、6.18；后两者加速比分别 2.18×、2.83×，前两者不适用。  
+2) 结论是多头解码能保持甚至略升质量并显著加速；MEDUSA‑2 速度最高，质量仅降 0.05。  
+3) 正文结合 ε=0.01–0.25、α=√ε 说明质量—加速权衡及采样策略差异；该表是 MEDUSA 有效性和配置选择的实验证据。
 
 ### Table 3 (p.0) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab03.png]]
@@ -363,9 +386,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Impact of Techniques on Speedup
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 3 图文联合解读**
 
-该表为MEDUSA-2速度提升的逐项消融：基线（仅Medusa-1头，无树注意力）约1.5x；叠加树注意力提升至约1.9x；再采用优化的树配置达约2.2x；最后用Medusa-2训练头，整体跃升至约2.8x。原文据此论证：tree attention与树结构优化是并行解码提速的关键，而Medusa-2的头部训练带来最大单步增益（+0.6x），印证了"多解码头+树注意力+优化配置"层层叠加的加速设计。该表在实验链路中起到定量归因作用，与Figure 3的端到端对比互为补充：图3展示总体加速，表3拆解各技术对最终~2.8x加速的贡献比例，使加速收益可追溯、可解释。
+Table 3 以 Vicuna 为基线，纵向列出 4 项技术逐层叠加的推理加速比：仅 MEDUSA-1 多头（无 tree attention）≈1.5x → 加入 tree attention ≈1.9x → 使用优化 tree 配置 ≈2.2x → 训练为 MEDUSA-2 头 ≈2.8x。
+
+该表作为定量消融，论证两点关键结论：① tree attention 是 Medusa 并行推测解码的核心机制——仅靠多头预测仅获 1.5x，叠加 tree 结构后增益显著；② MEDUSA-2 的联合训练头相对 MEDUSA-1 再贡献约 0.6x 加速，证明整套设计不可或缺。
+
+在论文实验链路中，它分解各模块边际贡献，与 Figure 3（baseline / Medusa-1 / Medusa-2 端到端 wall-time 对比）形成"组件级→系统级"的双层证据链，支撑 Medusa-2 显著超越 baseline 的核心结论。
 
 ### Table 4 (p.16) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab04.png]]
@@ -373,11 +400,9 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Speedup results on AlpacaEval ( Li et al. , 2023 ) dataset.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 联合解读：**
+> 【图文联合解读】**Table 4 图文联合解读：**
 
-Table 4 列出 AlpacaEval 上 4 个模型的加速效果：基线 17.87–37.07 tokens/s，启用 MEDUSA 后达 40.43–106.76 tokens/s；加速比 2.26×–3.16×，接受率 2.85–3.28（平均每步约接受 3 token）。Vicuna-13b 加速比最高（3.16×），Vicuna-33b 因单步计算开销大而加速比最低（2.26×），呈"模型越大、加速越受限"的趋势。
-
-⚠ **需指出**：您提供的"引用段落"实际讲解的是 **Figure 4**（树注意力散点图，候选 token 数 vs. 加速率/速度），并非 Table 4 的正文论述。Table 4 在论文中的独立作用是展示 MEDUSA **跨模型规模与家族**（Vicuna 7b/13b/33b + Zephyr-7b）的通用加速能力，与 Figure 4（树结构调优）及准确率表格一起，构成"通用性 + 关键模块优化 + 质量保持"的完整实验证据链，支撑"显著加速且无需牺牲生成质量"的核心结论。
+Table 4 展示 Medusa 在 AlpacaEval 数据集上对四个模型（Vicuna-7b/13b/33b、Zephyr-7b）的推理加速结果：基础速度 17.87–37.07 tokens/s，Medusa 提升至 40.43–106.76 tokens/s，加速比 2.26–3.16×，每步接受率 2.85–3.28（约 3 token/步）。结论：跨模型规模与类型均稳定获得 >2× 加速，13b 最优（3.16×），33b 因参数大、绝对速度低而略低（2.26×）。承接 Figure 4 搜索到的最优树结构，作为论文主实验，在真实评测集上验证了 Medusa 加速框架的通用性与实用价值，支撑"多解码头+树注意力即插即用"的核心主张。
 
 ### Table 5 (p.0) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab05.png]]
@@ -385,11 +410,7 @@ Table 4 列出 AlpacaEval 上 4 个模型的加速效果：基线 17.87–37.07 
 > Computational and space complexity of the main operators in different phases. The table is based on Table 2 in the report (Chen 2023).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**核心对象**：Table 5列出Prefill、Decoding、Parallel decoding三阶段中XWQ/K/V、QKT、PV、XWu/g、XWd五类算子的输入/输出shape及其计算/空间复杂度，以batch b、头数n、隐维h、序列长s、头维d、中间维i、候选数q等维度参数化。
-
-**关键论证**：并行解码阶段以候选数q替代单步维度1——投影O(bqh²)、注意力QKT O(bsqnd)、FFN up O(bqhi)。新增开销随q线性增长而与序列长度s无关，说明每步并行验证q个候选token的计算代价可控，从而从复杂度层面佐证Medusa"一次前向验证多个未来token"的加速可行性。
-
-**链路作用**：以理论复杂度证据支撑论文核心主张——Medusa以极小额外算力换得显著吞吐提升，衔接方法层（多头并行预测）与实验层（speedup测量），为加速方案提供可量化的开销边界。
+> 【图文联合解读】该表量化列出Prefill、Decoding、Parallel decoding三阶段中XWQ/K/V、QKT、PV、FFN等主要算子的输入/输出shape与计算/空间复杂度（b、s、q、n、h、i分别表批次、序列长度、并行预测数、头数、隐层/中间维度）。核心结论：并行解码阶段将q个Medusa预测token批量处理，XWQ/K/V计算O(bqh²)、空间O(2bqh+h²)（h²项不随q倍增，实现权重复用），QKT为O(bsqnd)，相比q次串行自回归显著节省K/V重加载与序列化开销，论证多解码头并行预测在访存与权重复用上的高效性，为Medusa方法加速比提供理论依据。
 
 ### Table 6 (p.25) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab06.png]]
@@ -397,13 +418,13 @@ Table 4 列出 AlpacaEval 上 4 个模型的加速效果：基线 17.87–37.07 
 > TFLOP/s & Operational Intensity of attention matrix multiplication with batch size 16 for Llama 33B on an A100 80GB PCIe.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读**
 
-1) **表格内容**：行轴为序列长度（128–8192），列轴为候选 token 数（1–112），单元值为"TFLOP/s & 算术强度（OI）"。数据呈单调递增：Seq=128、Cand=1 时仅 0.54 TFLOP/s & 0.98 OI；Seq=8192、Cand=112 时达 84.5 TFLOP/s & 59.3 OI。即候选数越多、序列越长，TFLOP/s 越高，且 OI 从 <1（访存受限）跃升至近 60（计算受限）。
+表6给出 Llama 33B（A100 PCIe, batch=16）下注意力矩阵乘法随序列长度（128–8192）与候选 token 数（1–112）变化的 TFLOP/s 与算术强度（"X & Y" 格式）。
 
-2) **技术结论**：验证阶段需对全部候选 token 一次性计算注意力，OI 随候选数线性放大，使原本受带宽限制的 attention 矩阵乘落入 A100 计算瓶颈区，GPU 利用率显著提升，印证了 Medusa 并行验证在硬件层面的可行性。
+核心数据：单候选解码时（candidate=1），TFLOP/s 仅 0.54–1.53，算术强度恒为 ~0.99，属严重 memory-bound；候选数升至 112 时，TFLOP/s 跃升至 36.57–84.5，算术强度达 40–59，进入 compute-bound 区间。
 
-3) **论文作用**：为 Medusa 多头投机解码提供算力利用率论据，证明其不会因引入候选而沦为访存瓶颈，是支撑"Medusa-1/2 验证开销可控、可加速"的核心实测依据。
+技术结论：Medusa 并行验证多个候选 token，本质上把 attention 矩阵乘的访存瓶颈转化为算力瓶颈，大幅提升硬件利用率，从而支撑"多解码头同时验证"的加速方案设计。该表为论文整体 speculative decoding 加速链路提供了底层硬件效率的量化佐证。
 
 ### Table 7 (p.25) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab07.png]]
@@ -411,13 +432,13 @@ Table 4 列出 AlpacaEval 上 4 个模型的加速效果：基线 17.87–37.07 
 > TFLOP/s & Operational Intensity of attention matrix multiplication with sequence length 1024 for Llama 33B on an A100 80GB
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 7 解读：**
+> 【图文联合解读】**图文联合解读**
 
-1）**核心对象与数据**：表格展示 Llama 33B 在 A100 80GB PCIe 上，序列长度 1024 时，注意力矩阵乘法在不同 Batch Size（1–64）和候选 Token 数（1–112）下的 **TFLOP/s & Operational Intensity** 双指标。当 BS=1、候选=1 时仅 1.26 TFLOPS & 1.0 OI（严重访存受限）；当 BS=64、候选=112 时升至 **246.14 TFLOPS & 2893.91 OI**，逐步逼近 A100 bf16 算力峰值（~312 TFLOPS），实现算力密集。
+1）**核心数据**：Table 7 为 Llama 33B 在 A100 80GB PCIe 上、序列长 1024 时，attention 矩阵乘的 TFLOP/s & Operational Intensity（OI）矩阵，行=Batch Size（1–64），列=候选 token 数（1–112）。当 Batch=1、Candidate=1 时仅 **1.26 TFLOP/s / OI=1.0**，处于严重 memory-bound；随 batch 与候选数同步放大，最高可达 **246.91 TFLOP/s / OI≈2492**（Batch=64, Candidate=80），逼近 A100 FP16 算力峰值（约 312 TFLOP/s），attention 转为 compute-bound。
 
-2）**关键结论**：单 token 解码时注意力算子处于强访存瓶颈区；随着 Medusa 并行生成多候选 Token，OI 提升约 2900 倍，注意力由访存受限转为算力受限，硬件利用率显著提高，从硬件层面为 Medusa 多头并行解码加速提供了算力可扩展性证据。
+2）**关键结论**：原文借此说明——在低并发下 attention 受访存限制、算力利用率极低；而 Medusa 的树状验证使单步可并行处理大量候选 token，恰好把 attention 推入算力饱和区，从而把硬件瓶颈转化为吞吐增益。
 
-3）**作用**：与 Figure 7 端到端加速效果互补，作为附录 E 中"为什么多头并行解码能跑满 GPU"的 micro-benchmark 理论支撑。
+3）**论文作用**：作为 Appendix E 的 roofline 理论支撑，与 Figure 7（MT-Bench 实测加速）互补，共同论证 Medusa 在 7B–33B 全规模上的工程合理性与实用性。
 
 ### Table 8 (p.25) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab08.png]]
@@ -425,7 +446,13 @@ Table 4 列出 AlpacaEval 上 4 个模型的加速效果：基线 17.87–37.07 
 > TFLOP/s & Operational Intensity of linear layers (up/gate/down) for Llama 33B on an A100 80GB PCIe.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表格展示 Llama 33B 在 A100 80GB PCIe 上 up/gate/down 线性层的 TFLOP/s 与算力强度（"&"分隔双值），结构为 Batch Size（1–64）× 候选 Token 数（1–112）。TFLOP/s 随 batch×tokens 增大由 1.26 单调饱和至约 246，算力强度同步突破 2893，表明从内存受限转入计算受限。该 Roofline 分析论证 Medusa 多头并行解码的硬件前提：一次前向处理多个候选 Token 可使解码线性层进入算力密集区，为 Figure 8 中各模型（尤其小模型）的实测加速提供底层理论支撑，构成方法可行性的关键证据链。
+> 【图文联合解读】**Table 8 解读：**
+
+**1) 核心对象与数据：** 表展示 Llama 33B 在 A100 80GB PCIe 上三个线性层（up/gate/down）的 TFLOP/s 与 Operational Intensity（算力强度），行轴为 Batch Size（1–64），列轴为候选 Token 数（1–112）。例如 BS=1、CT=1 时仅 1.26 & 1.0；BS=64、CT=96 时达 244.52 & 2711.46；BS=64、CT=112 峰值达 246.14 & 2893.91。两项指标均随 Batch Size 与候选 Token 数同向增长，候选 Token 增长带来的提升尤为显著。
+
+**2) 论证结论：** 候选 Token 数量越大，线性层越逼近 A100 的 roofline 计算密集区，证明 Medusa 多头并行预测多个候选 token 可显著提升 GPU 利用率，解释了 Figure 8 中端到端加速的硬件机理。
+
+**3) 论文作用：** 作为 roofline 级硬件证据，支撑 Medusa-2 推理加速框架的算力利用率论证，衔接端到端速度提升与底层算子效率。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

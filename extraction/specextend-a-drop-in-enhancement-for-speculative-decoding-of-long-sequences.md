@@ -30,11 +30,11 @@ tags: [speculative]
 > Performance and memory usage of speculative decoding with Llama-3.1-8B-Instruct and EAGLE-3 across varying input lengths. Performance significantly declines well before the shift of memory bottleneck.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图1展示Llama-3.1-8B-Instruct+EAGLE-3在1K–128K输入长度下的双轴数据：绿色折线为吞吐量(tokens/s)，堆叠柱为显存占用(蓝Model Weights+橙KV Cache)。量化可见：吞吐量从1K的~150骤降至4K的~45 tokens/s；而KV Cache在≤32K时仍<2 GiB，直至128K才增至~16 GiB与权重持平。
+> 【图文联合解读】图1展示Llama-3.1-8B-Instruct+EAGLE-3在1K–128K输入长度下的吞吐量（绿线，左轴）与显存占用（堆叠柱，右轴：蓝色Model Weights+橙色KV Cache）。吞吐量从1K的~148 tokens/s骤降至4K的~50、128K仅~5；而KV Cache占比直到64K–128K才显著膨胀至~16 GiB。
 
-**技术结论**：性能崩塌远早于显存瓶颈出现，说明长序列下推测解码减速的主因并非KV Cache显存/带宽，而源自其他机制(如草稿模型匹配率下降、注意力计算开销等)。
+**关键结论**：性能衰减远早于显存瓶颈的转移——说明主因并非显存压力，而是长序列下草稿模型命中率下降。
 
-**论文作用**：以"反直觉"现象作为核心动机，引出SpecExtend——针对非显存瓶颈的长序列性能退化，提出对推测解码的即插即用增强方案。
+**论文作用**：以量化证据建立问题动机，论证现有方案（如TriForce）仅靠KV压缩无法挽救长序列投机解码收益，从而引出SpecExtend这一drop-in增强方案。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig02.png]]
@@ -43,9 +43,11 @@ tags: [speculative]
 > Overview of SpecExtend. FlashAttention accelerates the prefill phases of both target and draft models, and Hybrid Tree Attention accelerates the verification phase. We use the target model’s attention scores obtained from verification to select the most relevant input chunks to retain in the draft model’s KV cache, enhancing both draft speed and accuracy on long inputs without additional training.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图展示SpecExtend整体流程：长输入序列切分为8个Chunk，经Flash Attention Prefill并行输入Target与Draft模型；Target通过Hybrid Tree Attention验证Draft生成的候选Token，其Attention Scores经"Cross-model Retrieval"反向回传，从8个Chunk中筛选出{1,3,7,8}保留至Draft Model KV Cache，实现draft与target的KV对齐。
+> 【图文联合解读】**图示结构**：左侧"长输入序列"切分为8个chunk（红色chunk 3为高注意力相关片段），经FlashAttention预处理后并行输入目标模型（蓝）与草稿模型（绿）；草稿生成候选tokens，目标模型通过Hybrid Tree Attention验证；验证所得注意力分数经"跨模型检索"反馈，仅将相关chunk（1、3、7、8）保留至草稿模型KV cache。
 
-论文以此论证三项drop-in加速技术——Prefill阶段FlashAttention、Verify阶段Hybrid Tree Attention、基于注意力分数的Chunk选择性缓存——在无需额外训练下兼顾draft速度与准确性，为Table 2中相对自回归生成取得显著Speedup提供了核心方法学支撑。
+**论证结论**：无需额外训练即可在长序列上同时提升草稿速度与准确率——三阶段加速链（FlashAttention预fill→Tree Attention验证→稀疏KV cache）共同缩短推测解码关键路径。
+
+**论文作用**：作为方法总览图，定锚整套SpecExtend流水线，为后续Table 2中接受长度τ与加速比的实验验证提供架构对应。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig03.png]]
@@ -85,13 +87,11 @@ tags: [speculative]
 > Speedup comparison of standard speculative decoding and SpecExtend across varying input lengths on
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-1) 该图为四面板分组柱状图（图片可见右侧"LC-7B/LC-68M"与"LC-7B/EAGLE"两面板），横轴为GovReport上1K–16K输入长度，纵轴加速比0–3.5，深浅蓝柱对比标准投机解码与SpecExtend。关键数据：LC-68M在8K由1.12升至2.30、16K由1.51升至2.84；EAGLE在16K由1.81升至3.21。
+图5在GovReport数据集上，对四种模型组合（V-7B/V-68M、V-7B/EAGLE、LC-7B/LC-68M、LC-7B/EAGLE）对比标准推测解码与SpecExtend在1K–16K输入长度下的加速比。数据揭示两个趋势：①标准推测解码随长度增加加速比急剧下滑，如V-68M从1K的1.78×降至8K的1.08×，LC-68M从1.78×降至1.12×；②SpecExtend始终稳定或上升，16K时普遍达到2.82–3.21×，较标准方法提升近一倍（V-7B/EAGLE：1.61→3.08）。
 
-2) 原文论证：标准投机解码随序列增长加速比显著衰减（16K仅1.51/1.81），而SpecExtend始终保持>1.8并呈上升趋势，长序列增益最明显，证实其对长输入的稳健加速能力。
-
-3) 该图是论文核心实验证据，验证SpecExtend作为即插即用模块在不同draft模型（LC-68M、EAGLE）与各长度下均稳定提升加速比，支撑其长序列泛化性与工程实用价值。
+论文借此论证核心结论：长序列下草稿模型因训练上下文外分布偏移命中率骤降，SpecExtend通过扩展草稿模型窗口恢复并放大加速比。该图是论文"drop-in即插即用、长输入普遍受益"主张的关键实验支撑。
 
 ### Figure 6 (p.7) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig06.png]]
@@ -116,7 +116,11 @@ tags: [speculative]
 > Perplexity and draft accuracy of needle tokens in the Needle Retrieval task, using different draft model settings. The first three methods use Vicuna-160M as the draft model, while TriForce uses Vicuna-7B.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】图中未显示前三列的方法名；4列草稿配置大小为160M、160M、160M（Vicuna）和7B（TriForce）。针令牌的PPL依次为8.311、2.435、2.237、2.191，准确率为0.081、0.166、0.823、0.976。7B TriForce较最佳160M配置准确率升0.153（15.3个百分点），PPL降0.046，说明强化草稿模型可显著改善长上下文预测。该表用于诊断小草稿失效，并作为SpecExtend增强长序列推测的动机。
+> 【图文联合解读】**Table 1 图文联合解读：**
+
+该表在 Needle Retrieval 任务上对比 4 种 draft 配置（3×Vicuna-160M、1×Vicuna-7B/TriForce）的 Perplexity 与 Accuracy 量化结果：PPL 依次为 8.311 / 2.435 / 2.237 vs 2.191，准确率 0.081 / 0.166 / 0.823 vs 0.976。其中第三种 160M 方案以 PPL 2.237、Acc 0.823 逼近 7B TriForce 的 2.191 与 0.976，性能差距极小。
+
+论文借此论证核心动机：上下文感知增强的小 draft（160M）即可恢复对 needle token 的预测能力，无需堆参数至 7B 也能匹敌 TriForce。该表作为方法基石，证明"扩展 draft 上下文长度"而非"放大 draft 规模"才是长序列投机解码的有效路径，为后续 SpecExtend 的 drop-in 设计提供量化依据。
 
 ### Table 2 (p.6) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab02.png]]
@@ -124,7 +128,9 @@ tags: [speculative]
 > Average accepted length ( τ ), decoding speed (tokens/s) and speedup of speculative decoding with and without SpecExtend. Speedup is measured relative to naive autoregressive generation.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表以四组子图对比 V-7B/LC-7B 分别搭配 V-68M/LC-68M 与 EAGLE 两种草稿模型，在 1K–16K 输入长度下标准投机解码与加入 SpecExtend 后的加速比。量化显示：标准方法随序列变长加速急剧衰减（V-7B/V-68M 由 1K 的 1.78× 降至 8K 的 1.08×），而 SpecExtend 保持并放大增益，16K 峰值达 LC-7B/EAGLE 的 3.21×。原文借此论证：SpecExtend 作为即插即用模块，无需重训练即可恢复并显著提升长序列下的投机解码效率，是论文方法链路的关键终端定量证据。
+> 【图文联合解读】**图文联合解读：**
+
+表2在GovReport/PG-19/BookSum三数据集、1K–16K五档长度下，对比V-7B与LC-7B目标模型搭配V-68M/EAGLE/LC-68M三种草稿模型在有无SpecExtend时的τ、Tok/s与加速比。数据显示：启用SpecExtend后τ全面提升，且序列越长增益越显著——如GovReport+V-68M在16K下τ由1.59升至3.07、加速比从1.38×跃至2.82×（接近翻倍）。该表直接实证SpecExtend作为即插即用增强模块，对不同草稿架构与数据集均能稳定提升长序列推测解码效率，是支撑论文"drop-in enhancement for long sequences"核心主张的关键实验依据。
 
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab03.png]]
@@ -132,13 +138,13 @@ tags: [speculative]
 > Speedup comparison of off-the-shelf methods for long sequence generation with Vicuna-7B. Standard refers to standard tree-based speculative decoding.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读**
+> 【图文联合解读】**图像内容说明**：所提供图片并非 Table 3，而是 **Figure 6**（DeepSeek-R1-Distill-Llama-8B / EAGLE-3 在 AIME-24 长推理任务上的结果），右侧正文为 4.2 节"Comparison with Other Methods"的论述片段。Table 3（Vicuna-7B 长序列生成加速比对比）未在图中出现。以下基于图片实际内容解读：
 
-**1) 核心对象与结构**：表 3 在 Vicuna-7B 上对比 5 种长序列生成加速方法（FlashDecoding、TriForce、MagicDec、Standard 树推测解码、Standard + SpecExtend），在 GovReport、PG-19、BookSum 三个长文本数据集、1K–16K 五档生成长度上报告加速比。数据上，SpecExtend 在所有 15 个组合中均加粗最高：GovReport 1K 达 2.28×、16K 达 2.65×；PG-19 由 1K 的 1.74× 提升至 16K 的 2.70×；BookSum 在 16K 取得全表最高 2.81×。
+**1) 图 6 核心数据**：左图解码速度（Tok/s）：Naive AR=31.42、EAGLE-3=30.34、EAGLE-3+SpecExtend=117.21；右图平均接受长度：1.00、1.89、5.95。SpecExtend 使 EAGLE-3 解码速度提升约 **3.86×**，接受长度从 1.89 跃升至 5.95（约 **3.15×**）。
 
-**2) 关键结论**：Standard 方法在 4K/8K 处出现明显衰减（如 GovReport 8K 仅 1.08×，BookSum 8K 仅 1.05×），说明标准推测解码难以应对长序列；FlashDecoding 加速随长度增长但绝对值偏低（最高 1.58×）；TriForce 在长序列下退化（GovReport 16K 跌至 1.02×）。SpecExtend 通过持续的 ~2× 加速，验证了其在长序列场景下对标准方法的"即插即用"增益。
+**2) 支撑的技术结论**：原文本节论证 SpecExtend 作为 drop-in 增强，在长输入下维持高草稿准确率，并同时复用基础框架的短输入优势，从而获得显著整体加速；同时强调排除 LongSpec 等训练式方法，因 SpecExtend 完全免训练。
 
-**3) 在论文中的定位**：该表是方法主实验核心证据，与 Figure 3 的接受率/散度分析互补——前者从端到端加速比证明有效性，后者从机制层面解释为何 CMR 草稿更准，从而共同支撑 SpecExtend 作为长序列推测解码增强方案的结论。
+**3) 在论文链路中的作用**：图 6 与 Table 3 共同构成 4.2 节"与现成方法对比"的双场景验证——Table 3 面向 Vicuna-7B 通用长生成，图 6 面向 R1 推理长链生成，分别证明 SpecExtend 对树式投机与 EAGLE-3 框架的通用加速能力。
 
 ### Table 4 (p.8) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab04.png]]
@@ -146,7 +152,11 @@ tags: [speculative]
 > Ablation study of SpecExtend components. The standard setting refers to tree-based speculative decoding with Vicuna-7B/68M. FA denotes FlashAttention for prefill, HTA denotes Hybrid Tree Attention, and CMR denotes Cross-model Retrieval.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表格展示EAGLE与EAGLE-3作为草稿模型时，启用与否SpecExtend在1K–16K长度下的接受长度τ、Tok/s及Speedup。数据显示：未启用SpecExtend时，加速比随序列增长急剧衰减——EAGLE在16K仅1.02×、EAGLE-3在16K降至0.83×（已低于baseline）；启用后长序列性能反而跃升，EAGLE 16K Speedup由1.02×提至1.85×，EAGLE-3 16K由0.83×提至2.36×，Tok/s近乎翻倍。该消融用于论证FA（FlashAttention预填充）、HTA（Hybrid Tree Attention）、CMR（Cross-model Retrieval）三组件协同是SpecExtend维持长序列投机解码收益的核心，从而支撑"drop-in增强"这一核心论据。
+> 【图文联合解读】表4以消融方式对比EAGLE与EAGLE-3两个草稿模型，在1K–16K上下文长度下启用/不启用SpecExtend的三项指标：平均接受长度τ、吞吐Tok/s、相对加速比Speedup。
+
+核心数据：短序列（1K–2K）增益微弱，如EAGLE@1K仅由2.01×微升至2.04×；长序列下增益陡增——8K时EAGLE-3加速比从0.96×（已反退）跃至2.08×；16K时EAGLE-3由0.83×变为2.36×，τ从1.49恢复至3.80，EAGLE亦由1.02×升至1.85×。SpecExtend同时修复了长上下文中τ崩塌与吞吐下滑两类退化。
+
+论文作用：验证FA（prefill FlashAttention）+HTA（Hybrid Tree Attention）+CMR（Cross-model Retrieval）三组件协同，专解长序列下tree-based speculative decoding失效（τ≈2、speedup跌破1×）的痛点，证明SpecExtend是面向长上下文不可或缺的即插即用增强。
 
 ### Table 5 (p.8) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab05.png]]
@@ -154,11 +164,11 @@ tags: [speculative]
 > Evaluation of SpecExtend on LLaMA-3.1-8B-Instruct with EAGLE and EAGLE-3 on the GovReport dataset.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5对比LLaMA-3.1-8B-Instruct在GovReport上、EAGLE与EAGLE-3在1K–16K输入下的τ（接受长度）、Tok/s、Speedup三组指标，每行配对启用/不启用SpecExtend两种配置。
+> 【图文联合解读】Table 5核心：在GovReport数据集上，以LLaMA-3.1-8B-Instruct为目标，配合EAGLE与EAGLE-3两种草稿模型，在1K/2K/4K/8K/16K五种输入长度下，对比启用/不启用SpecExtend时的接受长度τ、吞吐Tok/s及相对自回归加速比。
 
-**核心结论**：标准投机解码随长度急剧衰减——EAGLE-3在16K时Speedup仅0.83×（反慢于自回归），EAGLE也仅1.02×。SpecExtend显著抬升τ（EAGLE-3@16K：1.49→3.80），使Speedup恢复并反超至2.36×；EAGLE@16K由1.02×提升至1.85×。而1K处增益极小（EAGLE-3：2.76×→2.75×），印证其专为长序列优化。
+关键结论：短输入(1K–2K)下SpecExtend效果中性甚至略损(如EAGLE-3@1K从2.76×→2.75×)；但长输入下提升显著——16K时EAGLE从1.02×→1.85×，EAGLE-3从0.83×(反而慢于基线)跃至2.36×；8K时EAGLE-3从0.96×→2.08×。τ同步回升，说明草稿模型在长上下文下的有效接受能力被恢复。
 
-**论文作用**：与Figure 5形成"图+表"互证，定量佐证SpecExtend作为drop-in模块在长上下文下恢复并增强投机解码加速比的核心主张，是实验链路中"长序列有效性"的关键证据。
+论文作用：作为核心实证之一，验证SpecExtend以"即插即用"方式修补推测解码在长序列场景的退化，且对先进的EAGLE-3同样奏效，支撑方法的普适性。
 
 ### Table 6 (p.8) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab06.png]]
@@ -166,13 +176,13 @@ tags: [speculative]
 > Evaluation of SpecExtend on LLaMA-3.1-8B- Instruct with EAGLE for inputs up to 128K tokens on the PG-19 dataset. Naive autoregressive generation runs out of memory beyond 64K tokens, thus speedup values are omitted.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 6 图文联合解读**
+> 【图文联合解读】**Table 6 解读**
 
-**1) 核心数据：** 表展示 LLaMA-3.1-8B-Instruct + EAGLE 在 PG-19 数据集 32K/64K/128K 三档长度下启用 SpecExtend 前后的对比。无 SpecExtend 时，τ≈1.73，Tok/s 稳定在 ~8.45；启用后 τ 跃升至 ~2.72（32K: 2.73；64K: 2.71；128K: 2.72），Tok/s 提升至 22.59–23.05（32K 给出 2.08× speedup，64K 与 128K 因自回归基线 OOM 而省略）。
+1) **结构与数据**：对比 SpecExtend 开关（No/Yes）在 32K/64K/128K 三档上下文下的 τ、Tok/s、Speedup。开启后 τ 由 1.73→2.73，Tok/s 由 8.45→23.05，32K 处达 2.08× 加速；64K、128K 下 Tok/s 仍稳在 22.5–22.8，Speedup 因基线 OOM 而省略。
 
-**2) 关键技术结论：** SpecExtend 作为 EAGLE 的即插即用增强，长度从 32K 延展至 128K 仍保持约 2.7× 的吞吐加速与一致的高接受温度（τ 显著增大意味着平均接受草稿更长），验证了"短序列训练、长序列零样本可用"的核心论断。
+2) **关键结论**：SpecExtend 将 EAGLE 的接受长度与吞吐近三倍化，且在 128K 长上下文下仍稳定运行，而原生自回归在 64K 以上即显存崩溃，证明方法对长序列具有可扩展性与工程必要性。
 
-**3) 在论文中的作用：** 该表是长上下文扩展性的关键证据——证明 SpecExtend 不仅可替代密集近邻注意力，还能在 64K 以上（朴素方法显存不足）继续提供稳定的推测解码加速，补齐了 Figure 6（推理任务）之外的通用长文本实验链路。
+3) **论文作用**：作为长上下文场景的主实验证据，支撑 SpecExtend 即插即用、显著扩展推测解码可用长度范围的核心贡献。
 
 ### Table 7 (p.11) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab07.png]]
@@ -180,9 +190,17 @@ tags: [speculative]
 > Latency overhead of a single retrieval cache update step on 16K token inputs.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表展示16K token输入下检索缓存的单步延迟开销：完整前向Forward=53.76 ms，启用检索后升至54.11 ms（仅多0.35 ms，约0.65%）；逐token增量Forward=0.84 ms、缓存Update=0.34 ms。
+> 【图文联合解读】**Table 7 图文联合解读**
 
-原文借此论证检索缓存机制近乎"零成本"——既不显著拖慢主前向（开销<1%），增量维护代价也极低（每token合计≈1.18 ms）。这证明SpecExtend对长序列的适配高效可行，是支撑其作为"drop-in"增强模块、可无缝接入既有投机解码流水线的关键效率证据。
+**1) 核心数据**：表格报告 16K token 输入下"检索缓存更新"各步骤的延迟（ms）：
+- 标准 Forward：53.76
+- 带检索的 Forward（w/ Retrieval）：54.11
+- 更新时的 Forward：0.84
+- Update 本身：0.34
+
+**2) 关键结论**：在 16K 长序列下，启用检索的 Forward 仅比标准 Forward 多花 0.35 ms（54.11−53.76），增量开销 <1%；更新步骤仅 0.34 ms，几乎可忽略。说明把历史 token 的 KV 写入检索库并按需取回这一步极其轻量，远不会抵消推测解码带来的加速收益。
+
+**3) 在论文中的作用**：SpecExtend 通过在 draft/verify 之间引入"检索缓存"扩展有效上下文。该表是为回应"检索机制本身是否昂贵"这一疑问而做的实测验证——证明它是名副其实的"drop-in"低开销增强，从延迟维度支撑了方法在长序列上的实用性与可部署性。
 
 ### Table 8 (p.12) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab08.png]]
@@ -190,11 +208,11 @@ tags: [speculative]
 > Ablation study of Cross-model Retrieval parameters. The table reports decoding speed (tokens/s) using Vicuna-7B as the target model on 8K-token GovReport inputs.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 图文联合解读：**
+> 【图文联合解读】**表格内容**：展示 Cross-model Retrieval 四个超参——Working Cache Size、Chunk Size、Top-k、Retrieval Frequency——在 Vicuna-68M 与 EAGLE 两个 draft 模型上、target= Vicuna-7B、8K GovReport 输入下的解码速度（tokens/s）。各参数均存在明显拐点：Cache 1024（Vicuna-68M 33.69）/2048（EAGLE 45.33）最佳，4096 以上 Vicuna-68M 跌至 25；Chunk=32 时两者同时达峰（33.52、49.68）；Top-k 取 32/64 较优；Retrieval Frequency=4（Vicuna-68M 33.59）/8（EAGLE 48.52）最优，过频至 128 时 Vicuna-68M 仅 23.95。
 
-该表展示跨模型检索（Cross-model Retrieval）四个超参数对解码速度（tokens/s）的影响，每参数对比 Vicuna-68M 与 EAGLE 两个草稿模型。Working Cache Size 在 1024（Vicuna-68M 达 33.69）与 2048（EAGLE 达 45.33）最优；Chunk Size=32 时两者同时达到峰值 33.52 与 49.68；Top-k 在 32–64 区间最佳；Retrieval Frequency=4 与 8 分别取得 33.59 与 48.52 的最高速度。过小缓存、过大 Top-k 或过低频检索都会显著掉速。
+**论证结论**：四个参数均呈先升后降曲线，过大或过小均损害速度，证明 Cross-model Retrieval 模块需精细调度，而非"越大越好"。
 
-论文借此论证：每个超参数均存在"过犹不及"的甜点区间，且所选默认值（cache≈1024–2048、chunk=32、top-k≈32–64、frequency≈4–8）合理。该消融是 SpecExtend 主实验的前置验证，确保后续长序列加速收益来源于方法设计而非参数巧合，支撑整体实验链路可信度。
+**论文作用**：作为 SpecExtend 长序列检索增强的消融，与表 7 速度结果配套，为方法中默认超参（Cache、Chunk、Top-k、Retrieval freq）提供经验依据，支撑主实验速度增益的归因。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

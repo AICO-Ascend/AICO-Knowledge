@@ -47,7 +47,13 @@ tags: []
 > We find that three components yield the most significant gains: (i) branch- specific fusion within the multi-branch backbone, (ii) context-aware gating, and (iii) tokenizer compression. Removing any of these causes the largest regressions in validation loss. Specifically, for the “w/o multi branch” ablation, we retain the mHC backbone structure but replace the branch-specific gating with a single 
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图5展示Engram架构消融：深蓝曲线描绘3B MoE下Engram单模块插入层深（Layer 8–12）对验证损失的影响，呈先微升后回落趋势，结合原文揭示Layer 2早注最优。右栏5个×号标记消融变体：去多分支融合、去token压缩、去门控、加4-gram、去短卷积，分别落于橙虚线（基线）与绿虚线（完整Engram）之间梯度位置。原文借此论证三大核心组件——分支专属融合、上下文感知门控、tokenizer压缩——任一缺失即引最大回归。该图为论文"条件记忆需多组件协同"方法论的关键证据，串联架构设计→消融验证→相对3B MoE全面优越的实验闭环。
+> 【图文联合解读】**图文联合解读：**
+
+1）**核心对象与数据**：该图以Validation Loss为纵轴（含断轴，1.768–1.808区间），横轴左侧为层索引1–12，右侧为5种消融变体。橙色虚线代表3B MoE Baseline（约1.808），绿色虚线代表完整3B MoE+1.6B Engram（约1.768）；深蓝曲线为单模块插入不同层的扫掠结果，Layer 2处取得最低值≈1.7705，随后单调恶化至Layer 12的≈1.783；右侧×号标注的"w/o multi branch / token compress / gating"、"+4-gram"、"w/o short conv"五种变体loss均高于绿色基线。
+
+2）**关键结论**：Engram需在浅层（如Layer 2）早期注入，深度越深收益越弱；同时证实三大核心组件——分支融合、上下文感知门控、tokenizer压缩——均为必要设计。
+
+3）**论文作用**：该图为架构设计提供经验依据，定位最佳插入位置并验证各模块不可缺，是支撑"条件记忆+稀疏查找"整体方法有效性的关键消融证据。
 
 ### Figure 7 (p.18) ⭐深度解读
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig07.png]]
@@ -56,13 +62,13 @@ tags: []
 > The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static patterns. In English, we observe strong activations on multi-token named entities (e.g., “Alexander the Great”, “the Milky Way”) and formulaic phrases (e.g., “By the way”, “Princess of Wales”). This behavior generalizes effectively across languages. In
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## Figure 7 联合解读
+> 【图文联合解读】**图文联合解读：**
 
-**核心对象与结构**：图以热力图形式展示 Engram 门控机制在多语言文本上的激活分布。颜色越深红表示门控标量 αₜ 越接近 1，每行对应一个 token 序列，N=3 后缀 n-gram 完成后触发。可观察到五行示例：(1) 英文 "…norse Brucephal us." 中 "Bruce" 与 "phalus" 显著激活；(2) "Way." 中 "Way" 激活；(3) "…iana, Princess of Wales." 中 "Princess of Wales" 连续高亮；(4) 中文 "印刷术。" 中 "术" 单独激活；(5) 中文 "…医圣',…《伤寒杂病论》" 中 "医圣"、"《伤寒杂病论》" 等命名实体高亮。
+**核心对象与结构**：图中以热力图展示 Engram 门控标量 α_t∈[0,1]（白→深红）在 5 个句子（含 3 条英文、2 条中文）逐 token 上的取值，采用 N=3 后缀 n-gram。强激活（深红）集中在 "the Great"、"uce phal"、"Milky Way"、"Princess of Wales" 等多 token 命名实体，以及 "By the way" 这类固定短语；中文行则在 "四大 发明"、"造纸术"、"指南针"、"张仲景" 等成语/专名处显著激活。
 
-**关键论证结论**：门控机制并非均匀响应，而是呈现高度选择性——仅在**静态、可枚举的局部模式**完成时强烈激活，涵盖英语多 token 命名实体（如 Princess of Wales）与公式化短语；该选择性在中文场景同样成立（"医圣"、《伤寒杂病论》），证实跨语言泛化。
+**关键结论**：门控具有高度选择性——仅在**局部静态模式完成时**触发，而非逐词全开。这验证了条件记忆检索的"按需触发"假设，即 Engram 只对高复用、可枚举的多 token 模式做强记忆读取，且该行为在跨语言（英/中）下保持一致。
 
-**链路作用**：此图构成 Engram "条件记忆"假设的定性证据，表明查找表能精准捕捉模式补全信号而非全段均匀检索，是后续量化稀疏性增益与推理加速实验的机理基础。
+**论文链路作用**：该图作为质化证据，与定量检索命中率、困惑度互补，支撑"查找式记忆构成 LLM 稀疏性新维度"的核心论点——通过选择性门控，将稳定的模式化知识从注意力计算中剥离，使模型算力集中于需要组合推理的位置。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -72,13 +78,11 @@ tags: []
 > | Pre-training performance comparison between dense, MoE, and Engram models . All models are trained for 262B tokens and are matched in activated parameters (3.8B). Engram-27B is iso-parameters with MoE-27B by reallocating parameters from routed experts (72 → 55) to a 5.7B-parameter Engram memory. E
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 图文联合解读**
+> 【图文联合解读】**核心对象与结构**：对比Dense-4B、MoE-27B、Engram-27B、Engram-40B四模型，在相同262B训练token、3.8B激活参数条件下，涵盖语言建模（Pile loss: 2.091/1.960/**1.950**/1.942）、知识推理（MMLU: 48.6/57.4/**60.4**/60.6）、阅读理解、代码数学四类共30+基准。
 
-1) **核心对象与数据**：在 262B tokens、激活参数均为 3.8B 的公平设置下，对比 Dense-4B（4.1B 总参）、MoE-27B（2 共享 + 72 routed/top-6，26.7B）、Engram-27B（72→55 routed，新增 5.7B Engram 记忆，26.7B）和 Engram-40B（记忆扩至 18.5B，39.5B）四个模型。Engram-27B 在 Pile loss（1.950）、Validation（1.622）、MMLU（60.4）、CMMLU（61.9）、BBH（55.9）、GSM8K（60.6）、MATH（30.7）等绝大多数任务上加粗胜出；Engram-40B 进一步把 Pile loss 压至 1.942、MMLU 至 60.6。
+**关键结论**：将MoE路由专家从72→55，把节省参数重分配给5.7B Engram记忆后，Engram-27B在绝大多数任务上反超MoE-27B；Engram-40B把记忆扩至18.5B，性能进一步单调提升。
 
-2) **关键技术结论**：在等激活参数条件下，把 MoE 的 routed expert 参数量替换为 Engram 条件记忆即可全面超越纯 MoE，且扩大记忆容量（5.7B→18.5B）仍持续获益，验证了"条件查表式记忆"作为新稀疏轴的有效性。
-
-3) **论文作用**：作为全文核心预训练实验基线，直接支撑 Engram=新稀疏性维度这一中心主张，并与后续 scaling/消融形成证据链。
+**论文作用**：作为核心定量证据，支撑"条件记忆是优于/正交流水线于专家路由的新稀疏轴"这一核心主张，为后续规模化、消融分析奠基。
 
 ### Table 2 (p.11) ⭐深度解读
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab02.png]]
@@ -86,7 +90,16 @@ tags: []
 > | Long-context performance comparison. Parenthetical values (e.g. (50k, 1.62) ) denote the pre-training steps and the corresponding loss prior to the long-context extension. Two key findings: (1) With only 82% of the pre-training FLOPs (41k vs. 50k), Engram-27B matches the baseline’s LongPPL ( Fang 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表对比MoE-27B基线与Engram-27B在32k长上下文下的LongPPL（Book/Paper/Code/L-CoT困惑度）与RULER（NIAH的S/MK/MV/MQ及VT/CWE/FWE/QA）表现，括号标注预训练步数与损失。核心结论：(1)仅用82% FLOPs（41k vs 50k），Engram-27B LongPPL与基线持平，RULER显著更优（如MQ 89.5 vs 84.2、QA 44.0 vs 34.5）；(2)等损失(46k)与等算力(50k)条件下各项指标全面胜出。该表作为关键实验证据，验证"条件记忆+查表稀疏"以更少预训练算力提升长文本建模能力，支撑论文新稀疏性轴的核心主张。
+> 【图文联合解读】# Table 2 图文联合解读
+
+**1) 核心对象与数据**
+Table 2 对比 32k 长上下文下 MoE-27B 基线（50k 步, loss 1.63）与 Engram-27B 三档配置（41k/1.66、46k/1.63、50k/1.62），共 11 项指标：LongPPL 含 Book/Paper/Code/L-CoT，RULER 含 NIAH-S/MK/MV/MQ 及 VT/CWE/FWE/QA。Engram-50k 在 LongPPL 四项全面最优（4.14/2.82/2.44/13.41）；RULER 关键增益显著——MQ 由 84.2→97.0、VT 由 77.0→89.0、FWE 由 73.0→99.3。
+
+**2) 关键结论**
+仅以 82% 预训练 FLOPs（41k vs 50k），Engram 即匹配基线 LongPPL 并在 RULER 上反超；等 loss（46k）与等 FLOPs（50k）条件下 Engram 各项均优于 MoE 基线。
+
+**3) 在论文中的作用**
+该表是与 Figure 2（嵌入表模型并行工程可行性）配套的核心效率-有效性证据链，证明 Engram 这一"条件记忆"稀疏轴在长上下文场景兼具算力节省与精度提升，支撑全文核心主张。
 
 ### Table 4 (p.18) ⭐深度解读
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab04.png]]
@@ -94,7 +107,9 @@ tags: []
 > | End-to-end Inference Throughput . We measure infernece throughput with a 100B- parameter Engram layer entirely offloaded to host memory.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 4 展示端到端推理吞吐：硬件 H800、512 序列、长度 Uniform(100,1024)。4B-Dense 基线 9,031.62 tok/s，叠加 100B Engram（CPU offload）降至 8,858.28；8B-Dense 由 6,315.52 降至 6,140.02，降幅仅 1.9%~2.8%。核心结论：Engram 条件记忆以近乎零开销换得参数规模大幅扩展。该表支撑论文"可扩展查表式条件记忆不损推理速度"的核心主张，是稀疏性论证的关键实测依据，证明 host-memory 查表即可让模型"变大"而不牺牲吞吐。
+> 【图文联合解读】**Table 4 图文联合解读**
+
+表4展示端到端推理吞吐：H800硬件、512序列、长度Uniform(100,1024)下，4B-Dense基线9,031.62 tok/s，叠加CPU offload的100B Engram层仅降至8,858.28；8B-Dense由6,315.52降至6,140.02，降幅仅1.9%~2.8%。结论：Engram条件记忆以近零开销换得25×参数扩展。该表支撑"host-memory查表让LLM变大不变慢"的核心论断，是稀疏性论证的关键实测依据。
 
 ### Table 5 (p.33) ⭐深度解读
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab05.png]]
@@ -102,13 +117,11 @@ tags: []
 > Detailed model architecture information and training hyper parameters.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 5 图文联合解读**
 
-1）**核心对象与数据**：表格列出Dense-4B（4.1B/3.8B总/活跃参数）、MoE-27B（72路由/6激活/2共享专家）、Engram-27B与Engram-40B（总参26.7B/39.5B）四套配置的架构与超参。共享基础：30层、dim 2560、MLA注意力、RoPE θ=10000、mHC扩展率4、seq 4096、vocab 129280、batch 1280、5万步、Muon主干+Adam嵌入、LR 4e-4、Step Decay。Engram专有：dmem=1280、8头、层[2,15]、n-gram[2,3]、合并mHC+tokenizer压缩+Conv零初始化均启用，LR倍率×5、专属Adam。
+该表纵向列出4模型配置：① Dense-4B（4.1B总/3.8B激活，30层，dim 2560，262B tokens，MLA+RoPE θ=10000，mHC扩展率4，seq 4096，vocab 129280，batch 1280，50k步，Muon主干+Adam嵌入，LR 4e-4，weight decay 0.1）；② MoE-27B（26.7B，1层前置dense，72路由/6激活专家+2共享，Loss Free）；③ Engram-27B/40B叠加条件记忆模块：dim_dmem 1280，词表22.6M/72.4M，8头，层[2,15]，n-gram[2,3]，mHC融合、tokenizer压缩、Conv零初始化，LR×5，weight decay 0，Adam仅优化embed。
 
-2）**关键结论**：四模型共用主干超参，唯一变量为Engram模块，证明lookup稀疏性是独立"新轴"；tokenizer压缩、mHC融合、Engram专用优化器的高LR倍率（×5）共同验证了Figure 5所述三大关键组件——分支融合、上下文门控、tokenizer压缩——的必要性。
-
-3）**整体作用**：作为附录配置表，保证全文消融与对比实验可复现，并清晰隔离基线与Engram创新点。
+该表与Figure 5消融互证：mHC多分支融合、上下文门控、tokenizer压缩三大组件缺一不可，共同支撑Engram将"可扩展查找"确立为LLM稀疏性的新轴，并保证全文实验可复现。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

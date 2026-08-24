@@ -24,18 +24,19 @@ tags: []
 ## 图表（原文 caption + 页码）
 
 ### Figure 2 (p.23) ⭐深度解读
-![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p23.png]]
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig02.png]]
+*整页渲染: ![[assets/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-p23.png]]*
 > [!quote] caption
 > FlowServe selects the appropriate DistFlow [10] backend based on the network fabric. For MLA models like DeepSeek and Kimi K2, both interconnects satisfy TTFT and TPOT SLAs.
 
 > [!tip] 技术解读（多模态）
-> I don't see a figure on this page—it consists entirely of body text (page 23 of a technical paper on FlowServe, covering DistFlow KV-transfer scheduling, heterogeneous prefill/decode deployment on Ascend NPUs, and the introduction to §5.2 "Disaggregated MoE-Attention").
+> 【图文联合解读】**图文联合解读：**
 
-The page does **reference** two figures, but they are not present on this page:
-- **Figure 2** — referenced in the "Heterogeneous Prefill-Decode Deployment" paragraph for the cross-NPU KV-cache transfer path (Ascend 910B prefill ↔ Ascend 910C decode over RoCE/VPC via DistFlow).
-- **Figures 18 and 19** — referenced at the very bottom of the page as illustrations of three new techniques for disaggregated MoE-Attention.
+**(a) 集群层：** CloudMatrix384 SuperPod 含 48 台 910C 服务器、共计 384 颗 NPU（每服务器配 2 CPU + 多 NPU + 1 NIC），三层互连并用：VPC（绿色，管理面）、UB（蓝色，节点内/间全互联总线）、RoCE（红色，RDMA 数据面）。
 
-Because no figure or caption is actually rendered on the supplied image, I cannot describe its architecture/components/data flow or transcribe its caption verbatim. If you can share the page(s) containing Figure 2 or Figures 18/19, I'll provide the description and verbatim caption as requested.
+**(b) 芯片层：** 单颗 910C 由 Die 0 与 Die 1 经高带宽 NoC 互连构成；每 Die 采用解耦 DaVinci 架构，含 AIC（Cube + Buffer）与 AIV（Scalar + Vector + Unified Buffer），辅以 AI CPU、DMA、Misc 单元，通过 MTE2/MTE3 访存。
+
+**论证作用：** 该图奠定全篇硬件底座——(1) 双 Die + NoC 提供片上高带宽，是 MoE-Attention 解耦、专家并行卸载的算力前提；(2) 图中显式的 RoCE/VPC/UB 三类互连直接对应后文"异构 Prefill-Decode 部署"中 910B 预填充 ↔ 910C 解码的 KV-cache 跨片传输路径，并支撑 FlowServe 依据网络拓扑选择 DistFlow 后端、保障 MLA 模型（DeepSeek、Kimi K2）的 TTFT/TPOT SLA。
 
 ### Figure 4 (p.8) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig04.png]]
@@ -72,13 +73,9 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 > This redesign centers on three key components: • First, we introduce the Data Parallel (DP) group abstraction, inspired by SGLang [24].
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读**
 
-**核心对象与结构：** 该图展示 DeepSeek 单个 MoE 层在多 Die（Die 0–3 及 N–1/N）上的并行执行时间线，每 Die 依次执行 MLAPrologue（红）→ MLA（黄）→ All2All（绿）→ O → Gating 序列。关键视觉差异：(1) Die 0/1 的 MLA 块宽度明显大于 Die 2/3，量化呈现 MLA 延迟的 die 间差异；(2) 各 Die 的 All2All 被红色虚线垂直对齐，标示同步点；(3) Die 2/3 在 Gating 之后出现蓝色空白段，代表空闲等待。
-
-**论证的技术结论：** 配合三种 Key Technique——① DP-LB 调度将不同 Die 的 MLA 延迟拉齐，避免 All2All 同步时的短板效应；② MLAPrologue 与 MLA 采用 TP=1 配合 All2All，避免 KV cache 重复；③ Proactive GC 回收 Gating 后空闲 Die 的 CPU 资源，消除 stragglers。
-
-**论文作用：** 该图作为 FlowServe 推理架构中分布式 MoE 调度章节的标志性图示，直观串联"延迟变异—同步阻塞—资源闲置"三大痛点与其解决方案，是论文分布式执行优化的核心证据。
+图示展示DeepSeek单MoE层在FlowServe上跨N+1个Die（Die 0至Die N）的并行执行时序：每Die流水线为 MLAPrilogue → MLA → All2All → O → Gating → Dispatch → MoE → Combine → Next Layer，两条红色虚线标出Dispatch前与Combine后的全局同步点。它支撑四项关键技术结论：①DP-LB均衡MLA时延波动；②MoE-LB均衡MoE时延；③Proactive GC消除CPU straggler；④MTP+Dynamic MicroBatch提升整体吞吐。在论文方法链路中，此图是调度优化方案的可视化骨架——把"DP组抽象（受SGLang启发）+四类负载/内存/batching策略"映射到具体流水时序，为后续Figure 11+的端到端性能评估提供机制锚点，证明四条技术可正交叠加而非冲突。
 
 ### Figure 12 (p.16) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig12.png]]

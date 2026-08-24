@@ -30,13 +30,13 @@ tags: [training, architecture]
 > Trend of sizes of state-of-the-art Natural Language Pro- cessing (NLP) models with time. The number of floating-point op- erations to train these models is increasing at an exponential rate.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图1图文联合解读**
 
-1) **核心对象与数据**：半对数散点图，横轴为2018–2021年份，纵轴为参数量（10⁻²至10³亿，对数轴）。六个标注点：ELMo (94M, 2018)→BERT-L (340M)→GPT-2 (1.5B)→Megatron-LM (8.3B)→Turing-NLG (17.2B)→GPT-3 (175B, 2020)，红色虚线拟合呈指数增长。
+图1位于论文首页右侧，为一张折线图：横轴为年份（2018–2021），纵轴为参数量（对数刻度，单位十亿，范围10⁻²–10³），按时间顺序标注五个代表性NLP模型——ELMo(94M)、BERT-L(340M)、GPT-2(1.5B)、Turing-NLG(8.3B)、GPT-3(175B)，红色虚线拟合显示参数规模近指数增长，约每1–1.5年放大一个数量级。
 
-2) **论证结论**：约2年内参数量增长近3个数量级，训练所需FLOPs随之指数飙升，单卡/单节点已无法承载。
+原文借此为Abstract中两大瓶颈提供量化证据：训练SOTA模型所需FLOPs呈指数增长，而GPU显存有限使大模型难以装入单机/单卡，迫切需要新的模型并行方法。
 
-3) **论文作用**：作为开篇动机图，引出Megatron-LM的核心贡献——张量并行+流水并行，在GPU集群上高效训练千亿级模型，与图中趋势形成"问题—方案"呼应。
+该图作为引言动机图，引出Megatron-LM提出的**张量并行+流水线并行**方案，并自然衔接后文Table 1对1B–1T参数GPT模型的弱扩展吞吐实验，构成"问题驱动—方案提出—规模验证"的完整逻辑链。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig02.png]]
@@ -45,13 +45,11 @@ tags: [training, architecture]
 > Combination of tensor and pipeline model parallelism (MP) used in this work for transformer-based models.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】图示 N_t=2、N_p=2 的二维正交并行：每层 Transformer 内含 Self-Attention 与 MLP 模块，被横切为 Tensor MP partition #1/#2，权重/激活经蓝虚线（all-reduce）在 2 张 GPU 间同步；不同层分属 Pipeline MP #1/#2，沿绿色箭头串行。
 
-1）**核心对象与结构**：图示展示了 Transformer 层在 PTD 并行下的二维切分。绿色实线框"Pipeline MP partition #1"代表一个流水阶段，内部串联多个结构相同的 Transformer 层（每层含 Self-Attention 与 MLP 子模块）；蓝色虚线框"Tensor MP partition #1/#2"将同一层内 Q/K/V 矩阵乘法与 MLP 切分到 2 个 GPU 上，层间仅在边界处通过 all-reduce 通信。
+**论证结论**：层内张量并行平摊权重与激活显存，层间流水线并行扩展深度，二者正交使单卡显存降为 1/(N_t·N_p)，是 Table 2 中 GPT 扩至 530B 参数规模的架构基础。
 
-2）**关键技术结论**：该图直观论证了 Megatron 的核心方案——张量并行（层内）与流水线并行（层间）正交组合，使单层权重与激活显存被 N_t 个 GPU 平摊，同时流水阶段又可跨 N_p 个 GPU 扩展层数，从而在保持高利用率的前提下支撑超大规模模型（论文 Table 2 即在此架构上将 GPT 模型扩至 530B 参数）。
-
-3）**论文作用**：此图是全文方法学的"总览图"，后文 Table 2 等实验均以此 PTD 并行布局为基线，证明其相对 ZeRO-3 的吞吐与可扩展性优势。
+**论文链作用**：为 Section 3 并行策略推导与 Section 5 弱扩展性实验（N_t=N_p=8 等配置）提供可视化与硬件映射前提，奠定"张量×流水线"正交分解的整体方法框架。
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig03.png]]
@@ -62,11 +60,11 @@ tags: [training, architecture]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构：** 图示GPipe在4个Device上的流水线调度，1个batch切分为8个microbatch（编号1–8）。蓝色方块为前向pass，绿色为反向pass（时长为前向的2倍），灰色区域为pipeline bubble。Device 1率先启动前向，各设备依次错开1个microbatch时间，全部前向完成后才依次启动反向，呈现典型"先全部F、再全部B"的同步模式。
+1) **核心对象与结构**：图中展示 GPipe 流水调度在 4 个 Device（Device 1–4）上的时间—任务分配。每个 mini-batch 被切分为 8 个 micro-batch（编号 1–8），先依次执行前向（蓝色 1→8）再依次执行反向（绿色 8→1），灰色区域表示设备空闲的"流水线气泡"，右侧"Pipeline flush"分界线后开始下一批（9–16）。
 
-**2) 关键结论：** 纯流水线并行存在显著气泡（warm-up与cool-down阶段设备空闲），其占比与microbatch数N和设备数M相关（效率≈N/(N+M−1)），是GPipe方案的核心效率瓶颈。
+2) **关键技术结论**：气泡（灰色）产生于流水线首尾的填充与排空阶段，其占比随 micro-batch 数 m 与流水级数 p 之比（p−1/m）决定；反向耗时设为前向 2 倍，但调度效率与该比值无关，仅由气泡比例主导——这是 GPipe 的固有瓶颈。
 
-**3) 论文作用：** 作为Megatron-LM提出PTD-P（张量+流水线+数据三维并行）方法的动机基线，论证单维流水线并行不足以高效训练超大模型，需结合张量并行进一步压缩气泡、提升GPU集群利用率。
+3) **在论文中的作用**：Figure 3 揭示传统 GPipe 的气泡开销，以此作为动机，引出本文提出的 Interleaved 1F1B 调度策略（在后续 Figure 中展示），通过交错前反向显著缩小气泡，从而提升大规模 Transformer 在 GPU 集群上的训练效率，构成方法部分的核心改进点。
 
 ### Figure 4 (p.3) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig04.png]]
@@ -75,7 +73,13 @@ tags: [training, architecture]
 > Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleav
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图中展示4个设备（Device 1–4）上两种1F1B流水线调度对比：上图默认调度按顺序处理微批次1–7，灰色气泡（warm-up阶段）约占前半时段；下图交错调度将每设备再分配1个模型分片（深绿为第1分片、浅绿为第2分片），微批次扩展至1–8，灰色气泡明显缩小，flush更早完成。原文借此论证：交错式1F1B通过把多个Transformer分片分配到同一GPU，让前向/反向计算在时序上更紧密交叠，可在几乎不增加显存开销的前提下显著压缩气泡、提升端到端吞吐。该图是Megatron-LM提出的Interleaved 1F1B核心优化的示意，作为流水线并行的关键贡献，直接支撑后续千卡级GPU集群训练LLM的大规模实验验证。
+> 【图文联合解读】# Figure 4 图文联合解读
+
+**1) 核心对象与结构**：上图为4设备默认非交错1F1B流水线，每设备单chunk，前向(深蓝)预热4个micro-batch后进入1F1B稳态，尾部灰色气泡含一段空闲；下图为交错1F1B，每设备分配2个chunk（深/浅色区分），micro-batch数翻倍至约24+，同色段对应同一chunk内的前/反向，灰色气泡显著缩短。
+
+**2) 关键技术结论**：通过将多chunk分配给同一设备、虚拟扩大流水线深度P，使稳态期 in-flight micro-batch 数加倍，等效缩小编排/排空阶段气泡占比，从而提高流水线并行利用率、降低单步时间。
+
+**3) 在论文中的作用**：作为Megatron-LM面向GPU集群大模型训练的核心创新之一，与张量并行、序列并行共同构成"TP+PP+DP"三级并行框架，支撑万亿参数级Transformer的高效端到端训练。
 
 ### Figure 5 (p.5) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig05.png]]
@@ -84,15 +88,7 @@ tags: [training, architecture]
 > Blocks of transformer model partitioned with tensor model parallelism (figures borrowed from Megatron [40]). 𝑓and 𝑔 are conjugate. 𝑓is the identity operator in the forward pass and all- reduce in the backward pass, while 𝑔is the reverse. relevant for the pipeline bubble size. We qualitatively describe how communication time behaves and present cost models for amount of communication; however, we d
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-1) **核心结构**：图分(a) MLP和(b) Self-Attention两个子图，展示Transformer块沿2个GPU的张量切分方式。MLP中`f`将`X`拆为`[Y₁B₁, Y₂B₂]`并行计算，`g`做all-reduce恢复`Z`；Self-Attention中`Q/K/V`沿注意力头维度切分为`[Q₁,Q₂]/[K₁,K₂]/[V₁,V₂]`，各GPU独立完成`Softmax→Dropout`后由`g`合并输出。
-
-2) **关键结论**：`f`与`g`为共轭算子——前向`f`恒等、`g`通信，反向时角色互换，证明层内张量并行只需一次all-reduce即可同步，无需逐层参数传递。
-
-3) **论文作用**：与流水线并行（层间）正交，构成Megatron-LM"层内张量并行+层间流水线并行"双维度并行的可视化基础，用于推导通信量代价模型并降低pipeline bubble占比。
-
-(约218字)
+> 【图文联合解读】图(a)将MLP权重按列切分A=[A₁,A₂]与B=[B₁,B₂]至两块GPU：X经f（恒等）复制后分别做XAᵢ→GeLU得Y₁、Y₂，由g全归并为Y=GeLU(XA)，再切分B线性映射输出Z。图(b)沿注意力头切分Q=[Q₁,Q₂]、K、V，各GPU独立完成Q·Kᵀ→Softmax→乘V后由g归并。前向f恒等、g为all-reduce；反向二者互换，保证X梯度仅一次跨GPU通信。论文据此论证：tensor-parallel模块每两次GEMM间各插入一次all-reduce，单次通信量∝隐藏维度h、可与计算重叠，从而在千亿参数规模下维持近线性扩展，支撑PTD-P方案的整体可行性。
 
 ### Figure 6 (p.5) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig06.png]]
@@ -155,9 +151,11 @@ tags: [training, architecture]
 > Throughput per GPU of PTD-P and ZeRO-3 for two differ- ent GPT models (the 175B GPT-3 model is shown with dotted lines, and the 530B model is shown with solid lines). Global batch sizes are fixed and ZeRO-3 is used without any model parallelism.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】图10核心展示：在固定全局batch size下，175B（虚线）与530B（实线）GPT模型分别用ZeRO-3（蓝）与PTD-P（橙）训练时，单卡吞吐（Achieved teraFLOP/s per GPU）随GPU数（768–1920）的变化。定量看：PTD-P 530B稳定在约170→160，PTD-P 175B约150→143，几无衰减；而ZeRO-3 175B从约143骤降至~45，ZeRO-3 530B从约138降至~50。
 
-图示四组配置下每GPU吞吐量（TFLOP/s）随GPU数（768→1920+）的变化。橙色PTD-P两条曲线稳定在140–170 TFLOP/s区间，几乎不随规模衰减；蓝色ZeRO-3则从约145急剧下滑至45–50，175B模型降幅最显著（仅剩约1/3）。论文借此论证：纯数据并行方案（ZeRO-3）在GPU增多后通信开销主导，性能严重退化；而PTD-P结合张量、流水线与数据并行的混合策略保持近线性高效扩展，支撑了Megatron-LM方法体系的核心结论——大规模模型训练必须采用混合并行而非单纯数据并行，以获得可扩展的吞吐。
+原文借此论证：**纯数据并行（ZeRO-3，不含模型并行）随GPU规模增大吞吐严重退化**；PTD-P（张量+流水线并行）保持高且稳定的单卡效率，故千亿级以上模型必须引入模型并行。
+
+该图与Table 1互补，作为"为何需Megatron式TP+PP"的**关键经验依据**，支撑论文弱扩展至1T参数的核心结论。
 
 ### Figure 11 (p.9) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig11.png]]
@@ -283,10 +281,16 @@ tags: [training, architecture]
 ### Table 1 (p.8) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab01.png]]
 > [!quote] caption
-> Weak-scaling throughput for GPT models ranging from 1 billion to 1 trillion parameters.
+> shows the model configurations along with the achieved FLOP/s (both per GPU and aggregate over all GPUs). We see super- linear scaling to 3072 A100 GPUs (384 DGX A100 nodes), since GPU utilization improves as the models get larger (larger matrix multiplications) without significant increase in the c
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表呈现9组GPT模型（3.6B→1008B参数）的弱扩展吞吐：层数32→160、隐藏维3072→25600、张量并行恒为8、流水并行1→64、GPU数64→3072；单卡TFLOPs从138升至163（峰值利用率43%→52%），聚合吞吐8.8→502 TFLOPs。原文借此证明：TP+PP组合在跨三个数量级（3.6B→1008B）规模下仍保持近线性弱扩展，1T模型仍维持52%峰值利用率，无明显效率退化。该表是论文"trillion级训练可行"主张的核心量化证据，与Figure 1所示参数指数增长形成闭环——前者揭示需求趋势，后者给出Megatron-LM（张量并行+流水线并行）足以承载该趋势的并行扩展可行性，构成方法链路中"性能验证→规模外推"的关键一环。
+> 【图文联合解读】**Table 1 图文联合解读**（注：图示区域为正文段落，表格本身未直接渲染，依据 caption 与正文描述重建其内容）
+
+1) **核心对象与结构**：表 1 列出 GPT 系列模型（1B–1T 参数）在 24–3072 块 A100 GPU（384 个 DGX A100 节点）上的**弱扩展吞吐**配置，列含参数量、批大小、张量/流水并行度，以及**单 GPU 与聚合 FLOP/s**；最大模型达峰值设备吞吐的 52%，最小为 44%。
+
+2) **关键技术结论**：跨规模呈**超线性扩展**，因模型越大矩阵乘法越大，GPU 利用率提升而通信相对计算时间未显著增加，验证了 Megatron 的 TP+SP 并行在大规模下无明显通信瓶颈。
+
+3) **作用**：该表为论文实验枢纽——既是**端到端训练框架**（含数据加载、优化器、通信、日志）可行性的实证，也是后续用公式（4） `8TP/(nX)` 估算万亿参数训练时间的 X 值来源，支撑"万卡级高效 LLM 训练"的核心论点。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab02.png]]
@@ -294,13 +298,13 @@ tags: [training, architecture]
 > Comparison of PTD Parallelism to ZeRO-3 (without model paralllelism). The 530-billion-parameter GPT model did not fit on 560 GPUs when using a microbatch size of 4 with ZeRO-3, so we increased the number of GPUs used to 640 and global batch size to 2560 to provide a throughput estimate (relevant row
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读（Table 2）**
+> 【图文联合解读】**Table 2 图文联合解读：**
 
-1）**结构与核心数据**：表对比 ZeRO-3 与 PTD 两种方案在 174.6B 和 529.6B 参数 GPT 模型上的表现，列出 GPU 数（384–2240）、microbatch（1/2/4）、每 GPU TFLOPS 及训练 300B tokens 天数。PTD 在 174.6B/1536 GPU 下达 141 TFLOPS、仅需 23 天；529.6B/2240 GPU 下 159 TFLOPS、42 天。ZeRO-3 随 GPU 扩展吞吐骤降（174.6B 由 144→88→44），530B 在 560 GPU+mbs=4 下放不下，只能改用 640 GPU 与 batch=2560* 才得 138 TFLOPS/169 天。
+1）**核心对象与数据**：对比 ZeRO-3 与 PTD 两种并行方案在 174.6B / 529.6B 参数 GPT 模型上的吞吐量。ZeRO-3 仅支持数据并行，174.6B 在 384 GPU、mb=4 时仅 144 TFLOP/s/卡、需 90 天；529.6B 须扩至 640 GPU 才可容纳（mb=4，batch=2560*），仅 138 TFLOP/s/卡、169 天。PTD（TP=96/280）同等规模达 153–171 TFLOP/s/卡，529.6B 在 560 GPU 上 156 天、2240 GPU 缩至 42 天。
 
-2）**关键技术结论**：PTD 每 GPU 吞吐显著高于 ZeRO-3（如 529.6B 同规模 171 vs 138 TFLOPS），且随 GPU 数增多几乎不衰减，训练时长大幅缩短（1120 GPU 下 80 vs 137 天），证明张量+流水线+数据并行的组合在大模型上效率与可扩展性均优于纯数据并行方案。
+2）**论证结论**：呼应 Figure 2——张量并行（层内切分）+ 流水线并行（层间切分）的正交组合，使 PTD 在更少 GPU 上即可装下更大模型，并保持显著高于 ZeRO-3 的每卡算力与训练效率。
 
-3）**论文作用**：作为方法验证核心证据，支撑"PTD 优于 ZeRO-3"的核心主张，体现 Megatron-LM 在千亿至万亿参数规模训练中的实用价值。
+3）**论文作用**：以量化对比实证 PTD 方案在大规模训练中的可行性，支撑全文"张量+流水线正交扩展"的核心方法论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

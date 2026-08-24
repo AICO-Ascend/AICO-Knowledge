@@ -146,15 +146,16 @@ tags: []
 > Memory access cost per token per layer incurred by the residual mechanism under each scheme. The internal I/O of the layer function f l is excluded. For AttnRes, both Full and Block variants use the two-phase inference schedule described in Appendix B ; amortized costs are averaged over N layers wit
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像说明**：表格主体行数据未显示（仅可见表注与正文段落），以下结合原文论述解读。
+> 【图文联合解读】**说明**：图片仅显示了正文段落与 Table 1 的 caption 部分，表格主体数据未出现在裁剪图中，故依据 caption + 正文进行解读。
 
-**解读：**
+**1) 表的核心对象与结构**
+Table 1 以"每 token、每层"的**内存访问开销**为度量单位（按隐藏维 d 计数 reads/writes，剔除层函数 $f_l$ 内部 I/O），横向对比不同残差机制（Standard Residuals、Full AttnRes、Block AttnRes，以及对比基线 (m)HC）。表中数值为公式化的 I/O 复杂度；典型参数下 L=128, N=8, S=L/N=16, m=4。Full/Block 的数值采用附录 B 的两阶段推理调度，并按 block 内 N 层摊销。
 
-1) **对象与结构**：表比较 Standard、Full AttnRes、Block AttnRes 与 (m)HC 等残差方案在每 token 每层的内存访问成本（读/写次数，单位为 d）。典型参数 L=128、N=8、S=L/N=16、m=4，成本对 N 层取摊销均值。
+**2) 原文论证的关键结论**
+正文援引此表指出：Block AttnRes 通过块内批处理将每层 I/O 压缩至 **(N/S + 3)d reads + 2d writes**，显著低于 (m)HC 等既有残差泛化方案在典型设置下的残差流开销。
 
-2) **关键结论**：正文指出 Block AttnRes 通过 block 内批处理，使每层仅需 **(N/S+3)d 次读、2d 次写**，显著低于 (m)HC 等既有残差泛化的 residual-stream I/O。
-
-3) **论文作用**：作为 Block AttnRes 设计的效率背书，与 Phase 1 可与首层计算重叠的调度结合，论证其端到端推理延迟开销 <2%，是论文"以注意力替代均匀加性残差"方法可行性的关键定量证据。
+**3) 在论文链路中的作用**
+该表是方法论层面"**效率可证**"的关键支撑——以封闭公式证明 AttnRes 在不牺牲残差灵活性的同时，残差流 I/O 与标准残差同阶（常数倍 d），进而保证端到端推理延迟开销 <2%，为前文性能收益提供 I/O 层面的理论兜底。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/attention-residuals-tab02.png]]
@@ -162,13 +163,7 @@ tags: []
 > Baseline vs Block AttnRes ( N = 8 ) vs Full AttnRes vs mHC(-lite) [ 64 ]: Model configurations, Hyperparameters, and Validation Loss.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读**
-
-① **对象与结构**：在5档 Chinchilla 式缩放规模（194M→528M 激活参数，38.7B→119.0B token；d_model 896→1264，L_b=H∈{12,13,14,16,17}，lr 由 2.99e-3 递减至 2.02e-3，batch 192→432）下，并列比较 Baseline / Block AttnRes (N=8) / Full AttnRes / mHC(-lite) 四种残差方案的验证损失。
-
-② **关键结论**：Full AttnRes 在全部 5 档均取得最低 Val. Loss（加粗：1.899 / 1.874 / 1.804 / 1.737 / 1.692），三种改进方案均稳定优于 Baseline；Block AttnRes 紧随其后，并在 528M 档（1.693 vs 1.692）几近追平 Full 版本，验证块粒度近似的有效性。
-
-③ **链路作用**：作为核心定量证据，承接 Figure 2 的伪码实现，以多尺度一致优势证明 AttnRes 残差机制优于 mHC(-lite)，确立 Full AttnRes 为论文最优残差方案。
+> 【图文联合解读】表2按5档模型（激活参数194M→528M、Tokens 38.7B→119.0B）比较Baseline、Block AttnRes（N=8）、Full AttnRes和mHC-lite，并列出L_b/H、d_model、d_ff、lr及batch size。Block用伪查询聚合8块表征，以partial_block存块内残差、blocks存块间历史；5档均较基线降损（1.909–1.693）。Full有4/5档最佳（最低1.692），仅241M档mHC以1.869胜出。该表将图2机制落实到受控规模对比，结论是：注意力残差稳定有效，Block已具竞争力，Full整体更优。
 
 ### Table 3 (p.10) ⭐深度解读
 ![[assets/crops/attention-residuals-tab03.png]]
@@ -176,13 +171,11 @@ tags: []
 > Performance comparison of AttnRes with the baseline, both after the same pre-training recipe. Best per-row results are bolded .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】【Table 3 图文联合解读】
+> 【图文联合解读】Table 3 在相同预训练前提下对比 Baseline 与 AttnRes 在 15 个基准上的表现，分三组：General 7 项（MMLU 73.5→74.6、GPQA-Diamond 36.9→44.4、BBH 76.3→78.0 等）、Math & Code 6 项（HumanEval 59.1→62.2、Math 53.5→57.1、CMath 84.7→85.1 等）、Chinese 2 项（C-Eval 79.6→82.5、CMMLU 82.0→82.9）。AttnRes 在 14 项胜出，仅 MMLU-Pro 以 52.2 与 Baseline 打平（同行加粗）；最大增益出现在 GPQA-Diamond（+7.5）、Math（+3.6）、HumanEval（+3.1）、C-Eval（+2.9）等推理/代码/中文任务。
 
-Table 3对比AttnRes与Baseline在相同预训练流程下15项基准得分：General类7项（MMLU 74.6 vs 73.5；GPQA-Diamond 44.4 vs 36.9，**+7.5**；BBH 78.0 vs 76.3；ARC-Challenge 65.7 vs 64.6；HellaSwag 83.4 vs 83.2；TriviaQA 71.8 vs 69.9）、Math&Code类6项（HumanEval 62.2 vs 59.1；Math 57.1 vs 53.5；GSM8K 82.4 vs 81.7；MGSM 66.1 vs 64.9；CMath 85.1 vs 84.7；MBPP 73.9 vs 72.0）、Chinese类2项（C-Eval 82.5 vs 79.6；CMMLU 82.9 vs 82.0）；仅MMLU-Pro持平(52.2)。AttnRes在所有其余14项上全面胜出。
+论证结论：在排除训练差异后，注意力残差结构本身为模型带来跨领域稳定提升，且通信优化未折损质量。
 
-**论证结论**：在保持预训练配方不变的前提下，注意力残差架构相较传统残差基线，于通用理解、数学/代码、中文三大类任务上均稳定带来提升，**推理密集型与硬任务增益最显著**（GPQA +7.5、HumanEval +3.1、Math +3.6、C-Eval +2.9）。
-
-**论文链路作用**：作为下游能力评估的核心收尾证据，与前置困惑度/训练指标等表互补，从训练侧（不损指标）到评估侧（全面提分）共同支撑"以注意力替代残差"的整体方法主张。
+作用：与 Table 1/2 的系统效率数据互补，与 Figure 3 的缓存通信机制呼应，共同支撑 AttnRes"既快又好"的核心主张。
 
 ### Table 4 (p.11) ⭐深度解读
 ![[assets/crops/attention-residuals-tab04.png]]
@@ -190,13 +183,9 @@ Table 3对比AttnRes与Baseline在相同预训练流程下15项基准得分：Ge
 > Ablation on key components of AttnRes (16-layer model).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 图文联合解读**
+> 【图文联合解读】**联合解读**
 
-**1) 核心对象与数据**：表格在 16 层模型上对关键组件做消变，对比三种架构变体的 Loss 表现——Baseline (PreNorm) 为 1.766，DenseFormer [36] 为 1.767（几乎无改善），mHC [59] 为 1.747（显著低于 Baseline）。
-
-**2) 关键技术结论**：原文借此论证 AttnRes 设计选择的必要性——简单做法（DenseFormer，密集残差连接）几乎没有收益（+0.001），而引入矩阵化的路由聚合机制（mHC）则带来实质性增益（−0.019）。这说明 AttnRes 的有效并非来自"加更多残差连接"，而来自**结构化的跨层信息路由**。
-
-**3) 在论文中的作用**：作为方法链路中的**组件消变环节**，Table 4 与 Figure 4 的 scaling law 互补——后者证明 AttnRes 在大算力规模下稳定领先（Block AttnRes 达 1.692，1.25× 计算优势），前者则在该消变层面验证其组件选择的合理性，共同支撑 AttnRes 作为有效 token-mixing 替代方案的论断。
+表4对16层AttnRes做组件消融：Baseline为1.766，DenseFormer/mHC为1.767/1.747；Full AttnRes取1.737，"输入相关查询"进一步降至1.731，证实其为关键机制；Block(S=4)得1.746，回收Full近95%增益；而SWA仅1.764、input-independent mixing升至1.749，区分于既有稀疏/静态混合方法。该表衔接Fig 4缩放实验，以块粗化在小模型中验证可行性，为大模型Block AttnRes提供超参依据，支撑论文"机制有效+部署友好"双重论证。
 
 ### Table 5 (p.14) ⭐深度解读
 ![[assets/crops/attention-residuals-tab05.png]]
@@ -204,11 +193,11 @@ Table 3对比AttnRes与Baseline在相同预训练流程下15项基准得分：Ge
 > Comparison of residual update mechanisms. Weight : whether the mixing coefficients are architecture-fixed, learned-static (fixed after training), or input-dependent (dynamic). Source : which earlier representations layer l can access. Normalization is omitted from most formulas for clarity.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5 对14种残差更新机制按 Weight（Fixed/Static/Dynamic）与 Source（单 h_{l-1} / 多流 / 全历史层）双维度对比，分四组：单状态（Residual/ReZero/LayerScale/Highway/DeepNorm/KEEL）、多状态（SiameseNorm/HC·mHC/DDL）、跨层访问（DenseNet/DenseFormer/MRLA），及作者 AttnRes（Full/Block）。AttnRes 是表中唯一同时具备 Dynamic 权重与全部历史层 [h₁,…,h_{l-1}] 的方法：h_l ∝ Σ φ(w_l,k_i)v_i，其中 φ=exp(q⊤RMSNorm(k))，softmax 跨所有源联合归一化；Block 变体进一步聚合到块级源 [b₀,…,b_n^j]。
+> 【图文联合解读】该表按"单态/多态/跨层"三组横向对比14种残差更新机制，纵列展示更新公式、权重类型(固定/静态/动态)与信息源范围。AttnRes以φ(q,k)做动态注意力加权，Full版源覆盖全部早层h₁…h_{l-1}，Block版将其限定为块级[b₀,…,b_nʲ]——是表中唯一兼具"动态权重+全源跨层访问"的方法。
 
-技术结论：AttnRes 兼具 DenseFormer 式跨层访问与 Highway/MRLA 式动态门控，并把归一化统一放在 softmax 层而非逐源缩放。
+论文借此将AttnRes定位于残差机制谱系中"动态权重×全源跨层"的交汇点，凸显其相对Residual/ReZero(单源固定/静态)等方法在表达能力上的差异化优势。
 
-论文作用：作为方法定位图，把 AttnRes 嵌入"固定→静态→动态、单状态→全历史"的残差设计谱系，凸显其"动态+全历史+跨源联合归一化"的独特定位，为后续实验设计提供正交化基线。
+在论文论证链中，Table 5提供理论坐标系，与Figure 5的损失/激活/梯度经验证据互补，共同支撑Block AttnRes改善信号传播的核心主张。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

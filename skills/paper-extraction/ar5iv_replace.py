@@ -152,6 +152,26 @@ def find_figures(dom, kind, wanted):
     return found
 
 
+def _resolve_ltx_css_vars(svg_text):
+    """LaTeXML SVG 用 CSS 变量 --ltx-fill-color/--ltx-stroke-color 表达颜色，
+    cairosvg 不支持 var()，无 fill 属性的元素继承根节点黑色 → 整图黑底
+    （kimi-linear fig2 事故）。把变量展开成元素自身的 fill/stroke。"""
+    import re
+    def _expand(m):
+        tag, style = m.group(1), m.group(2)
+        fill = re.search(r'--ltx-fill-color:\s*([^;]+)', style)
+        stroke = re.search(r'--ltx-stroke-color:\s*([^;]+)', style)
+        extra = ""
+        if fill and 'fill:' not in style and ' fill=' not in tag:
+            extra += f";fill:{fill.group(1)}"
+        if stroke and 'stroke:' not in style and ' stroke=' not in tag:
+            extra += f";stroke:{stroke.group(1)}"
+        if extra:
+            return f'{tag}style="{style}{extra}"'
+        return m.group(0)
+    return re.sub(r'(<(?:g|path|rect|text|use)[^>]*?)style="([^"]*)"', _expand, svg_text)
+
+
 def save_figure(fig_node, base_url, out_path):
     from urllib.parse import urljoin
     img = next(fig_node.iter("img"), None)
@@ -169,7 +189,8 @@ def save_figure(fig_node, base_url, out_path):
         if svg is None:
             return False, "no <img>/<object>/<svg> in figure"
         import cairosvg
-        cairosvg.svg2png(bytestring=svg.to_html().encode("utf-8"),
+        cairosvg.svg2png(bytestring=_resolve_ltx_css_vars(
+            svg.to_html()).encode("utf-8"),
                          write_to=str(out_path), scale=2.0)
         return True, "inline svg via cairosvg"
     # ar5iv 图片在 <id>/ 目录下（base+'/'）；arxiv 原生 HTML 的 src 自带版本目录
@@ -191,7 +212,9 @@ def save_figure(fig_node, base_url, out_path):
         return False, f"all URL candidates 404 for {src[:60]}"
     if src.lower().endswith(".svg"):
         import cairosvg
-        cairosvg.svg2png(bytestring=data, write_to=str(out_path), scale=2.0)
+        cairosvg.svg2png(bytestring=_resolve_ltx_css_vars(
+            data.decode("utf-8", "ignore")).encode("utf-8"),
+                         write_to=str(out_path), scale=2.0)
     else:
         out_path.write_bytes(data)
     return True, f"{len(data)}B from {url.rsplit('/',1)[-1]}"

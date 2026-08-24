@@ -58,11 +58,11 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1）**图表内容**：横轴为层索引 i（0~32），纵轴为相邻层输入的余弦相似度 cos(h₀ⁱ, h₀ⁱ⁺¹)。红线（Pre-Norm）从第 1 层约 0.2 迅速攀升至 0.85–0.95 区间，并在整个网络深度上保持稳定的高值；蓝线（Hyper-Connection）同样从低位上升，但中位数仅在 0.60–0.85 之间大幅振荡，且第 5–95 分位带更宽（约 0.35–0.90）。
+1）**核心对象**：在 OLMo-1B 上，绘制第 *i* 层输入 **h₀ⁱ** 与第 *i+1* 层输入 **h₀ⁱ⁺¹** 之间的余弦相似度（曲线为中位数，阴影为 5–95 分位数），横轴覆盖 1–32 层。Pre-Norm（红）全程维持在 ~0.90–0.95，分布带极窄；Hyper-Connection（蓝）在 ~0.55–0.80 间波动，且 5–95 分位数带明显更宽。
 
-2）**关键论证**：Pre-Norm 模型中相邻层输入高度相似（≈0.9），表明存在明显的表征坍缩/秩坍缩问题，深层难以获得新信息；而 Hyper-Connection 将相似度显著拉低并放大层间差异，证明其有效缓解了该瓶颈。
+2）**关键结论**：Pre-Norm 相邻层输入高度相似，表明存在表征坍缩/重复，层间缺乏信息增益；扩展残差宽度后层间多样性显著恢复。
 
-3）**论文作用**：作为方法动机图，Figure 3 在引入 Hyper-Connection 前定量揭示 Pre-Norm 的固有缺陷，为后续提出残差宽度扩展（多流残差映射）以恢复层间表征多样性提供实验依据，奠定整篇方法的立论基础。
+3）**链路作用**：作为动机图，定量暴露 Pre-Norm 缺陷，为提出多流 Hyper-Connection 提供立论依据。
 
 ### Figure 4 (p.5) ⭐深度解读
 ![[assets/crops/hyper-connections-fig04.png]]
@@ -73,11 +73,11 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图(a)展示n=2的**顺序排列**超连接结构：单个输入经展开生成2条并行隐藏流（蓝色与橙色块），依次通过layer 1与layer 2；每层前通过"⊕"汇聚各流，层内由可学习矩阵H^l控制流间混合与残差路径。
+1）**核心对象与结构**：图4展示n=2时HC的两种拓扑。(a)顺序排列：底部输入经加法节点分两流进入layer 1，再堆叠进入layer 2，逐层输出；(b)并行排列：输入分流后分别经layer 1与直接路径，汇聚加和再分流入layer 2，末端带⊕合并输出。两者均含2条残差流与2个⊕聚合节点。
 
-**论证结论**：该图直观说明超连接（HC）通过可学习矩阵将传统单残差扩展为多流并行结构，并在顺序堆叠中保持每层的多流聚合能力，证明HC可作为ResNet残差连接的**直接泛化**框架。
+2）**论证的关键结论**：HC不仅兼容传统顺序堆叠（等价于残差网络），还能以并行多分支形式运行——即通过n=2同时维护两条独立残差路径并以加法融合，揭示其结构自由度。
 
-**整体作用**：图4(a)(b)共同奠定HC的拓扑自由度——既支持常规顺序堆叠，也支持并行多分支，为后续实验（ResNet、ViT、LLM等任务）验证"多流残差优于单流"提供结构基础，是方法论层的核心可视化支撑。
+3）**链路作用**：作为方法论核心可视化，奠定"多流残差优于单流"的拓扑基础，为后续ResNet/ViT/LLM实验中对比HC-n=2、4与baseline的增益提供结构层面的支撑。
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/hyper-connections-fig05.png]]
@@ -112,11 +112,11 @@ tags: []
 > Visualization of connection matrices for hyper-connections and various related baseline methods. The attention layers, which have odd ids, are marked with green tick marks.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】核心：32×32下三角热力图，对比超连接与Post/Pre-Norm层间权重（色阶−1至+1），奇数层（注意力层）用绿色刻度标记。超连接矩阵呈稀疏非均匀分布，第10–11行附近出现一处标注为"PTB"（预训练偏置）的异常亮斑；Post-Norm表现为对角方向的平滑衰减；Pre-Norm则接近均匀强连接（近似恒等）。
+> 【图文联合解读】**核心对象**：Figure 7含两部分。上方表格显示DHC×4在7个基准（MMLU、HellaSwag、ARC-C/E、PIQA、WinoGrande、BoolQ）上全面超越OLMoE-1B-7B基线（如ARC-C 41.8→47.8，BoolQ 65.4→68.5）。下方为§4.5可视化，对比5种方法在32×32隐藏通道上的**连接矩阵**（颜色-1~1），绿色刻度标记奇数id的注意力层：Hyper-Connection呈现含蓝色负值的多样化斑块并标注PTB；Post-Norm呈对角平滑衰减；Pre-Norm全红均匀无选择性；Pre-Norm PTB呈阶梯状；Two-hop Residual呈规则竖条。
 
-结论：超连接学到了比固定残差更丰富、可学习的跨层路由结构，并保留了来自预训练的偏置特征，突破了Post/Pre-Norm的刚性模式。
+**关键结论**：基线连接模式要么过于刚性（Pre-Norm恒等）、要么结构单一（仅沿对角衰减或竖条），而Hyper-Connection可学习任意含负值的灵活连接，支持更丰富的跨层信息路由。
 
-作用：作为4.5节可视化分析的核心证据，解释表1中DHC×4在MMLU Var（39.7 vs 38.5）和HellaSwag（70.2 vs 69.5）上优于基线的性能来源。
+**论文作用**：作为机理层面的可视化证据，从结构表达力角度解释为何DHC×4能在表7所列各基准上稳定提升，呼应正文中HC框架相对于传统残差/规范化的设计优势。
 
 ### Figure 8 (p.14) ⭐深度解读
 ![[assets/crops/hyper-connections-fig08.png]]
@@ -134,9 +134,9 @@ tags: []
 > Loss curves in V3 validation sets and accuracy curves on downstream tasks for OLMoE-1B7B and OLMoE-1B7B-DHC×4 models. 17
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图9由28张子图组成，对比 OLMoE-1B-7B（红）与 OLMoE-1B-7B-DHC×4（蓝）在约100B–500B tokens 训练区间的表现。上12张为训练loss及12个验证集（C4、Dolma六子集 books/cc/pes2o/reddit/stack/wiki、Ice、M2D2-s2orc、Pile、WikiText-103）的loss曲线，蓝色全程稳定低于红色约0.02–0.05；下16张为MMLU四类及平均、HellaSwag、SciQ、ARC-Challenge/Easy、PIQA、WinoGrande、OpenBookQA、BoolQ、COPA、CommonsenseQA、SocialIQA 的下游准确率，蓝色多数高于红色且差距随训练持续或扩大。
+> 【图文联合解读】**图文联合解读（≤220字）：**
 
-论证：DHC×4 在保持 MoE 稀疏激活宽度不变的前提下，同时降低预训练loss并提升下游任务准确率，支撑核心主张——可学习残差连接（DHC）作为静态跳连的可扩展替代优于基线，是论文方法有效性的关键横向验证证据。
+图含28子图：12个验证集loss曲线（training、C4 en、dolma各子集、pile、wikitext103等）与16个下游任务accuracy曲线（MMLU 5子类、HellaSwag、SciQ、ARC、PIQA、WinoGrande、BoolQ、COPA等），对比OLMoE-1B-7B（红）与DHC×4（蓝）在500B tokens内的全程演化轨迹。**关键结论**：蓝线在全部12个验证loss上全程低于红线（差距约0.05–0.15），在全部16个下游accuracy上全程高于红线（如MMLU avg. ~1.5pp、HellaSwag ~2pp），一致胜出且差距稳定。**论文作用**：与图8定性架构对比、FLOPs开销表协同，定量证明DHC×4作为残差连接的替代具备跨领域、跨任务的普适增益，无明显退化任务，支撑其"即插即用"的工程定位。
 
 ### Figure 10 (p.18) ⭐深度解读
 ![[assets/crops/hyper-connections-fig10.png]]
@@ -145,9 +145,13 @@ tags: []
 > Loss curves in V3 validation set and accuracy curves on downstream tasks for OLMo-7B and OLMo-7B-DHC×4 models. 18
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图含15子图：9个V3验证集loss曲线（c4 en、dolma六子集books/cc/pes2o/reddit/stack/wiki、ice、m2d2-s2orc、pile、wikitext103）与6个下游任务准确率（HellaSwag、SciQ、COPA、OpenbookQA、PIQA、WinoGrande、ARC-Easy），对比OLMo-7B基线与OLMo-7B-DHC×4在100B–500B token训练区间表现。
+> 【图文联合解读】**图文联合解读：**
 
-蓝色DHC×4在所有loss子图均稳定低于红色基线（如HellaSwag最终约70% vs 68%、SciQ约92% vs 90%、COPA约83% vs 80%），6个准确率均高于基线。论证DHC宽度扩展（×4）在7B规模上同时改善预训练loss与下游能力，是论文支撑"超连接可扩展优于残差基线"结论的核心实验链路。
+1) **核心对象与数据**：6×3 共 18 张子图，横轴均为训练 token 量（100–500B），红/蓝线分别代表 OLMo-7B 基线与 OLMo-7B-DHC×4。前 11 张为 V3 验证集（c4-en、dolma 子集 books/cc/pes2o/reddit/stack/wiki、ice、m2d2-s2orc、pile、wikitext-103）上的 loss 曲线，11 个数据集上 DHC×4 的 loss 始终低于基线（如 c4-en 500B 时约 2.47 vs 2.50，pile 约 2.04 vs 2.07）；后 7 张为下游任务准确率（HellaSwag、SciQ、COPA、OpenBookQA、PIQA、WinoGrande、ARC-Easy），DHC×4 在 SciQ 上领先约 2–3 个百分点（~92% vs ~89.5%），其余任务亦有 0.5–1 pp 的稳定优势。
+
+2) **关键结论**：在 7B 规模、长程训练（500B tokens）下，宽度×4 的动态超连接（DHC）相对标准残差连接同时降低预训练 loss 并提升全部 7 项下游准确率，证明方法可扩展性。
+
+3) **论文作用**：作为 DHC×4 扩展性实验的核心证据，支撑"超连接架构在大模型长程训练中仍有效"的主张，与 Table 10 共同构成方法稳健性验证链。
 
 ### Figure 11 (p.20) ⭐深度解读
 ![[assets/crops/hyper-connections-fig11.png]]
@@ -158,11 +162,7 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**1) 图示对象与数据：** 图中展示 ViT/16-Large（红线）与 ViT/16-Large-DHC×2（蓝线）在约 60000–95000 步区间的训练 loss 曲线，EMA(0.999) 平滑；纵轴为 loss，横轴为训练步数。蓝线全程位于红线之下，差距随步数推进而逐渐收敛。
-
-**2) 论证的技术结论：** DHC×2 在多 epoch 训练中持续降低训练 loss，证明超连接带来的额外容量确有优化收益；但随同一数据集被反复遍历，HC 的增益递减，暗示存在对训练集的过拟合/记忆效应，容量扩展收益边际递减。
-
-**3) 在论文链路中的作用：** 作为支撑实验，量化验证 HC 的容量增益随训练饱和的边界条件，为后续关于泛化、可扩展性与训练效率的讨论提供实证依据，也解释了在有限 epoch 设置下 DHC 优势更显著的现象。
+该图对比ViT/16-Large基线（红）与DHC×2（蓝）在约30k–93k训练步的loss曲线（EMA=0.999平滑）。两条曲线均从≈1.8降至≈0.20–0.25，DHC全程略低约0.05–0.10，但差距极小且随训练推进逐渐收敛。论文借此论证：超连接带来稳定但**有限且递减**的loss增益，源于多epoch对同一数据集的反复过拟合。在整体实验链路中，此图作为训练动力学的补充实证，与Table 11的ImageNet精度结论相呼应——说明HC的价值不在于大幅压低训练loss，而体现在精度端与表征质量上。
 
 ### Figure 12 (p.21) ⭐深度解读
 ![[assets/crops/hyper-connections-fig12.png]]
@@ -171,11 +171,11 @@ tags: []
 > Distribution of weights of last DHC in ViT-Base/16-DHC×2 model. F MORE VISUALIZATION AND ANALYSIS
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（图12）**
+> 【图文联合解读】**1) 核心对象**：7×3网格直方图，对应3个ImageNet类（33海龟、998 capitulum、779校车）的末层DHC权重（β₁、β₂及α分量）频次分布。
 
-图12展示ViT-Base/16-DHC×2末层DHC模块权重在两幅不同输入图上的分布直方图：左侧绿色为"capitulum"，右侧橙色为"779:school bus"，共7个参数（β₁≈1.10–1.20、β₂≈1.10–1.20、α₁,₀≈−0.65–−0.35、α₁,₁≈1.1–1.3、α₁,₂≈0.1–0.3、α₂,₀≈2.0–2.4、α₂,₁≈−0.2–0.2）。
+**2) 关键数据**：β₁、β₂呈双峰（≈0.95与1.20），类别差异显著——校车β₁集中于1.20（频次≈50），capitulum集中于0.95（频次≈45），海龟双峰并存；α₁,₀∈[-0.65,-0.35]、α₂,₀∈[2.0,2.4]。
 
-关键发现：同一网络面对不同样本时权重分布差异极大——"school bus"在β₁≈1.20、α₁,₁≈0.9、α₁,₂≈−0.1、α₂,₁≈−0.2等极值处高度集中（频次≈50），而"capitulum"分布相对分散。这是论文**"超连接具有输入自适应动态路由"**这一核心命题的直观证据，用以佐证其用可学习动态连接替代静态残差路径的方法论动机。
+**3) 结论与作用**：权重随输入类别自适应分化，印证DHC动态加权机制有效（非恒等残差），作为附录可视化支撑"输入依赖超连接"的核心理论主张。
 
 ### Figure 13 (p.22) ⭐深度解读
 ![[assets/crops/hyper-connections-fig13.png]]
@@ -285,9 +285,11 @@ tags: []
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-Table 1 以 OLMo-1B 为基线，在 500B tokens 上对 DHC 扩展率 n∈{1,2,4,8} 做消融，对比"去 tanh"与"含 tanh"两版本。数据显示：基线 V2/V3 PPL 为 18.023/14.229，下游均准 62.5；扩展率升高后指标单调改善，DHC×8 W/O tanh 取得最低损失（V2 2.777、PPL 17.425，V3 2.514、PPL 13.819），DHC×4 W/O tanh 取得最高下游精度 64.4；含 tanh 版本整体略低但更稳定。
+1) **结构与数据**：表1以OLMo-1B基线（V2 Loss 2.811、Down Stream 62.5）为对照，比较DHC（Dynamic Hyper-Connections）在扩展率n∈{1,2,4,8}、有/无tanh激活下的表现。W/O tanh组中，n=8取得最优Loss/PPL（V3 PPL 13.819），n=4取得最优下游任务精度64.4；带tanh组n=4的V3 PPL为13.826，精度63.8。
 
-原文借此论证"扩展率 n 越大越好、tanh 提供稳定正则"，支撑 Figure 1 中 OLMoE-1B-7B-DHC×4 收敛速度 1.8× 提升的结论。该表在论文中起核心验证作用：量化 n 与 tanh 的边际收益，为 DHC 模块超参选择与设计合理性提供实验依据。
+2) **关键结论**：随n增大，困惑度单调下降但下游精度先升后降，n=4为综合最优权衡点；去除tanh普遍优于保留tanh，验证了tanh约束的非必要性。
+
+3) **论文作用**：作为消融实验，为主方法OLMoE-1B-7B-DHC×4中n=4的超参选择提供实证依据，证明DHC扩展在适度规模下即可显著超越基线。
 
 ### Table 2 (p.7) ⭐深度解读
 ![[assets/crops/hyper-connections-tab02.png]]
@@ -295,11 +297,13 @@ Table 1 以 OLMo-1B 为基线，在 500B tokens 上对 DHC 扩展率 n∈{1,2,4,
 > Ablation study on static and dynamic hyper-connections with training on 500 B tokens.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
+> 【图文联合解读】**核心对象**：表 2 在 500B tokens 训练下对比 OLMo-1B 基线与静态超连接（SHC）、动态超连接（DHC）在扩展率 n=2、n=4 时的表现，指标含 V2/V3 Eval Loss、PPL 及下游平均准确率。
 
-Table 2 在 500B tokens 训练规模上消融 OLMo-1B 基线、SHC×n、DHC×n（n=2/4）及去 tanh 变体，对比 V2/V3 验证集 Loss、PPL 与下游平均准确率。数据上：基线 V2 Loss 2.811、下游 62.5%；DHC×4 去 tanh 以 V2 Loss 2.779、下游 64.4% 双双最优；DHC×4（带 tanh）在 V3 PPL 13.826 最佳。
+**数据要点**：所有 HC 变体均优于基线（62.5→64.4%）；相同 n 下，去除 tanh 的 DHC 反而全面优于原版 DHC；n=4 普遍优于 n=2，最优配置为 **DHC×4 W/O tanh**（V3 PPL 13.844、下游 64.4%）。
 
-原文据此论证四点关键技术结论：① 超连接稳定优于残差基线；② 动态路由（β、α 由网络依输入预测）优于静态可学习标量；③ 扩展率 n=4 优于 n=2；④ 去除 tanh 进一步提升。该消融是支撑图 2 架构设计与 HC 整体方法有效性的核心证据，串联从组件动机（Figure 2 残差/深度/宽度连接分解）到性能验证的完整实验链路，确证横向信息交换与纵向特征整合的协同价值。
+**技术结论**：实验验证"去掉 tanh 的动态超连接"为最佳设计。
+
+**论文作用**：在消融实验中为最终动态超连接方案（去 tanh、n=4）的选型提供量化依据，是支撑方法设计的关键证据链。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/hyper-connections-tab03.png]]
@@ -307,14 +311,11 @@ Table 2 在 500B tokens 训练规模上消融 OLMo-1B 基线、SHC×n、DHC×n�
 > Ablation study on OLMo-1B-DHC × 4. In the B or WC column, the symbol " ✗ " denotes parameters that are not trainable from initialization.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**1) 核心对象与数据**
-Table 3 对 OLMo-1B-DHC×4 的三个组件（WC 加权连接、B 偏置、Tanh 激活）做 6 组消融，"✗"=从初始化冻结不训练、"✓"=可训练；指标含 V2/V3 验证 Loss 与 PPL、下游平均准确率。最优配置 WC✓+B✓+Tanh✗：V2 Loss=2.779、PPL=17.773，V3 Loss=2.516、PPL=13.823，Acc=64.4；加 Tanh 后 Acc 略降至 63.8；仅 WC 可训练 Acc=63.6；仅 B 可训练最差（Acc=62.5）。
+> 【图文联合解读】1) 表3对OLMo-1B-DHC×4的WC（宽度连接矩阵）、B（偏置）、Tanh三组件做6组消融，对比V2/V3 Loss/PPL与下游平均准确率。最优配置WC✓+B✓+Tanh✗：V3 PPL 13.823，下游准确率64.4%；三组件全开下游反降为63.8%。
 
-**2) 关键结论**
-WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化明显；Tanh 几乎无增益甚至略损，验证"加权连接+偏置"即 DHC 的最小有效设计。
+2) 论证：DHC各组件均有效，WC矩阵贡献最大（启WC下游+1.1%），B次之；Tanh非线性非必需，引入反而损害下游精度。
 
-**3) 论文作用**
-消融验证支撑 DHC 设计简洁性与组件必要性；与 Fig.3 揭示的残差流跨层高余弦相似性形成"为何需引入动态重加权"的动机—方案互补论证。
+3) 该表作为方法验证的终点环节，承接Figure 3揭示的Pre-Norm层间坍缩动机，通过组件级消融为DHC最终方案（保留WC+B、剔除Tanh）提供定量选型依据。
 
 ### Table 4 (p.8) ⭐深度解读
 ![[assets/crops/hyper-connections-tab04.png]]
@@ -322,7 +323,15 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > Performance of related methods on OLMo-1B models.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 4 在 OLMo-1B 上对比 DHC×2 与 ResiDual、Altup×2，指标含 V2/V3 Eval Loss、PPL 及下游平均准确率。DHC×2 W/O tanh 全面最优：Loss 2.792/2.529、PPL 17.663/14.033、下游 Acc 63.8%，超越基线 62.5%。论证：(1) ResiDual、Altup 反劣于 vanilla 残差（62.0/62.4）；(2) DHC×2 略胜基线（63.0）；(3) 去 tanh 后增益扩大，表明动态连接矩阵中的非线性门控非必需。此表作 1B 量级消融，与图 4 的 n=2 拓扑示意（顺序/并行）呼应，承接结构设计论证，启下 4.3 节 7B 模型训练曲线验证。
+> 【图文联合解读】**Table 4 图文联合解读**
+
+**核心数据**：OLMo-1B 上对 HC 三组件（WC 宽度连接、B 分支、Tanh 非线性）做消融，分无/有 Tanh 两组——
+- 无 Tanh 最佳 **WC+B**：V2 Loss **2.779**/PPL **17.773**，V3 Loss **2.516**/PPL **13.823**，下游 Acc **64.4**；
+- 有 Tanh 最佳 **WC+B+Tanh**：V2 Loss **2.781**，V3 Loss **2.515**/PPL **13.807**，Acc **63.8**。
+
+**技术结论**：①WC 多流残差显著优于单流（PPL 17.91→17.49，Acc 62.5→63.6）；②WC+B 在两组中均取得最优 Loss/PPL，量化验证并行多分支设计优势；③额外引入 Tanh 反致下游 Acc 略降（64.4→63.8），表明线性映射已足够，无需非线性。
+
+**论文作用**：与 Fig.4 的串/并联拓扑可视化呼应，从 OLMo-1B 量级量化论证"多流优于单流、线性已足"——这是 HC 方法设计的两条核心原则，为后续大规模 ResNet/ViT/LLM 实验提供组件必要性与设计简洁性的消融依据。
 
 ### Table 5 (p.9) ⭐深度解读
 ![[assets/crops/hyper-connections-tab05.png]]
@@ -330,11 +339,9 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > Performance of 7B models. FLOPs refers to the computation per token in the forward pass.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5横向对比 **OLMo-7B** 与 **OLMo-7B-DHC×4**（参数量同为 6.9B）：前向 FLOPs 仅由 13.36G 微增到 13.38G（+0.15%，几乎可忽略）；V2 损失 2.581→**2.559**（PPL 14.316→**14.023**），V3 损失 2.322→**2.304**（PPL 11.324→**11.120**），下游任务平均准确率 70.1→**71.0**，DHC 在每一列指标上均更优（粗体标注）。
+> 【图文联合解读】**Table 5 图文联合解读**
 
-**论证结论**：将扩展率 r=4 的动态超连接（DHC）施加到 7B 级别基线时，可同时压低预训练损失/困惑度并提升下游准确率，验证了 hyper-connections 不只是小模型上的"玩具改进"，而是**在规模放大后仍保持"近零额外算力、可见效果增益"**的关键证据。
-
-**在论文链路中的作用**：与 Figure 5（OLMo-1B 训练曲线）构成"小模型看趋势 → 7B 看收益"的递进证据链，为全文"以极低成本改造残差流、可随规模稳定 scaling"的核心主张提供决定性的大模型端实证支撑。
+表5对比OLMo-7B基线与OLMo-7B-DHC×4在7B规模上的表现：两者参数量相同（均6.9B），FLOPs几乎不变（13.36G→13.38G，仅增0.02G），但DHC×4在V2 Loss（2.581→2.559）、V2 PPL（14.316→14.023）、V3 Loss（2.322→2.304）、V3 PPL（11.324→11.120）以及下游任务平均准确率（70.1→71.0）上全面胜出。该表用以证明：动态超连接（DHC）以几乎为零的额外计算开销（约0.15% FLOPs），即可同时改善预训练困惑度与下游任务表现。它是论文"以极小代价换性能"这一核心论点的7B级关键证据，与Figure 5的小规模曲线分析形成互补，从量化和质化两个层面共同支撑DHC的可扩展性与有效性。
 
 ### Table 6 (p.9) ⭐深度解读
 ![[assets/crops/hyper-connections-tab06.png]]
@@ -344,11 +351,11 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1）表6对比OLMo-7B与OLMo-7B-DHC×4（n=4）：参数同为6.9B，FLOPs仅由13.36G增至13.38G（+0.02G）；V2 Loss 2.581→2.559（↓0.022），V3 Loss 2.322→2.304（↓0.018），对应PPL分别由14.316/11.324降至14.023/11.120，下游任务平均Acc由70.1升至71.0。注：表内为稠密OLMo-7B，与caption所述"MoE models / OLMoE setting"不符，存在标注疑误。
+1）Table 6对比OLMo-7B与OLMo-7B-DHC×4（同等6.9B参数、FLOPs≈13.37G）在500B tokens训练后的OLMoE下游评测结果：DHC×4在V2/V3 Loss与PPL上全面降低（V2 Loss 2.581→2.559；V3 PPL 11.324→11.120），任务平均准确率由70.1提升至71.0，参/算量几乎持平。
 
-2）原文据此论证：DHC以n=4替换残差连接后，在近全指标上超越残差基线——训练loss降~0.027、C4-en验证loss降0.028、ARC-Challenge +6分、MMLU Var +1.2分，且仅需基线一半训练token即可达同等性能。
+2）论证以n=4的超连接替换残差连接后，在不增加参数与计算的前提下，下游指标稳定提升（训练损失降约0.027，C4-en验证损失降约0.028）。
 
-3）作用：与Fig.1、Fig.9互证，确立"近零参/算力代价换取稳定性能增益"这一核心实证支柱，支撑超连接作为残差连接可扩展替代方案的方法论主张。
+3）与Fig.6长程loss曲线、Fig.13–15消融共同构成递进实验证据链，从下游有效性到长程训练稳定性，端到端支撑"DHC隐式增宽/增深模型即提升性能"的核心主张。
 
 ### Table 7 (p.15) ⭐深度解读
 ![[assets/crops/hyper-connections-tab07.png]]
@@ -356,13 +363,9 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > Comparison of number of parameters.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：所提供图片实际为论文正文（含公式21–26），仅在末尾出现"Table 7: Comparison of number of parameters."标题，**表格本身的数值未在图像中呈现**；用户附带的讲解文字实为 Figure 7（连接矩阵热力图）的caption，存在张冠李戴。以下仅依据图像中的公式与正文论证解读：
+> 【图文联合解读】**图文联合解读：**
 
-1) **核心对象**：Table 7 用于列出实验中各模型（OLMo-1B/7B、OLMoE 等）在 SHC×{2,4}、DHC×{2,4} 配置下的参数总量与额外参数 $P_\text{extra}$。图像给出的计算式为：SHC 额外参量 $n(n+2)\times 2L$（例 OLMo-1B-SHC×4 = 768）；DHC 额外参量 $(|\theta_\text{norm}|+d_\text{model}(n+2)+n(n+2)+2)\times 2L$（例 OLMo-1B-DHC×4 = 394,048）。
-
-2) **关键结论**：相比基座模型动辄数十亿的参数量，SHC/DHC 引入的额外参数占比极小；SHC 仅含静态矩阵 $n^2$ 量级，DHC 主体来自宽度为 $d_\text{model}$ 的窄投影，与表 8 的 FLOPs 共同支撑"开销可忽略"这一论断。
-
-3) **论文作用**：与 Table 8（FLOPs）配套，为"超连接以极小成本换取残差路径扩展"的整体方法论证提供参数–计算双重证据。
+表7对照展示了静态超连接(SHC)与动态超连接(DHC)在OLMo系列模型（含1B/7B等不同规模）上的参数开销。依据公式：|θ_SHC|=n(n+2)，|θ_DHC|=|θ_norm|+d_model(n+2)+n(n+2)+2。具体实例：OLMo-1B-SHC×4仅新增768个参数，OLMo-1B-DHC×4新增394,048个。该表与Table 8(FLOPs)互证，支撑"超连接引入的额外参数与计算开销均可忽略"这一核心结论，为方法在大规模预训练中的实用化部署扫除效率顾虑。
 
 ### Table 8 (p.16) ⭐深度解读
 ![[assets/crops/hyper-connections-tab08.png]]
@@ -370,13 +373,13 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > FLOPs per token in forward pass.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 图文联合解读**
+> 【图文联合解读】**Table 8 联合解读**
 
-1) **核心对象与数据**：表 8 展示前向传播中每 token 的 FLOPs，对比 OLMo 基线与四种 HC 变体（SHC×2/×4、DHC×2/×4），覆盖 1B/7B 稠密及 MoE 模型。HC 自身仅新增 0.0010G–0.0197G FLOPs，总 FLOPs 增幅在 **+0.038% 到 +0.208%** 之间（OLMo-1B-DHC×4 最大仅约 0.2%）。
+**① 核心对象与数据**：表展示各模型前向单 token 的 FLOPs，对比基线与加入 SHC/DHC（扩展率 n=2、4）的差异。OLMo-1B 基线 2.3536 G；SHC×2/×4 增量仅 +0.038%/+0.127%，DHC×2/×4 为 +0.076%/+0.200%。OLMo-7B 基线 13.3647 G，DHC×4 增 +0.147%；OLMoE-1B-7B 基线 2.3580 G，DHC×4 增 +0.208%。HC 自身 FLOPs 仅 0.0010–0.0197 G。
 
-2) **关键结论**：HC（尤其 DHC）引入的计算开销相对原 Transformer 可忽略不计，验证了"以极低算力代价换得残差连接替换"的可行性，与下方 Memory Footprint 段落（n=2 时额外显存 <15%，且隐状态可重计算）共同构成"算力–显存双廉价"的论证链。
+**② 论证结论**：相比基座数十亿参数，HC 引入的计算开销最大不足 0.21%，与参数开销（SHC 仅 n² 静态矩阵，DHC 主体为 d_model 窄投影）共同支撑"开销可忽略"论断。
 
-3) **整体链路作用**：在 Figure 8（架构对比）定性展示之后，本表以量化 FLOPs 增量排除读者对 HC 复杂度的疑虑，为后续 Table 9 实测显存与下游性能实验铺路，证明 HC 是"即插即用"的轻量残差替代方案。
+**③ 论文作用**：属效率验证环节，为"以 HC 替换残差连接几乎零成本"提供关键量化证据，铺垫下游大规模实用化主张。
 
 ### Table 9 (p.16) ⭐深度解读
 ![[assets/crops/hyper-connections-tab09.png]]
@@ -384,13 +387,11 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > Measured Memory Footprint on 8 GPUs.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**注意**：图片实际呈现的是 FLOPs 对比表（HC FLOPs / Total FLOPs / Δ 率），与所标注的"Measured Memory Footprint"存在出入，以下按可见内容解读。
+> 【图文联合解读】Table 9 展示 OLMo-1B/7B/OLMoE-1B-7B 引入 SHC/DHC（×2、×4）后的实测开销：HC FLOPs 增量极小（如 OLMo-1B-DHC×4 仅 0.0049G，OLMo-7B-DHC×4 仅 0.0197G），总 FLOPs 增幅均 ≤0.208%（×2 时仅 +0.038%–+0.076%）。
 
-**1) 核心数据**：对比 OLMo-1B/7B 及 OLMoE-1B-7B 在 SHC×2/×4、DHC×2/×4 变体下的计算开销。HC 引入的额外 FLOPs 极小（OLMo-1B-DHC×4 仅 0.0049G，总 Δ +0.200%；OLMo-7B-DHC×4 仅 0.0197G，Δ +0.147%；OLMoE-1B-7B-DHC×4 为 0.0049G，Δ +0.208%），即 HC 占比 <0.15%。
+关键结论：HC 以几乎可忽略的计算代价（<0.3%）即可嵌入模型；结合正文，n=2 时额外激活显存 <15% 标准 Transformer 总量，证实 HC 是轻量、即插即用的残差替代方案。
 
-**2) 关键论证**：结合正文 Memory Footprint 段落（激活额外 2nsbd_modelL，前向丢弃+重算可降至 nsbd_model），共同证明 HC 是"近零开销"的高性价比结构替换，为 DHC×4 等扩展变体在大模型上的可行性提供效率依据。
-
-**3) 链路作用**：与 Figure 9（OLMoE-1B-7B 损失/下游精度曲线）形成"效率—效果"双验证，确保性能增益并非源于算力堆叠，而是结构本身的归纳偏置。
+链路作用：继 Figure 8 架构定性对比后，以量化 FLOPs/显存数据打消读者对复杂度的顾虑，衔接下游任务实验，证明性能提升几乎"零成本"。
 
 ### Table 10 (p.19) ⭐深度解读
 ![[assets/crops/hyper-connections-tab10.png]]
@@ -398,7 +399,11 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > Benchmarking class-conditional image generation on ImageNet 256 × 256, with cfg=1.50. NP , P , and R are short for Numerical Precision, Precision, and Recall, respectively.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表对比ImageNet 256×256条件生成（cfg=1.50）下四个DiT变体。核心数据：DiT-XL/2-SHC×2（675M、FP16、QK-Norm）的FID=2.18、sFID=4.52、IS=287.24、R=0.60，较同规模基线DiT-XL/2（FID=2.36）FID降低0.18，并逼近参数量大45%的DiT-1B/2（983M，FID=2.13、IS=288.69）。论文据此论证两点：(1)FP16配合QK-Norm在降低数值精度（NP）下仍保持生成稳定；(2)静态超连接（SHC×2）以更少参数逼近更大模型质量，证明HC模块的扩展有效性。该表属于方法验证实验链路，与下游任务表格共同为"超连接可作为残差连接的drop-in替代"提供生成质量层面的实证支撑。
+> 【图文联合解读】Table 10 在 ImageNet 256×256、cfg=1.50 设定下对比四组 DiT 类条件生成模型：FP32 基线 DiT-XL/2（675M，FID 2.27 / IS 278.24）、FP16+QK-Norm 的 DiT-XL/2（675M，2.36 / 269.46）与 DiT-1B/2（983M，2.13 / 288.69），以及引入静态超连接的 DiT-XL/2-SHC×2（675M，FID 2.18 / sFID 4.52 / IS 287.24 / P 0.82 / R 0.60）。
+
+论证结论：超连接在不增加参数量（仍为 675M）的前提下，使 DiT 在 FID、sFID、IS、P、R 等生成指标上整体逼近参数多约 50% 的 DiT-1B/2（983M），并稳定优于同规模 FP16 基线，从而以量化证据支撑"以同等模型体积换得更强生成性能"的参数效率论断。
+
+作用：与 Figure 10 的语言模型训练/下游任务曲线互为补充，从视觉生成与 NLP 双领域共同验证超连接方法的通用性与有效性，是论文"参数高效增强跨任务可迁移"这一核心结论的关键实验支柱。
 
 ### Table 11 (p.19) ⭐深度解读
 ![[assets/crops/hyper-connections-tab11.png]]
@@ -406,7 +411,13 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > Accuracy on ImageNet. ViT*/16 refers to the results reported by (Dosovitskiy et al., 2020), whereas ViT/16 denotes our re-implemented baseline. SHC and DHC indicate that residual connections are replaced with static and dynamic hyper-connections, respectively.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表中以224×224图像、bfloat16训练ViT/16 300轮，将残差替换为静态(SHC)或动态(DHC)超连接，扩展率n=2。85M Base准确率由76.38%升至SHC 77.60%、DHC 77.26%；307M Large由77.25%升至78.38%、79.94%，相对提升1.13%和2.69%。结果表明DHC在Large上优势最大，HC可在不增模型规模下提精度；该表承担方法在图像分类任务中的验证作用。
+> 【图文联合解读】**Table 11 联合解读：**
+
+该表在 ImageNet（224×224，300 epoch）上对比 ViT/16-Base（85M）与 Large（307M）三种配置：Base 基线 76.38%，SHC/DHC 分别达 77.60%/77.26%（相对 +1.22%/+0.88%）；Large 基线 77.25%，SHC/DHC 分别达 78.38%/79.94%（相对 +1.13%/**+2.69%**）。
+
+**关键结论**：超连接对 ViT 精度有显著正向提升，且在 Large 规模上增益放大；其中 DHC（动态）在两种规模下均不逊于 SHC，大模型场景下优势最明显。
+
+**论文链路作用**：与 Fig.11 训练损失曲线互补，构成"精度+收敛"双重证据，承接 Table 12 训练配置，支撑"超连接可即插即用替代残差连接"的核心技术主张，为后续 RL（Table 13）与生成（Table 14）的迁移实验提供预训练基础。
 
 ### Table 12 (p.20) ⭐深度解读
 ![[assets/crops/hyper-connections-tab12.png]]
@@ -414,13 +425,13 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > Training hyperparameters for ViT.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像无法完整辨认**：所提供图片仅显示了论文 E.3 节"Visualization of DHC"的正文段落（含 Figure 12 的讨论），并未呈现 Table 12 的实际行列超参数数据，仅在页脚处可见"Table 12: Training hyperparameters for ViT"的标题。下列说明以原文段落与标题为依据。
+> 【图文联合解读】**Table 12 解读**
 
-**核心对象**：Table 12 应列出 ViT 系列模型（含 baseline ViT-Base/16 与其 DHC×2 变体）的训练超参数——典型项目包括优化器（如 AdamW / Adam）、batch size、weight decay、learning rate 与 schedule、warmup epochs、总训练 epoch 数、augmentation、label smoothing、drop_path 等。
+1) **核心数据**：ViT 训练超参表，含 lr=0.003、Batch Size=4096、调度器为 Cosine Annealing + 10k 步线性 Warmup、Mixup(α=0.2)、300 epoch、AdamW(β1=0.9, β2=0.999, ε=1e−8)、梯度裁剪 1.0、Weight Decay=0.3、Dropout=0.1、bf16 精度。
 
-**技术结论**：该表作为附录表，与 Figure 12（最后一层 DHC 动态权重分布可视化）同页出现，意在以可复现的超参数配置支撑"beta 类内高度集中、alpha 类间差异显著"的结论——即 DHC 学到了输入相关的连接模式。
+2) **论证结论**：ViT 实验沿用成熟 ImageNet 训练配方（大 batch、长 epoch、cosine+warmup、强正则），证明 DHC 带来的增益来源于结构改进而非特殊调参，从而保证与基线 ViT 公平对比。
 
-**论文链路作用**：Table 12 属于"More Visualization and Analysis"附录的实验可复现性模块，确保主文中 ViT 图像分类实验（baseline vs DHC）结果与权重可视化分析可在统一配置下被复现与对比。
+3) **链路作用**：作为附录的可复现性材料，支撑正文对 DHC 在 ViT-Base/16 等视觉骨干上性能与权重分布（图12）的实验结论，是论文"通用残差替代方案"主张在视觉域验证的实验基础。
 
 ### Table 13 (p.0) ⭐深度解读
 ![[assets/crops/hyper-connections-tab13.png]]
@@ -428,9 +439,11 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > OLMo’s default configuration was evaluated using multiple metrics. Perplexity (PPL) and loss were used for the V2 and V3 Validation Sets, while zero-shot testing was applied to the Downstream Benchmarks. However, the grey benchmarks were excluded from our analysis due to the instability of their per
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 13 图文联合解读**
+> 【图文联合解读】**核心对象与结构**：Table 13 是 OLMo 默认配置的评测基准清单，分三组：13 个 V2 验证集（覆盖 4chan、c4_en、gab、ice、m2d2_s2orc/wiki、manosphere、pile、ptb、twitterAEE 等）、11 个 V3 验证集（Dolma 子集：books、common-crawl、pes2o、reddit、stack、wiki 及 c4_en、ice、pile、m2d2、wikitext103 等），以及 10 个 Downstream 零样本基准（piqa、hellaswag、winogrande、openbook_qa、sciq、arc_easy、copa、commitment_bank、mrpc、rte、sst2）。V2/V3 用 PPL 与 loss，下游用 zero-shot，灰色行因指标不稳定被剔除。
 
-该表列出了 OLMo 默认配置下的完整评测体系，分为三大类共34项指标：① **V2 Validation Sets**（12项，如 4chan、C4、Gab、ICE、Manosphere、Pile 等领域验证集）；② **V3 Validation Sets**（11项，涵盖 Dolma 的 books、common-crawl、pes2o、reddit、stack、wiki 等子集）；③ **Downstream Benchmarks**（11项零-shot任务：piqa、hellaswag、winogrande、openbook_qa、sciq、arc_easy、copa、commitment_bank、mrpc、rte、sst2）。验证集用 PPL/loss，下游任务用零-shot 准确率，灰色行因数值不稳定被剔除。原文借此论证：hyper-connections 在**多领域语言建模**（V2/V3 验证集覆盖域内与域外语料）与**多任务下游能力**（涵盖推理、常识、NLI、情感分析）上均需系统性对比，是评估 DHC/SHC 变体有效性的统一基准，在实验链路中充当"多维度可复现评测脚手架"。
+**技术结论作用**：为 DHC 与基线对比定义统一、多维度评测协议，确保跨语料域与跨推理任务比较的公平性。
+
+**实验链路角色**：作为 Table 6 消融与 Fig.13–15 的配套表，提供"DHC 不增显式参数即可在长程训练下持续降低 loss、提升 zero-shot"的可复现多维证据，连接组件有效性至端到端训练有效性。
 
 ### Table 14 (p.31) ⭐深度解读
 ![[assets/crops/hyper-connections-tab14.png]]
@@ -438,27 +451,16 @@ WC 与 B 必须同时可训练、缺一不可，单独训练任一项均退化�
 > Downstream Benchmarks for OLMoE.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 14 联合解读**
 
-**1）核心对象与结构：** 表左侧仅列出 12 个下游评测基准名称（包括 piqa、hellaswag、winogrande、openbook_qa、sciq、arc_easy、arc_challenge、copa、boolq、commonsense_qa、social_iqa、mmlu）及其文献引用，覆盖常识推理、阅读理解、问答与多任务知识等能力。右侧具体分数列在本截图中未呈现。
+**1) 核心对象与数据结构**
+该表列出 OLMoE（MoE 架构基线）所采用的 12 项下游评测基准，涵盖：常识/物理推理（piqa、hellaswag、winogrande、social_iqa、commonsense_qa）、QA 阅读（openbook_qa、sciq、boolq）、ARC 推理（arc_easy/arc_challenge、copa）及综合知识（mmlu）。当前裁图仅展示基准名称与文献引用列，主体分数列未在图中呈现，故量化结果须结合原文正文。
 
-**2）论证结论：** 论文将该评测套件作为 OLMoE 模型的标准化下游验证集，对照基线与不同 DHC 扩张倍率（×1/×2/×4），证明 Hyper-Connections 在预训练指标之外，亦能在多样化下游任务上取得一致增益，从而验证方法的可迁移性与稳健性。
+**2) 论证的技术结论**
+论文以此套标准化基准，对应用 Dynamic Hyper-Connection（DHC）后的 OLMoE 进行零样本/小样本下游评测，验证超连接方案在 MoE 架构上的迁移有效性与通用性，与前期 OLMo 稠密模型实验形成互补。
 
-**3）在论文链路中的作用：** 与正文 Figure 14（连接矩阵可视化）互补——前者展示"结构层面"的展开模式，后者给出"任务层面"的实证收益，共同支撑"结构改动有效且泛化"的核心论点。
-
-### Table 15 (p.33) ⭐深度解读
-![[assets/crops/hyper-connections-tab15.png]]
-> [!quote] caption
-> Results on downstream benchmarks for 1B models.
-
-> [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 15 图文联合解读**
-
-**1) 核心数据**：表格展示 OLMo-1B 基线与多种 hyper-connection 变体在 7 个下游基准（arc_easy、copa、hellaswag、openbook_qa、piqa、sciq、winogrande）上的平均分。基线为 62.5；DHCx4 W/O tanh 取得最高均分 64.4，DHCx4、DHCx2 W/O tanh 均为 63.8，SHCx4 为 63.6，均高于基线。
-
-**2) 关键结论**：① 增大连接扩展因子 n（DHCx4）效果最佳，过大（x8）反降；② 移除 tanh 在 DHC 上平均更优（64.4 vs 63.8）；③ 非可训练 WC/ℬ 变体（63.4/63.6）与全训练版本相当，说明结构先验本身已贡献增益；④ SHC 同样带来提升，验证稀疏超连接的泛化能力。
-
-**3) 实验链路作用**：作为 1B 规模下游消融，对超参数 n、激活 tanh、可训练性进行系统性扫描，与 7B 实验、训练损失曲线（Figure 15）共同支撑"hyper-connections 改进跨规模稳健有效"的核心论点。
+**3) 在论文整体链路中的作用**
+Table 14 属实验链路末端的"泛化性验证"环节：先以 OLMo-1B 证明 DHC 在稠密模型上的优势（Fig.14、Table 13 等），再以 OLMoE 证明其同样适用于稀疏专家架构，从而支撑"超连接是一种可即插即用的架构增强"这一核心论断。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -30,11 +30,9 @@ tags: []
 > 1 shows the Ascend architecture where the
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**1) 图示对象与结构**：展示Ascend 910B单AI Core架构：含1个AI Cube Unit（Cube核心+L0A/L0B/L0C、BT/FP、L1 Buffer+FixPipe+Scalar）与2个AI Vector Unit（各含Vector核+Vector Scratchpad+Scalar），三者均经左侧Global Memory互联。
+> 【图文联合解读】该图展示Ascend 910B单AI核的异构结构：1个AI Cube Unit（含L1 Buffer分解为L0A/L0B/BT/FP四个子缓冲，配套Cube Unit计算后经L0C输出，再汇入FixPipe）+ 2个对称的AI Vector Unit（各含Scalar Unit、Vector Unit与Vector Scratchpad Memory），三者均通过双向通道挂接Global Memory。
 
-**2) 关键技术结论**：Cube与Vector各持独立scratchpad，跨单元无本地直连通路，仅能经全局内存/L2交换数据；非对称划分迫使parallel scan采用block-tiled、解耦look-back的通信最小化设计，而非GEMM中心方案。
-
-**3) 论文方法链作用**：为解耦scan方法提供硬件依据——AIV跑element-wise/局部scan，AIC做跨块前缀累积，MTE编排块级tile传输，从而在Ascend上高效实现线性注意力/SSM scan。
+原文借此论证其"矩阵立方+向量"双计算引擎与L0/L1/Global多层内存层次，为后续parallel scan算子的硬件映射奠定基础：算法须同时利用Cube的高吞吐矩阵乘与Vector的灵活访存，才能高效实现扫描归约类操作。该图是论文方法链路中连接硬件特性与并行扫描实现策略的关键参照。
 
 ### Figure 4 (p.4) ⭐深度解读
 ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig04.png]]
@@ -43,13 +41,14 @@ tags: []
 > 1: Data path from an input tile xℓto an output tile yℓof the ScanU (Algorithm 4.1).
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图4核心内容：**
+> 【图文联合解读】**核心对象与结构**：展示向量 x 在 Global Memory 中的子块 **x_ℓ** 经 Cube + Vector 异构单元处理后回写为 **y_ℓ** 的完整数据通路。
+- **Cube 单元**：x_ℓ→L0A，s×s 下三角单位阵 **U_s**（对角线为1）→L0B；A @ U_s 一次性算出 tile 内 s 个**并行局部前缀和**，结果落入 L1C。
+- **Vector 单元**：L1C→UB，由 5 个并行加法器完成 tile 间**顺序累加**。
+- 最终 y_ℓ 写回 Global Memory 的 y。
 
-图示 ScanU 单 tile（x_l → y_l）的片上数据通路。左下为 Global Memory，含输入张量 x（含 tile x_l）、上方的 U_s（通常为上一轮的累加结果），以及输出 y（含 y_l）。右上 Cube unit：从 GM 读 x_l 至 L0A（矩阵缓冲），与 L0B 中 1/0 选择矩阵（实现下三角扫描矩阵）做矩阵乘，结果落入 L1C；随后 L1C 数据经 DMA 进入右下 Vector unit 的 UB，并在 UB 内通过一串 "+" 链式累加（向量级 prefix-sum），最终写回 y_l。
+**技术结论**：ScanU 将前缀扫描拆解为「**Cube 做 tile 内并行局部扫描 + Vector 做 tile 间顺序累加**」，复用矩阵乘算力实现扫描并行化。
 
-**论证结论：** ScanU 把"扫描"拆解为 Cube 端的大规模矩阵乘（构造 partial sum）+ Vector 端的链式累加（完成 prefix-sum），即"超立方算子 + 向量归约"混合实现，避开显式多步同步扫描。
-
-**在论文中的作用：** 作为 Algorithm 4.1 的微观数据流证据，支撑其"用 Cube unit 完成并行扫描主体、用 Vector unit 完成剩余归约"的核心设计；与性能模型及实验部分呼应，论证该混合策略在 Ascend 上的吞吐与访存优势。
+**论文作用**：是 Algorithm 4.1 到 Ascend 硬件映射的**桥梁图**，支撑后续性能建模与吞吐分析，论证异构 AI 加速器天然适配并行扫描负载。
 
 ### Figure 5 (p.7) ⭐深度解读
 ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig05.png]]

@@ -30,13 +30,13 @@ tags: [moe, training]
 > Data flow through an MoE layer: Route, Dispatch, Compute, and Combine stages.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图1联合解读**
 
-**1) 图示内容：** 展示MoE层前向传播的Route与Dispatch两阶段数据流。`Input Tokens [B×S, H]` 进入绿色**TopKRouter**：先经`Gating Linear`，再由`Softmax/Sigmoid`打分，最后`Top-k Selection + Load Balancing`输出`routing map`与`probs`；随后蓝色**Token Dispatcher**执行`Permute`（按专家分组tokens）→`All-to-All`（跨GPU发送）→`Postprocess`（预处理），将tokens分发至右侧`Shared`通路及各Expert。
+图示MoE层前向四阶段数据流：输入`[B×S, H]`经TopK Router（门控线性层→Softmax/Sigmoid打分→Top-K选择含负载均衡）输出路由图与概率；Token Dispatcher按专家重排并All-to-All分发至各GPU；Expert Computation对E个专家执行Grouped GEMM并行计算；Token Combiner通过All-to-All回收、Unpermute还原顺序后按路由概率加权合并；Shared Expert MLP以旁路跳过路由直接汇入融合，最终输出`[B×S, H]`。
 
-**2) 关键结论：** 原文以此论证MoE的核心机制是**token级稀疏激活**与**跨GPU All-to-All通信**的耦合，路由决策与分发传输构成性能与扩展性的关键瓶颈。
+**论证结论**：通过显式拆分Route–Dispatch–Compute–Combine四步，揭示MoE计算中通信（两次All-to-All）与计算（Grouped GEMM）的解耦边界，为量化通信开销与设计重叠优化提供模型基础。
 
-**3) 论文作用：** 作为方法总览图，为后续章节深入讨论路由策略、通信优化、Expert并行计算等具体技术提供整体框架铺垫。
+**章节作用**：作为方法篇总览图，统一定义后续并行策略、张量/专家并行调度、Token-dropping及细粒度通信优化等章节所引用MoE计算图的术语体系与执行顺序。
 
 ### Figure 2 (p.10) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig02.png]]
@@ -45,9 +45,14 @@ tags: [moe, training]
 > Router architecture: linear projection, score function, top-𝑘selection, and load balancing. combine_postprocess (backward).
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】图示 **Megatron Core MoE TopKRouter** 四阶段流程：
 
-图示Megatron-Core中MoE TopKRouter架构：左为分数函数（softmax归一化得[BxS, E]维分数），中为Top-K选择，输出两个并行产物——逐token概率[BxS, E]（加权组合专家输出）与路由映射[BxS, E]（dispatcher布尔掩码）；下方为两类负载均衡机制：无辅助损失的Expert Bias与全局batch级的Global_aux_loss。原文借此论证Router同时兼容aux-loss与aux-loss-free双路径，可灵活切换细粒度路由与均衡策略；该图是后续细粒度MoE并行调度、分组GEMM与token-dropless训练等扩展组件的路由计算基础。
+1. **门控层**线性投影 $W_r\in\mathbb{R}^{H\times E}$，由 $l=W_r^T x$ 得 logits $[B\times S, E]$；
+2. **评分函数**支持标准 Softmax 与 Sigmoid 两形式；
+3. **Top-k 选择**自 $E$ 个专家中选 $k$ 个，输出每 token 概率与布尔**路由映射** $[B\times S, E]$；
+4. **负载均衡**：作用于 logits 的 z-loss/Sinkhorn、无辅助损失的**专家偏置**，以及作用于路由映射的 micro-batch/sequence/global 三粒度 aux_loss。
+
+原文借此论证 MoE 路由的模块化设计；该图为后续 Table 2 对比注意力层与 MoE 层并行需求差异、实现可扩展 MoE 训练奠定结构基础。
 
 ### Figure 3 (p.13) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig03.png]]
@@ -67,7 +72,13 @@ tags: [moe, training]
 > Expert Parallelism (EP) distributes experts across GPUs. The all-to-all communication dispatches tokens to their assigned experts and combines results.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图示 **EP=4、8 Experts、2 Experts/GPU**（GPU0 持 E0/E1，GPU1 持 E2/E3）的 MoE 数据流：token 序列 [T0][T1][T2]… 经路由后，由 **All-to-All dispatch** 分发到各 GPU 对应专家计算，再经 **All-to-All combine** 回收结果。原文借此论证：EP 将专家切分到多 GPU 以摊薄单设备显存与算力，关键代价是 all-to-all 通信。该图是论文方法学的起点，为后续 EP 通信优化与大规模扩展性实验提供架构基础。
+> 【图文联合解读】**图文联合解读：**
+
+图示 EP=4、8 个专家（每 GPU 2 个）的 MoE 专家并行流程：序列 [T0…Tn] 经 Router 决策后，通过 All-to-All Dispatch 将 token 分发至 GPU0–3 上的对应专家（E0–E7）并行计算，再经 All-to-All Combine 聚合，保持 token 顺序输出。
+
+**技术结论：** 论证 Megatron-Core 专家并行的核心机制——通过两次 all-to-all 通信实现"按专家分片、跨 GPU 调度"，使每 GPU 仅持有部分专家，显存随 EP 度扩展而摊薄。
+
+**论文作用：** 作为方法链路基础图，支撑后续 Table 3 的 DeepSeek-V3 配置与 Table 4 的重计算显存分析，是 EP 通信模式与专家分片策略的标准可视化说明。
 
 ### Figure 5 (p.17) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig05.png]]
@@ -76,16 +87,14 @@ tags: [moe, training]
 > Parallelism mappings: traditional constraints vs. MoE Parallel Folding decoupling.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## 图文联合解读
+> 【图文联合解读】**图示 Attention（上）与 MoE 层（下）在 4 Rank 上的三种并行映射**：
+① DP4→EP4：每 rank 独占 1 个 expert（E1/E2/E3/E4 互斥分布）；
+② TP2-DP2→ETP2-EP2：attention 切 1/2，专家按 E1/E2 与 E3/E4 分组跨 rank——属传统强耦合（绿色虚线强制约束 attention 并行维度与 expert 维度同构）；
+③ TP2-CP2→ETP2-EP1：启用 MoE Parallel Folding，attention 引入 CP2，每 rank 折叠持有全部 4 个 expert 的 1/2（ETP2-EP1）。
 
-**1) 核心对象与结构：**
-左侧（传统方案）上为 TP2-DP2：序列被切成 Seq1/Seq2 两段，每段 2 个 Rank（Rank1–3）各持 1/2 Attn；下为 ETP2-EP2：4 个 Experts 被拆成两组分发到不同 Rank。右侧（Parallel Folding）上为 TP2-CP2：4 个 Rank 同处 Seq1，靠 Context Parallel 切分序列；下为 ETP2-EP1：所有 Experts（1/2 E1–E4）完整堆叠在每个 Rank 上（EP=1，专家本地化）。
+**关键结论**：解耦 attention 并行（DP/TP/CP）与 MoE 专家并行（ETP/EP），使后者可独立取 EP1 折叠全 expert，从而削减跨 rank 通信、降低激活显存并提升 token throughput。
 
-**2) 关键技术结论：**
-绿色虚线箭头显示二者可等价映射，证明可将原本耦合的 DP×EP 解耦为 CP×EP1——在保持等效序列并行度的同时，消除 EP 带来的跨设备 Expert 通信开销。
-
-**3) 论文链路中的作用：**
-该图作为 MoE Parallel Folding 方案的形式化定义与可行性证据，为后续显存/通信收益及大规模训练实验奠定理论基础，是该方法从"概念"走向"实现验证"的桥梁。
+**作用**：奠定 Table 5 "细粒度激活 offloading" 实验所依赖的灵活并行拓扑基础，证明 MoE 训练可摆脱"attention-必须-决定-expert 分布"的传统限制。
 
 ### Figure 6 (p.18) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig06.png]]
@@ -96,11 +105,11 @@ tags: [moe, training]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图6展示了 Parallel Folding 中 **Attention 层在单一 TP 组内**的并行配置：8 张 GPU（GPU0–GPU7）构成一个 TP=8 的张量并行组，组内通过 TP AllReduce（8 路通信）完成 attention 集合通信，A2A Scope 限定为这 8 GPU。
+图示将 Attention 层的 TP=8 单一组（GPU0–GPU7，8 路 TP AllReduce，A2A Scope=8 卡）按 fold_factor=4（=TP/ETP=8/2）折叠为 MoE 层的 ETP=2 × EP=4 网格：每 2 卡纵向配对（GPU0↔GPU1 等）做 ETP=2 的 Expert TP（Expert TP AllReduce），4 对横向构成 EP=4 的 4 路 EP A2A 通信（A2A Scope 缩至 4 EP rank）。
 
-**论证结论**：传统方案中 attention（TP/CP）与 MoE（EP）必须共享同一并行映射，导致通信域膨胀；而 folded 布局将二者解耦——attention 在小组内保持高 TP/CP，MoE 在同小组内独立使用 ETP=1、高 EP，all-to-all 与 attention 集合通信都局限在 NVLink 互连的小 GPU 组内，从而降低跨域通信开销。
+**关键结论：** 解耦 Attention 与 MoE 并行映射，使二者通信域独立——Attention 维持 8 路张量并行通信，MoE 专家通信仅需 4 路 A2A，显著降低跨域 AllReduce 频率与开销。
 
-**论文作用**：作为核心方法的可视化证据，支撑 Parallel Folding 在 MoE 训练中实现 attention–MoE 解耦并行、提升可扩展性的设计主张。
+**论文作用：** 作为 Megatron-Core MoE 可扩展训练的核心机制，Parallel Folding 在同一 8 卡集群上灵活切换并行策略，为后续 MEFS 优化、跨域通信隐藏及大规模 MoE 性能评估奠定方法基础。
 
 ### Figure 7 (p.22) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig07.png]]
@@ -124,13 +133,13 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > Selective Recomputation.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图8联合解读：**
 
-图8展示了DeepSeek-V3架构中的**选择性重计算（Selective Recomputation）策略**。图例标注了七类操作的内存管理方式：紫色core_attn（fused_attn无需重算）、粉色moe_act、绿色layernorm、蓝色mlp_up_proj、黄色dispatch均采用**output-discarding**（丢弃输出，反向时重算）；红色虚线框标记moe模块，橙色虚线框标记shared_experts。右下块图可见shared_experts内部FC1→Swiglu→FC2三段结构，灰色阴影区域表示各模块的重计算范围。备注指出dense mlp模块的mlp_recompute未在图中绘出。
+**1) 核心对象与结构**：图示 DeepSeek-V3 单层 Transformer 的选择重计算策略。上半部为 MLA（LayNorm→Down_proj→Up_proj+RoPE→Core-attn→Proj Linear→bias-drop-add），下半部为 DeepSeekMoE（LayerNorm→路由专家：fp32 Router→Token Dispatcher→Grouped FC1→Swiglu→Grouped FC2→Token Combiner，共享专家：FC1→Swiglu→FC2）。色标区分 6 类模块：紫 core_attn（fused_attn 不需重算）、粉 moe_act、绿 layernorm、蓝 mla_up_proj、黄 dispatch 均标记为 "output-discarding"（不存输出，重算时重生成），红/橙虚线框标注 moe 与 shared_experts 整块重算区域，并备注 dense mlp 重算未在图中绘出。
 
-**技术结论：** 论文据此论证——重算应优先施加于"显存密集但计算廉价"的算子（layernorm、dispatch、mlp_up_proj等），从而以极小计算开销换取显著的激活显存节省，是MoE大规模训练的关键显存优化手段之一。
+**2) 关键技术结论**：原文论证——该策略对显存占用大但计算便宜的部分做丢弃输出、依赖重算的细粒度选择；具体到 DeepSeek-V3，对 MLA 的 up_proj、attention 输入、MoE 的 router/dispatch/Swiglu/FC1 均丢弃输出（重算而非缓存），从而以最小额外算力换显著显存节省。
 
-**论文作用：** 该图与Figure 7（通信计算重叠）共同构成第3章的两大训练加速支柱，支撑后文吞吐量与显存占用实验的优化依据。
+**3) 论文整体作用**：作为 MoE 大模型训练内存优化链路的关键一环，与混合精度（表8）、并行策略协同，使 MoE 训练在万亿参数规模下内存可控，支撑后文吞吐/显存实验论证。
 
 ### Figure 9 (p.24) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig09.png]]
@@ -139,11 +148,9 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > Fine-grained activation offloading: stream overlap for forward and backward passes.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】该图展示双流时间线：上为 **Compute Stream**（Forward FC1→FC2→Backward FC2→FC1），下为 **D2H Stream**（前向阶段 Offload to CPU、后向阶段 Prefetch from CPU）。FC2 计算时段与传输时段形成"Overlap"和"Latency hidden"两块浅绿区域，证明 D2H/H2D 传输与 FC2 计算在时间上完全重叠。
 
-图9展示前向传播中细粒度激活卸载的两流时间线。Compute Stream依次执行Forward FC1与FC2（深绿块），D2H Stream负责Offload to CPU（深灰块）。关键在于：FC1的激活无需等FC2完成即可启动卸载，箭头指示其起始时刻，浅绿"Overlap"区表明D2H传输与FC2计算在时间上完全并行。
-
-论文借此论证：通过流级重叠，可将激活offload开销隐藏于后续计算之下，避免串行等待的墙钟代价，从而在保留大规模MoE训练所需显存卸载能力的同时，最小化对训练吞吐的影响。该机制是Megatron-Core细粒度activation offloading调度方案的核心组成部分，与并行/流水策略协同实现大规模MoE模型的可扩展训练。
+原文据此论证**细粒度激活卸载**可将设备-主机数据传输延迟隐藏于 FC2 计算之后，使 offload/prefetch 不引入额外端到端耗时。该图是 Megatron-Core 降低激活显存占用、支撑大规模 MoE 训练的关键机制示意图，量化说明了"以算换存"策略的零额外开销特性。
 
 ### Figure 10 (p.26) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig10.png]]
@@ -165,7 +172,13 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > Comparison of sharding strategies: (a) FSDP2 shards each parameter uniformly; (b) Megatron-FSDP flattens per-module and shards non-uniformly, aligning with communication buffers.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图(a)展示FSDP2策略下3个Linear模块在Device Rank 0/1上的分布：Linear 1采用Shard_Param按模块分片集体缓冲（蓝色，每Rank各持一份对应条目），Linear 2、3为均匀分片（绿/红色），再以DTensor形式映射至各Rank对应位置。原文借此论证FSDP2"逐参数均匀分片"使通信缓冲与shard不对齐、引入额外开销；该图为对比铺垫(b) Megatron-FSDP"按模块扁平化、非均匀分片并对齐通信缓冲"的核心论点服务，是论文分布式训练设计章节中支撑其sharding strategy优越性的关键原理示意。
+> 【图文联合解读】**图文联合解读（Figure 11）**
+
+1) **核心对象与结构**：图示对比两种分片策略。(a) FSDP2：3个Linear层各自被均匀切成Rank0/Rank1两段，形成(Shard, Param)-Shaped Collective Buffer，两台Device各持有3个DTensor（每层一块）；(b) Megatron-FSDP：把3个Linear展平为单一Per-Module Collective Buffer，按DP-Shard Size做非均匀切片，每Device仅持有与buffer切片对齐的少量DTensor（通常对应若干完整层）。
+
+2) **关键结论**：Megatron-FSDP将分片边界对齐到通信buffer，使每设备D tensor更少、all-gather通信次数更少，从而优于FSDP2的逐参数均匀切分。
+
+3) **论文作用**：作为方法论论据，支撑Megatron-FSDP优于原生FSDP2的设计主张，为后续Table 11在GB300/GB200/H100上的MoE吞吐基准提供动机。
 
 ### Figure 12 (p.28) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig12.png]]
@@ -176,9 +189,11 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示对比FSDP梯度处理两种方案：上方为torch.empty的CUDACachingAllocator每次通信重新分配；下方Persistent双缓冲设计——两个预分配buffer在FSDP collectives间循环复用，经Reduce Scatter产出Gradient shard。
+**核心对象与结构：** 图示展示 FSDP 反向传播中持久双缓冲（double-buffer）流水线。顶部两个 `CUDACachingAllocator`（`torch.empty`）分别预分配粉色与蓝色 4 块缓冲区，经绿色箭头下放至底部形成两套"Pre-allocated buffer"（含循环箭头表示复用）。流程：Param shard → AllGather → 粉色 buffer → Transformer layer BWD → 蓝色 buffer → Reduce Scatter → Gradient shard，两组 buffer 交替跨 FSDP 集合通信复用。
 
-原文借此论证：**消除每次collective的分配开销，并使NCCL User Buffer Registration成为可能**。该设计在论文中支撑Table 12关于不同并行策略（degree 𝑑）对内存与通信影响的对比实验，是MoE大规模训练通信栈优化的核心环节，对降低显存峰值、提升集合通信效率至关重要。
+**技术结论：** 原文借此论证通过预分配+循环复用双 buffer，可彻底消除每次 AllGather/Reduce-Scatter 的临时内存申请开销，并满足 NCCL User Buffer Registration（UBR）的固定地址注册要求，从而将通信与计算 overlap 最大化。
+
+**链路作用：** 属于论文系统级 FSDP 优化章节，与 Table 12 并行策略内存/通信分析互为佐证，为 MoE+Transformer 大规模训练提供低开销通信基础设施。
 
 ### Figure 13 (p.30) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig13.png]]
@@ -189,11 +204,11 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：图示 4 块 GPU（GPU0–3），每卡承载 1 个专家，整体并行处理 8 个 token（a1–a8，每卡 2 个）。数据流为：Attention Layer 输出 → 本地 Router 决策 → token 被染色标记目标专家（如 a2 标绿、a1 标蓝）→ 经 EP group 的 **Dispatch（All-to-All 集合通信）** 将 token 跨卡路由至对应专家所在 GPU。
+**1）核心对象与结构**：图示4 GPU各承载1个Expert（共4专家）的EP数据流。每GPU处理2个token（a1–a8），经Attention层后由本地Router决定路由，Dispatch（EP group）按路由结果执行all-to-all将token分发至对应专家所在GPU（如a1/a5/a8跨卡汇聚到GPU1 Expert，a3路由至GPU3 Expert），Expert计算后由Combine（EP group）将fi结果回传原GPU。
 
-2) **关键技术结论**：Expert Parallelism 的核心通信代价来自 Dispatch 阶段的 **All-to-All**：Router 在本地完成路由决策后，token 必须在 EP group 内重新分发，使每卡只处理分到本地专家的子集——这是 EP 区别于 TP/PP 的标志性通信模式。
+**2）关键技术结论**：论证Expert Parallelism通过分片存储专家权重+EP group的all-to-all通信机制，使每卡只需驻留1个专家权重，从而突破单卡显存容量上限；Router在本地决策、跨卡仅搬运被选中的token，最小化通信量。
 
-3) **论文中的作用**：作为 §4.2.1 "Communication Anatomy" 的开篇图，奠定后续讨论 Combine、GEMM 切分、All-to-All 优化（如双向/TMA 加速）等问题的基础，是 Megatron-Core MoE 通信栈设计的参照原型。
+**3）论文链路作用**：作为EP的示意性原理图，与Table 13"Memory bottleneck solutions"互证，是Megatron-Core MoE扩展方案（TP+EP+PP多维并行）中的关键并行维度，用于解决专家层显存瓶颈的工程实践基础。
 
 ### Figure 14 (p.31) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig14.png]]
@@ -202,7 +217,7 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > The dispatch kernel design of HybridEP.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图示HybridEP调度内核两路数据流：①节点间（绿框）从其他节点同rank获取RDMA Token/Prob/Scaling factor；②本地（粉框）从注意力层与路由器取Token/Prob/Scaling factor。前者由RDMA warp组跨节点交换后送入"Global Memory→SM warp group"，与本地输入共同经FIFO转发至目标expert。论证核心：HybridEP将跨节点RDMA与节点内dispatch解耦——先由RDMA warp组完成同rank交换，再由SM warp组在节点内FIFO推送，避免SM直接处理RDMA数据。该设计是MoE专家并行通信栈中dispatch阶段token高效路由的关键实现。
+> 【图文联合解读】HybridEP调度内核呈现双路径融合结构：①节点内走"Global Memory ⇒ SM warp group → SMEM Cyclic FIFO → SM ⇒ Global Memory"流水线；②节点间经RDMA warp group直发。三类数据（Token、Prob、Scaling factor）并行贯穿两条通道。图原论证：HybridEP把节点内NVLink与节点间RDMA合并到单一调度内核，借SMEM Cyclic FIFO作片上环形缓冲，省去主机往返。该图支撑Table 14所述通信瓶颈解法，是实现跨节点MoE可扩展训练的核心通信原语。
 
 ### Figure 15 (p.31) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig15.png]]
@@ -211,9 +226,9 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > The combine kernel design of HybridEP.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】1) **对象与结构**：图中是 HybridEP 的两条并行 combine 路径，每条处理 Token、Prob 两类数据：本地 Global Memory→SM/intra-node warp group，或其他节点同 rank 的 RDMA Token/Prob→SM/inter-node warp group；随后均经 SMEM Cyclic FIFO。  
-2) **技术结论**：节点内与 RDMA 通信分工处理，并用共享内存循环队列衔接，减少 CPU 调度、拷贝和同步开销。  
-3) **作用**：作为 MoE 通信到专家计算的 kernel 实现图，支撑 HybridEP 的低开销 token 组合及性能扩展性实验。
+> 【图文联合解读】1）结构：图中是 HybridEP combine 的本地/跨节点 Token、Prob 流水：Global Memory→SM 后进入 Intra-node/Inter-node warp group；每段含 1 个 Reduce warp group、2 个 SMEM Cyclic FIFO，跨节点经 RDMA 传递 Token/Prob，并连接相同 rank id。  
+2）结论：核函数按节点内/节点间分工，以片上 FIFO 衔接，仅传输 token/prob，减少同步与通信开销。  
+3）作用：它是 MoE token 聚合、通信实现与性能/扩展性评估之间的原理图。
 
 ### Figure 16 (p.32) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig16.png]]
@@ -222,13 +237,11 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > Merged FWD-FWD Timeline with all-to-all Overlapping.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（Figure 16）**
+> 【图文联合解读】**图示内容**：横轴为时间，两行分别为Even（ubatch 0/2/4）与Odd（ubatch 1/3/5）微批次；每段顶部标"Merged"，由绿色FWD块与灰色BWD块组成，相邻偶奇ubatch的前向计算合并为统一的FWD-FWD窗口，BWD紧随其合并执行。
 
-该图展示双微批次（u-Batch Even / Odd）在 MoE 流水线中的三段时序，每行均包含 FWD→BWD→FWD；三段顶部标注"Merged"，下方虚线框分别标记 ubatch 0（归属 Even 行）与 ubatch 1（归属 Odd 行）。
+**关键结论**：通过将两个连续微批次的前向阶段合并，使MoE all-to-all通信与计算相互重叠，从而隐藏通信开销，解决流水线中all-to-all带来的bubble问题。
 
-**关键结论**：1F1B 流水使 ubatch 1 的 FWD 与 ubatch 0 的 BWD 并发；"Merged"段表明连续的 FWD-FWD 阶段可与 MoE 专家路由的 all-to-all 通信重叠执行，从而隐藏通信开销。
-
-**论文作用**：作为 Megatron-Core MoE 扩展方法的核心调度图，支撑其"计算-通信全重叠"的高吞吐训练策略。
+**论文作用**：作为Table 16"Computation bottleneck solutions"中与GroupedGEMM、early-reduce等并列的方案支撑图，证明通信—计算重叠策略在大规模MoE训练中可有效消除瓶颈。
 
 ### Figure 17 (p.33) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig17.png]]
@@ -237,13 +250,13 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > Merged FWD-BWD Timeline with all-to-all Overlapping.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图17图文联合解读：**
+> 【图文联合解读】**图17联合解读**
 
-**1) 核心对象与结构**：图示为按奇偶分流的微批次双轨时间轴（u-Batch-Even / u-Batch-Odd），横向分为三段："Not Merged"段仅含 ubatch0 的 FWD；"Merged-1"段将 ubatch0 的 BWD 与 ubatch1 的 FWD 并排放置；"Merged-2"段将 ubatch1 的 BWD 与 ubatch2 的 FWD 并行呈现，颜色块以绿(FWD)/灰(BWD)区分。
+1）**结构与对象**：横轴为训练时间流，纵向分两行（u-Batch-Even与u-Batch-Odd），共呈现6个ubatch（0–5）交错排列，每段由绿色FWD块与灰色BWD块组成；中间4段标注"Merged"，仅首段ubatch 0的FWD与末段ubatch 5的BWD标红"Not Merged"。
 
-**2) 论证的技术结论**：原文借此说明，在 MoE 训练中，相邻微批次的前向计算与上一微批次的反向计算可"合并"(merged)重叠执行，而非严格串行；该调度使 all-to-all（专家并行 dispatch/combine）通信得以嵌入计算空隙，从而隐藏通信开销。
+2）**关键结论**：图中展示FWD-BWD合并重叠调度——后一ubatch的FWD与前一ubatch的BWD并行执行，使MoE层中all-to-all通信被计算掩盖；首尾两次因无相邻阶段无法合并。
 
-**3) 在论文整体中的作用**：作为"All-to-All Overlapping"优化策略的可视化佐证，支撑 Megatron-Core MoE 流水线实现通信-计算重叠、提升大规模专家并行训练吞吐量的核心方法论结论。
+3）**论文作用**：作为Megatron-Core MoE的核心优化手段之一，通过跨ubatch流水化隐藏all-to-all延迟，是实现MoE大规模高效训练的调度基础。
 
 ### Figure 18 (p.34) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig18.png]]
@@ -273,13 +286,13 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > Interleaved PP Timeline with all-to-all Overlapping.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读**
 
-图19展示了**交错式PP时间线**（PP=4，VPP=3，Grad accumulation=8）在**warmup阶段**对all-to-all通信的隐藏策略。图例用橙/蓝/粉三色区分FWD的三条虚拟管道及对应BWD，每格数字标记微批次序号（1–8）。红色框出warmup结束时多执行的一个额外微batch，其fprop紧接主时间线起点的microbatch（标注"Execute one extra micro-batch"），而bprop则与下方相邻微batch的fprop/bprop重叠（多箭头所示）。
+**1) 核心对象与结构**：图示 PP=4、VPP=3、GA=8 下的交错 1F1B 时间线。横轴为时间步，纵轴为 4 个 PP 阶段 ×3 个虚拟阶段（共 12 行），色块按 FWD/BWD 与 VIRTUAL_PIPE_0/1/2（黄/红/粉）区分，编号 1–8 表示 8 个 micro-batch。含 Warmup 段（填管线）和 Flush 段（排空）。
 
-关键结论：**通过在warmup阶段注入额外微batch**，使后续微batch的前向/反向与MoE all-to-all通信在时间轴上**计算-通信交叠**，从而隐藏通信开销。
+**2) 关键结论**：上图展示原调度，下图通过在 1F1B 起始前多执行一个 micro-batch，使相邻 micro-batch 的 fprop/bprop 无数据依赖（图下箭头标注），从而将 MoE 的 all-to-all 通信与 Dense 计算重叠执行，消减管线气泡。
 
-在论文中，该图支撑Megatron-Core交错流水线中"**通信隐藏于计算**"的核心优化链路，是MoE大规模训练高效率的关键实证。
+**3) 在论文中的作用**：支撑 MoE 训练中"通信—计算重叠"的核心优化论点，是连接交错 PP 调度与 expert 并行效率分析的关键图表，为后续性能数据提供时序依据。
 
 ### Figure 20 (p.37) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig20.png]]
@@ -301,13 +314,16 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > The workflow of the router fusion. • Computation of MoE auxiliary loss: Building on step 2, the auxiliary loss computation is fused into a single kernel.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读**
 
-图21展示MoE路由器的融合流程：输入经Gating Linear产生Logits后，分两路径并行演示——上路采用Topk/Group Topk搭配Sigmoid/Softmax，下路用Topk搭配Sigmoid/Softmax，两路径分别汇聚为单一"Fused kernel"。
+**1) 核心对象与结构**
+图示为路由器融合工作流：输入经 Gating Linear 产生 Logits 后，分裂为两条并行分支。蓝色上路径依次执行 Topk/Group Topk → Sigmoid/Softmax → Scale，封装为**蓝色 Fused Kernel**，输出 *Probs* 与 *Routing map*；绿色下路径执行 Topk → Sigmoid/Softmax，封装为**绿色 Fused Kernel**，输出 *Score for aux loss* 与 *Routing map for aux loss*；两者再汇入紫色 **Compute aux loss**（第二个 Fused Kernel），最终送往 Dispatch Preprocess，共三个融合内核。
 
-**关键论证：** 路由器中的Top-k专家选择与激活函数可被融合为单个kernel，省去多次中间张量写回与launch开销，相比传统分步执行显著降低访存与调度代价。
+**2) 关键结论**
+MoE 辅助损失计算被融合进单一 kernel；上路径产生实际路由权重与分发映射，下路径仅生成供辅助损失使用的得分，二者共享 Gating Linear 输出但走独立分支，避免冗余访存与重复 Top-k 选取。
 
-**在论文中的位置：** 该图隶属Megatron-Core的MoE性能优化模块（与Figure 19/20的grouped GEMM等并列），是支撑其端到端可扩展训练链路中路由器层级算子融合优化的关键可视化说明。
+**3) 在论文中的作用**
+作为 Figure 18 范式"减少 GEMM 之外的 kernel 数量"在路由阶段的实例化，支撑 Megatron Core 中 MoE 训练端到端 kernel fusion 优化链路，提升大规模 MoE 训练吞吐。
 
 ### Figure 22 (p.39) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig22.png]]
@@ -318,11 +334,11 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图22 联合解读**
 
-**核心对象与结构**：上下两幅子图均含 CPU/GPU 双时间线。上图（传统执行）CPU 侧交替出现 *Python & Framework* 与 *Launch K1* 等多次调用块，GPU 侧 K1、K2 之间形成 "CPU Overhead" 气泡；下图（CUDA Graph 执行）CPU 侧仅一个 *Graph Launch (Single API call)* 长块，GPU 侧 K1、K2 紧密背靠背，底部绿色箭头标注 "NO GPU BUBBLE"。
+**核心对象与结构：** 图分上下两部分，均以时间轴（横轴 Time）为基准，纵向并列 CPU 与 GPU 两条 Timeline。上半"Traditional Execution"显示每轮迭代中 CPU 需交替执行 [Python & Framework] 与 [Launch K1/K2/K3]，每次 Launch 仅触发单个 Kernel（K1→K2→K3），Kernel 之间存在灰白色"GPU BUBBLES"间隙；下半"CUDA Graph Execution"显示 CPU 端仅需一次 Graph Launch（Single API call），GPU 端 K1–K5 五个 Kernel 紧密串联，标注"NO GPU BUBBLES"。
 
-**关键技术结论**：原文借此论证——逐核启动路径下 CPU 调度开销足以让 GPU 产生空闲等待，而单次 API 提交整张计算图可彻底消除该空泡。
+**关键技术结论：** 传统执行模式下 Python/框架调度开销导致 GPU 频繁空转（每两个 Kernel 出现一处气泡）；CUDA Graph 通过一次捕获后整图回放，消除逐 Kernel 的 CPU Launch 开销，使 Kernel 紧密 back-to-back 执行，GPU 利用率显著提升。
 
-**论文中作用**：MoE 训练含大量细粒度专家计算与 all-to-all 通信核，传统调度极易使 GPU 空转。本图为 Megatron-Core 集成 CUDA Graph 提供执行模型层面的动机支撑。
+**在论文中的作用：** 该图为 Megatron-Core 引入 CUDA Graph 优化 MoE 训练流水线提供直观机理依据，是其性能优化章节的关键支撑图，与文中吞吐/加速比数据形成"机制—收益"对照。
 
 ### Figure 23 (p.39) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig23.png]]
@@ -331,13 +347,16 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > Full versus layer-wise CUDA Graphs in one training iteration (three layers, two microbatches).
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图23解读：**
+> 【图文联合解读】**核心对象与结构**：
+横轴展示一次训练迭代的执行序列，包含 2 个 microbatch × 3 个 layer 的前向（F₁₁–F₂₃）、反向（B₁₁–B₂₃）、损失 L 及优化器 Opti。两类 CUDA Graph 对比：
+- **紫色虚线（Layer-wise CUDA Graphs）**：以"单层/单 microbatch"为粒度，逐小块独立 capture，需多张图拼接；
+- **橙色虚线（Full CUDA Graphs）**：将整次迭代序列封装为一张大图，一次性 capture。
 
-图示一次训练迭代（3层、2微批次）的调度序列：前向块F₁₁–F₁₃、损失块L、反向块B₁₁–B₁₃依次排列。**紫色虚框（Layer-wise CUDA Graphs）**逐层独立封装每个F/B；**橙色虚框（Full CUDA Graphs）**将整段前向（或整段迭代）打包为单一图。
+**关键技术结论**：
+Full CUDA Graph 把全部前反向+优化器操作纳入单一图，消除了 layer-wise 方案在每个小块间的 kernel launch 开销与 CPU–GPU 同步停顿，从而获得更高吞吐与更稳定的执行时间。
 
-**技术结论：** MoE模型中各层专家路由使每层处理的token数动态变化，Full CUDA Graph要求全段shape一致，因此**无法捕获**；Layer-wise方案将每层作为独立子图capture，既复用kernel消除launch开销，又容忍层内shape浮动。
-
-**方法链作用：** 是论文针对MoE特殊结构对CUDA Graph机制的关键改造，构成Megatron-Core可扩展MoE训练性能优化的核心组件之一。
+**在论文中的作用**：
+该图是性能优化章节中"Full CUDA Graphs 优于 Layer-wise"论点的核心可视化证据，支撑 Megatron Core 在 MoE 训练流水线中选用端到端整图 capture 的方案。
 
 ### Figure 24 (p.40) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig24.png]]
@@ -361,16 +380,13 @@ Figure 7 并列对比 Baseline（左）与 Memory-Efficient Permutation（右）
 > Transformer layer forward pass: without (upper) and with (lower) partial CUDA Graphs. CPU overhead is largely eliminated for static components.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图25联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1）核心对象与结构**
-该图为NSight Systems profiler时间线，对比Transformer层前向传播两版本在+104~109ms（无CUDA Graph，上）与+97.5~103ms（部分CUDA Graph，下）区间的执行序列。按MoE流程划分为**preprocess、dispatch、routed experts（含GroupedGEMM_parallel/nvls）、combine**四个阶段。上图各kernel块之间存在明显**空白间隙**（CPU launch overhead）；下图左侧绿色"CUDA Graph"区块连续紧凑，可见`cudaMemcpyAsync`等异步调用将多步操作封装，kernel间隙被消除，而dispatch/combine等动态部分仍保留外部调度。
+1) **核心对象与数据**：图为Nsight Systems对Transformer层前向的时间轴剖面，自上而下分为attention、shared experts、router、preprocess、dispatch、routed experts、combine七阶段。上半部分无CUDA Graph，attention区间（≈98.5–104ms）含约十余次独立kernel（LayerNorm、Q/K/V proj、RoPE、attn、Proj…），kernel间存在明显CPU launch间隙；下半部分启用partial CUDA Graph后，attention整段被包裹在单一绿色"cudaGraph"块内（≈98–100.5ms），耗时由约6ms压缩至约2.5ms，节省≈50%。
 
-**2）关键技术结论**
-Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA Graph捕获，可基本消除CPU发射开销与launch latency；对依赖token路由、动态专家分配的dispatch/combine则保留非图路径，从而兼顾**执行效率与动态灵活性**。
+2) **关键技术结论**：attention作为形状/计算图静态的子模块，其CPU调度开销可被CUDA Graph彻底消除；router/dispatch/combine（含AllToAll）仍为动态，需在Graph外执行。
 
-**3）在论文中的作用**
-作为NSight实测证据，支撑文中核心论点——Partial CUDA Graphs是Megatron-Core MoE训练实现高吞吐的关键优化之一，与并行张量/专家、TokenDrop等优化协同，使大规模MoE训练可扩展。
+3) **作用**：为论文"partial CUDA Graphs"策略提供实测证据，支撑MoE训练中静态段图捕获、动态段保留的低开销优化方案。
 
 ### Figure 26 (p.42) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig26.png]]
@@ -379,7 +395,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Why Pipeline Parallelism prevents CUDA Graphs from being shared across microbatches. With PP (top): Execution is interleaved—multiple forward passes run before any backward pass. If microbatches share a graph, F_mb1 overwrites saved context of F_mb0 before B_mb0 uses it, causing memory corruption. Each microbatch needs its own graph (𝐿× 𝑀× 2 graphs total). Without PP (bottom): Execution is sequent
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图中以 \(L\) 层、\(M\) 个微批比较执行顺序：启用 PP 时连续运行 \(F_{mb0},F_{mb1},\ldots\)，再统一反向；禁用 PP 时按 \(F_{mb0}\!→\!B_{mb0}\!→\!F_{mb1}\!→\!B_{mb1}\) 执行。CUDA Graph 保存的反向上下文会被后续前向覆盖，故 PP 下不能跨微批共享，总计需 \(L·M·2\) 个图；无 PP 仅需 \(L·2\) 个。图中解释了两者冲突，为图数量估算及 MoE 训练优化设计提供依据。
+> 【图文联合解读】**图文联合解读：**
+
+图分上下两栏对比：上栏（带 PP，流水线并行）时间轴上 F_mb0→F_mb1→…→B_mb0→…→B_mb1 交错执行，F_mb(i+1) 先于 B_mb(i) 完成，红色叉号标注"不可跨 microbatch 共享图"，共需 L×M×2 张图；下栏（无 PP，顺序执行）严格 F→B→F→B 交替，绿色勾标注"F_mb(i+1) 在 B_mb(i) 之后执行，可共享"，仅需 L×2 张图。
+
+**技术结论：** PP 模式下交错调度使前向保存的张量/上下文被后续前向覆盖，反向时引发显存损坏，故每个 microbatch 必须独立捕获 CUDA Graph，使图数量随 M 线性放大。
+
+**论文作用：** 为 MoE 训练中 CUDA Graph 实现的显存开销分析提供量化依据（L×M×2 vs L×2），论证大规模 PP 场景下图管理的扩展性挑战，是方案设计的关键约束。
 
 ### Figure 27 (p.45) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig27.png]]
@@ -388,13 +410,11 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > ECHO workflow for forward and backward passes. The planner generates routing and hot expert maps. Expert Dispatch clones hot expert weights to spare slots; Expert Gradient Dispatch reduces gradients back to home experts.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图27（Backward）图文联合解读：**
+> 【图文联合解读】**图示内容（量化）：** 图示 ECHO 前/反向计算流。前向（红色标题）：Planner 据 hidden states 同时输出 routing map（送 Token Dispatch）与 hot expert map（送 Expert Dispatch），随后经 Token Dispatch→Expert FC1→MoE act→Expert FC2→Token Combine，两级 Expert Dispatch 将热专家权重克隆至空闲槽；反向：Combine backward→FC2 dgrad/wgrad→MoE act backward→FC1 dgrad/wgrad→Dispatch Backward，Expert Gradient Dispatch 将梯度归约回原专家。
 
-**1) 核心结构：** 图示ECHO反向计算流，自底向上为：Combine backward → FC2 双轨（dgrad 主路径 + wgrad 并行）→ MoE act backward → FC1 双轨（dgrad + wgrad）→ Dispatch Backward。两条黄色模块贯穿全程——左侧 "Expert Dispatch" 将 home expert 权重分发至 dgrad 计算路径；右侧 "Expert Gradient Dispatch" 从 wgrad 路径汇聚梯度回传 home expert。两条横向 dashed 线划分出 FC2、MoE act、FC1、dispatch 四个阶段。
+**技术结论：** 论证 ECHO 通过规划器驱动的动态克隆+空闲槽复用，实现不丢 token 的负载均衡 MoE 训练。
 
-**2) 关键结论：** 反向与前向结构对称——dgrad 在被克隆的 hot expert 上算、wgrad 归约回 home expert，从而在不改 MoE 算法的前提下，保持专家并行并复用热专家权重，避免跨 rank 重复存储。
-
-**3) 论文作用：** 与前向图配对构成完整 ECHO 调度示意图，是论证"调度即扩展性"的核心证据，支撑 ECHO 在不修改路由/并行框架条件下实现 MoE 高效训练的结论。
+**论文作用：** 作为 ECHO（论文核心贡献）相对 drop-and-pad 基线的可扩展 MoE 训练完整工作流图示佐证。
 
 ### Figure 28 (p.46) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig28.png]]
@@ -405,11 +425,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**核心对象与结构：** 图分三列对比三种执行模式的显存布局。每列含多层（行）×多专家（Exp 0/1/2）的方块堆叠，绿色为实际占用 token（编号 0–5），白色为空闲区，虚线框表示预分配但未用容量。Eager 列贴合实际、无浪费；Static Shape 列每层独立预留最坏容量，白色碎片显著；Paged Stashing 列各层共享一个超尺寸 tmp 缓冲区，配合 Stashing buffer 将分散 token 紧凑填入。
+图示横轴对比三种执行模式（Eager / 静态Naïve worst buffer / 静态Paged stashing），纵轴为Layer 0/1/2下Exp 0/1/2的token（0–5）分配，深绿表实际占用、浅绿表分配缓冲。
 
-**关键结论：** Paged Stashing 以"共享最坏尺寸 tmp + 分页暂存"机制，在保留静态分配优势的同时，把碎片率逼近 Eager 水平，兼顾稳定性与显存利用率。
+**核心结构**：Layer 0仅Exp 2激活、Layer 2仅Exp 1/2激活，Naïve模式仍按worst-case为每层每专家预留满载缓冲，造成大量浅绿碎片；Paged Stashing采用跨层共享tmp缓冲+分页暂存未路由token，将浅绿区压缩为stashing buffer。
 
-**论文作用：** 为 MoE 训练中 Expert Parallel 显存瓶颈提供解决方案的可视化依据，支撑 Paged Stashing 作为 Megatron Core 中 MoE 通信–计算重叠优化的核心设计。
+**论证结论**：Paged Stashing在保留静态shape编译效率的同时，规避了Eager动态分配碎片化和Naïve最坏预分配浪费，实现内存利用率最优。
+
+**论文作用**：作为MoE显存优化的关键可视化证据，支撑"Paged Stashing"核心技术claim，与后续吞吐/显存实验数据形成机理与结果互证。
 
 ### Figure 29 (p.46) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig29.png]]
@@ -418,13 +440,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Paged Stashing stream overlap. Forward pass: After Layer N computes, its activations are stashed (copied from tmp buffer to paged stashing buffer) on a dedicated Pack stream while Layer N+1 computes on the main Compute stream—the stash is completely overlapped. Backward pass: Activations for Layer N are pre-fetched (reloaded from stashing buffer to tmp buffer) on the Unpack stream before Layer N b
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-1) **图示对象**：横向时间线对比两条 CUDA Stream——绿色 Compute Stream（依次执行 Forward Layer N、N+1），深灰 Stash Stream（执行 Layer N 激活从 tmp buffer 拷至 stash buffer）；两者在时间轴上以箭头衔接，浅绿"Overlap"区表明 Layer N 的 stash 拷贝与 Layer N+1 的前向计算完全并行执行。
+图29以时间轴横向展示两条并行CUDA流：Compute流（绿色）依次执行Forward Layer N、N+1及反向Backward N+1、N；Stash流（灰色）执行tmp→stash缓冲的"Stash Layer N"与反向"Reload Layer N"。前向阶段Stash与Forward N+1完全重叠（Overlap），反向阶段Reload潜伏于Backward N+1之后被完全隐藏（Latency hidden）。
 
-2) **关键结论**：前向 stash 通信可与下一层计算 kernel 完全重叠，专用 Pack Stream 使 tmp→paged stash 的拷贝延迟被计算掩盖，不引入额外气泡。
+该图直观论证了**Paged Stashing通过双流DMA使激活搬运与计算全重叠、零额外开销**的关键结论。
 
-3) **链路作用**：作为 MoE 训练显存-计算重叠优化的核心证据，证明 paged stashing 通过流并行实现了激活备份零开销，是支撑大规模 MoE 流水线高吞吐的关键环节。
+在论文中，它是支撑MoE激活重计算/存储优化可行性的核心示意图，配合Figure 28构成"内存换显存、重叠隐藏延迟"的完整技术叙事链。
 
 ### Figure 30 (p.50) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig30.png]]
@@ -433,11 +455,11 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > FP8 training recipes: Per-Tensor Scaling, Blockwise FP8, and MXFP8. A reduced-precision training recipe consists of: • Data format. There are two types of FP8 format: E4M3 and E5M2 [71, 74]. Usually there are two combinations used in training: ∘E4M3: Inputs, weights, and gradients are all quantized in the E4M3 format. ∘Hybrid: Inputs and weights are quantized in E4M3, while gradients are quantized
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图示内容（量化）**：展示三种FP8量化方案的缩放因子粒度。Per-Tensor为整张量1个scale（最粗，单色大方块）；Blockwise为128×128块1个scale（中等，2×2示意）；MXFP8为1×32元素1个scale（最细，6×6共36个小色块）。底部双向箭头标注粒度光谱：左侧"Coarse / Fewer Scales"，右侧"Fine / More Scales"。
+> 【图文联合解读】**图文联合解读：**
 
-**技术结论**：FP8训练配置由"数据格式（E4M3/Hybrid）+ 缩放粒度"联合定义；粒度越细→scale越多→数值精度越高，但scale元数据存储与计算开销也越大，三者构成精度–效率的权衡谱系。
+图示横向对比三种FP8量化方案的缩放因子（scale）分配粒度：① **Per-Tensor**——整个张量共享1个scale（绿色大方块）；② **Blockwise**——每128×128元素块1个scale（图中2×2=4块示意）；③ **MXFP8**——每1×32元素1个scale（6×6细密小格）。底部箭头标示从"Coarse Granularity / Fewer Scales"到"Fine Granularity / More Scales"的演进。
 
-**方法作用**：位于第5.3节首图，承接前文"三堵墙"分析，作为Reduced-Precision Recipes的形式化铺垫，为后续NVFP4讨论建立粒度对比基准。
+原文借此论证：FP8训练配方由数据格式（E4M3，或E4M3+E5M2混合）与缩放粒度共同决定；粒度越细，scale数量越多，数值稳定性越高，但存储/通信开销随之增加，构成**精度–效率权衡**。该图为Megatron-Core低精度栈的选型基础，决定MoE大规模训练中FP8路径的数值稳定性与吞吐表现。
 
 ### Figure 31 (p.52) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig31.png]]
@@ -491,9 +513,9 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > SDPA exhibits 𝑂(𝑠2) complexity, while MoE and the remaining attention operations exhibit 𝑂(𝑠) complexity. Therefore, SDPA dominates the computation at longer sequence lengths.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图(b)展示4K→256K序列长度下SDPA与MoE占总FLOPs占比的此消彼长：SDPA（红）由4K约13%单调升至256K约90%；MoE（蓝）由4K的59.4%降至256K的约6%。两曲线在约16K附近交叉，4K时MoE主导（59.4%），64K时SDPA主导（69.7%）。
+> 【图文联合解读】图(a)在0K–64K序列下展示三组件绝对FLOPs：SDPA（红）呈O(s²)于64K达32000+ TFLOPs，MoE（蓝）与剩余注意力（橙）为O(s)，同位置仅约10000和5000。图(b)4K–256K对数刻度显示占比演变：4K时MoE占59.4%主导，16K附近交叉于约40%，256K时SDPA升至约90%、MoE降至约6%。
 
-原图用以论证：SDPA复杂度为Θ(s²)、MoE及其他操作仅Θ(s)，故长序列训练时注意力成为算力瓶颈。论文据此强调须重点优化SDPA（如FlashAttention内核），才能使MoE模型在长序列场景下保持可扩展性。
+该图量化论证：序列超16K后，SDPA的二次复杂度使其取代MoE成为计算主导。论文借此指明长上下文MoE训练的优化重心应从MoE通信转向SDPA，为后续序列并行与计算-通信重叠等优化策略提供量化依据。
 
 ### Figure 35 (p.59) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig35.png]]
@@ -502,11 +524,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Communication and computation patterns of TP and two types of CP.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图以表格形式对比TP与两种CP（Context Parallel）在Core Attention中的通信与计算模式：CP(P2P)线性层权重复制，K/V切片直接送入SDPA并伴点对点通信；CP(A2A)权重同样复制，但K/V先经All-to-All重分布再输入SDPA；TP权重被切分并行、无额外集合通信步骤。
+> 【图文联合解读】**图35 图文联合解读**
 
-关键结论：CP方案下线性层权重在各rank上重复存储，attention输入仍需通过P2P或A2A通信才能正确分片到各rank；而TP通过将权重本身切分，使各rank天然持有对应分片，通信模式更简洁高效。
+**核心对象与结构**：表格对比TP与两种CP在Core Attention层的通信-计算模式。CP(P2P)：线性权重复制，SDPA前后以P2P传递sequence-sharded张量（环形通信）；CP(A2A)：线性权重复制，SDPA前后通过A2A在sequence-sharded与head-sharded布局间转换；TP：权重切分(paralleled)，单次SDPA处理head-sharded张量，无额外跨设备通信。
 
-该图为论文论证长序列训练中CP与TP的通信开销权衡提供直观对比，是方法选型与性能分析的核心参考依据。
+**关键技术结论**：CP保留完整线性权重（节省显存、可承载更长序列），代价是额外的集合通信开销；TP切分权重、通信最少但显存放大。与正文对照，该图量化了"P2P适合序列切分、A2A需配合head切分"的设计取舍。
+
+**方法链路作用**：作为MoE长序列训练中TP×CP×EP并行组合选型的可视化决策依据，支撑后续关于通信开销与显存权衡的实验分析。
 
 ### Figure 36 (p.61) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig36.png]]
@@ -517,14 +541,7 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**
-图(a)"Unpacked sequences"展示5条变长序列（橙、蓝、米、绿、紫），按各自长度独立放置，未做拼接。最长序列（如蓝色）决定批处理行高，其余序列（尤其米色）右侧留有大量空白/padding，仅为对齐最长序列。
-
-**2) 关键技术结论**
-"未打包"模式下，短序列被强制padding到与最长序列等长，造成**显著的计算浪费**——GPU算力消耗在无意义的padding token上，**吞吐效率下降**。这在MoE训练中尤其严重，因为不同样本激活的专家数与序列长度相关，padding会污染token路由与负载统计。
-
-**3) 在论文中的作用**
-该图作为**动机图**，引出后文提出的"Packed sequences"方案：通过将多条样本拼接填满固定context长度，消除padding冗余，从而**提升MoE训练吞吐与专家路由统计的准确性**，是该方法整体效率优化的关键铺垫。
+图(a)展示5条长度不一的序列（橙、蓝、米黄、绿、紫）按原始长度堆叠，存在大量空白区域；图(b)将所有序列统一填充至最大长度，形成密实矩形块。原文借此论证**打包序列（packed sequences）策略**可消除padding冗余，使批次内token利用率接近100%，显著提升训练吞吐与GPU计算效率。该图是论文方法链路的基础铺垫——为后续MoE训练中变长序列的高效批处理、专家路由与token drop策略提供数据组织层面的前提。
 
 ### Figure 37 (p.61) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig37.png]]
@@ -533,7 +550,7 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Compute imbalance in causal attention over packed sequences. are partitioned and which CP communication group is used by attention operators, without requiring any parameter redistribution or optimizer-state migration. Therefore, Dynamic-CP provides a practical form of dynamic parallelism for variable-length training with minimal framework overhead. Related work, including
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图中用4×4与4×2网格表示打包序列的因果注意力有效计算：左图7个单元集中为6+1，右图呈4+3分布，体现等长切分不等于计算均衡。原文据此指出变长样本会导致Context Parallel通信组负载不均；Dynamic-CP按序列长度动态选择切分和通信组，无需迁移参数或优化器状态，仅增加很小框架开销。该图是Dynamic-CP的动机性论证，并非性能实验。
+> 【图文联合解读】图以3个4×4批次展示因果注意力掩码，彩色单元为有效计算：同样4个token，长度3+1需7个单元，2+2仅6个，未填充的长度4则有10个，负载在6～10间失衡。该对比论证Dynamic-CP需按序列长度和掩码动态调整QKV划分及CP通信组；它无需迁移参数或优化器状态，框架开销低。该图是从固定CP迈向可变长度动态并行的关键动机。
 
 ### Figure 38 (p.61) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig38.png]]
@@ -553,7 +570,11 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Load balancing strategies in Megatron-Core MoE.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图分两栏对比Megatron-Core MoE的两种负载均衡策略：(a)辅助损失法沿 Logits→Score Function→Top-k Selection→Dispatch 路径，先按分数函数计算专家接收概率 P_i=(1/T)Σ probs(x,i)，再统计路由频次 f_i=(1/(T·topk))Σ routing_map(t,i)，以 L_aux=α·E·Σ(f_i·P_i) 做梯度反向传播的"可微软均衡"；(b)Sinkhorn 路线沿 Logits→exp→Row/Col Norm 迭代收敛→Top-k→Dispatch，以矩阵归一化分配实现"非可微硬均衡"（图中示例矩阵元素为 -4,-3,-2,-1）。两者为框架提供互补的专家路由机制选择，是支撑大规模MoE可扩展训练栈的关键模块之一。
+> 【图文联合解读】【对象】图分三栏对比 Megatron-Core MoE 三种负载均衡策略：(a) 辅助损失（梯度、可微、软均衡）经 Logits→分数函数→Top-k→Dispatch，附加 $L_{aux}=\alpha\cdot E[\sum f_i P_i]$；(b) Sinkhorn（指派、不可微、硬均衡）对 exp 矩阵迭代行列归一（no_grad）后 Top-k；(c) 无辅助损失偏置法（反馈、不可微、自适应）以 Logits+Expert Bias→Top-k→Dispatch→Token Counts 形成 $b_i\text{+=sgn}(avg-cnt_i)$ 闭环。
+
+【结论】呈现从"梯度惩罚→组合优化→无梯度反馈"的演进路线，揭示可微软均衡与不可微硬均衡之间的权衡。
+
+【作用】为论文 MoE 路由模块的方法选型与后续吞吐/质量对比实验提供统一基线。
 
 ### Figure 40 (p.65) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig40.png]]
@@ -564,11 +585,11 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图40展示Megatron-Core MoE的**共享专家架构**流程。核心结构：输入token流（T1–T7）经门控选Top-K→**Token Dispatch**（All-to-All通信，橙色框）→Norm→**Routed Experts Compute**（橙色框）→Norm→**Token Combine**（橙色框）→Add叠加共享专家输出→输出token。
+**1) 核心结构（图中可量化信息）：** 图示展示了 Megatron-Core MoE 的双路径架构。输入为 8 个 token（T0–T7），经 Router 分流为两条并行支路：左路（绿色）为 Shared Expert，对全部 8 个 token 依次执行 FC1 与 FC2 计算；右路（橙色）为 Routed Experts，仅对每个专家的 Top-K token 依次执行 Token Dispatch → Routed Experts Compute → Token Combine。最终通过 Add 操作将两路输出逐 token 相加，输出同样为 8 个 token。两路之间存在两个 "Comp/Comm Overlap" 节点（蓝色），用虚线箭头连接 Shared Expert 计算与 Dispatch/Combine 通信。
 
-**关键技术结论**：共享专家处理**全部token**，路由专家仅处理Top-K被分配的token；当启用overlap时，共享专家计算与Token Dispatch/Combine的All-to-All通信**并行执行**，从而隐藏通信延迟。
+**2) 关键技术结论：** Shared Expert 处理全量 token（计算量大但通信无关），Routed Experts 仅处理分配 token（需 All-to-All 通信）。通过 Comp/Comm Overlap，Shared Expert 的 FC1/FC2 计算可与 Token Dispatch/Combine 通信并发执行，隐藏其延迟，从而摊薄通信开销对整体吞吐的影响。
 
-**论文作用**：该图是Megatron-Core实现**计算–通信重叠（overlap）**优化的核心证据，支撑其作为Nemotron-3 Super/Ultra模型采用的MoE架构基础，证明双分支设计可在不增加关键路径时延的前提下扩展专家容量。
+**3) 在论文中的作用：** 该图作为计算–通信重叠优化的可视化证据，支撑论文关于"通过结构与流水线优化提升 MoE 训练可扩展性"的核心方法论，并佐证其已被 NVIDIA Nemotron-3 Super/Ultra 模型采纳，体现工业落地价值。
 
 ### Figure 41 (p.66) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig41.png]]
@@ -592,15 +613,27 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > An example of granular upcycling a dense layer into E2G2T2 fine-grained MoE. E2G2T2 denotes 4 experts, top 2, with half intermediate size. (1) We shard MLP weights in the intermediate dimension (4ℎ→2ℎ) then duplicate the shards. (2) We initialize half the router weights then duplicate them. This ensures Top2 always selects one of each MLP shard so MoE output is the same as the dense model at the s
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（Figure 42）：**
+> 【图文联合解读】**图文联合解读：**
 
-图示E2G2T2细粒度MoE结构：输入经**Grouped Router→topK/Softmax**，从**4个专家**中选通**top-2**（红箭头激活，灰X门控），每个专家含W1(**h×2h**)与W2(**2h×h**)，即中间维为密集MLP的一半，求和后输出。
+1. **核心对象**：左侧为稠密 MLP（含 W1∈ℝ^{h×4h}、W2∈ℝ^{4h×h}），右侧为细粒度 MoE E2G2T2（4 专家、组大小 2、Top-2、中间维减半 2h）。MLP 权重沿中间维切片为 2h 后复制成 4 组（h×2h），路由器权重 Wg 由 2×h 复制为 4×h，配合 Top-K/Softmax 强制每组各选一名专家。
 
-**关键技术结论：** 将密集MLP中间维切分为两半(4h→2h)并复制成2组专家，同时复制路由器权重使Top2**必然各选中一个不同分片**，训练起始MoE输出与原密集模型严格一致。
+2. **关键结论**：通过"沿中间维切片+复制"与"路由器权重复制"的组合初始化策略，可保证 MoE 输出在起步阶段与稠密模型数学等价，避免性能回退。
 
-**作用：** 这是"granular upcycling"的核心机制，实现从密集检查点**无损初始化**细粒度MoE，是论文扩大专家数量同时保持训练稳定性的关键链路。
+3. **链路作用**：作为"granular upcycling"的核心可视化证据，衔接稠密预训练向细粒度 MoE 的转换流程，是论文实现低成本、可扩展 MoE 训练的关键技术支撑。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.11) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab01.png]]
+> [!quote] caption
+> MoE component to process group mapping.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】表1将MoE四个组件映射到进程组（PG）：①Router用tp/cp/tp_cp，因权重在所有EP rank间复制；②Token Dispatcher用ep/tp_ep，需在expert rank间做all-to-all通信；③Experts用ep/expt_tp/expt_dp，权重按EP分片，梯度在EDP组内归约；④Shared Experts仅用tp，与稠密MLP一致。
+
+论证结论：MoE的Route→Dispatch→Compute→Combine四阶段并非单一并行范式可覆盖——路由需复制、调度依赖跨EP集合通信、专家计算采用"EP分片+独立DP"复合策略，共享专家则可复用稠密路径。
+
+作用：该表为整篇方法确立**统一进程组语义基线**，使后续通信-计算重叠、Drop&Pad、Fine-grained EP等可扩展优化在同一PG框架下正交叠加，支撑万卡级MoE训练。
 
 ### Table 2 (p.15) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab02.png]]
@@ -608,25 +641,47 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Contrasting parallelism requirements of attention and MoE layers within a single Transformer block.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表沿"计算特性 / TP / CP / EP"四个维度对比同一Transformer块内Attention（稠密）与MoE（稀疏）层的并行需求。Attention每token与全序列交互，QKV矩阵大适配高TP，长序列受益于高CP，无EP概念；MoE每token仅路由K/E个专家，单专家维度小使高TP适得其反，无序列依赖使CP失效，必须以EP分布大量专家。
+> 【图文联合解读】**图文联合解读**
 
-关键结论：同一块内两类层并行需求根本冲突，无法用单一方案统一处理，必须为MoE引入EP并设计TP/EP/CP细粒度可调的多维混合并行。
+**① 核心内容（量化对比）：** 表格从4个维度对比同Transformer块内Attention（密集）与MoE（稀疏）层的并行需求——
+- **Computation**：Attention每token全互attend；MoE每token仅路由top-K of E个专家。
+- **TP**：QKV矩阵大→宜高TP；单专家维度小→高TP反效。
+- **CP**：长序列→宜高CP；MoE无序列依赖→CP不相关。
+- **EP**：Attention不适用；MoE必需，用于分发大量专家。
 
-作用：作为方法动机表，支撑Megatron-Core中MoE专用并行调度（分片、组限专家、All-to-All通信优化）的设计依据。
+**② 关键论证结论：** 同一Transformer块内两层并行策略根本冲突——Attention依赖TP+CP切分计算；MoE则必须EP，传统TP低效、CP完全失效。
+
+**③ 论文作用：** 作为核心动机，揭示MoE训练需异构细粒度并行，支撑Megatron-Core对密集/稀疏层分别调度、并组合TP/CP/EP的整体架构设计。
+
+### Table 3 (p.20) ⭐深度解读
+![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab03.png]]
+> [!quote] caption
+> Memory breakdown per GPU for DeepSeek-V3 with BF16 training (PP 4 × VPP 4 × EP 64 , 256 GPUs).
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+图像本身未呈现 Table 3 的具体条目（如各模块分项数值），仅展示了正文段落与表标题，因此可解读内容须结合原文语境。
+
+**1) 核心对象与结构**：表 3 展示 DeepSeek-V3 在 BF16 精度、PP4×VPP4×EP64 跨 256 GPU 配置下的**单卡显存分解**（按模型参数、激活、优化器状态、专家路由等模块拆分），原文给出的关键量化结论是**单卡总显存需求达 199.5 GB**。
+
+**2) 关键技术结论**：该表作为基线证据，用以论证 MoE 模型因专家路由、专家参数及专家级激活等多重开销，显存远超同规模 Dense 模型，且**199.5 GB 显著超出 H100 的 80 GB 容量上限**，凸显"无优化则不可训练"的现实瓶颈。
+
+**3) 在论文链路中的作用**：表 3 是**优化方案必要性**的量化锚点——紧接其后的表 4 在同一配置下对比不同重计算目标的显存削减效果，形成"基线 → 优化收益"的递进论证链，为后文介绍选择性重计算、专家并行等 Megatron-Core MoE 训练技术提供动机与基准。
 
 ### Table 4 (p.23) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab04.png]]
 > [!quote] caption
-> summarizes the memory reduction achieved by different recomputation targets for the DeepSeek-V3 configuration in Table 3 .
+> Memory reduction per GPU from fine-grained recomputation for DeepSeek-V3 (PP​4×VPP​4×EP​64, 256 GPUs).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明：图像中未呈现 Table 4 的实际表格内容，仅展示了引用该表的两段正文（Granular recomputation 与 Output-discarding recomputation），数据无法辨认。以下仅依据原文解读：**
+> 【图文联合解读】**Table 4 图文联合解读：**
 
-1) **核心对象**：Table 4 量化对比了 DeepSeek-V3 配置下，不同重计算（recomputation）目标所获得的显存节省幅度，包括专家 MLP 激活函数、LayerNorm、MLA 上投影等细粒度模块，以及"丢弃输出"重计算策略。
+**1) 核心对象与数据**：该表展示 DeepSeek-V3 配置（PP4×VPP4×EP64，256 GPUs）下，三种细粒度重计算（fine-grained recomputation）目标各自节省的单 GPU 显存——MLA Up-Projection 节省 30.4 GB（最大）、LayerNorm 节省 8.2 GB、SwiGLU 激活函数节省 3.8 GB，三者合计节省 42.4 GB。
 
-2) **关键技术结论**：原文论证两点——①细粒度（granular）重计算仅对选定的子模块重算，附加计算开销 <5%，却能显著降低激活显存；②"输出丢弃"重计算在前向时及时释放 checkpoint 模块的输出，反向时再重算恢复，进一步压缩显存，且不损失梯度正确性与训练动力学。
+**2) 关键结论**：论文以此论证"选择性重计算"远比粗粒度全量重计算高效：仅针对显存占比最大的 MLA Up-Projection 即可回收约 30 GB，验证细粒度策略能在极小计算开销下显著释放显存，使大 MoE 模型得以在 256 卡集群上可行训练。
 
-3) **在论文链路中的作用**：Table 4 作为实验证据，支撑 MoE 大模型训练栈中显存优化的两类核心技术主张，与 Table 3 的模型配置、Figure 4 的 EP 通信方案共同构成 Megatron-Core 在计算、通信、激活三维度协同扩展 MoE 训练的方法论闭环。
+**3) 链路作用**：作为方法验证环节的关键量化证据，配合 EP64 的 all-to-all 通信与 Table 3 的整体配置，共同支撑 Megatron-Core 可扩展训练 MoE 的工程可行性结论。
 
 ### Table 5 (p.25) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab05.png]]
@@ -634,13 +689,11 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Memory and throughput impact of fine-grained activation offloading.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表5核心内容**：对比两模型在开启细粒度激活卸载（+Offload）前后的显存与吞吐。
-- **DeepSeek-V3 full**（TP1PP8EP32VPP4, MXFP8）：169→151 GB（**−10.7%**），945→930 TF/s（**−1.6%**）——显存显著节省，吞吐近乎无损；
-- **Qwen3-235B**（TP2→TP1 + EP16→EP64）：172→175 GB（**+1.7%**），800→920 TF/s（**+15.0%**）——结合并行折叠后，显存略增但吞吐大幅跃升。
+> 【图文联合解读】**Table 5 联合解读：**
 
-**技术结论**：激活卸载与MoE Parallel Folding（尤其EP扩展）存在强协同——以极低代价换取显存，或近乎"白嫖"地获取吞吐增益，验证了Megatron Core中激活管理与并行解耦策略的实用性。
+表5对比两模型启用细粒度activation offloading的效果。**DeepSeek-V3**（TP1PP8EP32VPP4, MXFP8）：内存169→151 GB（−10.7%），吞吐945→930 TF/s（−1.6%），表明在已用VPP压缩场景下，offload以极小吞吐代价换取显著内存节省。**Qwen3-235B**：结合offload重配并行（TP2→TP1 + EP16→EP64），吞吐由800→920 TF/s（+15%），内存仅+1.7%，说明offload释放的显存可支撑更高EP并行度从而大幅提速。
 
-**实验链作用**：作为支撑性数据，证明在数十B–千B级MoE模型训练中，激活卸载是平衡显存与吞吐的关键优化手段，为整篇方法的可扩展性论证提供量化证据。
+**作用**：论文以此论证fine-grained activation offloading不仅是被动内存优化手段，更是MoE训练中实现配置灵活性（与MoE Parallel Folding互补）的关键支撑组件，使大模型在不同硬件约束下都能找到更优的吞吐-显存平衡点。
 
 ### Table 7 (p.32) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab07.png]]
@@ -648,13 +701,15 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > EP Scaling Performance for HybridEP and all-to-all (in µs).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 7 联合解读**
+> 【图文联合解读】**Table 7 图文联合解读**
 
-1) **对象与数据**：该表量化了 HybridEP 与 all-to-all 两种 MoE 通信原语，在 GB200 与 H100 两种硬件上、EP size ∈ {8,16,32,64} 的 dispatch 与 combine 时延（µs）。关键读数：GB200 EP=64 dispatch 为 675 vs 930，差距温和；H100 EP=64 dispatch 达 4626 vs 9164，HybridEP 近乎 2× 加速；combine 趋势一致。
+**1) 核心对象**：表7给出 HybridEP 与 all-to-all 在 dispatch/combine 两类通信上的延迟（μs），横轴为 EP size∈{8,16,32,64}，纵轴为 GB200 与 H100 两平台。量化看，H100 EP=64 dispatch：HybridEP 4626 vs A2A 9164（≈2.0× 加速）；GB200 EP=64 dispatch：675 vs 930（≈1.4×）；combine 同趋势。所有 EP 下 HybridEP 均快于 A2A。
 
-2) **关键结论**：HybridEP 在大 EP 规模下显著优于传统 all-to-all，且优势在缺乏高速域内互联的 H100 上被放大——印证了 Fig.7 中 Memory-Efficient Permutation 路线（将 permute 前置、融合 group send/recv、释放中间张量）所带来的通信开销削减与显存节省。
+**2）关键结论**：HybridEP 在所有规模/平台上均优于纯 all-to-all，且优势随 EP 扩大而显著放大（尤其 H100，EP=8→64 时 A2A 从 1265 涨至 9164 μs，HybridEP 仅 661→4626 μs，扩展性更优）。
 
-3) **链路作用**：作为论文 MoE 训练栈的通信层基准证据，Table 7 与 Fig.7 共同支撑"Megatron-Core 通过 HybridEP + 内存高效排列实现大规模 EP 可扩展训练"的核心论点，是实验评估章节的关键性能锚点。
+**3）作用**：为 HybridEP 作为 MoE 可扩展通信骨干的论断提供端到端通信开销实测证据，支撑论文在大规模 EP 训练场景下"通信可控、可扩展"的核心论点。
+
+（注：所给引用段落实为 Figure 7 解读，与 Table 7 无直接关联，故以上仅依据表格内容。）
 
 ### Table 8 (p.49) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab08.png]]
@@ -662,13 +717,7 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Summary of the impact from reduced-precision training on the Three
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表8 图文联合解读：**
-
-表8以"三堵墙"为行、低精度训练收益为列，给出量化结论：**内存墙**——FP8/FP4分别降低激活50%/75%，消除BF16权重副本并保留BF16优化器状态（§4.1.3 / 5.3.5 / 4.1.6）；**通信墙**——参数AllGather量减半（§5.3.5）；**计算墙**——Tensor Core GEMM加速，但伴随量化kernel额外开销（§4.3.5 / 4.3.2）。
-
-论文借此论证：低精度训练并非单一优化，而是**同时**撬动内存、通信、计算三维的"全栈杠杆"，是MoE规模化突破显存与带宽瓶颈的核心使能技术。
-
-该表与第4–5章各节实现细节形成"结论—落地"映射，作为Megatron-Core方法完备性的横截面总结，凸显"精度压缩+系统优化"协同设计的整体逻辑。
+> 【图文联合解读】Table 8 归纳降精度训练对大模型训练"三大墙"的量化收益：①**Memory墙**：FP8/FP4 激活存储分别降低 50%/75%，消除 BF16 权重复本，优化器状态转 BF16（§4.1.3/5.3.5/4.1.6）；②**Communication墙**：AllGather 参数通信量减半（§5.3.5）；③**Compute墙**：Tensor Core GEMM 加速，但引入量化 kernel overhead（§4.3.5/4.3.2）。技术结论：降精度可同时击穿内存、通信与算力三堵墙，代价是 compute 端存在量化开销权衡。该表在论文方法链路中充当全局收益清单，将 4.x/5.x 各章节的优化按"墙"维度归并，为读者提供一站式视图，是论证万亿 MoE 可扩展训练可行性的关键技术拼图。
 
 ### Table 9 (p.58) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab09.png]]
@@ -676,11 +725,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > SDPA performance in cuDNN for DeepSeek-V3.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表9图文联合解读：**
+> 【图文联合解读】**Table 9 联合解读**
 
-表9对比Hopper与Blackwell两代GPU平台下DeepSeek-V3 SDPA算子在cuDNN中的前/反向TFLOPS，覆盖序列长度4096与16384。数据上Blackwell实现压倒性领先：序列4096时前向1324 vs 553 TFLOPS（≈2.4×）、反向1083 vs 422（≈2.57×）；序列16384时前向1698 vs 638 TFLOPS（≈2.66×）、反向1298 vs 523（≈2.48×）；且两平台均呈现"长序列TFLOPS更高"的特征，反向约为前向的76–82%。
+**核心数据**：表9量化对比了Hopper与Blackwell两代GPU在DeepSeek-V3上cuDNN SDPA的吞吐性能。序列长度为4096时，Hopper前向/反向分别为553、422 TFLOPS，Blackwell跃升至1324、1083；序列扩至16384后，Hopper达638/523，Blackwell达1698/1298 TFLOPS。
 
-该表用于论证新一代Blackwell架构对注意力计算的核心加速能力，量化其在DeepSeek-V3这一MoE超大模型训练中的硬件红利，支撑论文在新一代平台上开展大规模MoE训练的方法选择与性能预期。
+**关键技术结论**：Blackwell相对Hopper实现约2.4倍前向、2.5倍反向加速；且序列从4096延至16384，两平台吞吐均显著提升（如Blackwell前向+28%），表明长序列下注意力计算利用率更高。
+
+**论文链路作用**：作为Megatron-Core在最新硬件上的性能基准实验，支撑论文关于"全栈协同优化（算法+并行+硬件）"的核心主张，证明cuDNN SDPA能充分释放Blackwell算力，是模型端到端训练效率论证的关键一环。
 
 ### Table 10 (p.66) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab10.png]]
@@ -688,7 +739,11 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Layer distribution for DeepSeek-V3 with flexible asymmetric VPP (PP = 16 , VPP = 2 ).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】所引 Figure 10 卸载/重计算段落与 Table 10 不匹配；以下按表下正文解读。表展示 DeepSeek‑V3 在 PP=16、VPP=2 时的非对称布局：16 个 PP rank；rank 0 为 embedding＋3 decoder／2 decoder，rank 1–13 各 2／2 decoder，rank 14 为 2 decoder／MTP，rank 15 为 2 decoder／loss，共 61 个 decoder。说明灵活 VPP 可摆脱层数整除及首尾模块限制，通过细粒度分层实现负载均衡；该表为虚拟流水并行提供配置实例，连接模型结构与大规模 MoE 训练，并非性能实验。
+> 【图文联合解读】**表10内容**：PP=16、VPP=2下DeepSeek-V3层级分布——PP rank 0的VPP rank 0承载"embedding + 3× decoder"，其余PP rank的VPP rank 0均为"2× decoder"；VPP rank 1中PP rank 0–13为"2× decoder"，PP rank 14为MTP模块，PP rank 15为loss计算。
+
+**技术结论**：支撑Flexible Asymmetric VPP设计——允许同一PP rank内两VPP rank承担非等量decoder层（首段3:2），并将embedding、MTP、loss等异构组件定向吸附至首/尾边界阶段，从而在统一PP拓扑下消除尾部流水线气泡、平衡各阶段计算负载。
+
+**论文作用**：作为"灵活非对称流水线"能力的实证样例，与Table 9等LLM配置互补，证明Megatron-Core可承载DeepSeek-V3等含MTP、dense/MoE混合的非均匀架构的可扩展训练。
 
 ### Table 11 (p.69) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab11.png]]
@@ -696,17 +751,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Unified throughput benchmarks (per-GPU figures) for two mixture-of-experts models on NVIDIA GB300, GB200, and H100. All configurations use force-balanced routing. The Dtype column specifies the FP8
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**注意**：用户提供的引用段落实际是关于"Figure 11 分片策略对比（FSDP2 vs Megatron-FSDP）"的描述，与图中所示的 Table 11 吞吐基准表不匹配。以下解读严格依据图中表格内容：
+> 【图文联合解读】**图文联合解读（Table 11）**
 
----
+**1) 核心对象与数据**：该表对比 DeepSeek-V3 与 Qwen3-235B 两个 MoE 模型在 GB300/GB200/H100 三代硬件上的单卡吞吐（Per-GPU TF 与 Tokens/s/GPU），均采用 force-balanced 路由，Seqlen 多为 4096，末行覆盖长序列 131,072。数据呈梯度递增：Qwen3-235B 在 H100（BF16）为 320 TF → GB200（MXFP8）919 TF → GB300（MXFP8）974 TF；DeepSeek-V3 同趋势，从 368 TF 升至 1233 TF。
 
-**Table 11 图文联合解读**
+**2) 关键技术结论**：a) 硬件代差显著——Blackwell（GB300/GB200）相比 Hopper（H100）吞吐提升约 2.5–3×；b) FP8 量化（MXFP8 vs BF16）带来 ~20% 增益；c) 长序列场景下 Tokens/s/GPU 下降（1556 vs 6583），暴露 attention 开销瓶颈。
 
-该表在统一 SeqLen=4096、force-balanced 路由下，对比 DeepSeek-V3 与 Qwen3-235B 两款 MoE 在 GB300 / GB200 / H100 三代硬件上的单卡吞吐（TFLOPs/GPU、Tokens/s/GPU）。量化结果：DeepSeek-V3 在 GB300/256 卡 MXFP8 下达到 1233 TF 与 4730 tokens/s，较同规模 GB200 BF16（857 TF / 3298 tokens/s）提速约 **44%**；GB200 MXFP8 为 1048 TF，H100（1024 卡 FP8-BLK）仅 368 TF。Qwen3-235B 趋势一致：GB300 MXFP8 974 TF vs GB200 BF16 750 TF（**+30%**）。长序列 131072 下吞吐骤降至 1556 tokens/s。
-
-**技术结论**：Blackwell 架构 + MXFP8 相对 Hopper / BF16 带来显著代际收益（约 1.3–1.4×），H100 性能约为 Blackwell 的 30%，长序列受注意力成本制约吞吐。
-
-**论文作用**：作为统一基准，支撑 Megatron-Core 在多代际 NVIDIA 硬件上规模化训练 MoE 模型的核心方法主张。
+**3) 论文链路作用**：作为最终端到端验证，证明 Megatron-Core 在最新 Blackwell 平台上对大规模 MoE 模型的统一吞吐竞争力，并量化 FP8/路由/硬件协同的工程收益。
 
 ### Table 12 (p.70) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab12.png]]
@@ -714,9 +765,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Impact of parallelism strategies on memory and communication. d = parallelism degree. †Requires distributed optimizer (--use-distributed-optimizer).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】1. 表12以并行度d量化TP、EP、PP、CP、DP：TP激活（配SP）、权重、状态均为1/d；EP激活约1且受负载影响，MoE权重/状态1/d；PP基础激活1（VPP时>1），权重/状态1/d；CP仅激活1/d；DP仅在分布式优化器下状态1/d。  
-2. 各策略单层通信依次为高、中、中、中、低；TP/PP/EP切分参数，CP不减权重，DP通信最低。  
-3. 表为MoE训练的显存—通信权衡及混合并行选型提供依据，连接算法、显存优化与扩展性能实验。
+> 【图文联合解读】**Table 12 深度解读**
+
+1) **核心对象与数据**：表对比 5 种并行策略（TP/EP/PP/CP/DP）在 4 个维度上的伸缩性，以并行度 d 为因子：①TP 激活与权重均为 1/d（含 SP），通信 High；②EP 激活约 1（load-dependent），仅 MoE 权重缩为 1/d，通信 Medium；③PP 激活 1（VPP 时 >1）；④CP 激活 1/d，权重不缩，optimizer 1/d†；⑤DP 三者均不缩，optimizer 仅靠分布式优化器降至 1/d†，通信 Low。
+
+2) **关键技术结论**：单一策略无法同时兼顾显存与通信——TP 显存最优但通信最重；EP 因负载依赖显存几乎不缩；CP/DP 显存收益有限；故 MoE 训练必须组合多种并行。
+
+3) **论文作用**：为 Megatron Core 的 5D 并行（DP+TP+PP+EP+CP）选型提供量化权衡依据，是设计可扩展 MoE 训练栈的理论参照表。
 
 ### Table 13 (p.72) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab13.png]]
@@ -724,13 +779,15 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Memory bottleneck solutions.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 13 图文联合解读**
+> 【图文联合解读】**图像说明**：裁切图仅显示了表格上方的上下文文本（含"Memory Bottleneck (Memory Wall)"小节标题、症状描述及解决方案引导句），以及底部表注"Table 13: Memory bottleneck solutions."，**表格主体的行/列数据未在图中呈现，无法直接读取具体条目**。
 
-1）**核心对象与结构**：图示为论文 Table 13 的局部可见内容，仅呈现"Memory Bottleneck (Memory Wall)"这一行的三字段条目——**类别名、Symptom（症状）、Solutions（解决方案）**。症状列具体描述为：被迫使用全重计算（full recomputation）或过大的并行度以避免 OOM 显存溢出；解决列为：应用 Table 13 所列的显存节省技术以降低显存占用。
+**基于可见文本的解读**：
 
-2）**论证的关键技术结论**：作者将显存瓶颈归纳为一种可枚举的故障模式（Memory Wall），其根因是激活/参数驻留显存超限；通过引入系统化的显存节省技术（如选择性重计算、参数分片、混合精度等），可在**不显著牺牲计算效率**的前提下缓解 OOM，替代"粗放式"地堆叠并行度或全量重算。
+1）该表隶属"Megatron-Core 排错手册"中的"Memory Wall"小节，症状被明确定义为"被迫全量重计算或使用过大并行度以避免 OOM"，所列条目为针对该瓶颈的内存节省手段（文本指向 Table 13）。
 
-3）**在论文链路中的作用**：Table 13 位于方法诊断篇，作为 **MoE 训练中四大瓶颈（显存、通信、计算、扩展性）的问题–对策速查表**之一，与正文各章节的优化方案（如选择性重计算、all-to-all 调度、并行策略搜索）一一对应，为读者按症状选择对应优化提供导航。
+2）论文据此论证：当 MoE 训练遭遇显存墙时，**应优先施加细粒度重计算（如仅对 MoE 层/专家计算块 selective recompute）及状态/激活卸载**等手段，以在保持大 batch 与适度 TP/EP 并行度的同时控制显存，**而非粗暴地全量重算或堆叠并行度**。
+
+3）该表作为"诊断→解法"对照表，是论文 MoE 大规模训练方法链路的运维配套：先由决策树定位瓶颈类别（显存/计算/通信），再回查本表选取对应优化，构成端到端可操作指南。
 
 ### Table 14 (p.72) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab14.png]]
@@ -738,23 +795,13 @@ Megatron-Core对静态可复现的计算段（attn、expert GEMM等）实施CUDA
 > Communication bottleneck solutions.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】# Table 14 图文联合解读
+> 【图文联合解读】**图文联合解读：**
 
-**说明**：图片仅清晰显示表格的标题（"Table 14: Communication bottleneck solutions"）及前后语境文字，表格主体的行列内容未能完整呈现，以下结合可见信息与原文上下文进行解读。
+**1）核心对象与结构：** 图像仅显示该表所在章节的标题"Communication Bottleneck (Communication Wall)"及症状描述（profile显示collective operations耗时显著），并指明需查Table 14定位对应优化方案。表格主体未在图像中呈现，仅可读到caption"Communication bottleneck solutions"，推测表格按"瓶颈类型（如all-to-all dispatch/combine、DP/TP/EP通信）→症状表现→对应优化手段（融合kernel、HybridEP、grouped GEMM等）"逐行列出。
 
-## 1) 核心对象与结构
+**2）关键技术结论：** 作者主张MoE大规模训练中通信墙普遍存在，需先profile定位瓶颈（集合通信占比），再对症下药：dispatch/combine瓶颈用HybridEP融合调度，TP/DP瓶颈用张量并行融合，EP负载不均用token dropping或capacity factor调节。
 
-根据可见内容，Table 14 围绕**通信瓶颈（Communication Wall）**展开，结构上呈现"症状—解决方案"的映射关系：
-- **症状（Symptom）**：Profiling 显示 collective operations 占用大量时间；
-- **解决方案（Solutions）**：定位瓶颈通信类型并施加对应优化（如行内引用 "(Table 14)" 所指）。
-
-## 2) 原文论证的关键结论
-
-该表将 MoE 训练中的通信瓶颈分类化、可操作化：它把"通信成为 wall"的现象与具体优化手段一一对应，避免了笼统优化。结合 Figure 14 中 HybridEP dispatch kernel 的 RDMA 跨节点 + 节点内转发设计，论文意在说明：MoE all-to-all / dispatch 的通信热点需通过**端到端定制内核**（HybridEP）按通信模式精准解决，而非套用通用集合通信原语。
-
-## 3) 在整体方法链路中的作用
-
-Table 14 是论文"性能诊断→优化映射"工具链的**速查表**，位于系统优化章节末尾的实践指南位置，配合 HybridEP、内核融合、并行策略等内容，为读者在部署 MoE 大模型训练时提供**自检—归因—施治**的闭环参考，支撑论文"可扩展 MoE 训练"这一核心贡献的工程落地。
+**3）论文整体作用：** 该表是Megatron-Core的"排错速查表"，与前述各章节HybridEP、Expert Parallel、GroupedMLP等优化形成闭环——既给出理论方案，又提供实战调优路径，是将技术成果落地为可操作指南的关键桥梁。
 
 ### Table 15 (p.73) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab15.png]]
@@ -762,11 +809,13 @@ Table 14 是论文"性能诊断→优化映射"工具链的**速查表**，位�
 > CPU overhead bottleneck solutions.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 15 图文联合解读：**
+> 【图文联合解读】## 图文联合解读
 
-该表为"问题—对策"两行结构。**Symptom**：Nsight Systems 时间轴显示 GPU kernel 间出现空隙，CPU 发起 kernel 速度跟不上。**Solutions**：通过减少 host 端 kernel 启动次数并启用 CUDA Graphs 来降低 CPU 开销。
+**核心对象与数据**：Table 15 列出 1 条 CPU 瓶颈诊断记录——**Symptom**："Nsight Systems 时间线显示 GPU kernel 间存在间隙，CPU 无法及时下发 kernel"；**Solutions**："通过减少 kernel launch 次数 + 启用 CUDA Graphs 来削减 host-side 开销"。
 
-论文借此论证：MoE 训练扩展时，单步 kernel 数量激增，CPU 调度成为关键瓶颈，导致 GPU 出现空泡。该表作为性能瓶颈诊断清单的一节，配合 Figure 14/15 等 profiling 视图，主张借助 CUDA Graphs 等技术消除 host overhead，否则大量小 kernel 将抵消 GPU 算力。它是论文优化章节"识别瓶颈→给出方案"链路的标准条目，体现 Megatron-Core 在大规模 MoE 端到端调优中的工程完备性。
+**关键技术结论**：当 profiler 揭示 CPU 是瓶颈（非 GPU）时，论文给出的双管齐下策略——① 算子融合减少 launch 次数；② CUDA Graph 捕获/重放，将多次 launch 合并为一次图提交，绕过 CPU launch latency。
+
+**论文链路作用**：该表属于"性能诊断→根因定位→优化处方"方法学的一环，与前文 GPU 侧优化（如 Fig 15 HybridEP combine kernel）共同构成 MoE 端到端训练调优指南——既优化 GPU kernel 本身，也消除 CPU launch overhead 造成的 stall gap，二者缺一不可。
 
 ### Table 16 (p.73) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab16.png]]
@@ -774,9 +823,13 @@ Table 14 是论文"性能诊断→优化映射"工具链的**速查表**，位�
 > Computation bottleneck solutions.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**注：图片仅显示了表格的引导文字（Symptom / Solutions 段落及表题），未呈现表格主体内容（具体的 kernel 优化手段清单），故主要依据原文及上下文进行解读。**
+> 【图文联合解读】**Table 16 图文联合解读：**
 
-表格 16 聚焦 **"计算瓶颈"（Computation Bottleneck）**，对应症状为：无通信或 CPU 瓶颈的前提下，GPU SM 利用率仍偏低。其核心结构列出三类内核级优化手段：①**Batching**——合并小 kernel，降低调度/访存开销；②**Fusion**——算子融合，消除中间张量读写；③**Lower precision**——降低数值精度以缩减计算量与带宽占用。原文借此论证：在通信与 CPU 瓶颈已被排除后，低效 kernel 本身仍会拉低吞吐，必须从内核层面系统补齐短板。该表与论文中针对通信、CPU、调度等其他瓶颈的方案表并列，共同构成 **Megatron-Core 全栈性能调优链路**，支撑 MoE 在高密度 Expert 并行下的可扩展训练。
+1. **核心对象与数据**：表名"Computation bottleneck solutions"，针对"计算瓶颈（计算效率墙）"——细粒度 MoE 架构中 GEMM 尺寸过小致 GPU kernel 硬件利用率不足的现象。其症状为 GPU SM 利用率低但无通信/CPU 瓶颈；解决方案为通过 **批处理（batching）、算子融合（fusion）、低精度（lower precision）** 提升 kernel 效率。
+
+2. **论证结论**：细粒度 MoE 拆专家导致单次 GEMM 过小，仅靠通信优化（如图16的 all-to-all 重叠）无法解决端到端效率，必须从 kernel 层面入手，融合小算子、降低精度，方可突破计算效率墙。
+
+3. **论文作用**：与 Figure 16（通信瓶颈/重叠方案）并列，构成 MoE 训练双瓶颈诊断表（计算+通信），是 Megatron-Core 性能调优方法链路中的关键对照表。
 
 ### Table 17 (p.74) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab17.png]]
@@ -784,9 +837,13 @@ Table 14 是论文"性能诊断→优化映射"工具链的**速查表**，位�
 > DeepSeek-V3 final optimized configurations on GB200 and H100. † Parallel Folding is used; TP
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表 17 对比 DeepSeek-V3 在 GB200（256 卡）与 H100（1024 卡）的最终优化配置：TP/PP/EP 分别 1/4/64 与 2/8/64（均 VPP=4，EP=64），GBS/MBS/SeqLen 同为 8192/1/4096；精度 MXFP8 对 FP8-Blockwise，Dispatcher 用 HybridEP 与 DeepEP；Recompute 范围、CUDA Graphs、EP all-to-all Overlap 按硬件特性差异化；最终性能 1048 vs 368 TFLOPS/GPU。
+> 【图文联合解读】**Table 17 解读**
 
-论文论证：MoE 大模型训练无"统一最优配方"，需按硬件定制——GB200 借 CUDA Graphs+MXFP8 即高效，H100 则需更激进 Recompute 与 EP 通信掩盖。作为端到端案例，它验证 Megatron-Core 对前沿 MoE 模型与异构硬件的灵活适配能力，是论文"可扩展 MoE 训练"主张的关键实证。
+**核心数据**：对比 GB200（256 卡）与 H100（1024 卡）上 DeepSeek-V3 最终配置——并行度分别为 TP/PP/EP=1/4/64 与 2/8/64，VPP=4，GBS/MBS/SeqLen=8192/1/4096；GB200 采 MXFP8+HybridEP+CUDA Graphs+仅 mlp 重算，性能 1048 TFLOPS/GPU；H100 采 FP8-Blockwise+DeepEP+扩展重算（mlp/mla_up_proj/moe_act/layernorm）+ EP all-to-all overlap，性能 368 TFLOPS/GPU。
+
+**关键结论**：同一框架下两平台通过差异化组件组合分别逼近硬件最优——GB200 借助低通信开销与 CUDA Graph 捕获获得约 2.85× H100 的单卡吞吐，H100 须以更激进的算子重计算换取显存与以 all-to-all overlap 掩盖通信，体现 Megatron-Core 配置的可移植性。
+
+**论文作用**：作为端到端实证 case，将并行策略、精度、调度、重计算等组件联合调优落地于真实 DeepSeek-V3 规模。
 
 ### Table 18 (p.74) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab18.png]]
@@ -794,15 +851,20 @@ Table 14 是论文"性能诊断→优化映射"工具链的**速查表**，位�
 > DeepSeek-V3 optimization summary by platform.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 18 图文联合解读**
 
-1) **表格核心内容**：Table 18 按"Category × 平台（GB200 / H100）"两列组织，汇总 DeepSeek-V3 在两大硬件平台上的优化项。可见行"Parallelism"显示 GB200 与 H100 两栏**完全一致**，均采用 *Parallel Folding* 与 *Flexible VPP* 两种并行策略（其余行在截图中不可见）。
+该表按 Platform（GB200 vs H100）× Category（Parallelism/Precision/Memory/Communication/Compute Efficiency）双维度对照 DeepSeek-V3 的优化栈。
 
-2) **论证的关键结论**：两平台在并行维度上**优化配置对齐**，表明 Megatron-Core 所提的 Parallel Folding（计算/通信折叠）与 Flexible VPP（弹性虚拟流水线）属于**跨硬件可移植的通用机制**，并非某一 GPU 专属技巧，验证了方法的可复现性。
+**关键数据对比：**
+- **并行策略**：两者一致，均为 Parallel Folding + Flexible VPP。
+- **精度**：GB200 采用 **MXFP8**，H100 采用 **FP8-Blockwise**（对应各自硬件原生支持）。
+- **内存优化**：共有 Memory-efficient permutation、Fine-grained recomputation、FP8 primary weights、Low-precision optimizer states；**GB200 额外启用 Optimizer states offloading**。
+- **通信**：GB200 用 **HybridEP**，H100 用 **DeepEP EP Communication overlap**。
+- **计算效率**：GB200 额外启用 CUDA Graphs 与 CPU-side optimizations，H100 仅 Kernel fusions。
 
-3) **在论文中的作用**：该表置于 DeepSeek-V3 端到端 case study 末尾，**作为平台无关性的实证证据**——将前文抽象的 MoE 优化技术（EP overlap、Parallel Folding、Flexible VPP 等）落地到具体 GPU，串联起"通用框架 → 真实大模型训练"的实验链路，强化"Megatron-Core 方案具备规模化、工程化部署能力"的核心论点。
+**核心结论**：Megatron-Core 的核心优化（并行/重计算/FP8 主权重/低精度优化器状态）在两平台可复用，但需针对硬件特性在精度格式、通信原语、内存卸载及图捕获上做平台特定调优。
 
-（注：截图仅可见 Parallelism 一行，其余优化项如 Communication、Memory 等分类未能呈现，已据原文推测框架。）
+**在论文中的作用**：作为 DeepSeek-V3 大规模训练 case study 的"优化配方表"，论证 Megatron-Core 既具备**跨平台可移植性**，又允许**硬件感知的差异化配置**，支撑"同一框架、多平台部署"的方法论。
 
 ### Table 19 (p.86) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab19.png]]
@@ -810,13 +872,9 @@ Table 14 是论文"性能诊断→优化映射"工具链的**速查表**，位�
 > Notation and abbreviations used throughout this report.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 19 图文联合解读**
-
-该表为全报告符号/缩写索引，分6类共约25项：①**模型参数**E专家数、K top-k路由(K≤E)、h隐维、Nactive∝K(激活)、Ntotal∝E(总参)；②**训练维度**T每GPU token、B批大小、s序列长、L MoE层数；③**并行维度**：TP/PP/CP/DP通用 + MoE专属EP/ETP/EDP及调度VPP；④**批配**MBS/GBS/GA；⑤**精度**BF16/FP8-BLK(Hopper)/MXFP8(Blackwell)；⑥**度量缩写**MFU/GEMM/SDPA/MLA/MTP。
-
-**技术结论**：以 Nactive∝K、Ntotal∝E 定量刻画MoE稀疏激活；引入EP/ETP/EDP等MoE专属并行维度，体现MoE相比稠密模型的并行扩展性。
-
-**论文作用**：作为统一术语索引，支撑后续scaling law公式、并行策略以及Fig.19所示all-to-all与interleaved PP重叠调度的图表解读。
+> 【图文联合解读】①该表统一6类符号：E为每层专家数，K为Top‑k且K≤E，h为隐维，N为总参数，Nactive随K缩放、Ntotal随E缩放；训练含T/B/s/L；并行含TP、PP、CP、DP、EP、ETP、EDP、VPP；批配置为MBS/GBS/GA；精度含BF16、FP8‑BLK、MXFP8；指标含MFU等。  
+②它无实验数值，核心是区分激活参数和全部专家容量。  
+③其统一方法、调度、精度与评测口径，支撑MoE跨GPU实验对照。
 
 ### Table 20 (p.87) ⭐深度解读
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab20.png]]
@@ -824,11 +882,13 @@ Table 14 是论文"性能诊断→优化映射"工具链的**速查表**，位�
 > Parallelism and training configuration details for benchmark entries reported in Table 11 .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 20 列示 DeepSeek-V3 与 Qwen3-235B 两类 MoE 模型在 GB300/GB200/H100 上的训练配置：GPU 数、序列长度（4k 与 128k）、精度格式（MXFP8/BF16/FP8-BLK）、实测算力（TF），以及 TP/PP/CP/EP/VPP/MBS/GBS 超参。关键数据：DeepSeek-V3 在 GB300/256 GPU/MXFP8 下达 1233 TF，较同硬件 BF16（857 TF）提升约 1.44 倍；Qwen3-235B 在 128k 序列、GB300 下仍获 1150 TF；同硬件下 MXFP8 较 BF16 普遍提速 1.22–1.23 倍。
+> 【图文联合解读】**Table 20 图文联合解读**
 
-原文论证：(1) Megatron Core 在异构硬件上均实现 SOTA 吞吐；(2) MXFP8 较 BF16/FP8-BLK 带来显著算力增益；(3) 即使 EP64 大规模专家并行与长序列下仍保持高利用率。
+**核心对象与数据：** 该表列出 Table 11 基准测试条目的并行策略与超参配置，涵盖两个 MoE 模型（DeepSeek-V3、Qwen3-235B）在三种硬件（GB300/GB200/H100）和三种精度（MXFP8/BF16/FP8-BLK）下的 9 组配置。表格纵向对比 TP、PP、CP、EP、VPP、MBS、GBS 等并行/批维组合，横向给出吞吐量（TF）。例如 DeepSeek-V3 在 GB300+256 GPU+MXFP8+4k seqlen 下峰值达 1233 TF（TP1 PP4 EP64），而 H100+1024 GPU+FP8-BLK 同模型仅 368 TF。
 
-作用：作为 Table 11 性能条目的可复现配置补充，贯通"硬件—精度—并行策略—吞吐"实验链路，支撑"可扩展 MoE 训练"核心结论。
+**关键技术结论：** MXFP8 精度普遍优于 BF16/FP8-BLK（如 GB200 上 DeepSeek-V3 从 857→1048 TF），GB300 吞吐领先；EP（专家并行）规模高达 32–64，是 MoE 扩展核心；长序列 128k 通过 CP=4 实现，仍保持 1150 TF，验证 Megatron-Core 在异构硬件与多精度下的 MoE 大规模训练可扩展性。
+
+**论文链路作用：** 作为 Table 11 的"配置脚注"，提供可复现性细节，与正文吞吐数字互为佐证，共同支撑 Megatron-Core 支持 MoE 端到端高效训练的工程主张。
 
 ## 关键公式（原文截图，无 LaTeX 源 — 引用前请核对图片）
 

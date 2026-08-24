@@ -43,9 +43,9 @@ PY
 
 figures_index.md          ← 全部图表的主索引（⭐=有 M3 解读）
 visuals.json              ← crop → page/caption 映射（机器可读）
-minimax_captions.json     ← 图片路径 → M3 解读文本（1576 条，裁剪图 100% 图文联合解读）
+minimax_captions.json     ← 图片路径 → M3 解读文本（1606 条，裁剪图 100% 图文联合解读）
 formulas.json             ← slug → LaTeX 公式列表（58 篇 479 条，权威源）
-ar5iv_crops.json          ← 坏字体论文的 ar5iv 原图裁剪登记（54 张，重裁 overlay 保护）
+ar5iv_crops.json          ← 坏字体论文的 ar5iv 原图裁剪登记（77 张，重裁 overlay 保护）
 papers.json               ← 论文 manifest（RAG 摄取入口）
 ```
 

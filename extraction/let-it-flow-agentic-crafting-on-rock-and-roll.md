@@ -39,7 +39,7 @@ tags: []
 > The overview of agentic RL ecosystem (a) and its training pipeline (b). technical stack, ALE is also a call to reframe the community’s priorities. In complex agentic settings, the central challenge is no longer merely data scale or curation quality, but the co-design of training infrastructure, executable environments, and evaluation protocols. We hope this work catalyzes collaborative efforts tow
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图(b)展示Agentic RL训练流水线两阶段闭环：Rollout阶段由Agentic LLM向环境输出Action（Tokens），回收Observation（State）；积累的Trajectory Data送入Training阶段完成Weight Update，再经Weight Synchronization回传LLM，形成自循环。图(a)展示ALE生态（含RK Sandbox、CLI、Agent Framework、LLM、Proxy Service、Response Queue、Execution Engine等模块），为流水线提供可执行环境与工程支撑。原文据此论证：智能体RL的核心挑战已从单纯的数据规模与质量，转向训练基础设施、可执行环境与评估协议的协同设计——ALE即作为该一体化技术栈，催化社区协作。
+> 【图文联合解读】图(a)展示ALE双层架构：左侧ROLL训练框架含Actor Train/Infer（Sync Weight同步权重）与Env.Manager调度多Env.Worker（运行Rock SDK）；右侧ROCK执行引擎以iFlow CLI为Agent，通过ModelProxy的Request/Response Queue与LLM四步轮询（①送②收③查④回）。图(b)RL管线：Rollout阶段Agentic LLM与Environment以Action Tokens、Observation State循环生成Trajectory Data；Training阶段据此Weight Update，再经Weight Synchronization回灌Rollout。原文据此论证智能体强化学习的核心挑战已从"数据规模"转向"训练基础设施、可执行环境与评估协议的协同设计"，ALE构成后续Terminal-Based Benchmark（Table 2）等实验的系统底座，并通过rollout与训练解耦支撑大规模端到端训练。
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig03.png]]
@@ -65,11 +65,9 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示ROCK系统架构：右侧聚焦两大核心技能——Skill 4"海量调度"（含10,000+并发Sandbox，节点标注Running/Succeed/Failed/Pending四态，由Docker鲸鱼统一编排）与Skill 5"鲁棒容错隔离"（展示鲸鱼容器RUNNING/CRASHED状态自动恢复）；左侧揭示Worker–Sandbox–Env Hub执行栈，并通过Agent Bridging模块实现Model Server与RL Frame间经GEM传递Action/Observation的闭环交互。
+图4以"ROCK SERVICE"为核心架构，展示了五大核心技能：①Skill 1精简SDK控制（make/reset/step/close四操作）；②Skill 2无缝Agent扩缩，统一纳管Openhands、iFlow CLI、Mini Agent、SWE Agent等多类异构Agent；③Skill 3原生Agent桥接，通过OpenAI协议对接Agent Frame、GEM协议对接RL Frame（传输LLM Request/Response与Action/Observation）；④Skill 4大规模调度，支持10,000+并发Sandbox（Running/Succeed/Failed/Pending多状态共存）；⑤Skill 5鲁棒故障隔离，单Sandbox崩溃不影响其他Running节点。
 
-**技术论断：** 该图直观论证ROCK具备万级并发沙箱编排与节点级故障自愈两大能力，是智能体强化学习训练得以规模化落地的工程基石。
-
-**论文作用：** 作为Figure 4居于系统设计章节，为后续Table 4（大模型工具调用基准）等实验提供基础设施可行性背书，贯穿"craft on rock and roll"的核心叙事。
+该图论证了ROCK通过"控制平面SDK化+执行平面Sandbox池化+协议层兼容化"的设计，同时支撑训练与推理链路。在论文整体链路中，它奠定了Table 4工具使用基准测评的工程基础——正是凭借10K+并发环境与多Agent兼容能力，论文才能在R²-Harness、τ²-Bench等基准上跑通大规模强化学习训练流，从而得出"工具调用SOTA"的结论。
 
 ### Figure 5 (p.8) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig05.png]]
@@ -130,11 +128,9 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示横向三行对比同一智能体轨迹上三种重要性采样粒度。顶行（token级）将众多τ_token打包入chunk c₂…cₜ，两处"Interaction"箭头落入chunk内部，与chunk边界错位；中行（chunk级，橙色高亮并标✓）每条Interaction箭头恰好落在chunk边界上，τ_{2h}/r₂ 与 s_t/τ_{t1} 等位置严格对齐；底行（sentence级）一个粗粒度句子横跨多条Interaction，混叠多个交互事件。结构上量化呈现了"chunk数↔token数↔interaction次数"的三种对应关系。
+该图对比了三种重要性采样粒度：每个 chunk 由 system prompt sₜ、h 个 token (τₜ₁–τₜₕ) 与 response rₜ 构成。Token 级将交互点落在 chunk c₂ 的 token 序列内部（最细粒度）；Chunk 级让交互点严格对齐 chunk 边界（即 c₁→c₂ 或 cₜ 末尾，✓ 标记处），与一次完整 agent 交互天然对应；Sentence 级则将多个 chunk 聚合为一个交互单位（粒度最粗）。
 
-原文据此论证：**chunk级粒度与环境中agentic交互的天然边界完全对齐**，既避免token级的子chunk内切分失配，又避免sentence级的跨交互混叠，因而是重要性采样的最优选择。
-
-在论文方法链路中，该图为后续"采样策略—交互步对齐—策略梯度更新"模块提供粒度选择的实证依据，是连接环境交互建模与训练目标设计的关键前提。
+**关键结论**：Chunk 级采样与交互的自然粒度一致，能获得更稳定、低方差的重要性权重估计，是论文 method 设计的基础选择。**链路作用**：作为消融性图示，为后续实验中选择 chunk 级策略提供直觉与一致性论据。
 
 ### Figure 10 (p.23) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig10.png]]
@@ -154,14 +150,11 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构：**
-左图为"Sampling From Beginning"示意。一条轨迹被切分为多个 chunk（s₁→c₁→r₁→⋯→s*ₜ→c*ₜ→r*ₜ→⋯→s*ₗ），星号 s* 标识"关键岔路口"（Crucial Fork）状态。在每个 chunk 上并行展开 III 次 rollout（标注 ⁽ⁱ⁾、⁽ⁱⁱ⁾、⁽ⁱⁱⁱ⁾），结果全部以 ❌ 失败告终（"All Failures"、"Uninformative Rollouts"），右端仅露出"Expert-Like"轨迹示意，暗示需回溯到 s*ₗ 关键节点才可获得专家级轨迹。
+左图：从 s₁ 全程采样至关键分叉 s*ᵢ 再至 s*ⱼ，多条 rollout 全部失败（✗），标注 "Costly Search from the Beginning""All Failures""Uninformative Rollouts"，凸显从零探索的低效。
 
-**2) 关键技术结论：**
-原文论证：从头开始的 rollout 难以抵达关键岔路口 s*ₗ，导致大量无效探索，严重限制策略学习效率；而 Sequential Rollback 从关键 chunk 初始化，可大幅降低探索负担，使模型沿关键节点逐步回溯，实现 chunk 级课程学习。
+右图：在专家轨迹引导下 "Rollback" 回滚至 Crucial Fork s*ᵢ，从该 chunk 重采样 c(i)⁽ⁱ⁾r(i)⁽ⁱ⁾ 三条并行分支，得到成功（✓）与失败（✗）混合的 "Valuable Rollouts"，Success Rate 显著提升。
 
-**3) 在论文中的作用：**
-该图作为动机图，揭示了传统"从初始状态采样"在长程困难任务中的低效性，为后文提出的 Chunk-Level Initialized Resampling（Sequential Rollback）提供必要性依据，是 AgentFlow 训练管线中关键的数据采样加速机制之一。
+**技术结论**：Sequential Rollback 将搜索负担从全程前推压缩到 chunk 级重采，大幅释放有效样本；**论文作用**：与 Resampling 模块协同，是 FlowRL 在长程 agentic 任务中解决"前期探索瘫痪"的关键采样加速器，直接决定策略收敛效率。
 
 ### Figure 12 (p.25) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig12.png]]
@@ -172,9 +165,9 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图含三子图，对比Seq-Rollback（绿）与Baseline（灰）约175步训练。左图"训练时平均成功率"：绿线在10%–100%剧烈波动、均值约60–80%，两橙色圈标记骤降点（≈20%和≈40%）；灰线恒为0%。中图"Expert Chunks数量"：绿线由~45递减至~20，标注"Rollback"箭头；灰线恒为0%。
+图12以三联子图展示Sequential Rollback与Baseline在困难训练任务上的对比。**左图**（训练成功率）：Seq-Rollback成功率在10%–100%剧烈波动，基线始终为0；图中橙色圆圈标出两处"成功率骤降"点，暗示模型跨越关键chunk回退重试。**中图**（专家chunk使用量）：随训练步数从约42单调降至0，标注"沿专家轨迹回退"，说明模型逐步摆脱对专家的依赖。**右图**（测试成功率）：前75步两者均失败，约75步后Seq-Rollback陡升至近100%，基线恒为0。
 
-原文用此论证：顺序回退机制能产出大量有价值正样本，而朴素采样基线完全失败；成功率骤降恰反映模型跨关键chunk回退重试的机制行为。作为论文核心贡献Sequential Rollback在难训练任务上的关键经验证据，支撑回退策略的必要性、有效性与可解释性。
+该图作为论文核心实验证据，定量证明：顺序回退机制可产生富含正信号的rollout，且随训练自收敛——专家介入渐少、测试成功率跃升，完整支撑了"agentic crafting需回退式探索"这一方法论主张。
 
 ### Figure 13 (p.26) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig13.png]]
@@ -183,9 +176,9 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Comparison of IPA with & without Chunk-Level Initialized Resampling (Parallelized Initial- ization) on a mini-set of the training data. Left: Average success rate on training tasks. The gap between curves in the early stage of training shows that the Chunk-Level Initialized Resampling brings much more diverse reward signals in training batches. Middle: Minimum success rate across train-tasks with 
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】该图由三个子图对比IPA算法有无Chunk-Level初始化重采样（并行初始化）的效果。左图（训练平均成功率）：加该模块（橙）由约35%稳步升至~95%，基线（灰）峰值仅~75%且后期回落至~40%；中图（训练最低任务成功率）：加模块约40步后陡升至~70%，基线恒为0，蓝色箭头标注"学习困难任务能力"；右图（测试平均成功率）：加模块达~90%，基线仅~53%。
 
-图13对比"块级初始化重采样"（Parallelized Initialization, 橙线）与无该机制（灰线）下的IPA训练表现。可见右侧测试时成功率曲线：训练100步时橙线达约90%，灰线仅约52%，差距近40个百分点；左侧训练任务平均成功率在早期阶段橙线也明显领先。原文借此论证两点关键技术结论：(1) 块级重采样在训练初期即提供更多样化的奖励信号；(2) 使模型能以课程式方式攻克最难任务（Middle面板最低成功率亦显著提升）。在论文整体链路中，该图作为消融证据支撑"Parallelized Initialization"是IPA方法中提升rollout价值与最终泛化性能的关键组件。
+原文以此论证Chunk-Level初始化重采样在训练早期为batch注入更丰富的奖励信号，使智能体能攻克困难任务并显著提升测试泛化，是IPA流程中关键的样本多样性增强组件，支撑整体训练稳定性与泛化性能。
 
 ### Figure 14 (p.27) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig14.png]]
@@ -194,17 +187,7 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Benchmark characterization and cross-benchmark comparison of Terminal Bench Pro against other benchmarks.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（≤220字）**
-
-该图为Figure 14的部分视图，展示Terminal Bench Pro的基准特征与跨基准对比。
-
-**(a) 环形图**：呈现Terminal Bench Pro在8个任务类别（Scientific Computing、Debugging、Games、System Administration、Security、Machine Learning、Data Processing、Software Engineering）上的分布，各扇区面积接近，表明**类目分布均衡**（每类约12.5%）。
-
-**(c) 热力图**：三列对比Terminal Bench 1.0/2.0/Pro Public在Security、SE、System Admin、Debugging四类上的pass@1标准差。Pro Public在所有四类均最低（如SE: 0.02 vs 1.0的0.09；Debugging: 0.04 vs 2.0的0.18），验证其**评估方差更低、更稳定可靠**。
-
-**论证结论**：通过"均衡覆盖 + 低方差"双重证据，支撑Terminal Bench Pro作为**更严谨基准**的主张——避免类别偏斜与结果波动，使模型能力评估更具区分力。
-
-**链路作用**：作为§3.3.2小节核心可视化，为后文实验（如评测新模型时统一在该基准上的可比性）提供方法论基础。
+> 【图文联合解读】图14以四联图刻画Terminal Bench Pro：8类任务各25例，共200例、每类占12.5%，较1.0/2.0更均衡。Pro Public每题测试数最小/中位/均值为10/19/28.3（1.0：1/3/5；2.0：1/3/8）；安全、软件、运维、调试的跨基准pass@1标准差为0.04/0.02/0.05/0.04。说明新版测试更充分、性能波动更低；该图在主评测前审计基准，为后续能力与泛化比较提供统一标尺。
 
 ### Figure 15 (p.28) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig15.png]]
@@ -213,9 +196,11 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Performance-parameter trade-offs in agentic tasks. Scores represent averages on general agentic and code agent benchmarks. Models with known parameters are shown as circles, while proprietary models with unknown parameters are depicted as diamonds (right side). Left: Total parameters versus overall performance. Right: Activated parameters versus overall performance. 2https://github.com/alibaba/ter
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（Figure 15 · 激活参数量 vs 准确率）：**
+> 【图文联合解读】**核心对象与数据**：双子图散点图。左图横轴为总参数量（15B–Unknown，对数刻度），右图为激活参数量（0–Unknown），纵轴均为智能体任务平均准确率（10–40%）。圆点=开源已知参数模型，菱形=闭源模型。关键数据：IFlow-ROME（30B-A3B，紫色星标）以仅3B激活参获约30%准确率；同尺寸Qwen3-Coder 30B-A3B仅约20%；480B级Qwen3-Coder 480B、Kimi-K2-0905约32–34%；闭源Claude-Haiku-4.5达约40%。
 
-图示为各模型在 agentic 基准上的平均准确率（纵轴 10–40%）与激活参数量（横轴 0–40B+）的散点对比。核心发现：**iFlow-ROME（30B-A3B）在仅 ~3B 激活参数下达约 30% 准确率**，逼近 GLM-4.6（~28B 激活、~36%）、Kimi-K2-0905（~30B、~32%）等大模型，并显著优于同激活量级的 GPT-OSS-120B（~25%）与 Qwen3-Coder 30B-A3B（~21%）；右上方为参数未知的闭源模型（Claude-Haiku-4.5、GPT-5 Mini 等）。图中斜向"Performance-Parameter Trade-off"箭头印证：在极低激活成本下，iFlow-ROME 凭借路由机制实现了极具竞争力的 agent 性能，凸显 MoE 架构的效率优势，为论文"小激活、大能力"的核心主张提供量化支撑。
+**技术结论**：右图中IFlow-ROME显著领先Pareto前沿——以约1/10的激活参量匹配甚至超越480B级开源模型，证明MoE在智能体任务上的高参数效率；左图同步显示其30B总参亦优于多数同体量模型。
+
+**论文作用**：作为模型发布的核心效率证据，呼应"小激活、强能力"主张，与训练流程、通用/代码智能体基准评测章节形成完整论证闭环。
 
 ### Figure 16 (p.34) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig16.png]]
@@ -260,7 +245,13 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Case study 2 screenshot examples: Solar System Modeling. 37
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图18以5×2网格对比ROME、Qwen3-Coder-Plus、GLM-4.6、Qwen3-coder-30B、Devstral-Small-2五款代理在"太阳系建模"任务第2、3次截图：ROME呈现完整恒星＋多颗行星分布在同心轨道环上，UI控件齐全；Qwen3-Plus行星排成水平直线，几何失真；GLM-4.6背景转为蓝色渐变且太阳退化为黄色矩形，未完成渲染；Qwen3-30B行星稀少；Devstral-Small-2两屏几乎全黑，仅留椭圆描边。图中用以论证ROME在多轮迭代式可视化生成中，物体完备性、布局合理性与稳定性显著优于开源基线模型，支撑论文"agentic crafting"框架能显著提升大模型创意编码与复杂动态场景构建能力这一核心结论。
+> 【图文联合解读】## 图18图文联合解读
+
+**核心对象**：5×2网格对比ROME、Qwen3-Coder-Plus、GLM-4.6、Qwen3-coder-30B、Devstral-Small-2共5个模型对"太阳系建模"任务的两帧渲染截图。ROME产出最完整——黑底同心椭圆轨道+中心太阳+多颗异色行星按真实尺度分布；Qwen3-Coder-Plus行星在帧2呈初始共线；GLM-4.6含星空蓝底与左右UI信息面板；Qwen3-coder-30B带中文行星标签；Devstral-Small-2近乎空场，仅余中心亮点与单轨道，未渲染行星。
+
+**论证结论**：作为定性证据，支撑ROME在agentic创意编码中场景完整度、物理合理性与元素丰富度全面优于基线模型。
+
+**论文作用**：实验章节"案例研究"的视觉佐证，与定量评估互补，共同验证"agentic crafting"框架在多类创意生成任务上的普适优势。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -270,7 +261,11 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Performance on Terminal-Based Benchmarks (Normal Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表1对比ROME（MoE，30B总参/3B激活）与6个主流模型在6个终端类基准（Terminal-Bench 1.0/2.0、SWE-Bench Verified/Multilingual、Terminal-Bench-Pro Public/Private）的得分。ROME平均分37.60，仅以0.39分之差低于GPT-5 Mini（37.99），却激活参数远少于后者；在Terminal-Bench 1.0（41.50）、Terminal-Bench-Pro-Public（40.50）、SWE-Bench Multilingual（40.00）等项均领先同/近量级对手。原文借此论证：经ALE训练的ROME以极低激活参数量逼近超大闭源模型的agentic编码能力，是论文"以高效架构实现agentic能力"主张的关键实证支撑，配合Figure 1共同构成ROME性能展示的核心。
+> 【图文联合解读】Table 1对比7个模型在6项终端编码基准的得分。ROME（MoE，30B总参/3B激活）在Terminal-Bench 1.0（41.50）、2.0（24.72）、Pro-Public（40.50）三项居首，均值37.60第一；SWE-Bench Verified（57.40）与Multilingual（40.00）仅次于GPT-5 Mini。
+
+论文借此论证：仅3B激活的ROME均值全面领先——超GPT-OSS-120B（31.83）、GLM-4.5 Air（31.75）、Devstral Small 2（29.10）、Qwen3-Coder（25.94）、Gemini-2.5 Flash（19.87），并略胜GPT-5 Mini（37.99），印证MoE架构与ALE训练实现"小模型高性能"的有效性。
+
+该表是支撑ROME开源SOTA主张的核心量化证据，串联Figure 1的ALE方法概述与后续消融/规模化分析，构成实验链路关键节点。
 
 ### Table 2 (p.29) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab02.png]]
@@ -278,13 +273,13 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Performance on Terminal-Based Benchmarks (Large Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读**
+> 【图文联合解读】**Table 2 图文联合解读**
 
-**核心对象与数据**：表2对比ROME（仅3B激活参数的MoE）与Qwen3-Coder Plus/480B-A35B、DeepSeek V3.1(671B/37B激活)、GLM-4.6(355B/32B)、Kimi-K2(1043B/32B)、Claude-Haiku-4在6个终端与SWE基准（Terminal-Bench 1.0/2.0、SWE-Bench Verified/Multilingual、Terminal-Bench-Pro Public/Private）及平均分上的成绩。
+表2对比ROME（30B总参/3B激活）与Qwen3-Coder Plus、Qwen3-Coder 480B-A35B、DeepSeek V3.1（671B/37B激活）、GLM-4.6（355B/32B）、Kimi-K2（1043B/32B）、Claude-Haiku-4共7个模型在Terminal-Bench 1.0/2.0、SWE-Bench Verified/Multilingual及Terminal-Bench-Pro-Public/Private六项基准上的表现。
 
-**关键结论**：ROME以3B激活取得37.60平均分，逼近40B级激活的Qwen3-Plus(43.36)、GLM-4.6(42.45)、Kimi-K2(42.19)；在Terminal-Bench 1.0上以41.50反超GLM-4.6(41.25)与Qwen3-480B(37.92)。Claude-Haiku-4以48.84居首，但ROME以小近10倍激活参数即进入第一梯队，体现极高参数效率。
+ROME均分37.60，虽低于Claude-Haiku-4（48.84），但在Terminal-Bench 1.0以41.50反超DeepSeek（38.75）、Kimi-K2（39.25），与GLM-4.6（41.25）持平；Pro-Public得40.50，与Kimi-K2并列。SWE-Bench Verified 57.40亦领先DeepSeek（62.20以外的多数MoE对手）。
 
-**论文链路作用**：作为Figure 2所示"agentic RL生态—训练—评估闭环"中的终端代理能力评测节点，为ROME在代码/终端代理场景下"小而强"的论点提供量化佐证。
+该表是论文"小激活、强agent"主张的关键实证——仅3B激活参数即可在agentic终端任务上与千亿级MoE模型正面竞争，验证其训练栈与RL策略的效率优势。
 
 ### Table 3 (p.30) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab03.png]]
@@ -292,13 +287,7 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Performance on Tool-Use Benchmarks (Normal Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 联合解读：**
-
-**1）核心对象与数据**：ROME（30B总参/3B激活的MoE）与6个基线在6项工具使用基准上的得分对比。ROME以**平均49.46**居中游，超过同架构同规模的Qwen3-Coder（40.87）、24B密集模型Devstral Small 2（39.35）和Gemini-2.5 Flash（43.82），仅落后于GLM-4.5 Air（58.78）、GPT-5 Mini（58.38）与5.1B激活的GPT-OSS-120B（56.47）。Tau2-Bench Retail上ROME达62.28，MTU-Bench Single-Turn达62.45。
-
-**2）关键技术结论**：原文结合图3的ROLL解耦架构（生成—环境交互—奖励流水线+动态GPU池）论证——**仅3B激活参数即可产出具有竞争力的工具调用智能体**，在Tau2-Bench、BFCL-v3等真实API场景上逼近参数规模数十倍于己的模型，证明ROLL训练范式的高效性。
-
-**3）实验链路作用**：作为ROLL方法的核心主结果表，承接图3架构设计，落脚于下游工具使用任务的性能收益，支撑"小激活、强智能体"的整体论点。
+> 【图文联合解读】Table 3对比7个模型在6项Tool-Use基准上的表现。ROME为30B MoE架构、仅激活3B参数，平均得49.46，大幅领先同规模Qwen3-Coder（40.87）与Devstral Small 2（39.35），并在Tau2-Bench三域（Retail 62.28、Airline 50.50、Telecom 30.92）、BFCL-v3（43.00）、MTU-Bench多轮（47.63）上全面压制同量级对手；与参数量大数倍的GPT-OSS-120B（56.47）、GLM-4.5 Air（58.78）、GPT-5 Mini（58.38）仅小幅落后。论文借此论证：ROLL框架以极少激活参数量即可训练出强工具调用与多轮交互能力的agentic模型，是方法有效性论证的关键实验支撑。
 
 ### Table 4 (p.30) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab04.png]]
@@ -306,11 +295,7 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Performance on Tool-Use Benchmarks (Large Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 图文联合解读**
-
-该表对比ROME与6款主流大型MoE模型在6项工具调用基准上的表现。ROME仅3B激活参数，平均分**49.46**，与激活37B的DeepSeek V3.1（49.94）持平，并高于Qwen3-Coder Plus（47.41）和Claude-Haiku-4（53.56）；其在MTU-Bench单轮（62.45，第二高）和Tau2-Bench Retail（62.28）尤为突出。GLM-4.6（61.12）与Kimi-K2（60.52）整体领先，ROME与Qwen3-Coder 480B（51.11）也展现强竞争力。
-
-论文借此支撑核心论点：**agentic能力更多源于高质量agentic craft轨迹与RL训练，而非单纯堆参数**——激活参数规模差一个数量级，ROME仍可比肩头部大模型。该表在实验链路中是"参数效率"论证的关键证据，与Figure 4的ROCK架构呼应，共同完成"小模型+精训练≈大模型agentic能力"的论证闭环。
+> 【图文联合解读】Table 4展示ROME与Qwen3-Coder Plus/480B-A35B、DeepSeek V3.1、GLM-4.6、Kimi-K2、Claude-Haiku-4在Tau2-Bench(Retail/Airline/Telecom)、BFCL-v3、MTU-Bench(单/多轮)六项工具调用基准上的得分。ROME为MoE架构，总参30B、激活仅3B，平均分49.46，介于GLM-4.6(61.12)、Kimi-K2(60.52)与DeepSeek V3.1(49.94)之间；其以3B激活参数即逼近Qwen3-Coder 480B-A35B(51.11)、超过Qwen3-Coder Plus(47.41)，并在Tau2-Retail并列最高62.28、MTU单轮62.45位列第二。该表用以论证ROME在激活参数仅为对手1/10量级下仍保持可比工具调用性能，是论文Agentic实验链路中"高效小型激活MoE"的关键支撑证据。
 
 ### Table 5 (p.31) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab05.png]]
@@ -318,11 +303,11 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Performance on General-Agent Benchmarks (Normal Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 5 图文联合解读**
 
-该表对比ROME（30B总参/3B激活MoE）与Qwen3-Coder-30B-A3B、Devstral Small 2、GPT-OSS-120B、Gemini-2.5 Flash、GLM-4.5 Air、GPT-5 Mini在GAIA、BrowseComp-ZH、ShopAgent单/多轮四项基准上的表现。ROME平均分25.64，居开源模型之首（Qwen3-Coder仅15.69、Devstral 16.30），超越参数量数倍于自身的GPT-OSS-120B(23.40)与GLM-4.5 Air(24.78)，仅次于闭源GPT-5 Mini(35.59)。ROME在ShopAgent上以34.53/29.61领先多数对手，验证其agentic核心能力。该表处于论文"通用Agent能力评测"环节，与Hard Models表互补，共同支撑"小激活参数亦可达到强agent性能"的关键结论。
+Table 5 对比 ROME（30B MoE、激活 3B）与 Qwen3-Coder 30B-A3B、Devstral Small 2（24B Dense）、GPT-OSS-120B、Gemini-2.5 Flash、GLM-4.5 Air、GPT-5 Mini 共 7 个模型在 GAIA、BrowseComp-ZH、ShopAgent（单/多轮）4 项通用 Agent 基准上的成绩。ROME 平均 **25.64**，超过 Qwen3-Coder（15.69）、Devstral（16.30）、GPT-OSS-120B（23.40）、Gemini-2.5 Flash（22.66）、GLM-4.5 Air（24.78）等所有开源/闭源对手，仅次于 GPT-5 Mini（35.59）；ShopAgent 单轮 34.53、多轮 29.61 均居开源模型首位。
 
-> 注：所引文字段落实为Figure 5（iFlow CLI架构图）的讲解，与Table 5主题不直接对应；以上解读基于表格内容及论文主线推断。
+该表用以印证"ROME 以仅 3B 激活参数即在多数基准上比肩/超越更强开源 Agent 模型"这一关键技术结论，是 ROME 训练完成后在通用 Agent 能力维度上的关键评测证据，与 Figure 5 的 iFlow CLI 数据/训练链路上下游呼应，共同构成"数据→训练→评测"的闭环验证。
 
 ### Table 6 (p.31) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab06.png]]
@@ -330,13 +315,9 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Performance on General-Agent Benchmarks (Large Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 6 联合解读**
+> 【图文联合解读】Table 6对比ROME（MoE，30B总参/3B激活）与6个大型基线在GAIA、BrowseComp-ZH、ShopAgent（单/多轮）4项基准的成绩。ROME均值25.64，超过Qwen3-Coder Plus（23.99）与Qwen3-Coder 480B-A35B（23.88），ShopAgent双轮34.53/29.61均高于Kimi-K2（30.97/26.26），仅次于DeepSeek V3.1（32.16）与Claude-Haiku-4（32.51）。
 
-**1）对象与数据**：对比 7 个大模型在 4 个通用 Agent 基准上的表现。ROME 仅 30B 总参/3B 激活（MoE），远小于 DeepSeek-V3.1(671B)、Kimi-K2(1043B)、GLM-4.6(355B)、Qwen3-Coder 480B-A35B 等。量化结果：ROME 平均 25.64，高于 Qwen3-Coder-Plus (23.99) 与 Qwen3-480B (23.88)；在 ShopAgent 单轮 (34.53) / 多轮 (29.61) 双双领先，但 GAIA (24.24)、BrowseComp-ZH (14.19) 偏低。
-
-**2）关键结论**：原文以此佐证 ROME"以极少激活参数取得与大型开源 agent 模型相当性能"的核心论断。
-
-**3）链路作用**：作为 Table 5 的大型模型分支补充，与 Figure 6 的数据/训练流水线呼应，从实验端闭环支撑方法有效性。
+原文据此论证：ROME以仅3B激活参数（远小于同类32–37B）即取得有竞争力的通用Agent能力，证明其agentic数据合成与训练流水线在效率与泛化上的优势，构成论文"通用Agent能力外推验证"环节的核心证据，为前文数据构造（图6）→ 训练 → 评测闭环提供横向性能对标支撑。
 
 ### Table 8 (p.35) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab08.png]]
@@ -344,15 +325,13 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Case-study evaluation scores, reported as the average ratings across 30 experts.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 8为30位专家对**ROME**及4个基线（Qwen-Coder-30B、Qwen3-Coder-Plus、Devstral-Small、GLM-4.6）在"睡眠管理系统"与"太阳系建模"两案例下五维度（功能/布局/代码质量/结构/创新）子项评分（满分约100）的平均得分。
+> 【图文联合解读】**Table 8 图文联合解读**
 
-**核心数据**：睡眠管理任务中GLM-4.6居首93，ROME与Qwen3-Coder-Plus并列92，Devstral-Small最低86；太阳系建模中Qwen3-Coder-Plus 96居首，ROME 94次之，Devstral-Small仅30分（交互子项仅10）。
+**核心数据**：该表对比 ROME 与 Qwen-Coder-30B、Qwen3-Coder-Plus、Devstral-Small、GLM-4.6 共 5 个模型，在「睡眠管理系统」与「太阳系建模」两个案例、5 个子维度（功能/布局/代码质量/结构/创新）上的 30 位专家打分。
 
-**关键结论**：作者方法ROME在两项任务中均位列前列（92/94），与最强商业模型持平并显著领先Devstral-Small，验证其在专业领域生成高质量HTML交互应用的优势，尤其在交互性与代码健壮性上。
+**关键结论**：ROME 在两个案例总分分别达 92 与 94，整体领先或并列最优（Sleep 仅次于 GLM-4.6 的 93，Solar 超过 Qwen3-Coder-Plus 的 96 仅 2 分但功能交互项 34 vs 36 接近）；Devstral-Small 在 Solar 案例骤降至 30，暴露其复杂交互任务短板。
 
-**论文作用**：作为IPA框架的专家案例研究补充，与自动化定量评测共同支撑"Agentic工作流+交互感知训练"在交互式代码生成中的有效性论证。
-
-（注：所引正文段落讲解的是Figure 8 IPA训练流水线，与本表无直接对应，故解读以表格自身数据为主。）
+**作用**：作为自动评测的补充，以专家主观评分印证 ROME 在真实 GUI 智能体案例中的实用性与稳健性，强化主实验结论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

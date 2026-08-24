@@ -30,7 +30,13 @@ tags: []
 > Left: Memory layout when serving an LLM with 13B parameters on NVIDIA A100. The parameters (gray) persist in GPU memory throughout serving. The memory for the KV cache (red) is (de)allocated per serving request. A small amount of memory (yellow) is used ephemerally for activation. Right: vLLM smooths out the rapid growth curve of KV cache memory seen in existing systems [31, 60], leading to a nota
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】左图量化展示 A100 40GB 显存分配：参数 26GB(65%) 常驻，KV Cache >30% 按请求动态分配，激活仅小片。右图双曲线对比：现有系统(橙)batch≈8 即显存触顶 39GB、吞吐仅 ~0.3k tok/s；vLLM(蓝)线性缓增、batch=40 仍可服务，吞吐稳 ~0.9k tok/s。作用：开篇动机图，揭示传统 KV 连续分配引致内部碎片严重、batch 受限，锚定 PagedAttention 分页方案——碎片降至 sub-block 量级、吞吐提升 2–4×，为全文方法与实验铺垫论证基础。
+> 【图文联合解读】**图文联合解读：**
+
+**核心对象与数据**：左图展示13B参数LLM在NVIDIA A100（40GB）上的内存布局——参数占26GB（65%，灰色）、KV Cache超30%（红色）、少量为激活等开销（黄色）。右图上为不同批量下的内存占用：现有系统（橙）增长陡峭，约8请求即触顶40GB；vLLM（蓝）线性缓增，约40请求才达上限。下图为吞吐量对比，vLLM在大批量下吞吐显著领先。
+
+**关键结论**：传统系统因KV Cache按连续块预分配，内存迅速耗尽，限制批大小；vLLM通过分页化管理将内存利用率与吞吐同步拉高。
+
+**论文作用**：Figure 1在首页定量化揭示KV Cache浪费问题，作为引入PagedAttention动机，与Table 1配置及后续消融实验共同构成"问题—方法—验证"叙事链。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig02.png]]
@@ -50,9 +56,9 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-该图以一条水平连续内存条展示两段请求的KV cache分配：请求A占用7个prompt token槽("Four…fathers")+1个已生成token槽，并预留2个reserved槽，但其后留有**2038个从未使用的内部碎片**；请求B仅用3个prompt token槽+1个reserved槽，留有**507个内部碎片**；两段间的灰色间隙标注为**外部碎片(External fragmentation)**。
+图3以两并发请求的KV cache物理布局为例，展示了现有系统的三内存浪费：**①预留浪费**——每个请求按最大序列长度预先分配槽位（如请求A为"forth"、`<eos>`预留2槽，请求B为"once`预留1槽）；**②内部碎片**——请求A预分配后实际未用2038槽，请求B未用507槽；**③外部碎片**——两请求内存块之间的空隙无法被新请求利用。
 
-原文借此论证：现有系统因按最大序列长度**连续预分配**，同时产生reserved、internal fragmentation、external fragmentation三类浪费，使显存无法容纳更多并发请求。该图作为**动机图**，直接引出PagedAttention的核心思想——将KV cache拆为固定大小非连续"页"，借助块表映射消除碎片，从而在方法链路中奠定"页式显存管理"必要性的视觉证据基础。
+原文借此论证：传统按"最长序列"连续预分配的方式，使显存大部分被浪费而非服务真实请求，严重限制了批处理并发度。这是PagedAttention提出"虚拟内存+非连续分页"方案的核心动机——通过将KV cache按固定page分页管理，消除三类碎片，从而提升显存利用率与系统吞吐，构成论文方法（vLLM）部分的关键问题陈述。
 
 ### Figure 4 (p.5) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig04.png]]
@@ -61,13 +67,13 @@ tags: []
 > vLLM system overview.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图4联合解读（vLLM系统架构）**
+> 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：图示含三类组件——中央**Scheduler**（调度器）通过有向边连接**KV Cache Manager**（内含两张Block tables网格）与N个并行**Worker**（每个Worker含Cache Engine+Model Shard+GPU）；KV Cache Manager下接**CPU/GPU Block Allocator**两个分配器。
+1) **核心对象与结构**：左半图展示 vLLM 系统由三类组件构成——顶部 **Scheduler**（调度器）单向分发给 N 个 **Worker**（Worker 0…N-1），每个 Worker 内含 **Cache Engine** 与对应 GPU 上的 **Model Shard**；左侧 **KV Cache Manager** 维护两张 **Block tables**，下接 **CPU Block Allocator** 与 **GPU Block Allocator**，分别管理两种物理显存。
 
-2) **关键技术结论**：Scheduler集中管控请求调度；KV Cache Manager以Block Table为元数据，将GPU显存按"页"粒度（类OS虚拟内存）分配；CPU Block Allocator支持阻塞序列的溢出管理，证明PagedAttention可消除KV Cache碎片。
+2) **论证的关键结论**：Scheduler 集中调度、Worker 并行执行的分层架构，使 KV Cache 逻辑块与物理块解耦——Block tables 完成"逻辑序列→物理页"的映射，从而在 GPU 显存中以非连续、固定大小的页块存储注意力 Key/Value 向量，规避传统连续预分配造成的内部碎片与浪费。
 
-3) **论文整体作用**：此图是vLLM的系统总览，对应后续§4 PagedAttention算法的硬件落地——Scheduler+Block Manager实现"以页为单位的注意力计算"，是连接内存管理理论与实际GPU serving系统的桥梁，支撑了§5实验中高吞吐量的结果。
+3) **论文链路中的作用**：该图给出 PagedAttention（图右）的运行底座——只有在此 Scheduler/Allocator/Block table 三层协同下，逻辑连续、KV 物理分散的分页注意力才能落地，是后续吞吐量实验（如共享 prefix、beam search 场景）实现 2–4× 提升的架构前提。
 
 ### Figure 5 (p.5) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig05.png]]
@@ -78,11 +84,11 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示：左侧查询向量"forth"与右侧3个非连续KV块（块大小B=4）通过箭头建立注意力计算关系。Block1存"years/ago/our/fathers"，Block2存"brought/forth"（未填满），Block0存"Four/score/and/seven"；逻辑序列为0→1→2，但物理上分散、不相邻。
+1）**核心对象与结构**：图左侧展示分布式推理架构——Scheduler 调度请求，KV Cache Manager 通过 Block tables 管理物理块，分配给 N 个 Worker（每个含 Cache Engine + Model Shard，部署于 GPU）。右侧展示 PagedAttention 核心：将一条序列 "Four score and seven years ago our fathers brought forth" 的 KV 向量切成定长 Block（Block 0/1/2），各块在内存中非连续存储，但通过块表逻辑映射；给定 Query "forth"，按需读取 Block 0（含 "Four score and seven"）和 Block 2（含 "brought forth"）参与计算。
 
-论证结论：原文给出分块注意力公式A_ij=exp(qᵢᵀK_j/√d)/Σ，证明softmax注意力可按固定大小块独立计算，KV向量无需在显存中连续存储，从而彻底解耦逻辑序列顺序与物理内存布局。
+2）**关键技术结论**：KV 缓存可像操作系统虚拟内存分页一样按块（size=B）非连续存放，分块式注意力计算（按 Kⱼ、Vⱼ 分块累加）仍然数学等价，从而彻底消除显存碎片与重复分配。
 
-论文作用：作为PagedAttention算法的标志性图示，为后续block table虚实块映射机制、显存分页管理及高吞吐LLM serving的系统实现奠定直观基础。
+3）**论文作用**：作为方法总览图，把"分页 KV 缓存 + 块表管理 + 多 Worker 并行"链路一次性呈现，是后续块共享、Copy-on-Write 等优化的前提。
 
 ### Figure 6 (p.6) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig06.png]]
@@ -91,11 +97,13 @@ tags: []
 > Block table translation in vLLM. divides it into physical KV blocks (this is also done on CPU RAM for swapping; see §4.5). The KV block manager also maintains block tables—the mapping between logical and physical KV blocks of each request. Each block table entry records the corresponding physical blocks of a logical block and the number of filled positions. Separating logical and physical KV block
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**1) 核心结构（具体/量化）**：图示 Request A 的 KV 分页映射。4 个逻辑 KV 块（Block 0–3，每块容量 4 token）通过 Block Table 指向 GPU DRAM 上的物理块 **7、1、3**（序号非连续），表项含 "Physical block number" 与 "# filled"；新生成的 *fathers*、*brought* 使逻辑块 1 由 3→4、逻辑块 2 由 0→1，以黄色高亮。
+> 【图文联合解读】**图文联合解读（Figure 6 — Block table translation in vLLM）：**
 
-**2) 论证的技术结论**：①逻辑–物理块解耦，物理块可非连续分配，消除外部碎片；②块内按 token 增量填充，`# filled` 追踪部分占用，避免预分配造成的内部浪费，并支持流式解码时原位追加。
+1) **核心对象与结构**：图左侧展示 Request A 的 Logical KV blocks（Block 0–3，存 "Four score and seven"、"years ago our fathers"、"brought" 等 token）通过 Block Table 映射到 GPU DRAM 上的 Physical KV blocks（Block 7、1、3），表项含「物理块号」与「# filled 计数」（如 4、4、1），实现非连续分配与按需填充。
 
-**3) 在论文链路中的作用**：本图是 PagedAttention 的机制示意——把 OS 虚拟内存分页思想移植到 LLM 的 KV cache 管理，是后续显存高效利用、近零浪费以及请求间物理块共享等实验结论的方法论基础。
+2) **论证结论**：PagedAttention 打破了 KV cache 必须连续预分配的假设——逻辑块顺序固定，但物理块可分散、按需分配，避免碎片与浪费，为同前缀请求复用物理块（如图右侧 Figure 7 中 Request B 共享 Block 4、5）提供基础。
+
+3) **链路作用**：作为 vLLM 内存管理层核心数据结构，是后续 §4.5 CPU RAM 交换、近零显存浪费与高吞吐实验结论的机制前提。
 
 ### Figure 7 (p.6) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig07.png]]
@@ -104,13 +112,13 @@ tags: []
 > Storing the KV cache of two requests at the same time in vLLM. requests and the latest tokens for generation phase requests) as one sequence and feeds it into the LLM. During LLM’s computation, vLLM uses the PagedAttention kernel to access the previous KV cache stored in the form of logical KV blocks and saves the newly generated KV cache into the physical KV blocks. Storing multiple tokens within
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图7 图文联合解读**
+> 【图文联合解读】**图7图文联合解读**
 
-图示两并发请求（A："Four score and seven…"；B："It was the best of…"）的逻辑KV块经各自块表映射至共享的9块物理KV池（每块4 token）。物理分配**非连续且跨请求交错**：A 的逻辑块 0→物理 7、块 1→物理 1、块 2→物理 3；B 的逻辑块 1→物理 2；橙色高亮为 A 生成阶段新增 token，绿色为 B 的块。
+①**核心对象与结构**：左图为单请求A的KV缓存——4个逻辑KV块（每块4 token，含①②③①位置编号）经Block Table（物理块号+#filled列）映射至8个非连续物理KV块（例：逻辑Block0→物理Block7、Block1→物理Block4、Block2→物理Block3）；右图为请求A、B同时存储于同一9块物理池——两者各持独立逻辑块表（A:4块，B:3块），分别指向共享物理块（Block1/7归A，Block2/5归B），实现同池共存。
 
-**核心结论**：PagedAttention 通过逻辑–物理块映射的"类虚拟内存"机制，消除连续分配导致的内存碎片与浪费，支持多请求并发下的块级独立调度与跨请求内存共享（如公共前缀可共用物理块）。
+②**技术结论**：Block Table解耦逻辑视图与物理布局，多请求可共享物理显存池，按需动态分配、无须预留连续空间，显存利用率逼近理论最优。
 
-**论文作用**：该图是 PagedAttention 核心机制最直观的设计级证据，为后续吞吐量、显存利用率等系统级实验提供方法基础，论证 vLLM 服务框架的可行性。
+③**文中作用**：与Figure 8（parallel sampling）、beam decoding共同构成"复杂解码场景"图示组，支撑vLLM在多请求场景下保持近最优显存效率的核心论点。
 
 ### Figure 8 (p.7) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig08.png]]
@@ -119,7 +127,16 @@ tags: []
 > Parallel sampling example. generates a single sequence. In the remainder of this paper, we assume the more general case in which a request gener- ates multiple sequences. In parallel sampling, one request includes multiple samples sharing the same input prompt, allowing the KV cache of the prompt to be shared as well. Via its PagedAttention and paged memory management, vLLM can realize this sharin
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图展示两样本 A1、A2 并行采样的内存视图：二者 Logical Block 0（prompt "Four score and seven"）通过块表映射到同一 Physical Block 7，**Ref count=2**；当 A2 写"mothers"触发 Copy-on-write，原共享块被复制出新 Block 3（"fathers"），Ref count 由 2→1，两样本写入互不影响。原文借此论证：PagedAttention 的块级内存管理可在 prompt 共享 KV cache 的同时，仅在输出分歧处按块复制，兼顾显存节约与样本独立性，是 vLLM 高吞吐、低显存的关键设计支撑。
+> 【图文联合解读】**图文联合解读（Figure 8 Parallel sampling）**
+
+**1) 核心对象与结构**
+图8展示Parallel Sampling场景：同一请求A派生出两个样本A1、A2，二者共享同一prompt前缀"Four score and seven years ago our"（逻辑Block 0–1）。分叉后A1生成"fathers"、A2生成"mothers"。中间为物理KV块表（Block 0–8），其中Block 7为原始共享前缀页，Block 2、3为分叉后各自独占页；红色"Ref count: 2→1"标注与Copy-on-write弧线显式指示：分叉触发时仅复制被修改页，前缀页引用计数递减。
+
+**2) 关键技术结论**
+PagedAttention借助分页式内存管理与Copy-on-write机制，使多输出序列的prompt前缀KV cache实现**零冗余共享**——引用计数跟踪共享块、被写时再按页复制，从而逼近显存利用的理论最优。
+
+**3) 在论文整体中的作用**
+与Figure 7（shared prefix）、Figure 9（beam search）共同构成"复杂解码策略"图示组，支撑全文核心论点：vLLM在parallel sampling、beam search等多样化解码下均能实现近最优显存效率，论证PagedAttention方案的通用性。
 
 ### Figure 9 (p.7) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig09.png]]
@@ -130,11 +147,13 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图9 — Beam Search下的Paged KV缓存布局**
 
-图示4条beam候选在block级KV缓存上的分配：**Block 0、Block 1**为全部beam共享的前缀块；候选0/1在**Block 3**处分叉，候选2/3在**Block 2**处分叉；带"×"标记的**Block 5、Block 2、Block 4、Block 8**代表其所属beam在后续步被剪枝，对应物理块随即被回收，复用为**Block 9–12**。
+**核心对象与结构（量化）**：
+- **左侧（Copy-on-write机制）**：样本A1与A2共享前缀逻辑块（"Four score and seven years ago our"），分叉点触发CoW——物理Block 1的引用计数由2→1（仅A2独占"mothers"），新物理Block 3独立承载A1的"fathers"分支；Block 7亦被两样本共享。
+- **右侧（Beam候选块链管理）**：4个候选通过块链表组织，候选1与候选2共享Block 0→1→3的前缀链；候选2分叉后接Block 7→11；候选0与候选3因被剪枝（叉号标记Block 5/2/4/8）所占块被回收，腾出供新扩展（如Block 9/10/11/12）复用。
 
-**原文论证的关键结论**：相较传统连续分配因beam间前缀重复和动态剪枝造成的严重碎片与显存浪费，paged block机制可同时实现①跨beam前缀KV共享与②被剪枝beam内存的即时释放，从而显著提升beam search场景下的显存利用率与批吞吐。
+**关键技术结论**：Copy-on-write + 引用计数 + 块级共享，使Beam Search中多条候选序列的公共前缀无需物理重复存储，从根本上消除前缀冗余造成的内存浪费。
 
-**在论文中的作用**：该图是PagedAttention针对beam decoding提出的内存管理方案的直观示例，与shared-prefix（Figure 7）、parallel sampling（Figure 8）共同构成"复杂采样场景"图示组，支撑全文核心论点——vLLM在多样化解码策略下均能逼近最优显存效率。
+**在论文中的作用**：证明PagedAttention不仅适用于basic decoding（Figure 4–6），还可泛化至beam search等含前缀共享与动态剪枝的复杂解码场景，是其通用性的关键证据之一。
 
 ### Figure 10 (p.8) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig10.png]]
@@ -143,19 +162,13 @@ tags: []
 > Shared prompt example for machine translation.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**Figure 10 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 核心对象与结构**
-图中展示两个并行翻译请求（Sequence A 与 B）的三段式结构：
-- **Shared prefix**（黄色共享段，~50 token）：两序列完全相同，含指令"Translate English to French:"及三个示例对（sea otter→loutre de mer / peppermint→menthe poivrée / plush giraffe→girafe en peluche）。
-- **Task input**（绿色私有段）：A 为 `"cheese" =>`，B 为 `I love you =>`。
-- **Task output**（蓝色私有段）：A 输出 `fromage`，B 输出 `Je t'aime`。
+图10展示机器翻译的共享提示（shared prompt）结构：序列A与序列B共用同一长前缀——包含"Translate English to French:"指令及三个少样本示例（"sea otter"→"loutre de mer"、"peppermint"→"menthe poivrée"、"plush giraffe"→"girafe en peluche"），仅任务输入（"cheese" vs "I love you"）与LLM输出（"fromage" vs "Je t'amie"）不同。
 
-**2) 原文论证的技术结论**
-两请求的 prefix 完全一致，意味着 LLM serving 中该部分会产生重复的 prefill 计算与 KV cache 存储；这正是 PagedAttention 引入 **block-level KV cache sharing** 的现实驱动力——共享前缀的物理页只需分配一次，多请求复用，节省显存并避免冗余计算。
+该图用以论证：在真实LLM服务中，多条请求常共享长前缀，少样本提示场景尤为典型；PagedAttention支持按块粒度共享前缀的KV缓存，从而显著节省显存、提升吞吐。
 
-**3) 在论文整体中的作用**
-作为 vLLM 共享前缀优化（如 Copy-on-Write、块表复用）的典型用例图，证明 few-shot prompting 与 system prompt 场景下 prefix 共享具有普遍性，为后续性能收益（显存节省、吞吐提升）提供具体应用背景。
+在论文整体链路中，它作为典型用例，支撑第4节"Sharing for Shared Prompt"等共享前缀优化机制的设计动机，与并行解码、beam search等场景并列，共同展示PagedAttention在实际工作负载下的普适价值。
 
 ### Figure 11 (p.9) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig11.png]]
@@ -164,16 +177,11 @@ tags: []
 > Input and output length distributions of the (a)
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## 图文联合解读
+> 【图文联合解读】图(a) ShareGPT：输入均值161.31 tokens，集中于近0处（峰≈1.75×10⁻²）；输出均值337.99 tokens，长尾延伸至≈2000。图(b) Alpaca：输入均值19.31 tokens（峰≈7×10⁻²），输出均值58.45 tokens。两数据集均呈"输入短、输出长且高变异"的长尾分布。
 
-**1. 核心对象与数据**
-图(a) ShareGPT：输入长度均值 161.31 tokens，输出均值 337.99 tokens，分布跨度大，输出长尾延伸至 ~2000 tokens；图(b) Alpaca：输入均值仅 19.31，输出均值 58.45，两者均高度集中在 0–100 tokens 区间，密度峰值约 7–8×10⁻²。两个数据集的输入/输出长度均呈现**高度异构、长尾分布**特征，且输出长度方差显著大于输入。
+原文用以论证：请求长度方差大、输入输出长度悬殊，使KV缓存必须弹性管理，凸显PagedAttention按页分配机制的必要性。
 
-**2. 关键论证结论**
-请求长度（尤其是输出）不可预测且差异巨大，传统基于"最长预估长度预分配连续 KV cache"的方案会造成严重内部碎片与内存浪费；这正是 PagedAttention 提出**按页非连续分配、动态拼接**的动机——以分页机制应对任意长度的生成请求。
-
-**3. 在论文链路中的作用**
-位于评估章节开头，作为实验场景的真实数据画像：ShareGPT 代表长对话、长输出压力场景，Alpaca 代表短指令场景。两者互补地验证了 vLLM/PagedAttention 在**不同负载特征**下均能维持高吞吐，证明分页 KV 缓存机制具有通用性与鲁棒性。
+链路作用：作为端到端服务实验的前置动机证据，与批处理吞吐结果共同支撑"vLLM在各模型规模与负载下均最优"的核心方法结论。
 
 ### Figure 12 (p.10) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig12.png]]
@@ -197,7 +205,13 @@ tags: []
 > Average number of batched requests when serv- ing OPT-13B for the ShareGPT (2 reqs/s) and Alpaca (30 reqs/s) traces.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图13展示OPT-13B在ShareGPT(2 reqs/s)与Alpaca(30 reqs/s)两种负载下的平均批处理请求数对比。ShareGPT子图：vLLM=30.42，Orca(Oracle/Pow2/Max)依次为13.62/9.81/7.00，vLLM约为Orca最优的2.2倍；Alpaca子图：vLLM=132.44，Orca依次为72.75/43.24/7.00，约为Oracle的1.8倍。该图论证PagedAttention通过消除KV cache碎片化与显存浪费，使系统可同时承载更多并发请求，有效批大小显著超越传统连续批处理方案。在论文实验链路中，它与吞吐量、延迟指标互补，直接量化vLLM"更高吞吐"的核心优势，为方法有效性提供关键实证。
+> 【图文联合解读】**图文联合解读（Figure 13）**
+
+**(1) 核心对象与数据：** 图中含两个柱状图，对比在 OPT-13B 下四种调度方案的平均批大小。ShareGPT 轨迹（2 req/s）：Orca(Max)=7.00、Orca(Pow2)=9.81、Orca(Oracle)=13.62、vLLM=30.42；Alpaca 轨迹（30 req/s）：分别为 7.00、43.24、72.75、132.44。
+
+**(2) 关键结论：** vLLM 的平均批处理请求数是 Orca(Max) 的 4 倍以上（ShareGPT 约 4.3×，Alpaca 约 18.9×），即便对比拥有"最优预知"的 Orca(Oracle)，vLLM 仍可承载 2–4× 的并发请求，凸显其更强的批处理吞吐能力。
+
+**(3) 论文整体作用：** 该图在 Figure 12（延迟-请求率曲线）基础上，从"批大小"维度解释 vLLM 为何能显著拓展请求率上限：得益于 PagedAttention 的高效显存管理（消除碎片、提升 KV cache 利用率），vLLM 能容纳更大并发批，从而直接转化为更高的服务吞吐，构成方法有效性论证链的关键一环。
 
 ### Figure 14 (p.11) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig14.png]]
@@ -206,13 +220,13 @@ tags: []
 > Parallel generation and beam search with OPT-13B on the Alpaca dataset.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 14）**
 
-图14展示OPT-13B在Alpaca数据集上四种负载（并行生成size=2/4、束搜索width=2/4）下，vLLM（蓝/绿线）与Orca-Max、Orca-Power（红叉/橙三角）的归一化延迟（s/token）随请求速率（req/s）变化曲线。图中显示vLLM蓝色曲线在请求速率达到约15-18 req/s时延迟才开始急剧上升，而Orca-Max仅在约2 req/s、Orca-Power在约8 req/s即饱和。
+该图以2×3子图展示OPT-13B在Alpaca上的6组对照：上排为并行生成（size=2/4/6），下排为束搜索（width=2/4/6），横纵轴分别为请求率与归一化延迟，对比Orca三档策略与vLLM。关键量化结果：vLLM在所有配置下饱和请求率均最高，例如size=2时可达~17 req/s，显著超过Orca(Pow2)≈9与Oracle≈12；width=6时仍达~7 req/s，约为Oracle的2倍。
 
-**关键结论：** 在并行采样与束搜索等需要共享前缀或管理多个序列的工作负载下，vLLM凭借PagedAttention的分页KV缓存管理，将吞吐量较Orca-Max提升约7-8倍，较Orca-Power提升约2倍。
+原文论证结论：PagedAttention通过页式KV cache实现序列间灵活共享，缓解了并行采样/束搜索造成的内存浪费，使vLLM在高资源竞争场景下依旧保持领先。
 
-**论文作用：** 该图扩展了Figure 13的实验维度，证明PagedAttention不仅在普通自回归生成中有效，在更复杂的解码策略（并行生成、束搜索）中同样显著降低内存碎片、提升服务吞吐，巩固了vLLM方法的核心技术优势。
+论文作用：补充第5节单序列基准实验，验证vLLM对多种并行解码策略的通用性与鲁棒性，强化"内存效率→吞吐增益"的核心论点。
 
 ### Figure 15 (p.11) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig15.png]]
@@ -221,9 +235,11 @@ tags: []
 > Average amount of memory saving from sharing KV blocks, when serving OPT-13B for the Alpaca trace.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图15联合解读：**
 
-图(a)(b)分别量化OPT-13B服务Alpaca负载时，并行采样（输出序列数2/4/6）与束搜索（束宽2/4/6）下KV块共享带来的显存节省。并行采样节省由6.09%升至9.79%；束搜索节省则达37.56%→53.13%→55.16%，幅度与绝对值均显著更高。论文借此实证块共享对公共前缀密集的解码场景（尤以束搜索为甚）收益突出，支撑PagedAttention通过共享KV块提升显存利用率这一核心机制的有效性，是其系统级显存高效性实验论证链中的关键一环。
+图15以两组柱状图量化KV块共享带来的内存节省：(a)并行采样下，输出序列数为2/4/6时分别节省6.09%/8.53%/9.79%；(b)束搜索下，束宽为2/4/6时分别节省37.56%/53.13%/55.16%。
+
+数据表明束搜索场景的节省（峰值55.16%）远高于并行采样（峰值9.79%），因为beam内序列共享大量前缀token，KV块复用率高；而并行采样各序列前缀重叠有限。该结果直接验证了PagedAttention的块级共享机制在真实输入输出长度异质、请求结构复杂的Alpaca负载下仍可大幅压缩KV缓存占用。论文借此支撑核心结论——相比Orca基线，在真实聊天场景中可提升服务吞吐40–60%，构成从合成benchmark（Figure 13–14）到真实trace验证链路中的关键实证环节。
 
 ### Figure 16 (p.12) ⭐深度解读
 ![[assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig16.png]]
@@ -295,13 +311,13 @@ The figure contains two subplots:
 > Model sizes and server configurations.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 1 联合解读**
 
-**1）表核心数据：** 三个模型规模（13B/66B/175B）对应不同硬件配置（1×A100-40G / 4×A100 / 8×A100-80G），显存总量分别为 40/160/640 GB；参数常驻占 65%（26/132/346 GB）；KV cache 可用内存 12/21/**264** GB，对应最大并发槽位 15.7K / 9.7K / **60.1K** 个。
+1) **核心数据**：表内列出 13B/66B/175B 三种模型的服务器配置。参数占内存分别为 26/132/346 GB；分配给 KV cache 的内存仅 12/21/264 GB，可用 KV cache slots 上限为 15.7K / 9.7K / 60.1K，呈"模型越大、每 GPU 可服务并发越少"的非线性下降。
 
-**2）论证结论：** 参数约占显存 ⅔ 且常驻不可动（对应图1灰色区），KV cache 是剩余动态内存主体，且随 batch 激增（呼应图1右侧"现有系统 KV 暴增"曲线）——尤其是 175B 模型 KV 容量高达 264 GB，传统连续张量分配必然产生严重碎片，**直接论证 PagedAttention 分页管理 KV cache 的必要性**。
+2) **论证结论**：参数静态占用绝大部分显存，留给 KV cache 的空间极其受限；尤其 13B 模型 40 GB 显存中仅 12 GB 可作 KV cache，说明 KV cache 管理是吞吐瓶颈，必须消除碎片化。
 
-**3）论文作用：** 作为实验 baseline 配置表，贯穿后续吞吐量/批大小基准测试，证明 PagedAttention 在不同参数规模与显存预算下均能逼近理论 batch 上限，是评估方法有效性的硬件锚点。
+3) **作用**：为 PagedAttention 提供量化基线——证明传统连续分配策略浪费严重，进而引出 vLLm 通过分页机制提升 KV cache slot 利用率的核心实验动机。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -30,13 +30,11 @@ tags: [rl]
 > The performance of SAO on reasoning and coding benchmarks. The four reasoning benchmarks are evaluated in a reasoning-with-Python-tool setting, where the baseline is the Qwen3- 30B-A3B SFT model; SWE-Bench Verified evaluates coding with the Qwen3-30B-A3B baseline. SAO outperforms the corresponding baseline and GRPO across all five benchmarks. ∗Equal Contribution. Work done while ZH and YL interned
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图1联合解读**
+> 【图文联合解读】图示对比SAO、GRPO与Baseline在5项基准的准确率（%）：AIME2025（80.4 / 84.2 / 97.3）、BeyondAIME（53.3 / 54.8 / 74.8）、HMMT Nov 2025（75.2 / 76.0 / 88.3）、IMOAnswerBench（53.3 / 55.8 / 74.0）、SWE-Bench Verified（23.0 / 27.0 / 29.8）。
 
-该图为柱状图，对比SAO（深蓝）、GRPO（浅蓝）与基线（白）在多基准上的得分。可读取的量化结果：MMT Nov 2025上SAO达**88.3**，较GRPO（76.0）提升**12.3**分；IMO Answer Bench上SAO为**55.8**，超出基线53.3；SWE-Bench Verified上SAO得**29.8**，较GRPO（27.0）和基线（23.0）分别提升**2.8**与**6.8**分。
+技术结论：SAO在全部5项基准上同时优于Baseline与GRPO。推理类任务提升最显著——较GRPO提升12.3–20.0个百分点；编码任务虽绝对值偏低，仍取得对GRPO +2.8pp、对Baseline +6.8pp的正向增益，验证方法在"带Python工具的agentic推理"与"真实软件工程修复"两类异质场景下的通用有效性。
 
-原文借此论证核心结论——SAO在四个推理基准与一个编码基准（共五项）上**全面稳定超越**GRPO与Qwen3-30B-A3B SFT基线，是支撑"单次rollout异步优化策略优于传统同步GRPO"主张的**首要经验证据**。
-
-该图作为论文首页Figure 1，奠定整篇实验链路的基调——先以宏观性能对比建立方法有效性，再逐项剖析机制（异步、效率、单rollout假设），形成"结果先行、机理跟进"的论证结构。
+论文作用：作为headline result，与Table 1（纯数学推理）形成"广（多基准）—专（数学域）"互补，构成SAO在agentic RL设置下方法有效性的核心实证链，为后续消融与分析奠定基础。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig02.png]]
@@ -47,11 +45,7 @@ tags: [rl]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与结构**：图分两行对比。上行（SAO）：编号 7、9（及 8）三条轨迹**逐条独立**送入 Training 模块，参数 π_θ 与 π_rollout 通过反向箭头同步迭代；下行（GRPO）：编号 3→2→1 的轨迹必须**积攒为一组**后整体送入 Training。右侧附两幅相同的 Trust Region 图，以横轴 A、纵轴 π_θ / π_rollout 给出上下界 1+ε_h 与 1-ε_l 围成的灰色安全区域，表明两方法均受同一信任域约束。
-
-2）**关键技术结论**：SAO 单轨迹一完成即可训练（"ready for training"），无需等齐整组，从而消除 GRPO 中因等待最慢样本造成的 GPU 气泡；同步保证新旧策略比仍在 1±ε 信任域内。
-
-3）**论文链路作用**：该图是方法概述的总锚点，承上启下——直观展示 SAO 把同步组训练拆解为异步流水线，启下各节中"Rollout–Train 交叠""资源利用率/吞吐提升""信任域约束保持"等分析与实验的对比基准。
+图示GRPO与SAO两种训练范式的核心差异。GRPO（上）需生成组内全部9条轨迹后才启动训练，存在"waiting for Group"同步阻塞（已完成的1、2、7、9需等待仍在生成的3、4、5、6、8）；SAO（下）采用单轨迹完成即训练，按完成序9→8→…→1逐条进入训练端，rollout与训练流水线并行。两者共用相同Trust Region约束（π_θ/π_rollout ∈ [1−ε_l, 1+ε_h]），表明异步化并未放宽策略限制。该图论证了SAO的核心动机：在不改变信任域前提下，通过消除组同步等待提升时序利用率与样本效率，直接支撑后文SWE-Bench Verified实验中精度与训练效率的提升论证。
 
 ### Figure 3 (p.6) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig03.png]]
@@ -60,13 +54,7 @@ tags: [rl]
 > Performance comparison between SAO and GRPO (w/ DIS) during training. It can be observed that SAO almost consistently outperforms the optimized GRPO during the training process on different benchmarks. 4
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-图3以Qwen3-30B-A3B为基模型，在AIME 2025与Beyond（AIME之外）两个数学基准上，对SAO、GRPO(w/ DIS)与Vanilla GRPO三条曲线进行了约1000步训练的准确率对比。**量化结果**显示：在AIME 2025上，SAO最终达到约95%，GRPO(w/ DIS)约92%；在Beyond基准上，SAO约70%，GRPO(w/ DIS)约65–67%；Vanilla GRPO在约150步后骤降至约73%并迅速崩溃退出。
-
-**技术结论**：图中SAO曲线在两个基准的训练全程几乎全程位于GRPO(w/ DIS)之上，直观支撑原文"SAO almost consistently outperforms the optimized GRPO"的核心论断；同时Vanilla GRPO的早崩反衬出DIS稳定化与单rollout异步策略的必要性。
-
-**作用定位**：作为论文的主对比实验图，它在方法/实验链路中扮演关键验证角色——将提出的SAO与经改进的强基线GRPO并列训练，是证明"单rollout+异步优化"在智能体RL中相对主流GRPO具有稳定性与性能双重优势的核心证据。
+> 【图文联合解读】图以训练步数为横轴、准确率为纵轴，对比AIME 2025、BeyondAIME、HMMT-Nov-2025：SAO（紫）几乎全程高于GRPO(DIS，蓝），终点约为96%/76%/91%，后者约95%/71%/87%；Vanilla GRPO（浅蓝）在百步后跌至约70%/42%/68%。上表最终准确率为23.0%→27.0%→29.8%。该图以同带DIS的GRPO公平对照，支撑SAO单次rollout异步优化更稳定、最终更优，并为Table 3价值模型与critic消融提供训练侧证据。
 
 ### Figure 4 (p.7) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig04.png]]
@@ -75,9 +63,7 @@ tags: [rl]
 > Training dynamics of asynchronous single-rollout RL. (a) Explained Variance for SAO and a single-critic-update baseline. (b) Critic gradient norm during value training under full-parameter optimization and frozen-attention optimization used in SAO. (c) Token-level clip ratio during training for SAO with the proposed DIS and the VAPO baseline.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-图4(b)(c)分别展示SAO训练动力学的两项关键诊断。**(b)** 为 Critic Gradient Norm 曲线，上方"SAO w/o Frozen attention"（全参数优化）在~500步后梯度飙升至约10且持续增长；下方 SAO（冻结注意力）稳定保持在4–5，证明冻结注意力对价值网络训练的正则化必要性。**(c)** 为 Token-level Clip Ratio，紫色 SAO 曲线在~500步附近出现峰值约0.006，蓝色 vanilla VAPO（无DIS）全程趋近于0，说明 DIS 机制允许更积极的策略更新并触发裁剪。两图共同支撑论文核心论断：异步单次rollout需配合**冻结注意力价值训练**与**DIS解耦裁剪**两项设计，二者协同保证异步架构下 critic 稳定与 policy 高效探索，是 SAO 优于串行VAPO的实验证据基础。
+> 【图文联合解读】图4三子图诊断SAO训练动力学：**(a)** Explained Variance，SAO在~900步达~0.60，SAO w/o Faster value仅~0.52，差约8个百分点，验证Faster value提升价值拟合；**(b)** Critic Grad Norm，无冻结注意力时~500步后梯度飙至>10并持续增长，冻结后稳定于3–5，证明冻结注意力对价值网络训练的强正则化必要性；**(c)** Clip Ratio，SAO在~800步峰值~0.006，vanilla VAPO全程近0，表明DIS允许更积极策略更新并触发裁剪。三图共同支撑SAO两项核心设计（冻结注意力价值训练+DIS解耦裁剪），为异步架构优于串行VAPO提供关键实验证据。
 
 ### Figure 5 (p.9) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig05.png]]
@@ -86,11 +72,13 @@ tags: [rl]
 > Online learning simulation under changing writing-style preferences. 5
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图示训练步数(0–430)与奖励(0–0.75)曲线，对比SAO(深蓝)与Running Mean基线(浅蓝)在单rollout在线学习下的表现。两处灰色阴影区(步150–170、290–310)代表风格奖励切换：SAO峰值约0.70–0.75，切换后迅速回升；Running Mean则适应滞后明显，稳态性能偏低(约0.45–0.60)。
+> 【图文联合解读】**图5联合解读：**
 
-该图论证在非平稳偏好下，SAO相比运行均值优势估计具备更快适应速度与更高稳态奖励，凸显其对偏好漂移的鲁棒性。
+图(a)展示Cute、Chuunibyou、Classical三种写作风格在400+训练步内的准确率动态迁移：偏好切换阴影区分别位于约175步与300步。Cute从初始~30%攀升至~73%峰值后骤降至近0%；Chuunibyou在275步附近达~78%峰值后回落；Classical则在300步后从0飙升至~65%；Academic始终贴近0%。图(b)对比SAO与Running Mean基线的奖励曲线：SAO峰值约0.72，显著高于基线的~0.55，且在两次偏好漂移阴影区后回升斜率更陡。
 
-在实验链路中，此图作为消融对比，验证SAO相对传统优势估计的必要性，为单rollout异步优化方法的核心论点提供关键实证。
+**论证结论**：证明SAO能在**非平稳奖励分布**下完成快速风格偏好适配，相比Running Mean基线具有更高的峰值奖励与更优的切换后恢复能力。
+
+**整体作用**：该实验是论文验证算法**在线部署鲁棒性**的关键环节——超越静态任务基准，模拟真实场景中用户偏好时变的情形，为SAO相对传统RL方法的优势提供直接实证支撑。
 
 ### Figure 6 (p.13) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig06.png]]
@@ -99,13 +87,7 @@ tags: [rl]
 > Training reward for token-level SAO training and step-level variants, where token-level shows better training rewards.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-图中横轴为训练步数（部分截断），纵轴为Reward（范围约0.42–0.54），对比三条曲线：SAO（token-level，浅蓝）、Step-level(Average)（紫）、Step-level(Last-Token)（深蓝）。训练起点三者均约0.44–0.45，中段曲线交织；最终SAO升至约0.47，明显高于Step-level(Average)的~0.44与Step-level(Last-Token)的~0.45。
-
-原文借此论证：**在单次rollout异步优化框架下，采用token级优势估计（即SAO）比step级聚合（Average/Last-Token）能获得更高的训练奖励**，验证token级细粒度信用分配在agentic RL中的有效性。
-
-在论文整体链路中，该图属于消融/对比实验环节，为前文方法部分提出的token级SAO算法提供直接经验证据，说明其设计选择（非step级粗粒度回报聚合）在奖励优化上具有可观测优势，支撑后续任务性能（pass@k）的整体提升结论。
+> 【图文联合解读】图6对比三种方案训练奖励（0–400步）：SAO（token级）由~0.425升至~0.54；Step-level(Average)与Step-level(Last-Token)均收敛于~0.495。token级SAO全程领先，差距约0.04–0.05。论文以此论证token级异步优化粒度优于步级均值或末token聚合，是SAO的关键设计依据，在消融链路中验证粒度选择对策略学习效率的直接影响。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -115,23 +97,7 @@ tags: [rl]
 > Experimental Results on math reasoning benchmarks(Accuracy %).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 联合解读**
-
-该表列示Qwen3-30B-A3B在AIME2025、BeyondAIME、HMMT Nov 2025、IMOAnswerBench四项数学基准上的Accuracy%。核心数据：基线w/python仅14.6/10.5/17.3/7.8；施加SAO后跃至**97.3/74.8/88.3/74.0**，不仅全面超越同模型的GRPO(84.2/54.8/76.0/55.8)，还反超Claude-Sonnet-4.5与GPT-5 High，逼近更大规模GLM-4.7。消融项"SAO w/ DIS only"(94.2/71.5/86.7/71.3)与"GRPO+DIS"(93.5/70.8/84.0/70.0)均明显回落，证实双组件缺一不可。原文以此支撑"SAO全五基准均胜出"的核心论断，是实验链路中量化方法优越性的关键证据。
-
-### Table 2 (p.6) ⭐深度解读
-![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab02.png]]
-> [!quote] caption
-> Experimental Results on SWE-Bench Verified (Accuracy %).
-
-> [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
-
-**①核心数据：** Table 2 量化展示 Qwen3-30B-A3B 在 SWE-Bench Verified 上的代码修复准确率：基座 23.0% → +GRPO(w/ DIS) 27.0% → +SAO(本文) **29.8%**。SAO 较基座绝对提升 **6.8 个百分点**，相对 GRPO(w/ DIS) 再提升 **2.8 个百分点**。下方三张训练曲线（AIME 2025、BeyondAIME、HMMT-Nov-2025）同步显示 SAO 紫线全程高于 GRPO(w/ DIS) 蓝线，且 Vanilla GRPO 浅蓝线在 ~200 步后崩溃，与表头量化结果形成"终值—过程"互证。
-
-**②关键结论：** 配合 Figure 2"单轨迹生成即可训练、GRPO 须整组完成才能训练"的机制对比，Table 2 实证了 SAO 去除组内同步等待后，在代码修复这一典型 agentic RL 任务上既提升 **样本效率** 又提升 **最终精度**。
-
-**③整体作用：** Table 2 是论文方法有效性的**主基准证据**，与 Figure 2（机制图）+ 数学三曲线（泛化证据）共同构成"机制创新→代码任务量化→数学任务过程"的完整验证链，支撑 SAO 相对 Vanilla GRPO 与 GRPO(w/ DIS) 的全面优越性主张。
+> 【图文联合解读】表1列出AIME2025、BeyondAIME、HMMT Nov 2025、IMOAnswerBench四个数学推理基准的准确率，对比闭源模型（Claude-Sonnet-4.5、GPT-5 High、GLM-4.7在AIME2025分别达87.0%/94.6%/95.7%）与Qwen3-30B-A3B的多种配置：原始模型调用python工具时表现极差（AIME仅14.6%），关闭工具后跃升至85.0%；SFT与GRPO分别将带工具配置提升至80.4%和84.2%（AIME）。该表构建基线参照系，与图1联合论证"SAO在四个推理与一个编码基准上全面超越Qwen3基线和GRPO"的核心技术结论，是论文实验验证链路中的对照基准表。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab03.png]]
@@ -139,17 +105,13 @@ tags: [rl]
 > Ablation results of value model training strategy and critic update frequency. We compare partial parameters, i.e., frozen-attention, with full-parameter value update in RL training, as well as the effectiveness of faster critic updates per policy step. We report Accuracy (%) for all datasets
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 核心结构与数据：**
-表格对比3种配置在AIME2025与BeyondAIME两个数学基准上的准确率（%）：①SAO（Frozen Attention + Critic频率=2）：97.3 / 74.8；②Single-step-update（Frozen Attention + 频率=1）：95.00 / 69.75；③Full-Parameter Value Training（全参数更新 + 频率=2）：90.62 / 74.50。变量为"Value训练策略（部分冻结 vs 全参数）"和"Critic更新频率（1 vs 2）"。
+表3对比三种价值模型配置在AIME2025与BeyondAIME上的精度：①SAO（Frozen Attention，频率2）AIME2025达97.3%、BeyondAIME 74.8%，为最优；②Single-step-update（频率1）AIME降至95.00、BeyondAIME降至69.75；③Full-Parameter训练AIME仅90.62但BeyondAIME保持74.50。
 
-**2) 关键论证结论：**
-- **冻结注意力优于全参数训练**：在同等频率=2下，Frozen Attention在AIME2025上比Full-Parameter高约6.7个百分点（97.3 vs 90.62），说明仅训练价值模型的部分参数即可，且效果更佳，验证了SAO的轻量化设计；
-- **更高Critic更新频率有效**：SAO（频率=2）相比Single-step-update（频率=1），AIME2025提升2.3点、BeyondAIME提升5.05点，表明"每策略步更新两次Critic"的异步策略带来显著增益。
+**关键结论：**论文以此论证两点设计选择——价值模型冻结主干仅训练部分参数（frozen-attention）显著优于全参数更新，尤其在AIME2025上提升约6.7点；每策略步两次critic更新（频率2）较单次带来明显增益，表明更频繁的价值估计更新对策略学习至关重要。
 
-**3) 在论文链路中的作用：**
-该表作为消融实验，支撑SAO方法的两大核心设计选择——价值模型局部训练与加速Critic更新，与Figure 3（SAO vs GRPO的训练曲线对比）共同构成方法有效性证据链，证明各组件选择均有数据支撑。
+**整体作用：**该表是消融实验核心，验证SAO框架中价值网络"轻量化训练+高频更新"组合的必要性，排除全参数价值头与低频更新的替代方案，为方法设计的合理性提供实证支撑。
 
 ### Table 4 (p.8) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab04.png]]
@@ -157,13 +119,7 @@ tags: [rl]
 > Ablation results of value model training strategy and critic update frequency. We compare partial parameters, i.e., frozen-attention, with full-parameter value update in RL training, as well as the effectiveness of faster critic updates per policy step. We report Accuracy (%) for all datasets
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 联合解读**
-
-**1) 核心数据**：表格对比了5种设置在 AIME2025 / BeyondAIME 上的准确率（%）：SAO（完整方法）= 97.3 / 74.8；去掉 Faster value = 95.0 / 69.8（↓2.3 / 5.0）；去掉 Frozen attention = 90.6 / 74.5（↓6.7 / 0.3）；Vanilla VAPO（无 DIS）= 91.3 / 69.0；Running mean baseline = 79.8 / 55.3。
-
-**2) 关键结论**：两项消融均造成性能下降，证明二者缺一不可——冻结注意力对 AIME 至关重要（−6.7），对应 Figure 4(b) 中全参数优化导致 critic 梯度爆炸（≈10）的问题；加速 critic 更新则对 BeyondAIME 收益更大（−5.0），对应 Figure 4(a) 中 explained variance 的领先。
-
-**3) 论文链路作用**：Table 4 是 Figure 4 训练动力学诊断的**性能验证**——前者证明现象（梯度不稳、价值预测不准），本表量化证实 SAO 的两个工程设计（frozen-attention + faster critic updates）以及 DIS 共同带来了相对 baseline 超 17 点的总体提升，闭合了"诊断→设计→增益"的论证链。
+> 【图文联合解读】表4在AIME2025、BeyondAIME上比较价值模型策略：SAO准确率为97.3%、74.8%，均最高；去掉更快价值更新降至95.0%、69.8%（分别下降2.3、5.0点），取消冻结注意力降至90.6%、74.5%，说明其主要稳定AIME训练，频繁价值更新则对两套数据均关键。图4显示全参数训练约500步后梯度升至约10，冻结注意力后稳定在4–5；二者共同构成SAO算法有效性及相对VAPO优势的分量消融与机制证据链。
 
 ### Table 5 (p.13) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab05.png]]
@@ -171,14 +127,13 @@ tags: [rl]
 > The ablation on the action granularity for value and policy model training. Step-level denotes that each agent step is viewed as an action to calculate the value. Token-level refers to each token being viewed as an action. We report the results with the same training steps (400 steps).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**1) 核心对象与数据**
-Table 5 在固定 400 训练步下，比较了三种动作粒度方案在 AIME2025 与 BeyondAIME 上的得分：Step-level (Average) 为 85.8 / 60.5，Step-level (Last-Token) 为 87.3 / 62.8，Token-level 为 89.8 / 66.8。三行单调递增，最优与最差之间在 AIME2025 相差 4.0 分，在 BeyondAIME 相差 6.3 分。
+> 【图文联合解读】**Table 5 联合解读**
 
-**2) 关键技术结论**
-将每个 token 视为动作用于价值估计时效果最好；同为 Step-level 时，仅用末 token 聚合显著优于全步平均。结论：动作粒度越细，信用分配与策略优化越有效，验证了"token 级动作"的必要性。
+**1) 核心对象与数据**：表展示动作粒度消融，在相同400训练步下，对比三种粒度在AIME2025/BeyondAIME上的表现：Step-level (Average) 为85.8/60.5；Step-level (Last-Token) 为87.3/62.8；Token-level 为89.8/66.8。性能呈严格递增趋势，Token-level最佳，较Average版在AIME2025上提升+4.0，BeyondAIME上提升+6.3。
 
-**3) 在论文中的作用**
-作为异步优化框架的关键设计消融，Table 5 支撑了作者在价值/策略模型训练中采用细粒度（token 级）动作的设计选择，是整套方法实证链路中的重要一环。
+**2) 关键技术结论**：论文借此论证——将每个token视为动作（而非把整步聚合为单一动作）能为价值估计提供更细粒度、更准确的监督信号；即便同为Step-level，Last-Token聚合也优于Average聚合，进一步说明末步token携带了关键的未来回报信息。因此Token-level是该方法价值/策略训练粒度的合理且最优选择。
+
+**3) 在论文链路中的作用**：作为消融实验，为论文所提单轨迹异步优化框架中"token级价值计算"这一核心设计决策提供了经验支撑，强化了方法组件选型的可信度。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

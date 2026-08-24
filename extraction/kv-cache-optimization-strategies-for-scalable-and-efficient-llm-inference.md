@@ -32,11 +32,11 @@ tags: [kv-cache]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示展示了自回归生成的两个连续步骤（Step 1、Step 2），序列由"The"、"apple"、"tas"等青色 token 框组成，曲线箭头表示当前新 token 对所有历史 token 的注意力依赖；右下方粉色框标注"KV Cache"，用于存储历史 token 的 K、V 矩阵。
+1）图示自回归两步生成过程：Step1序列"The apple tastes"（青色历史token），橙色"?"经attention对全部历史做预测，输出"sweet"；Step2扩展为"The apple tastes tastes sweet"再预测"."；底部粉色框标注KV Cache存储历史token的K/V。
 
-**核心结论：** 图示直观论证 KV cache 的必要性——若无缓存，每步都需从头重算所有历史 token 的 K、V，时间复杂度为 O(n²)；借助缓存复用，仅需计算新增 token，使单步注意力降为 O(n)。
+2）论证结论：新token每步需attend全部历史K/V，无缓存时每步从零重算开销巨大；KV Cache通过存并复用历史K/V避免冗余计算，显著降低推理时延。
 
-**论文作用：** 作为 Figure 1 置于引言，奠定全文优化动机，后续章节围绕"如何更高效地压缩/共享该缓存"展开，属于全文技术链路的问题定义与起点。
+3）论文作用：作为引言Figure1奠定核心问题与优化动机，后续章节围绕KV Cache压缩、共享、淘汰等策略展开，构成全文方法链路的起点。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig02.png]]
@@ -45,13 +45,13 @@ tags: [kv-cache]
 > Data-flow of the KV cache within a single transformer layer. Input token xt fans into three projections; Kt and Vt are appended to their respective caches (teal); Qt attends over the full caches to produce output ot. Cache size grows as O(T) per head per layer.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：图示单层 Transformer 内 KV cache 的数据流。输入 token $x_t$（橙色）经三个投影 $W_Q, W_K, W_V$ 分流：$Q_t$（黄色，左侧）无需缓存；$K_t, V_t$（teal 蓝绿）依次 append 到各自的 cache $K_c=[K_1,\ldots,K_t]$、$V_c=[V_1,\ldots,V_t]$（teal 框标注缓存区）。底部给出注意力的完整计算式 $\mathrm{softmax}(Q_tK_c^\top/\sqrt{d_k})V_c$。右侧橙色标注明确指出缓存体量为 $t\times d_v$，每头每层线性增长。
+该图刻画单Transformer层KV Cache数据流：输入token $x_t$经$W_K$、$W_Q$、$W_V$三路投影得$K_t$、$Q_t$、$V_t$；$K_t$、$V_t$以"append"方式累入缓存$\mathbf{K}_c=[K_1..K_t]$（$t \times d_k$）与$\mathbf{V}_c=[V_1..V_t]$（$t \times d_v$），teal高亮；$Q_t$对完整缓存执行$o_t=\text{softmax}(Q_t\mathbf{K}_c^\top/\sqrt{d_k})\mathbf{V}_c$注意力运算。
 
-2) **关键技术结论**：teal 色块直观看清"被缓存的对象"就是 K、V 两路；其大小随已解码 token 数 $t$ 以 $O(T)$ 增长，逐 token 累积、不可压缩释放。这正是后文所有 KV cache 优化策略（量化、淘汰、共享、压缩、分页等）共同针对的内存瓶颈来源。
+原文借此论证关键结论：每头每层缓存随序列长度$T$以$O(T)$线性增长，构成LLM推理的显存与带宽瓶颈。
 
-3) **论文链路作用**：作为全文"问题定义"奠基图——在介绍任何优化方法之前，先建立 KV cache 的结构、大小与访存模式，为后续 5 大类优化技术的分类与实验对比提供统一的参照基线。
+论文作用：该图为全篇"问题基线"，Table 2所列eviction、量化、共享、分页等优化策略均围绕缓解此$O(T)$增长展开。
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig03.png]]
@@ -60,7 +60,7 @@ tags: [kv-cache]
 > KV cache memory as a function of context length for three LLaMA-2 model variants under fp16 precision.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图以32K–128K上下文为横轴、FP16 KV缓存显存为纵轴，展示LLaMA‑2 7B、13B、70B三条线性增长曲线；128K时缓存分别约64、80、40GB。虚线表示A100 80GB容量，点线表示FP16参数显存（约14、26GB）。KV缓存随序列长度持续膨胀：7B仅缓存就占64GB，计入14GB参数后几乎耗尽单卡显存，成为推理瓶颈。该图为后文缓存压缩、量化及调度卸载实验提供容量基线与必要性依据。
+> 【图文联合解读】图示LLaMA-2三种变体（7B、13B、70B-GQA）在fp16精度下KV缓存随上下文长度（0–128K）的线性增长，每token开销分别为0.50/0.78/0.31 MB。虚线标注GPU显存上限（RTX 4090:24 GB、A100:80 GB），点线标注参数权重（7B:14 GB、13B:26 GB）。关键发现：7B模型KV缓存在约48K token处即突破RTX 4090显存上限（图中"7B KV"箭头），128K时达~64 GB——长上下文场景下KV缓存已超越参数成为主存瓶颈。此图作为动机图，为后文Table 3所列KV压缩方法（量化、稀疏、共享等）的必要性提供量化论证。
 
 ### Figure 4 (p.4) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig04.png]]
@@ -71,9 +71,11 @@ tags: [kv-cache]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-该图以 4×4 因果自注意力矩阵呈现"The apple tastes sweet."的注意力分布，采用 Viridis 配色（深紫=低、黄=高），灰色表示被掩码的未来 token；右下"Query=sweet"行可读出对"apple"约 0.65（对应 caption 中 65%）、"tastes"约 0.20、"sweet"自注意约 0.10，行和归一为 1。
+①**核心对象**：4×4 因果自注意力权重矩阵（Query="The/apple/tastes/sweet"×Key 同四词），行和归一为1。量化数据："sweet"行注意力分布为0.05/0.65/0.20/0.10，峰值0.65落于"apple"列（橙色框标注）；其余三行对角自注意分别为1.00、0.70、0.55。Viridis配色，深紫=低、黄=高，灰格为未来掩码。
 
-论文借此论证：**KV 条目重要性高度不均**——个别 token（如 sweet→apple）承载绝大部分注意力，其余条目贡献微弱。这正是 H₂O、SnapKV 等基于注意力分数驱动的 KV 淘汰策略的核心前提，为后文量化、淘汰与预算分配等优化章节提供直觉依据与动机锚点。
+②**关键结论**：注意力分布严重偏斜——后序 token（"sweet"）将65%权重集中于非自身的早期 token（"apple"），说明多数 KV 对仅承载低权重贡献，是 KV Cache 淘汰（eviction）的天然候选。
+
+③**论文作用**：该图为后续所有缓存压缩/淘汰策略（如低权重 KV 驱逐、混合内存方案）提供动机与直觉支撑，是论证"KV Cache 可稀疏化而不损性能"的入门示例。
 
 ### Figure 5 (p.5) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig05.png]]
@@ -117,11 +119,11 @@ tags: [kv-cache]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1）图示对象为KV cache矩阵X∈R^(l_prompt×d)：蓝色大矩形为完整缓存，红色虚框沿d维度（通道/列方向）取出一列，标注 s_X, z_X∈R^d，表明缩放因子与零点按"通道"逐列计算——即**per-channel quantization**沿token维度聚合统计量。
+**1) 核心对象与结构**：图示KV缓存矩阵 X∈R^(l_prompt×d) 的两种量化粒度。左图 *per-token* 对每一行（一个 token）共享一组缩放因子与零点 s_X, z_X ∈ R^(l_prompt)；右图 *per-channel* 对每一列（一个通道）共享 s_X, z_X ∈ R^d；红色虚线框分别圈出被量化的行/列单元。
 
-2）结合正文"K中某些维度幅度极大"的观察，该图论证：Key cache存在显著通道级异常值，故需**逐通道量化**以保留敏感维度精度；而Value无此模式，KIVI改用per-token量化，二者结合构成KIVI的核心设计。
+**2) 关键技术结论**：key cache 存在幅度很大的 outlier，而 value cache 无明显 outlier。KIVI 据此对 key 采用 per-channel、对 value 采用 per-token 量化，使 outlier 所在通道获得更细粒度的量化参数，从而保留关键信息并降低误差。
 
-3）该图为KIVI方法的关键可视化依据，支撑其"Key per-channel + Value per-token"非对称量化策略，为后续实验链路中实现4-bit近无损压缩提供理论直觉与方案锚点。
+**3) 在论文中的作用**：作为 KIVI 混合量化策略的概念基础，为后续实验的精度–效率权衡提供设计依据。
 
 ### Figure 9 (p.9) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig09.png]]
@@ -132,11 +134,7 @@ tags: [kv-cache]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：图示 Palu 的低秩 KV-cache 压缩流——原始线性投影权重 W 被分解为下投影矩阵（左侧输入 X 块）与上投影矩阵 **B**（底部红块）；蓝色"Original KV"框中为完整输出 **Y**，红色文字"**Cache H instead of Y**"标示被替换的缓存对象。虚线箭头表示下投影到低维隐表示 **H**，实线箭头表示由 B 重建回 Y。
-
-2) **关键结论**：推理时不再缓存完整 K/V 张量 Y，而只缓存经低秩压缩后的 H；Y 可通过 Y ≈ B·H 低成本重建，从而以 rank 比例缩减 KV-cache 显存，同时保持输出近似等价。
-
-3) **论文作用**：作为 Palu 章节的方法示意图，为"低秩投影压缩 KV-cache"这一核心论点提供直观机制说明，支撑后续实验在长上下文、多 batch 推理场景下显存与吞吐收益的论证。
+图9展示Palu低秩压缩的两条对比路径：上行为原始线性投影 X→W→Y（缓存完整KV Y）；下行为分解路径，将W离线分解为下投影A与上投影B，执行 X→A→H→B→Y，仅缓存低维隐层H而非Y。原文借此论证：W≈BA，rank远小于dim(d)，故|H|≪|Y|，可在推理时即时通过B重建Y，从而以极小算力开销换取KV-cache显存与带宽的大幅压缩。该图是Palu整篇方法的基石机制，后文实验均围绕"以H替Y"展开压缩率、吞吐与精度权衡的验证。
 
 ### Figure 10 (p.11) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig10.png]]
@@ -173,11 +171,17 @@ tags: [kv-cache]
 > Standard linear attention (top) vs. loglinear attention (bottom). The input consists of query, key, and value vectors [30]. at nearby keys and averages their value; while Linear Attention is alike global linear regression because it fits a global straight line for all data. Based on such observation, the authors proposed Local Linear Attention, which is similar to local linear regression. This ena
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】## Figure 12 图文联合解读
 
-图示上方"标准线性注意力"为**单层顺序链**：每步接收Q、K、V——顶部为3维查询向量、底部为3×3键值矩阵，经单节点处理后水平传递历史状态，复杂度O(N)；下方"对数线性注意力"采用**双层分层结构**：底层K、V先经多个分桶节点并行聚集，再通过⊕加法运算合并至上层节点，形成对数级深度的递推架构。
+**1) 核心结构对比（具体、量化）：**
+- **上图（Standard Linear Attention）**：8 个同质紫色方块水平链式串联，每个节点结构完全相同——上方接收 query（单列向量），下方接收 key 与 value（各 2 列向量），呈单层均匀网络。
+- **下图（Log-Linear Attention）**：同样 8 个 token 位置，但节点呈**多层金字塔/树状层次结构**——底层连接 K/V，深蓝色中间节点通过 ⊕ 加法逐层聚合相邻邻域的表征，再传到上层浅色节点，实现分层归并。
 
-该对比论证关键结论：标准线性注意力复杂度低但只能拟合全局线性关系、表达力受限；分层对数线性结构以近线性代价换来更强的近似能力。在论文中，此图位于**注意力机制综述**背景章节（[30]引文），用于引出"局部线性注意力"等改进思路，为后续KV-Cache压缩、稀疏化等核心方案奠定理论与结构基础。
+**2) 关键技术结论：**
+原文用此对比论证：标准线性注意力 ≈ "全局线性回归"（一条直线拟合所有数据，难以捕捉局部模式）；Log-Linear 通过分层邻域聚合 ≈ "局部线性回归"，天然引入**局部归纳偏置**，从而优于全局线性方案。
+
+**3) 在论文整体链路中的作用：**
+该图位于第 15 页综述部分，作为**替代注意力机制的动机图**，从"理论类比"过渡到"方法设计"，直接启发了论文提出的 **Local Linear Attention**——融合两者优势的折中方案，是从观察 → 方案推导的关键桥梁。
 
 ### Figure 13 (p.17) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig13.png]]
@@ -215,7 +219,13 @@ tags: [kv-cache]
 > Comparison of KV Cache optimization techniques
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表1将KV Cache优化技术归为5类、共计28种代表方法：Cache Eviction（H2O、SnapKV等9种）、Cache Compression（KIVI、MiniCache等4种）、Hybrid Memory（PagedAttention、InfiniGen等7种）、New Attention（KIMI Linear等4种）、Combination（FlexGen、ShadowKV等4种）。每类对应不同优化目标（内存/吞吐/TTFT/速度），并以精度、硬件需求、设计复杂度为代价，分别适用于长上下文单请求、边缘/超长上下文、多租户数据中心、智能体任务及消费级硬件等场景。承接图1对KV Cache必要性的阐述，该表构建了"目标—权衡—方法—适用场景"四维分类坐标，为后续逐节技术分析与本文方法的横向定位提供全局参照框架。
+> 【图文联合解读】**图文联合解读：**
+
+1）**核心对象与结构**：Table 1 以 5 类技术（Cache Eviction、Cache Compression、Hybrid Memory、New Attention、Combination）为主行，列出其优化目标、权衡代价、代表方法与适用场景，共计覆盖约 30 种具体方案（如 H2O、KIVI、PagedAttention、KIMI Linear、FlexGen 等）。
+
+2）**关键结论**：各类技术在内存占用、吞吐、首 token 延迟、推理速度上各有侧重，但均伴随精度损失、重建开销或硬件复杂度等代价——说明**单一策略难以兼顾效率与质量**，需根据工作负载（长上下文、边缘、数据中心、Agent 任务）选型。
+
+3）**链路作用**：该表作为综述性 baseline，为后续章节分门别类展开每类技术的原理与实验对比奠定分类框架，是论文方法谱系的总览图。
 
 ### Table 2 (p.0) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab02.png]]
@@ -223,9 +233,13 @@ tags: [kv-cache]
 > Summary of KV Cache eviction techniques
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 2 以 Method/Mechanism/Phase/Overview 四列横向对比 9 种 KV Cache 淘汰技术，按执行阶段分布：Prefill 阶段 5 种（NACL、InfiniPot、KVzip 等），After Prefill 阶段 2 种（SnapKV、Ada-KV），Decoding 阶段 3 种（H2O、HASHEVICT、MorphKV），RocketKV 横跨两阶段。机制层面涵盖重要性评分（H2O、KVzip）、观察窗投票聚类（SnapKV）、LSH 哈希近似（HASHEVICT）、上下文蒸馏（InfiniPot）、相关性筛选（MorphKV）、代理-随机混合（NACL）、粗排+细选两阶段压缩（RocketKV）、跨头动态预算（Ada-KV）。
+> 【图文联合解读】**Table 2 联合解读**
 
-结合图 2 所示单层 KV cache 以 O(T) 线性膨胀的瓶颈，该表论证：单一固定策略难以兼顾精度与效率，淘汰须按 prefill/decoding 阶段、跨注意力头差异化设计，为论文后续提出阶段感知+预算自适应的统一框架奠定分类基准与对比基线。
+表2以Method/Mechanism/Phase/Overview四列横向对比9种KV Cache驱逐方法。按执行时机归类：①Prefill阶段——NACL（代理+随机单次驱逐）、InfiniPot（持续上下文蒸馏、固定预算处理无限上下文）、KVzip（上下文重建+最大交叉注意力打分）；②After Prefill——SnapKV（观察窗投票+聚类）、Ada-KV（跨注意力头动态分配预算）；③Decoding阶段——H2O（保留Heavy-Hitter+近期token）、HASHEVICT（LSH+汉明距，无注意力计算）、MorphKV（相关性选择，消除首token偏置）；④RocketKV跨两阶段，采用SnapKV粗排+HSA细排的二级压缩。
+
+**技术结论**：驱逐策略沿"静态滑窗→注意力打分→哈希近似→自适应分配"演进，但仍缺乏多阶段协同与"内存-精度"联合权衡。
+
+**论文作用**：作为相关工作总览，为本文差异化方法定位、基线选取及统一驱逐框架设计提供分类依据。
 
 ### Table 3 (p.0) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab03.png]]
@@ -233,7 +247,9 @@ tags: [kv-cache]
 > Cache Compression Methods Comparison Table
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表格横向对比KIVI、KVQuant、MiniCache、PALU四种KV cache压缩方案，沿**机制/粒度/异常值处理**三维度展开：KIVI与KVQuant均走量化路线（前者K/V非对称、后者Key在RoPE前per-channel NUQ），Value均per-token；MiniCache采用跨层合并，粒度NA；PALU用per-token per-head group低秩潜向量做隐维压缩。论文借此论证压缩策略多样（量化、合并、降维并行），且各方法均预留全精度"逃生通道"（残差缓存/稀疏fp16/不可合并对/关键层高秩）兜底异常值。该表作为综述型基线，为后文各方法实验对比提供分类依据。
+> 【图文联合解读】**Table 3 图文联合解读**
+
+该表横向对比四种缓存压缩方法（KIVI、KVQuant、MiniCache、PALU），沿**机制 / 粒度 / 异常值处理**三列展开：KIVI采用非对称量化（Key per-channel、Value per-token），KVQuant用Pre-RoPE非均匀量化并隔离top 1%异常值；MiniCache走跨层KV合并路线（粒度NA），PALU则以per-token per-head group低秩投影重建，并对关键层赋高秩。论文借此论证：现有压缩策略呈现"量化—合并—低秩"多样化路径，且均需配套异常值/关键层保护机制以保性能。该表为全文KV cache优化的方法分类与后续精度–效率权衡分析提供分类学基础。
 
 ### Table 4 (p.0) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab04.png]]
@@ -241,7 +257,7 @@ tags: [kv-cache]
 > Hybrid Memory Solutions Comparison Table
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表4按"方法—卸载目标—机制—关键优化"四列对比7种KV-Cache混合内存方案：6/7方案卸载至CPU DRAM，唯INF2采用Host+NVMe SSD（CSDs）；机制涵盖分页、注意力推测、SLO分层、近存计算、异步重算重叠、参数重映射、零拷贝传输。该表论证混合内存核心瓶颈在于PCIe带宽与CPU开销，且部分机制（如InfiniGen的注意力推测）正建立在KV条目注意力分数高度不均的前提之上，与Figure 4结论相呼应；该表梳理出从分片→推测预取→近存计算的演进脉络，为本文新策略提供设计空间的定位基准。
+> 【图文联合解读】该表对比7种KV cache混合内存方案，4列展示：方法、Offload目的地、机制、关键优化。6种以CPU DRAM为offload目标，仅INF2采用Host+NVMe SSDs(CSDs)。机制涵盖分页(Paged Attention)、注意力推测(InfiniGen)、分层调度(LayerKV)、存算一体ANS、重叠重算(KVPR)、参数重映射(Oneiros)、头级近似(CLO)。关键优化集中于降低PCIe传输量、减少GPU空闲、提升长上下文与多租户吞吐。论文借此论证混合内存方案的多样性及PCIe/CPU瓶颈，为后文方法设计提供基线对比，支撑可扩展LLM推理的整体方法链路。
 
 ### Table 5 (p.0) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab05.png]]
@@ -249,13 +265,13 @@ tags: [kv-cache]
 > Attention Variants – Mechanisms, Complexities, and Features
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 5 解读**
+> 【图文联合解读】**图文联合解读：**
 
-**核心内容**：横向对比 5 种注意力变体的机制与复杂度——Softmax（SDP+MHA，O(T²)/O(T)/O(T)）、Linear（核点积替换 softmax，O(T)/O(1)/O(1)）、Log Linear（对数增长状态，O(TlogT)/O(logT)/O(logT)）、Local Linear（query 局部线性拟合，O(T²)/~O(T)/O(T)）、KIMI Linear（KDA+MLA 混合，主要 O(T)/O(1)/O(1)）。
+1）**核心对象**：Table 5 比较 5 种 Attention 变体（Softmax、Linear、Log Linear、Local Linear、KIMI Linear）在机制、训练复杂度、解码时间/空间复杂度及特性上的差异。关键数据：Softmax 解码 O(T)/O(T)、Linear 达 O(1)/O(1)、Log Linear 为 O(logT)、KIMI Linear 凭借 KDA+MLA 混合（3:1 比例）也实现 O(1)/O(1)。
 
-**关键结论**：KV 缓存优化的底层在于按序列长 T 选择注意力机制——Linear/Log Linear/KIMI Linear 可将解码内存压至 O(1)，Softmax 高表达却伴 O(T) 内存开销；Local Linear 保留 O(T) 空间换取更优偏差-方差；KIMI Linear 需以 3:1 与 full attention 混合以维持全局信息流。
+2）**关键结论**：Softmax 高表达但代价高；Linear 极低成本但表达有限；Log Linear 折中；Local Linear 偏差-方差更优但开销大；KIMI Linear 以混合架构兼顾 O(1) 解码与近全注意力质量，验证"混合化"是兼顾效率与性能的有效路径。
 
-**论文作用**：与 Figure 5 分类法互为补充，作为"机制选择层"决策表，为后续量化、稀疏化等 KV 优化策略提供底层依据。
+3）**论文作用**：作为 KV cache 优化综述的方法学基础，本表从 attention 底层机制角度解释 KV 显存/计算瓶颈来源，为后续 Figure 5 的五类优化分类（量化、稀疏化、共享等）提供理论锚点。
 
 ### Table 6 (p.18) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab06.png]]
@@ -263,9 +279,7 @@ tags: [kv-cache]
 > Comparison of KV Cache Optimization Techniques
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表6以"技术/内存/加速/精度/权衡"五列横向对比约30种KV Cache优化方法。关键数据：淘汰类——H2O内存减5–10×、吞吐↑29×；RocketKV压缩高达400×、加速3.7×；KIMI KV减75%、1M上下文加速6×。量化类——KIVI内存降2.6×；KVQuant省3.7–6.9×；PALU约50%。卸载类——FlexGen吞吐↑40–100×；LayerKV TBT改善69×；TailorKV省GPU 73.8%。架构类——LinearAttention长序列加速4000×。表中各列同时标注痛点：精度波动、反量化开销、PCIe瓶颈。
-
-该表与Fig.6注意力图互补——图示策略原理、表给量化证据——为论文论证"无单一方案占优，需淘汰+量化+卸载融合以兼顾内存、吞吐与精度"提供关键实证支撑，是后续章节讨论混合方案与系统设计的依据。
+> 【图文联合解读】表6横向对比28种KV Cache优化技术（H2O→TailKV），五列量化呈现：内存维度覆盖5–10×缩减（H2O/FlexGen）、400×压缩（RocketKV）、73.8% GPU减（TailKV）乃至O(1)（LinearAttn）；加速范围1.7–4000×（LinearAttn最长序列下）；精度多数为"可比基线/无损"（PagedAttention、LayerKV、INF2、KVPR、Oneiros等明确标注Lossless）。原文借此论证核心结论：现有方案无单一占优——驱逐类受累积注意偏置与重击风险、量化类承重构与反量化开销、卸载类受PCIe带宽制约、线性注意力在关联回归任务上逊于Softmax——从而为论文提出的统一分类法及新方法定位提供实证依据，构成survey→motivation的关键一环。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

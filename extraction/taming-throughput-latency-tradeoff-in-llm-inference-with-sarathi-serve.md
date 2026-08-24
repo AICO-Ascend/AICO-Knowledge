@@ -30,7 +30,7 @@ tags: [disaggregated-serving]
 > Yi-34B running on two A100 GPUs serving 128 requests from arxiv-summarisation trace. 1a highlights one of the many generation stalls lasting over several seconds in vLLM [53]. 1b shows the impact of increasing load on tail latency. Sarathi-Serve improves throughput while eliminating generation stalls. 1
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图1a为0~350s生成token数曲线：Sarathi-Serve平滑升至约30K tokens，vLLM呈阶梯状，在200~220s出现明显"Generation stall"（插图标注）。图1b为P99 token间隔柱状图，在QPS=0.55/0.7/1.0下vLLM从约0.5s飙升至约1.4s（负载越高恶化越剧），Sarathi-Serve稳定在约0.3~0.35s。该图作为开篇动机图，定量揭示vLLM在高并发下存在秒级生成停顿与尾部延迟膨胀两大缺陷，为Sarathi-Serve以chunked-prefill+stall-free调度兼顾吞吐上限与消除停顿的核心论点提供直接实证依据，并奠定后文调度设计与实验评估的必要性。
+> 【图文联合解读】图1双子图：(a) Yi-34B双A100服务arxiv 128请求下"Tokens生成-时间"曲线，Sarathi-Serve(蓝)持续平滑上升，vLLM(橙)在200–220s区间出现数秒水平的"generation stall"平台；(b) P99 token间隔随QPS(0.55/0.7/1.0)柱图，vLLM由约0.5s升至1.35s，Sarathi-Serve稳定在≈0.3s。原文论证：负载升高时vLLM尾延迟急剧恶化且decode阶段存在阻塞，Sarathi-Serve通过chunked预填充与stall-free调度，兼顾高吞吐与低尾延迟。该图作为开篇动机图，直观揭示vLLM缺陷，为Table1所示模型/硬件配置下的系统设计与后续性能对比实验铺垫核心理由。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig02.png]]
@@ -39,13 +39,13 @@ tags: [disaggregated-serving]
 > Current LLM serving systems involve a tradeoff be- tween throughput and latency depending on their scheduling policy. Prioritizing prefills optimizes throughput but sacrifices TBT (time-between-tokens) tail latency whereas prioritizing decodes has the opposite effect. Sarathi-Serve serves high throughput with low TBT latency via stall-free batching. (The figure is illustrative and actual values wi
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图2解读：**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 结构与数据**：二维定性定位图，纵轴为Throughput（越高越好），横轴为TBT Latency（越右越差）。四个系统坐标分别为：FasterTransformer（红圆，左下——decode优先，吞吐与TBT均低）、Orca（紫圆，中部偏右——prefill优先）、vLLM（蓝圆，右上——prefill优先，吞吐高但TBT尾延迟高）；三者由灰色虚线串联，标注"迭代级批处理→Paged Attention"，构成既有方法的帕累托前沿。Sarathi-Serve（绿色星标）独立位于左上象限——高吞吐、低TBT延迟，旁注"Stall-free batching"。
+图示二维空间（纵轴 Throughput，横轴 TBT Latency）中四系统的相对定位：FasterTransformer（红点，左下，Decode prioritizing）、Orca（紫点，中部，Prefill prioritizing + iteration-level batching）、vLLM（蓝点，右上，Prefill prioritizing + Paged Attention）沿虚线箭头由左下向右上推进，呈现传统"高吞吐 ↔ 低 TBT 不可兼得"的折中曲线。Sarathi-Serve（绿星，左上区）凭借 **stall-free batching** 跳出该曲线，同时占据高吞吐与低 TBT 时延象限。
 
-**2) 关键结论**：现有系统受调度策略制约，prefill优先换高吞吐却牺牲TBT，decode优先反之，沿虚线呈此消彼长；Sarathi-Serve通过无停顿批处理跳出该曲线，**同时实现高吞吐与低TBT**，打破throughput–TBT权衡。
+原文借此论证：**通过调度策略改进可在不牺牲 TBT 尾延迟的前提下显著提升吞吐**，即折中是可打破的而非本质约束。
 
-**3) 论文作用**：图位于第2页，作为问题动机图，先建立tradeoff认知、再预告方法定位，为后续chunked prefill、stall-free调度等机制设计与实验评估提供论证锚点。
+该图位于 p.2 开篇位置，作为全文**动机图（motivational figure）**，为后续 chunked-prefill 调度、stall-free batching 设计以及 Table 2 实验评估（optimum range、alpaca、sharegpt 等数据集下的端到端基准对比）提供问题陈述与目标锚点。
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig03.png]]
@@ -54,15 +54,11 @@ tags: [disaggregated-serving]
 > Throughput of the prefill and decode phases with different batch sizes for Mistral-7B running on a single A100 GPU. We use prompt length of 1024 for both prefill and decode experiments. Note that different y-axis, showing pre- fills are much more efficient than decode. Further, note that batching boosts decode throughput almost linearly but has a marginal effect on prefill throughput.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图3联合解读：**
+> 【图文联合解读】**核心对象与数据**：左两图为Prefill/Decode吞吐量对比——Prefill在batch 1–8范围内吞吐稳定在~4.5K–5.5K tokens/s（batch=2时峰值），随batch增大几乎无提升；Decode从batch=1的~20 tokens/s近乎线性增长至batch=64的~820 tokens/s；二者y轴量级差约10倍，直观显示Prefill效率远高于Decode。右两图补充延迟分解：Prefill延迟随序列长度128→2K由~30ms增至~145ms，attention占比明显；Decode延迟几乎与batch无关，稳定在~15–20ms，线性层占主导。
 
-该图含左右两子图（Mistral-7B / 单卡A100，prompt长度1024）：
-- **Prefill**：批大小 1/2/4/8，吞吐约 4.5k→5.4k→5.2k→4.8k tokens/s，BS≥2 即饱和甚至略降；
-- **Decode**：批大小 1/8/16/32/64，吞吐约 10→110→220→420→810 tokens/s，随批大小近似线性增长。两图纵轴相差近一个数量级。
+**关键结论**：Prefill属compute-bound，batching边际增益小；Decode属memory-bound，batching带来近线性吞吐提升。该差异正是Sarathi-Serve需要协同调度两类阶段的根本动机。
 
-**论证结论**：prefill 计算密集，单请求即吃满算力，batching 边际收益小；decode 访存密集，受制于单 token 访存开销，batching 能近乎线性放大吞吐。
-
-**论文作用**：揭示两阶段算力–访存特性失衡这一根因，为 Sarathi-Serve 提出"分块 prefill + decode 共批（stall-free batching）"以提升整体吞吐、压低时延提供直接动机。
+**在论文中的作用**：该图是动机实验，定量揭示Prefill/Decode的负载特性差异，为后续提出chunked prefill与splitwise batching以调和throughput–latency tradeoff提供实证依据。
 
 ### Figure 4 (p.5) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig04.png]]
@@ -71,13 +67,13 @@ tags: [disaggregated-serving]
 > Prefill and decode time with different input sizes for Mistral-7B running on single A100 GPU. Linear layers contribute to the majority of runtime in both prefill and decode phases. Due to the low arithmetic intensity in decode batches, the cost of linear operation for 1 decode token is nearly same as 128 prefill tokens. into linear, attention and others, and shows their individual contributions. F
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图4解读：**
+> 【图文联合解读】**图文联合解读：**
 
-**1）核心数据：** 左图为Mistral-7B在A100上的Prefill耗时（序列长度128→2k），从约33ms单调上升至约143ms，其中linear层（青色斜纹）始终占主体（2k时约120ms），attention与others占比小。右图为Decode耗时（batch size 1→64），全程几乎持平于18–23ms，linear仍为主，attention可忽略。
+1）图中左子图为 Prefill 阶段随序列长度（128/256/512/1k/2k）的耗时，总时间近似线性增长（~32→145ms），其中 linear 层始终占主导（2k 时约 120ms）；右子图为 Decode 阶段随 batch size（1/8/16/32/64）的耗时，全程几乎平坦在 ~18–22ms，linear 仍为最大分量（约 12–15ms），attention 与 others 占比极小。
 
-**2）关键结论：** Prefill与Decode均以linear层为瓶颈；因decode算术强度低，**1个decode token的linear开销≈128个prefill token**，且增加batch几乎不放大延迟，说明decode是访存受限。
+2）关键结论：两阶段均以 linear 计算为瓶颈；由于 decode 算术强度低，**单 token decode 的 linear 耗时（~13ms）已接近 128 token prefill 的 linear 耗时（~17ms）**，验证 decode 属 memory-bandwidth bound、prefill 属 compute-bound。
 
-**3）在论文中的作用：** 该图是Sarathi-Serve提出"chunked prefill+decode共批"（splitwise）的核心动机——证明把prefill小块塞进decode batch可被现有GPU带宽"免费"吸收，从而打破throughput–latency权衡，同时解释了为何大batch下throughput仍受限。
+3）方法论作用：该图为 Sarathi-Serve 提供动机——prefill 重、decode 轻且对 batch 不敏感，故可将两者放入同一 hybrid batch 并对 prefill 分块（chunked-prefills），在隐藏 prefill 延迟的同时维持低 TBT，从而打破吞吐–延迟权衡。
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig05.png]]
@@ -114,9 +110,7 @@ tags: [disaggregated-serving]
 > A generation stall occurs when one or more prefills are scheduled in between consecutive decode iterations of a request. A, B, C and D represent different requests. Sub- script d represents a decode iteration, p represents a full prefill and p0, p1 represent two chunked prefills of a given prompt. vLLM induces generation stalls by scheduling as many pre- fills as possible before resuming ongoing d
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图7沿时间轴横向对比四种调度的迭代块序列：vLLM在A_d、B_d之后串入C_p、D_p两个全prefill，导致A、B的decode发生stall（标注"TBT with prefill interference"）；Orca以C_p/D_p/A_d/B_d混合批处理，但因长prompt执行时长仍高，无法消除A、B的stall；FasterTransformer则反复多轮A_d/B_d直至A、B退出才调度C_p、D_p，虽无decode stall但新请求prefill却停滞；Sarathi-Serve将C、D的prefill各切分为p1、p2两chunk，在A_d、B_d的decode间隙交叉插入，实现全程"No stalls"。
-
-该图是论文核心可视化论据，定量证明仅靠"混合批"或"优先级极端倾斜"都无法双赢——唯有**chunked prefill与decode交错**才能兼顾吞吐与延迟，直接引出Sarathi-Serve"分块+交错调度"的核心方法论，并为后续Figure 8的stall-free时间线与正文throughput–latency tradeoff论证提供基础。
+> 【图文联合解读】该图以时间线对比四种调度策略：vLLM与Orca将C、D完整prefill（p）打包执行，A、B的decode迭代被迫停滞；FasterTransformer仅调度decode（A退出→B退出），C、D的prefill被迫等待；Sarathi-Serve把prefill拆为p0、p1两个chunk与A_d、B_d交错执行，全程无stall。该图揭示了前三类系统在prefill–decode串行化上的结构性缺陷——或损失decode时效、或损失prefill吞吐——论证分块prefill+decode交叉调度是实现stall-free的核心机制，为§6后续SLO与吞吐实验提供关键动机基础。
 
 ### Figure 8 (p.7) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig08.png]]
@@ -125,13 +119,15 @@ tags: [disaggregated-serving]
 > A 2-way pipeline parallel iteration-level schedule in Orca across 4 requests (A,B,C,D) shows the existence of pipeline bubbles due to non-uniform batch execution times.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图8 联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-图8对比两套2路PP调度（GPU0+GPU1×4请求A-D）时间线：
-① **Orca（上行）**：两GPU错位执行，标出两类灰色气泡——prefill长度差异（A_p/B_p vs C_p/D_p耗时不同）及prefill/decode相互干扰（解码等待下一个prefill完成），出现明显空档；
-② **Sarathi-Serve（下行）**：将每请求切分为A_p1/A_p2/A_d1/A_d2等定长块，两GPU锁步执行，标注"Minimal Bubbles"，气泡几乎不可见。
+图8对比了Orca与Sarathi-Serve在2路流水线并行、4请求（A,B,C,D）下的迭代级调度时序。Orca（上图）GPU0与GPU1上先后执行ApBp→CpDp→Ad1Bd1→Cd1Dd1，由于prefill长度差异（Ap/Bp与Cp/Dp不同）及prefill与decode（d1）混合计算时长不均，分别产生"长度变化气泡"和"prefill-decode干扰气泡"，GPU1还出现空闲等待。
 
-原文借此论证：变长prefill与prefill-decode共存是Orca流水线气泡的两大根源，而uniform-compute批次（分块prefill）能基本消除之。该图是Sarathi-Serve核心设计——**chunked-prefill+uniform batch**——的关键动机图，为后续吞吐-时延权衡实验奠定理论依据。
+Sarathi-Serve（下图）通过将prefill切分为等大小token块（如Ap1、Bp1、Ap2…）与decode请求组合，形成**等计算量批次**（Ap1Bp1Cp1D…），两卡时序几乎对齐，仅存极小气泡。
+
+原文借此论证核心结论：iteration-level调度的pipeline bubble根因是batch计算量不均匀，Sarathi-Serve以uniform-compute batching（即chunked-prefill + decode同批）为关键设计消除气泡。
+
+该图是论文方法动机—核心机制链路的关键证据，支撑"stall-free batching + 良好throughput/latency tradeoff"的主论点。
 
 ### Figure 9 (p.8) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig09.png]]
@@ -168,11 +164,13 @@ tags: [disaggregated-serving]
 > Capacity of LLaMA2-70B and Falcon-180B (mod- els with pipeline parallelism) with different schedulers under strict (SLO-S) and relaxed (SLO-R) latency SLOs.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**图11 图文联合解读**
 
-图11含(a)(b)两子图，对比 Orca、vLLM、Sarathi-Serve 三种调度器在 LLaMA2-70B 与 Falcon-180B（均采用流水线并行 PP）下的最大容量（Max Capacity），分别在严格 SLO-S 与宽松 SLO-R 下评估。(a) openchat_sharegpt4 上 Sarathi 相对 vLLM 提升 **5.54–6.31×**；(b) arxiv_summarization 上严格 SLO 下为 **4.20–4.69×**，宽松 SLO 下为 **2.75–3.00×**。
+图11对比三种调度器（Orca、vLLM、Sarathi-Serve）在两类pipeline并行大模型（LLaMA2-70B、Falcon-180B）与两类SLO下的最大服务容量：(a) openchat_sharegpt4上，Sarathi-Serve相对Orca提速4.69x–6.31x（LLaMA2-70B SLO-R达0.83 vs Orca 0.13）；(b) arxiv_summarization上提速2.75x–4.60x。在所有模型×SLO×数据集组合中，Sarathi-Serve均显著领先vLLM与Orca。
 
-**关键结论**：Sarathi-Serve 在满足时延 SLO 的同时显著提高吞吐，且严格 SLO 下优势更突出，验证其 chunked-prefill + decode-fusion 调度对流水线并行大模型同样有效。该实验将论证从单 GPU 张量并行场景扩展到多节点 PP 场景，补强了全文的方法—实验论证链。
+该图论证：pipeline并行场景下，Sarathi-Serve的chunked-prefill与分阶段调度同样能显著突破吞吐-时延折中，释放更多请求容量。
+
+在论文链路中，图11将实验结论从单卡评估延伸至多卡分布式大模型部署，证明方法在更大规模场景中依旧有效，巩固整体方法优势。
 
 ### Figure 12 (p.12) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig12.png]]
@@ -196,11 +194,7 @@ tags: [disaggregated-serving]
 > TP scales poorly across nodes. (a) Median TBT for decode-only batches: cross node TP increases median TBT by more than 2× compared to a 4-way TP within node and PP across nodes. (b) Capacity under strict (SLO-S) and re- laxed (SLO-R) latency SLOs: Sarathi-Serve increases Falcon- 180B’s serving capacity by 4.3× and 3.6× over vLLM’s TP- only and hybrid-parallel configurations under strict SLOs.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图13联合解读**
-
-图13以Falcon-180B为对象，对比跨节点并行策略。(a)P50 TBT条形图：batch 8→128时，纯跨节点TP8从~0.19s升至~0.36s，而TP4:PP2（节点内TP+跨节点PP）稳定在0.08–0.15s，batch=128时差距达2.4×。(b)容量图：SLO-S下Sarathi-Serve TP4:PP2达~0.6，是vLLM TP8（~0.13）与vLLM TP4:PP2（~0.15）的~4.6×与4×；SLO-R下亦达~0.75。
-
-该图论证两点：①跨节点TP因通信开销大导致TBT膨胀、扩展性差，应以PP替代；②在混合并行配置下，Sarathi-Serve的chunked-prefill与融合调度显著放大吞吐。它在论文中作为核心方法（延迟-吞吐权衡调度）面向跨节点超大模型场景的关键实验支撑，验证"避免跨节点TP + 采用Sarathi调度"是同时满足SLO与高吞吐的必要组合。
+> 【图文联合解读】图13基于Falcon-180B对比跨节点TP8与节点内TP4+跨节点PP2的并行策略。**(a)** P50 TBT随batch从8增至128，TP8由0.19s升至0.37s，TP4:PP2仅由0.085s升至0.15s，batch=128时差距>2×，直接量化跨节点TP的扩展性劣势。**(b)** SLO-S下Sarathi-Serve TP4:PP2容量≈0.62，较vLLM TP8(0.14)、vLLM TP4:PP2(0.18)分别提升4.3×与3.6×；SLO-R下优势同样显著(0.75 vs 0.15/0.50)。该图为论文"TP+PP混合并行+分块调度"方案提供关键容量证据，论证在严格时延约束下混合并行与Sarathi调度协同带来的吞吐-时延权衡最优解。
 
 ### Figure 14 (p.13) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig14.png]]
@@ -223,11 +217,11 @@ tags: [disaggregated-serving]
 > Models and GPU configurations (GQA: grouped- query attention, SW: sliding window).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图表联合解读：**
+> 【图文联合解读】**表1核心数据**：列出4组模型-GPU部署配置——Mistral-7B（1×A100，GQA-SW，80GB）、Yi-34B（2×A100 TP2，GQA）、LLaMA2-70B（8×A40 TP4-PP2，GQA，48GB）、Falcon-180B（2节点4×A100 TP4-PP2，GQA，80GB），参数跨度7B–180B，涵盖滑动窗口GQA与标准GQA、纯TP及TP+PP混合并行。
 
-该表枚举 4 个模型(Mistral-7B、Yi-34B、LLaMA2-70B、Falcon-180B)的实验配置：注意力机制上仅 Mistral-7B 采用 GQA-SW，其余均为 GQA；GPU 配置覆盖 1 卡 A100 到 4×2 节点、TP2 至 TP4-PP2 四种并行拓扑，单卡显存 80 GB(A100)或 48 GB(A40)，总显存从 80 GB 扩展至 640 GB。
+**论证结论**：支撑Sarathi-Serve核心主张——分块预填充与无停顿调度在不同模型规模、注意力机制及并行拓扑下均能消除生成停顿，优化吞吐-延迟权衡。
 
-论文以该表作为**统一实验基准**，配合图 1 中 Yi-34B(A100×2)在 vLLM 中出现数秒级 generation stall 的现象，论证 Sarathi-Serve 在**不同模型规模与并行拓扑**下均能消除停顿、提升吞吐，从而支撑其"chunked-prefill + 紧致调度方案对从 7B 到 180B 的 LLM 推理通用有效"的核心结论。
+**论文作用**：作为实验基座，为后续吞吐/延迟对比提供统一硬件参照，验证方法在从单卡小模型到跨节点大模型的异构部署中具备可推广性。
 
 ### Table 2 (p.10) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab02.png]]
@@ -235,13 +229,13 @@ tags: [disaggregated-serving]
 > Datasets used for evaluation.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 2 图文联合解读：**
 
-1) **核心数据**：表 2 列出两个评估数据集的 prompt/output token 长度分布。*openchat_sharegpt4*（对话类）prompt 中位数 1730、P90 5696、Std 2088；output 中位数 415、P90 834、Std 101。*arxiv_summarization*（长文摘要）prompt 中位数 7059、P90 12985、Std 3638；output 中位数 208、P90 371、Std 265。
+该表呈现两类评估数据集的 token 长度分布：**openchat_sharegpt4**（对话场景，prompt 中位 1730、P90=5696、Std=2088，output 中位 415、P90=834）属"短输入—中等输出"均衡型负载；**arxiv_summarization**（长文档摘要，prompt 中位 7059、P90=12985、Std=3638，output 中位 208）属典型 **prefill 主导型**长输入负载。
 
-2) **原文引用说明**：所引段落实际讨论的是 Figure 2（吞吐-延迟权衡示意），并未直接论述表 2。表 2 的作用由其内容本身体现：两份数据集在 prompt 长度上差异悬殊（短对话 vs 长摘要），恰好对应 Sarathi-Serve 所要处理的 prefill 主导与 decode 主导混合负载场景。
+原文借此论证：Sarathi-Serve 的 **chunked prefill + stall-free batching** 策略在两类截然不同的负载上均能兼顾吞吐与 TBT——前者验证低 TBT 尾部延迟，后者验证对超长 prompt 分块带来的高吞吐收益。
 
-3) **实验链路作用**：作为评测 workload 的形式化刻画，为后续 stall-free batching 在异构输入/输出长度下保持低 TBT 与高吞吐的实验结论提供分布依据。
+其在论文中的作用：为后续吞吐–延迟权衡实验提供具代表性的 workload 基准，支撑"调度策略效果高度依赖负载特征"这一核心结论。
 
 ### Table 3 (p.10) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab03.png]]
@@ -249,7 +243,7 @@ tags: [disaggregated-serving]
 > SLOs for different model configurations.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 3 定义了四种模型（Mistral-7B、Yi-34B、LLaMA2-70B、Falcon-180B）在 relaxed 与 strict 两种 SLO 下的 P99 TBT 阈值，分别为 0.5/0.1s、1/0.2s、5/1s、5/1s。可见 SLO 随模型规模放宽（参数越大，prefill/decode 单步越慢），且 strict 恰为 relaxed 的 1/5。该表为 Sarathi-Serve 实验设定量化成功门槛，用以回答 §5.4.1 chunked-prefills 自身开销及 §5.4.2 其与 stall-free batching 单独/联合效果两个关键问题，是衡量系统在吞吐–延迟权衡下能否达标的核心依据。
+> 【图文联合解读】表3列出四款模型（Mistral-7B/Yi-34B/LLaMA2-70B/Falcon-180B）的P99 token-by-token延迟服务等级目标，分relaxed与strict两档：Mistral-7B为0.5/0.1s，Yi-34B为1/0.2s，LLaMA2-70B与Falcon-180B同为5/1s，模型越大SLO越宽松。原文据此在不同规模模型上分别评估Sarathi-Serve，验证chunked-prefills与stall-free batching在严格/宽松延迟约束下均能维持高吞吐。该表为后续§5.4中吞吐量-延迟权衡与消融实验确立服务质量门槛，是证明Sarathi方案跨模型通用性的关键基线。
 
 ### Table 4 (p.13) ⭐深度解读
 ![[assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab04.png]]
@@ -257,13 +251,14 @@ tags: [disaggregated-serving]
 > TTFT and TBT latency measured in seconds for hybrid-batching and chunked-prefills used in isolation as well as when they are used in tandem, evaluated over 128 requests for Yi-34B running on two A100s with a token budget of 1024. By using both hybrid-batching and chunked-prefills , Sarathi-Serve is 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**1) 表格内容与结构**
+Table 4 对比三种调度器在 Yi-34B（2×A100，token 预算 1024，128 请求）下、两个数据集（openchat_sharegpt4 / arxiv_summarization）的 P50 TTFT 与 P99 TBT（秒）：hybrid-batching-only TTFT 低（0.53 / 3.78）但 TBT 高（0.68 / 1.38）；chunked-prefills-only TBT 低（0.17 / 0.20）但 TTFT 高（1.04 / 5.38）；Sarathi-Serve（combined）TTFT 居中（0.76 / 3.90）却取得最低 TBT（0.14 / 0.17）。
 
-1) **表结构与数据**：Table 4 比较三种调度策略在 Yi-34B（2×A100，128 请求，token 预算 1024）下，对 openchat_sharegpt4 与 arxiv_summarization 两个数据集的 P50 TTFT 与 P99 TBT（秒）。hybrid-batching-only TTFT 最低（0.53/3.78）但 TBT 最高（0.68/1.38）；chunked-prefills-only 反之，TTFT 最高（1.04/5.38）但 TBT 低（0.17/0.20）；Sarathi-Serve 联合使用时 TBT 最低（0.14/0.17），TTFT 仅小幅上升（0.76/3.90）。
+**2) 关键结论**
+单独任一技术均存在明显短板（一个保 TTFT、一个保 TBT），二者协同使用可同时压低首 token 延迟与 token 间延迟。
 
-2) **关键结论**：单独使用任一技术都无法同时压低 TTFT 与 TBT，二者存在此消彼长；唯有 hybrid-batching 与 chunked-prefills 协同（Sarathi-Serve），才能在两个维度同时取得最优或近优，验证了"组合即优势"的核心设计主张。
-
-3) **论文作用**：该表是方法有效性实验的核心证据，支撑 throughput–latency 权衡可被同时优化的关键论断，直接印证 Sarathi-Serve 系统设计的合理性。（注：题目所引 Figure 4 论述 prefill/decode 线性层耗时，与本表内容无直接对应。）
+**3) 在论文中的作用**
+作为消融实验，定量证明 Sarathi-Serve 的两大核心技术——混合批处理（hybrid-batching）与分块 prefill（chunked-prefills）——必须协同使用，缺一不可，从而支撑全文"兼顾吞吐与延迟"的核心方法论主张。
 
 ## 相关论文
 

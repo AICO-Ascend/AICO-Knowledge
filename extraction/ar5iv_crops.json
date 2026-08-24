@@ -430,5 +430,190 @@
   "page": 14,
   "caption": "TABLE VI: The summary of outlier redistribution models in Sec. IV-D3.",
   "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab06.png"
+ },
+ "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab04.png": {
+  "slug": "indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse",
+  "kind": "tab",
+  "num": 4,
+  "page": 0,
+  "caption": "Preliminary results on GLM-5 (744B) with training-free IndexCache.",
+  "path": "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab04.png"
+ },
+ "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab08.png": {
+  "slug": "kimi-linear-an-expressive-efficient-attention-architecture",
+  "kind": "tab",
+  "num": 8,
+  "page": 0,
+  "caption": "Performance of Kimi-Linear-Base and Moonlight-Base across diverse tasks.",
+  "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab08.png"
+ },
+ "assets/crops/kimi-vl-technical-report-fig10.png": {
+  "slug": "kimi-vl-technical-report",
+  "kind": "fig",
+  "num": 10,
+  "page": 15,
+  "caption": "Kimi-VL is capable of following multi-step reasoning processes to complete complex GUI tasks. In this example, it successfully enables the “Do Not Track” feature in the Chrome browser to enhance online privacy. The agent interprets each screen, identifies relevant UI elements, and performs the appro",
+  "path": "assets/crops/kimi-vl-technical-report-fig10.png"
+ },
+ "assets/crops/kimi-vl-technical-report-tab01.png": {
+  "slug": "kimi-vl-technical-report",
+  "kind": "tab",
+  "num": 1,
+  "page": 5,
+  "caption": "Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.",
+  "path": "assets/crops/kimi-vl-technical-report-tab01.png"
+ },
+ "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig01.png": {
+  "slug": "mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving",
+  "kind": "fig",
+  "num": 1,
+  "page": 2,
+  "caption": "Mooncake Architecture.",
+  "path": "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig01.png"
+ },
+ "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig03.png": {
+  "slug": "mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving",
+  "kind": "fig",
+  "num": 3,
+  "page": 5,
+  "caption": "The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.",
+  "path": "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig03.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig01.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "fig",
+  "num": 1,
+  "page": 3,
+  "caption": "Fig. 1: The decoder-only Transformer for LLMs.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig01.png"
+ },
+ "assets/crops/hyper-connections-tab12.png": {
+  "slug": "hyper-connections",
+  "kind": "tab",
+  "num": 12,
+  "page": 20,
+  "caption": "Training hyperparameters for ViT.",
+  "path": "assets/crops/hyper-connections-tab12.png"
+ },
+ "assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab02.png": {
+  "slug": "bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure",
+  "kind": "tab",
+  "num": 2,
+  "page": 6,
+  "caption": "Using four different language models in BERTopic, coherence score (TC) and topic diversity (TD) were calculated ranging from 10 to 50 topics with steps of 10. All results were averaged across 3 runs for each step. Thus, each score is the average of 15 separate runs.",
+  "path": "assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab02.png"
+ },
+ "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab03.png": {
+  "slug": "beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl",
+  "kind": "tab",
+  "num": 3,
+  "page": 12,
+  "caption": "Results with Web-based Search and Browsing.",
+  "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab03.png"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab01.png": {
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "kind": "tab",
+  "num": 1,
+  "page": 11,
+  "caption": "MoE component to process group mapping.",
+  "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab01.png"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab04.png": {
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "kind": "tab",
+  "num": 4,
+  "page": 23,
+  "caption": "Memory reduction per GPU from fine-grained recomputation for DeepSeek-V3 (PP​4×VPP​4×EP​64, 256 GPUs).",
+  "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab04.png"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab18.png": {
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "kind": "tab",
+  "num": 18,
+  "page": 74,
+  "caption": "DeepSeek-V3 optimization summary by platform.",
+  "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab18.png"
+ },
+ "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab10.png": {
+  "slug": "deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference",
+  "kind": "tab",
+  "num": 10,
+  "page": 18,
+  "caption": "Technique list of DeFT. What we propose is in red. The details of the first four techniques are in Section 3.3, while the details of the following techniques are discussed in this chapter.",
+  "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab10.png"
+ },
+ "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab02.png": {
+  "slug": "block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models",
+  "kind": "tab",
+  "num": 2,
+  "page": 7,
+  "caption": "Perplexities (PPLs; ↓) and variances of the NELBO Var𝐗,t​[ℒBD​(𝐗,θ)] (Var. NELBO; ↓). Models are trained on LM1B using a linear schedule for 65B tokens, then finetuned for 10B tokens.",
+  "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab02.png"
+ },
+ "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab10.png": {
+  "slug": "search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning",
+  "kind": "tab",
+  "num": 10,
+  "page": 22,
+  "caption": "Search-R1 case study 1 (successful): Search-R1 conduct multi-step reasoning, search, with self-verification and finally answer the question.",
+  "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab10.png"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab04.png": {
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "kind": "tab",
+  "num": 4,
+  "page": 17,
+  "caption": "Ablation Study: Global Parser vs. Normal. Performance comparison on downstream tasks. Both models aim for a target compression ratio of R=4. The Global Parser achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.",
+  "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab04.png"
+ },
+ "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab04.png": {
+  "slug": "zero-memory-optimizations-toward-training-trillion-parameter-models",
+  "kind": "tab",
+  "num": 4,
+  "page": 19,
+  "caption": "Configurations for different model sizes, number of layers, and hidden dimensions (HD) across Figures 2, 3, 5.",
+  "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab04.png"
+ },
+ "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig02.png": {
+  "slug": "kimi-linear-an-expressive-efficient-attention-architecture",
+  "kind": "fig",
+  "num": 2,
+  "page": 5,
+  "caption": "Execution time of kernels for varying input lengths, with a uniform batch size of 1 and 16 heads.",
+  "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig02.png",
+  "source": "manual-pdf-region (wrapfigure; ar5iv svg 文字层在 svg 外不可渲染)"
+ },
+ "assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig01.png": {
+  "slug": "longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification",
+  "kind": "fig",
+  "num": 1,
+  "page": 1,
+  "caption": "The SoTA SD method, EAGLE, has a training context length of 2048, which is significantly shorter than the context lengths of modern LLMs.",
+  "path": "assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig01.png"
+ },
+ "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig04.png": {
+  "slug": "deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference",
+  "kind": "fig",
+  "num": 4,
+  "page": 9,
+  "caption": "Latency breakdown for speculative decoding with a token tree of 32 queries, whose tree topology is from Medusa (Cai et al. 2024). U means unpaged memory.",
+  "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig04.png"
+ },
+ "assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig13.png": {
+  "slug": "efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey",
+  "kind": "fig",
+  "num": 13,
+  "page": 25,
+  "caption": "Fig. 13: Communication traffic heatmap for InternLM-2 102B pre-training using 128 GPUs during a single iteration, with tensor parallelism (TP) size 8, pipeline parallelism (PP) size 4, data parallelism (DP) size 4 and ZeRO stage 1 (ZeRO-1) size 4. The prioritization of topology arrangement is TP >DP",
+  "path": "assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig13.png"
+ },
+ "assets/crops/kimi-k3-open-frontier-intelligence-fig06.png": {
+  "slug": "kimi-k3-open-frontier-intelligence",
+  "kind": "fig",
+  "num": 6,
+  "page": 9,
+  "caption": "Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lower gradient norms with fewer spikes, indicating more stable optimization.",
+  "path": "assets/crops/kimi-k3-open-frontier-intelligence-fig06.png"
  }
 }

@@ -62,9 +62,13 @@ tags: []
 > Overview of training pipeline. Following a single-turn RL warm-up stage, the sampled trajectories are
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 3）：**
 
-图示Agentic RL阶段的核心架构：Actor Model（绿）与Critic Model（蓝）均由RL预热后采样的轨迹分别初始化；Critic Model额外经Value Training训练，二者通过PPO算法连接并最终生成CUDA Agent。原文以此论证：(1)采用"单轮RL预热→轨迹采样→初始化actor-critic"的两阶段训练策略，保证agentic RL的稳定冷启动；(2)以PPO为框架的actor-critic结构是大规模CUDA内核生成agentic RL的关键设计。该图是论文整体方法链路的核心枢纽，串联起轨迹生成、奖励调度与最终高性能CUDA智能体训练的全流程。
+1) **核心结构**：图示三阶段训练管线——（a）Single-Turn Warm-up：Base Model 经 PPO 得到 Single-Turn Model；（b）Agent Warm-up：Single-Turn Model 采样 Agent Trajectories，同时用于 RFT 训练 Actor Model（绿色）与 Value Pretraining 训练 Critic Model（蓝色）；（c）Agentic RL：Actor+Critic 经 PPO 训练为最终 CUDA Agent。两阶段共享 PPO 算法，分别对应"单轮热身→多轮智能体"的两步训练。
+
+2) **论证的关键结论**：单轮 RL 热身阶段产生的采样轨迹具有双重用途——既为 Actor 提供 RFT 监督信号，又为 Critic 提供价值预训练数据；这种"轨迹复用"机制保证 Actor 与 Critic 初始化分布对齐，缓解后续多轮 Agentic PPO 中奖励稀疏与冷启动 Critic 估值不准的问题，为引入 Robust Reward Scheduling（替代纯 speedup 奖励）奠定稳定基础。
+
+3) **整体链路作用**：该图是论文方法论的核心蓝图，明确展示从 Base→Single-Turn→CUDA Agent 的训练递进路径，强调"先单轮后多轮"的渐进策略，是后续 Table 3 训练数据构成与奖励调度实验的框架基础。
 
 ### Figure 4 (p.10) ⭐深度解读
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig04.png]]
@@ -99,7 +103,11 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图(b)展示训练数据中的"组合型Torch算子类"`Model`：在`forward`中依次执行`Softmax(dim=1)`→`ConvTranspose2d`(3→16通道，k=3，s=2，p=1)→可学习`bias`相加；输入张量形状为`[512, 3, 32, 32]`。它表明训练算子并非单原子操作，而是由softmax+转置卷积+偏置融合而成的复合算子类，由此扩展了可优化算子空间的组合深度与多样性，为agent生成长程、融合式CUDA kernel提供更贴近真实工作负载的训练目标，支撑大规模RL对复杂算子的端到端优化能力验证。
+**1) 核心对象与结构：** 图A展示两类算子类样例。(a) 为 `transformers` 算子类，基于 `FNetConfig` 定义 `FNetPredictionHeadTransform`/`FNetLMPredictionHead`，`get_inputs()` 返回形状 `(32,128,512)` 与 `(32,512)` 的随机张量；(b) 为组合型 `torch` 算子类，将 `nn.Softmax(dim=1)`、`nn.ConvTranspose2d` 与可学习 `bias` 串联，配置含 batch_size=512、in/out_channels=3/16、kernel_size=3、stride=2、padding=1、output_padding=1。
+
+**2) 关键技术结论：** 训练数据覆盖两类典型算子——框架级封装类（如 transformers 的预测头）与原子算子组合类（Softmax+ConvTranspose2d+bias），且均通过 `get_inputs()`/`get_init_inputs()` 显式提供形状参数，体现真实算子的输入规约模式。
+
+**3) 论文方法链路中的作用：** 为 Agentic RL 提供多样化、可执行的 CUDA kernel 生成训练样本，使策略学习真实算子的 forward 行为与张量形状约束，是后续 RL 训练与 kernel 生成质量的数据基础。
 
 ### Figure 7 (p.13) ⭐深度解读
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig07.png]]
@@ -108,13 +116,13 @@ tags: []
 > Distribution of the maximum AST similarity between each training sample and all evaluation samples.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图7 联合解读：**
 
-1) **核心对象**：直方图展示训练样本与全部评估样本间的最大AST相似度分布。横轴范围0–0.45，纵轴占比0%–12%；峰值约12%出现在相似度≈0.30处，整体集中于0.15–0.45区间，极低相似度(<0.10)样本几乎为零；右上角虚线"t"标记约0.42的阈值位置。
+1) **核心对象与数据**：该直方图横轴为训练样本与所有评估样本的"最大AST相似度"（0–1），纵轴为占比（0%–12%）。分布显著左偏并集中于0.20–0.40区间，主峰约位于0.27处（≈12%），次峰约0.33（≈10%）和0.20（≈11%）；0.5以上几乎为0，**没有任何样本越过黄色虚线所示的0.9阈值**。
 
-2) **关键结论**：训练集与评估集存在中等程度的代码结构重叠，既非高度雷同（避免数据泄露/记忆式刷分），也非完全无关（保证任务可迁移），由此佐证评估结果的有效性与公平性。
+2) **论证的技术结论**：作者借此证明训练集与评估集在抽象语法树层面高度去相关——即便取最大相似度，绝大多数训练样本与测试样本的代码结构差异显著，且不存在近似复刻（≥0.9）的情况，从而排除了数据污染/泄漏的可能，确保评测分数反映真实泛化能力。
 
-3) **链路作用**：作为前置数据审计环节，用于在RL训练前排除与评测题高度相似的训练样本，防止策略过拟合到已知解，确保后续KernelBench等基准上的性能提升来自真正的泛化能力。
+3) **在论文中的作用**：作为方法链路中的"数据有效性/可信度"前置验证环节，为后续KernelBench基准上的泛化性结论提供合规依据；若缺少此图，对未见过算子的性能提升结果将难以排除记忆效应。
 
 ### Figure 8 (p.22) ⭐深度解读
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig08.png]]
@@ -195,9 +203,11 @@ Figure 12: Fused sum-then-dot-product kernel implementation (Case D.3).
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图13展示`ModelNew`自定义算子类（22行代码），将原本独立的**矩阵乘法、除法、求和与缩放**四类操作融合，通过单次`cuda_extension.fused_sum_dot`调用替代多条PyTorch逐op链。`__init__`声明weight参数与scaling_factor，`forward`仅返回融合输出，体现**算子融合 + 自定义CUDA扩展**的端到端可集成形态。
+该图展示 Case D.3 的 PyTorch 集成代码：`ModelNew(nn.Module)` 仅 22 行，将 `torch` 中的矩阵乘、除法、求和与 scaling 四种操作融合为单一 CUDA 算子 `cuda_extension.fused_sum_dot_forward(x, weight, scaling_factor)`。输入张量 (batch, input_size) 与权重 (hidden, input) 经一次 fused kernel 调用即输出 (batch, hidden)，实现 4-op → 1-kernel 的算子融合。
 
-论文借此论证：在D.3案例中，Agent能够生成超越torch原生接口的**fused custom operator**，将多类element-wise/reduction操作合一，直接通过PyTorch `nn.Module`对外暴露，验证了agentic RL在生成可编译、可调用的高性能CUDA算子方面的泛化能力，为"算子级优化取代逐op调度"提供落地证据。
+**论证结论：** CUDA-Agent 生成的扩展不仅能写单一 GEMM，还能跨多种运算类型自动融合，显著减少 kernel launch 与显存往返。
+
+**论文作用：** 作为 Case D.3 证据点，验证 agent 在"多操作自定义算子"场景下端到端 Python 封装与调用链的完整生成能力。
 
 ### Figure 14 (p.28) ⭐深度解读
 ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p28.png]]
@@ -265,11 +275,13 @@ Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
 > Main Results on KernelBench. We report Pass Rate, Faster Rate (percentage of kernels faster than baseline), and Geometric Mean Speed-up. Metrics are reported relative to both PyTorch Eager and PyTorch Compile baselines. Overall metrics are weighted by the number of problems in each level (Level 1: 1
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表格对象与结构**：Table 1 对比 6 个模型（基座 Seed1.6、GLM 4.6、Kimi K2、Gemini 3 Pro、Claude Opus 4.5 及本文 CUDA Agent）在 KernelBench 三级共 250 题（100/100/50）上的三项指标：Pass Rate、相对 PyTorch Eager/Compile 的 Faster Rate 与 Geomean 加速比，Overall 按题数加权。
+> 【图文联合解读】**图文联合解读：**
 
-**关键技术结论**：CUDA Agent 在所有层级全面最优。Overall 达 Pass Rate 98.8%、加速比 2.60×/2.11×；Level 2 实现 100% 通过与 3.27×/2.80× 加速，显著领先 Claude Opus 4.5（95.2%、1.99×）与 Gemini 3 Pro（91.2%、1.92×）；Level 3 高难度下仍保持 94% 与 1.80×/1.52×，难度越高领先幅度越大；而 Seed1.6 基座 Overall 仅 74%、加速 0.95×（反慢于 baseline）。
+该表对比 Seed1.6、GLM 4.6、Kimi K2、Gemini 3 Pro、Claude Opus 4.5 与 CUDA Agent 在 KernelBench（Overall/Level1/2/3，共 250 题）上的 Pass Rate、Faster Rate 与 Geomean Speed-up（相对 Eager/Compile）。**关键数据**：CUDA Agent Overall 全面领先——Pass Rate 98.8%、vs Eager Faster Rate 98.4%、Speed-up 2.60×，均显著优于次优 Claude Opus 4.5（95.2%、90.4%、1.99×）；Level 2 达 100% Pass 与 3.27× 加速，Level 3 亦达 94%/1.80×。
 
-**论文作用**：作为 headline 主表，定量验证"三阶段合成数据 + 大规模 agentic RL"全链路在自动 CUDA kernel 生成上同时超越基座与商用 SOTA，是闭环证明方法有效性的关键实验落点。
+**论证结论**：大规模 Agentic RL 训练后的 CUDA Agent 在正确率与加速比上均超越闭源强模型，验证了其在 CUDA 内核生成上的有效性。
+
+**论文作用**：作为 Headline 主结果表，定量支撑全文方法贡献，并支撑 Figure 1 三阶段数据流水线（爬取→精炼→RL 训练）的有效性闭环。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-tab02.png]]
@@ -277,15 +289,13 @@ Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
 > Ablation Study. Comparison between the full model and leave-one-out variants under agent loop evaluation . We analyze the contributions of (1) the agent loop, (2) robust reward design, (3) RFT, and (4) Value Pretraining. For variants without RFT or Value Pretraining, we report results from the final
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表2 联合解读**
+> 【图文联合解读】**Table 2 联合解读：**
 
-该表以Overall子集为基准，对完整模型进行四项消融，报告Pass Rate、相对Eager/Compile的Faster Rate与几何平均加速比。
+表2采用留一法（leave-one-out）在Overall子集上消融。完整CUDA Agent取得Pass Rate 98.8%、vs Eager/Compile加速比2.60×/2.11×的全面最优；移除**Agent Loop**后指标断崖式下降至77.1%、0.89×/0.69×（甚至慢于基线），印证循环迭代是核心引擎；去掉**Robust Reward**时Pass Rate维持96.8%但vs Compile仅1.25×；剔除**RFT**或**Value Pretraining**后vs Compile Faster Rate分别跌至49.8%和50.9%，说明二者是把性能从"能跑"推向"超过编译优化"的关键。
 
-关键数据：完整模型Pass 98.8%、vs Eager 98.4%更快、加速2.60×；去掉Agent Loop后各项骤降至77.1%/43.5%/0.89×，甚至慢于Eager；去掉RFT后Pass 95.6%但vs Compile仅49.8%、1.05×；去掉Robust Reward与Value Pretraining均明显退化。
+**论证结论：** 四项组件均不可缺，Agent Loop决定可行性，后三者共同决定性能上限。
 
-结论：四项组件均不可或缺，其中Agent Loop贡献最大（无它即失效），RFT次之。
-
-作用：以定量消实验验证了"Agent Loop + 鲁棒奖励 + RFT + Value Pretraining"四项设计的必要性，支撑论文方法完整性的核心论据。
+**论文作用：** 承接Figure 2的agent loop架构图，为整体RL训练链路（agent循环+奖励设计+RFT+Value Pretraining）提供量化证据，支撑"全栈设计缺一不可"的核心主张。
 
 ### Table 3 (p.14) ⭐深度解读
 ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-tab03.png]]
@@ -293,13 +303,13 @@ Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
 > Composition of the final training dataset
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读**
+> 【图文联合解读】## Table 3 图文联合解读
 
-**核心数据：** 该表按"算子融合度"（单 CUDA kernel 融合的 torch 算子数量 ×N）划分训练集分布：×2 占绝对主导（83.77%），×3（7.62%）、×1（3.40%）、×4（2.80%）、×5（1.23%）依次递减，transformers 类算子仅 1.18%。
+**核心数据**：最终训练数据集按算子组合类型分布——torch 算子×2 占 **83.77%** 绝对主导；×3 占 7.62%；×1 占 3.40%；×4 占 2.80%；×5 占 1.23%；transformers 算子单独占 1.18%（合计 100%）。
 
-**论证结论：** 数据分布严重偏向"两算子融合"，反映真实 PyTorch 推理中算子合并是最高频的优化场景；高阶融合（×4、×5）与 transformer 专属算子样本稀缺，是后续评估泛化能力的难点。
+**关键结论**：数据集呈典型长尾分布，绝大多数样本对应"两算子融合"场景，符合现实 CUDA 内核优化任务的核心复杂度（双算子融合最常见且收益最显著），同时保留少量多算子组合与 Transformer 专用样本以兼顾泛化与多样性。
 
-**链路作用：** 作为 Figure 3 训练流水线的"数据基座"，该分布直接决定了 actor/critic 在单轮 RL 预热与多轮 agentic RL 阶段所见的奖励信号密度——模型主要学习 ×2 融合策略，少量样本支撑复杂场景的探索。
+**方法链作用**：该表服务于 Figure 3 所示的 Agentic RL 训练流水线——构图数据是 RL 采样的轨迹源，决定奖励学习覆盖的难度谱；偏重 ×2 的设计确保策略能稳定掌握主流融合模式，少量高阶样本则防止策略坍缩、提升跨场景迁移能力。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

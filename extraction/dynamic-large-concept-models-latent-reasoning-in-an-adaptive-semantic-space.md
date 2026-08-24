@@ -30,11 +30,15 @@ tags: []
 > 3.1
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 1 — DLCM 总体结构）**
 
-图(a)展示DLCM总览结构：输入token经编码器（蓝色圆角模块）后，通过Q查询机制映射至4个概念槽C₁–C₄（内含a、ba、bn等字符符号），再经后续"MH"模块继续处理。图(b)展示边界检测与池化：token序列(s、B、b、a、o、b、bn)按阈值K动态切分边界，池化为C₁–C₄四个概念。
+**(a) 总体架构**：左侧 8 个 token 输入经含 θ 参数的蓝色编码器，由查询 Q 抽取得到 4 个语义概念嵌入 C₁–C₄；中间橙色模块接收 KV 与隐状态 S，送入紫色解码器，最终输出右侧 4 个位置的下个 token 概率分布。
 
-原文借此论证：DLCM以"概念"（concept）替代传统token作为推理粒度，通过边界检测自适应分块、Q查询检索形成潜变量序列，实现语义空间中的动态推理。该图作为全文方法基石，为Table 1预训练数据统计与下游对比实验提供架构锚点。
+**(b) 边界检测与池化**：对编码隐状态 hθ(·) 设阈值 τ，按边界 τ 将 8 个 token 动态切分为 4 段并池化得到 C₁–C₄，体现"语义自适应粒度"。
+
+**(c) 解码器交叉注意力**：查询 q₁–q₅ 通过交叉注意力矩阵选择性聚焦 C₁–C₄，说明生成阶段在概念层而非 token 层进行推理。
+
+**关键结论**：DLCM 将 token 级推理上移至概念级 KV 缓存，缩短序列并支持动态粒度，构成论文"潜在自适应语义空间推理"方法的核心链路。
 
 ### Figure 9 (p.7) ⭐深度解读
 ![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p07.png]]
@@ -71,19 +75,31 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
+### Table 1 (p.9) ⭐深度解读
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab01.png]]
+> [!quote] caption
+> Statistics of the pretraining data.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 1 图文联合解读**
+
+该表量化呈现DLCM预训练语料构成：总计**1,000B tokens**，由四类数据按比例混合——Nemotron-CC（英文网页）占50%（500B）、MAP-CC（中文网页）占25%（250B）、OpenCoder-Pretrain（代码）占15%（150B）、MegaMath-Web（数学）占10%（100B）。
+
+原文借该表论证关键结论：预训练数据**英中双主、代码与数学为辅**的四源异构配比设计，使模型在自适应语义空间中能同时获得通用语言、跨语种、编程与推理能力。该表位于第3.1节（数据设置），是后续消融与下游评估（语言/代码/数学任务）的**基座配置**，为Figure 1所示的"动态分块+潜在推理"框架提供训练数据支撑，确保模型在概念粒度推理中具备多领域知识基底。
+
 ### Table 2 (p.15) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab02.png]]
 > [!quote] caption
 > Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
+> 【图文联合解读】**联合解读：**
 
-**1) 核心对象与数据：** 该表展示 DLCM 与 Baseline 在 12 项零样本基准任务上的准确率（%）对比，按 MMLU 类（8 项）、阅读理解（2 项）、中文（2 项）三类组织。DLCM 平均得分 43.92%，Baseline 41.23%，整体 +2.69%。MMLU 类中 OpenBookQA（+3.00）、ARC Easy（+2.61）、PIQA（+2.42）提升最大；阅读理解类两项均下降（BoolQ -1.47、RACE -0.72）；中文任务表现参差（C-Eval +1.71，CMMLU -0.24）。
+**1) 表格内容：** Table 2 按任务类别比较 DLCM 与 Baseline 的零样本准确率（%）。常识问答类（Commonsense QA、HellaSwag、Winogrande、OpenBookQA、PIQA、ARC Challenge/Easy）共 7 项全部提升，Diff 范围 +0.67～+3.00（OpenBookQA 提升最大，+3.00；HellaSwag 最小，+0.67）；MMLU 微降 -0.30。阅读理解类（BoolQ、RACE）出现回归，分别为 -1.47 和 -0.72。
 
-**2) 关键技术结论：** 论文据此论证"在自适应语义潜空间做推理"的 DLCM 在多数任务上系统性地优于标准 Transformer 基线，**尤其是常识/知识类推理任务获益最显著**，而涉及长文本精确比对（阅读理解）的任务略逊，揭示了潜空间聚合在长跨度检索上的局限。
+**2) 关键结论：** DLCM 在多数零样本任务上稳定优于 Baseline，尤其在常识与推理类任务（OpenBookQA +3.00、ARC Easy +2.61、PIQA +2.42）上增益显著；但在阅读理解（BoolQ/RACE）及 MMLU 出现轻微回退，说明"动态潜概念建模 + 自适应语义空间"的收益偏向语义/常识推理，而对长文本阅读理解任务的表征能力尚有局限。
 
-**3) 在论文中的作用：** 作为主实验证据，承接第 3.6 节"ragged-boundary 注意力掩码"（Figure 2）所示结构设计与第 4 节方法论述，并以 Table 2 的整体平均增益 +2.69% 量化支撑"自适应语义潜空间推理"方案的有效性，与 Figure 9 的加速比共同构成"性能-效率"双线验证。
+**3) 实验链路作用：** 作为方法论核心实证支柱，Table 2 量化验证了 DLCM 设计的有效性，支撑论文"潜空间推理优于纯 token 自回归"的核心主张，并与 Figure 2（注意力掩码）和 Figure 9（加速比 T_FA = T_8）共同构成方法–效率–性能三角论证。
 
 ### Table 3 (p.16) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab03.png]]
@@ -91,30 +107,25 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 > Architecture Configuration Details. A unified view of the parameter settings for Baseline (LLaMA-1.3B) and DLCM (2.3B). Values are presented as Baseline / Ours .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读：**
+> 【图文联合解读】**Table 3 图文联合解读**
 
-该表以"Baseline / DLCM"并列形式，对比LLaMA-1.3B与DLCM-2.3B的架构配置，分四模块呈现：
+Table 3 以"Baseline(1.3B)/DLCM(2.3B)"并列对比架构参数。通用层：同用 Transformer、词表 128,815、Swish、8k 位置编码，DLCM 总参升至 2.3B。维度层：DLCM 新增主隐层 d_p=3,072 与 Cross 中间层 6,144（基线无）。层级配置：DLCM 将 32 层拆为 10 编码+16 backbone+6 解码，而基线统一 32 层。注意力：DLCM backbone 头 48、KV 头 12（基线均为 24），体现分组 KV 与交叉注意力结构。
 
-- **General**：DLCM参数量2.3B（≈1.8×基线），共享Vocab=128,815、Max Pos=8k、Swish激活；
-- **Dimension**：DLCM新增Main Hidden *dₚ*=3,072，自/交叉注意中间层均扩至6,144；
-- **Layer**：DLCM将32层重构为Encoder 10 + Backbone 16 + Decoder 6三段式；
-- **Attention**：DLCM保留24个Attn Heads但KV Heads减半至12，Backbone独立48 Heads / 24 KV Heads。
+**关键结论**：DLCM 以 encoder–backbone–decoder 三段分层、主隐层维度加倍及交叉注意力机制，仅以约 1B 参数增量即构建潜在推理架构。
 
-**技术结论**：DLCM并非简单堆叠参数，而是通过编码器-骨干-解码器分层与双维度隐藏设计，将推理从token级拓展至concept级潜在语义空间。**作用**：为后续性能/效率实验提供公平架构对照基线，验证"自适应语义空间潜在推理"设计而非单纯增大模型即可带来增益。
+**作用**：为后续推理基准实验提供可复现的架构基线，证明模型性能提升源于结构升级（分层语义空间+交叉推理）而非单纯参数扩容，从而支撑"自适应语义空间潜在推理"的核心方法论。
 
 ### Table 4 (p.17) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab04.png]]
 > [!quote] caption
-> Ablation Study: Global Parser vs. Normal. Performance comparison on downstream tasks. Both models aim for a target compression ratio of R = 4 . The Global Parser achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.
+> Ablation Study: Global Parser vs. Normal. Performance comparison on downstream tasks. Both models aim for a target compression ratio of R=4. The Global Parser achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表格解读：**
+> 【图文联合解读】**Table 4 图文联合解读**
 
-**1) 核心数据**：表4在目标压缩比 R=4 下，对比 Global Parser 与 Normal 两种解析策略在 6 项下游任务上的 Acc：ARC-C（0.3038 vs 0.2858）、ARC-E（0.6296 vs 0.6242）、CSQA（0.2457 vs 0.2228）、HellaSwag（0.3507 vs 0.3499）、OpenBookQA（0.3220 vs 0.3280）、PIQA（0.6806 vs 0.6785），平均提升 +2.1%；实际压缩比 3.92 vs 3.15。
+Table 4 在目标压缩比 R=4 下，对比 Global Parser 与 Normal 在 6 项下游任务上的准确率：Global Parser 在 ARC Challenge（0.3038 vs 0.2858）、Commonsense QA（0.2457 vs 0.2228）、PIQA（0.6806 vs 0.6785）、HellaSwag（0.3507 vs 0.3499）、ARC Easy（0.6296 vs 0.6242）上均更优，仅 OpenBookQA（0.3220 vs 0.3280）略低；平均提升 +2.1%。更重要的是，其实现压缩比 3.92 显著贴近目标 4，而 Normal 仅 3.15。
 
-**2) 关键结论**：Global Parser 在多数任务上精度更优（5/6 胜），且实际压缩比 3.92 更逼近目标 R=4，证明全局解析策略既能稳定压缩、又能保留判别性语义。
-
-**3) 论文作用**：作为消融实验，验证"全局解析"是该自适应语义空间方法的关键设计，对"动态概念建模"主线起到设计选择合理性的支撑作用。
+该消融证明全局解析器能在更精准逼近压缩目标的同时稳定提升性能，是支撑 DLCM 自适应语义空间机制有效性的关键实验证据。
 
 ### Table 5 (p.18) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab05.png]]
@@ -122,11 +133,13 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 > Average tokens per concept across content types and compression ratios. Values represent the actual granularity achieved for each target compression setting.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5 展示六类内容（Casual 中/英、Technical 中/英、Code、Math/Science）在 Target 8/4/2 三档压缩下的实际"每概念平均 token 数"：Target 8 跨度 6.09–10.58（Technical English 最高），Target 4 收窄至 3.27–4.41（Math/Science 最高 4.41），Target 2 趋近均匀的 1.76–2。
+> 【图文联合解读】**Table 5 联合解读**
 
-关键结论：实际粒度随压缩目标自适调整——低压缩对粗概念（≈10 token），高压缩对细且均匀颗粒（≈2 token），跨内容类型差异随压缩加深而收敛，证明动态语义空间具备按需细分化能力。
+1) **结构与数据**：6 类内容（Casual 中/英、Technical 中/英、Code、Math/Science）× 3 档压缩目标。Target 8 跨度 6.09（Tech 中文）–10.58（Tech 英文）；Target 4 收窄至 3.27–4.41（Math/Science 最高）；Target 2 趋近 1.76–1.98（Code 最高）。
 
-论文作用：作为结论处的核心实证，支撑"自适应潜在推理"主张，验证模型在不同语料/压缩设置下均能稳定控制概念粒度。
+2) **关键结论**：模型实际粒度与目标压缩比一致，且随内容自适应——技术英文需更长概念保留语义，技术中文因更紧凑而粒度最细；高压缩时各类型收敛近 2 token，验证动态分块可控。
+
+3) **链路作用**：作为正文的实证支撑，证明 DLCM 的"自适应语义空间"压缩并非固定粒度，而是按内容类型动态调节概念大小，为后续推理效率与下游任务表现提供粒度可控性证据。
 
 ### Table 6 (p.7) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab06.png]]
@@ -134,11 +147,13 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 > Performance comparison (Batch=1, Heads=32, Interval=6)
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 6 在 Batch=1、Heads=32、Interval=6 固定配置下对比 Flex 与 Flash Varlen 两种注意力实现。表中前两列（误标 Seq Length/Hidden Size）实为二者实际延迟（ms），"Flex (ms)" 列为加速比（1.26×–1.73×），后两列依次为扫描序列长度（2K/4K/8K/16K）与隐藏维度（1K/2K/4K）。
+> 【图文联合解读】**Table 6 联合解读**
 
-核心发现：Flex 在全部 12 组配置中均快于 Flash Varlen；序列越长优势越显著（16K 时达 1.66×–1.73×），短序列（2K）下收窄至 1.44×–1.48×，整体呈稳定单调加速。
+Table 6 在 Batch=1、Heads=32、Interval=6 固定配置下，对 Flex 与 Flash Varlen 两种注意力实现做了 12 组延迟对比（Seq∈{2K,4K,8K,16K} × Hidden∈{1K,2K,4K}）。数据表明 Flex 较 Flash Varlen 慢 **1.26×–1.73×**，且劣势随序列延长扩大——16K 时稳定在 **1.66×–1.73×**。
 
-该表用以论证 Flex 注意力机制的可靠性，是论文"动态概念建模"高效潜在推理链路的工程基石；配合 Figure 9 的速度比趋势曲线，共同支撑"自适应语义空间下推理高效性"这一核心结论。
+**论证结论**：Flash Varlen 在动态 LCM 长序列自适应语义空间中具有显著的工程必要性，可避免 Flex 在变长场景下的额外开销。
+
+**链路作用**：作为方法工程化论证的关键证据，支撑动态 LCM 在效率维度的可行性，与前文效率基准、复杂度分析共同构成"正确性+效率"的完整实验闭环。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

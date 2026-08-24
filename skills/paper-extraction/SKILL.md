@@ -113,6 +113,13 @@ python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条
   - 区域收集必须空间序截断（先按到 caption 距离排序再施闸），MuPDF 块序 = PDF 内容流序 ≠ 视觉序；
   - `block_table_score` 用 multi-span 行比例 + 数字密度（散文 italic 词不再虚增分数）；纯文字表头行靠 zero_run≤2 容忍进入；`valid_table` 要求过半 sc≥1 才出图（宁可不裁也不产假表格图）；
   - 公式截图：区域级英文词率 >45% 弃（整段散文卷不进公式图）；x 拉满种子栏（求和右半不被 60pt growth 窗截断）。
+- **图形方向与共享 Rect 事故（2026-08-24 二轮沉淀）**：
+  - **caption-above 布局**（中文白皮书 ascend-950 全篇 22 图）：图在 caption 下方。判据 = caption 下方 25pt 内有硬图形（嵌入图/drawings）**且** 上方 500pt 窗口内没有"无主"硬图形——上方图形若被更早的 caption 紧贴认领（caption 在图顶），说明它属于上一张 caption。纯邻接探测会把 a-survey fig02 的图裁给 fig01（上方矢量折线图间隙 >25pt 即失守）。
+  - **union 必须拷贝**：`u = fitz.Rect(above[0][0])` 再 `|=`——直接拿 gfx 里的 Rect 做 union 会原地改写共享对象，污染同页后续 caption 的采集窗（ascend-950 fig403 因此被拐去裁 fig402 的图）。三个 union 点（above/below/链式扩展）都要拷贝。
+  - **数字节标题不是图内容**："4.7 超节点能力" digit_dense + block_table_score 双通道都会中招变"视觉元素"产出纯文本假图——gfx 收集时 HEADING（数字型）块整体排除；但 HEADING_APPENDIX（"VIRTUAL STAGE 0" 小型大写）是图内面板标题，不能排。
+  - **below 模式也要链式 x 扩展**（行内引用锚点在单栏、通栏图被栏位 x 窗截断：longspec fig01/kimi-k3 fig06）；内容下界只认硬图形（sc=2 散文段会把 max_vis_y1 拖进正文）。
+  - **LaTeXML SVG 的 CSS 变量**：`--ltx-fill-color/stroke-color` cairosvg 不认 var()，无 fill 元素继承根黑色 → 整图黑底（kimi-linear fig2）；`ar5iv_replace._resolve_ltx_css_vars` 展开变量再渲染。文字层在 SVG 子树外（HTML 绝对定位）的图 cairosvg 救不了 → 登记手工 PDF 区域裁剪进 ar5iv_crops.json（source 注明 manual-pdf-region）。
+  - **黑图扫描先看 alpha**：透明 PNG convert('L') 透明处变黑，91%"黑图"可能是误报（kimi-k3 fig06/kimi-k2 fig03 均正常）。
 
 ## 查询（任何工程）
 

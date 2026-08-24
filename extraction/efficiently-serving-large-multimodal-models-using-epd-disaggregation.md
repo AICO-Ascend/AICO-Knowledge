@@ -30,11 +30,13 @@ tags: [multimodal, disaggregated-serving]
 > Aggregated (top) vs. disaggregated (bottom) sys- tem architectures. In the aggregated setup, the encoder (E) and LLM share the same GPUs, leading to interference be- tween encode and prefill stages (e.g., LLM-4 delays E5).
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**核心对象与结构**：图1对比两种LMM服务执行时间线。上半"Aggregated"（DP=4）E与LLM共享同GPU，4行流水线依次为E¹→LLM¹、E²→LLM²、E³→LLM³、E⁴→LLM⁴（挤占E⁵使其延迟）→LLM⁵；下半"Disaggregated"（P=3, E=1）E与LLM分置不同GPU，Encoder行集中处理E¹–E⁵，LLM三行并行执行LLM¹–LLM⁵。
+> 【图文联合解读】**图1联合解读**
 
-**论证结论**：聚合架构下encoder与prefill共用GPU产生资源争用，如LLM⁴阻塞E⁵；解耦后两者独立调度，消除时序干扰。
+图1为甘特式调度图，对比两种架构：①**聚合（DP=4）**：4块GPU同时承载编码E与LLM预填充，4行依次为E¹→LLM¹、E²→LLM²、E³→LLM³、E⁴→LLM⁴→**E⁵→LLM⁵**，其中第4行LLM⁴占据GPU时间长，直接队头阻塞后续请求E⁵的编码启动。②**解耦（E=1, P=3）**：编码独占1块GPU流水处理E¹/E³/E⁴/E⁵，3块prefill GPU并行LLM¹-LLM⁵预填充，编码与LLM不再串行争用。
 
-**论文作用**：开篇动机图，揭示传统聚合部署的流水线瓶颈，为后文EPD解耦方案提供必要性依据。
+**技术结论**：直观论证EPD解耦可消除编码—预填充阶段间的资源争用与队头阻塞。
+
+**论文作用**：与Table 1（EPD在所有视频长度下TTFT最低）互为印证，作为全文方法动机的核心可视化证据。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig02.png]]
@@ -43,13 +45,13 @@ tags: [multimodal, disaggregated-serving]
 > Impact of disaggregation on supported batch size and number of images per request for the MiniCPM- V 2.6 model. Removing the LLM from the GPU signifi- cantly increases capacity, enabling larger batches and higher- resolution inputs. This demonstrates the memory efficiency benefits of disaggregation. representations. This stage is computationally intensive, especially for high-resolution or complex
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图2联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-1）**核心数据**：该柱状图对比了 MiniCPM-V 2.6 模型在 **Disaggregated（蓝色）** 与 **Aggregated（绿色）** 两种部署下的最大批处理大小（Max Batch Size），横轴为每请求图像数（1/3/5/15/20/30/40）。数据显示：1图时，解耦配置批大小约48 vs 聚合仅约6；3图时约17 vs 约2；5图时约8 vs 约1；15图及以上，聚合模式全部 OOM（显存不足），而解耦模式仍可支持 15图≈4、20图≈3、30–40图≈1 的批处理。
+1) **核心数据**：图示 MiniCPM-V 2.6 在不同每请求图像数（1/3/5/15/20/30/40）下，Disaggregated（蓝）与 Aggregated（绿）方案支持的最大批大小。1图时蓝≈48 vs 绿≈6；3图蓝≈17 vs 绿≈2；5图蓝≈7 vs 绿≈1；15图起绿方出现 OOM，蓝方仍可支持小批量。
 
-2）**论证结论**：将 LLM 从 GPU 卸载后，编码器独占显存，使批容量获得数倍乃至近一个数量级的提升，并解锁了更高分辨率/更多图像的请求输入，直观证明了**解耦架构的显存效率收益**。
+2) **关键结论**：将 LLM 从编码端 GPU 摘除（EPD 解耦）后，显存释放使单请求图像数与批容量均显著提升；高并发/多图场景下 Aggregated 直接 OOM，解耦方案才可服务。
 
-3）**论文作用**：该图位于方法介绍后的实验验证环节，作为 EPD-Disaggregation 提出的**首个量化动机证据**，为后续吞吐/延迟实验提供容量前提说明。
+3) **论文作用**：作为论文 EPD Disaggregation 核心动机的实验依据，定量证明"编码—预填—解码"三阶段解耦相较聚合部署在显存效率上的优势，支撑后续 Table 2 跨模型对比与框架设计论证。
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig03.png]]
@@ -58,13 +60,13 @@ tags: [multimodal, disaggregated-serving]
 > The inference pipeline of EPD Disaggregation. stages—EP-migration and PD-migration—handle the trans- fer of data from encoding to prefill and from prefill to de- code, respectively. We denote the input text prompt as ip, multimodal data as im, and the output text as o. The steps are as follows:
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图3图文联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-该图展示EPD分离推理流水线架构：三类GPU（E黄、P橙、D绿）各自配备独立的队列与处理阶段——Encoding Queue→Encoding Stage→EP Bridge Queue、P同构、D同构。数据经"EP Migration"由E传P，再经"PD Migration"由P传D，输入ip/im经三阶段生成输出o。
+该图展示EPD Disaggregation的三阶段推理流水线结构：E GPUs（黄）负责Encoding Stage，经EP Migration迁移至P GPUs（橙）的Prefill Stage，再经PD Migration迁移至D GPUs（绿）的Decode Stage；每阶段含独立输入队列（Encoding/Prefill/Decode Queue），底部分别设EP Bridge Queue与PD Bridge Queue实现跨阶段数据缓冲。
 
-**论证结论：** 将多模态推理拆解为编码、预填充、解码三个异构阶段，因各阶段显存/算力特征差异显著（对应Table 3中E与P最大批处理规模相差数倍），独立部署可避免资源争用。
+**论证结论**：通过将多模态编码、文本预填、解码三类异构负载解耦到独立GPU池，并配合桥接队列迁移，可针对性解决"编码瓶颈"问题，使各阶段按需独立扩缩。
 
-**论文作用：** 作为EPD方法的核心架构定义图，确立阶段划分与跨阶段迁移机制，为后续资源调度、批处理优化等实验奠定基础。
+**论文作用**：作为核心架构图，奠定了Table 3对比E/P阶段最大批大小差异的实验基础，是全文方法论与评估链路的基石。
 
 ### Figure 4 (p.4) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig04.png]]
@@ -73,9 +75,7 @@ tags: [multimodal, disaggregated-serving]
 > System architecture of the proposed EPD Disaggregated Inference. the data associated with the request. In the decoding stage, workers load the LLM weights for decoding tasks and use the KV cache.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图示EPD分离推理架构：多模态请求经Scheduler(Load Balancer)分配至Encoding、Prefill、Decoding三类专精实例，分别承载Encoder Weights+MM Cache、LLM Weights+MM/KV Cache及纯解码任务。阶段间以5槽EP Bridge Queue经Async Transfer(§3.2.1)异步交接；阶段内用TP/PP并行，跨阶段用IRP(§3.2.2)通信。
-
-它论证将异构负载解耦到独立实例可弹性扩缩、消除长尾阻塞，是论文EPD方法的核心系统蓝图，后续全部实验均基于此架构展开。
+> 【图文联合解读】图中为三阶段流水线：编码器 E 将图像 \(i_{m_t}\) 转为高维嵌入 \(v_t^e\)，经 EP 迁移至 Prefill(P)，结合文本提示 \(i_p\) 生成初始 KV 与首个 token \(o_1^P\)；再经 PD 迁移至 Decode(D)，以 \(kv_{t+1}^d\) 更新并循环至输出结束。E/P/D 独立部署、按 DP 并发请求，从而解耦资源、按阶段扩缩容；IRP 消融中，移除后 TTFT 最多恶化 2.9×。所给图片是公式段落，并非 Figure 4 架构图。
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig05.png]]
@@ -179,27 +179,13 @@ tags: [multimodal, disaggregated-serving]
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
-### Table 1 (p.7) ⭐深度解读
-![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab01.png]]
-> [!quote] caption
-> Mean TTFT latency (in seconds) ( ↓ ) for varying video lengths at a fixed request rate of 1 request/sec. Results are averaged over 100 Video-MME samples. EPD achieves the lowest latency across all video lengths.
-
-> [!tip] 表格解读（多模态）
-> 【图文联合解读】该表对比vLLM、DistServe与EPD在1 req/s下8/16/32/64帧视频的TTFT延迟。EPD各帧数均最低：8帧0.24s（vs 0.42s）、16帧0.30s（vs 0.81/0.82s）、32帧0.49s（vs 1.54/1.59s）、64帧1.00s（vs 3.08/3.11s），64帧时相对vLLM降约68%。原文借此论证E-P-D三级解耦有效消除了聚合架构中编码与预fill争抢GPU的干扰（如Figure 1中LLM-4延误E5）。在论文中，该实验是从Figure 1架构动机到第四章方法落地的关键性能证据，量化印证解耦在长视频多模态场景的端到端时延优势。
-
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab02.png]]
 > [!quote] caption
 > Comparison of the maximum number of images supported per request for various image resolutions across different models. Higher values are better; best values in each row are italicized.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
-
-**核心数据：** 表中对比 MiniCPM-V 2.6、InternVL2-8B、InternVL2-26B 三款模型，在 313,234 / 787,444 / 4032,3024 三档分辨率下，DistServe 与 EPD 两种方案单请求可承载的最大图像数。
-
-**关键结论：** EPD 在所有行均**优于或持平** DistServe——MiniCPM-V 2.6 高分辨率档（4032×3024）由 7 跃升至 49（约 7×）；InternVL2-26B 由 1/11/1 提升至 10/45/10（4–10×）；仅 InternVL2-8B 三档同列均为 19，无增益。
-
-**论文作用：** 该表与 Figure 2 互为佐证，定量证明 EPD 通过将 LLM 从视觉编码端解耦，腾出大量 GPU 显存，使单请求能容纳更高分辨率、更多图像，是支撑"EPD 解耦提升多模态服务容量"核心论点的关键实验证据。
+> 【图文联合解读】该表对比 DistServ 与 EPD 在 MiniCPM-V 2.6、InternVL2-8B、InternVL2-26B 三种模型、三种分辨率（313,234/787,444/4032,3024）下每请求支持的最大图像数。EPD 在 MiniCPM-V 2.6 上由 77/26/7 跃升至 490/165/49（约 6–7 倍）；InternVL2-26B 由 1/11/1 提升至 10/45/10；InternVL2-8B 则恒为 19。原文借此论证：分离 LLM 显著释放显存，使每请求可容纳更多图像，验证 EPD 架构的显存效率优势；该表与 Figure 2 共同构成支撑方法有效性的关键实验证据。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab03.png]]
@@ -207,9 +193,13 @@ tags: [multimodal, disaggregated-serving]
 > Comparison of the maximum supported batch sizes for E and P stages across different models and image reso- lutions. Higher values are better; italicized values indicate the best in each row. OOM denotes cases where the model ran out of memory.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表量化对比MiniCPMv 2.6、InternVL2-8B、InternVL2-26B三模型在313×234、787×444、4032×3024三种分辨率下，DistServe与EPD方案E/P阶段最大批处理容量。数据显示EPD全面碾压：InternVL2-8B@787×444的E从9飙至67；MiniCPMv 2.6@4032×3024下DistServe OOM，EPD仍可服务E=4/P=9，多个高分辨率场景实现DistServe崩溃而EPD可运行的逆转。
+> 【图文联合解读】## 表3 联合解读
 
-此表是论文核心论点——"EP解耦让编码阶段获得独立显存/并行资源"——的硬证据，量化印证了高分辨率多模态推理下EPD相较DistServe传统EP合并策略的批容量与抗OOM优势，构成后续吞吐/延迟实验的理论与实证基石。
+**核心对象与数据**：对比DistServe与EPD在MiniCPMv2.6、InternVL2-8B、InternVL2-26B三个模型、三种图像分辨率（313×234 / 787×444 / 4032×3024）下E、P阶段最大支持batch size。EPD对E阶段扩批效果显著：MiniCPMv2.6在313×234下E由7→49、P由7→86；InternVL2-8B在787×444下E由9→67。高分辨率4032×3024场景下DistServe多次OOM（如MiniCPMv2.6、InternVL2-26B三档全OOM），而EPD仍可运行（MiniCPMv2.6: E=4, P=9）。
+
+**关键技术结论**：E与P解耦后，编码阶段可独立扩批，突破DistServe将E/P绑定在同一实例上的显存瓶颈，对大模型+高分辨率场景尤为有效。
+
+**论文链路作用**：作为对比实验，为Figure 3所述EPD分离推理流水线提供量化证据，支撑"解耦提升吞吐与可扩展性"的核心主张。
 
 ### Table 4 (p.8) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab04.png]]
@@ -217,13 +207,7 @@ tags: [multimodal, disaggregated-serving]
 > Effect of ablating IRP feature from the proposed system on TTFT (s). Disabling IRP negatively affects the TTFT (up to 2.9x worse ) for various multiple images/ re- quest (#I/R). Results are averaged over 100 requests.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-表4针对EPD系统，在图像数/请求数 #I/R=2/4/6/8 四档下，对比开启IRP与禁用IRP的TTFT(秒)：完整EPD分别为 0.92/1.02/1.14/1.74 s；w/o IRP 劣化至 1.46/2.47/3.37/4.27 s，恶化倍数依次 1.6×、2.4×、2.9×、2.5×（100请求均值）。
-
-**技术结论：** 禁用IRP使TTFT恶化最高达2.9×，证明Image Request Prediction是降低多图首token时延的核心组件，尤其在中高并发场景收益显著。
-
-**实验链路作用：** 该表作为4.4节消融研究的关键证据，量化拆解各模块贡献；与Figure 4所描绘的EPD解耦推理架构形成"设计↔验证"闭环，论证完整"EPD+IRP"方案的必要性与最优性。
+> 【图文联合解读】Table 4 对比 EPD 启用/禁用 IRP 在 #I/R=2/4/6/8 四档负载下的 TTFT（100 请求均值）：启用时为 0.92 / 1.02 / 1.14 / 1.74 s；禁用后升至 1.46 / 2.47 / 3.37 / 4.27 s，分别劣化 1.6×、2.4×、2.9×、2.5×。原文据此论证 IRP 是降低首 token 延迟的关键调度组件，在 #I/R=6 中等负载时收益最大（2.9×）。该表属 4.4 消融研究，与 Figure 4 架构图呼应，通过逐项剔除核心模块，证明 EPD 解聚推理设计的完整性与各组件不可替代性。
 
 ### Table 5 (p.9) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab05.png]]
@@ -231,13 +215,13 @@ tags: [multimodal, disaggregated-serving]
 > Ablating the offline optimizer reduces goodput by 2.2× on average when configurations are selected randomly. ↓ indicates lower is better; ↑ indicates higher is better.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 5 联合解读**
+> 【图文联合解读】**Table 5 图文联合解读：**
 
-1) **核心数据**：在随机选取配置的设定下，对比完整 EDP 与去掉离线优化器（w/o Opt.）的版本。完整 EPD 的 Goodput 为 1.25 r/s、TTFT 为 2.12 s、TPOT 为 0.031 s；去掉优化器后，Goodput 降至 0.56 r/s（退化 2.2×），TTFT 升至 4.48 s（退化 2.1×），仅 TPOT 略优（0.025 s，0.8×）。
+该表为消融实验，对比 EPD 完整方案与"去掉离线优化器（w/o Opt.）"在随机配置下的三项指标：Goodput 由 1.25 r/s 降至 0.56（劣化 2.2×），TTFT 由 2.12s 升至 4.48s（劣化 2.1×），TPOT 略优（0.025s vs 0.031s，因并发降低所致）。
 
-2) **关键结论**：离线优化器对吞吐与首 token 时延贡献显著——没有它，即便保留 EPD 的 encoder/decoder/prefill 拆分与请求路由机制，系统平均 goodput 仍掉一半，说明仅靠架构设计无法替代为异构 LMM 工作负载搜索最优 batch/cache/并行配置的作用。
+**技术结论**：离线优化器在随机配置场景下是 EPD 取得高吞吐与低首 token 时延的关键组件，缺失后 goodput 平均下降 2.2×，证明其不可替代性。
 
-3) **实验链路作用**：该表作为消融实验，剥离"架构 vs. 配置搜索"两个独立贡献，验证 EPD 系统的收益同时来源于分离式服务架构与离线优化器；这一结论支撑了论文后续在 SLO attainment 等端到端指标中 EPD 全面优于基线的主张。
+**论文作用**：作为方法链路中的消融验证环节，定量支撑 EPD 系统中"搜索最优编码/解码资源配比"这一设计点的必要性与有效性。
 
 ### Table 6 (p.9) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab06.png]]
@@ -245,13 +229,11 @@ tags: [multimodal, disaggregated-serving]
 > Ablating dynamic role-switching from EPD de- grades TPOT by 2.4× and increases end-to-end latency by 2.2×. Results are averaged over 100 requests with one 4K image each. ↓ indicates lower is better.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 6 图文联合解读**
+> 【图文联合解读】**Table 6 联合解读**
 
-**1) 核心对象与数据**：Table 6 为消融实验，对比 EPD 完整方案与去除动态角色切换（w/o Switch）在三项指标的表现——Latency 28.01→61.10s（劣化 2.2×）、TPOT 0.05→0.12s（劣化 2.4×）、TTFT 1.42→1.33s（0.9×）。实验模拟负载突变：100 请求、到达率 3 req/s、前 10 个请求生成 50 token、剩余 90 个生成 500 token，每请求配 1 张 4K 图像。
+Table 6 为 EPD 消融实验：对比完整 EPD（Latency 28.01s、TTFT 1.42s、TPOT 0.05s）与去掉动态角色切换（61.10s、1.33s、0.12s）。负载为 100 个含 4K 图像请求，前 10 个生成 50 token、后 90 个生成 500 token，到达率 3 req/s。**去除切换使 TPOT 劣化 2.4×、端到端延迟增加 2.2×，而 TTFT 几乎不变（0.9×）**。
 
-**2) 关键结论**：动态角色切换是 EPD 架构的核心设计；移除后 TPOT 与端到端延迟显著恶化，而 TTFT 反而略优（0.9×），说明无切换时系统被预 fill 阻塞、拖累解码，证实动态切换对负载自适应的必要性。
-
-**3) 在论文中的作用**：作为关键消融，与 Figure 6 的 TTFT 分布图等共同支撑"EPD 解耦 + 动态角色"提升多模态大模型服务效率的核心论点。
+论文借此论证：动态角色切换是 EPD 解聚合框架不可或缺的核心机制而非可选项——当请求输出长度从短到长跨阶段跃迁时，若 EPD 实例不能动态重分配 Encode/Prefill/Decode 角色，长输出阶段将产生严重排队，TPOT 与端到端延迟显著劣化。该表是论文实验链路中的关键一节，验证了 EPD 方法在动态工作负载下的鲁棒性。
 
 ### Table 7 (p.12) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab07.png]]
@@ -259,13 +241,9 @@ tags: [multimodal, disaggregated-serving]
 > SLO attainment results ( ↑ ) for online audio bench- marking with ultravox-v0 3 (24 audio files per re- quest). All baselines use 4 GPUs: vLLM operates in data- parallel (DP) mode, DistServe uses a 3P1D configuration, and EPD adopts a 2E1P1D setup. EPD achieves consis- tently high SLO attainment and
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 7 图文联合解读：**
+> 【图文联合解读】**Table 7 联合解读**
 
-该表以 Ultravox-v0.3 音频在线基准（每请求24音频文件）、4 GPU 为统一条件，横向对比 vLLM（DP）、DistServe（3P1D）与 EPD（2E1P1D）在 0.10–1.15 r/s 六档请求率下的 SLO Attainment 及 Goodput。数据上，低负载（≤0.25 r/s）三者均≥0.94 接近饱和；高负载下差距凸显，1.15 r/s 时 EPD=0.93、vLLM=0.87、DistServe=0.68；Goodput 方面 EPD=1.16 r/s，约为 DistServe（0.45）的 2.6 倍。
-
-原文借此论证：**EPD 在音频多模态场景下具备持续高 SLO 达成率与最高有效吞吐**。
-
-在全篇中，该表与文本/图像基准互为补充，作为 EPD disaggregation 框架在**音频模态**上的端到端验证，支撑其相对 vLLM、DistServe 的全面优势结论。
+Table 7 在4 GPU、ultravox-v0_3音频（24文件/请求）条件下，对比vLLM-DP、DistServe-3P1D、EPD-2E1P1D在0.10–1.15 r/s六档请求率下的SLO达标率与goodput。EPD全程≥0.93，DistServe自0.50 r/s起下滑至高负载0.68，vLLM居中为0.87–0.91；goodput分别为1.16、0.45、1.01 r/s。论文借此论证EPD解耦方案在多模态在线音频服务兼顾SLO达标与最高吞吐，验证方法在视觉之外的跨模态可扩展性，是实验链路上"从图像到音频"的泛化关键证据。
 
 ### Table 8 (p.12) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab08.png]]
@@ -273,13 +251,13 @@ tags: [multimodal, disaggregated-serving]
 > Comparison of maximum supported KV cache size (in terms of percentage of free memory) on prefill node for various #images/ request. Image resolution fixed to 4K. Higher ( italicized ) is better.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 图文联合解读**
+> 【图文联合解读】**Table 8 联合解读：**
 
-1) **对象与数据**：表比较两种方案（vLLM vs EPD，斜体为更优）在 4K 分辨率下，prefill 节点上 KV 缓存可占空闲显存的最大百分比。InternVL2-8B：5/10 张图分别为 94%→*95%*、89%→*91%*，20 张时两者均 OOCL；InternVL2-26B：5 张 67%→*89%*、10 张 36%→*80%*、20 张 vLLM OOM 而 EPD 达 *63%*、40 张 EPD OOCL。
+**1）核心对象与数据：** 对比两种方案（EPD vs 基线，斜体为优）在 prefill 节点可支持的最大 KV cache 占空闲内存比，图像固定 4K。InternVL2-8B：5 张图 94% vs 95%、10 张图 89% vs 91%、20 张图均 OOCL；InternVL2-26B：5 张图 67% vs 89%、10 张图 36% vs 80%、20 张图 OOM vs 63%、40 张图 OOM vs OOCL。
 
-2) **关键结论**：随每请求图像数增多，EPD 优势显著放大——EPD 通过将视觉编码外置，使 prefill 节点获得更大 KV 缓存预算，从而避免 vLLM 早出现的 OOM/OOCL。
+**2）关键结论：** EPD 将视觉编码解耦后，prefill 节点不再背负图像 embedding 显存压力，可用 KV cache 余量大幅提升；优势随模型规模与图像数放大——26B 在 10 张图时差距达 44 个百分点，20 张图时基线 OOM 而 EPD 仍可分配 63%。
 
-3) **论文作用**：作为消解论证（与 Figure 8 互证），证明 EPD 解耦架构在多图像高并发场景下能维持更大批处理与更高吞吐，支撑"更高效服务大模型多模态推理"的核心主张。
+**3）论文作用：** 为"EPD 解耦提升显存效率与并发吞吐"的核心主张提供量化佐证，与吞吐/时延实验互补。
 
 ### Table 9 (p.16) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab09.png]]
@@ -287,9 +265,13 @@ tags: [multimodal, disaggregated-serving]
 > TTFT and TPOT values (in seconds) used as SLO thresholds for different models and image counts per request (#I/R). Respective values are shown for MiniCPM-V 2.6, InternVL2-8B, and InternVL2-26B models.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 9 图文联合解读**
+> 【图文联合解读】**Table 9 联合解读**
 
-Table 9 给出 MiniCPM-V 2.6、InternVL2-8B、InternVL2-26B 三模型在每请求图像数 #I/R∈{2,4,6,8} 下的 TTFT 与 TPOT 阈值（秒）。TTFT 随图像数近似线性增长：8B 模型从 1.20s 升至 5.00s，26B 模型从 3.50s 跃至 15.00s；TPOT 多维持在 0.04–0.18s，仅 26B 在 #I/R=6 出现 0.95s 异常尖峰。该表为 Figure 9 的 SLO attainment 评估提供基准阈值，与正文相互印证：EPD 解耦方案是唯一在严格 TTFT 约束下仍能满足 SLO 的配置，PD/TD 等基线在高请求率下完全无法达标。该表在论文实验链路中承担"评价标尺"作用，支撑 EPD disaggregation 在严苛 SLO 场景下的核心有效性主张。
+1. **核心对象与数据**：表给出 MiniCPM-V 2.6、InternVL2-8B、InternVL2-26B 三模型在每请求图像数 #I/R=2/4/6/8 下的 TTFT 与 TPOT（秒）SLO 阈值。例如 InternVL2-26B 的 TTFT 从 3.50 (#I/R=2) 升至 15.00 (#I/R=8)，远高于另两模型；TPOT 多在 0.04–0.18s 区间，仅 #I/R=6 时 26B 达 0.95s。
+
+2. **关键结论**：作为实验基准的 SLO 上限，为 Figure 9 中"EPD 是唯一在低请求率下仍满足全部 SLO、而其他基线全部失效"的判断提供量化依据；图像越多 TTFT 阈值越松，反映多模态推理本身的高延迟。
+
+3. **链路作用**：服务于 EPD 解聚方案评估——先设定分模型/分图像规模的时延门槛，再以此衡量端到端调度是否能达标，是论文实验部分"门槛—测量—结论"链条的核心输入。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

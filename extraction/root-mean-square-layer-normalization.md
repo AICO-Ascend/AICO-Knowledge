@@ -32,11 +32,11 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图(b)横轴为训练时间(0–160分钟)，纵轴为Loss(4–10)，展示GRU-RNNSearch前10k步的两条曲线：蓝色Baseline最终约6.0，橙色LayerNorm约4.5；在约35分钟同一训练步处，Baseline=7.0，LayerNorm=5.9，损失差1.1。
+1) **核心对象与数据**：该图展示了基于 GRU 的 RNNSearch 模型在前 10k 训练步内 Baseline（无归一化，蓝线）与 LayerNorm（橙线）的训练损失曲线。子图(a)按训练步数（×100）绘制，在约 3000 步时 Baseline loss=7.0，LayerNorm loss=5.4，相差 1.6；子图(b)按训练时间（分钟）绘制，同等时长约 30 分钟时 Baseline=7.0，LayerNorm=5.9，相差 1.1。两条 LayerNorm 曲线全程显著低于 Baseline，且收敛更快、更平稳。
 
-原文借此论证：LayerNorm带来的加速收敛主要来自**缩放不变性**而非均值中心化（re-centering invariance），因为均值归一化并不降低隐藏状态或梯度方差。作者据此提出RMSNorm仅保留缩放项即可达到相近甚至更优效果。
+2) **论证的关键结论**：作者借此说明 LayerNorm 带来的训练稳定性提升主要来源于**缩放不变性（scale invariance）**而非重中心化（re-centering），从而为后续提出"可移除均值项、仅保留 RMS 缩放归一化"即 RMSNorm 提供实验铺垫。
 
-该图作为论文动机起点，连接Table 1的不变性分析，推动RMSNorm作为更轻量替代方案的提出与后续实验验证。
+3) **在论文中的作用**：作为支撑性预实验，与 Table 1 的 WMT 翻译结果互证，强化"RMSNorm ≈ 去均值 LayerNorm"的核心论点，构成从 LayerNorm → RMSNorm 简化论证链条的关键一环。
 
 ### Figure 2 (p.6) ⭐深度解读
 ![[assets/crops/root-mean-square-layer-normalization-fig02.png]]
@@ -47,11 +47,7 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与结构**：Figure 2 为 RNNSearch 模型在 newstest2013 上的验证集 SacreBLEU 收敛曲线，横轴为训练步数（×30k，0–50），纵轴为 Valid BLEU（0–25），共五条曲线。L2-Norm（红）起步最低、收敛最慢，最终约 22；Baseline（蓝）起步约 15，收敛缓慢；LayerNorm（橙）、RMSNorm（绿）、pRMSNorm（紫）均在 ~5 步内快速攀升至 23–24 平台。
-
-2）**关键结论**：RMSNorm/pRMSNorm 在保持与 LayerNorm 相当收敛速度的同时，达到最高的终端 BLEU，验证其在 NMT 任务中作为轻量归一化方案的有效性。
-
-3）**论文作用**：作为支撑实验，与 Table 1 等 WMT 测试集结果互证，强化"RMSNorm = 可去均值重中心化的 LayerNorm"这一核心论点。
+图2展示RNNSearch在newstest2013上五条SacreBLEU收敛曲线（横轴0–50×30k步，纵轴0–25）：RMSNorm（绿）、pRMSNorm（紫）、LayerNorm（橙）约5步内快速升至23–24平台；Baseline（蓝）缓升至~22；L2-Norm（红）起步近0、收敛最慢。它论证了RMSNorm/pRMSNorm收敛速度与LayerNorm相当、显著快于基线、且BLEU持平或更优。该图为论文核心主张——"无trick的RMSNorm在训练效率与翻译质量上等价甚至优于LayerNorm"——提供收敛行为的可视化证据，铺垫后文Table 2在Test14/Test17上的最终质量与耗时对比，形成"收敛速度→最终质量→计算开销"的完整实验论证链。
 
 ### Figure 3 (p.7) ⭐深度解读
 ![[assets/crops/root-mean-square-layer-normalization-fig03.png]]
@@ -90,11 +86,7 @@ tags: []
 > Error rate on validation set for the attentive reader model.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-图5展示了Attentive Reader模型上六种归一化方法的验证错误率收敛曲线（约300k训练步）：Baseline（蓝）收敛缓慢，300k步后错误率仍约0.48；BatchNorm-LSTM（绿）较慢；LayerNorm（红）、BatchNorm-Everywhere（橙）、RMSNorm（紫）、pRMSNorm（棕）在约50k步即收敛至≈0.5。结合表6，各方法每0.1k步耗时为：LayerNorm 392s、RMSNorm 333s（节省15.1%）、pRMSNorm 330s（节省15.8%）。
-
-论文以此论证关键结论：**RMSNorm与LayerNorm收敛性能相当，但计算开销显著降低**——通过省略均值中心化、重计算缩放不变性，简化了归一化计算。该实验在整体方法链中起核心验证作用：证明RMSNorm在保持训练稳定性的同时，实现了效率与精度的最佳平衡，为后续在Transformer、机器翻译等大规模任务中的推广提供了实证依据。
+> 【图文联合解读】图示6种归一化方法在attentive reader上的验证误差随训练步数（×1k, 最长≈300k）的收敛曲线：RMSNorm、pRMSNorm与LayerNorm均稳定收敛至约0.47，BatchNorm-LSTM约0.50，Baseline下降最慢且最终仅≈0.48。配套Table 6记录每0.1k步训练耗时——Baseline 315s、LayerNorm 392s、RMSNorm 333s（较LayerNorm快15.1%）、pRMSNorm 330s（快15.8%）。原文据此论证：RMSNorm与LayerNorm在收敛误差上相当，但训练速度领先约15%，以"精度持平、效率更优"的实证支撑全文核心结论，构成RMSNorm消融对比实验中关键的速度–精度权衡证据。
 
 ### Figure 6 (p.8) ⭐深度解读
 ![[assets/crops/root-mean-square-layer-normalization-fig06.png]]
@@ -103,13 +95,7 @@ tags: []
 > Recall@K values on validation set for the order-embedding models. worse than RMSNorm. Although in Figure 5 the performance of RMSNorm and LayerNorm is comparable, RMSNorm is around 15% faster than LayerNorm as shown in Table 6.3
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 COCO 跨模态检索任务中验证集 Recall@K 随训练步数（×0.3k，0–250）的演化。蓝色 Baseline 曲线在三项指标上均明显落后（R@1≈39 vs. 归一化组≈41；R@10≈87 vs. ≈89），收敛更慢且终值更低；RMSNorm（绿）与 pRMSNorm（红）自训练早期即领先 LayerNorm（橙），三者最终趋于相近，但 RMSNorm/pRMSNorm 峰值与稳定性略优。
-
-原文借此论证：**在 OE 跨模态场景下，RMSNorm 收敛速度与最终性能均不逊于 LayerNorm，且远胜无归一化基线**，呼应 Figure 5 的"精度可比"与 Table 6 的"RMSNorm 比 LayerNorm 快约 15%"。
-
-在论文整体实验链路中，该图与 §6.3 的 Image-Caption Retrieval 共同构成"质量—效率"双重证据链：既证明 RMSNorm 在跨模态检索中提供与 LayerNorm 同等收敛质量，又凸显其计算效率优势，从而支撑全文核心主张——RMSNorm 是 LayerNorm 的有效替代。
+> 【图文联合解读】图6比较Order-embedding模型在验证集上的Mean Recall@1/5/10，对比Baseline、LayerNorm、RMSNorm、pRMSNorm；每0.3k步取样，训练约0–75k步。Recall约由34/71/84升至40–41/76–77/88，三种归一化更早收敛，R@K整体优于Baseline，RMSNorm与LayerNorm相当。它承接图5的收敛结果及表6效率数据：RMSNorm性能不降，训练时间较LayerNorm快约15%，再由表7测试结果完成验证。
 
 ### Figure 7 (p.13) ⭐深度解读
 ![[assets/crops/root-mean-square-layer-normalization-fig07.png]]
@@ -132,16 +118,13 @@ Figure 6 以三幅子图（R@1、R@5、R@10）展示 Order-Embedding 模型在 C
 > SacreBLEU score on newstest2014 (Test14) and newstest2017 (Test17) for RNNSearch using Tensorﬂow- version Nematus. “ Time ”: the time in second per 1k training steps. We set p to 6.25%. We highlight the best results in bold, and show the speedup of RMSNorm against Layer- Norm in bracket.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 2 图文联合解读：**
 
-**1) 表格核心内容：**
-Table 2对比五种RNNSearch模型在Test14/17的SacreBLEU与训练耗时（每1k步秒数）：Baseline (21.7/23.4, 399s)、LayerNorm (22.6/23.6, 665s)、L2-Norm (20.7/22.0, 482s)、RMSNorm (22.4/**23.7**, 501s)、pRMSNorm (**22.6**/23.1, 493s)；括号标注RMSNorm、pRMSNorm相对LayerNorm分别提速24.7%与25.9%。
+1) **核心数据**：5行RNNSearch（Nematus）模型在Test14/17的SacreBLEU与每1k步训练耗时。Baseline（21.7/23.4，399s）< L2-Norm（20.7/22.0，482s，最差）；LayerNorm（22.6/23.6，665s）vs RMSNorm（22.4/**23.7**，501s，加速24.7%）vs pRMSNorm（**22.6**/23.1，493s，加速25.9%）。
 
-**2) 关键论证结论：**
-RMSNorm/pRMSNorm在Test17/14取得与LayerNorm相当甚至更优的BLEU（差距≤0.2），但训练时间减少约25%，证实RMSNorm以更少计算即可替代LayerNorm；L2-Norm质量最差，排除其作为替代方案。
+2) **关键结论**：RMSNorm/pRMSNorm在BLEU上与LayerNorm持平或更优（Test17 23.7 vs 23.6），同时训练时间降低约25%，验证"去均值中心化+可学习缩放"既保持质量又显著提速；而L2-Norm无缩放参数则性能退化，证明缩放项不可缺。
 
-**3) 在论文中的作用：**
-与Figure 2（收敛曲线，证趋势）形成"质量+效率"互补证据链——曲线证明收敛行为可比，Table 2以量化数字坐实最终得分与加速比，共同支撑论文核心主张：RMSNorm是LayerNorm的轻量高效替代。
+3) **论文作用**：与Figure 2收敛曲线互证——前者证"质量不减"，本表证"效率增益"，共同构成RMSNorm替代LayerNorm的核心实证支撑，主导第三/四节的效率论证主线。
 
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/root-mean-square-layer-normalization-tab03.png]]
@@ -149,13 +132,13 @@ RMSNorm/pRMSNorm在Test17/14取得与LayerNorm相当甚至更优的BLEU（差距
 > SacreBLEU score on newstest2014 (Test14) and new- stest2017 (Test17) for RNNSearch. “ Th ”: Theano-version Nema- tus, “ Py ”: an in-house PyTorch-based RNNSearch.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**表3 图文联合解读**：
 
-**1）表格核心对象与数据：** Table 3 对比 RNNSearch 在 Test14/Test17 上 Baseline 与 LayerNorm 两种配置的 SacreBLEU 表现，按列 1–4（四个分组条件）及 ALL（整体）给出均值 M 与标准差 S。Baseline 的 M 介于 −1.19 至 −2.60，S 高达 2.33–7.35；LayerNorm 的 M 收敛至 −0.43 至 −0.51，S 压缩至 1.19–1.51。
+① **核心数据**：表3报告RNNSearch在Test14与Test17（Theano/PyTorch两版Nematus）上不同归一化方案相对参考的Δ SacreBLEU，分列1–4及ALL均值。Baseline M=-2.60→ALL=-1.60（掉点严重）；LayerNorm M≈-0.50（恢复≈1 BLEU）；pRMSNorm行M≈-0.40至-0.74，整体表现略优于或持平LayerNorm。
 
-**2）关键技术结论：** 加入 LayerNorm 后，M 的绝对值从约 2 缩小至约 0.5，S 的最大值由 7.35 降至 1.51。数据定量证明层归一化显著降低跨条件/跨语对的方差，使训练结果更稳定、更可复现。
+② **论证结论**：pRMSNorm以极简的单一缩放因子完全替代LayerNorm，在两种框架、两个测试集上均不损失性能且略优，有力支持"RMSNorm即可，无需均值重中心化"的核心主张。
 
-**3）在论文中的作用：** 作为引入 RMSNorm 的前导实验证据——先证"归一化对 RNN 翻译模型必要且有效"，再顺势提出更轻量的 RMSNorm 替代方案，形成"动机→替代→验证"的完整方法论证链。
+③ **论文作用**：与Figure 3（单数据集调p曲线）互补，是pRMSNorm在真实NMT场景、跨框架的稳健性验证实验，支撑其作为通用归一化模块的结论。
 
 ### Table 8 (p.8) ⭐深度解读
 ![[assets/crops/root-mean-square-layer-normalization-tab08.png]]
@@ -163,24 +146,13 @@ RMSNorm/pRMSNorm在Test17/14取得与LayerNorm相当甚至更优的BLEU（差距
 > Time in seconds per 0.1k training steps for the order-embedding model.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表量化展示OE模型每0.1k步训练耗时：Baseline 2.11s、LayerNorm 12.02s、RMSNorm 7.12s（加速40.8%）、pRMSNorm 4.34s（加速63.9%）。原文据此论证RMSNorm较LayerNorm提速40%–64%，凸显*p*RMSNorm的效率优势。在论文链路中，该表与Table 7（精度指标）形成"精度-效率"互补双表：Table 7证RMSNorm泛化更优，Table 8证其训练开销更低；二者合力支撑"RMSNorm可在保持精度的同时显著提升效率、可作为LayerNorm高效替代"这一核心结论。
+> 【图文联合解读】**图文联合解读：**
 
-### Table 9 (p.9) ⭐深度解读
-![[assets/crops/root-mean-square-layer-normalization-tab09.png]]
-> [!quote] caption
-> Training error rate for the ConvPool- CNN-C model.
+该表量化展示 order-embedding 模型在 COCO 跨模态检索任务中，每 0.1k 训练步的耗时：Baseline 2.11±0.047s、LayerNorm 12.02±0.191s、RMSNorm 7.12±0.207s（较 LayerNorm 省 40.8%）、pRMSNorm 4.34±0.168s（省 63.9%）。可见 LayerNorm 代价约为 Baseline 的 5.7 倍，而 RMSNorm 显著压缩该开销，pRMSNorm 更接近 Baseline 速度。
 
-> [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 9 图文联合解读**
+论文借此论证核心结论：**RMSNorm 在维持与 LayerNorm 相当甚至更优检索性能（Table 7、Figure 6）的同时，大幅降低训练时间成本**，pRMSNorm 进一步逼近无归一化基线效率。
 
-**1) 核心对象与结构数据**
-Table 9 以**训练误差曲线图**形式呈现 ConvPool-CNN-C 模型在 0–200 epoch 区间内的误差率（0–0.08）变化，共 6 条曲线：Baseline、BatchNorm、LayerNorm、WeightNorm、RMSNorm、pRMSNorm。量化观察：Baseline（蓝）收敛最慢，前 50 epoch 误差居高，200 epoch 时仍残留约 0.005；其余 5 种归一化方法在约 100 epoch 后误差趋近 0，其中 RMSNorm 与 pRMSNorm 曲线几乎与 LayerNorm 重合。
-
-**2) 关键论证结论**
-该曲线配合 Table 10（测试误差：RMSNorm 8.83% / pRMSNorm 10.37% vs LayerNorm 10.49%；单 epoch 时间：RMSNorm 31s（节省 20.5%）、pRMSNorm 30s（节省 23.1%）），共同论证：**RMSNorm 在训练收敛速度上与 LayerNorm 相当，但测试精度更高、计算开销显著更低**，证明其可作为 LayerNorm 的高效替代。
-
-**3) 在论文链路中的作用**
-该表位于实验章末，与 Table 7（跨模态检索 R@K）、Table 8（ImageNet）、Table 10 构成"训练动态 → 训练时间 → 测试性能"完整证据链，从**视觉收敛过程**维度直观支撑论文核心主张：RMSNorm 以更低成本获得等效甚至更优的归一化效果。
+在实验链路中，该表与 Figure 6（收敛曲线）、Table 7（R@K）共同构成"收敛行为→训练成本→测试精度"的完整证据链，**从计算开销维度**直观支撑 RMSNorm 以更低代价实现等效归一化的主张。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

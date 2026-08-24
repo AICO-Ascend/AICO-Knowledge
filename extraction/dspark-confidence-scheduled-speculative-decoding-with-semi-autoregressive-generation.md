@@ -47,9 +47,11 @@ tags: [speculative]
 > | Main speculative decoding results. We report accepted length ( 𝜏 ) per decoding round (higher is better) for different target models and domains. Bold marks the best results.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 图文联合解读**
+> 【图文联合解读】核心对象与结构：表格列出 4 个目标模型（Qwen3-4B/8B/14B、Gemma4-12B）× 3 个 drafter（Eagle3 自回归、DFlash 并行、DSpark）× 9 个 benchmark（Math：GSM8K/MATH/AIME25；Code：MBPP/HumanEval/LCB；Chat：MT-Bench/Alpaca/Arena-Hard）的 τ 值。DSpark 在全部 36 格几乎全部加粗为最佳，例如 Qwen3-4B GSM8K：Eagle3 5.14、DFlash 5.40、DSpark 6.11。
 
-该表汇报 4 个目标模型（Qwen3-4B/8B/14B、Gemma4-12B）×3 种 Drafter（Eagle3 自回归、DFlash 并行、DSpark 半自回归）×9 个领域（Math/Code/Chat）的每轮接受长度 τ。结果显示 **DSpark 在全部 36 个格点均取得最佳**（粗体），如 Qwen3-4B GSM8K：5.14→5.40→6.11；Qwen3-14B AIME25：3.71→3.98→4.94；Gemma4-12B HumanEval：5.37→4.95→5.64。原文借此论证一个反直觉结论：**并行与半自回归 Drafter 的 τ 反而普遍超过自回归 Eagle3**，否定"逐 token 自回归必优"的传统假设。该表是论文实验链路的"主结果锚点"，为后续 DSpark 配合置信度调度验证带来的端到端加速（结合图 1 的 L=(Tdraft+Tverify)/τ 公式）提供 τ 层面的实证支撑。
+关键结论：DSpark 的 τ 一致反超两类基线，证明其同时具备自回归式高接受长度与并行式低 draft 延迟，验证 Figure 1 所述"打破 τ 与 T_draft 权衡"的机制。
+
+链路作用：作为主实验表，为 Figure 1 的延迟分解公式 L=(T_draft+T_verify)/τ 提供端到端实证支撑，奠定方法优越性的核心证据。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

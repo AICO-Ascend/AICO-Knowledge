@@ -32,7 +32,11 @@ tags: []
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示用三色图例区分可共享KV缓存（蓝）、不可共享prompt（绿）、不可共享generation（黄），对比Sequence-based与四种Tree-based解码：(1)Self-consistency——单prompt分支为G₁/G₂；(2)Few-shot prompting——示例P₁/P₂及其生成可共享；(3)Tree-of-thoughts——通过Search History在分支间共享上下文；(4)推测解码——草稿模型产出token树t₀→t₁,t₂,t₃→t₄，验证后保留t₀/t₂/t₄并跨Step history复用。Sequence-based各序列完全独立、无共享；而Tree-based蕴含丰富可共享结构，但传统实现难以高效利用。结合Table 1（ToT生成38,315 vs CoT仅525 token的开销差异），作者论证Tree-based存在严重计算冗余，从而引出DeFT借助FlashAttention对树状结构做高效分块注意力与KV缓存复用的核心贡献。
+图1将序列式解码（上：两独立Prompt各生成一条）与树式解码（下：四类场景）对比：(1) Self-consistency——单Prompt分支G₁/G₂；(2) Few-shot prompting——示例+P₁/P₂并行生成；(3) Tree-of-thoughts——P经Search History多层分支为P₁.₁/P₁.₂/P₂.₁/P₂.₂及对应生成；(4) Speculative decoding——draft产出token树t₀–t₄，verify后保留t₀/t₂/t₄的KV cache。配色区分蓝色shareable KV、黄色非共享生成。
+
+**技术结论：** 原文借此说明树搜索/选择类应用产出的token量远多于传统任务，而树结构中存在大量共享前缀（蓝色KV），但序列式注意力无法利用此冗余。
+
+**链路作用：** 作为动机图，引出DEFT需设计Flash Tree Attention以高效处理共享与非共享KV并存的结构化推理。
 
 ### Figure 2 (p.5) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig02.png]]
@@ -41,11 +45,11 @@ tags: []
 > Overview of DEFT. Input Metadata is prepared in the system elaborated in Appendix A.1. In QKV
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图示DEFT两阶段中的**Phase 1（QKV准备）**：HBM内Input Metadata含Query、共享前缀KV_0、分支KV_1/KV_2及Tree Topo，Q_a/Q_b各映射对应分支KV。经**KV-Guided Grouping**（跨分支复用KV_0）与**Flattened Tree KV Splitting**（按树拓扑切成均衡组G_i），IO感知装入各SM_i。
+> 【图文联合解读】**图文联合解读：**
 
-原文论证：消除共享前缀冗余KV读取 + SM负载均衡，为Phase 2共享内存（19TB/s）跑部分注意力 + 树感知全局归约供均衡输入。
+图示DEFT两阶段流水线：①阶段1（QKV Preparation）在HBM中读取含共享前缀的Tree KV（KV₀/KV₁/KV₂），经KV-Guided Grouping扁平分组为G₀/G₁/G₂，按IO感知与负载均衡加载至对应SM₀/₁/₂；②阶段2（Attention Calculation）在Shared Memory（19 TB/s）内并行运行DEFT Attention Kernel得局部A₀/A₁/A₂，再经Global Reduction合并为Final Attention。
 
-在论文中：作为投机解码链路的**前端预处理核心**，直接决定HBM带宽（2TB/s）利用率与SM并行度，是"内存高效、硬件友好树结构注意力"方法的基础环节。
+原文据此论证：利用HBM（2 TB/s）与SM（19 TB/s）近10×带宽差，将树结构推测解码中的共享前缀复用与并行注意力解耦，缓解KV加载瓶颈。该图为全文方法总览，衔接§3.3 QKV准备细节与后续注意力核性能分析。
 
 ### Figure 3 (p.6) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig03.png]]
@@ -73,13 +77,13 @@ tags: []
 > Latency breakdown for specula- tive decoding with a token tree of 32 queries, whose tree topology is from Medusa (Cai et al., 2024). U means unpaged memory.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图4解读**
+> 【图文联合解读】**图4解读（≤220字）：**
 
-图4展示在Medusa 32查询token树的推测解码场景下，6种注意力方法的延迟分解（Attention/KV Management/Other三类，纵轴秒）。关键量化数据：非分页的Tree-Attention-Medusa（U）总延迟最高约275s，其中KV管理占比高达53.46%；而DeFT系列（带分页机制）总延迟仅55–90s区间，以DeFT-Flatten最低。
+**1）核心对象与数据**：堆叠柱状图对比6种Attention方法在Size=32的Medusa树结构投机解码下的延迟构成（Attention橙色/KV Management蓝色/Other绿色）。Paged路径总延迟约49–89s（Radix≈70、DeFT-Flatten≈49、DeFT-Node≈89、DeFT-Node-Chunk≈53）；Unpaged路径（U）显著更高——DeFT-Node(U)≈195s、Tree-Attention-Medusa(U)≈280s。其中Unpaged方案的KV Management占比飙升至69–83%，而Paged方案中KV Management仅7.67–13.79%，瓶颈转移到Attn/Other（padding浪费）。
 
-**论证结论**：非分页方案的KV管理是主要延迟瓶颈，而分页KV管理能显著压低总延迟。
+**2）关键结论**：验证DEFT的Paged内存管理将KV管理开销压至极低水平（<14%），整体延迟较Unpaged Medusa基线降低约5–6倍；同时DeFT-Flatten与DeFT-Node-Chunk以最低Attn占比（~30%）在Paged路径中取得最优延迟，证明Flash Tree Attention在两种内存路径下均全面优于既有方案。
 
-**论文作用**：该图是实验链路中验证DEFT核心设计——Flash Tree Attention + 分页KV——相对Tree-Attention-Medusa实现显著加速的关键证据，支撑"分页管理是树结构LLM推理高效性必要条件"这一论点。
+**3）链路作用**：与Table 4形成Paged/Unpaged双路径的延迟归因证据，支撑"KV管理是树形解码主要瓶颈、paging是有效解"的核心论断。
 
 ### Figure 5 (p.15) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig05.png]]
@@ -88,14 +92,9 @@ tags: []
 > Illustration of DEFT. (Left) System overview. (Right) The data flow of DEFT-Node (DEFT-Flatten is similar except for QKV partitioning) using a decoding tree example.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**1) 核心对象与结构**
-图示一棵解码树：根节点 S0=Prompt"Machine Learning"，分叉为 S1="System is difficult" 与 S2="has changed the"，当前迭代 iter=3。底部输入元数据含 Query、KV Cache (S0,S1,S2)、Tree Topo，经"extract and pack"送入 HBM→Shared Mem。上部按 KV 前缀划分为 3 个 QKV Group（Group 0/1/2），每组 Query（"difficult/the"、"the"、"the"）按共享 KV 配对执行 Attention。
+> 【图文联合解读】**图文联合解读（Figure 5）**
 
-**2) 关键技术结论**
-论证 DeFT 的核心机制：Query 按 KV 前缀分组复用，使共享 KV 路径只需一次访存即可被多条查询路径共同使用，从而消除树形推理中的冗余计算与内存访问；并说明 DeFT-Node 与 DeFT-Flatten 仅 QKV 划分策略不同。
-
-**3) 在论文中的作用**
-作为系统总览与算法核心图，将"解码树→元数据→QKV 分组→Flash-Tree Attention Kernel"流水线具象化，为后续核函数设计与吞吐加速实验提供机制基础。
+左图展示DEFT系统四模块——模型接口（含DeFT Attention Kernel×#layer）、KV Cache Manager、Sequence Tree Manager与Branch Controller，通过Query/KV/Tree Topology三路元数据协同；右图以iter=0提示"Machine Learning"(S₀)在iter=3分叉为S₁"System is difficult"与S₂"has changed the"为例，按KV分组打包QKV（如Group 1：KV="System is difficult" + Q="difficult"）后送入注意力核并行计算。该图论证"按KV分组的Flash树形Attention"是消除树解码QKV冗余的核心机制，为Table 5的延迟对比实验提供方法学支撑。
 
 ### Figure 6 (p.16) ⭐深度解读
 ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p16.png]]
@@ -171,7 +170,16 @@ Figure 6: Discussion of tree-based decoding with tree queries (Miao et al., 2023
 > When the number of leaf nodes/queries ln is sufficiently large, the IO cost of partial results might become comparable to that of the KV cache. For instance, in the Llama models (Touvron et al., 2023a;b), where dhead =128, with ln =29, the total IO cost of QKT , M, QK⊤ sc , M + QK⊤ sc , and
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图11对比三种Tree Attention的QKV分块策略：左侧Medusa按GEMM将KV切为m×k与k×n的tile块，产生全量partial结果M；右侧SpecInfer采用Q-Guided Grouping，把查询分为G₀（Q_a）与G₁（Q_b）两组，分别共享同一组KV₀/₁/₂，并通过Q-BCM位掩码"110""101"标注各查询实际访问的KV子集。原文论证：当叶节点数ln足够大时，partial结果的IO开销可与KV cache相当，从而说明朴素的逐tile GEMM切分存在冗余访存问题，为论文提出的Q-BCM分块与Flash Tree Attention优化提供必要性依据，是方法链路中IO分析与分块策略设计的支撑图。
+> 【图文联合解读】**图文联合解读：**
+
+**1) 核心对象与结构：**
+图分三栏对比 QKV 分块策略——左栏 Vanilla Tree Attention 展示 G₀ 中 Q_a、Q_b 与 KV₀/KV₁/KV₂ 的关系，用 3×3 掩码矩阵 M 标出 KV-Guided Grouping；中栏 Medusa 采用 GEMM 分块（Q 块 m×k，KV 块 k×n），DCM 退化为单块 m×n；右栏 SpecInfer 用 Q-BCM 二值掩码 "110"（Q_a）和 "101"（Q_b）做 Q-Guided Grouping。
+
+**2) 关键技术结论：**
+Vanilla 的 KV-Guided Grouping 产生大量空块浪费；Medusa 的 GEMM 均匀分块忽略树结构掩码；SpecInfer 的 Q-Guided Grouping 按查询精准定位所需 KV，三者在内存访问粒度与计算冗余上各有权衡，凸显需要专门的树注意力内核。
+
+**3) 论文作用：**
+作为 Figure 3 的补充，该图铺垫 DEFT 设计的动机——证明现有树注意力实现未能联合优化分块与掩码，支撑 Flash Tree Attention 借助分块稀疏矩阵乘融合 KV-Guided/Q-Guided 分组的必要性。
 
 ### Figure 12 (p.23) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig12.png]]
@@ -180,13 +188,9 @@ Figure 6: Discussion of tree-based decoding with tree queries (Miao et al., 2023
 > The detailed procedure of reconstructing tree templates for multi-step reasoning. (Left)
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图12图文联合解读**
 
-图12展示两阶段构建解码树模板的流程。左绿框"Reconstruct thought trees"：Prompt节点按宽度w在d层深度上扩展为思维树，节点标为thought_i_j；✓标记保留节点，红色✗标记剪枝节点，虚线省略其余深度/宽度分支。右橙框"Tree templates for decoding"：每个保留节点封装5项元数据——start/end iteration（100/103）、thought size（3）、parent id（thought_i-1,k）、children id（None），并映射到具体文本"System is difficult"。据此生成两张结构化表：**Branch records**（迭代100，从(i-1,k)生成(i,j)）与**Prune records**（迭代103，剪掉(i,j)）。
-
-**技术结论**：作者论证树模板可由真实推理轨迹离线重建，并通过5项元数据完整表征节点的生成时机、长度、父子关系，从而无遗漏地为解码阶段提供可调度的分支与剪枝信息。
-
-**方法链路作用**：该模板是DeFT解码的离线预处理产物，为FlashTreeAttention提供"何时生成何分支、何时剪除何节点"的调度依据，是实现高效树结构推理的关键前置步骤。
+图12展示DEFT从实际多步推理记录重建思维树模板的过程。左侧从Prompt出发构建深度d、宽度w的思维树（节点thought i,j），用✓保留最优路径、⊖标记待剪枝节点；右侧将每个思维编码为五元组元数据（start_iter=100, end_iter=103, thought_size=3, parent_id=thought i-1,k, children_id=None），并据此导出Branch records（迭代100，从(i-1,k)生成(i,j)）与Prune records（迭代103，剪枝(i,j)）。该图论证了树模板可由真实推理轨迹结构化重建，为FlashTreeAttention的高效树状批解码提供预处理输入，是DEFT方法链路的模板构建核心环节。
 
 ### Figure 13 (p.25) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig13.png]]
@@ -197,11 +201,11 @@ Figure 6: Discussion of tree-based decoding with tree queries (Miao et al., 2023
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与数据**：图示排序任务下，DEFT-Node 与 DEFT-Flatten 两种切分策略在迭代步 2000–3700 区间的对比。左轴 Speedup Ratio（蓝实线）前期稳定在 320–380 倍，后期（≈3000 后）剧烈震荡；右轴 Tree Node Len std（红虚线）在 220–300 之间周期性起伏。
+图13以sorting任务为载体，对比DEFT-Node与DEFT-Flatten两种分割策略。横轴为推理步数（0–3500），蓝色实线为加速比（Node/Flatten每步延迟比，左轴1.25–2.0），红色虚线为树节点长度标准差（右轴150–400）。可见：节点长度std较低时，加速比稳定在1.3–2.0区间；std出现周期性尖峰（如step≈700处飙至400）时，加速比同步骤降，极端点甚至跌至0.25以下。
 
-2）**关键结论**：DEFT-Node 相对 DEFT-Flatten 获得高达约 350 倍的加速比，证明节点级切分显著优于展平切分，尤其在节点长度方差较小、树结构深度（d=10）× 宽度（w=10）规整的排序任务上，Node 策略能充分利用 Flash Tree Attention 的并行前缀，避免 Flatten 带来的冗余计算。
+**技术结论：** 树节点长度方差小→DEFT-Node更优（加速1.5×+）；方差大→Flatten反超，揭示两种策略存在互补适用域。
 
-3）**在论文中的作用**：作为消融/对比实验，支撑 DEFT-Node 作为默认切分策略的设计选择，强化"树状推理的高效解码依赖于与树结构对齐的注意力切分"这一核心论点。
+**论文作用：** 属实验消融分析，为DEFT依据负载特征自适应选择分割策略提供量化依据，支撑整体系统的鲁棒性论证。
 
 ### Figure 14 (p.26) ⭐深度解读
 ![[assets/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-p26.png]]
@@ -225,7 +229,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > The chunk size selection is a trade-off between IO redundancy and threadblock scheduling: a larger chunk size means less redundancy of Query IO but may cause potential idle SMs of GPUs due to fewer threadblocks during GPU scheduling.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图展示Prompt Length=1000时，不同token树规模（t=32/64/128/256）下单层Attention延迟随KV Chunk Size（128–1024）的变化曲线（实线为DeFT-Flatten，虚线为对照）。量化数据：t=32橙色线约90μs，t=256黄色线约270μs，延迟随t递增；多数曲线在chunk=256–512处取极小值，至1024时明显回升。原文据此论证chunk选择是Query IO冗余（越小越冗余）与SM线程块调度（越大越易空闲）的权衡；该ablation为DEFT系统确定最优KV chunk尺寸提供依据，支撑Flash Tree Attention整体推理效率的实验链路。
+> 【图文联合解读】**图文联合解读：**
+
+图15在Prompt长度=1000与4000两组下，给出**单层Attention延迟(μs)随KV Chunk Size(128/256/512/1024)** 的消融曲线，对比 **DeFT-Flatten（实线）** 与 **DeFT-Node-Chunk（虚线）** 在候选树规模 **t=32/64/128/256** 四档下的性能。
+
+核心结论：延迟随chunk增大**先降后微升**，最优chunk size集中在 **256–512**；以t=256、Prompt=4000为例，延迟从chunk=128时约1190μs降至chunk=512时约680μs；DeFT-Flatten整体略优于Node-Chunk。该结果直接呼应caption所述——chunk size是**Query IO冗余与SM线程块调度**的折中。
+
+在论文中，该消融为DeFT采用Flatten策略及推荐KV切分超参提供了实证依据，是方法选型与性能优化闭环的关键一环。
 
 ### Figure 16 (p.27) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig16.png]]
@@ -234,9 +244,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Time per output token(TPOT) of DEFT with different prompt lengths in speculative decoding. 2500 5000 7500 10000 12500 15000 17500 20000
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Figure 16）**
 
-该图展示在投机解码场景下（生成长度1000、token树大小=64），三种DEFT变体（DeFT-Node、DeFT-Node-Chunk，图中推测最高红线为DeFT-Flatten）的每输出token时间（TPOT）随prompt长度（2500–20000 tokens）变化的趋势。三条曲线均单调上升，但DeFT-Flatten增速最快（20000时TPOT最高），DeFT-Node居中，DeFT-Node-Chunk最低且增速最平缓，长prompt下优势显著拉开。原文借此论证：**chunk级KV切分策略（DeFT-Node-Chunk）在长上下文投机解码中延迟最低**，验证了Table 6关于切分粒度对注意力延迟影响的结论。该图作为方法验证的关键实验，支撑了论文整体方法链中"分块注意力优化"这一核心技术贡献，证明其在真实长prompt场景下具备实用加速价值。
+1）**核心对象与数据**：图16为双子图（token树大小 t=32 与 t=64），横轴为 prompt 长度（2500–20000 tokens），纵轴为 TPOT（ms/token），生成长度固定为 1000，对比 Radix-Attention、DEFT-Flatten、DEFT-Node、DEFT-Node-Chunk 四种方法。在 prompt=20000、t=64 时，Radix-Attention 约 37 ms/token，DEFT-Node 约 27 ms/token，而 DEFT-Node-Chunk 与 DEFT-Flatten 仅约 12–14 ms/token；随 prompt 增长，Radix-Attention 斜率最陡，DEFT-Flatten/Node-Chunk 近似线性且平稳。
+
+2）**关键技术结论**：DEFT-Flatten 与 DEFT-Node-Chunk 在长 prompt 下显著优于 Radix-Attention，验证了 KV 切分策略对长上下文推测解码的扩展性优势；DEFT-Node 因逐节点开销大，扩展性较差。
+
+3）**论文整体作用**：作为关键实验证据，支撑"DEFT 在树结构推测解码下可高效处理长上下文"的核心主张。
 
 ### Figure 17 (p.27) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig17.png]]
@@ -245,7 +259,9 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Decoding latency of DEFT with different prompt lengths in speculative decoding.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】该图展示生成长度=1000、Token Tree Size=64时，4种注意力实现的解码延迟随Prompt长度（约2000→20000 tokens）的变化。短prompt下四条曲线几乎重合（差异≈0），但随prompt延长，粉色基线斜率最陡，DeFT-Node次之，DeFT-Node-Chunk与橄榄色chunk基线增长最缓，至20000 tokens时差距已拉开数倍。论文借此论证：在推测解码的长上下文场景中，节点级KV复用叠加chunk分块的双重优化使DeFT-Node-Chunk具备最优可扩展性，是其作为论文核心高效变体的关键实验支撑。
+> 【图文联合解读】该图分两栏展示生成长度1000时、树规模分别为32与64查询下，Radix-Attention与三种DEFT变体（Flatten/Node/Node-Chunk）随prompt长度（≈1k–20k）变化的解码延迟。量化读数：prompt=20k时，Flatten仅≈9s（树32）与≈13s（树64），Node-Chunk≈10.5s与≈15s，增长最缓；Radix在树64、prompt=20k飙至≈37.5s且斜率最陡，Node也达≈28s。
+
+该实验论证：DEFT-Flatten与Node-Chunk对prompt长度呈近线性低增长，而Radix-Attention随树规模增大劣化显著，凸显树结构注意力下Flash树注意机制在长上下文推测解码中降低IO与延迟的必要性，作为论文核心实验结论之一支撑所提方法的优越性。
 
 ### Figure 18 (p.28) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig18.png]]
@@ -254,13 +270,29 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Attention latency of DEFT with different prompt lengths in speculative decoding.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图18在生成长度1000、Token Tree Size=64的推测解码设定下，对比不同注意力实现随Prompt长度（0–20000 tokens）变化的延迟曲线：红色线（朴素树注意力）斜率最陡，长prompt下延迟最高；DeFT-Node（青蓝）次之；DeFT-Node-Chunk（紫）增长最缓且接近最优基线。
+> 【图文联合解读】该图展示推测解码（Generation length=1000）下，DEFT 四种变体（Flatten、Node、Node-Chunk）与 Radix-Attention 在 prompt 长度 500–20000 tokens 范围内的 Attention 延迟（秒），分 Token Tree Size=32（左）与 64（右）两个子图。
 
-核心结论：随prompt增长，朴素树注意力开销急剧膨胀，而DeFT-Node-Chunk通过分块策略显著压缩长prompt下的注意力延迟，验证了chunk机制在大上下文推测解码中的可扩展性。
+**核心数据**：树=32、prompt=20k 时，Radix-Attention 与 DeFT-Node 同处 20–24s 高位，DeFT-Flatten/Node-Chunk 仅约 5–6s；树=64、prompt=20k 时，Radix-Attention 飙至 ~33s，DeFT-Node ~23s，而 DeFT-Flatten/Node-Chunk 仅 8–10s。
 
-该图在论文实验链路中起"长上下文效率验证"作用，作为DEFT方法论在长prompt场景下优于朴素树注意力的关键定量证据，支撑整体Tree-Structured speculative decoding的高效性论证。
+**论证结论**：Radix-Attention 与 DeFT-Node 延迟随 prompt 长度与树规模呈陡峭上扬，而 DeFT-Flatten 与 Node-Chunk 始终保持低斜率线性增长，验证 chunk 化策略在长 prompt、大草稿树场景下对 Attention 开销的有效抑制。
+
+**论文作用**：与 Table 18（A/F-LR 消融）配合，从 Attention 单一算子延迟维度量化解释 DEFT 加速来源，支撑"长上下文 + 树形推测解码"下 Flash Tree Attention 整体高效性论证。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.2) ⭐深度解读
+![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab01.png]]
+> [!quote] caption
+> Comparison of efficiency in sequence-based CoT (Wei et al., 2022) and tree-based ToT (Yao et al., 2023) decoding for a reasoning task. The task is sort- ing 128 numbers from Besta et al. (2023). The total gen- erated tokens of CoT is only 525 while 38 , 315 in ToT, resulting in inefficiency in end-t
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 1 图文联合解读：**
+
+该表量化对比"排序128个数字"任务中四种方案的 **Latency / IO-KV / IO-PA** 三项指标。序列式CoT仅生成525 token，而树式ToT生成38,315 token（约73倍），凸显树形解码的token爆炸问题。
+
+具体数据：Flash-Decoding+CoT延迟仅21s；Flash-Decoding+ToT延迟飙至429.65s、IO-KV高达59.96；Tree Attention+ToT将IO-KV降至12.40，但新增IO-PA=3.69。本文DeFT-Flatten+ToT以 **94.67s**、IO-KV=12.40、IO-PA=0，相对最优基线实现 **4.02× 加速**。
+
+**作用**：该表作为关键动机实验，量化揭示树形推理中KV cache与partial attention（QK^T、softmax）的IO瓶颈，为本文提出的Flash Tree Attention（DeFT）方法提供必要性论证与效率基准。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab03.png]]
@@ -268,13 +300,30 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Comparison of baselines and D E FT. Attention kernels of baselines are implemented to fit its memory management. Therefore, for a fair comparison with baselines, we implement D E FT-Node and D E FT-Flatten that fit both paged (Kwon et al., 2023)/unpaged memory management.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-表3横向对比4类方法在**内存管理 × 实现栈**两个维度的差异：Flash-Decoding（unpaged/Triton）、Tree Attention-Medusa（unpaged/PyTorch）、Radix Attention（paged/Triton）、DEFT（同时支持unpaged与paged/Triton）。
+**1) 表核心对象与结构**
+Table 3 对比 4 种树状注意力方法的两维属性：**内存管理方式**（paged / unpaged）与**底层实现框架**（Triton / PyTorch）。具体配置为：Flash-Decoding（unpaged + Triton）、Tree Attention-Medusa（unpaged + PyTorch）、Radix Attention（paged + Triton）、DEFT（unpaged/paged + Triton）。
 
-**关键结论：** 现有基线的注意力kernel与底层内存管理**强耦合**——前两种仅适配连续存储，Radix Attention仅适配分页存储，二者无法互换。DEFT则通过同时实现**DEFT-Node**（匹配vLLM分页方案）与**DEFT-Flatten**（匹配连续方案）两种变体，实现对两类内存管理的通用兼容。
+**2) 原文论证的关键结论**
+caption 指出基线内核均**绑定于单一内存管理**，无法跨范式对比。因此作者特地为 DEFT 实现 **DEFT-Node** 与 **DEFT-Flatten** 两种变体，使其同时适配 paged（vLLM 风格）与 unpaged 内存管理。该表证明：只有 DEFT 能与三类基线全部正面对齐，凸显其内存抽象上的**通用性与公平对比基础**。
 
-**在论文链路中的作用：** 此表是后续性能对比实验的**公平性前提**。它在量化层面统一了所有方法所处的实现栈（Triton）与内存维度，确保后续吞吐/延迟指标上的优势归因于DEFT算法本身（树结构注意力 + Flash-Tree-Attention kernel），而非底层存储差异引入的噪声。
+**3) 在论文中的作用**
+作为方法学桥接表，它位于 Figure 3（QKV 分区策略）与 Figure 10（DEFT-Node kernel 细节）之间，为后续 Wall-clock 与吞吐实验提供"配置等价性"前提，是 DEFT 宣称"通用、高效、可落地"论证链中的关键一环。
+
+### Table 4 (p.8) ⭐深度解读
+![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab04.png]]
+> [!quote] caption
+> Workloads generation . ToT-BFS stands for Tree-of-Thoughts (Yao et al., 2023) using breadth-first search. APPS (Hendrycks et al., 2021) is a competitive programming problem dataset. Medusa (Cai et al., 2024) is a speculative decoding framework. “GoT” stands for Graph-of-Thoughts (Besta et al., 2023)
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+**1) 核心对象与结构：** Table 4 为"工作负载生成"配置表，列出 4 种方法及其对应的内存与实现——Flash-Decoding（Triton/未分页）、Tree Attention-Medusa（PyTorch/未分页）、Radix Attention（Triton/分页）、DEFT（Triton/双支持未分页与分页），并定义 ToT-BFS（树形思维 BFS）、APPS（编程题集）、Medusa（投机解码框架）、GoT（图思维，用 GPT-3.5 在 ToT-BFS 内做复杂推理）四类评测负载。
+
+**2) 论证结论：** 强调 DEFT 唯一同时支持未分页与分页两种内存模式，且以 Triton 高效实现，覆盖从投机解码（Medusa 树拓扑）到链式/图式思维推理的多样树结构负载，凸显其通用性。
+
+**3) 论文作用：** 作为实验基线设定表，与 Figure 4（Medusa 32-query 树延迟分解）互补：Table 4 定义"测什么、用什么测"，Figure 4 展示"测出来多快"，共同支撑"Flash Tree Attention 全面优于 Flash-Decoding / Tree Attention / Radix Attention"的系统级加速结论。
 
 ### Table 5 (p.9) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab05.png]]
@@ -282,11 +331,11 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Comparison of D E FT-Flatten and baselines in average decoding latency (in seconds) for tree-based decoding. Here, b represents the tree width, and t denotes the token tree size (i.e., the number of tree-structured queries). The fastest method is in bold , and the second fastest is underlined . Radi
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**1) 表5核心内容**：对比 DEFT-Flatten 与三种基线（Unpaged：Flash-Decoding、Tree Attention-Medusa；Paged：Radix Attention）在 11 个树解码场景下的平均延迟（秒），覆盖三类任务——Few-shot Prompting（b=20/30/50）、Multi-Step Reasoning（Sorting/Document/Keyword/Set）、Speculative Decoding（t=32/64/128/256），并列出相对 Radix Attention 的 Attention/Decoding 加速比及上界。
+> 【图文联合解读】**图表联合解读：**
 
-**2) 关键结论**：① DEFT-Flatten 全部 11 项均最快（如 b=20: 9.98s vs 12.37s；t=256: 84.27s vs 188.66s），相对 Radix 实现 1.03×–2.23× 整体加速、1.15×–3.59× 注意力加速；② Flash-Decoding 在 t=128/256 出现 OOM，暴露其分页方案的扩展性局限；③ Speedup Upper-bound 最高 4.36×，表明注意力仍是主要瓶颈，进一步优化空间大。
+表5对比DEFT-Flatten与Flash-Decoding、Tree Attention-Medusa、Radix Attention在三类树形解码场景（共11组配置）下的平均解码延迟。DEFT-Flatten在所有配置中均最优：Few-shot Prompting（b=20/30/50）下9.98/10.99/12.48s，Multi-Step Reasoning下10.90–94.67s，Speculative Decoding（t=32–256）下42.23/46.60/56.96/84.27s，且Flash-Decoding在t=128、256时OOM。
 
-**3) 论文作用**：作为系统级延迟评测核心表，与 Table 4（DEFT-Node）共同验证 DEFT 在 Paged/Unpaged 两路径下对多种树结构解码的通用加速能力，支撑"Flash Tree Attention 全面优于既有方案"的结论。
+相对最强基线Radix Attention：注意力加速1.15×–3.59×，端到端解码加速1.03×–2.23×，且随树规模t增大而单调上升（t=256达2.23×），接近"无注意力"上界4.36×。该表以量化结果论证了DEFT-Flatten在树形解码场景下对paged KV cache的高效利用及其相对Radix Attention的显著优势，是论文核心实验证据之一。
 
 ### Table 6 (p.10) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab06.png]]
@@ -296,11 +345,11 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-该表对比 Llama3-8B(GQA) 在 A100 上三种 KV 切分策略（DEFT-Node、DEFT-Node-Chunk、DEFT-Flatten）与 Radix Attention 基线在 10 个场景（Few-shot b=20/30/50、Multi-Step Sorting/Document/Keyword、Speculative Set/t=32/64/128/256）下的平均 attention 延迟。数据显示 **DEFT-Flatten 在全部 10 项中均最快**（如 5.87/2.57/13.15 秒），Radix Attention 居次，Node-Chunk 第三，Node 最慢。
+1）**表格核心内容**：在A100上对Llama3-8B（GQA）比较三种KV切分策略——DEFT-Node、DEFT-Node-Chunk、DEFT-Flatten与基线Radix Attention，在少样本提示（b=20/30/50）、多步推理（Sorting/Document/Keyword/Set）、推测解码（t=32/64/128/256）共11种负载下的平均注意力延迟（秒）。
 
-**技术结论**：扁平化 KV 切分显著优于按节点/分块切分，证明在树状推理中将共享前缀展平为连续布局可最大化 FlashAttention 利用率，是 DEFT 核心设计选择。
+2）**关键结论**：DEFT-Flatten在几乎所有场景下均为最优（加粗），如Few-shot b=50仅5.87s（Radix为9.96s），t=256为40.56s（Radix高达145.43s，**加速约3.6×**）；DEFT-Node-Chunk次之（多场景下划线）。将树状KV展平为单一连续张量后调用Flash Attention，显著优于按节点或按chunk切分的方案，验证了"展平"是Tree Attention的最高效组织方式。
 
-**论文作用**：作为 Table 16 的补充消融，定量论证 KV 布局策略对 tree-structured attention 效率的关键影响，为方法选型提供实证依据。
+3）**链路作用**：作为Table 16的消融补充，该表在系统层面对DEFT的KV布局决策给出实证依据，是支撑"Flash Tree Attention"核心方法论的关键实验闭环。
 
 ### Table 7 (p.10) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab07.png]]
@@ -308,11 +357,7 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > [Different Prompt Lengths] Comparison of D E FT-Flatten and Radix Attention in the efficiency of multi-step reasoning task sorting . The original prompt length is approx- imately 1K tokens, and we pad it to lengths of 5K, 8K, or 10K tokens.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**核心数据**：表7对比DEFT-Flatten与Radix Attention在多步推理排序任务中的加速比，prompt长度L=1K/5K/8K/10K。Attention加速比依次为1.39×、1.71×、1.97×、1.84×（L=8K达峰，10K略回落）；Decoding加速比依次为1.09×、1.37×、1.53×、1.67×，随长度单调递增。
-
-**关键结论**：DEFT-Flatten在四种长度下均快于Radix Attention；Attention阶段优势随prompt变长先升后微降，Decoding阶段优势则持续扩大，说明长上下文场景下DEFT-Flatten的可扩展性更优，且其优势在端到端解码阶段更稳定。
-
-**论文作用**：与Figure 7（多步推理树形结构示意）、Table 8（端到端解码延迟）串联成完整验证链——从结构分析到多步推理量化对比，再到整体延迟优势，系统论证Flash Tree Attention+Flatten方法在树形结构LLM推理中的高效性。
+> 【图文联合解读】表7量化对比DEFT-Flatten与Radix Attention在Prompt长度L=1k/5k/8k/10k下的加速比：Attention端为1.39×/1.71×/1.97×/1.84×，Decoding端为1.09×/1.37×/1.53×/1.67×。结论：随prompt变长，DEFT-Flatten相对Radix的加速优势持续扩大，Decoding从1.09×增至1.67×，表明其对padding引入的冗余token及树结构共享KV缓存的利用更高效，对长上下文鲁棒。作用：为Figure 7多步推理case study补充量化数据，支撑论文关于DEFT-Flatten在长prompt树形解码场景下优于Radix Attention这一实验链路核心结论。
 
 ### Table 8 (p.10) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab08.png]]
@@ -320,11 +365,7 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > [Different Model Sizes] Comparison of decoding latency speedup and Attention/FFN latency ratio (in short as A/F-LR ) between D E FT and Radix Attention for Codellama-34B and Codellama-7B models. Radix Attention is the best baseline in decoding latency. b represents the tree width, and t denotes the 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表8内容**：展示DEFT与Radix Attention在Codellama-7B/34B三种场景（Few-shot b=30、Multi-step Reasoning排序约1k、Speculative Decoding t=64）的解码加速比与A/F-LR。7B加速比为1.34×/1.09×/1.85×，34B为1.23×/1.03×/1.78×；DEFT A/F-LR均≤0.89，Radix最高达2.12。
-
-**关键结论**：DEFT在不同模型规模下均稳定超越最强基线Radix，Speculative场景加速最显著（1.78-1.85×）；DEFT A/F-LR显著低于Radix，表明Attention不再是延迟瓶颈，开销由FFN主导，印证Flash Tree Attention确实消除了Attention侧IO开销。
-
-**论文作用**：作为方法**可扩展性（scalability）验证**，证明DEFT在不同参数量级模型与多类树形任务（少样本、多步推理、投机解码）中普遍有效，强化通用性主张并排除"加速仅适用于小模型/特定任务"的质疑。
+> 【图文联合解读】表8以Radix为强基线，比较7B/34B CodeLlama在少样本（b=30）、多步排序及推测解码（t=64）中的表现。DEFT解码加速分别为1.34/1.23、1.09/1.03、1.85/1.78×；A/F-LR为0.68/0.45、0.89/0.42、0.69/0.49（均7B/34B），显著低于Radix。说明DEFT-Flatten降低注意力瓶颈，且34B仍受益；结合Fig.7结构与Fig.8内核I/O分析，构成本文“结构—实现—端到端”验证链。
 
 ### Table 9 (p.18) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab09.png]]
@@ -332,31 +373,27 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Comparison among D E FT and concurrent works in single-context large-batch sampling scenarios, including Chunk-Attention (Ye et al., 2024a), Hygragen (Juravsky et al., 2024) and Bifurcated-Attention (Athi- waratkun et al., 2024). RelayAttention (Zhu et al., 2024) and Cascade-inference (Ye et al., 20
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】图像仅呈现Table 9的caption文本（具体表格数据未在裁剪图中显示），仅依原文解读：
 
-⚠️ 图中仅显示 Table 9 的标题说明文字与上方公式片段，**未呈现实际数据表格主体**（行列、具体数值不可见），以下基于标题与正文语境解读：
+1）**核心对象**：比较DEFT与同期方法（Chunk-Attention、Hygragen、Bifurcated-Attention；RelayAttention、Cascade-inference与Hygragen类似）在单上下文大批量采样场景下的性能，列中以"⋆"标记表示树分割后负载均衡程度，"⋆"越多越均衡。
 
-**1) 核心对象与结构**：标题明确该表横向对比 DEFT 与 Chunk-Attention、Hygragen、Bifurcated-Attention（及与之类似的 RelayAttention、Cascade-inference）共五类方法，纵向考察其在**单上下文大批量采样**场景下的性能指标；★标注量化为"树分裂后负载均衡度"，★越多越均衡。
+2）**关键结论**：原文借此论证DEFT在该场景下加速效果对树拓扑不敏感——负载越均衡加速收益越稳定，并凸显其相对同期工作的优势。
 
-**2) 原文论证结论**：① DEFT 在共享前缀树解码大批量采样中相对上述并行方法具加速优势；② ★越多（拓扑越均衡）效果仍稳健，证其加速对树拓扑**不敏感**——这是相对于拓扑耦合方法的差异化卖点。
-
-**3) 在论文链路中的作用**：与 Figure 9 的"两阶段融合内核"设计互为表里——前者解释 *为何快*（Flash 融合 + 拓扑感知分组降 IO），本表则实证 *在大批量 speculative decoding 实际部署场景下多快*，构成方法可扩展性与通用性的关键验证节点。
+3）**论文作用**：作为实验链路中"单上下文大批量采样"分支的横向对比基准，与树结构场景（Table 5/6）形成互补，共同支撑DEFT通用性的实验论证。
 
 ### Table 10 (p.18) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab10.png]]
 > [!quote] caption
-> Technique list of D E FT. What we propose is in red . The details of the first four techniques are in Section 3.3, while the details of the following techniques are discussed in this chapter.
+> Technique list of DeFT. What we propose is in red. The details of the first four techniques are in Section 3.3, while the details of the following techniques are discussed in this chapter.
 
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-1）**图像内容**：图片仅显示 Table 10 的 caption，表格本体（技巧列表）未呈现。caption 明确：表格列出 DEFT 采用的全部注意力算法设计技巧，作者新提的以**红色**高亮；前 4 项技巧的细节在 Section 3.3，后续技巧的细节在本章（A.4 附录）展开。
+该表为DeFT技术清单（Technique / Goal 两列6行），列出6项优化技术：(1) KV-Guided Grouping（提升GPU利用率、最小化HBM↔shared memory的KV IO）；(2) Flattened Tree KV Splitting（平衡注意力计算负载）；(3) Bit Causal Mask[Miao 2023]（低IO记录树因果）；(4) Kernel Fusion[Dao 2022/2023]（减少中间结果IO）；(5) Tiling[Dao 2022/2023]（适配shared memory容量）；(6) Tree-topology Aware Global Reduction（保证整树注意力正确性）。其中(1)(2)(6)无引用标注，为本文所提（原文标红）；(3)(4)(5)承自FlashAttention系列工作。
 
-2）**原文论证的关键结论**：作者通过该表系统罗列 DEFT 技术栈，明确区分"既有方法"与"本文贡献"，将树注意力结构、FlashAttention 融合（前 4 项，正文 §3.3）与两级 kernel、Global Reduction、LSE 数值稳定合并等实现层面技巧（附录 A.4）显式分层，体现"方法层 + 实现层"的完整设计。
+**论证结论**：三类目标——内存IO优化、计算平衡、树结构正确性——共同构成DEFT内核的优化栈。
 
-3）**论文整体链路中的作用**：Table 10 充当"技巧总览/索引"，衔接正文方法描述与附录实现讨论，为读者把握 DEFT 完整工程栈提供路线图，支撑其"高效树结构 LLM 推理"的核心主张。
-
-（注：图像仅含 caption，表格具体行项与红色标注内容无法从图直接读取，上述解读基于 caption 语义与正文/图 10 上下文推断。）
+**链路作用**：与Figure 10互证，作为实现章节总览：前四项支撑Section 3.3的FlashTreeAttention基础设计，后两项支撑DEFT-Node/Flatten内核在树状投机解码中的正确高效落地。
 
 ### Table 11 (p.21) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab11.png]]
@@ -364,13 +401,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Notations .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 11（Notations）图文联合解读**
+> 【图文联合解读】**Table 11 解读：**
 
-**1) 核心内容**：该表列出 DeFT 论文中树状解码注意力机制所用的 7 个关键符号及量化定义。结构上分两列——符号列（l_n、N_i、N_tree、#node、n_i、d_head、s_c）与说明列。其中 l_n 表示解码树叶节点/查询数，N_i 与 N_tree 分别表示单路径与整棵树的 token 总长度，#node 为节点总数，n_i 为单节点 token 长，d_head 为 LLM 注意力头维度（Llama 中固定为 128），s_c = √d_head 为缩放点积注意力因子。
+**1）核心内容：** 该表为DEFT论文的符号定义表，列出7个关键变量：lₙ（解码树叶节点数/查询数）、Nᵢ（根到叶节点i的token长度）、N_tree（整树token总长）、#node（节点总数）、nᵢ（节点i的token长度）、d_head（注意力头维度，Llama中为128）、s_c（缩放因子√d_head）。
 
-**2) 论证的技术结论**：该符号表为前文 IO 成本分析提供量化基础。结合图 11，论文指出当 l_n 足够大（如 Llama 128 维头、l_n=29）时，部分结果（QK^T、QK⊤_sc、中间矩阵 M 等）的 IO 代价将趋近甚至超过 KV cache 本身，从而论证树状注意力中 partial result 访存不可忽略，必须被纳入 flash-style 分块 IO 优化范畴。
+**2）技术论证：** 配合Figure 11，当lₙ足够大（如Llama中lₙ=29）时，部分结果的IO开销可与KV cache相比拟，符号统一为后文量化分析Flash Tree Attention的内存/IO代价提供基础。
 
-**3) 在论文中的作用**：此表是全文复杂度推导、IO 分析及实验对比的"语法基础"，统一了后续公式、FLOPS/IO 估算与基准测试中的变量含义，使树结构 LLM 解码的效率论证严格且可复现。
+**3）论文作用：** 作为公式推导与IO成本分析（证明DEFT在大规模lₙ时仍优于KV cache重读）的统一记号锚点，是方法复杂度论证的符号基石。
 
 ### Table 12 (p.22) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab12.png]]
@@ -378,15 +415,7 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > IO complexity breakdown for various methods. O (1) denotes the IO cost for a single data in the tensor across all layers and heads, which is equivalent to # heads ∗ # layer ∗ dtype _ size . The best among all methods in the table is in red , while the (potential) worst is in blue . Query IO is omitt
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 12 图文联合解读：**
-
-该表横向对比7种方法（Naive、Flash-Decoding、Radix、Tree Attention-M/S、DEFT-Node/-Node-Chunk）在KV cache、QK⊤、QK⊤/s_c、Mask、Softmax五类张量上的IO复杂度，关键发现：
-
-1) **核心数据**：DEFT-Node 与 DEFT-Node-Chunk 的 KV IO 同为 O(2d_head·N_tree)（红色最优），且 attention 计算项（QK⊤、Mask、Softmax）全部清零；而 Tree Attention-M 仍有 O(l_n·N_tree) 的 mask/softmax 开销，Naive/Flash/Radix 的 KV IO 为 O(2d_head·ΣN_i)（蓝色潜在最劣），Tree Attention-S 的 KV 更膨胀为 O(2d_head·N_tree·l_n)。
-
-2) **论证结论**：DEFT 仅付出与 Flash-Decoding 同量级的 KV IO，即可完全消除树状解码的 attention 计算 IO，显著优于 Tree Attention-M 与 SpecInfer。
-
-3) **论文作用**：为 DEFT "KV 最小化 + 计算归零" 的核心效率优势提供理论复杂度依据，支撑其实验端对 Medusa/SpecInfer 的速度领先。
+> 【图文联合解读】该表对比7种方法（Naive/Flash-Decoding/Radix/Tree Attention-M/S/DEFT-Node/Chunk）在KV cache、QK⊤、Mask、Softmax等6个环节的IO复杂度。DEFT-Node与DEFT-Node-Chunk仅需加载O(2d_head·Ntree) KV cache，其余环节均为0；Tree Attention-M/S因逐节点mask与softmax仍需O(l_n·Ntree)开销，Naive更高达O(2ΣN_i)。红色最优、蓝色最差。该表以形式化复杂度证明DEFT通过节点合并与chunk划分，将树形解码KV IO降至Flash级下界，是其Flash-Tree-Attention设计实现理论最优IO的核心证据。
 
 ### Table 13 (p.23) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab13.png]]
@@ -394,13 +423,11 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Details of generated workloads . For multi-step reasoning, we include these 4 tasks from Besta et al. (2023): (1) Sorting 128 numbers ( sorting in short); (2) Document merging ( document in short); (3) Keyword counting ( keyword in short); (4) Set intersection ( set in short). d , and w means depth 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 13 图文联合解读**
+> 【图文联合解读】**Table 13 解读**
 
-**1) 核心对象与数据：** 该表罗列了DEFT实验所用的两类生成负载配置。①多步推理：引用Besta et al. (2023)的4个任务——sorting(128个数)、document(文档合并)、keyword(关键词计数)、set(集合交集)，每任务标注树深度*d*与宽度*w*（如document *d*=3、*w*=10；sorting *d*=10、*w*=10）。②推测解码：基于Medusa (Cai et al., 2024)拓扑，记录每步接受的token树规模*t*及长度。
+该表列出 DEFT 评估所用的三类工作负载及其树形/规模参数：①多步推理 4 任务——sorting（d=10）、document（d=3）、keyword（d=5）、set（d=8），统一 w=10，树源自 Besta 等(2023) 的 ToT-BFS；②少样本提示，d=1，w∈{10,20,30}；③投机解码，t∈{32,64,128,256}，树取自 Medusa。
 
-**2) 关键技术结论：** 表格说明DEFT的评测负载并非合成，而是从真实推理/解码交互中重建（捕获树形、thought长度、最优thought及其得分），保证负载的真实性与多样性（深vs浅、窄vs宽），用以严谨验证Flash Tree Attention在thought生成阶段及token验证阶段的加速效果。
-
-**3) 在论文中的作用：** 作为实验链路的"输入基准"，为Figure 13中DEFT-Node与DEFT-Flatten策略对比、以及全文加速比实验提供统一、可复现的tree-structured负载标准。
+表中明确每类负载的解码树来源与记录内容（prompt、树形、thought size、分支/剪枝记录等），为实验提供可复现的统一基准。其作用在于：让 DEFT 在三种典型树形解码场景下系统测试 Flash Tree Attention 的效率与正确性，从而支撑"DEFT 通用且对不同树结构均显著加速"的核心结论。
 
 ### Table 14 (p.24) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab14.png]]
@@ -408,11 +435,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > [GPU Utilization Microbenchmark] Latency of a single layer of Attention (in µ s), SM Compute Throughput Ratio, Memory Throughput Ratio, and Low Utilization Ratio for D E FT on an NVIDIA A100 (80GB) using the LLama3-8B model (GQA). The workload is speculative decoding with 64 queries and a prompt wit
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**1) 核心对象与数据：** A100/80GB + LLama3-8B(GQA) + 64 queries/4k prompt 投机解码场景下，对比 DEFT-Node 与 DEFT-Flatten 的 Attention 单层延迟与三项 GPU 利用率。DEFT-Node：961.38μs / Compute 7.60% / Memory 17.39% / 低利用率 82.35%；DEFT-Flatten：226.82μs（↓4.2×）/ 21.19%（↑2.8×）/ 51.91%（↑3.0×）/ 0%。
+> 【图文联合解读】**图文联合解读：**
 
-**2) 关键结论：** Flatten 通过摊平树结构消除 per-node kernel 调度碎片，使 SM 计算与显存带宽利用率提升数倍，并将"计算空泡"占比从 82.35% 压至 0%，证明 flatten 变换是 Flash-Tree-Attention 高效利用 GPU 的核心机制。
+**① 核心数据**：表14在A100/LLama3-8B（GQA, 64 query, 4k prompt）下对比DeFT-Node与DeFT-Flatten——单层Attention延迟961.38μs → 226.82μs（约4.2×加速）；SM Compute Throughput 7.60% → 21.19%；Memory Throughput 17.39% → 51.91%；Low Utilization Time Ratio 82.35% → 0%。
 
-**3) 论文作用：** 与端到端延迟图互补，本表以微基准量化"DeFT 为何更快"，提供硬件级证据，支撑论文"tree-structured attention 可被高效实现"的核心论断。
+**② 技术结论**：将树结构flatten为稠密注意力大幅提升SM计算与显存带宽利用率，彻底消除Node版因kernel间同步导致的82.35%长时低利用率瓶颈。
+
+**③ 论文作用**：作为系统级微基准，从硬件层面量化解释为何DeFT-Flatten端到端性能优于Node版本，为论文"flatten优于node"的核心技术主张提供底层证据。
 
 ### Table 15 (p.24) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab15.png]]
@@ -420,13 +449,9 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Inference accuracy of D E FT in attention score and perplexity (PPL) . PPL is calculated after 400 iterations of decoding. Vanilla Attention is the implementation from Huggingface Transformers.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 15 联合解读**
+> 【图文联合解读】**Table 15 图文联合解读**
 
-**① 表格核心内容**：对比 Vanilla Attention（HuggingFace 基线）与 Radix Attention、DEFT-Node-Chunk、DEFT-Flatten 三种方案在 MHA 和 GQA 两种注意力变体下的数值精度。三类指标：相对注意力误差（Radix ≈0.54%，DEFT 两方案 ≈0.40%）、PPL（MHA 均为 1.000，GQA 均为 1.002）、相对 PPL 误差（均 ≤4×10⁻⁶）。PPL 在 400 轮解码后测量。
-
-**② 关键结论**：所有近似方案的 PPL 与基线完全一致（差异仅 10⁻⁶ 量级），注意力分数误差亦低于 0.55%，证明 DEFT 在树状结构复用 KV 的优化中**不损失推理精度**；且 DEFT 的节点分块/展平策略误差略优于 Radix Attention。
-
-**③ 在论文中的作用**：作为"正确性护城河"实验，与 Figure 15（KV 分块尺寸的性能消融）配合——前者证明精度无损，后者展示速度增益，共同支撑"DEFT 同时实现高效且精确的树状 LLM 推理"的核心主张。
+该表对比四种注意力实现（Vanilla、Radix、DEFT-Node-Chunk、DEFT-Flatten）在 MHA 与 GQA 下的精度。量化数据显示：Radix 的相对注意力误差为 0.545%/0.540%，而 DEFT-Node-Chunk 与 DEFT-Flatten 分别降至 0.403%/0.403% 与 0.407%/0.404%，误差减半；400 步解码后 PPL 均为 1.000/1.002，相对 PPL 误差 ≤9×10⁻⁶。原文借此论证 DEFT 在保留 tree 结构并行优势的同时，注意力精度优于 Radix、生成质量与 Vanilla 一致。在论文链路中，该表属"精度验证"环节，为后续 speedup 章节提供"无损"前提，支撑 DEFT 高效无损推理的核心结论。
 
 ### Table 16 (p.25) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab16.png]]
@@ -434,13 +459,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Average attention latency (in seconds) for tree-based decoding and its impact on decoding latency. Here, b represents the tree width, and t denotes the token tree size (i.e., the number of tree-structured queries). Attention Speedup over the best attention refers to the speedup of D E FT-Flatten com
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 16 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与数据**：表格对比四种注意力方法在 A100 80GB 上的平均注意力耗时，覆盖三类树状解码场景——少样本提示（b=20/30/50）、多步推理（Sorting/Document/Keyword/Set）、推测解码（t=32/64/128/256）。Flash-Decoding 延迟最高（如 t=32 时 340.09 s，t=128/256 OOM）；Tree Attention-Medusa 在 unpaged 中最快（3.93–68.28 s）；Radix Attention 作为 paged 基线（5.99–145.43 s）；DEFT-Flatten 在 paged 中最低（3.47–40.56 s）。底部给出三级加速比：相对最优 attention 1.02×–1.70×、相对 Radix Attention 1.15×–3.59×、相对 Radix 解码延迟 1.03×–2.23×。
+1) **核心数据**：表16对比三种树结构解码场景（Few-shot Prompting b=20/30/50、Multi-Step Reasoning 四类任务、Speculative Decoding t=32/64/128/256）下，Flash-Decoding、Tree Attention-Medusa、Radix Attention、DEFT-Flatten 的平均 attention 延迟。例如 Speculative t=128 下，DEFT-Flatten 仅 24.46s，而 Radix 76.10s、Tree-Attention 41.10s；Attention 加速比在 t=256 时达 3.59×（vs Radix）。
 
-2) **关键结论**：DEFT-Flatten 在所有场景下均优于 Radix Attention 和 Tree Attention-Medusa，且在推测解码长树（t=256）下 attention 加速达 3.59×、解码加速 2.23×，证明其在 GQA 模型上的注意力效率与端到端延迟两方面均显著领先。
+2) **关键结论**：Tree Attention-Medusa 虽是 attention 最优基线，但 Radix 在解码延迟上仍占优；DEFT-Flatten 同时优于两者——attention 较最优基线加速 1.02–1.70×、较 Radix 加速 1.15–3.59×，解码端加速 1.03–2.23×，且随 token 树规模 t 增大加速越显著。
 
-3) **论文作用**：该表是 DEFT 方法的核心实证支柱，配合 Table 6（KV 分块策略对比）和 Figure 16（TPOT 长 prompt 验证），系统论证 Flash Tree Attention 在 tree-structured 推测解码全流程中的有效性与可扩展性。
+3) **论文作用**：与 Table 6（KV 切分策略）互为补充，从系统层面验证 DEFT-Flatten 在 Paged 内存下的端到端优势，构成论文方法有效性的核心实验证据。
 
 ### Table 17 (p.25) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab17.png]]
@@ -448,7 +473,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Average end-to-end IO (TB) during decoding. Data format is Left/Right: (Left) KV Cache IO; (Right) partial results IO, including QK T , QK ⊤ /s c , Mask M , M + QK ⊤ /s c and Softmax . b means tree width. t denotes the token tree size (i.e., the number of tree-structured queries). ⋆ means out of mem
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表对比三类场景（Few-shot、Multi-Step、Speculative）下各attention方法的解码端到端IO（TB），格式为KV Cache IO / 部分结果IO。DEFT-Flatten在所有配置下IO最低：例如t=256推测解码仅40.56TB，而Radix为145.43、Flash-Decoding OOM；Few-shot b=50时5.87 vs 9.96 / 110.09。相对Radix取得1.73–3.59× attention加速与1.10–2.23× decoding加速。作为核心实验数据，该表定量印证DEFT通过平铺访存显著降低解码IO开销，支撑其端到端效率优势。
+> 【图文联合解读】**图文联合解读：**
+
+1）该表量化展示三类树结构解码场景（Few-shot b=20/30/50、Multi-Step 排序/文档/关键词/集合、Speculative t=32/64/128/256）下四种方法的端到端解码IO（TB），左列KV Cache IO、右列QK^T等partial results IO。例如Flash-Decoding在t=128下KV IO高达340.09TB，t=128/256超A100 80GB(⋆)；DEFT-Flatten降至13.15TB与40.56TB。
+
+2）原文用以论证DEFT-Flatten通过扁平化存储显著削减IO开销，相对最优attention获1.02×–1.70×加速、相对Radix Attention获1.15×–3.59× attention加速及1.03×–2.23×端到端加速。
+
+3）该表与Figure 17延迟曲线互补，从IO维度实证DEFT在三类树结构推理场景下的普适有效，构成方法验证的关键实验证据。
 
 ### Table 18 (p.28) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab18.png]]
@@ -456,7 +487,11 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > [Ablation Study of Model Size and Prompt Length] Comparison of decoding speedup and Attention/FFN latency ratio ( A/F-LR ) between D E FT and Radix Attention for Codellama-34B and Codellama-7B across varying prompt lengths in the sorting reasoning task. Radix Attention is the best baseline in decodi
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 18 对比 Codellama-7B/34B、prompt 长度 1k/5k/8k 下 DEFT 与 Radix Attention 的加速比与 A/F-LR：DEFT 加速比 7B 由 1.09× 升至 1.53×、34B 由 1.03× 升至 1.28×；Radix A/F-LR 在 7B 由 1.12 升至 2.50、34B 由 0.48 升至 1.16，而 DEFT-Flatten 仅升至 1.25 与 0.67。原文论证两点：①prompt 越长 Attention 越成瓶颈，DEFT 树结构平铺的加速收益越显著；②模型越大 FFN 越主导时，DEFT 仍能维持 A/F-LR<1。作为消融实验，该表验证 DEFT 在不同模型规模与序列长度下均优于最佳基线 Radix，支撑全文"树形推测解码高效且鲁棒"的核心结论。
+> 【图文联合解读】该表展示DEFT与Radix Attention在Codellama-7B/34B、1k/5k/8k prompt下的解码加速比与A/F-LR（Attention/FFN延迟比）。量化数据：7B加速1.09×→1.37×→1.53×，34B为1.03×→1.28×；Radix的A/F-LR在7B高达2.50、34B为0.48–1.16，DEFT-Flatten则降至0.42–1.25。
+
+原文论证：①prompt越长、模型越小，DEFT加速越显著，因注意力开销占比高、Flash Tree Attention优化空间大；②34B时A/F-LR<1，FFN主导，注意力优化边际收益递减；③DEFT-Flatten系统性压低A/F-LR，证明其消除树结构注意力冗余的有效性。
+
+作用：作为消融与扩展性实验，回答"规模与长度是否影响优势"的关键疑问，巩固DEFT方法在不同部署场景下的通用性结论。
 
 ### Table 19 (p.28) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab19.png]]
@@ -464,11 +499,13 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > [Different GPUs] Speedup of D E FT in average attention latency (second) with NVIDIA RTX 4090 (24GB) for LLama3-8B model(GQA). Radix Attention is the best baseline in decoding latency.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 19 图文联合解读：**
+> 【图文联合解读】**Table 19 图文联合解读**
 
-该表展示在 RTX 4090 上对 7B/34B 两类模型、三种 prompt 长度（1k/5k/8k）下的三项量化指标：①**DEFT 解码加速比**为 1.03×–1.53×，随 prompt 延长单调上升；②**Radix Attention 的 A/F-LR** 在 7B 上高达 1.12/1.89/2.50（>1），意味着其注意力算术量超过 Flash 内存加载，存在冗余计算；③**DEFT-Flatten 的 A/F-LR** 均显著 <1（7B：0.89/1.09/1.25；34B：0.42/0.57/0.67），表明 DEFT 通过公共前缀 token 复用将注意力计算量压缩到 Flash 加载之下，逼近理论下界。
+**1) 核心数据**：表格以 NVIDIA RTX 4090 为平台，对比 DeFT 与最佳基线 Radix Attention 在 Llama3-8B（GQA）模型上的解码性能。Decoding latency Speedup 方面，7B 模型随 prompt 长度从 1k→5k→8k 分别达 1.09×、1.37×、1.53×；34B 模型为 1.03×、1.18×、1.28×。A/F-LR（显存加载率）方面，DeFT-Flatten 全面低于 Radix Attention（7B：0.89/1.09/1.25 vs 1.12/1.89/2.50；34B：0.42/0.57/0.67 vs 0.48/0.86/1.16）。
 
-论文借此论证：**DEFT 在消费级 GPU 上仍稳定优于最强基线 Radix Attention**，且优势随 prompt 长度放大；同时 A/F-LR 指标为"为何 DEFT 快"提供了算术/内存层面的因果解释。该表构成实验链路的"跨硬件泛化"环节，证明方法不依赖数据中心级 GPU 即可生效。
+**2) 关键结论**：DeFT 在不同 prompt 长度与模型规模下均实现稳定的解码加速，且 prompt 越长加速比越高；更低的 A/F-LR 表明其树结构访存更高效，验证了 Flash Tree Attention 的有效性。
+
+**3) 论文作用**：该表属"不同 GPU"硬件泛化性实验，与 A100、H100 结果互补，证明 DeFT 在消费级 GPU 上同样具备实用加速优势，强化全文跨平台鲁棒性论证。
 
 ### Table 20 (p.28) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab20.png]]
@@ -476,13 +513,11 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > [Different Model Architectures(GQA)] Speedup of D E FT in average attention latency (second) with NVIDIA A100(80GB) for Codellama-34B model(GQA). Radix Attention is the best baseline in decoding latency.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 20 图文联合解读**
 
-表20聚焦Codellama-34B（GQA架构）在A100上的Paged Attention延迟，对比Radix Attention、DeFT-Node-Chunk与DeFT-Flatten在三类树结构任务下的表现：Few-shot Prompting(b=30)为4.26/3.07/2.95秒，Multi-Step Reasoning为26.36/24.61/23.86秒，Speculative Decoding(t=64)为33.63/15.39/14.04秒。DeFT-Flatten相对最强基线Radix Attention取得1.44×、1.10×、2.40×加速，推测解码场景收益最显著。
+该表在 NVIDIA A100(80GB) 上、采用 Paged KV 内存，针对 **Codellama-34B（GQA 架构）** 测量三种树状解码场景下 Radix Attention 基线与 DEFT 两种变体（Node-Chunk、Flatten）的平均注意力延迟（秒）。关键数据：Few-shot Prompting(b=30) 4.26→3.07→2.95；Multi-Step Reasoning-Sorting 26.36→24.61→23.86；Speculative Decoding(t=64) 33.63→15.39→14.04；相对最佳基线的加速比为 **1.44×、1.10×、2.40×**。
 
-**论证结论：** DeFT-Flatten在GQA架构下仍稳定优于现有最优解码基线。
-
-**论文作用：** 与Table 21（MHA）构成"不同模型架构"消融实验，共同证明DeFT-Flatten对MHA与GQA异构注意力均具通用加速能力，增强方法的架构可推广性论证。
+原文借此论证：在 GQA 这类非 MHA 架构上，**DEFT-Flatten 同样显著优于 Radix Attention**，尤其在 Speculative Decoding 场景下加速达 2.4×，证明方法的架构无关性。该表与 Table 21 共同构成"不同模型架构（MHA / GQA）"消融实验，强化 DEFT 通用高效的结论，是论文实验链路中支撑泛化性的关键证据。
 
 ### Table 21 (p.29) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab21.png]]
@@ -490,7 +525,9 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > [Different Model Architectures(MHA)] Speedup of D E FT in average attention latency (second) with NVIDIA A100(80GB) for Codellama-7B model(MHA). Radix Attention is the best baseline in decoding latency.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表量化Codellama-7B（MHA）在A100上三类树结构推理场景的Paged注意力延迟（秒）：Radix Attention为12.39/53.96/96.55；DEFT-Node-Chunk为10.12/54.20/48.96；DEFT-Flatten最优为8.24/43.91/36.48，对应加速比1.50×/1.23×/2.65×。结论：DEFT-Flatten在所有场景均超越最强基线Radix Attention，Speculative Decoding收益最显著（2.65×），证明Flash Tree Attention对树结构解码的通用加速能力。该表隶属"不同模型架构"实验组，表明DEFT不仅适用于GQA模型，在MHA上同样有效，支撑其跨架构通用性结论。
+> 【图文联合解读】**图文联合解读：**
+
+该表在 Codellama-7B（MHA 架构，A100）上对比 Paged 内存下三种注意力方法在三种场景的平均注意力延迟：Radix Attention（12.39/53.96/96.55s）、DEFT-Node-Chunk（10.12/54.20/48.96s）、DEFT-Flatten（8.24/43.91/36.48s）。关键结论：DEFT-Flatten 全面超越最强基线 Radix Attention，在 Few-shot Prompting、Multi-Step Reasoning-Sorting、Speculative Decoding 上分别取得 1.50×、1.23×、2.65× 加速，尤其推测解码场景收益最大。该表证明 DEFT 在 MHA 模型上同样具有普适加速能力，补全了实验链中不同架构、不同解码范式的验证维度。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

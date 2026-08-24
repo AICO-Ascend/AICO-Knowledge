@@ -30,14 +30,13 @@ tags: [speculative, long-context]
 > The SoTA SD method, EAGLE, has a training context length of 2048, which is significantly shorter than the context lengths of modern LLMs. 2023), and their ability to handle extensive con- texts is becoming crucial for emerging applications such as LLM agents and long reasoning tasks (Tan et al., 2025; Guo et al., 2025), which now oper- ate over context windows extending to millions of tokens (Team
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**1) 核心对象与数据**
-对数刻度柱状图（y 轴 2k→10M），对比 7 个前沿 LLM 的上下文窗口：DeepSeek-V3、Qwen3-235B-A22B 约 128k；Claude 3.7 Sonnet 约 200k；Grok 3、GPT-4.1、Gemini 2.5 Pro 约 1M；Llama 4 Scout 约 10M（最高）。红色虚线标 2k，为 EAGLE 训练上下文长度。
+> 【图文联合解读】**图1联合解读（≤220字）**
 
-**2) 关键结论**
-现代 LLM 实际上下文窗口为 EAGLE 训练长度的 **64×~5000×**，EAGLE 根本无法覆盖真实长上下文场景，直接迁移将失效。
+该图以对数纵轴条形图对比7个现代LLM的上下文窗口：Llama 4 Scout约10M（最高），Grok 3、GPT-4.1、Gemini 2.5 Pro约1M，Claude 3.7 Sonnet约200k，DeepSeek-V3与Qwen3-235B-A22B约128k；底部红色虚线标注于2k处，对应SoTA推测解码方法EAGLE的训练上下文长度2048。
 
-**3) 论文作用**
-作为核心动机图，揭示 SOTA 推测解码方法在长上下文下的根本局限，为 LongSpec（长上下文无损推测解码）的研究必要性提供直观量化依据。
+**原文论证结论**：EAGLE训练上下文（2k）相比现代LLM（128k–10M）存在**两个数量级到四个数量级**的巨大差距，传统SD方法无法直接迁移到长上下文场景。
+
+**论文作用**：作为开篇**动机图**，直接引出LongSpec的核心必要性——必须为超长上下文重新设计草稿生成与验证机制，为后续方法设计与Table 1/Figure 3的实验评测铺垫问题背景。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig02.png]]
@@ -66,11 +65,7 @@ tags: [speculative, long-context]
 > Training loss curves on long-context data.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-图中展示长上下文训练过程中两条Loss曲线（横轴Steps 0–1200）：红色为启用了Anchor-Offset Indices的预训练模型，初始Loss约4.2并快速收敛至~3.5；蓝色为未启用版本，初始Loss高达~6.3，需经约1200步才降至同等水平。红色箭头标注"3.93×"，定量说明无Anchor-Offset需多花近4倍训练步数才能追上。
-
-该图作为训练阶段的实证依据，证明Anchor-Offset位置编码策略在长上下文建模中具备显著更优的起点Loss与收敛效率，为后续投机解码中Draft模型对超长位置信息的准确预测提供了关键的模型质量前提，从而支撑Table 4中更高的平均接受长度τ与解码加速结论。
+> 【图文联合解读】该图上半为表格：Multi-News 与 RepoBench-P 上，无 Anchor-Offset 时 τ=3.20/3.26、Tokens/s≈85；引入后 τ 升至 3.36/3.39、Tokens/s 升至 91+。下半为 0–1200 步训练损失曲线，Anchor-Offset（红）初损约 4.2、终损约 3.5；无 Anchor-Offset（蓝）初损约 6.4，原文用红色箭头标注其达同等损失需多耗 3.93× 步数。结论：Anchor-Offset 索引在长上下文上同时降低训练初/终损失并大幅加速收敛，同时提升推理接受长度与吞吐。该图衔接训练消融与推理评测，闭环支撑 LongSpec "训练-推理协同" 的长上下文推测解码方案。
 
 ### Figure 5 (p.8) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig05.png]]
@@ -79,17 +74,9 @@ tags: [speculative, long-context]
 > Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latency reduction is observed in the target model’s at- tention layer (the yellow part) using our approach.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**核心对象与量化数据**
+> 【图文联合解读】**图5图文联合解读**
 
-Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对比 **EAGLE（~78 ms）** 与 **Hybrid Tree Attention（~40 ms）**，分四段：draft model forward、target model attention、target model FFN、verification。EAGLE 中 target attention 约 50 ms（占绝对主体）；Hybrid 将其压缩至 ~12 ms（约 4× 加速），draft、FFN、verification 三段基本不变，总耗时近乎减半。
-
-**关键技术结论**
-
-该图量化佐证 caption 论述：Hybrid Tree Attention 的收益**集中体现在目标模型注意力层**，直接缓解长上下文验证阶段的注意力计算瓶颈，验证了作者"目标模型 attention 层显著降低"的论断。
-
-**在论文整体链路中的作用**
-
-作为 LongSpec 核心效率实证证据，支撑其"长上下文无损 + 高效"的设计主张；与吞吐、接受率等实验数据相互呼应，证明优化并非以牺牲无损性为代价。
+图5以水平堆叠条形图分解单次投机解码循环延迟，对比EAGLE（≈76 ms）与Hybrid（≈37 ms），分四段：draft forward（红）、target attention（黄）、target FFN（绿）、verification（蓝）。EAGLE中target attention段约51 ms，占绝对主导；Hybrid将其压缩至约11 ms，约4–5×加速；其余三段近似不变，总延迟近乎减半。结论：Hybrid Tree Attention精准削减了长上下文下target attention的关键瓶颈。该图作为方法核心论据，以延迟分解直观证明改进集中于attention层，支撑LongSpec整体近2倍加速的实验结论。
 
 ### Figure 6 (p.9) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig06.png]]
@@ -108,15 +95,16 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 > and Figure 3 show the decoding speeds and average acceptance lengths across the five evalu- ated datasets at T = 0 and T = 1 , where T denotes the temperature used in LLM sampling. Our pro- posed method significantly outperforms all other approaches on both summarization tasks and code completion ta
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明：** 所提供图片实为论文 §4.2 "Main Results" 正文页（对 Table 1 的文字论述），并非 Table 1 表格本体，故依据原文进行解读。
+> 【图文联合解读】**Table 1 图文联合解读**
 
----
+**① 核心对象与结构数据**
+表格针对目标模型 **QwQ-32B**，在 5 个长文本数据集（摘要、代码补全）上，比较目标模型、**PLD**（n-gram SD）、**MagicDec**（带/不带 Flash Attention）以及作者提出的 **LongSpec**，报告两个温度（T=0、T=1）下的 **walltime speedup** 与 **平均接受长度 τ**。例如 T=0 下摘要任务 τ≈3.5、加速达 2.67×；代码补全 τ≈4、加速达 3.26×；T=1 下整体保持 ~2.5× 加速。
 
-**1) 核心对象与数据：** Table 1 展示 LongSpec 在 5 个评测数据集（含摘要与代码补全两类长文本任务）上，于 T=0 与 T=1 两种采样温度下的解码速度（speedup）与平均接受长度。T=0 时，摘要任务接受长度约 3.5、加速比最高 2.67×；代码补全任务接受长度约 4、加速比最高 3.26×。T=1 时仍保持约 2.5× 加速，持续领先 MagicDec。
+**② 关键论证结论**
+原文用此表证明：(a) LongSpec 在两类长文本任务上均**显著超越 PLD 与 MagicDec**；(b) 即便 MagicDec 使用 Flash Attention 仍落后 LongSpec，说明优势并非仅来自注意力实现；(c) 接受长度 τ 较高（3–4），验证 draft 模型在长上下文下仍能生成被目标 LLM 接受的 token 序列，体现方法的**无损性与鲁棒性**。
 
-**2) 关键结论：** 证明 LongSpec 在长文本生成场景下兼具高接受率与显著加速，且对温度鲁棒，方法具备通用性与稳健性。
-
-**3) 论文作用：** 作为主实验核心定量证据，支撑"长上下文无损推测解码"在摘要、代码两类典型长序列任务上的 SOTA 主张，与图3互补，回应引言中 EAGLE 训练上下文仅 2k 的痛点。
+**③ 在论文链路中的作用**
+Table 1 是 §4.2 "Main Results" 的**主实验证据表**，与 Figure 3 共同支撑 §1 中"EAGLE 等 SD 方法训练上下文仅 2048、难以适配现代 LLM 长窗口"的核心痛点主张，并为后续消融与长上下文数学推理实验（§4.3）提供基准性能参照。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab02.png]]
@@ -124,15 +112,13 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 > Performance comparison with and with- out Anchor-Offset Indices on the Multi-News and RepoBench-P datasets. Models with Anchor-Offset In- dices achieve higher output speed and larger acceptance length, highlighting their efficiency and effectiveness.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
+> 【图文联合解读】Table 2 在 Multi-News 与 RepoBench-P 两个长文数据集上，对比有无 Anchor-Offset 索引（锚点-偏移索引）的接受长度 τ 与生成速度 Tokens/s。
 
-该表在 Multi-News（摘要）与 RepoBench-P（代码）两个长文本基准上，对比启用/不启用 Anchor-Offset Indices 时的接受长度 τ 与吞吐量 Tokens/s。
+**核心数据**：无索引时，Multi-News 的 τ=3.20、85.98 tokens/s，RepoBench-P 的 τ=3.26、85.21 tokens/s；加入 Anchor-Offset 后分别提升至 3.36/91.11 与 3.39/91.28，速度增益约 6%–7%，接受长度提升约 4%–5%。
 
-具体数据：Multi-News 上 τ 由 3.20 升至 3.36（+5.0%），Tokens/s 由 85.98 升至 91.11（+6.0%）；RepoBench-P 上 τ 由 3.26 升至 3.39（+4.0%），Tokens/s 由 85.21 升至 91.28（+7.1%）。两数据集两指标同步提升，且吞吐量增益（6–7%）略高于 τ 增益。
+**论证结论**：Anchor-Offset 索引压缩了草稿模型的 KV Cache 索引而不损精度，同步提高草稿 token 被目标模型接受的概率与端到端生成吞吐，验证其高效性与有效性。
 
-原文借此论证：Anchor-Offset Indices 是 LongSpec 长上下文无损投机解码的核心工程优化——它弥补了朴素索引在长序列下压缩率与检索精度的双重损失，使轻量草稿模型更准确地预测目标 token，从而在 lossless 前提下同时提升接受长度与端到端解码速度。
-
-在论文链路中，本表属组件消融环节，紧承 Figure 2(b) 索引机制示意图，为后续端到端长文评测中 LongSpec 的速度优势提供单变量因果证据。
+**论文作用**：作为消融实验，量化证实 LongSpec 三大核心组件之一的独立贡献，与 Figure 2(b) 索引机制图形成"机制说明—性能验证"的闭环。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab03.png]]
@@ -140,7 +126,13 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 > Performance of our method on the QwQ-32B model on four math reasoning datasets, using a maxi- mum output length of 32k tokens. The table shows the tokens generated per second and the mean number of accepted tokens τ , where our approach achieves about 2.34 × higher speed compared to the baseline on 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 3展示QwQ-32B在AIME24/AMC/Minerva/MATH500四个数学推理集（32k最大输出）上的性能：Vanilla tokens/s仅18.92–19.59，LongSpec提升至42.63–48.36，加速比2.25–2.47×；τ由1.00升至3.65–3.95（平均3.81）。原文据此论证：LongSpec在长输出思维链场景下仍能无损地实现平均2.34×加速，验证其n-gram+动态树草稿机制对长链路CoT的有效性。该表与Figure 3（摘要/代码等短输出场景）互补，证明方法在不同任务、不同输出长度下均稳定加速，支撑论文"无损长上下文推测解码"的核心结论。
+> 【图文联合解读】**Table 3 图文联合解读**
+
+**1）核心内容**：在 QwQ-32B 模型、32k 最大输出长度下，对 AIME24、AMC、Minerva、MATH500 四个数学推理数据集对比 Vanilla 与 LongSpec。平均接受长度 τ 从 1.00 提升至 3.65–3.95（均 3.81）；Tokens/s 从约 19 提升至 42.63–48.36，平均加速 2.34×（2.25×–2.47×）。
+
+**2）关键结论**：LongSpec 在长输出数学推理中通过一次验证接受近 4 个 token，实现 lossless 推理的同时获得 2.34× 端到端加速。
+
+**3）论文作用**：与 Figure 3（摘要/代码 5 类长文任务）、Table 1（综合对比）共同构成实验核心，证明 LongSpec 的长上下文投机解码在长输出推理场景下依然有效且无损。
 
 ### Table 4 (p.16) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab04.png]]
@@ -148,14 +140,11 @@ Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对�
 > Average acceptance length τ and decoding speed (tokens/s) across different models and settings. Specifically, “Vanilla HF” refers to HuggingFace’s PyTorch-based attention implementation, while “Vanilla FA” employs Flash
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**1) 核心对象与数据**
-表4对比V-7B与LC-7B两个模型在GovReport、QMSum、MultiNews、LCC、RB-P五个长文数据集上,Vanilla HF/FA、TR、EAGLE、LongSpec五种设置的接受长度τ与解码速度(tokens/s)。LongSpec在所有数据集均取得最高τ(V-7B:3.14–3.86;LC-7B:3.06–4.21)与最快速度(85.23–122.30 tok/s),全面领先;EAGLE τ≈1.91–2.10,但tokens/s仅26–40;TR速度近LongSpec(64.96–100.41)但τ偏低(2.13–3.05)。
+> 【图文联合解读】表4（T=0）对比V-7B与LC-7B在GovReport、QMSum、MultiNews、LCC、RB-P五项长文任务的平均接受长度τ与解码速度（tokens/s），设置涵盖Vanilla HF/FA、TR、EAGLE、LongSpec。
 
-**2) 关键结论**
-LongSpec同时实现更长接受长度与更高吞吐量,体现高效draft+verify机制的优越性;EAGLE速度慢表明短文训练的draft在长上下文失效;TR速度可但验证开销大。
+数据要点：LongSpec τ=3.06–4.21、速度85–122；Vanilla τ=1、速度14–56；TR τ≈2.7–3.0但速度与LongSpec相近；EAGLE τ≈2且速度仅26–40。
 
-**3) 论文作用**
-与图4训练曲线协同,作为核心实验结论表,支撑"长上下文无损推测解码"的整体主张。
+结论与作用：LongSpec在τ与吞吐上同时超越基线与SOTA投机方法（TR/EAGLE），证明其无损长上下文投机解码的全面高效性，是论文支撑方法相对现有方案优势的核心效率证据表。
 
 ### Table 5 (p.16) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab05.png]]
@@ -163,15 +152,11 @@ LongSpec同时实现更长接受长度与更高吞吐量,体现高效draft+verif
 > A detailed breakdown of performance as the prefill length increases, with LongChat-7B on GovReport.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**说明**：用户提供的 caption 与图片实际内容不完全吻合（caption 写"with LongChat-7B on GovReport"，但图片为多模型×多数据集的完整对比表）。以下按图片实际内容解读。
 
-表格对比 **V-7B** 与 **LC-7B** 两模型在 GovReport、QMSum、MultiNews、LCC、RB-P 五个长文数据集上，Vanilla HF、Vanilla FA、TR、EAGLE、LongSpec 五种方法的接受长度 τ 与生成吞吐量 Tokens/s。
+---
 
-**关键结论：** LongSpec 在所有数据集上 τ 最高（3.06–4.21），Tokens/s 较 Vanilla HF 提速约 **4×**（如 LC-7B LCC：122.30 vs 25.27）；而 EAGLE 在长文下 Tokens/s（29.75–40.64）反低于 Vanilla FA（42.69–54.17），暴露其长上下文退化。
-
-**实验链路作用：** 以多模型×多数据集的横向基准，定量证明 LongSpec 相对 TR/EAGLE 在长上下文场景具备稳定无损加速优势，构成论文核心实验证据。
-
-（注：原文表格 caption 与正文实际内容存在轻微出入——caption 仅提 GovReport，但表中实为五数据集联合对比。）
+表5对比 Vanilla HF/FA、TR、EAGLE、LongSpec 五种方法，在 GovReport、QMSum、MultiNews、LCC、RB-P 五个长上下文数据集上对 V-7B 与 LC-7B 两个基模型的接受长度 τ 与 Tokens/s 表现。EAGLE τ≈1.9–2.1，吞吐 26–40；TR τ≈2.7–3.1，吞吐 65–100；LongSpec τ 达 3.06–4.21，吞吐 85–122 tokens/s，在所有数据集与基模型上全面领先 EAGLE 近 3 倍、超越 TR 约 1.4 倍。作为论文核心结果表，量化证明 LongSpec 在长上下文场景下兼具更长接受长度与更高吞吐双重优势，支撑其"高效 drafting+verification"主结论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

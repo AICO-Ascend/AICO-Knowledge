@@ -291,7 +291,7 @@ def block_table_score(b):
     multi_ratio = sum(1 for l in lines if len(l["spans"]) >= 2) / len(lines)
     digit_ratio = sum(c.isdigit() for c in txt) / len(txt)
     sym_ratio = sum(1 for c in txt if not c.isalnum() and not c.isspace()) / len(txt)
-    if digit_ratio > 0.2 or sym_ratio > 0.22:
+    if digit_ratio > 0.2 or sym_ratio > 0.18:
         return 2
     if multi_ratio >= 0.5 and digit_ratio > 0.1:
         return 2
@@ -315,36 +315,26 @@ def is_folio(br, t, page_h):
         (br.y0 < 50 or br.y1 > page_h - 50)
 
 
-def drawing_zones(drawings):
-    """密集矢量图区域（figure 图形区）：>=6 个 drawings 的连通簇的 bbox。
-    表格 walk 必须把簇内文字（图例 "Baseline: 1.891 x C^-0.057" 之类 sc=2
-    高分块）排除 —— attention-residuals tab02 曾把下方 scaling-law 图的
-    图例文字采进表格裁剪，变成"表格+半截图混合"（用户 2026-08-24 上报）。"""
-    rects = []
+def drawing_zones(drawings, page_area=1, blocks=()):
+    """页面矢量绘制 rect 列表（局部墨迹）。表格 walk 用"文字块与绘制相交"
+    来排除图表内文字（图例/轴标签这类 sc=2 高分块，attention-residuals
+    tab02 上报 #19）。两类不算局部墨迹：
+      - 超大矩形（>30% 页面积）
+      - 与 >10 个文字块相交的容器框（Figure 5 外框 [50,62,546,318] 把
+        deepseek-v3 p13 的真表格行也框进去，25% 页面积但本质是容器）
+    真表格行的文字 bbox 不与局部绘制相交（框线在行间隙），不受影响。"""
+    out = []
+    text_rects = [fitz.Rect(b["bbox"]) for b in blocks if b["type"] == 0]
     for d in drawings:
         r = d["rect"]
         if r.width <= 2 or r.height <= 2:
             continue
-        # 表格框线是细长矩形 —— 排除，否则带框线表格整体成"图形区"，
-        # 表内文字全被误排除（图表 zone 只保留形状丰富的绘制）
-        if r.width / max(r.height, 0.1) > 8 or r.height / max(r.width, 0.1) > 8:
+        if r.width * r.height >= 0.3 * page_area:
             continue
-        rects.append(r)
-    zones = []
-    for r in rects:
-        for i, z in enumerate(zones):
-            if fitz.Rect(r).intersects(z + (-6, -6, 6, 6)):
-                zones[i] = z | r
-                break
-        else:
-            zones.append(fitz.Rect(r))
-    # 二轮合并 + 计数过滤（粗估：用成员数>=6 的小簇并入的大簇才算）
-    counts = [0] * len(zones)
-    for r in rects:
-        for i, z in enumerate(zones):
-            if fitz.Rect(r).intersects(z):
-                counts[i] += 1
-    return [z for z, c in zip(zones, counts) if c >= 6]
+        if sum(1 for tr in text_rects if r.intersects(tr + (-8, -8, 8, 8))) > 10:
+            continue
+        out.append(r)
+    return out
 
 
 def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
@@ -387,10 +377,11 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
         t = block_text(b)
         if not t or is_folio(br, t, page_h):
             continue
-        if zones and any((z + (-15, -15, 15, 15)).contains(
-                fitz.Point((br.x0 + br.x1) / 2, (br.y0 + br.y1) / 2))
-                for z in zones):
-            continue  # 图形区（含边缘 15pt 内的轴标签）内的文字，不是表格内容
+        if zones and any(fitz.Rect(dr).intersects(br + (-8, -8, 8, 8))
+                         for dr in zones):
+            continue  # 与矢量绘制相交的文字（图例/轴标签），不是表格内容。
+            # 用"块与绘制相交"而非"块在 zone bbox 内"：deepseek-v3 p13 的
+            # 真表格行落在 Figure 5 zone 的 bbox 里但行上没有绘制
         cands.append((br, b, t))
     # 空间序：离 caption 由近及远
     cands.sort(key=lambda c: c[0].y0, reverse=(direction == -1))
@@ -437,12 +428,14 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
             break
         sc = block_table_score(b)
         # prose gate: 宽长文 + 非强表格 = 正文段落。窄块豁免（公式/单元格块
-        # 天然窄，a-survey tab07）；宽长文行需 ≥2 个硬证据才放行
-        # （let-it-flow "# Total Params" 行；medusa fig4 caption 续行只有
-        # 散点图轴标签 1 个证据 → 截断，防污染）
+        # 天然窄，a-survey tab07）。宽长文行的证据阈值随已收行数升档：
+        # 已收 <3 行（表格尚未成形，deepseek-v3 tab2 的公式行只领先 fig
+        # caption 一步）1 个硬证据即放行；已收 >=3 行（表格大概率完整，
+        # 再往外多半是他物）需 2 个（medusa tab1 的 fig4 caption 续行拦下）
         wide_block = br.width > 0.55 * (x1 - x0)
         wordy = len(t.split()) > 18 or len(t) > BODY_MIN_CHARS
-        if wide_block and wordy and sc < 2 and not strong_ahead(i, 2):
+        need = 2 if len(picked) >= 3 else 1
+        if wide_block and wordy and sc < 2 and not strong_ahead(i, need):
             break
         if sc >= 1:
             picked.append((br, b))
@@ -487,12 +480,22 @@ def process_paper(slug, dpi, latex_slugs):
         # collect graphic + label elements for figure region union
         cols = page_columns(blocks, page.rect.width)
         gfx = []        # (rect, is_visual) — is_visual=True for drawings/embedded images
+        hard = []       # 真图形（嵌入图/矢量 drawings）——方向探测只认硬图形，
+                        # 数字密集的散文行（"...示意图如下：" sc=2）不算
         for b in blocks:
             r = fitz.Rect(b["bbox"])
             if b["type"] == 1:  # embedded image
                 gfx.append((r, True))
+                hard.append(r)
             elif b["type"] == 0:
                 t = block_text(b)
+                # 节标题（"4.7 超节点能力"）数字密度高但不是图形内容 ——
+                # digit_dense 和 block_table_score 都会被节编号骗过，
+                # 导致 ascend-950 fig417 纯文本假图复活；数字节标题整体排除。
+                # （只排数字 HEADING：HEADING_APPENDIX 类小型大写标题
+                #  "VIRTUAL STAGE 0" 是图内面板标题，排除了会削掉图顶）
+                if HEADING.match(t):
+                    continue
                 digit_dense = t and sum(c.isdigit() for c in t) / len(t) > 0.2
                 if 0 < len(t) <= LABEL_MAX_CHARS or block_table_score(b) >= 2 \
                         or (len(t) <= 400 and digit_dense):
@@ -502,6 +505,7 @@ def process_paper(slug, dpi, latex_slugs):
             r = dr["rect"]
             if r.width > 2 and r.height > 2:
                 gfx.append((r, True))
+                hard.append(r)
         # caption rects act as separators (another caption bounds this one's region)
         cap_rects = [c[3] for c in caps]
         for kind, num, tail, r, _blen in caps:
@@ -514,6 +518,104 @@ def process_paper(slug, dpi, latex_slugs):
                 # 栏位约束：图只在 caption 所在栏内聚类（2026-08-24 跨栏污染修复）
                 cx0, cx1 = col_window(r, cols, page.rect.width)
                 x0, x1 = max(r.x0 - 30, cx0), min(r.x1 + 30, cx1)
+                # 方向判定：caption-above 布局（中文白皮书 ascend-950 全篇）的图
+                # 在 caption 下方。判据 = caption 下方紧贴硬图形 且 上方 500pt
+                # 窗口内没有"无主的"硬图形 —— 上方图形若被更早的 caption 紧贴
+                # 认领（caption 在图顶上方），说明本篇是 caption-above 布局，
+                # 该图属于上一张 caption，不能挡住本 caption 向下取图。
+                # （a-survey fig01 上方是矢量折线图、下方 25pt 内是 fig02 的图，
+                # 纯邻接探测会把 fig02 的图裁给 fig01）
+                ADJ = 25
+                adj_below = any(g.x1 > x0 and g.x0 < x1
+                                and r.y1 - 4 <= g.y0 <= r.y1 + ADJ
+                                for g in hard)
+                hard_above = [g for g in hard
+                              if g.y1 <= r.y0 + 4 and g.y0 > r.y0 - 500
+                              and g.x1 > x0 and g.x0 < x1]
+                def _owned(g):
+                    return any(c is not r and c.y1 <= g.y0 + 4
+                               and c.y1 > g.y0 - 120
+                               and c.x1 > x0 and c.x0 < x1
+                               for c in cap_rects)
+                unowned_above = [g for g in hard_above if not _owned(g)]
+                if adj_below and not unowned_above:
+                    # caption-above 布局：收集 caption 下方的图形簇，
+                    # 下一张 caption / 长正文块作为下界
+                    below = [(g, vis) for g, vis in gfx
+                             if g.y0 >= r.y1 - 4 and g.y0 < r.y1 + 500
+                             and g.x1 > x0 and g.x0 < x1]
+                    other_caps_below = [c for c in cap_rects
+                                        if c.y0 >= r.y1 - 1
+                                        and c.x1 > x0 and c.x0 < x1]
+                    ceil = min([c.y0 for c in other_caps_below],
+                               default=page.rect.y1 - 50)
+                    below = [(g, vis) for g, vis in below if g.y0 < ceil]
+                    # 链式 x 扩展（与 above 模式同理）：行内引用锚点在单栏内，
+                    # 通栏图会被栏位 x 窗截断（longspec fig01 右半被切、
+                    # kimi-k3 fig06 左半被切）。不越过 ceil（下一 caption）
+                    if below:
+                        ux = fitz.Rect(below[0][0])
+                        for g, _ in below[1:]:
+                            ux |= g
+                        in_keys = {id(g) for g, _ in below}
+                        grown = True
+                        while grown:
+                            grown = False
+                            for g, vis in gfx:
+                                if id(g) in in_keys or g.y0 >= ceil:
+                                    continue
+                                if g.y1 < ux.y0 - 10 or g.y0 > ux.y1 + 10:
+                                    continue
+                                if g.x1 > ux.x0 - 5 and g.x0 < ux.x1 + 5:
+                                    below.append((g, vis))
+                                    in_keys.add(id(g))
+                                    ux |= g
+                                    grown = True
+                    if not below or not any(vis for _, vis in below):
+                        continue
+                    seen_fig.add(num)
+                    # 内容下界只认硬图形：sc=2 的散文段（"L0C Buffer->...随路量化"）
+                    # 会把 max_vis_y1 拖进正文，把整段散文/节标题框进裁剪
+                    hard_ids = {id(g) for g in hard}
+                    hard_below = [g for g, _vis in below if id(g) in hard_ids]
+                    if hard_below:
+                        max_vis_y1 = max(g.y1 for g in hard_below)
+                        below = [(g, vis) for g, vis in below
+                                 if id(g) in hard_ids or g.y0 <= max_vis_y1 + 40]
+                    else:
+                        max_vis_y1 = max(g.y1 for g, vis in below if vis)
+                        below = [(g, vis) for g, vis in below
+                                 if vis or g.y0 <= max_vis_y1 + 40]
+                    # 拷贝再 union —— u |= g / u.y1=... 会原地改写 gfx/hard 里
+                    # 共享的 Rect 对象，污染同页后续 caption 的方向探测
+                    # （ascend-950 fig403 因此被拐进 above-mode 裁了 fig402 的图）
+                    u = fitz.Rect(below[0][0])
+                    for g, _ in below[1:]:
+                        u |= g
+                    u.y0 = max(r.y1 + 2, u.y0 - 4)
+                    u.y1 = min(ceil - 2, max_vis_y1 + 45)
+                    # 视觉元素之后的任何文字块（正文/节标题）都不能进裁剪框 ——
+                    # 真图标签 ≤120 字符已进 gfx union，剩下的都是页内正文
+                    tail_txt = [fitz.Rect(b["bbox"]).y0 for b in blocks
+                                if b["type"] == 0
+                                and fitz.Rect(b["bbox"]).y0 > max_vis_y1
+                                and block_text(b).strip()
+                                and fitz.Rect(b["bbox"]).x1 > x0
+                                and fitz.Rect(b["bbox"]).x0 < x1]
+                    if tail_txt:
+                        u.y1 = min(u.y1, min(tail_txt) - 4)
+                    u.x0 = max(0, u.x0 - 4); u.x1 = min(page.rect.x1, u.x1 + 4)
+                    out = CROPS / f"{slug}-fig{num:02d}.png"
+                    item = {"num": num, "page": pno + 1,
+                            "caption": re.sub(r'\s+', ' ', tail).strip()[:300],
+                            "path": f"assets/crops/{out.name}"}
+                    if out.exists():
+                        res["figures"].append(item); continue
+                    pix = crop_pix(page, u, dpi)
+                    if pix:
+                        pix.save(str(out))
+                        res["figures"].append(item)
+                    continue
                 above = [(g, vis) for g, vis in gfx
                          if g.y1 <= r.y0 + 4 and g.y0 > r.y0 - 500
                          and g.x1 > x0 and g.x0 < x1]
@@ -534,7 +636,7 @@ def process_paper(slug, dpi, latex_slugs):
                 # 栏位 x 窗切掉）——已收块的 y 带内，与 union x 相邻的图形块
                 # 迭代并入，直到不动点。跨栏污染仍由初始栏位窗 + y 带约束。
                 if above:
-                    u0 = above[0][0]
+                    u0 = fitz.Rect(above[0][0])
                     for g, _ in above[1:]:
                         u0 |= g
                     in_keys = {id(g) for g, _ in above}
@@ -563,7 +665,7 @@ def process_paper(slug, dpi, latex_slugs):
                 max_vis_y1 = max(g.y1 for g, vis in above if vis)
                 above = [(g, vis) for g, vis in above
                          if vis or g.y0 <= max_vis_y1 + 40]
-                u = above[0][0]
+                u = fitz.Rect(above[0][0])
                 for g, _ in above[1:]:
                     u |= g
                 u.y1 = min(r.y0 - 2, max_vis_y1 + 45)
@@ -583,7 +685,7 @@ def process_paper(slug, dpi, latex_slugs):
                     pix.save(str(out))
                     res["figures"].append(item)
             else:  # table: 方向判定 —— 紧贴 caption 的表格块在哪侧
-                zones = drawing_zones(page.get_drawings())
+                zones = drawing_zones(page.get_drawings(), page.rect.width * page.rect.height, blocks)
                 if num in seen_tab:
                     continue
                 cols = page_columns(blocks, page.rect.width)
