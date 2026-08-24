@@ -14,7 +14,8 @@
   5. eprint_formulas（LaTeX 源公式，失败冷却 3 天；无网时自动跳过）
   6. extract_phase1 再合并（把 4/5 的增量嵌进 MD）
   7. orchestrate_deep_reread（生成深读队列，新增论文的全要素深读交夜间 cron/agent）
-  8. --push 时 token-safe commit + push（推完抹 push URL token）
+  8. wiki_index（LLM Wiki 簿记层：重建 index.md + 种子新概念页；有增量才记 log.md）
+  9. --push 时 token-safe commit + push（推完抹 push URL token）
 
 铁律保持：图/表/公式理解全走 MiniMax-M3（m3_caption.py），公式以 formulas.json
 LaTeX 为权威源，深读产出落 extraction/deep/ 独立文件（extract 重跑不丢）。
@@ -134,16 +135,16 @@ def main():
     print("FULL PIPELINE: source -> extract -> visuals -> captions -> formulas -> push")
     print("=" * 60)
 
-    print("\n[1/8] sync_from_source (no push)")
+    print("\n[1/9] sync_from_source (no push)")
     run("sync_from_source.py")
 
-    print("\n[2/8] extract_phase1 (base extraction)")
+    print("\n[2/9] extract_phase1 (base extraction)")
     run("extract_phase1.py")
 
-    print("\n[3/8] extract_visuals (figure/table/formula crops)")
+    print("\n[3/9] extract_visuals (figure/table/formula crops)")
     run("extract_visuals.py")
 
-    print("\n[4/8] m3_caption for new crops (context-enriched)")
+    print("\n[4/9] m3_caption for new crops (context-enriched)")
     # 上下文增强解读（图/表/公式 + 论文正文引用段落联合喂 M3）；幂等：
     # 已有【图文联合解读】前缀的 crop 自动跳过，只补新增/失效的
     if (SKILL / "context_caption.py").exists():
@@ -151,23 +152,36 @@ def main():
     else:
         batch_caption(uncaptioned_crops())
 
-    print("\n[5/8] eprint_formulas (latex source; background-safe)")
+    print("\n[5/9] eprint_formulas (latex source; background-safe)")
     run("eprint_formulas.py", timeout=600)
 
-    print("\n[6/8] extract_phase1 (merge captions + formulas)")
+    print("\n[6/9] extract_phase1 (merge captions + formulas)")
     run("extract_phase1.py")
 
-    print("\n[7/8] orchestrate_deep_reread (queue for night cron)")
+    print("\n[7/9] orchestrate_deep_reread (queue for night cron)")
     if (SKILL / "orchestrate_deep_reread.py").exists():
         run("orchestrate_deep_reread.py", timeout=300)
     else:
         print("    (orchestrate_deep_reread.py not present, skip)")
 
+    print("\n[8/9] wiki_index (LLM Wiki: index.md + concept pages + log)")
+    if (SKILL / "wiki_index.py").exists():
+        run("wiki_index.py", timeout=300)
+        # 有实质增量才记编年日志（内容没变 git 就是干净的，空跑不刷 log.md）
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "extraction/", "wiki/"],
+            cwd=REPO, capture_output=True, text=True).stdout.strip()
+        if dirty:
+            run("wiki_index.py", "--log",
+                "pipeline | full_pipeline 全链路同步（extraction/wiki 有增量，index.md 已重建）")
+    else:
+        print("    (wiki_index.py not present, skip)")
+
     if push:
-        print("\n[8/8] token-safe commit + push")
+        print("\n[9/9] token-safe commit + push")
         token_safe_push("pipeline: full source->extract->visuals->captions->formulas auto-sync")
     else:
-        print("\n[8/8] --push not set, skip push")
+        print("\n[9/9] --push not set, skip push")
 
     print(f"\nFULL PIPELINE DONE in {time.time()-t0:.0f}s")
 

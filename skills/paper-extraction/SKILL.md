@@ -83,8 +83,13 @@ python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条
 │   ├── chunk_download.py        #   分块续传下载（jobs 文件/命令行驱动）
 │   ├── verify_pdfs.py           #   PDF 体检（截断/损坏/缺失/孤儿）
 │   ├── kb_query.py              #   统一查询 CLI（外部工程/RAG 消费入口）
+│   ├── wiki_index.py            #   📚 LLM Wiki 簿记层：index.md 重建 + 概念页种子 + log.md 记帐
 │   └── m3_caption.py            #   火山网关 MiniMax-M3 图深度解读（--save 直写 captions.json）
+├── wiki/
+│   └── concepts/<slug>.md       # 📚 原子概念页（19 页，跨论文综合，图谱 hub，夜间深读丰富）
 └── extraction/                  # generated knowledge base
+    ├── index.md                 # 📚 LLM-reads-first 内容目录（wiki_index 重建，勿手改）
+    ├── log.md                   # 📚 编年日志 append-only（## [date] op | detail）
     ├── <slug>.md                # per-paper structured (Obsidian-flavored)
     ├── deep/<slug>.md           # ⭐ 全要素深读笔记（技术点/表格/跨论文关系，独立维护，extract 重跑不丢）
     ├── moc_relations.md         # ⭐ MOC 跨论文关系谱系（独立维护，MOC 嵌入 ![[moc_relations]]）
@@ -126,6 +131,38 @@ python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条
   - **valid_table 接受强行少行表**：多列 sc0 表头 + ≥1 行 sc2 数据行（≥4 块）= 真表（specextend tab07 单行表）；纯散文采集全是 sc1 行过不了这条，防假表初衷不变。
   - **采集窗 640pt**：三段堆叠子表（a-survey tab16 表体 500+pt）不被 420 窗砍尾；真正截断靠间距/节标题/caption/prose 闸。
   - **边界案例走登记，不动全局**：gap 21pt 差 1pt 不过闸 + 节标题豁免双重边界（muon tab01 尾部两行节标题）——调全局规则收益不抵回归风险，手工区域裁剪登记 ar5iv_crops.json（manual-pdf-region）享 overlay 保护。
+- **表格方向与散文闸（2026-08-24 四轮沉淀，33 信号表全量重扫收敛）**：
+  - **prose_w 用栏宽不用采集窗宽**：双栏论文通栏 caption 会把采集窗撑到整页宽，栏内散文块相对窗口变"窄"而躲过散文闸 → prose gate 的宽度基准 = 最小栏宽（`min(c1-c0)`），megatron tab08 类尾部散文才被闸住。
+  - **x 窗最小重叠**：`_xov < 20pt 且 < 0.5*块宽` 才排除——12pt 边缘擦碰的邻栏块是污染，但 "93"/"2.78T" 这种窄单元格整块在窗内必须收（kimi-k3 tab01 整表曾被 20pt 硬闸误杀）。
+  - **双向采集打平先看单块最高分**：sc2 真表体 > sc1 散文总和（mooncake tab03：上方 2 段散文 sum=2 平下方表头+数据行 sum=2，比 max 才选对）；采集末端 40pt 内撞上 fig caption = 采到图内容了，反向取另一侧（specextend tab03 下方柱状图轴标签 sc2 压过上方真表）。
+  - **长合并表头连接器放宽到 250 字符**（a-survey tab09 211 字符 sc0 跨列合并表头超 150 限 → 下方区域空 → prev-page 兜底采了上页散文还超 700pt 被静默拒裁）。
+  - **表格 max_h 按页高**（`page.rect.height - 50`）：qwen3-vl 整页基准表 716pt 超 700 图限被静默拒裁；crop_pix 拒裁要打印告警，静默失败 = GONE 排查地狱。
+  - **valid_table 别加宽长文计数条款**：曾加"宽且词多的块 ≥N 即假表"导致 38 张真表（长换行行表格 a-survey tab18/sarathi tab01 等）被误杀，已回退三通道版本；单个怪表走 manual-pdf-region 登记（muon tab10 尾部数字密散文 sc2 过不了散文闸）。
+  - **prompt 模板附录表（单列巨元组长文本）别用 matplotlib 渲染**：textwrap 折行与真实排版行高不匹配必然叠字（deepseek-r1 tab24/26）——原 PDF 单页排版良好时直接 manual-pdf-region 裁剪原排版。
+- **重裁后解读必须失效重生成**：像素变了解读就过期。全量重裁的标准动作 = 备份 → hash 对比（changed/new/gone）→ 删 minimax_captions.json 对应 key → `context_caption.py` 补跑（M3 是廉价 vision 路径，117 张批量重解读换 KB 正确性值得）；最后核对 disk==referenced、0 缺解读再收口。
+
+## 📚 Wiki 三层架构与三个操作（Karpathy LLM Wiki 落地，2026-08-24）
+
+本库组织参考 [Karpathy LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) 三层模式：
+
+| 层 | 本库落地 | 谁写 |
+|---|---|---|
+| **Raw sources**（不可变事实源） | `papers/` PDF + `archive/paper_source_moonlight.bib` | 用户策展 |
+| **Wiki**（LLM 全权维护） | `extraction/`（MD/deep/MOC/moc_relations/captions/formulas）+ `wiki/concepts/` 概念页 | LLM |
+| **Schema**（规范） | 本 SKILL.md + `DEEP_LEARNING_PROTOCOL.md` + 各脚本 docstring | 人与 LLM 共演进 |
+
+**三个操作**：
+
+1. **Ingest** = `full_pipeline.py` 一条命令（源表 diff→下载体检→萃取→裁剪→M3 解读→公式→深读队列→**wiki_index 重建索引**→push）。收尾时 agent 对新论文做架构图深解 + 更新 `wiki/concepts/` 对应概念页成员。
+2. **Query** = 先读 `extraction/index.md`（LLM-reads-first 目录）定位，再钻取；机器查询走 `kb_query.py`。**好答案要回填**：跨论文对比/综述类回答写成独立 MD 落 `wiki/`（如 `wiki/concepts/` 或新主题页），别只留在对话里——查询和 ingest 一样让知识库复利增长。
+3. **Lint** = 定期体检：磁盘裁剪 vs MD 引用一致性、0 缺 M3 解读、概念页成员覆盖（新论文是否归队）、`extraction/log.md` 最近动态与库状态是否吻合。夜间深读 cron 顺带做；发现问题按对应铁律修复并记 log。
+
+**簿记两文件**（`wiki_index.py` 维护，勿手改 index）：
+- `extraction/index.md` — 内容目录：论文按主题分组 + fig/tab/深读标记 + 概念页清单 + 索引文件表。LLM 答查询**先读它**。
+- `extraction/log.md` — 编年日志 append-only，`## [YYYY-MM-DD] op | detail` 统一前缀；`grep "^## \[" extraction/log.md | tail -5` 查最近动态。full_pipeline 有增量时自动记 `pipeline | ...`；手工修复/审计用 `python3 wiki_index.py --log "op | detail"` 补记。
+
+**概念页**（`wiki/concepts/<slug>.md`，19 页种子）：一个概念一页，跨论文累积综合，Obsidian 图谱 hub。成员 = MOC 聚类 + moc_relations 谱系段 wikilinks；谱系叙述的单一事实源仍是 `moc_relations.md`（概念页只嵌入 `![[moc_relations#段]]`，不复制正文）。`wiki_index.py` 种子幂等不覆盖——已被夜间深读丰富的页面原样保留。
+
 
 ## 查询（任何工程）
 

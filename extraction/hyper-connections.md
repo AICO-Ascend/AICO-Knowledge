@@ -112,11 +112,13 @@ tags: []
 > Visualization of connection matrices for hyper-connections and various related baseline methods. The attention layers, which have odd ids, are marked with green tick marks.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**核心对象**：Figure 7含两部分。上方表格显示DHC×4在7个基准（MMLU、HellaSwag、ARC-C/E、PIQA、WinoGrande、BoolQ）上全面超越OLMoE-1B-7B基线（如ARC-C 41.8→47.8，BoolQ 65.4→68.5）。下方为§4.5可视化，对比5种方法在32×32隐藏通道上的**连接矩阵**（颜色-1~1），绿色刻度标记奇数id的注意力层：Hyper-Connection呈现含蓝色负值的多样化斑块并标注PTB；Post-Norm呈对角平滑衰减；Pre-Norm全红均匀无选择性；Pre-Norm PTB呈阶梯状；Two-hop Residual呈规则竖条。
+> 【图文联合解读】**Figure 7 图文联合解读：**
 
-**关键结论**：基线连接模式要么过于刚性（Pre-Norm恒等）、要么结构单一（仅沿对角衰减或竖条），而Hyper-Connection可学习任意含负值的灵活连接，支持更丰富的跨层信息路由。
+1) **核心对象**：5个32×32的连接矩阵热力图（绿刻度标记奇数层即注意力层），色阶−1.0（蓝）至+1.0（红），对比Hyper-Connection、Post-Norm、Pre-Norm、Pre-Norm PTB、Two-hop Residual。Hyper-Connection呈现混合红蓝的非平凡模式（含PTB标记），Post-Norm为平滑红色三角，Pre-Norm/Pre-Norm PTB近乎全饱和深红，Two-hop Residual呈规则竖条状。
 
-**论文作用**：作为机理层面的可视化证据，从结构表达力角度解释为何DHC×4能在表7所列各基准上稳定提升，呼应正文中HC框架相对于传统残差/规范化的设计优势。
+2) **论证结论**：Hyper-Connection习得了比四种基线更丰富、可学习、层间异构的连接模式（残差强度可正可负），突破了传统残差恒等约束。
+
+3) **作用**：作为4.5节可视化分析，定性证明所提DHC方法相对基线的结构新颖性，与上方Table 7（DHC×4在MMLU 38.5→39.7、HellaSwag 69.5→70.2等全指标提升）形成"结构多样性→性能增益"的闭环论证。
 
 ### Figure 8 (p.14) ⭐深度解读
 ![[assets/crops/hyper-connections-fig08.png]]
@@ -323,15 +325,9 @@ tags: []
 > Performance of related methods on OLMo-1B models.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**核心数据**：OLMo-1B 上对 HC 三组件（WC 宽度连接、B 分支、Tanh 非线性）做消融，分无/有 Tanh 两组——
-- 无 Tanh 最佳 **WC+B**：V2 Loss **2.779**/PPL **17.773**，V3 Loss **2.516**/PPL **13.823**，下游 Acc **64.4**；
-- 有 Tanh 最佳 **WC+B+Tanh**：V2 Loss **2.781**，V3 Loss **2.515**/PPL **13.807**，Acc **63.8**。
-
-**技术结论**：①WC 多流残差显著优于单流（PPL 17.91→17.49，Acc 62.5→63.6）；②WC+B 在两组中均取得最优 Loss/PPL，量化验证并行多分支设计优势；③额外引入 Tanh 反致下游 Acc 略降（64.4→63.8），表明线性映射已足够，无需非线性。
-
-**论文作用**：与 Fig.4 的串/并联拓扑可视化呼应，从 OLMo-1B 量级量化论证"多流优于单流、线性已足"——这是 HC 方法设计的两条核心原则，为后续大规模 ResNet/ViT/LLM 实验提供组件必要性与设计简洁性的消融依据。
+该表为OLMo-1B上WC（宽度连接）、B（偏置）、Tanh三组件的消融实验，按V2/V3评测Loss-PPL与下游平均准确率分两区（共6组配置）。数据明确显示：开启WC即可将V2 Loss从2.804降至2.779、下游准确率由62.5跃至64.4；B仅在WC开启后带来微弱增益；引入Tanh反而劣化下游表现（63.8 vs 64.4）。论文借此论证**WC是Hyper-Connections性能的核心模块，B与Tanh为非必要冗余**，印证其"以最少结构换最大增益"的设计哲学，构成消融链路中支撑方法极简性与有效性的关键证据。
 
 ### Table 5 (p.9) ⭐深度解读
 ![[assets/crops/hyper-connections-tab05.png]]
@@ -399,11 +395,7 @@ tags: []
 > Benchmarking class-conditional image generation on ImageNet 256 × 256, with cfg=1.50. NP , P , and R are short for Numerical Precision, Precision, and Recall, respectively.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 10 在 ImageNet 256×256、cfg=1.50 设定下对比四组 DiT 类条件生成模型：FP32 基线 DiT-XL/2（675M，FID 2.27 / IS 278.24）、FP16+QK-Norm 的 DiT-XL/2（675M，2.36 / 269.46）与 DiT-1B/2（983M，2.13 / 288.69），以及引入静态超连接的 DiT-XL/2-SHC×2（675M，FID 2.18 / sFID 4.52 / IS 287.24 / P 0.82 / R 0.60）。
-
-论证结论：超连接在不增加参数量（仍为 675M）的前提下，使 DiT 在 FID、sFID、IS、P、R 等生成指标上整体逼近参数多约 50% 的 DiT-1B/2（983M），并稳定优于同规模 FP16 基线，从而以量化证据支撑"以同等模型体积换得更强生成性能"的参数效率论断。
-
-作用：与 Figure 10 的语言模型训练/下游任务曲线互为补充，从视觉生成与 NLP 双领域共同验证超连接方法的通用性与有效性，是论文"参数高效增强跨任务可迁移"这一核心结论的关键实验支柱。
+> 【图文联合解读】图像可辨。表在ImageNet 256×256、cfg=1.50下比较类条件生成：DiT-XL/2-SHC×2采用FP16、QK-Norm，参数仍为675M，FID/sFID为2.18/4.52，IS=287.24、P=0.82、R=0.60。同规模XL/2为2.36/4.54、269.46、0.83、0.58；983M模型为2.13/4.50、288.69、0.82、0.59。结果表明SHC不增参数即可改善质量与召回率并逼近1B模型；配合Figure 10，证明超连接在大模型跨任务训练中的扩展性与鲁棒性。
 
 ### Table 11 (p.19) ⭐深度解读
 ![[assets/crops/hyper-connections-tab11.png]]
@@ -411,13 +403,7 @@ tags: []
 > Accuracy on ImageNet. ViT*/16 refers to the results reported by (Dosovitskiy et al., 2020), whereas ViT/16 denotes our re-implemented baseline. SHC and DHC indicate that residual connections are replaced with static and dynamic hyper-connections, respectively.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 11 联合解读：**
-
-该表在 ImageNet（224×224，300 epoch）上对比 ViT/16-Base（85M）与 Large（307M）三种配置：Base 基线 76.38%，SHC/DHC 分别达 77.60%/77.26%（相对 +1.22%/+0.88%）；Large 基线 77.25%，SHC/DHC 分别达 78.38%/79.94%（相对 +1.13%/**+2.69%**）。
-
-**关键结论**：超连接对 ViT 精度有显著正向提升，且在 Large 规模上增益放大；其中 DHC（动态）在两种规模下均不逊于 SHC，大模型场景下优势最明显。
-
-**论文链路作用**：与 Fig.11 训练损失曲线互补，构成"精度+收敛"双重证据，承接 Table 12 训练配置，支撑"超连接可即插即用替代残差连接"的核心技术主张，为后续 RL（Table 13）与生成（Table 14）的迁移实验提供预训练基础。
+> 【图文联合解读】注：图片顶部表格含FID/sFID/IS生成指标，属E.1 DiT实验，非Table 11本体。Table 11数据仅以正文叙述呈现：**ViT/16-Base（85M）**：基线76.38%，+SHC达77.60%（+1.22%），+DHC达77.26%（+0.88%）；**ViT/16-Large（307M）**：基线77.25%，+SHC达78.38%（+1.13%），+DHC达79.94%（+2.69%）。关键结论：超连接稳定提升分类精度，且DHC在大模型上增益最显著（+2.69%）。论文作用：与E.1生成实验互补，证明超连接在不同视觉任务与不同模型规模下的通用有效性与可扩展性。
 
 ### Table 12 (p.20) ⭐深度解读
 ![[assets/crops/hyper-connections-tab12.png]]

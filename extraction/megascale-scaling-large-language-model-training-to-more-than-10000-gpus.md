@@ -224,11 +224,13 @@ tags: [training]
 > Strong-scaling training performance for the 175B model. We set the batch size to 6144 when training with 3072 to 12288 GPUs. For 256 to 1024 GPUs, we decrease the batch size to 768 due to GPU memory limit. We report the training time required for training 300B tokens here. The number in parentheses 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 解读：**
+> 【图文联合解读】**图文联合解读：**
 
-该表对比 Megatron-LM 与 MegaScale 在 175B 模型上的强扩展性能，分两档 batch size：768（256–1024 GPU）与 6144（3072–12288 GPU）。数据显示 MegaScale 在各规模下全面领先：12288 GPU 时单次迭代时间由 8.57s 降至 6.34s，吞吐从 1466.8k 提至 1984.0k tokens/s，训练 300B tokens 用时从 2.37 天压至 **1.75 天**；MFU 提升 1.19–1.34×，峰值算力达 2166.3 PFlops/s，且扩展至 12288 GPU 时 MFU 仍保持 55.2%，几乎无衰减。
+**1) 核心对象与结构**：表格对比 MegaScale 与基线 Megatron-LM 在 175B 模型上的强扩展性能。两组批次大小：768（256–1024 GPU，受显存限制）、6144（3072–12288 GPU）。关键数据：12288 GPU 下 MegaScale 单次迭代 6.34 s、吞吐 1984.0k tokens/s、训练 300B tokens 仅 1.75 天、Aggregate 2166.3 PFlops/s、MFU 55.2%；小规模（1024 GPU）MFU 达 59.0%、加速 1.32×。
 
-论文借此论证：通过系统级优化（通信/流水线/算子），MegaScale 相比原 Megatron-LM 显著提升训练效率与可扩展性，是支撑 10000+ GPU 万卡训练可行性结论的核心实验证据。
+**2) 关键结论**：MegaScale 在全规模区间均稳定优于 Megatron-LM，MFU 提升幅度 1.19×–1.34×，单次迭代时间与训练总时同步下降，验证其通信/调度优化对万卡强扩展的有效性。
+
+**3) 论文作用**：与 Figure 2（Interleaved 1F1B 流水线）一脉相承，本表以量化数据落地"万卡稳定训练"这一中心主张，构成方法-系统-性能闭环的关键实验证据，支撑 MegaScale 整体论证框架。
 
 ### Table 3 (p.11) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab03.png]]

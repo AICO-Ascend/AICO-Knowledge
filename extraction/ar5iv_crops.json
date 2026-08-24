@@ -624,5 +624,156 @@
   "caption": "Controlling Muon's Update RMS Across Different Model Params",
   "path": "assets/crops/muon-is-scalable-for-llm-training-tab01.png",
   "source": "manual-pdf-region (gap 21pt<22 闸+heading 豁免双重边界案例，全局规则不动)"
+ },
+ "assets/crops/a-survey-of-large-language-models-tab15.png": {
+  "slug": "a-survey-of-large-language-models",
+  "kind": "tab",
+  "num": 15,
+  "page": 64,
+  "caption": "A category of existing evaluation work.",
+  "path": "assets/crops/a-survey-of-large-language-models-tab15.png",
+  "source": "manual-pdf-region (纯文字型表格全行 sc0 无数字无多 span，几何规则无锚点)"
+ },
+ "assets/crops/attention-residuals-tab02.png": {
+  "slug": "attention-residuals",
+  "kind": "tab",
+  "num": 2,
+  "page": 9,
+  "caption": "Baseline vs Block AttnRes (N=8) vs Full AttnRes vs mHC(-lite): Model configurations, Hyperparameters, and Validation Loss.",
+  "path": "assets/crops/attention-residuals-tab02.png",
+  "source": "manual-pdf-region (下方 fig4 图例 sc2 紧贴 21pt<22 间距闸被吸入，同 muon 边界类)"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab03.png": {
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "kind": "tab",
+  "num": 3,
+  "page": 20,
+  "caption": "Memory breakdown per GPU for DeepSeek-V3 with BF16 training (PP​4×VPP​4×EP​64, 256 GPUs).",
+  "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab03.png"
+ },
+ "assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab01.png": {
+  "slug": "bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure",
+  "kind": "tab",
+  "num": 1,
+  "page": 5,
+  "caption": "Ranging from 10 to 50 topics with steps of 10, topic coherence (TC) and topic diversity (TD) were calculated at each step for each topic model. All results were averaged across 3 runs for each step. Thus, each score is the average of 15 separate runs.",
+  "path": "assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab01.png"
+ },
+ "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab01.png": {
+  "slug": "beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl",
+  "kind": "tab",
+  "num": 1,
+  "page": 7,
+  "caption": "Examples of the synthetic questions, where red indicates injected facts and cyan represents fuzzed content.",
+  "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab01.png"
+ },
+ "assets/crops/deepseek-v3-technical-report-tab04.png": {
+  "slug": "deepseek-v3-technical-report",
+  "kind": "tab",
+  "num": 4,
+  "page": 26,
+  "caption": "Ablation results for the MTP strategy. The MTP strategy consistently enhances the model performance on most of the evaluation benchmarks.",
+  "path": "assets/crops/deepseek-v3-technical-report-tab04.png"
+ },
+ "assets/crops/deepseek-v3-technical-report-tab09.png": {
+  "slug": "deepseek-v3-technical-report",
+  "kind": "tab",
+  "num": 9,
+  "page": 34,
+  "caption": "The contribution of distillation from DeepSeek-R1. The evaluation settings of LiveCodeBench and MATH-500 are the same as in Table 6.",
+  "path": "assets/crops/deepseek-v3-technical-report-tab09.png"
+ },
+ "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab03.png": {
+  "slug": "zero-memory-optimizations-toward-training-trillion-parameter-models",
+  "kind": "tab",
+  "num": 3,
+  "page": 18,
+  "caption": "ZeRO configurations",
+  "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab03.png"
+ },
+ "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab03.png": {
+  "slug": "megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism",
+  "kind": "tab",
+  "num": 3,
+  "page": 7,
+  "caption": "Zero-shot results. SOTA are from (Khandelwal et al. 2019) for Wikitext103 and (Radford et al. 2019) for LAMBADA.",
+  "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab03.png"
+ },
+ "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab05.png": {
+  "slug": "megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism",
+  "kind": "tab",
+  "num": 5,
+  "page": 8,
+  "caption": "Development set results for MNLI, QQP, SQuAD 1.1 and SQuAD 2.0 and test set results for RACE. The trained tokens represents consumed tokens during model pretraining (proportional to batch size times number of iterations) normalized by consumed tokens during model pretraining for our 336M model.",
+  "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab05.png"
+ },
+ "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab02.png": {
+  "slug": "deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference",
+  "kind": "tab",
+  "num": 2,
+  "page": 6,
+  "caption": "Comparison of QKV partitioning strategies for baselines (most of which are shown in Figure 3) and DeFT. For IO redundancy, significant issues are highlighted in red, while negligible ones are in blue. “Q” refers to queries, and “KV” refers to the KV cache. “DCM” stands for Dense Causal Mask (a matri",
+  "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab02.png"
+ },
+ "assets/crops/attention-residuals-tab01.png": {
+  "slug": "attention-residuals",
+  "kind": "tab",
+  "num": 1,
+  "page": 8,
+  "caption": "Memory access cost per token per layer incurred by the residual mechanism under each scheme.",
+  "path": "assets/crops/attention-residuals-tab01.png",
+  "source": "manual-pdf-region (单元格内数学绘制无字→zones 误杀表格行；arxiv HTML 仅 22KB 残桩)"
+ },
+ "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab08.png": {
+  "slug": "megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism",
+  "kind": "tab",
+  "num": 8,
+  "page": 15,
+  "caption": "Speedup obtained for the 1.2 billion parameters model using model parallelism while keeping the batch size constant.",
+  "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab08.png",
+  "source": "manual-pdf-region (表后数字密集散文 sc2 连排，prose/gap 双闸失效边界)"
+ },
+ "assets/crops/muon-is-scalable-for-llm-training-tab10.png": {
+  "slug": "muon-is-scalable-for-llm-training",
+  "kind": "tab",
+  "num": 10,
+  "page": 17,
+  "caption": "Comparison of different models on various benchmarks.",
+  "path": "assets/crops/muon-is-scalable-for-llm-training-tab10.png",
+  "source": "manual-pdf-region (行内引用 'Table 10 presents...' 先于真 caption 占位并采散文过 valid)"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 24,
+  "page": 72,
+  "caption": "FRAMES (Factuality, Retrieval, And reasoning MEasurement Set) is a comprehensive benchmark designed to evaluate core components of retrieval-augmented generation (RAG) systems. Our evaluation employs the benchmark’s official \"Oracle Prompt\" configuration. In this setting, each test prompt includes t",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png",
+  "source": "manual-pdf-region (prompt 模板表单列巨元组 matplotlib 折行溢出叠字，原 PDF 单页排版良好直裁)"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab26.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 26,
+  "page": 74,
+  "caption": "AlpacaEval 2.0 is an open-ended evaluation dataset, similar in nature to ArenaHard, and leverages an LLM to assess model performance on subjective tasks. However, in contrast to ArenaHard, the prompts in AlpacaEval 2.0 are generally less challenging and only a small subset necessitates the deploymen",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab26.png",
+  "source": "manual-pdf-region (同 tab24：prompt 模板表走 manual-pdf-region 原排版)"
+ },
+ "assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab10.png": {
+  "slug": "deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models",
+  "kind": "tab",
+  "num": 10,
+  "page": 19,
+  "caption": "The data source and gradient coefficient of different methods. Ps​f​t denotes the data distribution of supervised fine-tuning datasets. πθs​f​t and πθ denote the supervised fine-tuned model and the real-time policy model during the online training process, respectively.",
+  "path": "assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab10.png"
+ },
+ "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab10.png": {
+  "slug": "zero-memory-optimizations-toward-training-trillion-parameter-models",
+  "kind": "tab",
+  "num": 10,
+  "page": 24,
+  "caption": "Model configurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.",
+  "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab10.png"
  }
 }

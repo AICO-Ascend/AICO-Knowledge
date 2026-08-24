@@ -364,11 +364,13 @@ tags: [training, architecture]
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 3 图文联合解读**
 
-1) **对象与数据**：在 1024/4096/16384 GPU 三规模下，比较 ROFT、Rail-only、Dragonfly、BCube、HPN、ZCube 六种拓扑的 GPU 对平均通信路径长度（APL）、单交换机故障后 APL 及平均路径拉伸（APS）。ZCube 在各规模 APL 全场最低（2.93939 / 2.96923 / 2.98450），故障后几无增长（2.94129 等），APS≈6.46×10⁻⁴，明显优于 ROFT（APL≈5.47）、Dragonfly（≈4.67）与 BCube（APS=9.77×10⁻⁴），与 HPN 相当且在 1024 GPU 规模上 APS 更小。
+**说明**：图片仅含 caption 文字，未呈现表格行/列数据，下文据 caption 与正文 Figure 3(a) 论证进行解读。
 
-2) **关键结论**：量化证明 ZCube 兼具最短路径与近零故障拉伸——即可扩展性与单点失效容错性兼顾，验证其相对人工/经典拓扑的路径效率优势。
+1) **核心对象与结构**：对比 BCube、ROFT、HPN、ZCube 等不同拓扑在 256 GPU 规模下，**GPU 对平均通信路径长度**及**平均路径拉伸（path stretch）**两项指标，并分别报告**单交换机故障前/后**的数值；星号约定服务器内通信路径长度计为 1。
 
-3) **论文作用**：与 Figure 3 的动态吞吐/训练性能互补，从静态拓扑度量层为 ATOP 自动生成的 ZCube 提供低成本高效率的证据，闭环论证"自动拓扑搜索优于人工设计"的核心主张。
+2) **关键论证结论**：与 Figure 3(a) 互为印证——ZCube 在每 100Gbps 最大并发流数仅 ~1.3（远低于 BCube 2.8、HPN 1.6），同时路径长度与拉伸显著更小且在单 ToR 故障后仍保持低延迟，从而说明 ZCube 在**高带宽利用率**与**故障弹性**上同时优于既有拓扑。
+
+3) **作用**：该表量化 ATOP 自动生成拓扑的**通信效率与鲁棒性**，为 Fig.3 中 GPT-3 训练 4k-GPU 单 ToR 故障性能退化结论提供**小规模结构层证据**，是方法链路上"拓扑搜索→结构验证→系统级评估"的关键中间环节。
 
 ### Table 4 (p.19) ⭐深度解读
 ![[assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-tab04.png]]

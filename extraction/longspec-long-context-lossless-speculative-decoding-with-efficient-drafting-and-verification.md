@@ -152,11 +152,11 @@ Table 1 是 §4.2 "Main Results" 的**主实验证据表**，与 Figure 3 共同
 > A detailed breakdown of performance as the prefill length increases, with LongChat-7B on GovReport.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：用户提供的 caption 与图片实际内容不完全吻合（caption 写"with LongChat-7B on GovReport"，但图片为多模型×多数据集的完整对比表）。以下按图片实际内容解读。
+> 【图文联合解读】**Table 5 图文联合解读**
 
----
+该表在 6 个 prefill 区间（0–5k 至 25k–32k）下，用 LongChat-7B 在 GovReport 上分解吞吐量 Tokens/s、平均接受长度 τ 及 Draft / Target / Verify 三段耗时。数据显示 τ 稳定在 4 左右，Draft（8.91→9.25 ms）与 Verify（6.18→6.28 ms）耗时近乎持平，而 Target 时间由 25.63 ms 单调增至 30.89 ms，是 25k–32k 段吞吐量由 ~115 跌至 103.68 tokens/s 的主导因素。
 
-表5对比 Vanilla HF/FA、TR、EAGLE、LongSpec 五种方法，在 GovReport、QMSum、MultiNews、LCC、RB-P 五个长上下文数据集上对 V-7B 与 LC-7B 两个基模型的接受长度 τ 与 Tokens/s 表现。EAGLE τ≈1.9–2.1，吞吐 26–40；TR τ≈2.7–3.1，吞吐 65–100；LongSpec τ 达 3.06–4.21，吞吐 85–122 tokens/s，在所有数据集与基模型上全面领先 EAGLE 近 3 倍、超越 TR 约 1.4 倍。作为论文核心结果表，量化证明 LongSpec 在长上下文场景下兼具更长接受长度与更高吞吐双重优势，支撑其"高效 drafting+verification"主结论。
+原文借此论证两点：(1) LongSpec 的接受长度对长 context 不敏感，drafting 阶段无退化；(2) 长上下文下真正的瓶颈集中在目标模型注意力层——直接呼应 Fig.5 中 HTA 显著削减该部分黄色延迟的结论，凸显该优化在整个 speculative decoding 链路中的必要性与有效性。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

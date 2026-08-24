@@ -75,13 +75,11 @@ tags: [training]
 > Max model throughput with ZeRO-DP.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图4（左半）联合解读**
+> 【图文联合解读】**核心对象与结构**：左图为ZeRO-DP（绿圆）与Baseline-DP（橙三角）的"单卡吞吐(Tflops)–模型规模(B)"散点对比，蓝虚线标示4.5 Pflops聚合基准；ZeRO-DP在6–8B参数时达峰值约47 Tflops，并可扩展至13B，Baseline-DP仅在1.5B处达约39/18 Tflops。右图为Model-ZeRO-17B（绿）与Megatron-LM-8.3B（橙）的"验证困惑度–迭代次数"曲线，30万次迭代后前者降至~8.8，低于后者~9.3。
 
-**核心内容**：横轴为模型规模1.5B–13B参数，纵轴为单卡吞吐（Tflops）。绿圆点为ZeRO-DP，橙三角为Baseline-DP，蓝虚线标示4.5 Pflops聚合吞吐（≈35 Tflops）。ZeRO-DP在1.5B–8B规模维持40–47 Tflops峰值；10B起降至约35、21 Tflops。Baseline-DP仅在≤1.5B处出现约39与约18 Tflops两点。
+**技术结论**：ZeRO-DP在削减显存的同时不牺牲计算吞吐，并使训练规模突破Baseline瓶颈；更大模型带来更优收敛质量。
 
-**技术结论**：① ZeRO-DP在≤8B规模下单卡效率逼近理论峰值，并显著高于Baseline-DP；② 模型规模超过8B后，受显存限制batch size被迫减小，吞吐随之下降；③ 但即便降速，ZeRO-DP仍可训练Baseline-DP根本装不下的13B模型，验证其规模可扩展性。
-
-**论文作用**：与Fig2、3及Table 4共同构成ZeRO吞吐量分析链，为"训练万亿参数模型"的核心主张提供效率与规模双重证据。
+**论文作用**：与Fig.3（超线性扩展）互补，以吞吐与精度双重实验指标，支撑ZeRO"民主化训练"主张，是Table 3理论分析走向实证落地的关键一环。
 
 ### Figure 5 (p.16) ⭐深度解读
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-fig05.png]]
@@ -175,16 +173,16 @@ tags: [training]
 ### Table 3 (p.18) ⭐深度解读
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab03.png]]
 > [!quote] caption
-> ZeRO conﬁgurations
+> ZeRO configurations
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明：图像中 Table 3 仅显示标题"ZeRO configurations"，具体表格内容未在可见区域内呈现，以下结合论文文本与已有认知进行解读。**
+> 【图文联合解读】## Table 3 图文联合解读
 
-**1) 核心对象与结构**：该表对比 ZeRO 不同阶段（P_os 仅切分优化器状态、P_os+g 切分优化器状态+梯度、P_os+g+p 三者全切分）在不同 DP 度（如 64、128、256、1024…）下，单 GPU 的模型状态（优化器状态、梯度、参数）、残差状态（激活、缓冲）及总显存占用，量化展示显存压缩倍数（约 4×→8×→线性可至 N 倍）。
+**核心内容**：该表枚举了 ZeRO 的 5 种内存优化配置，通过 ZeRO-DP（切分优化器状态 Pos、再加切分梯度 g）与 ZeRO-R（切分常量缓冲 CB、动量 MD、参数 Pa，必要时卸载 cpu）的不同组合，从 Config 1 的"仅切分优化器状态（Pos/CB+MD）"逐步递进到 Config 5 的"全量切分并卸载 CPU（Pos+g/CB+MD+Pa+cpu）"。
 
-**2) 关键结论**：论证 ZeRO 通过逐步切分三类模型状态，可在固定显存下支撑的参数量随 DP 度线性扩展，文中进一步指出 ZeRO-100B 可在 128 GPU 上训练 13B 模型无需 MP，每 GPU 吞吐 >40 TFlops，比纯 DP（最大 1.4B，<20 TFlops）显著提升。
+**论证结论**：表格作为实验变量表，支撑了论文核心论点——随着切分维度增加，每 GPU 显存占用线性降低、可训练模型规模呈超线性扩展，从而在 60B 模型上实现 38 TFlops/GPU、15 PFlops 聚合吞吐（Figure 3），相比 SOTA 提升 10× 以上。
 
-**3) 在论文中的作用**：Table 3 是 ZeRO 方法部分的内存分析基石，为 Figure 3（60B 模型超线性扩展、15 PFlops 聚合性能）与 Figure 4（民主化训练）提供量化依据，是从理论显存推导走向大规模实验验证的关键桥梁。
+**链路作用**：Table 3 是 ZeRO 方法体系的"配置总纲"，定义了从基础数据并行到极限切分的五档策略，为后续 Figure 3 的扩展性曲线与万亿参数训练可行性分析提供统一的实验标尺。
 
 ### Table 4 (p.19) ⭐深度解读
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab04.png]]
@@ -211,16 +209,18 @@ tags: [training]
 ### Table 10 (p.24) ⭐深度解读
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab10.png]]
 > [!quote] caption
-> Model conﬁgurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.
+> Model configurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 10 图文联合解读**
 
-该表为Figure 7（纯数据并行下最大模型规模 vs 吞吐量实验）提供具体配置：列出隐藏维度（256–3072）、层数、注意力头数及对应模型规模（约1.4B–13B参数），作为扫描吞吐量曲线的输入点。
+该表罗列了 Figure 7 评测所采用的模型配置，横向对比 ZeRO 与 Baseline 在 128 GPU、MP=1（纯数据并行）条件下的最大可训练规模。
 
-原文借此论证：（1）硬件约束为400 GPU，GPU数须为MP整数倍；（2）基线选用能容纳模型的最小2的幂次GPU数（如170B模型用256卡），使其通信开销更低，反衬ZeRO优势；（3）实验比较"每GPU性能"而非聚合吞吐，确保公平对比。
+**核心数据**：ZeRO 配置覆盖 1.5B–13B 九档模型，隐藏维度从 1920 扩至 4096，注意力头数 16–32，单卡 batch size 随模型增大从 24 递减至 2；Baseline 仅给出 1p16B（24 层）和 1p38B（40 层、hidden=1536、batch=1）两档，最大仅约 16B–38B 量级。
 
-该表在论文链路中起**实验设定基准**作用，奠定Figure 7吞吐量-规模曲线的数据基础，是支撑ZeRO相对基线在纯DP场景下仍可训练更大模型这一结论的实证支柱。
+**技术结论**：在固定 128 卡、不启用模型并行的前提下，Baseline 因每卡冗余存储参数/优化器状态，可承载模型很快触顶；而 ZeRO 通过分片这些状态，将纯数据并行可训练的模型规模上限提升至 13B（甚至图中推得更高），证明其消除了数据并行中的内存冗余瓶颈。
+
+**论文作用**：作为 Figure 7 的配置说明表，为"ZeRO 在不引入模型并行的情况下显著扩大可训练规模"这一关键实验结论提供超参数依据，支撑 ZeRO 作为内存优化而非并行策略的定位。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

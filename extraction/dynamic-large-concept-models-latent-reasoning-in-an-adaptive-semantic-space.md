@@ -93,13 +93,9 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 > Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**联合解读：**
+> 【图文联合解读】**【说明】** 所给原文段落仅引用 Figure 2/9，未直接讨论 Table 2，故下面对该表的解读独立完成。
 
-**1) 表格内容：** Table 2 按任务类别比较 DLCM 与 Baseline 的零样本准确率（%）。常识问答类（Commonsense QA、HellaSwag、Winogrande、OpenBookQA、PIQA、ARC Challenge/Easy）共 7 项全部提升，Diff 范围 +0.67～+3.00（OpenBookQA 提升最大，+3.00；HellaSwag 最小，+0.67）；MMLU 微降 -0.30。阅读理解类（BoolQ、RACE）出现回归，分别为 -1.47 和 -0.72。
-
-**2) 关键结论：** DLCM 在多数零样本任务上稳定优于 Baseline，尤其在常识与推理类任务（OpenBookQA +3.00、ARC Easy +2.61、PIQA +2.42）上增益显著；但在阅读理解（BoolQ/RACE）及 MMLU 出现轻微回退，说明"动态潜概念建模 + 自适应语义空间"的收益偏向语义/常识推理，而对长文本阅读理解任务的表征能力尚有局限。
-
-**3) 实验链路作用：** 作为方法论核心实证支柱，Table 2 量化验证了 DLCM 设计的有效性，支撑论文"潜空间推理优于纯 token 自回归"的核心主张，并与 Figure 2（注意力掩码）和 Figure 9（加速比 T_FA = T_8）共同构成方法–效率–性能三角论证。
+Table 2 展示 DLCM 与 Baseline 在三类 12 个零样本基准上的准确率对比（绿提升/红下降）。通用常识类 8 项中 7 项正向，最高为 OpenBookQA +3.00、ARC Easy +2.61、PIQA +2.42，仅 MMLU 微退 -0.30；英文 QA（BoolQ -1.47、RACE -0.72）与中文 CMMLU -0.24 均小幅退化，仅 C-Eval +1.71 上升。总体平均 43.92% vs 41.23%，+2.69。该表实证隐式推理在自适应语义空间总体有效，但在知识密集型 QA 与中文任务上存在边界，构成论文"方法有效但有局限"的核心实验支撑。
 
 ### Table 3 (p.16) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab03.png]]
@@ -133,13 +129,13 @@ Table 4 在目标压缩比 R=4 下，对比 Global Parser 与 Normal 在 6 项�
 > Average tokens per concept across content types and compression ratios. Values represent the actual granularity achieved for each target compression setting.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 5 联合解读**
+> 【图文联合解读】**说明：图片中仅显示表格标题及周边正文段落，未呈现表格具体数值，故结合原文论述解读。**
 
-1) **结构与数据**：6 类内容（Casual 中/英、Technical 中/英、Code、Math/Science）× 3 档压缩目标。Target 8 跨度 6.09（Tech 中文）–10.58（Tech 英文）；Target 4 收窄至 3.27–4.41（Math/Science 最高）；Target 2 趋近 1.76–1.98（Code 最高）。
+**核心对象与数据：** 表5展示在不同内容类型（代码、结构化文本、密集散文等）与各压缩比目标下，每个"概念"实际承载的平均token数，即每个语义块的真实粒度。
 
-2) **关键结论**：模型实际粒度与目标压缩比一致，且随内容自适应——技术英文需更长概念保留语义，技术中文因更紧凑而粒度最细；高压缩时各类型收敛近 2 token，验证动态分块可控。
+**关键技术结论：** 代码/结构化文本被压缩为更短的句法单元（约几个token），而密集散文则保留为更长的语义chunk（数十token）；同一压缩比下粒度随内容自适应变化。
 
-3) **链路作用**：作为正文的实证支撑，证明 DLCM 的"自适应语义空间"压缩并非固定粒度，而是按内容类型动态调节概念大小，为后续推理效率与下游任务表现提供粒度可控性证据。
+**方法链路作用：** 支撑DLCM"自适应语义空间"核心主张——证明模型并非机械按固定比例切分，而是在全局压缩预算内根据内容语义密度动态调整粒度，最大化信息保留，为后续推理实验提供可解释的结构性证据。
 
 ### Table 6 (p.7) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab06.png]]

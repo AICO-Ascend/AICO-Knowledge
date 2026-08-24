@@ -163,7 +163,7 @@ Muon 经 Newton–Schulz 正交化后，其训练得到的 FFN 权重矩阵奇�
 ### Table 1 (p.6) ⭐深度解读
 ![[assets/crops/muon-is-scalable-for-llm-training-tab01.png]]
 > [!quote] caption
-> Controlling Muon’s Update RMS Across Different Model Params
+> Controlling Muon's Update RMS Across Different Model Params
 
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**表1图文联合解读：**
@@ -178,13 +178,13 @@ Muon 经 Newton–Schulz 正交化后，其训练得到的 FFN 权重矩阵奇�
 > Scaling Law Models and Hyper-Parameters
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读**
+> 【图文联合解读】图像无法辨认——仅显示标题"Table 2: Scaling Law Models and Hyper-Parameters"，表格具体行列内容缺失，以下依据原文与 Figure 2 关联做解读：
 
-1) **核心对象与数据**：表格列出5个规模档（399M / 545M / 822M / 1.1B / 1.5B，不含Embedding参数）模型的超参配置——Head=Layer=(12→20)、Hidden=(1536→2560)、Tokens=(8.92B→38.91B)、LR≈(9.503e-4 → 8.305e-4，随规模微降)、Batch Size=(96→256，以8K上下文样本计数)。五档规模在深度、宽度、数据量上同步放大。
+**1) 核心对象与结构**：该表列出用于拟合缩放律（scaling law）的多档模型配置（参数量 N、层数、隐藏维、头数等）及对应学习率、batch size、AdamW/Muon 的超参（如 Muon 的学习率与 AdamW 的比值、权重衰减），通常按小/中/大几档规模排列。
 
-2) **论证结论**：作为Figure 2缩放律实验的配置清单，表明Muon在各档规模下复用相近的学习率量级（约8e-4–1e-3），无需随模型变大做大幅调参，印证其对规模的兼容性/稳定性。
+**2) 关键结论**：为 AdamW 与 Muon 各自拟合一条 loss–FLOPs 幂律曲线，并比较拟合指数与常数项，从而**定量证明 Muon 在不同计算预算下均优于 AdamW**，且该优势随规模平稳延续，支撑"Muon 可扩展（scalable）"的核心主张。
 
-3) **整体作用**：该表是论文"Muon可规模化"主张的实验骨架——通过统一架构族在1.5B规模内与AdamW（见同图红/蓝损失曲线对比）做同等条件benchmark，为后续"Muon优于AdamW且可扩展"的结论提供可复现的依据。
+**3) 论文链路作用**：与 Figure 2 的消融（Muon±WD vs AdamW）相辅——表 2 提供**模型规格与超参**，使后续 scaling law 拟合、跨优化器公平对比、以及第四章大规模模型的超参选择均可复现，是从消融走向"可扩展性论断"的桥接性配置表。
 
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/muon-is-scalable-for-llm-training-tab03.png]]
@@ -288,9 +288,13 @@ Muon 经 Newton–Schulz 正交化后，其训练得到的 FFN 权重矩阵奇�
 > Comparison of different models on various benchmarks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**表10 图文联合解读**
 
-表格将 Moonlight（2.24B 激活参数 / 15.29B 总参数，Muon 优化器，仅 5.7T token）与 LLAMA3.1-8B、Gemma2-9B、Qwen2.5-7B 三款 7–9B 模型（AdamW，15–18T token）在英/代码/数学共 8 项基准上对照。Moonlight 以更少的激活参数和训练 token，在 MMLU（70.0 vs 66.7）、BBH（65.2 vs 57.7）、GSM8K（77.4 vs 57.2）、MATH（45.3 vs 20.3）等多项显著超越 LLAMA3.1-8B，与更大的 Gemma2-9B、Qwen2.5-7B 亦具竞争力。论文借此实证 Muon 优化器的可扩展性——能以更低算力达到主流优化器训练大模型的水平，是全文"Muon 可规模化"核心论点的关键支撑。
+表10对比Moonlight（2.24B激活参数/5.7T tokens，Muon优化器）与算力更大的稠密模型LLAMA3.1-8B(7.38B/15T, AdamW)、Gemma2-9B(8.32B/8T)、Qwen2.5-7B(6.83B/18T)于MMLU(70.0)、BBH(65.2)、HumanEval(48.1)、GSM8K(77.4)等八项基准。
+
+**核心结论**：Moonlight以最少激活参数与最低训练token量(5.7T vs 8–18T)，却在多项上反超大模型——MMLU胜LLAMA3.1(70.0>66.7)、HumanEval全面领先(48.1>37.2/37.8)、GSM8K与MATH均超LLAMA3.1与Gemma2(77.4>57.2/70.7；45.3>20.3/37.7)。
+
+**论文作用**：与Figure 10的FFN奇异值谱分析相互印证，作为"Muon以正交化隐式施加谱约束、可显著降低训练算力而达到或超越AdamW训练大模型"的核心实证，连接论文方法机制与基准性能结论，是MoE扩展性叙事的关键实验支撑。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

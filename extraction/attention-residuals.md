@@ -143,27 +143,24 @@ tags: []
 ### Table 1 (p.8) ⭐深度解读
 ![[assets/crops/attention-residuals-tab01.png]]
 > [!quote] caption
-> Memory access cost per token per layer incurred by the residual mechanism under each scheme. The internal I/O of the layer function f l is excluded. For AttnRes, both Full and Block variants use the two-phase inference schedule described in Appendix B ; amortized costs are averaged over N layers wit
+> Memory access cost per token per layer incurred by the residual mechanism under each scheme.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：图片仅显示了正文段落与 Table 1 的 caption 部分，表格主体数据未出现在裁剪图中，故依据 caption + 正文进行解读。
-
-**1) 表的核心对象与结构**
-Table 1 以"每 token、每层"的**内存访问开销**为度量单位（按隐藏维 d 计数 reads/writes，剔除层函数 $f_l$ 内部 I/O），横向对比不同残差机制（Standard Residuals、Full AttnRes、Block AttnRes，以及对比基线 (m)HC）。表中数值为公式化的 I/O 复杂度；典型参数下 L=128, N=8, S=L/N=16, m=4。Full/Block 的数值采用附录 B 的两阶段推理调度，并按 block 内 N 层摊销。
-
-**2) 原文论证的关键结论**
-正文援引此表指出：Block AttnRes 通过块内批处理将每层 I/O 压缩至 **(N/S + 3)d reads + 2d writes**，显著低于 (m)HC 等既有残差泛化方案在典型设置下的残差流开销。
-
-**3) 在论文链路中的作用**
-该表是方法论层面"**效率可证**"的关键支撑——以封闭公式证明 AttnRes 在不牺牲残差灵活性的同时，残差流 I/O 与标准残差同阶（常数倍 d），进而保证端到端推理延迟开销 <2%，为前文性能收益提供 I/O 层面的理论兜底。
+> 【图文联合解读】该表量化比较Standard Residuals、mHC（m流）、AttnRes（Full/Block）四种方案每token每层的访存成本，含Read/Write/Symbolic/Typical列。典型配置（L=128, m=4, S=16）下：Standard=3d，mHC总I/O=34d，AttnRes Full=(S+N)d≈24d，Block=(N/S+5)d≈5.5d。关键结论：Block方案以约5.5d远低于Full的24d，验证图1(c)中"分组将访存从O(Ld)降至O(Nd)"的设计主张；其成本接近Standard，证明注意力残差在分块策略下具备实用可行性，支撑论文"以注意力残差替代均匀累加"的方法论，并成为后续实验对比内存开销的基准依据。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/attention-residuals-tab02.png]]
 > [!quote] caption
-> Baseline vs Block AttnRes ( N = 8 ) vs Full AttnRes vs mHC(-lite) [ 64 ]: Model configurations, Hyperparameters, and Validation Loss.
+> Baseline vs Block AttnRes (N=8) vs Full AttnRes vs mHC(-lite): Model configurations, Hyperparameters, and Validation Loss.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表2按5档模型（激活参数194M→528M、Tokens 38.7B→119.0B）比较Baseline、Block AttnRes（N=8）、Full AttnRes和mHC-lite，并列出L_b/H、d_model、d_ff、lr及batch size。Block用伪查询聚合8块表征，以partial_block存块内残差、blocks存块间历史；5档均较基线降损（1.909–1.693）。Full有4/5档最佳（最低1.692），仅241M档mHC以1.869胜出。该表将图2机制落实到受控规模对比，结论是：注意力残差稳定有效，Block已具竞争力，Full整体更优。
+> 【图文联合解读】**图文联合解读：**
+
+1) **核心对象与结构**：表对比5档MoE规模（194M–528M激活参数、38.7B–119.0B tokens、L_b=H=12–17、d_model 896–1264、d_ff 400–560、lr≈2×10⁻³、batch 192–432）下Baseline、Block AttnRes(N=8)、Full AttnRes与mHC(-lite)的验证损失。
+
+2) **关键结论**：Full AttnRes在4/5档（194M/296M/436M/528M：1.899/1.804/1.737/1.692，均加粗）取最低损失，mHC(-lite)仅在241M以1.869险胜；Block AttnRes稳定优于Baseline但弱于Full——证明学得的块间注意力残差在多尺度下稳定优于静态标量混合与启发式mHC方案。
+
+3) **论文作用**：作为核心实验表，跨规模量化论证AttnRes相对基线与前沿mHC的一致增益，为"以注意力替代标量残差混合"这一核心主张提供实证支撑。
 
 ### Table 3 (p.10) ⭐深度解读
 ![[assets/crops/attention-residuals-tab03.png]]

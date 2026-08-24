@@ -97,7 +97,13 @@ tags: [rl]
 > Experimental Results on math reasoning benchmarks(Accuracy %).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表1列出AIME2025、BeyondAIME、HMMT Nov 2025、IMOAnswerBench四个数学推理基准的准确率，对比闭源模型（Claude-Sonnet-4.5、GPT-5 High、GLM-4.7在AIME2025分别达87.0%/94.6%/95.7%）与Qwen3-30B-A3B的多种配置：原始模型调用python工具时表现极差（AIME仅14.6%），关闭工具后跃升至85.0%；SFT与GRPO分别将带工具配置提升至80.4%和84.2%（AIME）。该表构建基线参照系，与图1联合论证"SAO在四个推理与一个编码基准上全面超越Qwen3基线和GRPO"的核心技术结论，是论文实验验证链路中的对照基准表。
+> 【图文联合解读】**Table 1 图文联合解读**
+
+**① 核心对象与数据**：表比较了闭源模型（Claude-Sonnet-4.5、GPT-5 High、GLM-4.7）与 Qwen3-30B-A3B 基座在不同设置（w/wo python、SFT、GRPO）及本文 SAO 的 4 个数学基准准确率。SAO 取得 **AIME2025 97.3、BeyondAIME 74.8、HMMT 88.3、IMOAnswerBench 74.0**，全面领先同类基线。
+
+**② 关键技术结论**：a) SAO 超越 GPT-5 High（94.6/74.0）等闭源大模型，AIME2025 达 SOTA；b) 在 w/python 推理-工具设置下，GRPO 仅 84.2/54.8，SAO 显著反超，验证单 rollout 异步优化框架的有效性；c) 消融显示 SAO > SAO (w/ DIS only) 94.2/71.5 > GRPO (+ DIS) 93.5/70.8，表明 **DIS 改进与 SAO 优化器二者均不可或缺**。
+
+**③ 在论文中的作用**：作为 Figure 1 的量化补充，Table 1 以四个数学基准的精确数值夯实了"SAO 优于 GRPO 与 SFT 基线"的核心主张，并为后续 SWE-Bench 编程实验与方法组件消融提供对比锚点。
 
 ### Table 2 (p.6) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab02.png]]
@@ -105,13 +111,13 @@ tags: [rl]
 > Experimental Results on SWE-Bench Verified (Accuracy %).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 2 联合解读**
 
-Table 2对比Qwen3-30B-A3B在SWE-Bench Verified准确率：基线23.0%、+GRPO(w/ DIS) 27.0%、+SAO（本文）29.8%，SAO相对基线+6.8pp，相对GRPO再+2.8pp。底部曲线图补充AIME2025、BeyondAIME、HMMT-No三基准，SAO（紫）全程高于GRPO（蓝），与表2结论一致。
+**1) 核心对象与数据**：表展示 SWE-Bench Verified（代码修复基准）准确率(%)。基座 Qwen3-30B-A3B 为 23.0%；叠加 GRPO(w/ DIS) 提升至 27.0%；再叠加 SAO（本文方法，高亮行）进一步达 29.8%。相较 GRPO +2.8 点，相较基座 +6.8 点。
 
-**论证结论：** 单rollout+异步优化在异构长轨迹的agentic RL中显著优于同步GRPO，实现吞吐效率与最终精度的兼得。
+**2) 论证的关键技术结论**：SAO 在 GRPO+DIS 基线之上仍带来显著增益，验证了"单 rollout + 异步优化"（图 2 中每条轨迹完成即参与训练）的设计在 agentic RL 中优于同步等待式训练，提升样本利用效率。
 
-**链路作用：** Table 2与曲线共同构成SAO主体实证证据，配合图2异步调度示意图，从定性框架到SWE/数学多基准定量验证，形成"方法→结果"闭环，支撑全文"单轨迹即可训出更强agent"的核心论点。
+**3) 在论文中的作用**：作为核心主结果（main result），该表与图 2 配套，量化证明 SAO 框架在真实软件工程任务上的有效性，是论文方法主张的关键实验支撑。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-tab03.png]]

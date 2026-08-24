@@ -250,15 +250,25 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 
 3) **论文链路作用**：该表为论文数据流水线提供了**消融依据**，支撑 Kimi-K2 训练语料采用大规模 query/answer 改写扩增策略的关键设计选择，与 Figure 1 主结果形成"方法合理性→最终性能"的因果链。
 
+### Table 2 (p.6) ⭐深度解读
+![[assets/crops/kimi-k2-open-agentic-intelligence-tab02.png]]
+> [!quote] caption
+> Architectural comparison between Kimi K2 and DeepSeek-V3
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】表2对比Kimi K2与DeepSeek-V3架构：两者层数、每token激活专家数（8）、共享专家数（1）相同。K2总参1.04T（↑54%），激活参反降至32.6B（↓13%），专家数扩至384（↑50%），注意力头减半至64（↓50%），密集层由3减为1（↓67%），且取消专家分组。
+
+论证结论：K2走"扩专家池、压激活成本"的细粒度MoE路线——通过增加总专家数与削减单token算力（更少激活参数、更少注意力头），实现规模与效率的再平衡，验证了稀疏化扩展策略的有效性。
+
+论文作用：作为架构基线与DeepSeek-V3横向对照，凸显K2在MoE粒度、注意力配置上的关键取舍，为后续引入MuonClip等训练稳定性方案及方法创新铺垫架构背景。
+
 ### Table 3 (p.16) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-tab03.png]]
 > [!quote] caption
 > Performance comparison of Kimi-K2-Instruct against leading open-source and proprietary models across diverse tasks. Bold denotes the global SOTA; underlined bold indicates the best open-source result. Data points marked with * are taken directly from the model’s technical report or blog.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 联合解读**
-
-表3对Kimi-K2-Instruct与6个模型（开源2+闭源4）横向评测，分编程、工具使用、数学与STEM三大类共约30项基准。Kimi-K2在编程上多项刷新全局SOTA（LiveCodeBench v6 Pass@1 53.7、OJBench 27.1、SWE-Lancer 39.1、SWE-bench Verified 71.6开源最佳）；工具使用Tau2 airline 56.5、 AceBench 76.5领跑开源；数学与STEM中AIME 2024 69.6、GPQA-Diamond 75.1、HMMT 2025 38.8亦为开源最优。该表与Figure 3稳定训练loss曲线互证，作为后训练阶段的整体能力验证，构成"MuonClip优化+合成数据预训练+大规模Agentic后训练→广域基准领先"的实验闭环核心证据。
+> 【图文联合解读】Table 3 将 Kimi-K2-Instruct 与 2 个开源（DeepSeek-V3-0324、Qwen3-235B-A22B）及 4 个闭源模型（Claude Sonnet/Opus 4、GPT-4.1、Gemini 2.5 Flash）在 50 余项基准上横向对比，覆盖 Coding、Tool Use、Math & STEM、General 四类任务。数据上，Kimi-K2-Instruct 在绝大多数编码与智能体基准取得开源最优并部分对标 Claude Opus 4：LiveCodeBench v6 53.7、SWE-bench Verified 71.6、MultiPL-E 85.7、Terminal-Bench 30.0、Tau2 telecom 65.8、AceBench 76.5、AIME 2024 69.6、MATH-500 97.4、AutoLogi 89.5、GPQA-Diamond 75.1。结合 Figure 3 "全程无 loss spike"的训练稳定性证据，该表论证合成数据与 MuonClip 等策略使开源 MoE 在 agentic 任务上系统性逼近顶级闭源，是论文方法链路的最终性能验证。
 
 ### Table 4 (p.18) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-tab04.png]]

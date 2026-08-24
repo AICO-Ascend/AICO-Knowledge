@@ -151,15 +151,11 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 1 图文联合解读**
 
-**1) 表格数据（LM1B、16B tokens、单 token 生成 PPL）：**
-- AR（基线自回归）：**22.88**
-- AR + random batch size（仅控制有效 token 数）：24.37
-- BD3-LM L′=1：≤ 25.56（与 AR 存在约 2.7 点差距）
-- BD3-LM L′=1 + tuned schedule（调优噪声调度后）：**22.88**
+该表对比 LM1B 16B tokens 上的单 token 生成困惑度（PPL，越低越好）：AR 基线为 **22.88**；AR 引入随机 batch size 后退化至 24.37；BD3-LM 默认配置（L′=1）≤25.56；而 BD3-LM 经 **tuned schedule** 调参后达到 **22.88**，与 AR 完全持平。
 
-**2) 关键技术结论：** 表格用于支撑原文"block diffusion 参数化在 L′=1 极限下与 AR 的 NLL 期望等价"的理论声明。实验显示，尽管两者目标在期望上等价，BD3-LM 仍出现约 2 点的 PPL 差距，但该差距并非方法本身缺陷，而是训练方差所致——AR 对全部 L 个 token 算交叉熵，而 BD L′=1 仅对掩码 token 计算，导致方差更大；通过"随机 batch size"的对照实验（AR 同样缩减有效 token 后 PPL 升到 24.37）以及**调优噪声调度**，差距被完全闭合，BD3-LM L′=1 达到与 AR 完全相同的 22.88。
+原文借此论证两点关键技术结论：① block diffusion 通过合适调度即可匹配自回归模型的生成质量，验证"插值式框架"并非以质量换取效率；② 随机 batch 对 AR 的劣化（22.88→24.37）暗示逐 token 决策的脆弱性，而 BD3-LM 在块内并行采样的同时仍能保持低 PPL。
 
-**3) 在论文链路中的作用：** 该表是论文核心主张"block diffusion 在 AR 与纯扩散之间有效插值、且不牺牲生成质量"的**经验锚点**；它把抽象的理论等价性转化为可验证的数值结果，为后续展示 KV 缓存与并行采样带来的推理加速收益提供了"质量无损"前提。
+在全篇叙事链中，该表与 Figure 1 的概念动机图形成"动机—实证"闭环：先直观展示 KV cache 与并行采样带来的推理优势，再用 LM1B 上 PPL 完全追平 AR 的硬指标坐实方法可行性，为后续更大规模模型与更长块的实验提供基准锚点。
 
 ### Table 2 (p.7) ⭐深度解读
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab02.png]]
@@ -179,9 +175,7 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 > Test perplexities (PPL; ↓ ) of mod- els trained for 65B tokens on LM1B. Best diffusion value is bolded.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】1）表3比较BD3-LM在LM1B训练65B token后的测试：块长 \(L'=128/16/4\)，掩码分布取 \(\mathcal U[0,.5]\)、\([.3,.8]\)、\([.5,1]\)或\([0,1]\)，指标为PPL与Var. NELBO。  
-2）\(L'=4,\mathcal U[.5,1]\)以29.16获最低PPL，方差8.28；\(L'=128,\mathcal U[0,.5]\)以1.03获最低方差，但PPL为31.72。  
-3）该消融连接掩码设计与FlexAttention稀疏实现（正文称A5000上最高约5×加速），用于确定质量—稳定性折中配置。
+> 【图文联合解读】表3在LM1B、训练65B token的条件下比较三类模型的测试PPL（↓）。自回归基线为23.50/22.83；D3PM、SEDD、MDLM分别为≤82.34、≤32.68、≤31.78。BD3-LM将块长L′从16缩至8、4时，PPL由≤30.60降至≤29.83、≤28.23，优于既有扩散，但仍弱于最佳自回归模型。它说明减小块长能提升质量、逼近AR；表中验证与图4的FlexAttention稀疏掩码（约5×加速）共同支撑块扩散的“质量—效率”链路。
 
 ### Table 4 (p.8) ⭐深度解读
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab04.png]]
@@ -241,9 +235,11 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 > Effect of the noise schedule on like- lihood estimation. We finetune BD3-LMs on 3B tokens from LM1B and evaluate on a linear schedule. For clipped schedules, we compare optimal clipping for L ′ = 4 , 16 .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 8在LM1B 3B tokens上微调BD3-LM，比较各噪声调度在L′=4与L′=16下的PPL与Var. NELBO。L′=4时clipped U[0.45,0.95]最优（PPL 29.21，NELBO 6.24）；L′=16时clipped U[0.3,0.8]最优（PPL 31.12，NELBO 3.58），均显著优于linear、log、sqrt、cosine等标准调度。
+> 【图文联合解读】**1) 核心对象与结构/数据：** 表8比较BD3-LM（在LM1B上微调3B tokens，线性调度评估）在L'=4和L'=16两组下不同噪声调度的PPL与Var.NELBO。关键数据：L'=4时Clipped U[0.45,0.95]最优（PPL 29.21、Var.NELBO 6.24），L'=16时Clipped U[0.3,0.8]最优（PPL 31.12、Var.NELBO 3.58）；而Linear、Logarithmic、平方根、Cosine、Square等标准调度的Var.NELBO均≥7.6，最高达26.43。
 
-原文借此论证两点：(1) clipped masking全面优于标准噪声调度；(2) 最优掩码强度与块大小耦合——小块宜重掩码，大块宜轻掩码。该表为块扩散模型的噪声调度选择提供消融依据，支撑likelihood评估与超参设计，是方法链路中关键的消融实验。
+**2) 关键结论：** 截断（Clipped）噪声调度在取得最优PPL的同时，将Var.NELBO降低3-7倍，显著稳定训练；且最优截断区间随块长L'变化（短块偏向高噪声端U[0.45,0.95]，长块偏向中段U[0.3,0.8]）。
+
+**3) 作用：** 作为消融实验，为Block Diffusion框架采用截断噪声调度提供量化依据，是方法链路中连接似然估计理论与训练稳定性的关键支撑。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -86,13 +86,13 @@ tags: [sparse-attention, kv-cache]
 > Training-free IndexCache at 1/2, 1/4, and 1/8 indexer retention. ‘Long’ and ‘G&R’ aggregate benchmark scores. We compare uniform interleaving against searched patterns.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：图片实际呈现的是 Figure 3（30B 模型上 IndexCache 相对 DSA 基线的加速比条形图，纵轴为"Relative S"、横轴为 10K/60K/120K/200K 上下文长度，三幅子图分别对应三种推理设置，标注值在 114%–131% 之间），**Table 2 的表格本体并未在图中渲染**，仅可见其 caption 文字。因此以下解读仅依据 caption：
+> 【图文联合解读】**图文联合解读：**
 
-1) **核心对象与结构**：Table 2 对比的是 *Training-free* IndexCache 在 indexer 保留比例为 **1/2、1/4、1/8** 三档下的表现，列为两种调度策略——**Uniform interleaving（均匀交错 F/S）**与 **Searched patterns（搜索得到的非均匀模式）**，行为聚合基准 **Long** 与 **G&R** 的得分。
+**① 核心对象与结构：** 表2 在 1/2、1/4、1/8 三档 indexer 保留率下，对比均匀交错（Unif.）与搜索模式（+Search）两种 F/S 层分配，在 9 项基准（长文：MRCR/GW/LB2/RULER/LCR；通用推理：AIME/GPQA/LCB/IFB）上的得分及 Long/G&R 均值。
 
-2) **论证结论**：在无需训练的前提下，搜索得到的 F/S 交错模式在所有保留比例上均优于朴素均匀交错，说明跨层 index 复用存在更优的"算—跳"节奏，验证了 IndexCache 可压缩 indexer 调用次数而不显著损失质量。
+**② 关键技术结论：** 搜索模式大幅恢复精度——1/8 时 Long 均值由 35.3 跃升至 46.1（RULER 68.8→82.0）；1/4 时 Long 49.9 几近追平基线 50.2，G&R 74.9 反超基线 74.6；均匀方案在低保留率下退化严重。证明跨层索引冗余不均，需搜索定位关键层。
 
-3) **链路作用**：与 Figure 3（加速比）互补——Figure 3 证明速度收益，Table 2 证明质量几乎不退化，共同支撑"训练无关 + 模式可搜索 = 实用化稀疏注意力加速"的核心卖点。
+**③ 论文整体作用：** 核心实验，验证"跨层索引复用+搜索模式"可大幅削减 indexer 计算、保持稀疏注意力精度，是方法落地可行性的关键证据。
 
 ### Table 3 (p.9) ⭐深度解读
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab03.png]]
@@ -100,7 +100,11 @@ tags: [sparse-attention, kv-cache]
 > Training-aware IndexCache at 1/2 and 1/4 indexer retention with uniform inter- leaving. w/ searched pattern : the greedy-searched pattern replaces uniform interleaving. w/o cross-layer loss : each indexer is distilled only against its own layer.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表面向30B模型，在索引器保留率1/2、1/4下比较均匀交错、贪婪搜索布局及去除跨层损失；后者仅蒸馏本层。图中DSA基线长上下文/泛化推理均分为51.0/74.2；MRCR、GW、LB2、RULER、LCR为24.7、49.1、46.9、87.3、47.0，AIME、GPQA、LCB、IFB为88.8、79.4、70.5、57.9。消融用于证明跨层复用和跨层蒸馏的价值；因对比行缺失，优势幅度无法核验。该表连接全量基准与低保留率效率实验。
+> 【图文联合解读】Table 3 对训练感知 IndexCache 做消融，覆盖长上下文（MRCR/GW/LB2/RULER/LCR）与通用推理（AIME/GPQA/LCB/IFB）9 项基准。
+
+**核心数据**：1/2 均匀交织 IndexCache 长上下文均值 51.6、通用推理均值 74.5，**均略优于原始 DSA**（51.0/74.2）；1/4 保留仍维持 50.6/74.1，几无精度损失。取消跨层蒸馏（w/o cross-layer loss）长上下文均值跌至 49.8，**凸显跨层损失的关键作用**；贪力搜索模式未带来明显增益，甚至 AIME 外多数指标下降。
+
+**作用**：作为消融实验，验证"均匀交织 + 跨层蒸馏"设计不可或缺；为 1/2 保留率这一核心配置提供精度证据，支撑论文加速与质量并重的核心结论。
 
 ### Table 4 (p.0) ⭐深度解读
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab04.png]]
@@ -122,21 +126,13 @@ Table 4 在 GLM-5（744B）模型上对比 Original DSA 与训练免费 IndexCac
 > Evaluation results of training-free similarity-based searched pattern.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】# 图像与表格不匹配的说明
+> 【图文联合解读】**Table 5 图文联合解读**
 
-**注意**：上传的图片实际展示的是**公式 (4) 及周围正文**（动态规划求解最优 F 层选择的优化形式），**而非 Table 5 本身**。Table 5 的实际表格内容未能提供。以下结合 caption 与公式上下文进行解读：
+Table 5 在四个长上下文基准上对比三档配置：Original DSA（Avg 54.0，MRCR v2 24.5，GraphWalks 49.6，RULER 87.9）、1/2 Unif. IndexCache（50.7 / 22.0 / 46.6 / 83.6）、+Searched pattern（49.8 / 22.9 / 43.5 / 82.9）。
 
----
+**关键结论**：加入基于相似度检索的最优 F 层选择（对应公式 4 的 DP 优化形式）后，平均分反而比简单均匀复用低 0.9 点（49.8 vs 50.7），仅在 MRCR v2 上略优（+0.9），GraphWalks 反而下降 3.1 点。
 
-## 图文联合解读
-
-1. **核心对象与结构**：公式 (4) 定义了 IndexCache 的核心优化问题——在约束"恰有 M 个 F 层"下，最大化各层复用索引所得的累计相似度 ∑S_ℓ,src(ℓ)；src(ℓ) 为 ℓ 之前最近的 F 层。该问题通过 DP（dp[i][k]）精确求解。Table 5 据此应展示**训练免费的相似度搜索模式**的评估结果，即由 DP 解 c\* 选出的 F 层集合在相似度、检索质量及下游任务上的表现，并与均匀分配等基线对比。
-
-2. **论证的关键技术结论**：作者意图证明——基于相似度的搜索模式无需任何训练即优于手工规则（如固定间隔、均匀分配），从而**以零开销支撑跨层索引复用**的可行性。
-
-3. **在论文链路中的作用**：Table 5 是方法验证环节的关键证据——公式 (4) 给出理论最优解，Table 5 用实验量化"该最优解确实换来高质量注意力检索与精度保持"，从而为后文的端到端加速实验（速度/精度权衡）提供搜索策略层面的支撑。
-
-*（若需更精确解读，请补传 Table 5 实际图像。）*
+**作用**：作为消融实验，论证训练免费相似度搜索未能带来增益，从而为论文核心方案选用结构简洁、无需搜索的 Uniform IndexCache 提供数据支撑，避免引入额外超参与检索开销。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

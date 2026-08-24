@@ -76,13 +76,11 @@ tags: [architecture]
 > Comparison of different linear RNN models and their corresponding online learning objectives using the framework from Liu et al. ( 2024 ). For convenience, we simplify Longhorn’s vector-valued β to scalar β .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表1解读**
+> 【图文联合解读】**表1图文联合解读**
 
-**核心对象与结构**：表1沿Liu et al. (2024)在线学习框架，分"方法/在线目标/递推更新"三列，对比5种线性RNN——LA、Mamba2、Longhorn、DeltaNet、Gated DeltaNet。其中LA无任何门控或delta修正；Mamba2仅引入遗忘门α_t（如‖S_t-α_t S_{t-1}‖²_F项）；Longhorn与DeltaNet分别以标量化β_t实现delta修正的近似与精确形式；Gated DeltaNet的目标函数同时含α_t遗忘项与β_t delta修正项，递推式为S_t=S_{t-1}(α_t(I-β_t k_t k_t^T))+β_t v_t k_t^T，最为完整。
+表1以"方法/在线学习目标/在线更新"三列，对比LA、Mamba2、Longhorn、DeltaNet与本文Gated DeltaNet五类线性RNN。数据上：LA与Mamba2仅含遗忘门α_t；DeltaNet/Longhorn引入学习率β_t执行Delta更新；Gated DeltaNet递推式为 **S_t = S_{t-1}(α_t(I − β_t k_t k_t^T)) + β_t v_t k_t^T**，目标函数相应结合 ‖S_t − α_t S_{t-1}‖²_F 与 ⟨S_t k_t, β_t(v_t − α_t S_{t-1} k_t)⟩ 两项。
 
-**关键技术结论**：Gated DeltaNet不是临时拼接，而是Mamba2门控机制与DeltaNet delta规则的形式统一与严格推广，二者缺一不可。
-
-**论文链路作用**：该表为图1的混合架构与block设计提供理论锚点，证明所提方法为两线演进的自然融合终点，支撑后续消融与基准实验的合理性。
+此表论证关键结论：Gated DeltaNet是Mamba2（遗忘机制）与DeltaNet（Delta规则）的形式化统一体，**同时**获得跨token衰减与对错误写入的纠错能力，二者并非互斥而可叠加。该表为论文核心动机——在Mamba2框架内引入Delta规则——提供统一的数学依据，奠定后续架构（图1）与实验链路（S-MHA、Gated DeltaNet消融）的理论基础。
 
 ### Table 2 (p.5) ⭐深度解读
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab02.png]]

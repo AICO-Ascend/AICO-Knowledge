@@ -263,11 +263,11 @@ def col_window(rect, cols, page_w):
     return cols[col_of(rect, cols)]
 
 
-def crop_pix(page, rect, dpi):
+def crop_pix(page, rect, dpi, max_h=MAX_CROP_H):
     rect = rect & page.rect
     if rect.is_empty or rect.height < MIN_CROP_H or rect.width < MIN_CROP_W:
         return None
-    if rect.height > MAX_CROP_H:
+    if rect.height > max_h:
         return None
     mat = fitz.Matrix(dpi / 72, dpi / 72)
     return page.get_pixmap(matrix=mat, clip=rect)
@@ -356,7 +356,7 @@ def zones_with_text(zones, blocks):
 
 
 def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
-                         zones=(), text_zones=()):
+                         zones=(), text_zones=(), prose_w=0):
     # 采集窗 ±640pt：堆叠子表（a-survey tab16 三段能力评测表 y91-592）
     # 表体可超 500pt，420 窗会砍掉末段数据行；真正的截断靠间距/节标题/
     # caption/prose 闸，不靠这个粗界
@@ -393,7 +393,13 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
         else:
             if br.y1 > cap_rect.y0 + 2 or br.y1 < cap_rect.y0 - 640:
                 continue
-        if br.x1 < x0 or br.x0 > x1:
+        # x 窗微重叠排除：双栏论文左栏散文块常与右栏 caption 的 x 窗有
+        # 6-12pt 微重叠，被当候选吸入并把 union 拉成通栏（block-diffusion
+        # tab03）。排除条件 = 重叠 <20pt 且 不足块宽一半 —— 窄单元格块
+        # （"93"/"2.78T" 宽 <20pt）整格在窗内是 100% 重叠，必须放行
+        # （kimi-k3 tab01 整表被误杀的教训）
+        _xov = min(br.x1, x1) - max(br.x0, x0)
+        if br.x1 < x0 or br.x0 > x1 or (_xov < 20 and _xov < 0.5 * br.width):
             continue
         t = block_text(b)
         if not t or is_folio(br, t, page_h):
@@ -429,7 +435,7 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
             if s2 >= 1:
                 br2 = fitz.Rect(c2["bbox"])
                 wordy = len(t2.split()) > 18 and s2 < 2
-                if not (br2.width > 0.55 * (x1 - x0) and wordy):
+                if not (br2.width > 0.55 * (prose_w or (x1 - x0)) and wordy):
                     n += 1
         return n >= min_count
 
@@ -461,7 +467,10 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
         # 已收 <3 行（表格尚未成形，deepseek-v3 tab2 的公式行只领先 fig
         # caption 一步）1 个硬证据即放行；已收 >=3 行（表格大概率完整，
         # 再往外多半是他物）需 2 个（medusa tab1 的 fig4 caption 续行拦下）
-        wide_block = br.width > 0.55 * (x1 - x0)
+        # 宽度参照用栏宽（prose_w）而非采集窗：双栏论文的通栏 caption 给
+        # 整页窗，栏宽散文块就成"窄块"豁免 prose gate，整栏 sc1 散文被
+        # 无限吸入（megatron tab08 表后整页散文尾巴的根因）
+        wide_block = br.width > 0.55 * (prose_w or (x1 - x0))
         wordy = len(t.split()) > 18 or len(t) > BODY_MIN_CHARS
         need = 2 if len(picked) >= 3 else 1
         if wide_block and wordy and sc < 2 and not strong_ahead(i, need):
@@ -473,11 +482,16 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
             and br.y1 > prev_br.y0 + 2
         if sc >= 1:
             picked.append((br, b))
-        elif len(t) <= 150 and (strong_ahead(i, 1) or not edge_used or same_row):
+        elif len(t) <= 250 and strong_ahead(i, 1):
+            # 长 sc0 块 + 后面有硬表格证据 = 合并表头单元格（a-survey tab9
+            # "Models A800 Full Tuning A800 LoRA..." 211 字符一块）；散文行
+            # 后面极少紧跟 sc2 数据行，strong_ahead 把关
+            picked.append((br, b))
+        elif len(t) <= 150 and (not edge_used or same_row):
             # 短 sc0 行：表格在后面继续 → 连接行（子表头）；
             # 否则作为远缘表头/脚注吸收一次
             picked.append((br, b))
-            if not strong_ahead(i, 1) and not same_row:
+            if not same_row:
                 edge_used = True
         else:
             break
@@ -727,6 +741,7 @@ def process_paper(slug, dpi, latex_slugs):
                 cols = page_columns(blocks, page.rect.width)
                 cx0, cx1 = col_window(r, cols, page.rect.width)
                 x0, x1 = max(r.x0 - 20, cx0), min(r.x1 + 20, cx1)
+                prose_w = min(c1 - c0 for c0, c1 in cols)
                 # 堆叠表格（[tab8行][tab8 caption][tab9行][tab9 caption]）里
                 # "先试下方"会把 tab8 错配到 tab9 的行（deepseekmath 实测）。
                 # caption-below 风格的表格行紧贴 caption 上方，反之在下方；
@@ -748,24 +763,54 @@ def process_paper(slug, dpi, latex_slugs):
                         above_adj = True
                     if r.y1 - 2 <= br.y0 <= r.y1 + 60:
                         below_adj = True
-                # 方向选择：两侧都紧贴时双向采集，按得分和取优（kimi-k2-5 tab04
+                # 方向选择：两侧都紧贴时双向采集，按得分取优（kimi-k2-5 tab04
                 # 页眉 sc=1 触发 above_adj 抢方向 → caption-only；deepseekmath
-                # 堆叠表格 above=7>below=3 仍正确归属）。同分取上（caption-below）。
+                # 堆叠表格 above=7>below=3 仍正确归属）。
+                # 先比单块最高分：mooncake tab03 上方 2 散文 sc1 与下方
+                # 表头+sc2 数据行同分，同分取上即误选 —— 有 sc2 的一侧更像
+                # 真表。同分再比总和，仍同取上（caption-below 布局）。
+                # 采集尽头紧贴 fig caption ⇒ 该侧冲进了图内容（specextend
+                # tab03 下方 Figure 6 柱状图标签 sc2 被当表体），改取对侧。
                 region = []
                 if above_adj and below_adj:
-                    ra = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones)
-                    rb = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones)
-                    sa = sum(2 if b["type"] == 1 else block_table_score(b) for _, b in ra)
-                    sb = sum(2 if b["type"] == 1 else block_table_score(b) for _, b in rb)
-                    region = ra if sa >= sb else rb
+                    ra = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones, prose_w)
+                    rb = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones, prose_w)
+                    def _sc(p):
+                        return [2 if b["type"] == 1 else block_table_score(b)
+                                for _, b in p]
+                    sa, sb = sum(_sc(ra)), sum(_sc(rb))
+                    ma, mb = max(_sc(ra), default=0), max(_sc(rb), default=0)
+                    def _hits_fig_cap(picked, direction):
+                        if not picked:
+                            return False
+                        edge = (min(g.y0 for g, _ in picked) if direction == -1
+                                else max(g.y1 for g, _ in picked))
+                        for _k, _n, _t, c, _l in caps:
+                            if _k != "fig" or c is r:
+                                continue
+                            if direction == -1 and c.y1 <= edge + 2 \
+                                    and c.y1 > edge - 40:
+                                return True
+                            if direction == +1 and c.y0 >= edge - 2 \
+                                    and c.y0 < edge + 40:
+                                return True
+                        return False
+                    if _hits_fig_cap(ra, -1) and rb:
+                        region = rb
+                    elif _hits_fig_cap(rb, +1) and ra:
+                        region = ra
+                    elif ma != mb:
+                        region = ra if ma > mb else rb
+                    else:
+                        region = ra if sa >= sb else rb
                 elif above_adj:
-                    region = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones)
+                    region = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones, prose_w)
                 elif below_adj:
-                    region = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones)
+                    region = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones, prose_w)
                 if not region:
-                    region = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones)
+                    region = collect_table_region(blocks, r, x0, x1, +1, page.rect.height, zones, t_zones, prose_w)
                     if not region:
-                        region = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones)
+                        region = collect_table_region(blocks, r, x0, x1, -1, page.rect.height, zones, t_zones, prose_w)
                 # 表格有效性：区域里必须真有表格状内容（多单元格行/数字行/嵌入表图），
                 # 否则这块只是 caption+散文，宁可不裁也不产出假表格图（2026-08-24）
                 def valid_table(picked):
@@ -787,7 +832,7 @@ def process_paper(slug, dpi, latex_slugs):
                     fake_cap = fitz.Rect(x0, doc[pno-1].rect.height + 5, x1,
                                          doc[pno-1].rect.height + 10)
                     region2 = collect_table_region(pb, fake_cap, x0, x1, -1,
-                                                   doc[pno - 1].rect.height)
+                                                   doc[pno - 1].rect.height, prose_w=prose_w)
                     if valid_table(region2):
                         seen_tab.add(num)
                         u2 = region2[0][0]
@@ -801,7 +846,7 @@ def process_paper(slug, dpi, latex_slugs):
                                 "path": f"assets/crops/{out.name}"}
                         if out.exists():
                             res["tables"].append(item); continue
-                        pix = crop_pix(doc[pno - 1], u2, dpi)
+                        pix = crop_pix(doc[pno - 1], u2, dpi, max_h=doc[pno-1].rect.height - 50)
                         if pix:
                             pix.save(str(out))
                             res["tables"].append(item)
@@ -821,7 +866,7 @@ def process_paper(slug, dpi, latex_slugs):
                     # 裁下一页的表体区（caption 文本留在 visuals.json/MD）
                     nb = doc[pno + 1].get_text("dict")["blocks"]
                     fake_cap = fitz.Rect(x0, -10, x1, -5)
-                    region2 = collect_table_region(nb, fake_cap, x0, x1, +1, doc[pno + 1].rect.height)
+                    region2 = collect_table_region(nb, fake_cap, x0, x1, +1, doc[pno + 1].rect.height, prose_w=prose_w)
                     if valid_table(region2):
                         seen_tab.add(num)
                         u2 = region2[0][0]
@@ -835,7 +880,7 @@ def process_paper(slug, dpi, latex_slugs):
                                 "path": f"assets/crops/{out.name}"}
                         if out.exists():
                             res["tables"].append(item); continue
-                        pix = crop_pix(doc[pno + 1], u2, dpi)
+                        pix = crop_pix(doc[pno + 1], u2, dpi, max_h=doc[pno+1].rect.height - 50)
                         if pix:
                             pix.save(str(out))
                             res["tables"].append(item)
@@ -854,7 +899,7 @@ def process_paper(slug, dpi, latex_slugs):
                         "path": f"assets/crops/{out.name}"}
                 if out.exists():
                     res["tables"].append(item); continue
-                pix = crop_pix(page, u, dpi)
+                pix = crop_pix(page, u, dpi, max_h=page.rect.height - 50)
                 if pix:
                     pix.save(str(out))
                     res["tables"].append(item)

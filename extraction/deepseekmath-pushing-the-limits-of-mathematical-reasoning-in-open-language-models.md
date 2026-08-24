@@ -132,7 +132,11 @@ tags: []
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 1 联合解读**
 
-Table 1 对比 DeepSeek-LLM 1.3B 在 No Math Training 基线及四种数学语料（MathPile 8.9B、OpenWebMath 13.6B、Proof-Pile-2 51.9B、DeepSeekMath Corpus 120.2B tokens）下，8 个基准的 few-shot CoT 准确率。DeepSeekMath Corpus 在所有基准上均最优：GSM8K 23.8%、MATH 13.6%、OCW 4.8%、SAT 56.3%、MMLU STEM 33.1%、CMATH 41.5%、Gaokao MathCloze 5.9%、Gaokao MathQA 23.6%，全面超越 Proof-Pile-2 等语料。原文借此论证：高质量、大规模、多样化数学语料是模型数学推理能力提升的关键，为后续基于此语料进行 GRPO 强化学习训练 DeepSeekMath 7B 提供数据基础，构成全文"数据→SFT→RL"方法链路的起点。
+1) **对象与数据**：以 DeepSeek-LLM 1.3B 为基模型，对比在 5 种数学语料（No Training / MathPile 8.9B / OpenWebMath 13.6B / Proof-Pile-2 51.9B / DeepSeekMath Corpus **120.2B tokens**）下 8 项基准（英文 GSM8K、MATH、OCW、SAT、MMLU STEM；中文 CMATH、Gaokao MathCloze、MathQA）的少样本 CoT 准确率。结果显示 DeepSeekMath Corpus **全部 8 项均最优**：GSM8K 23.8%、MATH 13.6%、CMATH 41.5%、Gaokao MathQA 23.6%，相对无数学训练基线（2.9%/3.0%）提升 4–8 倍。
+
+2) **关键结论**：数据规模与质量并重——仅靠增大语料（Proof-Pile-2 51.9B）提升有限，而 DeepSeekMath Corpus 以约 2.3× 于 Proof-Pile-2 的体量取得显著优势，证明其筛选与去重策略有效。
+
+3) **论文作用**：作为核心动机实验，为后续 DeepSeekMath 7B 训练及整套数据构建方法（迭代分类、网页转换、去重）提供经验支撑。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab02.png]]
@@ -168,7 +172,9 @@ Table 1 对比 DeepSeek-LLM 1.3B 在 No Math Training 基线及四种数学语�
 > | Performance of Open- and Closed-Source models with both Chain-of-Thought and Tool-Integrated Reasoning on English and Chinese Benchmarks. Scores in gray denote majority votes with 32 candidates; The others are Top1 scores. DeepSeekMath-RL 7B beats all open- source models from 7B to 70B, as well as
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5对比CoT与Tool-Integrated两类推理范式下开源/闭源模型在GSM8K、MATH及两个中文基准上的表现。CoT设定下，DeepSeekMath-RL 7B以88.2%/51.7%（GSM8K/MATH Top1）全面超越7B–70B开源模型及多数闭源模型（如GPT-3.5仅80.8%/34.1%）；工具推理下同样以86.7%/58.8%领先开源阵营。作为核心实验证据，该表证明仅在GSM8K与MATH的CoT数据上做RL训练，即可在全部基准稳定超越纯SFT的DeepSeekMath-Instruct 7B（82.9%→88.2%、46.8%→51.7%），有力支撑"RL阶段显著增益于SFT"这一关键技术结论。
+> 【图文联合解读】**图文联合解读：**
+
+表5按"CoT推理"与"工具集成推理"两栏，对比闭源（Gemini Ultra 94.4/53.2%、GPT-4 Code 97.0/69.7%）与开源（7B–70B）模型在GSM8K/MATH及中文MGSM-zh/CMATH上的成绩。核心数据：DeepSeekMath-RL 7B以CoT方式取得88.2%/51.7%，工具集成下86.7%/58.8%，中文79.6%/88.8%，全面超越同尺寸乃至70B开源模型与多数闭源模型，仅依赖GSM8K+MATH CoT微调数据即泛化至中文。该表是论文方法链（数学预训练→SFT→GRPO强化学习）成效的最终验证，证明7B小模型可达到开源SOTA。
 
 ### Table 6 (p.16) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab06.png]]
@@ -219,18 +225,10 @@ Table 6 用 DeepSeek-LLM 1.3B 对比 5 种训练设置在 GSM8K/MATH/CMATH 及�
 ### Table 10 (p.19) ⭐深度解读
 ![[assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab10.png]]
 > [!quote] caption
-> | The data source and gradient coefficient of different methods. 𝑃 𝑠𝑓𝑡 denotes the data distribution of supervised fine-tuning datasets. 𝜋 𝜃 𝑠𝑓𝑡 and 𝜋 𝜃 denote the supervised fine-tuned model and the real-time policy model during the online training process, respectively.
+> The data source and gradient coefficient of different methods. Ps​f​t denotes the data distribution of supervised fine-tuning datasets. πθs​f​t and πθ denote the supervised fine-tuned model and the real-time policy model during the online training process, respectively.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**注意：图片内容与表标题不匹配。** 标题描述的是"数据来源与梯度系数"的表格，但实际图片显示的是**两组训练准确率曲线**（左：GSM8K，右：MATH），对比 RFT（紫）、Online RFT（绿）、GRPO+OS（橙）、GRPO+PS（蓝）四种方法随训练步数的表现。
-
-**1) 核心对象与量化数据：**
-- GSM8K（Y 轴 ≈58–66%）：GRPO+PS 收敛至约 65% 最高；GRPO+OS 约 64%；Online RFT 约 62%；RFT 最低约 60%。
-- MATH（Y 轴 ≈27–31%）：GRPO+PS 约 30.5% 领先；GRPO+OS 约 30%；Online RFT 约 29%；RFT 约 28%。
-
-**2) 论证结论：** GRPO+PS（采用 $P_{sft}$ 与实时策略 $\pi_\theta$ 混合梯度系数）始终优于 GRPO+OS、Online RFT 与纯 RFT，说明加入 SFT 数据梯度项对在线强化学习在数学推理任务上具有显著增益。
-
-**3) 链路作用：** 支撑论文核心观点——**GRPO 引入 SFT 数据源能突破纯在线 RL 的上限**，为"将 SFT 数据复用进 RL 训练流程"这一方法选择提供定量实验依据。
+> 【图文联合解读】表10从数据源、奖励函数、梯度系数三维度对比6种训练方法。SFT以Psft采样、系数为1；RFT/Online RFT均用规则奖励与Eq.10，仅采样策略不同（πsft vs πθ）；DPO引入正负样本对（Eq.14）；PPO采用Model奖励（Eq.18）；GRPO则分组采样{oi}_{i=1..G}并用Eq.21。论文借此论证GRPO在采样、奖励机制与梯度计算上的独特设计——相较PPO省去critic价值模型，是其在在线RL阶段选择GRPO作为核心算法的关键理论依据，支撑了后续实验对比。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

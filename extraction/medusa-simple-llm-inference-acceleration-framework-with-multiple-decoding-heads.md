@@ -400,9 +400,13 @@ Table 3 以 Vicuna 为基线，纵向列出 4 项技术逐层叠加的推理加�
 > Speedup results on AlpacaEval ( Li et al. , 2023 ) dataset.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 图文联合解读：**
+> 【图文联合解读】**图文联合解读说明**：所提供的图片仅显示了 Table 4 的标题（"Speedup results on AlpacaEval (Li et al., 2023) dataset"）及其下方的章节标题 "G. Exploration and Modeling of Hardware Constraints and MEDUSA"，**表格主体的数据行/列内容未在图像中呈现，无法辨认**，以下解读仅依据可见标题与论文语境进行：
 
-Table 4 展示 Medusa 在 AlpacaEval 数据集上对四个模型（Vicuna-7b/13b/33b、Zephyr-7b）的推理加速结果：基础速度 17.87–37.07 tokens/s，Medusa 提升至 40.43–106.76 tokens/s，加速比 2.26–3.16×，每步接受率 2.85–3.28（约 3 token/步）。结论：跨模型规模与类型均稳定获得 >2× 加速，13b 最优（3.16×），33b 因参数大、绝对速度低而略低（2.26×）。承接 Figure 4 搜索到的最优树结构，作为论文主实验，在真实评测集上验证了 Medusa 加速框架的通用性与实用价值，支撑"多解码头+树注意力即插即用"的核心主张。
+1) **核心对象与结构**：该表呈现 Medusa 多解码头框架在 AlpacaEval 指令数据集上的端到端加速比（speedup）结果，应包含不同模型（如 Vicuna/LLaMA 系列）、不同 Medusa head 数量或是否启用 tree-attention 等条件下的加速倍数列与基线对比。
+
+2) **关键技术结论**：作为论文主实验表，它量化证明 Medusa 相对自回归基线在真实指令场景中可获得显著（如 2× 以上）吞吐量提升，从而将 Figure 4 关于 tree-attention 候选 token 数与接受率权衡的微观结论，在 AlpacaEval 这一宏观端到端 benchmark 上得到实证支撑。
+
+3) **在论文链路中的作用**：Table 4 与 Figure 3/4 共同构成"组件消融→端到端验证"的实验闭环，作为 Section G 引入硬件约束建模前的系统级性能锚点。
 
 ### Table 5 (p.0) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab05.png]]
@@ -446,13 +450,11 @@ Table 4 展示 Medusa 在 AlpacaEval 数据集上对四个模型（Vicuna-7b/13b
 > TFLOP/s & Operational Intensity of linear layers (up/gate/down) for Llama 33B on an A100 80GB PCIe.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 解读：**
+> 【图文联合解读】**对象与数据**：表以 Batch Size（1–64）为行、Candidate Tokens（1–112）为列，每格含 TFLOP/s 与 Operational Intensity 两个数（对应 Llama 33B 的 up/gate/down 线性层，A100 80GB PCIe 实测）。如 batch=1/token=1 仅 1.26 & 1.0（严重欠载），batch=64/token=112 达 246.14 & 2893.91（接近峰值）；两指标均随 batch × token 单调递增。
 
-**1) 核心对象与数据：** 表展示 Llama 33B 在 A100 80GB PCIe 上三个线性层（up/gate/down）的 TFLOP/s 与 Operational Intensity（算力强度），行轴为 Batch Size（1–64），列轴为候选 Token 数（1–112）。例如 BS=1、CT=1 时仅 1.26 & 1.0；BS=64、CT=96 时达 244.52 & 2711.46；BS=64、CT=112 峰值达 246.14 & 2893.91。两项指标均随 Batch Size 与候选 Token 数同向增长，候选 Token 增长带来的提升尤为显著。
+**技术结论**：Medusa 多头预测+并行的核心收益——把 memory-bound 的 decode 阶段批量化后转为 compute-bound，使线性层硬件利用率提升近两个数量级。
 
-**2) 论证结论：** 候选 Token 数量越大，线性层越逼近 A100 的 roofline 计算密集区，证明 Medusa 多头并行预测多个候选 token 可显著提升 GPU 利用率，解释了 Figure 8 中端到端加速的硬件机理。
-
-**3) 论文作用：** 作为 roofline 级硬件证据，支撑 Medusa-2 推理加速框架的算力利用率论证，衔接端到端速度提升与底层算子效率。
+**论文作用**：为 Figure 8 中 Medusa-2 带来 2×+ 端到端加速提供底层证据，证明增益来源于"计算资源被充分激活"，而非调度或 KV-cache 层面的其它技巧。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -270,7 +270,7 @@
    {
     "num": 3,
     "page": 20,
-    "caption": "Memory breakdown per GPU for DeepSeek-V3 with BF16 training (PP 4 × VPP 4 × EP 64 , 256 GPUs).",
+    "caption": "Memory breakdown per GPU for DeepSeek-V3 with BF16 training (PP​4×VPP​4×EP​64, 256 GPUs).",
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab03.png"
    },
    {
@@ -481,7 +481,7 @@
    {
     "num": 10,
     "page": 19,
-    "caption": "| The data source and gradient coefficient of different methods. 𝑃 𝑠𝑓𝑡 denotes the data distribution of supervised fine-tuning datasets. 𝜋 𝜃 𝑠𝑓𝑡 and 𝜋 𝜃 denote the supervised fine-tuned model and the real-time policy model during the online training process, respectively.",
+    "caption": "The data source and gradient coefficient of different methods. Ps​f​t denotes the data distribution of supervised fine-tuning datasets. πθs​f​t and πθ denote the supervised fine-tuned model and the real-time policy model during the online training process, respectively.",
     "path": "assets/crops/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models-tab10.png"
    }
   ],
@@ -2423,6 +2423,12 @@
     "path": "assets/crops/kimi-k2-open-agentic-intelligence-tab01.png"
    },
    {
+    "num": 2,
+    "page": 6,
+    "caption": "Architectural comparison between Kimi K2 and DeepSeek-V3",
+    "path": "assets/crops/kimi-k2-open-agentic-intelligence-tab02.png"
+   },
+   {
     "num": 3,
     "page": 16,
     "caption": "Performance comparison of Kimi-K2-Instruct against leading open-source and proprietary models across diverse tasks. Bold denotes the global SOTA; underlined bold indicates the best open-source result. Data points marked with * are taken directly from the model’s technical report or blog.",
@@ -2833,6 +2839,12 @@
     "page": 10,
     "caption": "Throughput (queries per second, higher is better). Classification uses a pooled head at inference (no decoding). Reasoning uses CoT-style decoding (train-time only in DHRD). The rightmost column shows the speedup of our deployed path over CoT decoding on the same backbone.",
     "path": "assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab05.png"
+   },
+   {
+    "num": 6,
+    "page": 12,
+    "caption": "Third-party assets and licenses.",
+    "path": "assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab06.png"
    }
   ],
   "formulas": []
@@ -3393,6 +3405,12 @@
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab03.png"
    },
    {
+    "num": 4,
+    "page": 18,
+    "caption": "j Description of RL Data and Tasks.",
+    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab04.png"
+   },
+   {
     "num": 5,
     "page": 27,
     "caption": "j Data Statistics of SFT Data.",
@@ -3497,7 +3515,7 @@
    {
     "num": 24,
     "page": 72,
-    "caption": "j FRAMES (Factuality, Retrieval, And reasoning MEasurement Set) is a comprehensive",
+    "caption": "FRAMES (Factuality, Retrieval, And reasoning MEasurement Set) is a comprehensive benchmark designed to evaluate core components of retrieval-augmented generation (RAG) systems. Our evaluation employs the benchmark’s official \"Oracle Prompt\" configuration. In this setting, each test prompt includes t",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png"
    },
    {
@@ -3509,7 +3527,7 @@
    {
     "num": 26,
     "page": 74,
-    "caption": "j AlpacaEval 2.0 is an open-ended evaluation dataset, similar in nature to ArenaHard, and leverages an LLM to assess model performance on subjective tasks. However, in contrast to",
+    "caption": "AlpacaEval 2.0 is an open-ended evaluation dataset, similar in nature to ArenaHard, and leverages an LLM to assess model performance on subjective tasks. However, in contrast to ArenaHard, the prompts in AlpacaEval 2.0 are generally less challenging and only a small subset necessitates the deploymen",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab26.png"
    },
    {
@@ -3608,6 +3626,12 @@
     "page": 11,
     "caption": "| Long-context performance comparison. Parenthetical values (e.g. (50k, 1.62) ) denote the pre-training steps and the corresponding loss prior to the long-context extension. Two key findings: (1) With only 82% of the pre-training FLOPs (41k vs. 50k), Engram-27B matches the baseline’s LongPPL ( Fang ",
     "path": "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab02.png"
+   },
+   {
+    "num": 3,
+    "page": 13,
+    "caption": "| Entity resolution example reproduced from Ghandeharioun et al. ( 2024 ). This table illustrates how LLMs gradually integrate context tokens through layers of attention and FFNs to construct the internal representation of the entity: “Diana, Princess of Wales” . The “Latent State Translation” colum",
+    "path": "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab03.png"
    },
    {
     "num": 4,
@@ -4031,7 +4055,7 @@
    {
     "num": 4,
     "page": 26,
-    "caption": "| Ablation results for the MTP strategy. The MTP strategy consistently enhances the model performance on most of the evaluation benchmarks.",
+    "caption": "Ablation results for the MTP strategy. The MTP strategy consistently enhances the model performance on most of the evaluation benchmarks.",
     "path": "assets/crops/deepseek-v3-technical-report-tab04.png"
    },
    {
@@ -4061,7 +4085,7 @@
    {
     "num": 9,
     "page": 34,
-    "caption": "| The contribution of distillation from DeepSeek-R1. The evaluation settings of Live- CodeBench and MATH-500 are the same as in Table 6.",
+    "caption": "The contribution of distillation from DeepSeek-R1. The evaluation settings of LiveCodeBench and MATH-500 are the same as in Table 6.",
     "path": "assets/crops/deepseek-v3-technical-report-tab09.png"
    }
   ],
@@ -4655,7 +4679,7 @@
    {
     "num": 3,
     "page": 18,
-    "caption": "ZeRO conﬁgurations",
+    "caption": "ZeRO configurations",
     "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab03.png"
    },
    {
@@ -4673,7 +4697,7 @@
    {
     "num": 10,
     "page": 24,
-    "caption": "Model conﬁgurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.",
+    "caption": "Model configurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.",
     "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab10.png"
    }
   ],
@@ -4873,13 +4897,13 @@
    {
     "num": 3,
     "page": 7,
-    "caption": "Zero-shot results. SOTA are from ( Khandelwal et al. ,",
+    "caption": "Zero-shot results. SOTA are from (Khandelwal et al. 2019) for Wikitext103 and (Radford et al. 2019) for LAMBADA.",
     "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab03.png"
    },
    {
     "num": 5,
-    "page": 7,
-    "caption": "Development set results for MNLI, QQP, SQuAD 1.1 and SQuAD 2.0 and test set results for RACE. The trained tokens represents",
+    "page": 8,
+    "caption": "Development set results for MNLI, QQP, SQuAD 1.1 and SQuAD 2.0 and test set results for RACE. The trained tokens represents consumed tokens during model pretraining (proportional to batch size times number of iterations) normalized by consumed tokens during model pretraining for our 336M model.",
     "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab05.png"
    },
    {
@@ -4897,7 +4921,7 @@
    {
     "num": 8,
     "page": 15,
-    "caption": "Speedup obtained for the 1.2 billion parameters model",
+    "caption": "Speedup obtained for the 1.2 billion parameters model using model parallelism while keeping the batch size constant.",
     "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab08.png"
    }
   ],
@@ -4990,6 +5014,18 @@
     "page": 0,
     "caption": "TABLE XI: Comparison of Scheduling Approaches for KV Cache Optimization.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab11.png"
+   },
+   {
+    "num": 12,
+    "page": 26,
+    "caption": "Comparison of Hardware-aware Design Approaches for KV Cache Optimization.",
+    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab12.png"
+   },
+   {
+    "num": 13,
+    "page": 28,
+    "caption": "Long-context Text Benchmarks.",
+    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab13.png"
    },
    {
     "num": 14,
@@ -5326,7 +5362,7 @@
    {
     "num": 2,
     "page": 6,
-    "caption": "Comparison of QKV partitioning strategies for baselines (most of which are shown in Figure 3) and D E FT. For IO redundancy, significant issues are highlighted in red , while negligible ones are in blue . “Q” refers to queries, and “KV” refers to the KV cache. “DCM” stands for Dense Causal Mask (a m",
+    "caption": "Comparison of QKV partitioning strategies for baselines (most of which are shown in Figure 3) and DeFT. For IO redundancy, significant issues are highlighted in red, while negligible ones are in blue. “Q” refers to queries, and “KV” refers to the KV cache. “DCM” stands for Dense Causal Mask (a matri",
     "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab02.png"
    },
    {
@@ -6135,6 +6171,12 @@
     "path": "assets/crops/a-survey-of-large-language-models-tab05.png"
    },
    {
+    "num": 6,
+    "page": 23,
+    "caption": "Comparison of parallelism and complexity of dif- ferent models. T represents sequence length, H represents the dimension of the input representation, N represents the dimension after compression in SSMs, and M represents the number of layers in each Hyena module.",
+    "path": "assets/crops/a-survey-of-large-language-models-tab06.png"
+   },
+   {
     "num": 7,
     "page": 24,
     "caption": "Detailed formulations for the network configurations. Here, Sublayer denotes a FFN or a self-attention module in a Transformer layer, d denotes the size of hidden states, p i denotes position embedding at position i , A ij denotes the attention score between a query and a key, r i − j denotes a lear",
@@ -6148,7 +6190,7 @@
    },
    {
     "num": 9,
-    "page": 32,
+    "page": 33,
     "caption": "Basic statistics of the required number of GPUs, tuning time, batch size (denoted as BS) per device (full tuning and LoRA tuning), and inference rate (the number of generated tokes per second). Our experiments are conducted based on two Linux servers having 8 A800-80G SXM4 GPUs with 6 NVSwitch and 8",
     "path": "assets/crops/a-survey-of-large-language-models-tab09.png"
    },
@@ -6184,8 +6226,8 @@
    },
    {
     "num": 15,
-    "page": 63,
-    "caption": "A category of existing evaluation work. “General” denotes that the evaluation focuses on an overall performance of multiple abilities. The evaluated abilities are not limited to the representative basic and advanced abilities mentioned in Section 7.1 and 7.2.",
+    "page": 64,
+    "caption": "A category of existing evaluation work.",
     "path": "assets/crops/a-survey-of-large-language-models-tab15.png"
    },
    {
@@ -6524,7 +6566,7 @@
    {
     "num": 1,
     "page": 6,
-    "caption": "Controlling Muon’s Update RMS Across Different Model Params",
+    "caption": "Controlling Muon's Update RMS Across Different Model Params",
     "path": "assets/crops/muon-is-scalable-for-llm-training-tab01.png"
    },
    {
@@ -6639,13 +6681,13 @@
    {
     "num": 1,
     "page": 8,
-    "caption": "Memory access cost per token per layer incurred by the residual mechanism under each scheme. The internal I/O of the layer function f l is excluded. For AttnRes, both Full and Block variants use the two-phase inference schedule described in Appendix B ; amortized costs are averaged over N layers wit",
+    "caption": "Memory access cost per token per layer incurred by the residual mechanism under each scheme.",
     "path": "assets/crops/attention-residuals-tab01.png"
    },
    {
     "num": 2,
     "page": 9,
-    "caption": "Baseline vs Block AttnRes ( N = 8 ) vs Full AttnRes vs mHC(-lite) [ 64 ]: Model configurations, Hyperparameters, and Validation Loss.",
+    "caption": "Baseline vs Block AttnRes (N=8) vs Full AttnRes vs mHC(-lite): Model configurations, Hyperparameters, and Validation Loss.",
     "path": "assets/crops/attention-residuals-tab02.png"
    },
    {

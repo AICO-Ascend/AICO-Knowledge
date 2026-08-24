@@ -246,13 +246,13 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 > Number of requests rejected by the system under the overloaded-scenario experiment.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读：**
+> 【图文联合解读】**Table 3 解读**
 
-**1) 核心数据：** 该表展示过载场景（overloaded-scenario）下系统拒绝请求数。三列对比：Baseline（基线）=4183、Early Rejection（早期拒绝）=3771、Early Rejection based on Prediction（基于预测的早期拒绝）=3589。即在相同过载压力下，加入早期拒绝机制较基线减少约 412 条（≈9.8%）；进一步引入预测机制后，再减少约 182 条（相对 Early Rejection 再降 ≈4.8%）。
+**核心对象与数据**：表3对比了过载场景下三种拒绝策略的请求拒绝数——Baseline 4183、Early Rejection 3771、Early Rejection based on Prediction 3589，呈单调递减。
 
-**2) 关键论证结论：** 论文借此证明 Mooncake 的"过分配 + 早期拒绝"策略有效——通过预测未来负载提前腾挪 KVCache 资源，可显著降低系统对请求的硬拒绝率；基于预测的早期拒绝优于静态早期拒绝，体现负载预测模块的实际价值。
+**关键结论**：预测式早拒绝相比Baseline少拒绝约594个（约−14.2%），优于简单早拒绝（少412个）。论文借此论证：基于预测的早拒绝机制能在系统过载时更精准地识别"注定超时"的请求，避免无效算力消耗，从而降低SLO违约率。
 
-**3) 在论文中的作用：** 该表属于过载鲁棒性实验的一环，与吞吐量、TTFT 等主指标互为补充，共同支撑"以 KVCache 为中心 + 预测式调度"在真实高并发场景下提升服务可用性的核心论点。
+**论文作用**：该表是Mooncake负载感知调度实验链路的支撑数据之一，与吞吐量、SLO达成率等指标共同验证其KVCache中心化解耦架构与早拒绝调度的有效性。
 
 ## 相关论文
 

@@ -218,13 +218,13 @@ Let me draft:
 > extends Figure 4 to the full top- 5 branches of each head’s tree at MATH-500 prompt #0 , decode step 0 (root token “We” ). The pattern reported in the main text repeats throughout the tree. For the diffusion head, top- 2 and top- 4 both combine “ given ” at depth 1 and “ told ” at depth 2 with targe
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 8 图文联合解读**
 
-1) **对象与数据**：Table 8 展示 MATH-500 prompt #0、decode step 0（根 token "We"）处 diffusion head 与 causal head 各自的 **top-5 完整分支树**，逐 depth 列出 token、target joint（nats）与 gap；实验配置为 4×B200、N=16、W=7、B=255、LR 3×10⁻⁴、γ=0。
+**① 核心对象与数据**：列出 MATH-500 prompt #0、step 0 处 Causal 与 Diffusion 两 head 各 top-5 分支的 token 序列、Σlog r（surrogate）、Σlog p（target）、Δ（nats）。surrogate 高度聚集（causal -3.88~-4.01，diffusion -3.76~-3.87），而 target 跨度极大（causal -3.54~-49.71；diffusion -0.08~-96.44）；diffusion 端 Δ 多在 +47~+92.57，唯 rank 3（"are given that the"）Δ=-3.69 与 target 吻合最佳，causal rank 1 Δ=-0.34 几乎贴合，但 rank 2-5 仍 +7~+45 偏离。
 
-2) **关键结论**：两 head 均出现"off-argmax 继承"失稳——diffusion head 仅 rank-3（target joint −0.08）连贯，top-2/4 在 depth1 取"given"、depth2 取"told"，joint <−50 nats；causal head 仅 rank-1 "are told that"（gap −0.34）忠实，rank-2–5 在 depth2 一致偏到 off-argmax 的"given"，至 depth4–5 严重发散（如 rank-3 "the2product"，gap +42.50）。
+**② 关键结论**：两 head 的 surrogate log-r 都不能精确复现 target joint；diffusion head 失真更严重，整体呈系统性高估，仅个别分支碰巧接近 target。
 
-3) **作用**：作为 Figure 4 的全分支佐证，支撑 §A.4 关于"沿 argmax 锚定扩展导致祖先条件与自身 token 失配"的论断，从而论证 JetSpec 采用并行树状 drafting 突破传统 spec-decoding 缩放天花板的必要性。
+**③ 论文作用**：作为 Figure 4 的全分支扩展，定量印证"现有 head surrogate 不足以驱动并行树 drafting"，论证 JetSpec 须显式对齐 target 并设计新校正机制的必要性。
 
 ### Table 9 (p.15) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab09.png]]

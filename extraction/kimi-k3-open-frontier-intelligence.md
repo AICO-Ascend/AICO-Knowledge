@@ -30,13 +30,7 @@ tags: []
 > Kimi K3 main results. 1https://huggingface.co/moonshotai/Kimi-K3[cs.CL] 7 Aug 2026
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-图1分"Coding"与"General & Visual Agents"两栏共12基准（DeepSWE、Kimi Code Bench 2.0、Terminal-Bench 2.1、ProgramBench、FrontierSWE、SWE-Marathon、GDPval-AA v2 Elo、BrowseComp、AutomationBench、JobBench、CharXiv w/ tool、ZeroBench Pass@5），以横向条形对比Kimi K3与GPT-5.6 Sol、Opus 4.8、Fable 5、GLM-5.2得分，K3以蓝色高亮。
-
-**技术结论：** K3在ProgramBench(77.8)、FrontierSWE(81.4)、SWE-Marathon(42.0)、BrowseComp(91.2)、AutomationBench(30.8)居首；Terminal-Bench(88.3)、Kimi Code Bench(72.9)、CharXiv(91.3)、JobBench(54.3)紧追Fable 5；DeepSWE(67.5)居第4、GDPval-Elo(1686)居中。论证K3在编码与代理任务达开源前沿、与闭源SOTA相当但未全面超越。
-
-**论文作用：** 开篇主结果图，定量锚定K3前沿定位，为后续方法/实验论证提供基准锚点。
+> 【图文联合解读】该图分"编程"与"通用&视觉Agent"两大模块，展示 Kimi K3 与 Fable 5、GPT-5.6 Sol、Opus 4.8、GPT-5.5、GLM-5.2 在 12 项基准上的横向对比（均开启 max/xhigh 思考）。编程侧 K3 在 ProgramBench(77.8)、Terminal-Bench 2.1(88.3)、SWE-Marathon(42.0) 居首或并列最强，DeepSWE(67.5) 第二；Agent 侧 BrowseComp(91.2)、AutomationBench(30.8)、CharXiv(91.3) 均位列前二，仅 GDPval-AA Elo(1686) 与 JobBench(54.3) 略逊 Fable 5。结论：K3 在编程长程任务与工具调用型 Agent 上达到开放前沿水平，是论文"open frontier intelligence"主张的核心实证锚点，为后续 Table 1(K2 vs K3 架构对比) 与训练方法论述提供性能基线。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig02.png]]
@@ -93,13 +87,13 @@ tags: []
 > Vision-tower gradient norms in our pre-training ablations. Compared with the SigLIP-initialized MoonViT-3D, the from-scratch MoonViT-V2 maintains lower gradient norms with fewer spikes, indicating more stable optimization. 9
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**Figure 6 图文联合解读**
+> 【图文联合解读】**Figure 6 联合解读**
 
-**(1) 核心数据：** (a)展示7k–30k训练步两种视觉塔梯度范数全程曲线；(b)放大14k–16k区间。蓝色MoonViT-3D（SigLIP初始化）全程频繁出现0.4–0.75的尖峰，放大图显示其基线约0.02–0.03、尖峰达0.1–0.15。红色MoonViT-V2（从零训练）基线始终≤0.02，仅约22k步出现一次~0.4的孤立尖峰，其余区段近乎平坦。
+**(1) 核心对象与数据：** 横轴为训练步数（7k–30k），纵轴为视觉塔梯度范数。蓝线 MoonViT-3D（SigLIP 初始化）在全程频繁出现尖峰，多处突破 0.6，最高峰近 0.75；红线 MoonViT-V2（从头训练）基线稳定在 0.02 左右，仅个别步骤出现小幅脉冲。子图 (b) 在 14k–16k 区段放大（量级 0–0.15），蓝线密集尖刺可达 0.15，红线几乎贴近横轴，进一步印证差距。
 
-**(2) 技术结论：** V2从头训练相比SigLIP初始化方案，梯度范数更低、尖峰显著更少，优化过程明显更稳定——为"放弃强视觉预训练权重、重新设计原生视觉编码器"这一关键决策提供量化稳定性证据。
+**(2) 关键结论：** SigLIP 初始化反而带来梯度震荡与数值尖峰；从头训练的 MoonViT-V2 显著降低梯度量级与异常脉冲，说明其优化过程更平稳，支撑作者以 V2 替代 3D 的设计选择。
 
-**(3) 在论文中的作用：** 作为预训练消融（pre-training ablation）的客观度量，与下游任务性能互补，从训练动力学角度背书MoonViT-V2架构选择，强化"原生从头设计优于借用预训练初始化"的整体方法论主张。
+**(3) 链路作用：** 该图为"视觉编码器选型"消融提供训练动力学证据，与下游性能消融互补，论证 MoonViT-V2 是更稳健的预训练起点。
 
 ### Figure 7 (p.11) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-fig07.png]]
@@ -255,7 +249,7 @@ tags: []
 > Performance comparison of Kimi K3 against proprietary and open-source models. Bold denotes the best result for each benchmark and underline the second-best. Unless otherwise noted, Kimi K3 results are obtained with reasoning effort set to max and temperature equal to 1 . 0 . For HLE-Full, MMMU-Pro, 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 2将Kimi K3（max推理强度）与Claude Fable 5、GPT-5.6 Sol、Opus 4.8、GPT-5.5四个闭源模型及开源GLM-5.2在推理/知识、编码、代理三大类约30项基准上系统对比。**K3在代理类全面领先**：BrowseComp 91.2、DeepSearchQA 95.0、ResearchRubrics 76.2、MCPMark-Verified 94.5、Harvey Lab-AA 94.6、AutomationBench 30.8、SpreadsheetBench 2 34.8、τ³-Banking 33.4等均居首位；**编码**拿下ProgramBench 77.8、SWE-Marathon 42.0；**推理**与GPT-5.6 Sol互有胜负（GPQA 93.5平GPT-5.5，AA-LCR 74.7居首）。该表是论文核心实证，支撑"开源权重模型可达前沿、与最强闭源模型正面竞争"的主张，并凸显K3在长程工具调用与代理任务上的相对优势。
+> 【图文联合解读】表2将Kimi K3与4款闭源模型（Claude Fable 5、GPT-5.6 Sol、Claude Opus 4.8、GPT-5.5）及开源GLM-5.2在推理/编程/智能体/视觉4大类40+基准上对比。Kimi K3在智能体类全面领先：BrowseComp 91.2、DeepSearchQA 95.0、MCPMark 94.5、Harvey Lab-AA 94.6、τ³-Banking 33.4、SpreadsheetBench 2 34.8均最佳，编程类ProgramBench 77.8、SWE-Marathon 42.0亦居首；视觉OmniDocBench 91.1、MMVU 82.1夺冠；推理类则GPT-5.6 Sol略优（GPQA 94.1、CritPt 32.3）。该表以密集实证印证Figure 2的token/channel/layer混合MoE架构在agent与tool-use场景的优越性，是论文"开源达前沿智能"主张的核心量化证据。
 
 ### Table 3 (p.29) ⭐深度解读
 ![[assets/crops/kimi-k3-open-frontier-intelligence-tab03.png]]

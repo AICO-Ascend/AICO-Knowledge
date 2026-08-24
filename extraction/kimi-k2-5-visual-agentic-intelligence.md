@@ -275,14 +275,7 @@ Kimi K2.5 augments its native visual perception with **external tool calls** to 
 > Performance comparison of Kimi K2.5 against open-source and proprietary models. Bold denotes the global SOTA; Data points marked with * are taken from our internal evaluations. † refers to their scores of text-only subset.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**1) 表格结构与数据**
-该表横向对比 K2.5 与 5 个模型（Claude Opus 4.5、GPT-5.2 xhigh、Gemini 3 Pro、DeepSeek-V3.2、Qwen3-VL-235B）在 4 类 30 余项基准的成绩，加粗为全球 SOTA。K2.5 多项领先：数学 AIME 96.1、HMMT 95.4、GPQA-Diamond 87.6；Agentic BrowseComp 60.6→(w/ctx)74.9→(Swarm)78.4、WideSearch(Swarm) 79.0、Seal-0 57.4；图像 OCRBench 92.3、InfoVQA 92.6、WorldVQA 46.3、MathVista 90.1。
-
-**2) 原文论证的关键结论**
-(1) K2.5 与头部闭源持平或领先；(2) 仅 K2.5 报告的 Agent Swarm 列（BrowseComp 78.4、WideSearch 79.0）直接验证"并行智能体 RL"对长程浏览/搜索的提升；(3) 图像多任务领先证明多模态联合训练有效。
-
-**3) 在论文中的作用**
-作为主实验表，承接 Figure 4 的并行 RL 设计，在通用/智能体/视觉三维度系统验证方法有效性，支撑 K2.5 为全面型 agentic-visual 模型的最终结论。
+> 【图文联合解读】Table 4 对比 Kimi K2.5 与 Claude Opus 4.5、GPT-5.2、Gemini 3 Pro（闭源）及 DeepSeek-V3.2、Qwen3-VL-235B-A22B（开源），共 48 项基准，覆盖推理10/编码8/智能体8/图像14/视频6/计算2 六大类。K2.5 在 InfoVQA 92.6、OCRBench 92.3、MathVista 90.1、LiveCodeBench v6 85.0、BrowseComp-Swarm 78.4、VideoMMMU 86.6 等视觉与智能体项夺全球 SOTA。该表与 Figure 4 训练曲线互证，把"奖励引导有效分解"的并行 RL 方法转译为跨 6 域、跨竞品的可量化分数，撑起 K2.5"全能 SOTA"的核心论断。
 
 ### Table 5 (p.13) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab05.png]]

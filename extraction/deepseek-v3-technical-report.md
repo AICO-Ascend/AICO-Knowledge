@@ -103,19 +103,10 @@ tags: []
 ### Table 4 (p.26) ⭐深度解读
 ![[assets/crops/deepseek-v3-technical-report-tab04.png]]
 > [!quote] caption
-> | Ablation results for the MTP strategy. The MTP strategy consistently enhances the model performance on most of the evaluation benchmarks.
+> Ablation results for the MTP strategy. The MTP strategy consistently enhances the model performance on most of the evaluation benchmarks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：图片仅呈现标题与正文段落，表格具体数值未在图中展示，以下解读依据原文描述进行。
-
-**1）核心对象与结构**：Table 4 为 MTP（Multi-Token Prediction）策略的消融实验表。在两种规模下对比：
-- 小规模：15.7B 参数 MoE 基线，1.33T tokens 训练；
-- 大规模：228.7B 参数 MoE 基线，540B tokens 训练。
-两组均保持训练数据与架构不变，仅追加 1 层深度 MTP 模块；推理时直接丢弃 MTP 模块，保证推理成本完全一致。
-
-**2）关键结论**：MTP 在两种规模、绝大多数评测基准上一致提升模型性能，且不增加任何推理开销——证实其为"训练期免费增益"。
-
-**3）论文作用**：位于第 4.5 节"讨论"的消融研究，与 4.5.2 的无辅助损失负载均衡消融并列，分别支撑 MTP 与 DualPipe/负载均衡两项核心架构创新，为 DeepSeek-V3 整体性能收益提供可分解的归因证据。
+> 【图文联合解读】Table 4 对比小规模（15.7B / 1.33T tokens）与大规模（228.7B / 540B）两组 MoE 的 Baseline 与 w/ MTP。推理激活参数（2.4B / 20.9B）、总参数（15.7B / 228.7B）和训练 token 完全一致，仅多一层 MTP，推理成本不变。Pile-test BPB 几乎持平（0.729→0.729；0.658→0.657），但下游任务普遍提升：小模型 HumanEval 20.7→26.8（+6.1）、GSM8K 25.4→31.4（+6.0）、MMLU 50.0→53.3；大模型 HumanEval 44.5→53.7（+9.2）、DROP 68.5→70.6，代码与数学收益最显著。该表证明 MTP 是"零推理成本"的训练增强手段，作为 V3 训练链路中的关键技巧被最终采纳。
 
 ### Table 5 (p.27) ⭐深度解读
 ![[assets/crops/deepseek-v3-technical-report-tab05.png]]
@@ -166,10 +157,14 @@ tags: []
 ### Table 9 (p.34) ⭐深度解读
 ![[assets/crops/deepseek-v3-technical-report-tab09.png]]
 > [!quote] caption
-> | The contribution of distillation from DeepSeek-R1. The evaluation settings of Live- CodeBench and MATH-500 are the same as in Table 6.
+> The contribution of distillation from DeepSeek-R1. The evaluation settings of LiveCodeBench and MATH-500 are the same as in Table 6.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】图像仅显示表9题注及5.4.1引言，表格数值行未呈现，故无法辨认，仅依据原文：表9以DeepSeek‑V2.5为基线，消融DeepSeek‑R1蒸馏的贡献，考察加入/不加入该蒸馏在LiveCodeBench与MATH‑500上的表现，评测设置同表6。具体增益数值因内容缺失无法确定。该消融旨在说明R1蒸馏能增强代码与数学推理能力，连接R1推理能力输出与V3系列后训练改进的验证环节。
+> 【图文联合解读】**核心对象与数据**：对比 DeepSeek-V2.5 Baseline 与 +R1 Distill 两个版本在 LiveCodeBench-CoT 与 MATH-500 上的 Pass@1 及输出长度。LiveCodeBench：31.1→37.4（+6.3），长度 718→783；MATH-500：74.6→83.2（+8.6），长度 769→1510（近乎翻倍）。
+
+**技术结论**：R1 蒸馏在代码与数学推理上均带来显著准确率增益，但响应长度大幅膨胀，尤其数学任务几近倍增，推理效率得不偿失。
+
+**论文作用**：作为关键消融依据，支撑 V3 最终放弃直接蒸馏 R1 的路线、转而自研内生推理能力的决策，体现"质量—效率"权衡。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

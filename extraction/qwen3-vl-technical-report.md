@@ -66,9 +66,7 @@ tags: [multimodal]
 > Performance of Qwen3-VL-235B-A22B and top-tier models on visual benchmarks. The highest scores of the reasoning and non-reasoning models are shown in bold and underlined , respectively. Results marked with an ∗ are sourced from the technical report. + denotes results with tool use.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
-
-Table 2将Qwen3-VL-235B-A22B的thinking与instruct双版本，与Gemini 2.5 Pro、GPT-5、Claude Opus 4.1在5大类视觉基准（STEM 14项、General VQA 5项、Alignment 3项、Document Understanding 11项、2D/3D Grounding 6项）上横向对比。thinking版在MIA-Bench 92.7、DocVQA 96.5、MathVista-mini 85.8、MathVerse-mini 85.0、RefCOCO 92.1、CountBench 93.7取得领先；instruct版则在DocVQA 97.1、InfoVQA 89.2、OCRBench 920等文档/OCR任务上SOTA。该表用数据验证图1所提架构——原生分辨率视觉编码（含超小图8 token至极长图11427 tokens的变长令牌）、DeepStack多层注入、Interleaved MRoPE位置编码——的有效性，使开源MoE 235B模型整体对标顶级闭源对手，并在文档理解与细粒度定位上确立新SOTA，呼应文中"marginally outperforms its thinking counterpart"的双版本设计论断。
+> 【图文联合解读】表2对比Qwen3-VL-235B-A22B(thinking/instruct)与Gemini 2.5 Pro、GPT-5、Claude Opus 4.1于11类约50项视觉基准。thinking在MathVista_mini(85.8)、MathVerse_mini(85.0)、MIA-Bench(92.7)、RefCOCO-avg(92.1)、V*(85.9)、HRBench4K(84.3)等多类夺SOTA；instruct在DocVQA(97.1)、OCRBench(920)领先；多模态Agent类独家上榜(ScreenSpot Pro 61.8、OSWorldG 68.3、AndroidWorld 62.0)。该表论证：原生分辨率视觉编码+DeepStack多层注入使OCR/文档/空间/Agent全面领先，与Fig1架构图、Fig2多语OCR图共同构成"架构—能力—基准"证据链，支撑Qwen3-VL作为旗舰开源VL模型的对标结论。
 
 ### Table 3 (p.16) ⭐深度解读
 ![[assets/crops/qwen3-vl-technical-report-tab03.png]]
@@ -76,11 +74,7 @@ Table 2将Qwen3-VL-235B-A22B的thinking与instruct双版本，与Gemini 2.5 Pro�
 > Performance of medium-sized Qwen3-VL models and previous models on visual benchmarks. The highest scores are shown in bold . Results marked with an ∗ are sourced from the technical report. + denotes results with tool use.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读：**
-
-该表横跨 STEM/Puzzle、General VQA、Alignment、Document Understanding、2D/3D Grounding 五大类共 40 项视觉基准，对比 Qwen3-VL 30B-A3B（MoE）与 32B（Dense，含 thinking/instruct 双模式）与 Gemini 2.5 Flash、GPT-5 mini。数据显示：Qwen3-VL-32B-thinking 在 MMMU（78.1）、MMBench-EN（89.5）、DocVQA（96.9）、InfoVQA（89.2）、MIA-Bench（92.3）等多项取得最高分，全面领先 Gemini 2.5 Flash，并在 STEM 与文档理解上多数超过 GPT-5 mini。
-
-论文据此论证：原生分辨率编码 + DeepStack 多层融合 + Interleaved MRoPE 使中等规模模型即可在多模态推理、文档解析、长上下文（OCRBench_v2 计 855–903）上比肩甚至超越闭源旗舰。该表在论文实验链路中承担"中等规模竞争力验证"角色，为前述架构创新提供量化支撑，并衔接 Needle-in-a-Haystack（图3）的视频定位评测。
+> 【图文联合解读】Table 3对比Qwen3-VL中型变体（30B-A3B、32B，含thinking与instruct）与Gemini 2.5 Flash、GPT-5 mini在10类视觉基准上的表现。32B-Instruct拿下多项SOTA：文档理解DocVQA 96.9、CharXiv(DQ) 90.5；视觉定位CountBench 94.9、RefCOCO 91.9；空间推理RoboSpatialHome 74.2、RefSpatialBench 67.2；视频MLVU 82.1、MVBench 73.2；多模态Agent的OSWorld 41.0、WindowsAA 42.9；工具感知V* 91.1+、HRBench8K 81.6+；GPT-5 mini(high)则在纯STEM推理（MMMU 79.0、MathVision 71.9、LogicVista 71.4）领先。该表印证原生分辨率编码+变长视觉令牌+DeepStack多层注入+Interleaved MRoPE时间戳设计在文档、定位、空间、视频、Agent任务上的全面有效性，是中型模型能力定位、与闭源旗舰对标的核心实证环节。
 
 ### Table 4 (p.18) ⭐深度解读
 ![[assets/crops/qwen3-vl-technical-report-tab04.png]]
@@ -88,7 +82,13 @@ Table 2将Qwen3-VL-235B-A22B的thinking与instruct双版本，与Gemini 2.5 Pro�
 > Performance of small-sized Qwen3-VL models and GPT-5-nano on visual benchmarks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表对比 Qwen3-VL 2B/4B/8B（thinking/instruct）与 GPT-5 nano 在 6 类视觉基准上的表现。核心数据：8B-thinking 在多数任务上显著领先 GPT-5 nano high，如 DocVQA（95.3 vs 88.2）、InfoVQA（86.0 vs 68.6）、ChartQA（88.6 vs 52.1）、OCRBench（819 vs 753）、MathVista（81.4 vs 71.5）、MIA-Bench（91.5 vs 89.9）。思考模式普遍优于指令模式；规模 2B→4B→8B 单调提升；GPT-5 nano 在 2D/3D Grounding 上无数据。该表论证 Qwen3-VL 小模型在文档理解、数学推理等任务已超越同级竞品 GPT-5 nano，是论文视觉能力评估的核心实证。
+> 【图文联合解读】**Table 4 图文联合解读**
+
+**1) 核心对象与数据：** 该表横向比较 Qwen3-VL 2B/4B/8B（thinking 与 instruct 两档，共 6 列）与 OpenAI GPT-5 nano（high/minimal，共 2 列）在约 50 个视觉基准上的表现，按 10 大任务簇组织（STEM Puzzle、General VQA、Alignment、Document Understanding、2D/3D Grounding、Embodied/Spatial、Multi-Image、Video、Tool Perception、Agent）。量化亮点：8B-thinking 在 MMMU 达 74.1（nano-high 75.8），MathVista mini 81.4（nano-high 71.5），DocVQA 95.3（nano-high 88.2），OCRBench 819（nano-high 753）；MIA-Bench 91.5/91.1 亦全面领先。
+
+**2) 关键技术结论：** thinking 模式在 STEM、文档、推理任务上系统性优于 instruct；2B→8B 性能单调上升，8B-thinking 在多数基准上持平或超越 GPT-5 nano-high，且 instruct 模式远超 nano-minimal；同时 GPT-5 nano 在 2D/3D 定位、视频、具身与 Agent 任务普遍缺数据（"—"），覆盖广度不及 Qwen3-VL。
+
+**3) 在论文中的作用：** 与大型模型对比表互补，确立 Qwen3-VL 在小尺寸段对标 GPT-5 nano 的竞争力，并凸显其全任务覆盖优势，为"小模型亦可强多模态"提供实证支撑。
 
 ### Table 5 (p.21) ⭐深度解读
 ![[assets/crops/qwen3-vl-technical-report-tab05.png]]

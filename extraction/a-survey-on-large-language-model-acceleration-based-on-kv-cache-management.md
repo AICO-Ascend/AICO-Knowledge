@@ -135,7 +135,16 @@ _未检测到带 caption 的 figure_
 > Comparison of Memory Management Techniques for KV Cache
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表10将9个LLM推理系统(vLLM、vTensor、LeanKV、DMS、eLLM、Apt-Serve、ChunkAttention、MemServe、FlashForge)在5类KV cache内存管理策略上进行"×"标记的矩阵化对比（列标题图像乱码，仅X标记可辨）。打勾分布：vLLM、LeanKV、eLLM、Apt-Serve、MemServe各命中2项；vTensor、DMS、ChunkAttention、FlashForge各1项，无系统全部覆盖。结论：各方案在内存管理维度（推测含分页、写回、共享、重计算、缓冲等）呈互补分布，无单一银弹。作用：横向梳理KV cache内存优化技术生态，为读者依据部署场景按需选型提供决策依据。
+> 【图文联合解读】图像无法直接呈现表格的具体行列内容，仅依据原文caption与正文段落解读如下：
+
+**1. 核心对象与结构**
+Table 10 标题为"Comparison of Memory Management Techniques for KV Cache"，对照正文中提及的 LeanKV（统一分页+异构量化+动态稀疏，含vTensor Operation/Pool三组件）、DMS（动态内存稀疏化）、eLLM（受传统内存ballooning启发的管理框架）等方法，推测该表按"方法名 / 关键技术策略 / 内存组织方式 / 精度或稀疏粒度 / 适用场景"等维度横向对比KV Cache内存管理方案。
+
+**2. 关键技术结论**
+通过横向对比，正文强调单一策略（如纯分页或纯量化）的局限，主张融合"分页+量化+稀疏化"的混合机制是当前KV Cache高效管理的主流方向，LeanKV的on-GPU统一分页（循环空闲页链表+双向页表）代表该路线。
+
+**3. 论文整体作用**
+该表位于综述第23页Methods章节，承担分类学功能——为后续读者选取KV Cache内存优化方案提供决策依据，并与Table 9（压缩技术对比）、Table 11（注意力稀疏）等形成"压缩—管理—稀疏"的完整技术对照体系。
 
 ### Table 11 (p.0) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab11.png]]
@@ -150,6 +159,36 @@ _未检测到带 caption 的 figure_
 **关键技术结论**：单一调度维度难以同时满足吞吐、延迟与SLO公平，论文由此论证复合策略（如抢占+公平、层级+分层）已成为KV Cache调度的主流设计方向。
 
 **论文作用**：该表与Table 10（合并/共享）、Table 12（淘汰策略）并列，构成"调度—复用—淘汰"三位一体的KV Cache优化全景图，为读者按部署场景（高并发/低延迟/多租户）选择方案提供横向索引。
+
+### Table 12 (p.26) ⭐深度解读
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab12.png]]
+> [!quote] caption
+> Comparison of Hardware-aware Design Approaches for KV Cache Optimization.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**说明**：所提供图像实为论文正文文本（含6.2.4节与6.3/6.3.1节），并未显示Table 12表体；以下基于原图Caption与正文上下文进行解读。
+
+**图文联合解读**：
+
+1) **核心对象与结构**：Table 12横向对比KV Cache硬件感知优化方法，按部署硬件划分为Single/Multi-GPU、IO-based、Heterogeneous、SSD-based（含InstInfer利用CSD绕开PCIe带宽瓶颈）四类，纵向列示各方案在内存访问模式、注意力核设计、负载均衡、异步I/O、跨层调度等维度的优化策略。
+
+2) **关键结论**：硬件感知设计需结合组件特性与互连拓扑协同优化——单/多GPU聚焦访存与核并行；IO方案通过异步与预取缓解层级迁移；异构方案调度CPU–GPU任务分配；SSD方案从单纯卸载演进至近存计算。
+
+3) **链路作用**：与Table 10（合并/共享）、Table 11（淘汰）并列，构成"调度—复用—淘汰—硬件协同"四象限全景索引，按高并发/低延迟/多租户场景为读者横向选型提供依据。
+
+### Table 13 (p.28) ⭐深度解读
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab13.png]]
+> [!quote] caption
+> Long-context Text Benchmarks.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 13 联合解读**
+
+**1) 核心结构与数据**：表格汇总 13 个长文本评测基准（MultiTurnBench、NumericBench、RULER、OneRuler、L-Eval、M4LE、BAMBOO、LongBench、SCROLLS、ZEROSCROLLS、LooGLE、LongEval、StreamingEval），行表示基准，列包括 6 类任务能力子项（标签略有模糊，涵盖 QA、检索/推理、多轮、代码、归纳等维度）及支持语言列（多数为 EN，少数为 EN/ZH，OneRuler 支持 26 种语言）。LongBench 是唯一在全部 6 项任务上均打勾的基准，覆盖最广；OneRuler 跨语言最广；其余多侧重英文单语、覆盖 3–5 项任务。
+
+**2) 关键结论**：长上下文评测呈"能力碎片化"——没有单一基准同时满足多任务与多语言需求；多轮对话（MultiTurnBench、LongBench）、数值推理（NumericBench、RULER）等专项基准互补出现，反映 KV Cache 管理技术需要在检索、推理、生成等不同长程依赖上分别验证。
+
+**3) 论文中的作用**：该表为后续比较 KV Cache 压缩/淘汰/量化等加速方法在长文本场景下的实验配置提供选型依据，强调需在多类长程任务上综合验证，而非依赖单一数据集，避免评测偏差。
 
 ### Table 14 (p.30) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab14.png]]

@@ -19,10 +19,11 @@
 ![coverage](docs/images/kb_coverage_stats.png)
 
 - **682 张裁剪单图**（不再是整页截图——每张 figure 独立裁剪，可直接插入报告）
-- **422 张裁剪表格**（表格第一次成为"可插入的图"，不再只是 Markdown 文本）
+- **429 张裁剪表格**（表格第一次成为"可插入的图"，不再只是 Markdown 文本）
 - **479 条 LaTeX 权威公式**（58 篇）+ **4 张公式截图**（无 LaTeX 源论文兜底，引用前核对）
 - **1600+ 条 MiniMax-M3 多模态解读**（架构图/数据流图/表格逐张技术解读；全部裁剪图均为**图文联合解读**——论文正文引用段落 + 图片联合喂 M3，解读锚定原文论述）
 - **69 篇 6 段深读笔记**（核心问题/关键创新点(机制+效果+精确数字+公式+图解读)/表格/对比/谱系/局限）
+- **19 页原子概念页**（`wiki/concepts/`，跨论文累积综合 + 谱系嵌入，Obsidian 图谱 hub）
 
 ## 知识图谱（主题聚类 + 跨论文谱系）
 
@@ -32,7 +33,7 @@
 
 ## 快速取用（生产级工作流）
 
-**统一查询入口 `kb_query.py`**（全部子命令支持 `--json`，agent/RAG 程序化消费）：
+**统一查询入口 `kb_query.py`**（全部子命令支持 `--json`，agent/RAG 程序化消费）；**LLM 读库先读 `extraction/index.md`**（内容目录，按主题定位论文/概念页，再钻取细节）：
 
 ```bash
 KB=skills/paper-extraction/kb_query.py
@@ -43,6 +44,8 @@ python3 $KB formula softmax              # 按内容找 LaTeX 公式（$$ 直贴
 python3 $KB topics                       # 主题 → 论文映射
 python3 $KB info <slug>                  # 单篇全卡片
 ```
+
+> 📚 **LLM Wiki 三层架构**（参考 [Karpathy LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)）：raw（`papers/` 不可变）→ wiki（`extraction/` + `wiki/concepts/`，LLM 全权维护）→ schema（`SKILL.md`）。三个操作：**Ingest**=`full_pipeline.py` 一条命令；**Query**=先读 index.md 再钻取，好答案回填 `wiki/` 复利增长；**Lint**=定期体检（一致性/缺解读/概念页覆盖）。编年动态见 `extraction/log.md`（`grep "^## \[" extraction/log.md | tail -5`）。
 
 **写报告插图**：`kb_query.py fig <关键词>` → 拿裁剪单图 `![[assets/crops/<slug>-figNN.png]]` + `[slug, Fig.N, p.X]` 引用串。图已是干净单元素裁剪，不用再裁。
 
@@ -67,9 +70,14 @@ AICO-knowledge/
 │   ├── m3_caption.py                #   MiniMax-M3 图/表多模态解读
 │   ├── eprint_formulas.py           #   arXiv e-print LaTeX 公式抽取
 │   ├── kb_query.py                  #   统一查询 CLI（--json）
+│   ├── wiki_index.py                #   📚 LLM Wiki 簿记层（index.md + 概念页种子 + log.md）
 │   ├── chunk_download.py            #   分块续传下载
 │   └── verify_pdfs.py               #   PDF 体检（CI gate）
+├── wiki/
+│   └── concepts/<slug>.md           # 📚 19 页原子概念页（跨论文综合，图谱 hub）
 ├── extraction/                      # 生成的知识库
+│   ├── index.md                     #   📚 LLM-reads-first 内容目录（先读定位再钻取）
+│   ├── log.md                       #   📚 编年日志（ingest/lint/pipeline 动态）
 │   ├── <slug>.md                    #   每篇结构化解析（摘要/裁剪图/表格/公式/相关论文）
 │   ├── deep/<slug>.md               #   ⭐ 6 段一体化深读（图/表/公式织入）
 │   ├── fulltext/<slug>.txt          #   全文纯文本（RAG chunk 源）
@@ -110,4 +118,4 @@ speculative decoding（10 篇成簇：EAGLE 全家族/Medusa/SpecExtend/LongSpec
 
 ---
 
-**现状（2026-08-24）**：69 唯一论文 ｜ 682 裁剪图 + 422 裁剪表 + 4 公式截图 ｜ 479 LaTeX 公式（58 篇）｜ 1600+ MiniMax-M3 解读（全部裁剪图 = 图文联合解读）｜ 69 篇 6 段深读 ｜ 78 张坏字体/坏结构论文裁剪由 ar5iv 原图/手工区域保护 ｜ PDF 0 截断 ｜ 三铁律全绿。
+**现状（2026-08-24）**：69 唯一论文 ｜ 682 裁剪图 + 429 裁剪表 + 4 公式截图 ｜ 479 LaTeX 公式（58 篇）｜ 1600+ MiniMax-M3 解读（全部裁剪图 = 图文联合解读）｜ 69 篇 6 段深读 ｜ 19 页概念页 + index.md/log.md 簿记层（Karpathy LLM Wiki 落地）｜ 96 张坏字体/坏结构论文裁剪由 ar5iv 原图/手工区域保护 ｜ PDF 0 截断 ｜ 三铁律全绿。

@@ -127,13 +127,13 @@ tags: [disaggregated-serving]
 > Decode-only speedup with SARATHI on an A6000 GPU with LLaMA-13B (chunk size = 256).
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图8联合解读：**
 
-图8为分组柱状图，横轴为Batch Size（2–18），纵轴为decode-only加速比（0–10），三组序列长度1K（橙）/2K（灰斜纹）/3K（绿交叉纹）。数据显示：1K序列在batch=2时加速最高约9.9×，随batch增大单调降至18时的约2.7×；2K序列在batch=8时仅约2.8×；3K序列在batch=6后消失（OOM）。
+图8展示A6000+Llama-13B下SARATHI的decode-only提速曲线：横轴batch size 2–18，纵轴提速倍数，三色柱分别对应序列长度1K（橙实）、2K（灰斜纹）、3K（绿网格）。量化数据：1K序列在batch=2时达峰值~9.7×，随batch增大单调降至batch=18的~2.7×；2K/3K仅在batch≤8呈现数据，batch=2处分别约5.7×/4.3×。
 
-**技术结论：** SARATHI在decode-only场景下能获得显著加速，但加速比随batch增大和序列变长而递减，长序列高batch时受显存限制无法运行，凸显其在批处理推理中的实际收益边界。
+**技术结论：** 通过chunked-prefill与decode的混合调度，SARATHI仅在decode阶段即获显著加速；提速随batch与序列长度增加而收敛，但仍稳定保持≥2.7×，验证重负载下方法鲁棒性。
 
-**论文作用：** 该图作为图7系列补充，量化证明piggybacking策略在纯decode工作负载上同样有效，支撑论文核心主张——chunked-prefill与decode融合普遍优于传统分阶段调度。
+**链路作用：** 作为decode维度的性能证据，与端到端吞吐实验互补，从"单卡峰值decode提速"延伸至"跨硬件跨模型方法外推"，完成论证闭环。
 
 ### Figure 9 (p.10) ⭐深度解读
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig09.png]]
@@ -262,13 +262,11 @@ tags: [disaggregated-serving]
 > Peak throughput gains with S ARATHI for different se- quence lengths with two different model-GPU combinations (chunk size = 256).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 联合解读**
+> 【图文联合解读】该表量化展示 SARATHI 在两种模型-GPU 配置（LLaMA-13B/A6000 与 LLaMA-33B/A100）、序列长度 1K–3K、chunk=256 下的峰值吞吐增益：13B 在 1K 序列时达最高 1.33×（解码加速 5.45×，batch=6，P:D=50:1）；33B 在 1K 时为 1.25×（batch=10）。随序列长度增大，P:D 比升至 127:1，吞吐增益递减至 1.14×，说明越偏解码主导场景混合调度收益越有限。
 
-**1) 核心数据：** 两组模型-GPU（LLaMA-13B/A6000、LLaMA-33B/A100），各取 1K/2K/3K 三档序列长度，chunk=256。LLaMA-13B 固定 P:D=50:1、Batch=6，Decode Speedup 由 5.45×（1K）降至 2.51×（3K），Throughput Gain 为 1.33×/1.26×/1.22×；LLaMA-33B 随序列增长 Batch 由 10→5→3、P:D 由 28:1→127:1，Decode Speedup 3.83×/4.25×/3.51×，Throughput Gain 1.25×/1.22×/1.14×。
+原文借此论证：分块预填充 piggyback 解码可有效提升端到端吞吐，收益随负载结构变化可预测。
 
-**2) 关键结论：** SARATHI 在两种硬件-模型组合、不同序列长度下均稳定取得 1.14×–1.33× 的端到端吞吐增益，且 P:D 越均衡、Decode 提速越大，验证 piggyback 策略的普适性。
-
-**3) 链路作用：** 与 Fig 8（decode-only 提速曲线）互补，从"峰值 decode 提速"延伸到"峰值端到端吞吐增益"，完成从单卡到跨硬件跨模型的方法外推论证。
+在论文链路中，该表位于 Figure 4（算术强度分析）之后、详细调度实验之前，充当系统级性能落点，验证前文机制分析的实际效果，支撑"混合调度普适有效"的核心结论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

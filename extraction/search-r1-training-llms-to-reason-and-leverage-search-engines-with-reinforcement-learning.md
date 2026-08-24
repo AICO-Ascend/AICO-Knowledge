@@ -162,9 +162,11 @@ Table 2 在 Qwen2.5-7B/3B 两个基座上，对比 Direct/CoT/IRCoT/Search-o1/RA
 > Main results. The best performance is set in bold. † / ⋆ represents in-domain/out- domain datasets.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 5 图文联合解读**
+> 【图文联合解读】1) 表格展示 Qwen2.5-14b-Base/Instruct 上 10 种方法在 3 个 General QA（NQ†/TriviaQA⋆/PopQA⋆）与 4 个 Multi-Hop QA（HotpotQA†/2wiki⋆/Musique⋆/Bamboogle⋆）上的精确匹配率及均值。Search-R1-base 在全部 7 项均加粗最优（Avg.=0.479），较 R1-base（0.357）、Search-o1（0.310）、RAG（0.281）分别 +12.2/+16.9/+19.8 点；Search-R1-instruct（0.433）亦超 R1-instruct（0.339）。
 
-Table 5 展示 Qwen2.5-14b 上 9 种方法在 7 个 QA 数据集（2 个域内†、5 个域外⋆）的精确匹配率。Search-R1-base 7 项全部加粗最优，均值 0.479，较 Direct Inference（0.227）、RAG（0.281）、SFT（0.250）提升约 111%/70%/92%；Search-R1-instruct 均值 0.433 亦全面领先。R1-base/instruct 仅靠 RL 推理（无搜索）即达 0.357/0.339，已超 CoT、IRCoT、RAG 等检索方法，证明强化学习本身增益。该表作为全文主结果，支撑"RL+搜索引擎"显著优于提示方法、RAG 与 SFT 的核心结论。
+2) 论证结论：Search-R1 基于 RL 的"检索-推理联合训练"在域内†与域外⋆任务上一致超越 CoT/RAG/SFT/R1 系列等基线，multi-hop 提升尤显著（Bamboogle 0.528 vs RAG 0.192），体现强泛化能力。
+
+3) 论文作用：作为主结果表与 Figure 5 训练动力学互证——前者证 RL 训练可稳定收敛，本表证收敛后模型跨域达 SOTA，共同支撑 Search-R1 范式有效性及对 PPO/GRPO 的算法无关性。
 
 ### Table 6 (p.18) ⭐深度解读
 ![[assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab06.png]]

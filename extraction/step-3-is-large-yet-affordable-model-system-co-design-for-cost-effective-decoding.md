@@ -250,13 +250,13 @@ tags: []
 > Performance comparison with reported number of DSv3 under 20 tokens/s decoding SLA. TGS: Tokens/GPU/s.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 图文联合解读：**
+> 【图文联合解读】**Table 8 图文联合解读**
 
-**1) 核心对象与数据：** 在 20 tokens/s 解码 SLA 下，对比 DSv3 与 Step-3 的 TGS（Tokens/GPU/s）。DSv3-blog（144 GPU）TGS=1850，DSv3-profile（128 GPU）TGS=2324；Step-3 三档配置：BF16+3A2F（40 GPU）TGS=3321，FP8+2A2F（32 GPU）TGS=4039，FP8+4A2F 长上下文 8192（48 GPU）TGS=2643。
+Table 8 在 20 tokens/s 解码 SLA 下对比 Step-3 与 DSv3 的 Peak TGS（Tokens/GPU/s）：①DSv3-blog：上下文 4989，144 张 Hopper GPU，TGS=1850；②DSv3-profile：4096/128 GPU，TGS=2324；③Step-3 BF16：4096/40 GPU（3A2F 配置），TGS=3321；④Step-3 FP8：4096/32 GPU（2A2F），TGS=4039（全表峰值）；⑤Step-3 FP8：8192/48 GPU（4A2F），TGS=2643。
 
-**2) 关键结论：** 同等 SLA 下，Step-3（FP8, 32 GPU）以 DSv3 四分之一 GPU 数实现 1.74× 的 TGS（4039 vs 2324）；即使长上下文 8192 配置也用更少 GPU 超过 DSv3-blog，直接验证 FP8 注意力与 AFD 部署带来的解码性价比优势。
+技术结论：Step-3 仅以 DSv3 约 1/4–1/3 的 Hopper GPU（32–48 vs 128–144）即获得更高单卡吞吐（峰值 4039 vs 2324），验证注意力–FFN 解耦（AFD）+ StepMesh 异步 RDMA 流水（2A/3A/4A2F 拓扑）使 AFD 解码"少卡高吞吐、成本可控"。
 
-**3) 在论文中的作用：** 作为 AFD 解码方案的核心定量证据，与 Figure 8 的 StepMesh 通信流图呼应，共同支撑"大而经济"的系统级主张——少卡、高吞吐、低成本。
+论文作用：作为模型-系统协同设计的解码阶段核心量化证据，呼应 Figure 8 的 StepMesh 通信机制，证明系统级优化可显著降低大模型推理部署成本。
 
 ### Table 9 (p.14) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab09.png]]

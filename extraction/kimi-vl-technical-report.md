@@ -260,13 +260,9 @@ tags: [multimodal]
 > Performance of Kimi-VL-Thinking and Kimi-VL-Thinking-2506 on multimodal reasoning benchmarks. The metrics evaluated include MathVista (mini), MMMU (val), MMMU-Pro (average), MathVision (full) and VideoMMMU, with results expressed in Pass@1. The Kimi-VL-Thinking-2506 performs well in most cases, show
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读（Table 4）：**
+> 【图文联合解读】**Table 4 图文联合解读：**
 
-**1) 核心数据**：表格对比 Kimi-VL-Thinking 与 Kimi-VL-Thinking-2506 在 5 个多模态推理基准（Pass@1）上的表现。Kimi-VL-Thinking-2506 在四席取得最佳：MathVision 56.9、MathVista 80.1、MMMU-Pro 46.3、VideoMMMU 65.2；仅 MMMU(val) 64.0 略低于 77.3 的同行最优值。多项指标相较前列基线提升显著，如 MathVision 较 38.6 提升约 18 分。
-
-**2) 关键结论**：原文用以证明"thinking"变体经 2506 迭代后，在数学（MathVista/MathVision）、通用推理（MMMU-Pro）与视频理解（VideoMMMU）跨域跨尺度上均获得增强的推理与处理能力，体现长思维链微调对多模态推理的有效性。
-
-**3) 论文作用**：作为方法验证的收尾证据，与前文预训练（图4）等环节衔接，支撑"thinking 路线全面优于基线"的核心主张。
+表4对比Kimi-VL-Thinking与Kimi-VL-Thinking-2506及多款开源/闭源模型在5个多模态推理基准的Pass@1。2506版以MathVision 56.9、MathVista 80.1、MMMU-Pro 46.3、VideoMMMU 65.2四项居首，仅MMU(64.0)低于峰值77.3。原文据此论证"thinking"变体经强化训练后跨域推理能力全面跃升，作为论文方法链路中验证推理增强路径有效性的关键收尾实证，强化了多模态"思考"模式相较基线的优势。
 
 ### Table 5 (p.18) ⭐深度解读
 ![[assets/crops/kimi-vl-technical-report-tab05.png]]

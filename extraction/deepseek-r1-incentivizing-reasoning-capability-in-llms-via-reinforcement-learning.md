@@ -193,6 +193,20 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 
 **论文作用：**该表是支撑"纯RL探索→冷启动SFT→推理RL→通用RL→拒采样精炼"五阶段训练管线的核心消融证据，量化证明各阶段不可或缺的互补性，而非简单叠加即生效。
 
+### Table 4 (p.18) ⭐深度解读
+![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab04.png]]
+> [!quote] caption
+> j Description of RL Data and Tasks.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**注意**：图片实际内容为附录 **B.2 Reward Model Prompt**（奖励模型评判提示模板），并非 Table 4（RL 数据与任务描述），图文存在不匹配。以下按图片实际内容解读：
+
+1) **核心对象**：一段用于奖励模型/评判的 LLM-as-judge 提示词，要求模型以"公正裁判"身份对两位助手（Assistant A/B）的回答做配对比较；评判维度涵盖 helpful/relevant/concise、创造性与信息完整性；输出为 5 级偏好标签（"A 显著更好"→"B 显著更好"含平局），以 `[[AB]]/[[BA]]` 强制位置交换以缓解位置偏置。
+
+2) **论证结论**：DeepSeek-R1 在通用对齐/偏好类基准（如 Arena-Hard、AlpacaEval）上的胜率提升由该类 GPT-4-based 成对偏好奖励驱动，而非仅靠规则化 RL 奖励。
+
+3) **链路作用**：该提示是 R1 训练管线中 **偏好奖励信号**的生成接口，与规则化准确率奖励并行，构成"规则+偏好"双轨奖励，为 RL 阶段对齐人类偏好提供监督。
+
 ### Table 5 (p.27) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab05.png]]
 > [!quote] caption
@@ -406,14 +420,16 @@ Table 18 属附录 J "Evaluation Prompts and Settings"。图片仅显示 caption
 ### Table 24 (p.72) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png]]
 > [!quote] caption
-> j FRAMES (Factuality, Retrieval, And reasoning MEasurement Set) is a comprehensive
+> FRAMES (Factuality, Retrieval, And reasoning MEasurement Set) is a comprehensive benchmark designed to evaluate core components of retrieval-augmented generation (RAG) systems. Our evaluation employs the benchmark’s official "Oracle Prompt" configuration. In this setting, each test prompt includes t
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 24 展示 DeepSeek-R1 在 FRAMES 基准上的评测结果。该基准用于评估 RAG 系统核心组件，采用"Oracle Prompt"配置：每个测试提示包含问题及全部真实维基百科文章，免去 BM25 等外部检索环节，专门衡量模型对给定信息的推理与综合能力。
+> 【图文联合解读】**图文联合解读：**
 
-**论证结论**：经 RL 激励后，R1 在长上下文事实推理与多源信息整合上具备较强能力，验证纯强化学习在事实性任务中的有效性。
+**1) 核心对象与结构**：Table 24 展示 FRAMES 基准的"Oracle Prompt"评测范式，含两部分——**PROMPT 模板**（注入完整维基文章+多跳推理查询，本例为"未来妻子姓名"题，涉及第15位第一夫人母亲的名字与第2位被刺杀总统母亲的娘家姓，标准答案"Jane Ballou"）与 **Evaluation 模板**（LLM-as-judge 三段式：对比预测/真值、判定输出 TRUE/FALSE）。
 
-**链路作用**：该表属论文"通用能力评估"环节，与 GPQA、MMLU 等并列，用于多维度证明 R1 综合能力不仅限于数学/代码，在开放域事实推理任务上同样表现优异。
+**2) 关键结论**：该表论证"隔离检索、纯测推理"——因外部文档已全部注入，无需 BM25 等检索器，故可直接衡量模型对给定上下文的综合推理与事实合成能力。
+
+**3) 在论文中的作用**：作为附录评测规范，与第7章主表（FRAMES 准确率）配套，揭示 DeepSeek-R1 在多跳事实推理任务上的评估协议，强化"RL 激励的推理能力可泛化至复杂 RAG 场景"这一核心主张。
 
 ### Table 25 (p.73) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab25.png]]
@@ -432,16 +448,16 @@ Table 18 属附录 J "Evaluation Prompts and Settings"。图片仅显示 caption
 ### Table 26 (p.74) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab26.png]]
 > [!quote] caption
-> j AlpacaEval 2.0 is an open-ended evaluation dataset, similar in nature to ArenaHard, and leverages an LLM to assess model performance on subjective tasks. However, in contrast to
+> AlpacaEval 2.0 is an open-ended evaluation dataset, similar in nature to ArenaHard, and leverages an LLM to assess model performance on subjective tasks. However, in contrast to ArenaHard, the prompts in AlpacaEval 2.0 are generally less challenging and only a small subset necessitates the deploymen
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Table 26）：**
 
-该表展示了 AlpacaEval 2.0 的评测流程样例：上方给出一条示例 prompt（"哪些著名演员在百老汇开启演艺生涯？"），下方给出 LLM-as-judge 的评估模板——通过 system 提示词设定裁判 LLM 的角色（"高效助手，基于响应质量选出最佳模型并形成排行榜"），再用 user 提示词要求其逐条比较各模型输出。
+**1）表格内容：** 该表展示了 AlpacaEval 2.0 的 LLM-as-Judge 评估 Prompt 模板。以"What are the names of some famous actors that started their careers on Broadway?"为例，定义了 System 角色（高效评估员，输出排行榜）、User 指令（含 Instruction 和 JSON 格式的 Model Outputs，含 model_identifier "m"/"M" 与 output 字段），最终要求评估器仅输出获胜模型的标识符（m 或 M），实现自动化两两对比打分。
 
-论文借此论证的关键结论：AlpacaEval 2.0 与 ArenaHard 同属 LLM 主观评判式开放评测，但其 prompt 普遍难度较低，仅少量需要推理能力，因此更适合衡量模型的写作质量、指令遵循与人类偏好对齐，而非纯推理水平。
+**2）原文论点：** 表格揭示了 AlpacaEval 2.0 依赖 LLM 裁判对模型输出进行开放式主观评估的机制，相比 ArenaHard 提示更简单、少需深度推理。
 
-在整体实验链路中，它与 ArenaHard 形成互补：前者侧重通用对话/写作偏好评测，后者侧重高难度推理评测，二者共同构成对 DeepSeek-R1 能力维度的全面评估。
+**3）论文作用：** 作为 DeepSeek-R1 主实验评估链路（与 GPT-4o、Claude 等对比）的核心评测基准之一，用于在开放式指令任务上验证 R1 通过纯 RL 激励获得的对齐与生成质量。
 
 ### Table 27 (p.0) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab27.png]]
@@ -510,9 +526,15 @@ C-EVAL 用于衡量模型在**中文知识广度与深度**上的综合能力，
 > j An example of math evaluation, which applies to AIME, MATH, and CNMO. These
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像无法完整辨认，关键内容严重乱码**，仅可辨识少量英文片段（如"Malia Obama and Sasha Obama"、K1/K2标记）及"PROMPT/Evaluation"等结构标签。以下结合原文进行解读：
+> 【图文联合解读】**图像存在严重乱码**，大部分中文字符与符号无法辨识（显示为 °、º、@、~ 等乱码字符），仅可辨"PROMPT""Evaluation"标题、选项标识 K1/K2、字母选项 A/B/C、"K-e l iPº H W"（疑为"选择题"/单选模板字样）及末行"将答案用 \boxed{A""B""C"} 包裹"的指令片段。
 
-**1）核心对象与结构**：Table 32 应为 DeepSeek-R1 用于 AIME、MATH、CNMO 等数学基准的统一评测提示模板（prompt template），采用结构化格式，将问题包裹于 `
+**依据原文解读**：
+
+1) **核心对象**：Table 32 是 DeepSeek-R1 应用于 AIME、MATH、CNMO 三大数学基准的**统一评测提示模板**，采用"题面 + 选项 A/B/C + 要求 \boxed{} 输出"的结构化单选题格式。
+
+2) **论证要点**：体现作者为数学评测设计了**标准化的 chain-of-thought 引导模板**，强制模型按结构化方式作答，便于后续**规则化奖励/答案抽取**。
+
+3) **论文作用**：作为附录公开的评估协议，支撑主文 RL 训练后的 benchmark 公平对比，确保 AIME/MATH/CNMO 分数可复现。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

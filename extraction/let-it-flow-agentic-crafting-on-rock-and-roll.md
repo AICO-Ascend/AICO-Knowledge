@@ -187,7 +187,7 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Benchmark characterization and cross-benchmark comparison of Terminal Bench Pro against other benchmarks.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图14以四联图刻画Terminal Bench Pro：8类任务各25例，共200例、每类占12.5%，较1.0/2.0更均衡。Pro Public每题测试数最小/中位/均值为10/19/28.3（1.0：1/3/5；2.0：1/3/8）；安全、软件、运维、调试的跨基准pass@1标准差为0.04/0.02/0.05/0.04。说明新版测试更充分、性能波动更低；该图在主评测前审计基准，为后续能力与泛化比较提供统一标尺。
+> 【图文联合解读】图以环形图、堆叠条、类目热图和柱状图刻画 Terminal Bench Pro：公开版共200题，8类各25题（12.5%），领域覆盖最均衡。每题测试用例最少10个、中位19个、均值28.3个。其四类 pass@1 标准差为软件工程0.02、调试0.04、安全0.04、系统管理0.05，均低于旧基准。该图用于证明评测集偏置更小、校验更充分，从而支持对智能体能力进行稳健、细粒度的横向比较。
 
 ### Figure 15 (p.28) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig15.png]]
@@ -273,13 +273,9 @@ IPA流水线核心：专家轨迹T*切分为t个chunk（c*₁…c*ₜ），每ch
 > Performance on Terminal-Based Benchmarks (Large Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
+> 【图文联合解读】表2对比ROME（MoE 30B/3B激活）等7款模型在6项Terminal基准的得分及平均。ROME均分37.60领跑开源阵营（仅次于闭源GPT-5 Mini的37.99），并在Terminal-Bench 1.0（41.50）、2.0（24.72）、Pro-Public（40.50）三项夺冠，以仅3B激活参数超越GPT-OSS-120B（5.1B激活/均分31.83）与GLM-4.5 Air（12B激活/31.75）。
 
-表2对比ROME（30B总参/3B激活）与Qwen3-Coder Plus、Qwen3-Coder 480B-A35B、DeepSeek V3.1（671B/37B激活）、GLM-4.6（355B/32B）、Kimi-K2（1043B/32B）、Claude-Haiku-4共7个模型在Terminal-Bench 1.0/2.0、SWE-Bench Verified/Multilingual及Terminal-Bench-Pro-Public/Private六项基准上的表现。
-
-ROME均分37.60，虽低于Claude-Haiku-4（48.84），但在Terminal-Bench 1.0以41.50反超DeepSeek（38.75）、Kimi-K2（39.25），与GLM-4.6（41.25）持平；Pro-Public得40.50，与Kimi-K2并列。SWE-Bench Verified 57.40亦领先DeepSeek（62.20以外的多数MoE对手）。
-
-该表是论文"小激活、强agent"主张的关键实证——仅3B激活参数即可在agentic终端任务上与千亿级MoE模型正面竞争，验证其训练栈与RL策略的效率优势。
+原文据此论证ALE/ROCK有效性：极小激活参数即达终端任务领先，印证"训练基础设施、可执行环境与评估协议的协同设计"才是智能体RL核心。该表作为图2所示ALE系统底座在终端任务上的关键验证，支撑"rollout与训练解耦支撑大规模端到端训练"的核心论断。
 
 ### Table 3 (p.30) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab03.png]]
@@ -295,7 +291,13 @@ ROME均分37.60，虽低于Claude-Haiku-4（48.84），但在Terminal-Bench 1.0�
 > Performance on Tool-Use Benchmarks (Large Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 4展示ROME与Qwen3-Coder Plus/480B-A35B、DeepSeek V3.1、GLM-4.6、Kimi-K2、Claude-Haiku-4在Tau2-Bench(Retail/Airline/Telecom)、BFCL-v3、MTU-Bench(单/多轮)六项工具调用基准上的得分。ROME为MoE架构，总参30B、激活仅3B，平均分49.46，介于GLM-4.6(61.12)、Kimi-K2(60.52)与DeepSeek V3.1(49.94)之间；其以3B激活参数即逼近Qwen3-Coder 480B-A35B(51.11)、超过Qwen3-Coder Plus(47.41)，并在Tau2-Retail并列最高62.28、MTU单轮62.45位列第二。该表用以论证ROME在激活参数仅为对手1/10量级下仍保持可比工具调用性能，是论文Agentic实验链路中"高效小型激活MoE"的关键支撑证据。
+> 【图文联合解读】**Table 4 联合解读**
+
+1) **核心对象与数据**：该表对比 7 个大模型在 6 个工具调用基准（Tau2-Bench Retail/Airline/Telecom、BFCL-v3、MTU-Bench 单/多轮）上的得分，并标注架构与参数量。ROME 为 30B 总参 / 3B 激活（MoE），平均分 49.46；同级别 Qwen3-Coder（30B/3B）为 40.87，Devstral Small 2（24B Dense）为 39.35；而参数量大数倍的 GLM-4.5 Air（106B/12B）58.78、GPT-5 Mini 58.38、GPT-OSS-120B 56.47 才显著领先，Gemini-2.5 Flash 仅 43.82（部分含*）。
+
+2) **技术结论**：ROME 仅以 3B 激活参数即超越同激活规模的 Qwen3-Coder（+8.6 分）以及 Dense 的 Devstral（+10.1 分），并逼近参数量超自身数十倍的闭源大模型，证明其工具调用能力具备"小激活、强性能"的效率优势。
+
+3) **链路作用**：与 Table 3（小模型对比）呼应，该表将 ROME 推入大模型竞技场，是论文论证"ROCK 系统在小规模激活参数下仍具竞争力"的关键实验证据，支撑方法章节关于 agentic 流程有效性的整体叙事。
 
 ### Table 5 (p.31) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab05.png]]
@@ -315,9 +317,11 @@ Table 5 对比 ROME（30B MoE、激活 3B）与 Qwen3-Coder 30B-A3B、Devstral S
 > Performance on General-Agent Benchmarks (Large Models).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 6对比ROME（MoE，30B总参/3B激活）与6个大型基线在GAIA、BrowseComp-ZH、ShopAgent（单/多轮）4项基准的成绩。ROME均值25.64，超过Qwen3-Coder Plus（23.99）与Qwen3-Coder 480B-A35B（23.88），ShopAgent双轮34.53/29.61均高于Kimi-K2（30.97/26.26），仅次于DeepSeek V3.1（32.16）与Claude-Haiku-4（32.51）。
+> 【图文联合解读】1) **核心对象与结构**：表对比 ROME（MoE，30B 总参 / 3B 激活）与 Qwen3-Coder-30B-A3B、Devstral Small 2（24B Dense）、GPT-OSS-120B（5.1B 激活）、Gemini-2.5 Flash、GLM-4.5 Air（12B 激活）、GPT-5 Mini 在 GAIA、BrowseComp-ZH、ShopAgent（单/多轮）四项基准的得分。ROME 平均 25.64，超过 Qwen3（15.69）、Devstral（16.30）、GPT-OSS（23.40）、Gemini（22.66）、GLM-4.5 Air（24.78），仅次于 GPT-5 Mini（35.59）；ShopAgent 单轮 ROME 以 34.53 居首。
 
-原文据此论证：ROME以仅3B激活参数（远小于同类32–37B）即取得有竞争力的通用Agent能力，证明其agentic数据合成与训练流水线在效率与泛化上的优势，构成论文"通用Agent能力外推验证"环节的核心证据，为前文数据构造（图6）→ 训练 → 评测闭环提供横向性能对标支撑。
+2) **关键论证**：以"激活参数量可比"为公平基线，证明 ROME 仅 3B 激活即可在通用 Agent 任务上达到甚至超越 5–12B 激活的开源/闭源大模型，凸显 Figure 6 所示 agentic 数据流水线的训练增益。
+
+3) **链路作用**：作为大模型对比环节，与 Figure 6 数据构建、Table 5 小模型对照共同支撑 ROME 在 agentic 能力上的全栈竞争力。
 
 ### Table 8 (p.35) ⭐深度解读
 ![[assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab08.png]]

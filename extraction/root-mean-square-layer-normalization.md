@@ -95,7 +95,11 @@ tags: []
 > Recall@K values on validation set for the order-embedding models. worse than RMSNorm. Although in Figure 5 the performance of RMSNorm and LayerNorm is comparable, RMSNorm is around 15% faster than LayerNorm as shown in Table 6.3
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图6比较Order-embedding模型在验证集上的Mean Recall@1/5/10，对比Baseline、LayerNorm、RMSNorm、pRMSNorm；每0.3k步取样，训练约0–75k步。Recall约由34/71/84升至40–41/76–77/88，三种归一化更早收敛，R@K整体优于Baseline，RMSNorm与LayerNorm相当。它承接图5的收敛结果及表6效率数据：RMSNorm性能不降，训练时间较LayerNorm快约15%，再由表7测试结果完成验证。
+> 【图文联合解读】**1) 核心对象与数据**：图6展示order-embedding模型验证集上Mean Recall@K曲线，含三子图——(a)Recall@1(34–42)、(b)Recall@5(71–78)、(c)Recall@10(84–90)，x轴为训练步数(×0.3k，0–250+)。对比Baseline、LayerNorm、RMSNorm、pRMSNorm四条曲线：三种归一化方法约在50–75k步迅速收敛达峰，Baseline收敛慢且峰值略低。
+
+**2) 关键结论**：RMSNorm与LayerNorm、pRMSNorm的召回性能基本相当，且均优于无归一化Baseline；结合Table 6，RMSNorm比LayerNorm训练快约15.1%，pRMSNorm快15.8%。
+
+**3) 链路作用**：与Figure 5（attentive reader误差收敛）、Table 6（耗时）、Table 7（测试结果）共同构成完整证据链，支撑"RMSNorm可替代LayerNorm、兼顾性能与效率"的核心方法论结论。
 
 ### Figure 7 (p.13) ⭐深度解读
 ![[assets/crops/root-mean-square-layer-normalization-fig07.png]]
@@ -160,11 +164,15 @@ tags: []
 > Training error rate for the ConvPool- CNN-C model.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（Table 9，ConvPool-CNN-C 训练误差曲线）**
 
-1）该表为ConvPool-CNN-C模型在0–200个训练epoch上的训练错误率曲线，对比Baseline、BatchNorm、LayerNorm、WeightNorm、RMSNorm、pRMSNorm共六种方法。错误率从初始约0.08单调下降，至约150 epoch后趋近收敛；Baseline（蓝线）下降最慢且全程最高，约150 epoch才接近其他曲线；BatchNorm、RMSNorm、pRMSNorm收敛最快且彼此几乎不可区分。
+⚠️ 说明：图片仅露出x轴"Training epochs（0–200+）"与y轴顶端"0.60"，曲线与图例被裁切，无直接可读数值，以下结合caption与上下文推断。
 
-3）该实验位于论文归一化方法对比链路中，与NLP/CNN主实验共同支撑核心论点：RMSNorm在大幅简化计算（去除均值中心化）的同时，仍可保持与BatchNorm、LayerNorm等成熟方法相当的训练性能，并显著优于无归一化基线。
+1) **核心对象与结构**：纵轴为训练误差率（顶部0.60），横轴为训练轮次（0–200+），绘制ConvPool-CNN-C模型在多种归一化方式（BatchNorm / LayerNorm / RMSNorm等）下的训练误差收敛曲线，用于横向比较。
+
+2) **关键技术结论**：论文借此表论证RMSNorm的训练收敛轨迹与BatchNorm基本重合，最终训练误差相当，说明RMSNorm在不引入mini-batch统计量的前提下，仍可保持稳定的训练动力学，从而支持其"可替代BN"的等价性主张。
+
+3) **链路作用**：Table 9是"训练动力学一致性"实证环节的一部分，与测试误差、性能对比表共同构成RMSNorm在CNN上有效性的完整证据链。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

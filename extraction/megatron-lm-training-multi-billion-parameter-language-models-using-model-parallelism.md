@@ -133,14 +133,15 @@ tags: [training]
 > Parameters used for scaling studies. Hidden size per atten-
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**1) 核心对象与结构数据**
-该表列出4组Transformer缩放配置，约束每注意力头维度head_dim=96恒定（即heads=hidden/96）。参数随hidden size(1536→3072)、层数(40→72)从**1.2B→8.3B**递增；模型并行GPU从1→8，加入64路数据并行后扩展为64→512 GPU。
+> 【图文联合解读】**表1 + 柱状图联合解读**
 
-**2) 关键技术结论**
-实现"弱扩展"(weak scaling)：每GPU稳定承载约1B参数（1.2/1、2.5/2、4.2/4、8.3/8）。该表即为Figure 1中模型并行(蓝)与模型+数据并行(绿)FLOPS scaling曲线所对应的模型规格，论证了模型并行在8-way下仍可保持高吞吐。
+**① 表1结构/数据**：列4组扩展配置——参数量1.2B→2.5B→4.2B→8.3B，隐藏维度1536→1920→2304→3072，层数40→54→64→72，注意头16→20→24→32（每头维度恒定96）；模型并行GPU为1/2/4/8，对应叠加数据并行至64/128/256/512 GPU，保持约1B参数/GPU。
 
-**3) 在论文中的作用**
-作为后续Figure 1缩放实验、8.3B模型训练及端到端可扩展性分析的统一配置基线，支撑"千亿参数级别可用纯模型并行高效训练"的核心主张。
+**② 柱状图效率**：纯模型并行1→8 GPU弱扩展效率100%→95%→82%→77%；模型+数据并行64→512 GPU为96%→83%→79%→74%。
+
+**③ 关键论证**：8.3B参数模型在512卡上仍保持74%弱扩展效率，证明张量并行（TP）与数据并行（DP）可高效叠加。
+
+**④ 论文作用**：作为图1缩放实验的配置基线，是支撑"TP+DP混合并行可扩展至多B参数"这一核心方法论的关键实验锚点，为后续8.3B模型训练提供可行性依据。
 
 ### Table 2 (p.7) ⭐深度解读
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab02.png]]
@@ -159,32 +160,28 @@ tags: [training]
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab03.png]]
 > [!quote] caption
-> Zero-shot results. SOTA are from ( Khandelwal et al. ,
+> Zero-shot results. SOTA are from (Khandelwal et al. 2019) for Wikitext103 and (Radford et al. 2019) for LAMBADA.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读（Table 3）**
+> 【图文联合解读】**图文联合解读：**
 
-1）**核心对象与结构**：该表呈现三档模型配置——355M（24层、隐层1024、16头、每头64维，64卡，单epoch 0.86天）、2.5B（54层、1920、20头、每头96，128卡，2.27天）、8.3B（72层、3072、24头、每头128，512卡，2.10天）。列依次为参数量、层数、隐层维度、注意力头数、每头维度、GPU总数与每epoch训练时长。
+该表展示 355M / 2.5B / 8.3B 三档模型在 Wikitext103（困惑度↓）与 LAMBADA（准确率↑）的评测结果：355M 为 PPL 19.31 / 45.18%，2.5B 为 12.76 / 61.73%，8.3B 为 10.81 / 66.51%，前 SOTA 分别为 15.79 与 63.24%。随参数量增长，PPL 单调下降约 44%，LAMBADA 准确率提升约 21 个百分点；8.3B 双指标均刷新 SOTA。
 
-2）**关键技术结论**：随模型规模放大，层数、隐层与头数同步扩展，但每epoch训练天数仅从0.86增至约2.1–2.27天，证明**模型并行可高效支撑十亿至百亿参数**，训练时间随规模近亚线性增长。
+该表处于"Table 2 训练配置 → 图 6 收敛曲线 → 本表下游零样本评测"扩展性论证链的终点，证明经模型并行训练出的十亿级 LM 不仅收敛更快、终值困惑度更低，且在零样本任务上确实获得可度量的下游增益，从而闭环论证模型并行在大规模 LM 训练中的有效性。
 
-3）**论文整体作用**：该表支撑文末零样本评测结果，是模型并行（model parallelism）**可扩展性**的实证依据，证明在不显著增加训练成本前提下即可训练8.3B参数模型，从而为后续更大规模GPT类模型的可行性提供硬件与时间预算背书。
-
-（注：表内仅列配置与训练时长，零样本分数被截断。）
-
-### Table 5 (p.7) ⭐深度解读
+### Table 5 (p.8) ⭐深度解读
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab05.png]]
 > [!quote] caption
-> Development set results for MNLI, QQP, SQuAD 1.1 and SQuAD 2.0 and test set results for RACE. The trained tokens represents
+> Development set results for MNLI, QQP, SQuAD 1.1 and SQuAD 2.0 and test set results for RACE. The trained tokens represents consumed tokens during model pretraining (proportional to batch size times number of iterations) normalized by consumed tokens during model pretraining for our 336M model.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明：图片内容并非 Table 5**，而是论文中关于 Turing-NLG（17B 参数 GPT-2）、测试集 8-gram 污染分析、以及 BERT 层归一化/残差连接重排（Figure 7）稳定训练的正文段落，无法直接读取表格数据。以下依据原文 caption 与上下文进行解读：
+> 【图文联合解读】**图表联合解读：**
 
-**1）核心对象与结构**：该表应展示不同规模 Megatron 模型（1.2B/3.9B/8.3B 等参数）在五个下游任务上的分数——MNLI/QQP/SQuAD 1.1/SQuAD 2.0（开发集，零样本或单样本）以及 RACE（测试集），并以"训练 token 数"作为参考维度，量化对比参数规模对零样本泛化能力的影响。
+表5对比Megatron-336M/1.3B/3.9B与RoBERTa、ALBERT、XLNet在MNLI、QQP、SQuAD 1.1/2.0、RACE五个下游任务表现。Megatron-3.9B仅消耗1×训练token即全面领先：MNLI 91.4/91.4、QQP 92.7、SQuAD 1.1 95.5/90.0、SQuAD 2.0 91.2/88.5、RACE 89.5；其集成模型RACE更达90.9，超越ALBERT集成（89.4）。
 
-**2）关键技术结论**：表 5 用于佐证"模型越大、零样本泛化越强"的核心论点——随参数量从 1.2B 增至 8.3B，各项任务分数单调提升（尤其是 RACE 这类需推理的任务），表明模型并行训练出的更大 Transformer 确实获得了更好的通用语言理解能力，且未依赖任务专属微调。
+**关键结论**：模型并行扩展至数十亿参数后，下游泛化能力显著提升，且训练效率更高（token量仅为RoBERTa的1/2、ALBERT的1/3）。
 
-**3）论文链路作用**：与 Figure 5（弱扩展效率）形成"系统可扩展性 + 任务性能可扩展性"双重证据；与正文提及的 Turing-NLG（17B）一脉相承，共同支撑"Megatron 模型并行 + 数据并行 = 可训练超大规模 Transformer 并显著获益"这一完整论证闭环。
+**链路作用**：紧接Figure 5的弱扩展效率证据，本表证明工程扩展带来的实际性能回报，完成"并行方案可行→更大模型可训→下游更强"的论证闭环。
 
 ### Table 6 (p.11) ⭐深度解读
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab06.png]]
@@ -192,7 +189,15 @@ tags: [training]
 > Hyperparameters for ﬁnetuning BERT model on down-
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表6枚举BERT在MNLI、QQP、SQuAD1.1、SQuAD2.0、RACE五个下游任务上对336M/1.3B/3.8B三档模型的微调超参：batch size介于16-256、学习率1e-5至5e-5、训练2-12轮，按任务与模型规模分别调优。该表为后续各任务精度报告提供公平、可复现的配置，支撑论文关于"模型并行训练的超大BERT仍具备优秀下游任务迁移能力"的核心结论，是实验可复现性与可信度的关键保障。
+> 【图文联合解读】**图像无法辨认为 Table 6**：所提供图片实为论文参考文献页（Devlin、Radford、Raffel 等条目），并非 Table 6（BERT 微调超参数表）。以下仅依据原文 caption 解读：
+
+1) **核心对象与结构**：Table 6 列出在 SQuAD 等下游任务上微调 BERT 的超参数（如 batch size、学习率、训练 epoch 等），是模型并行训练大模型后迁移验证的配置清单。
+
+2) **论证的关键结论**：该表说明作者将十亿参数级预训练模型高效迁移到下游 BERT 微调任务中，提供可复现的实验设定，支撑"模型并行可扩展且实用"的结论。
+
+3) **链路作用**：与 Figure 6（预训练收敛性）、Table 3（零样本评测）共同构成"配置→训练→迁移"完整证据链，证明大规模 Transformer 兼具预训练优势与下游任务实用性。
+
+（注：原文引文讨论的是 Figure 6 而非 Table 6，存疑请核对。）
 
 ### Table 7 (p.15) ⭐深度解读
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab07.png]]
@@ -209,14 +214,16 @@ tags: [training]
 ### Table 8 (p.15) ⭐深度解读
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab08.png]]
 > [!quote] caption
-> Speedup obtained for the 1.2 billion parameters model
+> Speedup obtained for the 1.2 billion parameters model using model parallelism while keeping the batch size constant.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 联合解读**
+> 【图文联合解读】**Table 8 联合解读：**
 
-表8展示1.2B参数模型在固定batch size=8、纯模型并行条件下的加速比：1/2/4/8块GPU依次为1.0/1.64/2.34/2.98×。原文核心论证：2卡即可提速64%，但随GPU数增加呈明显边际递减——每卡计算量下降，显存带宽与all-reduce通信开销开始主导。
+该表展示 1.2B 参数模型在 **固定 batch size** 条件下，纯模型并行的加速比：1 / 2 / 4 / 8 块 GPU 分别获得 **1.0× / 1.64× / 2.34× / 2.98×** 的加速。
 
-在论文整体链路中，表8与前文Figure 8（8路模型并行+64路数据并行的混合并行）形成互补：前者证明模型并行不仅用于训练超大规模模型，也可在**不增大batch**的前提下加速中等规模训练，从而弱化"小模型必须靠扩batch提速"的假设。该结论为后续E节在WikiText103/LAMBADA上的语言模型评测提供了方法学支撑——即所采用的并行框架兼顾扩展性与效率。
+**关键论证：** ①模型并行确实可扩展（弱可线性扩展）；②但效率递减明显——8 卡仅 2.98×（并行效率约 37%），远低于理想值，证明张量切分存在通信与同步开销。
+
+**论文链路作用：** 该表承上启下。前半部分已证明模型并行的可行性，此处量化其扩展瓶颈（难以靠纯模型并行支撑更大模型），从而为后续 8.3B 模型必须采用 **"模型并行 + 数据并行" 混合策略**（对应 Figure 8 的 8 路模型并行 × 64 路数据并行方案）提供关键的实验依据。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

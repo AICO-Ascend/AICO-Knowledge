@@ -117,6 +117,20 @@ tags: []
 
 3) **论文链路作用**：作为附录 D 的效率补充证据，与主文精度提升互补，回应"引入 reasoning 是否拖慢部署"的潜在质疑，强化 DHRD 兼顾精度与推理效率的核心卖点。
 
+### Table 6 (p.12) ⭐深度解读
+![[assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab06.png]]
+> [!quote] caption
+> Third-party assets and licenses.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读：**
+
+1. **核心对象与结构**：图像中并未呈现表格的具体行列内容，仅可见正文引述"Table 6 lists the assets and licenses"及表标题"Table 6: Third-party assets and licenses"，属于合规性声明型表格，用于罗列论文所使用的第三方数据集与预训练模型及其对应许可证信息。
+
+2. **关键技术结论**：原文明确所有第三方资产均"在其原始条款下使用，且仅用于非商业研究"（non-commercial research），以声明形式约束使用边界，保障上游资源的合规性。
+
+3. **论文链路中的作用**：该表不属于方法/实验链路的技术模块，而是置于附录或末尾的**法律合规声明**，与正文的 dual-head reasoning distillation 方法无算法层面关联，仅满足开源/学术发表中对第三方资源归属与许可的披露规范。
+
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
 $$

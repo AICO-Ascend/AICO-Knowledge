@@ -116,11 +116,11 @@ tags: [speculative]
 > Perplexity and draft accuracy of needle tokens in the Needle Retrieval task, using different draft model settings. The first three methods use Vicuna-160M as the draft model, while TriForce uses Vicuna-7B.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 图文联合解读：**
+> 【图文联合解读】**表格核心数据**：对比四种缓存策略在 Needle Retrieval 任务上的困惑度与草稿准确率。前三种（Full KV/StreamingLLM/CMR）均用 160M 草稿模型，TriForce 用 7B。**量化结果**：困惑度由 8.311→2.435→2.237→2.191；准确率由 0.081→0.166→0.823→0.976。
 
-该表在 Needle Retrieval 任务上对比 4 种 draft 配置（3×Vicuna-160M、1×Vicuna-7B/TriForce）的 Perplexity 与 Accuracy 量化结果：PPL 依次为 8.311 / 2.435 / 2.237 vs 2.191，准确率 0.081 / 0.166 / 0.823 vs 0.976。其中第三种 160M 方案以 PPL 2.237、Acc 0.823 逼近 7B TriForce 的 2.191 与 0.976，性能差距极小。
+**关键结论**：同样 160M 草稿模型下，CMR（SpecExtend）准确率（0.823）远超 Full KV（0.081）与 StreamingLLM（0.166），且其困惑度（2.237）已接近 TriForce 用 7B 达到的 2.191。
 
-论文借此论证核心动机：上下文感知增强的小 draft（160M）即可恢复对 needle token 的预测能力，无需堆参数至 7B 也能匹敌 TriForce。该表作为方法基石，证明"扩展 draft 上下文长度"而非"放大 draft 规模"才是长序列投机解码的有效路径，为后续 SpecExtend 的 drop-in 设计提供量化依据。
+**实验链路作用**：作为消融/对比证据，证明 SpecExtend 的缓存策略仅以轻量 160M 草稿即可逼近 TriForce 重型 7B 草稿的检索性能，为其"即插即用、低开销增强长序列投机解码"的核心论点提供数据支撑。
 
 ### Table 2 (p.6) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab02.png]]
@@ -138,13 +138,11 @@ tags: [speculative]
 > Speedup comparison of off-the-shelf methods for long sequence generation with Vicuna-7B. Standard refers to standard tree-based speculative decoding.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像内容说明**：所提供图片并非 Table 3，而是 **Figure 6**（DeepSeek-R1-Distill-Llama-8B / EAGLE-3 在 AIME-24 长推理任务上的结果），右侧正文为 4.2 节"Comparison with Other Methods"的论述片段。Table 3（Vicuna-7B 长序列生成加速比对比）未在图中出现。以下基于图片实际内容解读：
+> 【图文联合解读】Table 3 在 GovReport、PG-19、BookSum 三个长文数据集、1K–16K 上下文长度下，对比 FlashDecoding、TriForce、MagicDec、标准树形推测解码（Standard）以及 Standard+SpecExtend 五种方案的推理加速比。
 
-**1) 图 6 核心数据**：左图解码速度（Tok/s）：Naive AR=31.42、EAGLE-3=30.34、EAGLE-3+SpecExtend=117.21；右图平均接受长度：1.00、1.89、5.95。SpecExtend 使 EAGLE-3 解码速度提升约 **3.86×**，接受长度从 1.89 跃升至 5.95（约 **3.15×**）。
+数据上，现有方法加速比多集中在 1.0–1.6× 区间，如 Standard 在 16K GovReport 仅 1.38×，TriForce 甚至降至 1.02×；而 Standard+SpecExtend 在所有配置下均取得最高值（粗体），如 GovReport 1K/16K 达 2.28×/2.65×、BookSum 16K 高达 2.81×，相对 Standard 显著提升且随长度延长增益扩大。
 
-**2) 支撑的技术结论**：原文本节论证 SpecExtend 作为 drop-in 增强，在长输入下维持高草稿准确率，并同时复用基础框架的短输入优势，从而获得显著整体加速；同时强调排除 LongSpec 等训练式方法，因 SpecExtend 完全免训练。
-
-**3) 在论文链路中的作用**：图 6 与 Table 3 共同构成 4.2 节"与现成方法对比"的双场景验证——Table 3 面向 Vicuna-7B 通用长生成，图 6 面向 R1 推理长链生成，分别证明 SpecExtend 对树式投机与 EAGLE-3 框架的通用加速能力。
+该表承接 Figure 3 对 CMR 接受率机制的分析，以端到端加速作为核心实验证据，证明 SpecExtend 无需修改 draft 模型即可在现成推测解码上稳定叠加增益，奠定其"drop-in enhancement"的方法定位。
 
 ### Table 4 (p.8) ⭐深度解读
 ![[assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-tab04.png]]

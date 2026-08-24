@@ -71,15 +71,13 @@ tags: [rl]
 > The strong scaling trend. Dotted lines indicate ideal linear scaling. verl consistently encounters OOM with 32k context length and the 32B model so the data points are missing. 8
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图文联合解读（≤220字）：**
 
-该图展示 AReaL 与 verl 在强扩展（strong scaling）下的吞吐量对比，纵轴为 token/s，横轴为 GPU 数；6 个子图按模型规模（1.5B/7B/32B）×上下文长度（16k/32k）排列。
+**核心对象与数据**：2×3强扩展子图，分别对应 1.5B/7B/32B 模型与 16k/32k 上下文长度；横轴 GPU 数（32–512），纵轴吞吐 (token/s)。AReaL（蓝实线）整体逼近理想线性虚线：如 1.5B@16k 从 ≈29k 升至 ≈140k（32→256 GPU），7B@16k 在 512 GPU 时达 ≈100k；32B@32k 场景中 verl（橙线）因 OOM 数据点缺失，仅 AReaL 仍可跑通至 ≈33k。verl 在各子图均明显低于理想线。
 
-**关键数据**：以 7B/32k 为例，GPU 从 64 增至 512 时，AReaL 由约 19k 升至 103k token/s（接近理想线性虚线），而 verl 仅由 19k 升至 38k；在 1.5B/16k 下，AReaL 在 256 GPU 处达 ~155k，约为 verl（67k）的 2.3 倍。
+**关键技术结论**：异步 RL 框架在跨模型规模、跨上下文长度下保持近线性扩展，显存与调度优于同步 verl，唯一支持 32B+32k 训练。
 
-**核心结论**：AReaL 的扩展效率显著优于 verl，且更贴近理想线性；更重要的是，32B/32k 配置下 verl 因 OOM 缺失数据点，而 AReaL 仍可在 256→512 GPU 间保持 ~18k→35k 的近线性增长，验证其异步架构在大模型长序列下的内存与并行优势。
-
-**作用**：该图是论文"系统效率"章节的实证支柱，证明 AReaL 异步 RL 框架在保证训练可行性的同时具备良好的可扩展性，为后续 Table 4 中 AIME24/25 等基准的优异结果提供了算力与吞吐基础。
+**论文作用**：作为系统效率实证支柱，为 Table 4 中 AIME24/25 等基准精度突破提供吞吐与可扩展性算力基础。
 
 ### Figure 5 (p.9) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig05.png]]

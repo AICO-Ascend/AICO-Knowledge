@@ -101,6 +101,20 @@ Table 2 对比 32k 长上下文下 MoE-27B 基线（50k 步, loss 1.63）与 Eng
 **3) 在论文中的作用**
 该表是与 Figure 2（嵌入表模型并行工程可行性）配套的核心效率-有效性证据链，证明 Engram 这一"条件记忆"稀疏轴在长上下文场景兼具算力节省与精度提升，支撑全文核心主张。
 
+### Table 3 (p.13) ⭐深度解读
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab03.png]]
+> [!quote] caption
+> | Entity resolution example reproduced from Ghandeharioun et al. ( 2024 ). This table illustrates how LLMs gradually integrate context tokens through layers of attention and FFNs to construct the internal representation of the entity: “Diana, Princess of Wales” . The “Latent State Translation” colum
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**说明**：提供的图片并非 Table 3 本身，而是一段正文（介绍 Engram 通过显式知识查找模拟"模型深度增加"，并使用 LogitLens 与 CKA 两种机制可解释性工具验证该假设）。Table 3 实体内容不可见，以下依据原文 caption 与正文联合解读：
+
+**1）核心对象与结构**：Table 3 复现自 Ghandeharioun et al. (2024) 的实体解析示例，追踪 LLM 各层（含注意力与 FFN）对目标实体 "Diana, Princess of Wales" 的隐状态表示；通过 "Latent State Translation" 列将每层 hidden state 解码为可读词，以观测模型在第几层才"识别出"完整实体身份。
+
+**2）关键论证结论**：用作 Engram 核心假设的机制级证据——证明显式知识查找等效于"增加模型深度"，使早期层跳过基础特征组合，直接获得高层语义。
+
+**3）论文链路作用**：与 LogitLens、CKA 共同支撑"条件记忆 = 新稀疏轴"这一可解释性主张，区别于 MoE/激活稀疏，从知识存储维度论证 Engram 的有效性。
+
 ### Table 4 (p.18) ⭐深度解读
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab04.png]]
 > [!quote] caption

@@ -195,16 +195,13 @@ Figure 10 展示 ASearcher-Local-14B 在约 220 训练步内三个行为指标�
 > Examples of the synthetic questions, where red indicates injected facts and cyan represents fuzzed content.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：所提供图片并非 Table 1 本身，而是论文第 3.2.2 节"Data Synthesis Agent"的正文段落（含 Fig. 4 引用），与 Table 1 的内容不对应。以下基于原文 caption 与正文对 Table 1 进行解读：
+> 【图文联合解读】**图文联合解读：**
 
-**1) Table 1 核心对象与结构**
-Table 1 展示的是数据合成智能体生成的合成问答样本示例。表格通过两种颜色编码标注内容：红色高亮为"injected facts"（注入事实），青色高亮为"fuzzed content"（模糊化内容），直观呈现了从种子问题到高复杂度问题的迭代改写过程，以及每一步新增的支持事实。
+该表以 **Round / Action / Question** 三列，展示了两个种子 QA 经多轮迭代合成复杂长程搜索问题的流程。例 1 从"M. P. Hein 生日"经 **2 轮 Injection**（注入 Eckerd College、Ulster County 行政官等事实）扩张为多层嵌套描述，再经 **1 轮 Fuzzing**（"Catskill Mountain Railroad"→"a historic mountain railway"）模糊化；例 2 从"美国军团位置"经 1 轮 Injection + 2 轮 Fuzzing（"1934"→"early 1930s"、"American Legion Post"→"veterans' organization's building"）逐级抽象。
 
-**2) 原文论证的关键技术结论**
-该表用于支撑 §3.2.2 的核心论点——合成数据通过**逐步注入事实 + 模糊化改写**两条动作路径，可严格对齐可靠来源并持续提升问题复杂度；supporting facts 列表的同步维护保证了合成 QA 对的质量可验证。
+该表用以论证核心方法结论：**通过"事实注入 + 实体模糊化"的多轮变换，可由简短种子 QA 自动批量合成需要多跳深度检索才能解答的长程问题**，有效缓解长程搜索训练数据稀缺问题。
 
-**3) 在论文整体链路中的作用**
-Table 1 是数据合成流水线的可视化证据，向下承接 RL 训练所需的复杂长程搜索数据，为 ASearcher-Web-QwQ 在 GAIA/xBench 上 +15.0/+22.4 的性能跃升提供数据质量背书。
+在论文整体链路中，它是 **异步 RL 训练管线中"数据合成引擎"的可视化示例**，与 Figure 1 中 RL 带来的 +15.0/+22.4/+15.6 增益相互印证——可扩展的长程合成数据是支撑 ASearcher-Web-QwQ 突破十轮搜索瓶颈的前提。
 
 ### Table 2 (p.12) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab02.png]]
@@ -236,13 +233,13 @@ Table 1 是数据合成流水线的可视化证据，向下承接 RL 训练所�
 > Results on GAIA, xBench-DeepSearch, and Frames. The results are evaluated with LLM- as-Judge. For baselines, we run the corresponding official codes for 4 seeds and report Avg@4 and Pass@4.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】观察到**图片表头列名实际为2WikiMQA/HotpotQA/Bamboogle/Musique（多跳QA）与NQ/TriviaQA/PopQA（单跳QA），与caption所述"GAIA/xBench-DeepSearch/Frames"不一致**，现按图片实际内容解读：
 
-1）**核心数据**：Table 4 在 GAIA、xBench-DeepSearch、Frames 三大搜索智能基准上对比 7B 与 14B/32B 两档基线（Search-R1、R1-Searcher、DeepResearcher、Simple DS 等），报告 Avg@4/Pass@4。绿色高亮的 ASearcher 系列表现最优：ASearcher-Web-14B 在 GAIA 达 76.1/80.7，Frames 达 36.6/33.7；ASearcher-Local-7B 在 GAIA 达 69.1/75.5，全面超越同规模基线。
+**1）结构**：对比7B与14B/32B规模下Search-R1、R1-Searcher、DeepResearcher、SimpleDS等基线及ASearcher-Local/Web系列在7个标准QA基准上的F1与LasJ及均值。
 
-2）**关键结论**：验证 ASearcher 的大规模异步 RL 框架在长程、多轮检索推理任务上取得 SOTA，且 Web 检索设置普遍优于 Local 检索，说明真实搜索环境对性能增益关键。
+**2）关键结论**：ASearcher-Local-7B在2WikiMQA F1 69.1、TriviaQA F1 75.2等多列居首；ASearcher-Web-14B于2WikiMQA达76.1/80.7；14B级ASearcher均值F1 60.0/61.5、LasJ 65.6/64.5均超越Search-o1（55.8/64.9）等强基线，证实大规模异步RL+长程搜索训练在通用检索QA上的稳定增益。
 
-3）**链路作用**：与 Figure 4 数据合成管线形成闭环——"高质量长程 QA + 异步 RL" 为论文核心方法论，Table 4 是其在 GAIA/xBench/Frames 上的最终性能背书。
+**3）作用**：与GAIA/xBench长程agentic评测互补，证明ASearcher方法在标准QA检索任务中同样具SOTA竞争力，体现泛化性。
 
 ### Table 5 (p.14) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab05.png]]
@@ -250,7 +247,13 @@ Table 1 是数据合成流水线的可视化证据，向下承接 RL 训练所�
 > Pass@1 results of ASearcher-Web-QwQ-v2 and baselines, evaluated on GAIA [ 24 ], xBench- DeepSearch [ 41 ], Frames [ 14 ], and HLE-500 [ 19 ]. † indicates results are obtained from official reports.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5对比ASearcher-Web-QwQ-v2与基线在GAIA、xBench-DeepSearch、Frames、HLE-500的Pass@1（注：当前图片仅显示基线行，ASearcher自身数据未呈现）。基线分两类：商业深度研究代理（Kimi-Researcher：69.0/78.8/26.9；OpenAI DeepResearch：67.0/26.6）与通用LLM+工具（OpenAI-o3最强：70.5/66.7/84.0/20.2；Claude-4-Sonnet：68.3/64.6/80.7/20.3；DeepSeek-R1：-/55.0/82.0/24.8；Qwen3-235B：45.6/46.0/-/20.0；Qwen3-30B最弱：35.9/32.0/56.4/13.2）。原文以此论证：异步RL+合成数据框架使QwQ基座在多跳长程搜索任务上比肩甚至超越o3、DeepResearch等顶级闭源代理，验证方法有效性。该表是论文实验链路核心证据，支撑"开源小模型可逼近闭源深度搜索智能体"的关键结论。
+> 【图文联合解读】**Table 5 解读**
+
+**结构与数据**：该表按三类方法（Commercial Deep Research Agents、General LLMs using Tools、本文 ASearcher-Web-QwQ）在 GAIA、xBench-DeepSearch、Frames、HLE-500 四个基准上的 Pass@1 结果。本文 ASearcher-Web-QwQ-v2 基线为 58.7/51.1/74.5/21.5；叠加 Summary=DeepSeek-V3 提升至 60.3/56.4/76.6/23.4；进一步加入 Test-time Search (K=16) 跃升至 **71.8/75.0/83.4/24.6**。
+
+**关键技术结论**：K=16 时本文方法在 GAIA 上超越 OpenAI-o3 (70.5) 与 OpenAI DeepResearch (67.0)，在 xBench 上达到 75.0 的 SOTA；Frames (83.4) 与 HLE-500 (24.6) 也极具竞争力，验证了"异步 RL + 测试时搜索扩展"的有效性。
+
+**论文作用**：作为主结果表，是论证方法 SOTA 性能的最终实验证据，支撑全文异步大规模 RL 框架的核心贡献。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
