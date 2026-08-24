@@ -157,13 +157,11 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 > Template for DeepSeek-R1-Zero. prompt will be replaced with the specific reasoning question during training.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】Table 1为DeepSeek-R1-Zero训练提示模板，含三要素：①"User/Assistant"对话框架；②`<think>...`与`<answer>...</answer>`双标签，强制模型先输出推理再给答案；③"User: prompt"占位符在训练时替换为具体题。
 
-1) **核心对象**：DeepSeek-R1-Zero 的对话提示模板，含两段固定指令（约60词）：设定 User–Assistant 角色，并强制 Assistant 输出须以 `<think>…` 包裹推理过程、以 `<answer>…</answer>` 包裹最终答案；末行 `User: prompt. Assistant:` 作为待填充推理题占位符。
+原文用它论证：模板极简（仅格式约束、零示例），配合GRPO规则奖励即可让模型在纯RL下自发涌现长链CoT与自我反思，证明推理能力无需SFT冷启动即可"从零激励"。
 
-2) **论证结论**：该模板为 R1-Zero 在纯 RL（GRPO）训练中划定了"思考-作答"的结构边界，使模型在不依赖监督微调数据的前提下，仍能以规则化标签形式区分内部推理链与最终答案，从而自发生成长 CoT。
-
-3) **链路作用**：作为 R1-Zero 训练的输入格式基座，直接服务于后续"Aha moment"涌现与可读性分析；也是 R1 引入冷启动 SFT 数据前的零基线结构。
+链路作用：作为R1-Zero纯RL路线的输入接口，与后续R1（SFT冷启动+拒采样）形成对照基线，支撑"RL可独立激发推理"这一核心主张。
 
 ### Table 2 (p.5) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab02.png]]
@@ -171,13 +169,11 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 > An interesting “aha moment” of an intermediate version of DeepSeek-R1-Zero. The model learns to rethink using an anthropomorphic tone. This is also an aha moment for us, allowing us to witness the power and beauty of reinforcement learning.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】该表呈现DeepSeek-R1-Zero中间版本对一道数学题（已知a>1，求方程 a−a+x=x 实数解之和）的思维链过程。模型先两边平方展开为四次方程 x⁴−2ax²−x+(a²−a)=0，随后自发输出"Wait, wait. Wait. That's an aha moment I can flag here"，并主动决定"reevaluate this step-by-step"重新审视前序推导。
 
-该表记录了 DeepSeek-R1-Zero 中间版本对一道数学题（a>1 时，求 √(a−√(a+x))=x 实数解之和）的完整解题轨迹：先按平方去根号→代入展开→化简得 x⁴−2ax²−x+(a²−a)=0→中途停顿自评 "Wait, wait. Wait. That's an aha moment I can flag here."→随即触发自我反思（"Let's reevaluate this step-by-step"），从方程原点重新审视并尝试再次平方，呈现典型的"顿悟—回溯—重审"行为链。
+**关键结论**：纯强化学习（无SFT冷启动数据）即可激发模型涌现高阶元认知行为——自主反思、重新评估推理路径，并以拟人化语气表达"顿悟"。
 
-原文借此论证关键结论：模型在纯强化学习（GRPO）训练下，未经任何监督提示，便自发涌现出拟人化的反思、验证与自我纠错能力，是推理能力"可被激励涌现"的有力证据。
-
-在论文方法链中，此例与 R1-Zero 的零冷启动路线互证，强化了"RL 即可激发高级推理"的核心主张，同时为后文引入冷启动 SFT、构造 DeepSeek-R1（解决语言混杂、可读性问题）的下一阶段训练提供动机与对照。
+**方法链路作用**：该案例是R1-Zero（纯RL）路径的核心定性证据，与图2所示的"冷启动SFT+RL"两阶段路线形成对照。它证明推理能力的自我反思与涌现不依赖显式监督，是RL驱动的R1训练范式成立的实证支撑。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab03.png]]
@@ -185,13 +181,13 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 > Experimental results at each stage of DeepSeek-R1. Numbers in bold denote the performance is statistically significant (t−test with p<0.01).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表3图文联合解读：**
+> 【图文联合解读】**Table 3 图文联合解读**
 
-表3展示DeepSeek-R1从R1-Zero→R1-Dev1→R1-Dev2/3→R1最终版在四大类（英语/代码/数学/中文）共21个基准上的递进表现。
+1）**核心对象与数据**：表展示 DeepSeek-R1 训练各阶段（R1-Zero → R1-Dev1/2/3 → R1）在英语、代码、数学、中文四类共 19 个基准上的表现。关键量化变化：AlpacaEval2.0 从 24.7 跃至 87.6，ArenaHard 53.6→92.3，IF-Eval 46.6→83.3，Aider-Polyglot 12.2→53.3，Codeforces 评分 1444→2029；加粗值经 t 检验（p<0.01）显著。
 
-**关键数据趋势：**R1-Dev1阶段在推理类任务出现明显回退——GPQA Diamond 75.8→66.1、AIME 2024 77.9→59.0、CNMO 88.1→58.0、SWE Verified 43.2→39.6、Aider-Polyglot 12.2→6.7，说明冷启动SFT虽改善语言混杂与格式问题，却损失了纯RL习得的推理能力。经推理RL恢复并叠加拒绝采样后，R1-Dev2/3全面回升，至R1最终版实现：IF-Eval 46.6→83.3、AlpacaEval2.0 50.1→87.6、ArenaHard 77.0→92.3、Codeforces评分1534→2029、Aider-Polyglot 6.7→53.3的显著增益。
+2）**技术结论**：纯 RL 的 R1-Zero 在推理任务（AIME 77.9、MATH-500 95.9）已很强，但通用能力（AlpacaEval 24.7、Aider 12.2）较弱；引入冷启动 SFT 与多阶段 RL 后，R1 在所有维度全面提升，证明"RL 激发推理 + SFT 补齐通用能力"的两阶段路线有效。
 
-**论文作用：**该表是支撑"纯RL探索→冷启动SFT→推理RL→通用RL→拒采样精炼"五阶段训练管线的核心消融证据，量化证明各阶段不可或缺的互补性，而非简单叠加即生效。
+3）**论文作用**：作为实验核心证据，串联"R1-Zero 验证纯 RL 可行性 → R1-Dev 调试拒采/语言一致 → R1 最终成型"的方法链，支撑论文主张。
 
 ### Table 4 (p.18) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab04.png]]
@@ -313,11 +309,14 @@ Table 8 将 R1（MoE，37B 激活 / 671B 总参）与 Claude-3.5-Sonnet-1022、G
 > Performance on latest math competitions. Participants with their USAMO index (AMC score+10×AIME score) surpassing 251.5 are qualified for USAMO.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表对比五个对象在 AMC 12 2024、AIME 2025 与 USAMO Index（AMC+10×AIME）三项最新数学赛事的成绩。DeepSeek R1 以 AMC 143.7、AIME 11.3/15、Index 256.7 与 o1-1217（141.0/12.0/15/261.0）并列领先，二者均超 251.5 门槛获 USAMO 资格；而 V3（131.3）、GPT-4o（104.0）、人类参赛者（123.7）均未达标。
+> 【图文联合解读】**表格核心数据**
+该表对比5个对象在AMC 12 2024、AIME 2025实测成绩及USAMO指数：DeepSeek R1（143.7 / 11.3/15 / 256.7）、OpenAI o1-1217（141.0 / 12.0/15 / 261.0）、DeepSeek V3（98.3 / 3.3/15 / 131.3）、GPT-4o 0513（84.0 / 2.0/15 / 104.0）、人类参赛者均值（61.7 / 6.2/15 / 123.7）。
 
-论证结论：仅经纯 RL（无 SFT）训练的 R1，在未被训练集污染的最新赛事上推理能力已比肩 o1-1217、显著超越基座 V3，证明 RL 路径可激发强推理。
+**关键结论**
+R1以AMC 143.7居首，USAMO指数256.7超过251.5入围线，与o1（261.0）双双达USAMO级；V3与GPT-4o均远未达标。
 
-作用：以"时效性强、零污染"的外部赛事补充 AIME/GPQA 等基准，进一步坐实"R1 推理≈o1"的核心结论。
+**论文中作用**
+作为外部真实场景验证，证明纯RL训练的R1在最新奥赛实战中达到与OpenAI o1比肩的竞赛级推理能力，支撑全文"用RL激励推理能力"的核心方法论主张。
 
 ### Table 14 (p.60) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab14.png]]
@@ -325,13 +324,14 @@ Table 8 将 R1（MoE，37B 激活 / 671B 总参）与 Claude-3.5-Sonnet-1022、G
 > Experimental results for each stage of DeepSeek-R1 on problems with varying difficulty levels in the LiveCodeBench dataset.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 14 图文联合解读**
+> 【图文联合解读】**1) 核心对象与数据**
+Table 14 展示 DeepSeek-R1 五个训练阶段（Zero→Dev1→Dev2→Dev3→最终 R1）在 LiveCodeBench 三档难度题目上的通过率：Easy 由 98.07 升至 100.00；Medium 由 58.78 升至 83.45；Hard 由 17.09 升至 34.44（近乎翻倍）。
 
-**① 核心对象与数据**：该表呈现 DeepSeek-R1 在 LiveCodeBench 上 5 个训练阶段（Zero → Dev1 → Dev2 → Dev3 → R1）于 3 个难度等级（Easy / Medium / Hard）的代码题通过率。Easy 由 98.07% 升至 100%（饱和）；Medium 从 58.78% 升至 83.45%（+24.67pp）；Hard 从 17.09% 升至 34.44%（近乎翻倍）。
+**2) 关键论证结论**
+该表量化证明：随 RL 训练阶段推进并叠加冷启动 SFT，模型代码推理能力呈单调增强；Hard 档近 2 倍跃升是 R1 推理能力涌现的核心实证，支撑"纯 RL 已可激发推理、冷启动微调进一步强化"的迭代路径有效。
 
-**② 关键结论**：随 RL 训练阶段递进，模型推理能力**单调增强**且**难度越高增益越显著**——Hard 题翻倍式提升直接验证了纯强化学习对复杂代码推理的关键驱动作用。
-
-**③ 论文链路作用**：作为"冷启动 SFT → RL → 拒绝采样 → 二次 RL"流水线的**收敛性证据**，支撑 R1 推理能力相对基座模型实现质的跃迁这一核心主张。
+**3) 在论文中的作用**
+与 AIME、MATH 等基准并列，共同刻画 R1 全开发链路中"推理能力逐步涌现"的实验轨迹，验证整体方法闭环。
 
 ### Table 15 (p.61) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab15.png]]
@@ -353,9 +353,11 @@ Table 8 将 R1（MoE，37B 激活 / 671B 总参）与 Claude-3.5-Sonnet-1022、G
 > Comparison of distilled and RL Models on Reasoning-Related Benchmarks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**表16核心**：对比三款32B级模型在AIME 2024（pass@1 / cons@64）、MATH、GPQA、LiveCode 四个推理基准的表现。DeepSeek-R1-Distill-Qwen-32B 全面领先（AIME 72.6 / 83.3，LiveCode 57.2），显著优于 QwQ-32B-Preview（50.0 / 60.0 / 41.9）与 Qwen2.5-32B-Zero 纯 RL（47.0 / 60.0 / 40.2），各指标平均领先 15–20 分。
 
-表16对比3个32B模型在4项推理基准的表现：DeepSeek-R1-Distill-Qwen-32B在AIME 2024（pass@1/cons@64：72.6/83.3）、MATH（94.3）、GPQA（62.1）、LiveCode（57.2）上全面领先，显著优于QwQ-32B-Preview（50.0/60.0、90.6、54.5、41.9）与Qwen2.5-32B-Zero（47.0/60.0、91.6、55.0、40.2）。该表论证"蒸馏R1可低成本复现顶尖推理性能"，量化佐证RL激励推理涌现的方法论，与表16蒸馏环节共同支撑R1系列模型的有效性主张。
+**技术结论**：证明 R1 的强推理能力通过蒸馏可高效迁移到 Qwen2.5-32B 基座，远超同规模纯 RL 路线（Qwen2.5-Zero）及同类开源推理模型 QwQ，验证"大模型蒸馏"优于"同规模从零 RL"。
+
+**论文作用**：作为正文"Distill 路径优于同规模 RL"论断的关键实证，与"RL 训 R1、Distill 向下分发"的双轨设计形成互补。
 
 ### Table 17 (p.62) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab17.png]]
@@ -387,13 +389,7 @@ Table 18 属附录 J "Evaluation Prompts and Settings"。图片仅显示 caption
 > MMLU-Redux is a subset of 5,700 manually re-annotated questions across all 57 MMLU subjects. MMLU-Redux focuses on improving the quality, clarity, and robustness of the benchmark by reducing noise, ambiguities, and potential biases in the MMLU, while potentially adjusting the scope or difficulty of 
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-该表展示MMLU-Redux评测样例：单题以桑拿浴医学问题为例，含B/C/D三选项（正确答案为D"勃起功能障碍减少"），并附标准化prompt模板，要求模型以JSON格式输出`reasoning`与`answer`字段，评估端通过解析JSON与ground truth比对判分。
-
-**技术结论：**MMLU-Redux是覆盖57个学科、5,700道人工重标注题目的子集，通过去噪、消歧、降偏提升基准质量与难度梯度。
-
-**链路作用：**作为DeepSeek-R1训练后的标准化知识与推理评测集之一，采用结构化JSON输出约束，便于自动化精确评估模型综合推理能力。
+> 【图文联合解读】表19呈现MMLU-Redux（57科目、5700题人工重标注子集）评测Prompt样例：以桑拿益处四选一题为载体，要求模型"先推理后选择"并以JSON格式输出`{"reasoning", "answer"}`，评估端解析后与ground truth比对。原文借此论证：经GRPO+RL训练后，模型在通用知识基准上仍保留结构化多步推理与指令遵循能力，验证RL未损害通用性。表中JSON结构化输出约束是实验链路中"推理能力不损通用能力"回归验证的关键评测协议。
 
 ### Table 22 (p.70) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab22.png]]
@@ -401,7 +397,7 @@ Table 18 属附录 J "Evaluation Prompts and Settings"。图片仅显示 caption
 > DROP assesses a model’s ability to understand and extract relevant information from extended textual passages. Unlike simpler question-answering benchmarks that focus on factual recall, DROP requires models to process and interpret context-rich paragraphs.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】图像无法辨认，仅依据原文：图中仅见赛事段落及“将 Answer 后的大写字母与标准答案比对”的评测指令，无完整表头、模型结果或量化数据。①核心对象是 DROP 长文本问答：读取扩展且语境密集的段落，提取相关信息并作答。②该基准不只检验事实记忆，更要求上下文理解与信息抽取。③它作为实验评测环节，用于验证模型在复杂阅读任务上的理解与泛化能力。
+> 【图文联合解读】表22给出DROP提示模板：含3个NFL段落问答示例、1个长文目标，要求逐步推理并以“Answer: $ANSWER”作答；目标答案“ Rivers传多少码”为231码。评测端比对“Answer:”后的结果与标准答案。它说明DROP重在长文本信息提取、关系理解与算术，而非简单事实记忆；论文借此检验RL模型能否将上下文理解与推理能力迁移到阅读理解，补足简单QA评测。
 
 ### Table 23 (p.71) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab23.png]]
@@ -409,13 +405,12 @@ Table 18 属附录 J "Evaluation Prompts and Settings"。图片仅显示 caption
 > Instruction-Following Evaluation (IFEval) is a benchmark designed to assess a model’s ability to comply with explicit, verifiable instructions embedded within prompts. It targets a core competency of large language models (LLMs): producing outputs that meet multiple, clearly defined constraints spec
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】图像无法辨认（仅显示零散的英文词组如"entanglement/quantum physics"、"Physical"、底部出现"Call official functions to check if the answer is consistent with the instructions"等残片，未形成可读表格），以下依据原文与论文已知内容解读：
+> 【图文联合解读】**图像无法直接呈现 Table 23 的数值对比表**，仅展示 IFEval 的一个示例 Prompt：要求将量子纠缠文本以 XML 格式总结、且少于 4 句话，Evaluation 说明通过调用官方函数校验指令一致性。
 
-**核心对象与结构**：Table 23 呈现的是 IFEval（指令遵循评测）基准结果，对比 DeepSeek-R1 系列（Zero/Preview）与基座模型在 Prompt-level（Strict/Loose）与 Inst-level（Strict/Loose）四列指标上的得分，用于衡量模型对显式、可验证指令的遵循能力。
-
-**关键技术结论**：论文借此表明，基于纯强化学习激励推理能力的 DeepSeek-R1-Zero 在指令遵循上仍存在不足，而引入冷启动 SFT 数据的 R1 显著提升 IFEval 分数，证实推理能力与指令遵循需协同优化。
-
-**论文作用**：作为通用能力评测的一环，与 MMLU、GPQA、MATH 等并列，补全 R1 在"可控生成"维度上的评估证据，支撑"RL 激发推理 + 冷启动提升综合表现"的整体结论。
+**结合原文解读**：
+1. **核心对象**：Table 23 是 IFEval 基准结果，对比 DeepSeek-R1 系列（Zero/Preview）与基座模型在 Prompt-level（Strict/Loose）与 Inst-level（Strict/Loose）四个维度的得分。
+2. **技术结论**：论证 R1-Zero/R1-Preview 在显式、可验证指令遵循上显著优于基座，验证 GRRL 训练未损害指令遵从能力。
+3. **链路作用**：与 Table 22 等共同构成"综合能力"评测闭环，证明推理强化在提升数学/代码的同时，不牺牲指令对齐等通用能力。
 
 ### Table 24 (p.72) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png]]
@@ -465,32 +460,27 @@ Table 18 属附录 J "Evaluation Prompts and Settings"。图片仅显示 caption
 > The CLUEWSC (Chinese Language Understanding Evaluation Benchmark - Winograd Schema Challenge) is a specialized task within the CLUE benchmark suite designed to evaluate a model’s commonsense reasoning and contextual understanding capabilities in Chinese.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 27 图文联合解读**
+> 【图文联合解读】**图文联合解读（Table 27）**
 
-该表展示了 CLUEWSC 中文指代消解任务的评估流程：**PROMPT 部分**给出 5 条经典 Winograd 式示例（涵盖"她们/他/它"等代词的指代判断），每条先呈现含歧义代词的语段，再附提问"上面的句子中的'X'指的是"，末尾将真正的测试题"崩龙珍夫妻康健…上面的句子中的'他'指的是"嵌入同一格式；**Evaluation 部分**规定解析模型回答的最后一行并与真值比对以判定正误。
+**核心对象与结构：** 表27为CLUEWSC（中文Winograd指代消解）评测Prompt模板，含5个中文小说片段作in-context示例（"他伯父还有许多女弟子""韦大哥…张大义凛然"等），各段追问"她们/他/它"指代；测试题为崩龙珍与鞠琴的故事，要求模型在`<think>`后用一句话答出"他"指谁；评测机制为解析回答最后一行与ground truth比对。
 
-在论文中，作者借此说明：即便主训练目标是数学/代码推理，基于纯 RL 激励的 DeepSeek-R1 仍能在中文常识与上下文理解（指代消解）上给出正确作答，验证了"推理激励"对通用语言理解能力的可迁移性，为全文"RL 即可激发强推理且不损失通用能力"的中心论点提供中文侧的实验佐证。
+**论证的关键结论：** 原文借此说明DeepSeek-R1在中英文常识推理与指代消解任务上均有效，证明纯RL激励的推理能力具备跨语言、跨任务泛化性。
+
+**在论文中的作用：** 作为附录中多基准Prompt样本之一，与MMLU、GSM8K等评测共同构成"R1通过纯RL获得全面强推理能力"的实验证据链，支撑全文核心方法结论。
 
 ### Table 28 (p.76) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab28.png]]
 > [!quote] caption
-> j C-EVAL evaluates a model’s breadth and depth of knowledge across 52 diverse
+> C-EVAL evaluates a model’s breadth and depth of knowledge across 52 diverse academic disciplines, spanning humanities, social sciences, STEM (Science, Technology, Engineering, and Mathematics), and other professional fields (e.g., medicine, law). All question in C-Eval are Chinese.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】# Table 28 图文联合解读
+> 【图文联合解读】**Table 28 图文解读**
 
-## 1) 表格核心内容
-Table 28 展示 **C-EVAL 基准的 Prompt 模板与评测协议**。该基准覆盖 **52 个学科领域**（人文、社科、STEM 及医学/法律等专业领域），**题目均为中文**。表格分为两部分：
-- **PROMPT**：含两道示例题——①一道1991年6月15日相关的中文阅读理解题（含ABCD选项）；②一道热学/密度相关的中文物理选择题（4选项）；
-- **Evaluation**：通过**解析模型回复的最后一行**，判断所选选项是否与标准答案一致。
+C-EVAL 基准的 Prompt 模板与评测协议。**Prompt** 部分展示两道中文四选一示例：①1991年皮纳图博火山喷发 SO₂ 与气候降温逻辑题；②哈萨克金雕追狼、无电信号仅 3 km 题；均为 A–D 四选项。**Evaluation** 规定解析模型回复的**最后一行**，判断所选选项是否等于标准答案。
 
-> 注：图中中文字符因编码问题呈乱码（mojibake），具体内容须依据原文还原。
+该表支撑论文的关键结论：DeepSeek-R1 在 **52 个中文学科**（人文、社科、STEM、医学、法律）上具备与 GPT/Claude 相当的知识广度与深度，证明纯 RL 激励推理并未损害其中文知识储备。
 
-## 2) 原文论证的技术结论
-C-EVAL 用于衡量模型在**中文知识广度与深度**上的综合能力，其多学科、中文语境的设计，专门考察 DeepSeek-R1 在非英文（中文）场景下的知识储备与学科推理水平。
-
-## 3) 在论文整体方法/实验链路中的作用
-作为 R1 综合评测套件的一环，与 MMLU、GPQA 等英文基准并列，**横向验证 R1 的跨语言知识迁移能力**，补全"推理能力"之外的"知识覆盖面"维度，强化"RL 激励下模型通用智能提升"的核心论点。
+在论文链路中，它与 MMLU、HUMAN-Eval、MATH 等并列为综合能力评估的"中文知识基准"一环，用于横向比较 R1 与 R1-zero、蒸馏模型及主流闭源模型的能力差异。
 
 ### Table 29 (p.76) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab29.png]]
@@ -498,13 +488,13 @@ C-EVAL 用于衡量模型在**中文知识广度与深度**上的综合能力，
 > GPQA (Graduate-Level Google-Proof QA Benchmark) is a rigorous evaluation framework designed to measure an LLM’s ability to tackle complex, graduate-level multiple-choice problems in STEM domains—specifically biology, physics, and chemistry.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 29 图文联合解读：**
 
-1. **核心对象与结构**：该表为 GPQA 评测的提示词模板样例。Prompt 部分规定模型须以"Think step by step"逐步推理，并以 `ANSWER: $LETTER`（无引号）格式输出最终选项；题目为量子力学情境——两态寿命分别为 10⁻⁹ s 与 10⁻⁸ s，可选项 B/C/D 为 10⁻⁸ eV、10⁻⁴ eV、10⁻¹¹ eV（A 项被截断）；Evaluation 部分说明通过解析"ANSWER:"后的字母与标准答案比对判定正误。
+1) **核心对象与结构**：该表呈现 GPQA 基准的 Prompt 模板与评测规则。Prompt 要求模型逐步思考（Think step by step）后，以 `ANSWER: $LETTER` 格式作答（LETTER∈{A,B,C,D}）。示例为量子力学题：两能级寿命分别为 10⁻⁹ s 和 10⁻⁸ s，候选能差选项为 A) 10⁻⁹ eV、B) 10⁻⁸ eV、C) 10⁻⁴ eV、D) 10⁻¹¹ eV。Evaluation 段规定：解析"ANSWER:"后大写字母与标准答案比对。
 
-2. **论证的技术结论**：DeepSeek-R1 在 GPQA 这一研究生级 STEM 多选题基准上的推理→格式化输出→自动评分流程是标准化、可复现的，用以严格衡量模型在生物、物理、化学领域的复杂推理能力。
+2) **论证的技术结论**：该模板用以评估 DeepSeek-R1 在 STEM（生物、物理、化学）研究生级难题上的推理能力，强调显式思维链（CoT）与严格答案格式控制，是验证强化学习后模型推理增强的关键评测之一。
 
-3. **作用定位**：该表属于附录评测提示示例，与 Table 30/31 等共同构成论文实验链路的"评测协议说明"，为读者复现 R1 在 GPQA 上的结果提供提示词与判分规则依据，支撑主文性能对比的可信度。
+3) **论文链路中的作用**：GPQA 与 MATH、AIME 等并列构成 R1 的"知识密集型推理"评测集，用于证明 GRRL 训练在不损害前沿学科推理的同时显著提升泛化推理能力。
 
 ### Table 31 (p.0) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab31.png]]
@@ -512,29 +502,27 @@ C-EVAL 用于衡量模型在**中文知识广度与深度**上的综合能力，
 > An example of C-SimpleQA. It measures a model’s ability to answer short, fact-seeking questions in Chinese with precise, verifiable correctness.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 31 图文联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-该表给出 C-SimpleQA 的评估示例，结构由两部分组成：① **PROMPT** 提出中文事实型问题"显脉香茶菜可治疗何种急性黄疸型肝炎"；② **Evaluation** 定义评判协议，以【正确】【错误】【未尝试】三档划分，并以"奥巴马孩子名字"作为 few-shot 示例，最后让模型仅输出 A/B/C 完成对新回答（黄疸型肝炎）的判定。
+表31以中文事实型问句"显脉香茶菜可用于治疗急性的什么类型黄疸型肝炎"为待评样例，完整呈现C-SimpleQA的评测提示词结构：由问题、标准答案、模型预测1/2构成，给出【正确】【错误】【未尝试】三类few-shot示范，再以A/B/C单选项强制评分模型新答案。
 
-它论证的技术结论是：C-SimpleQA 作为中文短答事实基准，采用三分类精确评判（避免答案部分正确时的模糊打分），可客观反映模型中文事实知识的"精确可验证"能力。
+原文借此论证关键技术结论：采用三档可验证判定（正确/错误/未尝试）替代二元准确率，可显式区分模型的实质性错误与主动弃答，避免对"我不知道"等合理拒答作惩罚性扣分，更公平地量化中文短答案事实检索能力。
 
-在论文中的作用：作为中文评估套件，与英文 SimpleQA 对照，衡量 DeepSeek-R1 在 RL 训练后中文事实问答的准确率与诚实性（是否知之为知之），支撑"RL 激励推理同时提升中英文知识能力"的实验结论。
+在论文链路中，该表作为SimpleQA的中文域并行评测组件，与R1整体实验框架中的多语言事实性问答基准共同支撑"推理能力激励不损害事实正确性"的核心结论。
 
 ### Table 32 (p.78) ⭐深度解读
 ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab32.png]]
 > [!quote] caption
-> j An example of math evaluation, which applies to AIME, MATH, and CNMO. These
+> An example of math evaluation, which applies to AIME, MATH, and CNMO. These benchmarks evaluate model performance on mathematical tasks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像存在严重乱码**，大部分中文字符与符号无法辨识（显示为 °、º、@、~ 等乱码字符），仅可辨"PROMPT""Evaluation"标题、选项标识 K1/K2、字母选项 A/B/C、"K-e l iPº H W"（疑为"选择题"/单选模板字样）及末行"将答案用 \boxed{A""B""C"} 包裹"的指令片段。
+> 【图文联合解读】**Table 32 图文联合解读**
 
-**依据原文解读**：
+Table 32 为 R1 在 AIME、MATH、CNMO 三大数学任务上的**统一评测模板**，由 PROMPT 与 Evaluation 两栏构成：PROMPT 给出示例题（求使 b-eautiful 整数超过 10 个的最小 b≥2），要求模型逐步推理并以 `\boxed{}` 输出最终数值；Evaluation 规定用 SymPy 解析 `\boxed{}` 内的数学表达式，通过基于规则的判分器与标准答案比对（图中实为开放求解题，并非 A/B/C 选择题）。
 
-1) **核心对象**：Table 32 是 DeepSeek-R1 应用于 AIME、MATH、CNMO 三大数学基准的**统一评测提示模板**，采用"题面 + 选项 A/B/C + 要求 \boxed{} 输出"的结构化单选题格式。
+论文借此论证两点关键结论：① 纯 RL 训练即可激发 R1 的多步数学推理能力，无需过程监督；② 采用规则化判分（非 LLM 评判），保证了数学评测的客观性与可复现性。
 
-2) **论证要点**：体现作者为数学评测设计了**标准化的 chain-of-thought 引导模板**，强制模型按结构化方式作答，便于后续**规则化奖励/答案抽取**。
-
-3) **论文作用**：作为附录公开的评估协议，支撑主文 RL 训练后的 benchmark 公平对比，确保 AIME/MATH/CNMO 分数可复现。
+该表位于实验验证环节，作为数学基准的标准化提示模板，使所有基线模型在同一格式下公平对比，是支撑 "R1 在数学推理上逼近 o1" 这一核心结论的实验基础设施。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

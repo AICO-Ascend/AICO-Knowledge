@@ -90,12 +90,14 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 ### Table 2 (p.15) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab02.png]]
 > [!quote] caption
-> Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red .
+> Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**【说明】** 所给原文段落仅引用 Figure 2/9，未直接讨论 Table 2，故下面对该表的解读独立完成。
+> 【图文联合解读】1) 表格对比DLCM与Baseline在12项零样本任务上的准确率，按类别分：常识/通识（Commonsense QA 21.38→+1.64、OpenBookQA +3.00、PIQA +2.42、ARC Easy +2.61、ARC Challenge +1.77、HellaSwag +0.67、Winogrande +1.02）；文本理解（BoolQ −1.47、RACE −0.72）；多语言知识（C-Eval +1.71、CMMLU −0.24、MMLU −0.30）。总体平均43.92 vs 41.23，净升+2.69。
 
-Table 2 展示 DLCM 与 Baseline 在三类 12 个零样本基准上的准确率对比（绿提升/红下降）。通用常识类 8 项中 7 项正向，最高为 OpenBookQA +3.00、ARC Easy +2.61、PIQA +2.42，仅 MMLU 微退 -0.30；英文 QA（BoolQ -1.47、RACE -0.72）与中文 CMMLU -0.24 均小幅退化，仅 C-Eval +1.71 上升。总体平均 43.92% vs 41.23%，+2.69。该表实证隐式推理在自适应语义空间总体有效，但在知识密集型 QA 与中文任务上存在边界，构成论文"方法有效但有局限"的核心实验支撑。
+2) 论证DLCM在常识/通识推理类任务上普遍增益，但在需精细文本理解（MMLU、BoolQ、RACE）的基准略退化，整体均值仍优于基线，支撑"自适应语义空间潜变量推理"的有效性与适用边界。
+
+3) 作为主结果定量证据，串联方法设计与消融/加速讨论，构成实验链路核心结论支撑。
 
 ### Table 3 (p.16) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab03.png]]
@@ -117,11 +119,11 @@ Table 3 以"Baseline(1.3B)/DLCM(2.3B)"并列对比架构参数。通用层：同
 > Ablation Study: Global Parser vs. Normal. Performance comparison on downstream tasks. Both models aim for a target compression ratio of R=4. The Global Parser achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 图文联合解读**
+> 【图文联合解读】【核心对象与结构】表4在目标压缩比R=4下，并列对比Global Parser与Normal两种解析器在6项下游任务（ARC-C、ARC-E、CommonsenseQA、HellaSwag、OpenBookQA、PIQA）的Acc与实现压缩比。
 
-Table 4 在目标压缩比 R=4 下，对比 Global Parser 与 Normal 在 6 项下游任务上的准确率：Global Parser 在 ARC Challenge（0.3038 vs 0.2858）、Commonsense QA（0.2457 vs 0.2228）、PIQA（0.6806 vs 0.6785）、HellaSwag（0.3507 vs 0.3499）、ARC Easy（0.6296 vs 0.6242）上均更优，仅 OpenBookQA（0.3220 vs 0.3280）略低；平均提升 +2.1%。更重要的是，其实现压缩比 3.92 显著贴近目标 4，而 Normal 仅 3.15。
+【关键结论】Global Parser在5项任务胜出（最高+2.29%于CommonsenseQA），仅OpenBookQA低0.006，平均提升+2.1%；更关键的是其实现压缩比3.92几近目标4，而Normal仅3.15，存在显著欠压缩。
 
-该消融证明全局解析器能在更精准逼近压缩目标的同时稳定提升性能，是支撑 DLCM 自适应语义空间机制有效性的关键实验证据。
+【链路作用】作为消融核心证据，该表证明全局解析器在精准逼近目标压缩比的同时提升下游准确率，从而支撑"自适应语义空间"中"压缩率可控即语义无损"的核心技术论点。
 
 ### Table 5 (p.18) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab05.png]]
@@ -143,13 +145,11 @@ Table 4 在目标压缩比 R=4 下，对比 Global Parser 与 Normal 在 6 项�
 > Performance comparison (Batch=1, Heads=32, Interval=6)
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 6 联合解读**
+> 【图文联合解读】**注：表格表头与数据列顺序错位**（表头：Seq Length / Hidden Size / Flex / Flash Varlen / Speedup；实际数据列顺序为 Flex (ms) / Flash Varlen (ms) / Speedup / Seq Length / Hidden Size，已按数据语义修正解读）。
 
-Table 6 在 Batch=1、Heads=32、Interval=6 固定配置下，对 Flex 与 Flash Varlen 两种注意力实现做了 12 组延迟对比（Seq∈{2K,4K,8K,16K} × Hidden∈{1K,2K,4K}）。数据表明 Flex 较 Flash Varlen 慢 **1.26×–1.73×**，且劣势随序列延长扩大——16K 时稳定在 **1.66×–1.73×**。
+**图文联合解读：**
 
-**论证结论**：Flash Varlen 在动态 LCM 长序列自适应语义空间中具有显著的工程必要性，可避免 Flex 在变长场景下的额外开销。
-
-**链路作用**：作为方法工程化论证的关键证据，支撑动态 LCM 在效率维度的可行性，与前文效率基准、复杂度分析共同构成"正确性+效率"的完整实验闭环。
+表6固定Batch=1、Heads=32、Interval=6，对Flex与Flash Varlen两种注意力做3×4共12组延迟对比（Seq∈{2K,4K,8K,16K}×Hidden∈{1K,2K,4K}）。Flex从2K的32.35ms升至16K的315.69ms，Flash Varlen对应从22.48ms升至190.38ms；Flex较Flash Varlen慢1.26×–1.73×，且劣势随序列延长扩大，16K时差距稳定在1.66×–1.73×。该表以量化延迟数据支撑"Flex长序列效率劣势显著"的关键结论，为DLCM选用Flash Varlen作为底层注意力实现提供性能层面的实证依据。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

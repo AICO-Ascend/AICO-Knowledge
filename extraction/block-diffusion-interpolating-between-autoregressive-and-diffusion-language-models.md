@@ -163,11 +163,13 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 > Perplexities (PPLs; ↓) and variances of the NELBO Var𝐗,t​[ℒBD​(𝐗,θ)] (Var. NELBO; ↓). Models are trained on LM1B using a linear schedule for 65B tokens, then finetuned for 10B tokens.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读：**
+> 【图文联合解读】**表格解读：**
 
-该表呈现 3 个训练阶段（以验证损失 L*=31.72/31.27/29.23 表示模型从差到好）×4 种块大小调度 L*∈{[0,0.5], [.3,.8], [-.5,1], [0,1]} 下，块扩散的 PPL 与 NELBO 梯度方差。定量规律：① 随训练推进 PPL 逐行下降（如 [0,0.5] 从 1.03→7.90→32.68）；② 全扩散调度 [0,1] 的 Var. NELBO 在 L*=31.72 时高达 **128**，而任一含较小块的调度稳定在 **≈31** 量级，降低近 4×；③ L*=29.23 时 [0,1] 方差仍为 4，而分块方案仅 ≈29。
+表格在LM1B上对比块大小L∈{8,16,32}（行，对应训练L'=31.72/31.27/29.23）与四种噪声调度U[0,.5]、U[.3,.8]、U[.5,1]、U[0,1]（列）下的PPL与NELBO方差。核心数据：(1) 受限调度U[0,.5]在所有块大小下PPL最优（L=8仅1.03，L=32为8.28），全调度U[0,1]最差；(2) 全调度方差随块增大由128剧降至4，而受限调度稳定在~29–32。
 
-论文借此论证：块扩散通过分块在 AR（低方差）与全扩散（高方差）之间插值，使 NELBO 方差量级与 AR 可比，验证了"块大小可调即可在两极限间平滑权衡"的方法核心主张，是论证其作为插值框架可行性的关键实验支点。
+**技术结论：** 原文借此论证"受限/线性噪声调度"是Block Diffusion的关键设计——既显著降低训练方差（贴近AR训练稳定性），又改善生成质量，故后续实验采用线性调度而非全程调度。
+
+**作用：** 该表是Figure 2训练分析（16B tokens）的延伸，用65B+10B微调后的评测，为"块扩散插值于AR与扩散之间"的核心方法选择提供定量经验支撑。
 
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab03.png]]
@@ -209,15 +211,15 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 > Generation length statistics from sampling 500 documents from models trained on OWT.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**说明**：图片正文中呈现的表格内容为各模型（AR、SEDD、MDLM、BD3-LM L′=4）在 PTB/Wikitext/LM1B/Lambada/AG News/Pubmed/Arxiv 七个数据集上的生成困惑度（gPPL，越低越好，加粗为最优），AR 在 4 个数据集上最优（81.07/25.32/51.14/52.11），MDLM 在 Lambada（48.29）和 Arxiv（37.89）最优，BD3-LM L′=4 在 Pubmed（42.52）最优。**这与所给 Table 6 caption（"采样 500 篇文档的生成长度统计"）不符——表中数值为困惑度而非长度，疑似 caption 与表格错配或截取有误，下文按实际所见内容解读。**
+图像仅显示表标题与"Median # tokens / Max # tokens"两列表头，数据行缺失无法直接读取数值。结合caption与上下文（Figure 6展示MDLM在L=1024、5K步下生成样本熵5.6、GPT2-Large困惑度69.26的定性质量）解读：
 
-**①核心对象**：对比 AR 与三类扩散 LM（SEDD、MDLM、BD3-LM）在零样本 gPPL 上的表现，AR 整体领先，BD3-LM L′=4 在多数数据集上接近甚至优于 SEDD/MDLM。
+① **对象与结构**：Table 6记录在OpenWebText(OWT)上训练的模型采样500篇文档的**生成长度中位数与最大token数**，用于跨模型长度分布的量化对比。
 
-**②技术结论**：作为对 §6.2"可变长度序列生成"章节的支撑证据，说明 BD3-LM 在保持扩散框架可变长生成能力的同时，样本质量已具竞争力，并非以牺牲质量换长度。
+② **论证结论**：配合Figure 6的定性样例，本表定量验证各模型（AR基线、MDLM、Block-Diffusion各配置）输出长度的合理性与稳定性，证明块扩散模型能以块为单位灵活控制生成长度。
 
-**③论文链路作用**：承接前述 MAUVE/perplexity 评估，体现"块扩散插值"在保 AR-级别质量的同时突破固定上下文限制，是论文"质量+灵活长度"双优论点的关键拼图。
+③ **方法链路作用**：是论文"插值于AR与扩散之间"核心论点的**长度可控性关键实证**，与困惑度、熵指标互补，构成方法有效性的完整证据链。
 
 ### Table 7 (p.9) ⭐深度解读
 ![[assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab07.png]]

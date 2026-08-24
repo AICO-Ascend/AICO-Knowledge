@@ -83,16 +83,11 @@ tags: []
 > Interference characteristics between GEMM and GEMV kernels. The points on the x-axis correspond unique GEMM-GEMV implementation pairs. The y-axis denotes the GEMM and GEMV kernels’ normalized performance P. ferent implementations of overlapping kernels exponentially expand the profiling space, resulting in millions of possible configurations. This immense complexity makes exhaustive exploration in
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## 图文联合解读
+> 【图文联合解读】**图5结构：** 横轴为约18个GEMM-GEMV实现配对，纵轴为归一化性能P∈[0,1.2]。蓝色GEMM曲线从~1.0单调降至~0.45；橙色GEMV由~0升至~1.0；灰色×虚线（非最优GEMV）在两曲线间剧烈震荡。红色虚线在0.3与0.8处划分"GEMM优先"（左：GEMM≥0.8）与"GEMV优先"（右：GEMV≥0.8）两区。
 
-**1) 核心对象与结构：**
-Figure 5 以横轴为不同 GEMM-GEMV 实现对（共约 18 个配对），纵轴为归一化性能 P∈[0,1.2]，绘制三条曲线：蓝色圆点实线（GEMM）从 ~1.0 单调下降至 ~0.45；橙色圆点实线（GEMV）由近 0 上升至 ~1.0；灰色×虚线（非最优 GEMV）则在两曲线间剧烈震荡。图中以红色虚线标出 0.3 与 0.8 两个阈值，分别对应"GEMM 优先"（左）与"GEMV 优先"（右）两个分区。
+**技术结论：** 核间干扰不可直接控制且高度非线性，作者以GEMM性能R作为R_physical的代理，建模配对干扰并据此仲裁调度优先级。
 
-**2) 关键论证结论：**
-两曲线呈典型此消彼长——优先 GEMM 时 GEMV 跌至 0.3，反之 GEMM 降至 0.45；而非最优 GEMV 实现性能完全不可预测（0.2–0.7 间抖动）。这印证了 GPU 上计算、内存、缓存资源竞争导致的 kernel interference 不可显式控制，且实现选择对干扰程度有数量级影响。
-
-**3) 在论文中的作用：**
-为 NanoFlow 必须采用"逐实现穷举 profiling + R_physical 测量"的方法论提供直接依据——既然干扰不可预测且依赖实现，就必须靠实测建模来分配 SM/带宽，是后文搜索空间指数膨胀论证的实验支撑。
+**论文作用：** 为NanoFlow的纳米剖面建模提供核心标定，使同卡共跑的attention GEMM与decode GEMV能通过统一度量决定G/G优先级，直接服务于Figure 4所示pipeline中prefill–decode协同调度。
 
 ### Figure 6 (p.11) ⭐深度解读
 ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig06.png]]

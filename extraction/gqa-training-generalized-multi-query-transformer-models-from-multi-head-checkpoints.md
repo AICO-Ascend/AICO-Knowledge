@@ -82,13 +82,13 @@ tags: [training]
 > Performance as a function of uptraining pro- portion for T5 XXL models with MQA and GQA-8.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## 图文联合解读
+> 【图文联合解读】**图5图文联合解读**
 
-**核心数据**：横轴为 uptraining 比例 α（0/5%/10%），纵轴为模型性能。MHA 基线（粉色虚线）恒定约 57.5；GQA-8（蓝方块）从 α=0 时约 56.7 升至 α=10% 时约 57.4；MQA（橙三角）从约 54.0 急升至 5% 时的约 57.0，随后趋于平缓。
+图5展示T5 XXL模型在不同uptraining比例α（0、0.05、0.1）下，三种注意力配置的Performance曲线：MHA基线（红色虚线）稳定在约57.35–57.4；GQA-8（蓝色方块）由α=0的~56.75升至α=0.05的~57.35，再微增至α=0.1的~57.4；MQA（橙色三角）由~54.0急剧跃升至~56.95，α=0.1达~57.15。
 
-**关键结论**：α=0 时 MQA 落后 MHA 约 3.5 分，而 GQA-8 仅落后约 0.8 分，说明 GQA 在"无重训练"状态下就能很好地逼近 MHA 质量；仅需 5% uptraining，两者即获大幅提升且收益递减，证明极小额外成本即可恢复性能。
+**论证结论**：MQA起点最低（损失~3.4点），但5% uptraining即可追回近3点；GQA-8起点高、回升幅度小，二者均在α=0.05后出现明显边际递减，10%提升有限。
 
-**论文作用**：作为 uptraining 有效性的实证核心，支撑"用 GQA 替代 MHA 是推理效率与质量最优折中"的核心主张，使论文方案具备实际部署可行性。
+**论文作用**：作为uptraining方法可行性的关键验证，证明从MHA检查点转换为MQA/GQA仅需极少额外训练即可逼近原始质量，是支撑"低成本复用既有大模型"核心主张的关键实验证据。
 
 ### Figure 6 (p.4) ⭐深度解读
 ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig06.png]]

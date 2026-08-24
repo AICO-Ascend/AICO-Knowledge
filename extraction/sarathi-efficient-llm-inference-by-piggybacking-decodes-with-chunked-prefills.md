@@ -159,13 +159,13 @@ tags: [disaggregated-serving]
 > Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU with varying sequence lengths and batch sizes, using prefill chunk sizes of 256 (top half) and 512 (bottom half). Orange and blue bars represent baseline and SARATHI, respectively. for sequence length of 1K as shown in Figure 9a. Using the chunk size of 512 for sequence length=1K at batch size of 18 also provides sign
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图10解读：**
+> 【图文联合解读】**图10联合解读：**
 
-**1）核心对象与数据**：2×3 网格堆叠柱状图，对比 LLaMa-13B 在 A6000 上各操作（preproj/attn/postproj/ffn，单位秒）的耗时，橙=SARATHI 基线，青=SARATHI。上排 chunk=256、下排 chunk=512；列分别为 seq len 1K/2K/3K。量化读数：seq=1K、batch=18、chunk=256 时基线≈8.6s、SARATHI≈6.7s；同 batch=18 但 chunk=512 时基线≈6.5s、SARATHI≈5.2s；seq=3K、batch=6、chunk=256 时基线≈8.3s、SARATHI≈6.8s。ffn（实色段）为最大占比。
+图10以2×3网格呈现LLaMa 13B在A6000上四类操作（preproj/attn/postproj/ffn）的耗时堆叠分解：上排chunk=256、下排chunk=512，序列长1K/2K/3K对应最大批次18/8/6。蓝色SARATHI总耗时全面低于橙色baseline：1K批次18从~8.5s降至~6.7s（chunk=256）；3K批次6从~8.4s降至~6.8s；chunk=512进一步将绝对耗时压低（如1K批次18≈5.2s）。耗时主成分为ffn与attn。
 
-**2）论证结论**：增大 chunk（256→512）显著压缩总时延，且 SARATHI 在每个配置下均低于基线，收益主要来自 ffn 与 attn 段。
+**关键结论：** SARATHI的加速并非仅源于attention优化，而是preproj/attn/postproj/ffn四阶段均被压缩，说明分块预填充+解码piggybacking带来的是整体流水线效率提升。
 
-**3）作用**：作为 Figure 9 的操作级分解补充，从微观算子层面验证 chunked-prefill + decode piggyback 减开销的机制有效性。
+**论文作用：** 与图9吞吐量曲线互补，从微观操作分解角度定量验证SARATHI在系统级调度层面普遍有效，为其分块策略提供耗时级证据支撑。
 
 ### Figure 11 (p.11) ⭐深度解读
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig11.png]]

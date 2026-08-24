@@ -130,16 +130,13 @@ tags: [kv-cache]
 > Rank correlation of the KV deviation per token be- tween two consecutive layers. expensive and defeats the purpose of selective KV recom- pute. Instead, we observe that the HKVD tokens on different layers are not independent:
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】## Figure 8 图文联合解读
+> 【图文联合解读】**图8联合解读**
 
-**1) 核心对象与数据**
-该图以三组柱状图分别展示 Mistral-7B（4 对层：5/6、12/13、21/22、31/32）、Yi-34B（5/6、16/17、31/32、46/47）与 Llama-70B（11/12、21/22、41/42、61/62）中**相邻层间逐 token KV 偏差的 Spearman 秩相关系数**。三个模型在所有采样层对上的秩相关均稳定在 **≈0.95–1.0** 区间，接近完全正相关。
+图8展示了Mistral-7B、Yi-34B、Llama-70B三种模型在多组相邻层对（如Mistral-7B的5 vs 6、12 vs 13、21 vs 22、31 vs 32等）上KV偏差的Spearman秩相关系数，所有柱形均接近1.0，量化表明相邻层间HKVD token的排序高度一致。
 
-**2) 关键技术结论**
-HKVD（高 KV 偏差）token 在不同层之间**并非独立**：一旦某 token 在某一层被识别为"重要"，其相邻层几乎必然也属于重要 token。这一强跨层相关性为后续策略提供了统计支撑——无需对每层独立、逐 token 重算 KV 偏差。
+该高相关性直接验证了原文关键观察"不同层的HKVD token并非独立"——若上层某token KV偏差大，则其下层大概率同样偏差大。
 
-**3) 在论文方法链路中的作用**
-该结论直接支撑 CacheBlend 的**选择性 KV 重算（selective KV recompute）** 设计：可利用层间秩相关，仅在少量代表层中识别关键 token，并将其"扩散"应用到相邻层缓存，从而**以极低开销完成关键 KV 的重计算与融合**，避免全 token、全层重算带来的高昂代价，是 CacheBlend 实现"快"的核心经验依据之一。
+这一结论支撑CacheBlend核心设计：仅需对少数层HKVD token选择性重计算，其余层直接复用缓存，避免逐层全量重算，从而实现RAG场景下多chunk KV缓存的快速融合推理。
 
 ### Figure 9 (p.7) ⭐深度解读
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig09.png]]

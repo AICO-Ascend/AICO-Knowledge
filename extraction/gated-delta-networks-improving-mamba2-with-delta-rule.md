@@ -88,11 +88,15 @@ tags: [architecture]
 > Zero-shot performance comparison on S-NIAH benchmark suite for 1.3B models (see § 4 for setups)
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 解读**
+> 【图文联合解读】**图像仅显示表标题"Caption"文字部分，未呈现具体数据行/列/数值，故无法直接读取具体指标。**
 
-该表对比 1.3B 规模的 DeltaNet、Mamba2、Gated DeltaNet 在 S-NIAH 三类检索任务（pass-key、数字、UUID）上、1K–8K 上下文长度下的零样本表现。Gated DeltaNet 全面领先：S-NIAH-2 在 4K 达 92.2（Mamba2 仅 56.2、DeltaNet 18.6），S-NIAH-3 的 4K 为 27.6（vs Mamba2 4.6）。
+**联合解读（基于上下文）：**
 
-论文借此论证关键结论：Mamba2 采用的简单内积损失难以建模键值关联，而 Delta 规则以在线回归 ‖Sₜkₜ−vₜ‖² 优化快权重（等价于测试时 SGD），因此门控 Delta 规则在上下文联想回忆能力上显著优于 Mamba2，为 Gated DeltaNet 架构的核心动机与设计选择提供关键实验依据。
+① **核心对象**：S-NIAH（单针检索）长上下文基准，针对1.3B参数模型，在不同上下文长度（如1k→64k）下零样本测试模型对嵌入文本中目标信息的召回准确率；行通常为方法（Gated DeltaNet / Mamba2 / Transformer等），列为各NIAH变体及长度档。
+
+② **关键技术结论**：论文借助该表论证，Gated DeltaNet（delta rule + gating）在大多NIAH档位与长度上获得一致优于纯Mamba2的检索分数，说明门控delta更新相较单纯门控Mamba2可提升长距离信息寻址能力。
+
+③ **整体链路作用**：与Figure 2长度外推实验互补——一方证明"训练长度内的常规任务不退步"，一方证明"对长距检索的零样本能力增强"，共同支撑"gated delta rule全面优于Mamba2基线"的核心claim。
 
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab03.png]]
@@ -100,13 +104,17 @@ tags: [architecture]
 > Performance comparison on language modeling and zero-shot common-sense reasoning.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 3 展示 10 个模型在 Wiki/LMB 困惑度及 8 项零样本推理任务的表现，分**纯循环**与**注意力/混合**两组。
+> 【图文联合解读】**Table 3 解读**
 
-**核心数据**：纯循环组中，Gated DeltaNet 以 Wiki ppl **16.42**、LMB ppl **12.17**、Avg **55.32** 全面优于 Mamba2(54.89) 与 DeltaNet(52.14)；混合组中，Gated DeltaNet-H1 取得 Avg **56.40**（榜首），H2 的 Wiki ppl **15.91** 为全表最低，均超越 Samba(54.00)。
+该表将10个模型分两组对比：纯循环（RetNet/HGRN2/Mamba/Mamba2/DeltaNet/**Gated DeltaNet**）与注意力/混合（Transformer++/Samba/**Gated DeltaNet-H1/H2**），覆盖Wiki ppl、LMB ppl（越低越好）以及LMB、PIQA、Hella、Wino、ARC-e/c、SIQA、BoolQ 8项准确率与均值。
 
-**论证结论**：门控+Δ规则同时改进 Mamba2 与 DeltaNet；将门控、Δ 规则与注意力结合的混合架构（Gated DeltaNet-H1/H2）达 SOTA。
+**关键数据**：
+- 纯循环组中Gated DeltaNet均值**55.32**最高，优于Mamba2(54.89)、DeltaNet(52.14)，Wiki ppl**16.42**、LMB ppl**12.17**、LMB acc**46.65**均居首。
+- 混合组中H1均值**56.40**最优，H2为56.18，均显著超过Samba(54.00)与Transformer++(52.25)；H2在Wiki ppl(15.91)、LMB acc(48.76)上领先，H1在PIQA(72.57)、Wino(58.40)等多项领先。
 
-**作用**：作为论文主实验核心表，从**建模效率**（ppl）与**应用能力**（下游推理）双维度验证所提方法的先进性与泛化性。
+**论证结论**：α/β门控对DeltaNet带来全面性能提升；H1（Gated DeltaNet+SWA）为性价比最高的推荐架构。
+
+**论文作用**：核心下游评测表，验证"门控Delta Rule + SWA"整体方法栈的有效性，为方法先进性提供主实验证据。
 
 ### Table 4 (p.7) ⭐深度解读
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab04.png]]

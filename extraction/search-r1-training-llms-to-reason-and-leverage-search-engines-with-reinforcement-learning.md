@@ -222,13 +222,7 @@ Table 6 在 Qwen2.5-7B 与 3B 基座上对比 SEARCH-R1（PPO）训练时**是�
 > Search-R1 case study 1 (successful): Search-R1 conduct multi-step reasoning, search, with self-verification and finally answer the question.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 10 联合解读**
-
-**核心对象与数据**：该表记录了 Search-R1 模型对多跳问答"What type of profession does Chris Jericho and Gary Barlow have in common?"的完整执行轨迹。模型共发起 5 次 `<search>` 调用、5 段 `<think>` 反思，依次检索两人各自职业、共同职业，并最终自验证纠正中间错误（如曾把"摔角手"误判为共同点），输出正确答案 `musician`（与 Ground Truth 一致）。
-
-**论证的技术结论**：该案例直接支撑论文核心论点——经强化学习训练后，LLM 能自主编排多轮"思考—检索—验证"循环，调用搜索引擎补充外部知识，并在推理出错时通过迭代反思自我修正，无需人工设计推理链。
-
-**在论文整体中的作用**：作为 Case Study 1，它与定量基准测试（Benchmark 指标）互补，以可读的 trace 形式直观展示 Search-R1 在 7B/13B 规模上涌现的自主多步推理与自验证能力，是证明 RL 训练有效性的关键定性证据。
+> 【图文联合解读】图中问题是判断克里斯·耶罗与加里·巴洛的共同职业，标准答案及模型答案均为“musician（音乐家）”。模型经历4轮“思考—搜索—返回信息—再思考”，逐人核验职业并复查共同点，体现自验证能力。结论是RL可让模型交替进行多步推理与按需检索。作为定性案例，它直观补足量化实验，串联“推理→检索→再验证→作答”全链路。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

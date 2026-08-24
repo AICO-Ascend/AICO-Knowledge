@@ -188,9 +188,7 @@ Table 1 对比 5 种 KDA:MLA 混合比（0:1、1:1、3:1、7:1、15:1）的训�
 > Performance of Kimi-Linear-Base and Moonlight-Base across diverse tasks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 图文解读**
-
-该表在相同激活参数（3B MoE）与训练量（5.7T tokens）条件下对比 Kimi-Linear-Base（48B 总参）与 Moonlight-Base（16B 总参）在 16 项基准上的表现。Kimi-Linear 在全部任务上均领先：通用类 TriviaQA 75.2 vs 66.2、MMLU-Pro 54.8 vs 42.4、WinoGrande 81.5 vs 74.6；数学类 MATH 58.5 vs 45.3、GSM8k 86.3 vs 77.2、CMATH 85.5 vs 79.6；代码类 CRUXEval-I-cot 61.0 vs 45.9、EvalPlus 64.9 vs 50.3；中文 C-Eval 83.3 vs 77.6、CSimpleQA 53.5 vs 34.7。原文借此论证新线性注意力架构在显著减少 KV 内存的同时不牺牲质量，且跨任务均稳定优于同等激活预算的标准 MoE 基线。该表是论文"效率–表达力等价"实验链路的关键支撑：在通用、数学、代码、中文多维度证明 Kimi-Linear 具备可扩展性与任务普适性。
+> 【图文联合解读】表8对比Kimi-Linear-Base与Moonlight-Base在四类任务的性能。两者均为MoE、激活3B参数、训练5.7T token，但Kimi-Linear总参48B远多于Moonlight的16B。Kimi-Linear全面领先：通用TriviaQA 75.2 vs 66.2、MMLU-Pro 54.8 vs 42.4；数学MATH 58.5 vs 45.3；代码CRUXEval-I-cot 61.0 vs 45.9、LiveCodeBench 20.0 vs 14.3；中文C-Eval 83.3 vs 77.6。论文借此论证：相同激活参数与训练量下，Kimi-Linear混合线性注意力架构表达力显著优于纯线性基线，是验证核心方法有效性的关键对照。
 
 ### Table 9 (p.28) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab09.png]]

@@ -364,11 +364,13 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Comparison of various M EDUSA -2 models. The first
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 联合解读**
+> 【图文联合解读】**⚠️图片差异说明**：您提供的实为论文 **Figure 1**（架构示意图），Table 1（tab01.png）的图像未呈现在此处；下方按图中实际可见内容进行解读，并衔接 Table 1 的作用。
 
-该表对比了 4 个 Medusa-2 模型（Vicuna-7B、Zephyr-7B、Vicuna-13B、Vicuna-33B）的关键指标：(1) 接受率 3.01–3.51；(2) 多头开销 1.18–1.27；(3) 生成质量几乎无损（相对基线 −0.14 至 +0.05）；(4) Medusa 加速比 *S*₋MEDUSA 达 2.35–2.83×，而传统投机解码 *S*₋SpecDecoding 仅 1.47–1.60×（Zephyr-7B 因非贪婪设置未测）。
+**1）结构与数据**：图示 Medusa 在原始 Transformer（Embedding→Layers→Last Hidden）的最后一层隐藏状态上并联 **3 个 Medusa Head**，与原 LM Head 并存。输入 *"What will happen if Medusa meets a llama?"* 后，三头并行预测后续 token 的 top-k 候选——Head1 首候选 *"It, I, As"*；Head2 次候选 *"is, ' the"*；Head3 第三位候选 *"difficult, is, '"* / *"not, difficult, a"*。组合形成 candidates（如 *"It is difficult not" ✓*、*"It' difficult a" ✗*），经树注意力并行验证后单步输出 *"It is difficult"*。
 
-原文借此论证：**Medusa-2 在 7B–33B 全规模上均显著优于投机解码，且不牺牲输出质量**，验证了多头并行预测方案对不同基座模型的通用性与鲁棒性。在论文链路上，该表位于实验核心，承担"主要速度–质量权衡"的主结果展示，为前文 Figure 1 提出的 tree-attention 多头机制提供了端到端的量化证据，支撑 Medusa 作为即插即用加速框架的核心结论。
+**2）原文论证结论**：并行多头预测+树形候选验证可将多步自回归解码压缩为单步，是推理加速的机制核心。
+
+**3）在论文中的作用**：作为 §2.1.1（多头设计）与 §2.1.2（tree-attention）的方法可视化锚点，为 Table 1 中 Medusa-2 系列模型加速比与各头接受率的量化对比提供直觉支撑。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab02.png]]
@@ -376,9 +378,7 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Comparison of Different Settings of Vicuna-7B. Quality
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】1) 表比较 Vicuna‑7B 的基线、直接微调、MEDUSA‑1/‑2：质量为 6.17、5.925、6.23、6.18；后两者加速比分别 2.18×、2.83×，前两者不适用。  
-2) 结论是多头解码能保持甚至略升质量并显著加速；MEDUSA‑2 速度最高，质量仅降 0.05。  
-3) 正文结合 ε=0.01–0.25、α=√ε 说明质量—加速权衡及采样策略差异；该表是 MEDUSA 有效性和配置选择的实验证据。
+> 【图文联合解读】图中并非Table 2，而是Figure 2，故无法读取表2数据。图中8×8掩码以8个候选Key为列，14个“✓”保留8条路径；根节点分叉到Head 1（“It/I”），再到Head 2（“is/·/the”），屏蔽无效前缀。它说明MEDUSA可自顶向下建树，并以树注意力一次并行验证多头候选；该机制将候选生成、筛选接入高效多路径解码流程。
 
 ### Table 3 (p.0) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab03.png]]
@@ -386,13 +386,14 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 > Impact of Techniques on Speedup
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读**
+> 【图文联合解读】**核心对象与结构：**
+表3为消融实验，按四条递进路径对比各技术对加速比的量化贡献：①仅Medusa-1多头（无树注意力）≈1.5×；②加入树注意力≈1.9×；③采用优化的树配置≈2.2×；④以Medusa-2训练多头≈2.8×。
 
-Table 3 以 Vicuna 为基线，纵向列出 4 项技术逐层叠加的推理加速比：仅 MEDUSA-1 多头（无 tree attention）≈1.5x → 加入 tree attention ≈1.9x → 使用优化 tree 配置 ≈2.2x → 训练为 MEDUSA-2 头 ≈2.8x。
+**关键结论：**
+该表逐项叠加地论证：树注意力机制贡献约0.4×增益，树结构优化再贡献约0.3×，而Medusa-2训练策略带来最大跳跃（≈0.6×）。三者缺一不可，共同支撑"多头预测—树形验证—再训练"全链路。
 
-该表作为定量消融，论证两点关键结论：① tree attention 是 Medusa 并行推测解码的核心机制——仅靠多头预测仅获 1.5x，叠加 tree 结构后增益显著；② MEDUSA-2 的联合训练头相对 MEDUSA-1 再贡献约 0.6x 加速，证明整套设计不可或缺。
-
-在论文实验链路中，它分解各模块边际贡献，与 Figure 3（baseline / Medusa-1 / Medusa-2 端到端 wall-time 对比）形成"组件级→系统级"的双层证据链，支撑 Medusa-2 显著超越 baseline 的核心结论。
+**论文链路中的作用：**
+表3与图3（Vicuna-7B/13B端到端加速）互为补充——图3展示总体加速效果，表3则拆解各组件权重，为MEDUSA-2方案提供可解释的消融依据，印证了"简单框架叠加多重解码头"仍需配套树注意力与重训练才能达最优。
 
 ### Table 4 (p.16) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab04.png]]
@@ -400,13 +401,13 @@ Table 3 以 Vicuna 为基线，纵向列出 4 项技术逐层叠加的推理加�
 > Speedup results on AlpacaEval ( Li et al. , 2023 ) dataset.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读说明**：所提供的图片仅显示了 Table 4 的标题（"Speedup results on AlpacaEval (Li et al., 2023) dataset"）及其下方的章节标题 "G. Exploration and Modeling of Hardware Constraints and MEDUSA"，**表格主体的数据行/列内容未在图像中呈现，无法辨认**，以下解读仅依据可见标题与论文语境进行：
+> 【图文联合解读】**Table 4 图文联合解读**
 
-1) **核心对象与结构**：该表呈现 Medusa 多解码头框架在 AlpacaEval 指令数据集上的端到端加速比（speedup）结果，应包含不同模型（如 Vicuna/LLaMA 系列）、不同 Medusa head 数量或是否启用 tree-attention 等条件下的加速倍数列与基线对比。
+**1) 核心对象与数据**：表 4 给出 AlpacaEval 上 4 个模型的 Medusa 加速结果（基线/加速 tokens/s · 接受率 · 加速比）：Vicuna-7b（37.07→106.76，3.23，2.88×）、Vicuna-13b（29.01→91.54，3.28，3.16×）、Vicuna-33b（17.87→40.43，2.85，2.26×）、Zephyr-7b（34.21→99.50，3.08，2.91×）。整体加速比集中在 **2.26–3.16×** 区间，接受率约 2.85–3.28。
 
-2) **关键技术结论**：作为论文主实验表，它量化证明 Medusa 相对自回归基线在真实指令场景中可获得显著（如 2× 以上）吞吐量提升，从而将 Figure 4 关于 tree-attention 候选 token 数与接受率权衡的微观结论，在 AlpacaEval 这一宏观端到端 benchmark 上得到实证支撑。
+**2) 关键结论**：Medusa 在指令型任务上普遍获得 ~3× 端到端加速；Vicuna-33b 加速比最低（2.26×），因模型规模大、接受率下降（2.85）；自蒸馏模型（Zephyr-7B、Vicuna-13/33B）由于精度-速度权衡，加速效果相对受限，印证 Figure 4 所揭示的"候选 token 越多，接受率与吞吐存在折中"的设计规律。
 
-3) **在论文链路中的作用**：Table 4 与 Figure 3/4 共同构成"组件消融→端到端验证"的实验闭环，作为 Section G 引入硬件约束建模前的系统级性能锚点。
+**3) 链路作用**：表 4 是 Medusa 在真实对话基准上的**主结果验证**，与 Figure 4（树注意力候选数消融）形成"机制分析 → 系统级收益"的闭环，共同支撑论文"多解码头 + 树注意力即可显著提速"的论证。
 
 ### Table 5 (p.0) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab05.png]]
@@ -414,7 +415,13 @@ Table 3 以 Vicuna 为基线，纵向列出 4 项技术逐层叠加的推理加�
 > Computational and space complexity of the main operators in different phases. The table is based on Table 2 in the report (Chen 2023).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表量化列出Prefill、Decoding、Parallel decoding三阶段中XWQ/K/V、QKT、PV、FFN等主要算子的输入/输出shape与计算/空间复杂度（b、s、q、n、h、i分别表批次、序列长度、并行预测数、头数、隐层/中间维度）。核心结论：并行解码阶段将q个Medusa预测token批量处理，XWQ/K/V计算O(bqh²)、空间O(2bqh+h²)（h²项不随q倍增，实现权重复用），QKT为O(bsqnd)，相比q次串行自回归显著节省K/V重加载与序列化开销，论证多解码头并行预测在访存与权重复用上的高效性，为Medusa方法加速比提供理论依据。
+> 【图文联合解读】**Table 5 图文联合解读：**
+
+该表量化对比了 Prefill、Decoding、Parallel decoding 三阶段核心算子（XW_{Q,K,V}、QKT、PV、XW_{u,g,d}）的计算/空间复杂度。关键数据：QKT 在 Prefill 为 O(bs²nd)，标准 Decoding 降为 O(bsnd)，而 Medusa 并行解码为 **O(bsqnd)**；新增成本仅增加因子 q（候选头数）而非 s（序列长度）。
+
+此表论证的核心结论：Medusa 多头并行解码相较于自回归解码，额外开销 = q/s，因 q 通常仅 4–5，远小于 s 的数百至数千量级，因此推理加速几乎"免费"。
+
+在论文中，该表为方法可行性提供理论支撑——证明 Medusa 头并行扩展多个候选 token 时不会显著增加计算负担，佐证了其作为轻量推理加速框架的设计合理性。
 
 ### Table 6 (p.25) ⭐深度解读
 ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab06.png]]

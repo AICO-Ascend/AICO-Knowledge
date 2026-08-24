@@ -228,7 +228,7 @@ Table 6 用 DeepSeek-LLM 1.3B 对比 5 种训练设置在 GSM8K/MATH/CMATH 及�
 > The data source and gradient coefficient of different methods. Ps​f​t denotes the data distribution of supervised fine-tuning datasets. πθs​f​t and πθ denote the supervised fine-tuned model and the real-time policy model during the online training process, respectively.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表10从数据源、奖励函数、梯度系数三维度对比6种训练方法。SFT以Psft采样、系数为1；RFT/Online RFT均用规则奖励与Eq.10，仅采样策略不同（πsft vs πθ）；DPO引入正负样本对（Eq.14）；PPO采用Model奖励（Eq.18）；GRPO则分组采样{oi}_{i=1..G}并用Eq.21。论文借此论证GRPO在采样、奖励机制与梯度计算上的独特设计——相较PPO省去critic价值模型，是其在在线RL阶段选择GRPO作为核心算法的关键理论依据，支撑了后续实验对比。
+> 【图文联合解读】表10从数据源、奖励函数、梯度系数三维度横向对比SFT、RFT、DPO、Online RFT、PPO、GRPO六种方法。SFT采用Psft(Q,O)联合采样；RFT/DPO由SFT模型πsft采样；Online RFT、PPO、GRPO则切换到在线策略πθ采样。奖励函数由Rule-based逐步演化为Model-based（PPO、GRPO），GRPO以G个样本{oi}替代单样本o。梯度系数依次对应公式10、14、10、18、21。该表作为方法谱系图，论证GRPO（公式21）以分组相对优势替代PPO的价值模型，是论文核心创新推导与R1-zero训练链路的方法学起点。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

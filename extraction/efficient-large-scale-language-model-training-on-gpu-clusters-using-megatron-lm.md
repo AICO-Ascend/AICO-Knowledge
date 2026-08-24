@@ -58,13 +58,7 @@ tags: [training, architecture]
 > GPipe pipeline schedule with forward passes (blue) for all microbatches (represented by numbers) followed by backward passes (green). The gray area represents the pipeline bubble. For simplicity, we assume that the backward pass takes twice as long as the forward pass. The efficiency of the pipeline schedule does not depend on this factor. Each batch in this example consists of 8 microbatches, and
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-1) **核心对象与结构**：图中展示 GPipe 流水调度在 4 个 Device（Device 1–4）上的时间—任务分配。每个 mini-batch 被切分为 8 个 micro-batch（编号 1–8），先依次执行前向（蓝色 1→8）再依次执行反向（绿色 8→1），灰色区域表示设备空闲的"流水线气泡"，右侧"Pipeline flush"分界线后开始下一批（9–16）。
-
-2) **关键技术结论**：气泡（灰色）产生于流水线首尾的填充与排空阶段，其占比随 micro-batch 数 m 与流水级数 p 之比（p−1/m）决定；反向耗时设为前向 2 倍，但调度效率与该比值无关，仅由气泡比例主导——这是 GPipe 的固有瓶颈。
-
-3) **在论文中的作用**：Figure 3 揭示传统 GPipe 的气泡开销，以此作为动机，引出本文提出的 Interleaved 1F1B 调度策略（在后续 Figure 中展示），通过交错前反向显著缩小气泡，从而提升大规模 Transformer 在 GPU 集群上的训练效率，构成方法部分的核心改进点。
+> 【图文联合解读】图3展示GPipe流水线调度：4个设备按时间轴依次对8个微批次执行前向（蓝，1时隙）与反向（绿，2时隙），灰色为气泡，"pipeline flush"处出现设备空闲。原文借此论证GPipe气泡显著、效率受限；以此为动机，本文在后续图中提出Interleaved 1F1B调度，交错前后向以缩小气泡，提升大规模Transformer在GPU集群上的训练效率，构成核心方法改进。
 
 ### Figure 4 (p.3) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig04.png]]
@@ -151,11 +145,13 @@ tags: [training, architecture]
 > Throughput per GPU of PTD-P and ZeRO-3 for two differ- ent GPT models (the 175B GPT-3 model is shown with dotted lines, and the 530B model is shown with solid lines). Global batch sizes are fixed and ZeRO-3 is used without any model parallelism.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图10核心展示：在固定全局batch size下，175B（虚线）与530B（实线）GPT模型分别用ZeRO-3（蓝）与PTD-P（橙）训练时，单卡吞吐（Achieved teraFLOP/s per GPU）随GPU数（768–1920）的变化。定量看：PTD-P 530B稳定在约170→160，PTD-P 175B约150→143，几无衰减；而ZeRO-3 175B从约143骤降至~45，ZeRO-3 530B从约138降至~50。
+> 【图文联合解读】**图10联合解读：**
 
-原文借此论证：**纯数据并行（ZeRO-3，不含模型并行）随GPU规模增大吞吐严重退化**；PTD-P（张量+流水线并行）保持高且稳定的单卡效率，故千亿级以上模型必须引入模型并行。
+**1) 核心对象与结构**：横轴为GPU数量（约768–1920），纵轴为单卡达成teraFLOP/s（0–200）。四条曲线：PTD-P 530B（橙实线方块）稳定在160–170；PTD-P 175B（橙虚线三角）约150；ZeRO-3 530B（蓝实线菱形）从140骤降至约50；ZeRO-3 175B（蓝虚线圆点）从140降至约45。
 
-该图与Table 1互补，作为"为何需Megatron式TP+PP"的**关键经验依据**，支撑论文弱扩展至1T参数的核心结论。
+**2) 关键结论**：全局batch固定时，PTD-P单卡吞吐基本不随GPU数下降，而ZeRO-3因仅数据并行、参数需跨卡sharding，通信开销随GPU数线性增长，吞吐近乎崩塌。530B模型尤其明显——GPT-3级别训练中PTD-P相对ZeRO-3可获得3倍以上的每卡效率。
+
+**3) 在论文中的作用**：此图直接对比Megatron-LM的核心方案（PTD-P：张量+流水线并行）与同期最优数据并行方案ZeRO-3，证明在超千卡、万亿参数规模下，纯数据并行扩展性失效，必须引入模型并行，从而为本文"PTD-P即最优可扩展路径"的核心论断提供端到端实验支撑，奠定Table 1弱缩放结果的可信基础。
 
 ### Figure 11 (p.9) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig11.png]]

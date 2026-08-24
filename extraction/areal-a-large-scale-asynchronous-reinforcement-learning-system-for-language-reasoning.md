@@ -167,20 +167,7 @@ tags: [rl]
 > Generalization results on DeepSeek-Distilled-Llama-8B across math benchmarks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
-
-⚠️ **说明**：所引原文段落实际讨论的是 **Figure 6（系统优化消融：动态批处理+30%吞吐、可中断生成+12–17%）**，而非 Table 6。以下按图片实际内容解读。
-
-**1) 表格核心对象与数据**
-Table 6 对比 DeepSeek 蒸馏 Llama 在 **14B** 与 **32B** 三种设置下的数学泛化结果（三列依次为：基准准确率、生成长度/格式率、另一基准得分）：
-- 14B：基座 53.4 → Sync AReaL 56.7 → Async AReaL **58.1**
-- 32B：基座 57.4 → Sync AReaL **61.2** → Async AReaL 61.0
-
-**2) 关键结论**
-异步 AReaL **不牺牲推理质量**：32B 与同步版几乎持平（61.0 vs 61.2），14B 反超同步版 +1.4、远超基座 +4.7；长度/格式率亦保持稳定。
-
-**3) 在论文方法链中的作用**
-与 Figure 6 的工程加速消融互补——图6证明"快"，本表证明"好"，共同闭环论证：**异步 RL 框架兼具系统吞吐增益与跨规模泛化能力**。
+> 【图文联合解读】该表展示AReaL在DeepSeek-Distilled-Llama-8B上的跨模型家族泛化结果，对比基线与两种学习率(η=4、η=8)的微调表现。四个数学基准上微调均显著超越基线(50.4/84.2/89.1/23.3)：η=4达58.4/92.3/92.2/42.6，AIME25提升最大(+19.3)；η=8为57.2/91.5/91.9/41.6，略低于η=4。该表证明AReaL异步RL框架不依赖特定基座，可有效迁移至不同模型家族，验证方法的普适性。
 
 ### Table 7 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab07.png]]

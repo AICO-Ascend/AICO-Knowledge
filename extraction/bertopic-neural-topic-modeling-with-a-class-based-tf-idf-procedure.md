@@ -46,11 +46,11 @@ tags: []
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 1 图文联合解读**
 
-**1）核心数据**：表内为6个主题模型（LDA、NMF、T2V-MPNET、T2V-Doc2Vec、CTM、BERTopic-MPNET）在3个数据集（20 NewsGroups、BBC News、Trump）上的主题一致性（TC）与主题多样性（TD）得分，每格为10–50主题、共15次运行的均值。BERTopic-MPNET的TC为.166/.167/.066，TD为.851/.794/.663；表现最优的对比项中，T2V-Doc2Vec TC居首（.192/.171）但Trump上仅-.169，CTM则在TD上三数据集全部领先（.886/.819/.855）。
+**① 核心对象与数据**：表1对比6种主题模型（LDA、NMF、T2V-MPNET、T2V-Doc2Vec、CTM、BERTopic-MPNET）在20 NewsGroups、BBC News、Trump三个数据集上的主题一致性（TC）与主题多样性（TD），每个分数为15次独立运行的均值。具体量化：BERTopic-MPNET在TC上表现突出（20NG: .166, BBC: .167, Trump: .066），仅次于或超过T2V-Doc2Vec（.192/.171/-.169）；CTM则在TD上最优（.886/.819/.855）；传统LDA/NMF整体TC偏低（≤.089）。
 
-**2）关键结论**：BERTopic-MPNET在TC上稳居第二（仅略逊T2V-Doc2Vec），并在Trump集上TC反超（.066 vs -.169/-.213），同时TD保持.66–.85的高位，证明其*c-TF-IDF*类簇流程在主题质量与多样性之间取得了最稳健的平衡，而非追求单一指标峰值。
+**② 关键技术结论**：论文借此论证BERTopic-MPNET在TC与TD之间实现了良好权衡——既显著优于LDA/NMF等经典模型的一致性，又保持接近最高水平的多样性，验证了基于class-based TF-IDF的神经主题建模方案的优越性。
 
-**3）在论文中的作用**：作为主实验核心证据表，用于支撑"BERTopic在不牺牲多样性的前提下产出语义连贯主题"的核心主张，并与经典基线（LDA/NMF）及同类神经模型（T2V、CTM）做横向对比，验证方法有效性。
+**③ 实验链路作用**：作为主结果表，定量支撑论文核心主张，并与图1（计算效率）共同构成BERTopic"质量+效率"双重优势的实证基础。
 
 ### Table 2 (p.6) ⭐深度解读
 ![[assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab02.png]]
@@ -58,15 +58,15 @@ tags: []
 > Using four different language models in BERTopic, coherence score (TC) and topic diversity (TD) were calculated ranging from 10 to 50 topics with steps of 10. All results were averaged across 3 runs for each step. Thus, each score is the average of 15 separate runs.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读：**
+> 【图文联合解读】**图文联合解读**
 
-表2在三个数据集（20NG、BBC News、Trump）上对比BERTopic嵌入USE、Doc2Vec、MiniLM、MPNET四种语言模型后的TC（一致性）与TD（多样性），数值为10–50话题各3次共15次运行的均值。
+表2对比4种嵌入（USE、Doc2Vec、MiniLM、MPNET）在20 NewsGroups、BBC News、Trump三数据集上的TC（主题一致性）与TD（主题多样性）得分，每格为10–50主题×3轮共15次运行的均值。
 
-**量化结果**：20NG上Doc2Vec双优（TC=.173、TD=.871）；BBC上MiniLM TC最高(.170)、Doc2Vec TD最高(.819)；Trump集整体偏低，Doc2Vec TC出现负值(-.088)，USE与MPNET TC仅约.05–.07。
+**核心数据**：Doc2Vec在20NG（TC=.173/TD=.871）与BBC（.168/.819）均最优，却在Trump严重劣化（TC=-.088，TD=.536）；MiniLM与MPNET在Trump TC并列最高（.060/.066），三项指标最为均衡；USE整体居中。
 
-**关键结论**：BERTopic性能显著依赖底层嵌入，无单一通用最优模型；Doc2Vec利于一致性却牺牲多样性，MiniLM/MPNET则较均衡。
+**技术结论**：嵌入模型选择显著影响主题质量；Transformer类嵌入（MiniLM、MPNET）跨语料稳定性优于Doc2Vec，尤其在短文本/社交媒体（Trump推文）场景表现明显更优，Doc2Vec则更适配传统长文档新闻语料。
 
-**论文作用**：该表支撑核心论点——c-TF-IDF流程与嵌入解耦，证明BERTopic框架通用、嵌入可替换，是方法可扩展性的关键实证。
+**论文作用**：作为关键消融实验，验证BERTopic嵌入无关的模块化设计，为"c-TF-IDF与嵌入解耦、可灵活替换"的核心方法论主张提供实证支撑。
 
 ### Table 3 (p.6) ⭐深度解读
 ![[assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab03.png]]

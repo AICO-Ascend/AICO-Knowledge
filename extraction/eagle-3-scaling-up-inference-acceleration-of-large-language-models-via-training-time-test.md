@@ -54,13 +54,13 @@ tags: [speculative, training]
 > Illustration of training-time test (the bottom part) and its comparison with other draft methods (the upper and middle parts). f denotes the feature, t denotes the token, and a represents the unconstrained vectors.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图3联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-1) **核心对象**：三幅上下对照的draft流程图。上为原EAGLE：Training时以特征序列$f_1\cdots f_t$输入Draft模型，Step1输出$\hat f_{t+1}$（$l_{fea}$），Step2经LM head输出$\hat t_{t+2}$（$l_{token}$）。中为EAGLE+$l_{fea}$去除：改用无约束向量$\hat a_{t+1}$，Test时$\hat t_{t+3}\neq t_{t+3}$（红字标错）。下为EAGLE-3：Training/Test均执行Step1→Step2自回归，并以红色虚线"Training-time test"将Step1预测$\hat a_{t+1}$回灌为Step2输入。
+1）图分三栏对比：上为EAGLE（训练单步、测试多步，依赖特征损失l_fea）；中为去掉l_fea后训练用未约束向量â，但测试时t̂ₜ₊₃ ≠ tₜ₊₃（红叉，暴露train-test不一致）；下为EAGLE-3的"training-time test"，将âₜ₊₁反馈送入草稿模型做第二步，使训练与测试流程对齐。
 
-2) **关键结论**：去掉特征预测会暴露train-test分布失配；将Step1纳入训练后，8×数据下α-α由~0.78升至~0.80、SP由~0.69升至~0.78，证明训练分布与测试对齐才能让数据规模转化为draft接受率增益。
+2）原文借此论证：传统EAGLE在测试时多步自回归会引入训练-测试分布偏差，移除l_fea后偏差明显（红叉）；通过训练时即模拟多步测试，可统一两阶段，提升草稿准确性。
 
-3) **作用**：作为EAGLE-3的核心创新，支撑"scaling law"与相对EAGLE-2的1.4×延迟加速结论。
+3）该图是EAGLE-3核心创新（training-time test）的动机与机制图，奠定了后续多步自回归训练范式，是论文方法链路的关键设计依据。
 
 ### Figure 4 (p.2) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png]]
@@ -69,7 +69,13 @@ tags: [speculative, training]
 > We can address this issue by incorporating Step 1 into the training process (the bottom of Figure 3). Using this method, the benefits of increasing training data become more pronounced. We name this technique as training-time test. EAGLE and speculative sampling methods such as Medusa (Cai et al., 2024) reuse the top-layer fea- tures of the target model, specifically the features immediately befor
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图4左侧给出EAGLE训练/测试两阶段流程（特征f_t预测f̂_{t+1}，再经LM head预测token）；右侧两折线图横轴为ShareGPT 1×–8×数据量下的接受率：EAGLE（红）较平稳；无特征预测版（黄）左图升至≈0.81但右图仅≈0.2–0.3；EAGLE-3（蓝）起点最低但随数据增速最快，8×时反超达≈0.80/0.78。原文据此论证：将测试时推理结构（Step1特征预测）纳入训练（training-time test）可显著放大数据扩展收益，是EAGLE-3关键改进。该图与Figure 3方法图互补，配合Table 4吞吐数据共同构成"训练时测试"有效性的完整证据链。
+> 【图文联合解读】图4以ShareGPT数据量1×–8×为x轴，对比EAGLE、EAGLE无特征预测、EAGLE-3在两种接受率指标下的曲线：
+- 左图（0-α，范围~0.72–0.81）：EAGLE-3随数据量从~0.72单调升至~0.80，于8×时反超EAGLE（~0.785），无特征预测版最高（~0.81）；
+- 右图（1-α）：EAGLE-3由~0.70升至~0.78，EAGLE平台于~0.69，无特征预测版仅0.22–0.32。
+
+论证结论：引入训练时测试（training-time test）后，EAGLE-3显著受益于数据规模扩展，突破了原EAGLE随数据增加增益饱和的局限。
+
+论文作用：为"训练时测试+特征预测"这一核心技术改进提供关键的缩放性实证支撑，衔接Figure 3的训练框架与Table 4的吞吐加速。
 
 ### Figure 5 (p.4) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig05.png]]
@@ -151,13 +157,13 @@ tags: [speculative, training]
 > Throughput improvement under different batch sizes on H100 and LLaMA-Instruct 3.1 8B for the MT- Bench dataset, with SGLang without speculative sam- pling as the baseline (1.00x). The experiments were conducted by the SGLang team.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**说明**：所提供图像仅显示 Table 3 的 caption 文本，未呈现表格具体的行/列数据（不同 batch size 下的吞吐量加速倍数无法从图中读出），以下解读依据 caption 与论文正文展开。
 
-**1）核心对象与数据：** 表3对比 EAGLE 与 EAGLE-3 在 H100、LLaMA-3.1-8B、MT-Bench 上，批量为 2–64 时的吞吐量加速比（基线 SGLang=1.00×）。EAGLE 仅在小批量（2–4）保持 1.38–1.40× 增益，批量≥16 后普遍降至 0.88–1.02×；EAGLE-3 全批量均显著领先，最低仍达 1.32×（batch=32），峰值 1.82×（batch=4）。
+**1) 表格核心对象与结构**：评测场景为 H100 GPU + LLaMA-3.1-8B-Instruct，数据集 MT-Bench；横轴为不同 batch size，纵轴为相对 SGLang 无推测采样基线（1.00x）的吞吐量加速比；实验由 SGLang 团队复现执行。
 
-**2）关键技术结论：** 证明 EAGLE-3（结合训练时测试）相对 EAGLE 在高并发场景下优势扩大——传统推测解码在大批量下易失效，EAGLE-3 的训练时测试机制有效突破此瓶颈。
+**2) 论证的关键技术结论**：随 batch size 增大，EAGLE-3 的吞吐量加速比进一步抬升——推测解码的验证开销被 batch 内并行摊薄，training-time test 策略在规模化部署场景下仍保持稳定的吞吐增益，体现其实用可扩展性。
 
-**3）实验链路作用：** 与 Figure 3 的方法示意图呼应，验证训练时测试在实际部署（大批量推理）中的工程价值，为论文核心方法提供端到端部署证据。
+**3) 在论文整体链路中的作用**：与 Figure 3/4 对 training-time test 的原理阐释互补，前者落在"特征采样可训练化"的算法层，本表则补齐端到端服务吞吐这一部署层证据，完成从方法改进到落地加速的论证闭环。
 
 ### Table 4 (p.8) ⭐深度解读
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab04.png]]

@@ -30,7 +30,11 @@ tags: [rl]
 > Dataflow graph of 3 RLHF algorithms [19, 43, 55].
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图展示(a) PPO、(b) Safe-RLHF、(c) ReMax 三种 RLHF 算法的三阶段数据流图，含 actor、critic、reference policy、reward model、cost model 五类模型节点：①生成(Actor Gen)、②准备(Ref/RM/Critic/Cost Fwd 等前向)、③训练(Actor/Critic Training)。Safe-RLHF 引入 cost model 与 L_ptx，ReMax 采用双 actor+双 RM+双 Ref 结构。该图论证：不同 RLHF 算法共享"生成—准备—训练"骨架，但模型组合与依赖各异，故 HybridFlow 须以灵活的多控制器架构统一调度异构数据流，为其模块化设计提供关键动机，并衔接后文对现有框架灵活性差、效率低两类缺陷的剖析。
+> 【图文联合解读】**图文联合解读（Figure 1）：**
+
+该图以三层数据流图刻画 PPO、Safe-RLHF、ReMax 三种 RLHF 算法：(1) Generation 层（Actor Gen）调用次数分别为 1、1、2 次；(2) Preparation 层组合各异——PPO 使用 Ref+RM+Critic 前向，Safe-RLHF 额外引入 Cost 模型，ReMax 仅用 RM+Ref；(3) Training 层 PPO/ReMax 含 Actor 与 Critic 训练，Safe-RLHF 增加 Actor Fwd 与 $\mathcal{L}_{ptx}$ 约束。
+
+论文借此论证：**不同 RLHF 算法的模型依赖关系异构**（含 reward、cost、reference、critic 等多模型耦合），且不同算法生成/训练阶段对模型组合的需求差异显著，验证了现有多/单控制器方案在灵活性或效率上的不足。该图为 HybridFlow 提出的**多控制器分层抽象**（intra-/inter-node 划分）提供了直接动机，奠定后续 Auto-Mapping 与 3D-HybridEngine 设计的基础。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig02.png]]
@@ -39,9 +43,9 @@ tags: [rl]
 > Programming model used in RLHF systems. (a)
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（≤220字）：**
+> 【图文联合解读】**Figure 2 联合解读：**
 
-图2对比两种RLHF编程模型。(a)现有框架采用纯多控制器：Actor、Critic、Reward各worker独立调度，代码层嵌套`recv_actor()`/`broadcast()`递归调用，由此产生两大缺陷——**Inflexible**（计算与数据依赖深度耦合、难以适配多种LLM系统）与**Inefficient**（训推切换开销大、模型放置策略僵化）。(b) HybridFlow提出混合模型：**Inter-Node**用单控制器统一编排`actor.gen → critic.comp_value → reward.compute_reward`；**Intra-Node**仍保留多控制器并行`gen`/`comp_reward`（含`all_gather_weights`）。由此获得**Flexible**（解耦数据与计算依赖、无缝集成任意LLM）与**Efficient**（零冗余切换、支持灵活模型放置）。该图是论文方法动机的核心可视化，与Table 2实测的训推切换开销直接呼应，奠定后文HybridFlow编程抽象与性能优势的设计基础。
+图2对比两种RLHF编程模型。(a)现有框架采用纯多控制器——Actor/Critic/Reward各worker节点均独立设控制器，计算与数据依赖嵌套、模型放置僵化、训练-生成切换开销大；(b)HybridFlow采用混合范式：节点间由单控制器协调模型调度，节点内沿用多控制器执行分布式计算（如图中gen()、comp_values()、comp_reward()函数解耦）。技术结论：解耦数据与计算依赖、消除转换冗余、支持灵活模型放置、为异构LLM系统提供统一接入。该图是HybridFlow核心设计动机与方案的可视化，直接呼应并支撑Table 2对"训练↔生成切换开销"的实验量化，构成论文"问题剖析—方案提出—性能验证"方法学链路的枢纽环节。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig03.png]]

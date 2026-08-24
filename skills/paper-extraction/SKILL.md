@@ -22,7 +22,7 @@ python3 skills/paper-extraction/parse_moonlight_bib.py     # 可选 dry-run：�
 python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条命令（2026-08-23 起）
 ```
 
-**`full_pipeline.py --push` 自动完成 8 步**：① sync_from_source（源表 diff→arxiv 解析→下载体检→索引追加）→ ② extract_phase1（文本+图表+MOC+manifest）→ ③ **extract_visuals（图/表/公式区域裁剪成单图** `assets/crops/`，报告可直接插入）→ ④ **新增裁剪自动走 MiniMax-M3 批量解读**（只补 minimax_captions.json 缺失项）→ ⑤ eprint_formulas（LaTeX 源，无网自动跳过）→ ⑥ extract_phase1 再合并 → ⑦ 深读队列（新增论文全要素深读交夜间 cron）→ ⑧ token-safe commit+push（推完抹 push URL token）。
+**`full_pipeline.py --push` 自动完成 10 步**：① sync_from_source（源表 diff→arxiv 解析→下载体检→索引追加）→ ② extract_phase1（文本+图表+MOC+manifest）→ ③ **extract_visuals（图/表/公式区域裁剪成单图 `assets/crops/`**→ ④ **新增裁剪自动走 MiniMax-M3 批量解读**（只补 minimax_captions.json 缺失项）→ ⑤ eprint_formulas（LaTeX 源，无网自动跳过）→ ⑥ extract_phase1 再合并 → ⑦ **🔍 audit_crops → discriminate_audit → autofix_crops（LLM vision Lint gate，全量机审→白名单→规则重裁闭环；新论文一遍过不需人工校验）** → ⑧ 深读队列（新增论文全要素深读交夜间 cron）→ ⑨ wiki_index 重建索引 → ⑩ token-safe commit+push（推完抹 push URL token）。
 
 旧的 `sync_from_source.py --push` 仍可用（只到入库+萃取，不管图表裁剪/解读）。
 
@@ -140,6 +140,8 @@ python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条
   - **valid_table 别加宽长文计数条款**：曾加"宽且词多的块 ≥N 即假表"导致 38 张真表（长换行行表格 a-survey tab18/sarathi tab01 等）被误杀，已回退三通道版本；单个怪表走 manual-pdf-region 登记（muon tab10 尾部数字密散文 sc2 过不了散文闸）。
   - **prompt 模板附录表（单列巨元组长文本）别用 matplotlib 渲染**：textwrap 折行与真实排版行高不匹配必然叠字（deepseek-r1 tab24/26）——原 PDF 单页排版良好时直接 manual-pdf-region 裁剪原排版。
 - **重裁后解读必须失效重生成**：像素变了解读就过期。全量重裁的标准动作 = 备份 → hash 对比（changed/new/gone）→ 删 minimax_captions.json 对应 key → `context_caption.py` 补跑（M3 是廉价 vision 路径，117 张批量重解读换 KB 正确性值得）；最后核对 disk==referenced、0 缺解读再收口。
+- **matplotlib 渲染表格的行高错位事故（2026-08-24 五轮，deepseek-r1 tab23/29）**：`ax.table` 无 colLabels 时 `get_celld()` 行号 0 起就是数据行，`cell.set_height(rh[r-1])` 把全部行高错位旋转一格（首行拿末行高度）——行高差异大的 prompt 模板表必然叠字+大片空白，dynamic-lcm tab02 的"CJK 豆腐块"实为两行文字被压进一行高。**此前误诊为"matplotlib 不适合长文本表"——真根因是 off-by-one**。正确做法：行高 = `rh[r]/sum(rh)`（自身折行数占比），图高 = 总行数×0.19in 不封顶 30。
+- **全量机审代替信号抽查（"怎么每次都不彻底"的根因，2026-08-25 落地为 full_pipeline step 7）**：audit_crops.py 全库 M3 逐张判决 → discriminate_audit.py 二阶白名单（子图面板/长 caption/prompt 模板表/原版排版重叠/代码 listing 图）→ autofix_crops.py 规则提案 → **M3 复核闭环**；两轮不收敛直接 manual-pdf-region 登记，不改全局规则。裁剪裁不出文字重叠——overlap 必是原版排版或渲染管线。`full_pipeline.py` 已自动串行：每次入库新论文→step 7 自动审→自动修→自动 verify→hard-case 落 ar5iv_crops.json 享 overlay 保护。新增论文无需人工校验。
 
 ## 📚 Wiki 三层架构与三个操作（Karpathy LLM Wiki 落地，2026-08-24）
 

@@ -369,13 +369,7 @@ tags: []
 > FLOPs per token in forward pass.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 联合解读**
-
-**① 核心对象与数据**：表展示各模型前向单 token 的 FLOPs，对比基线与加入 SHC/DHC（扩展率 n=2、4）的差异。OLMo-1B 基线 2.3536 G；SHC×2/×4 增量仅 +0.038%/+0.127%，DHC×2/×4 为 +0.076%/+0.200%。OLMo-7B 基线 13.3647 G，DHC×4 增 +0.147%；OLMoE-1B-7B 基线 2.3580 G，DHC×4 增 +0.208%。HC 自身 FLOPs 仅 0.0010–0.0197 G。
-
-**② 论证结论**：相比基座数十亿参数，HC 引入的计算开销最大不足 0.21%，与参数开销（SHC 仅 n² 静态矩阵，DHC 主体为 d_model 窄投影）共同支撑"开销可忽略"论断。
-
-**③ 论文作用**：属效率验证环节，为"以 HC 替换残差连接几乎零成本"提供关键量化证据，铺垫下游大规模实用化主张。
+> 【图文联合解读】表8量化OLMo 1B、7B及OLMoE 1B–7B接入SHC/DHC后的每token前向FLOPs。1B基线2.3536 G：SHC×2/×4为2.3545/2.3566 G（+0.038%/+0.127%），DHC×2/×4为2.3554/2.3583 G（+0.076%/+0.200%）。7B-DHC×4总增+0.147%，OLMoE增+0.208%；HC仅0.0010–0.0197 G。说明扩宽或采用DHC虽增算力，但总增量最高0.208%，代价极低；该表承接图8，支撑HC高效并引出内存分析。
 
 ### Table 9 (p.16) ⭐深度解读
 ![[assets/crops/hyper-connections-tab09.png]]
@@ -411,13 +405,13 @@ tags: []
 > Training hyperparameters for ViT.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 12 解读**
+> 【图文联合解读】**Table 12 图文联合解读**
 
-1) **核心数据**：ViT 训练超参表，含 lr=0.003、Batch Size=4096、调度器为 Cosine Annealing + 10k 步线性 Warmup、Mixup(α=0.2)、300 epoch、AdamW(β1=0.9, β2=0.999, ε=1e−8)、梯度裁剪 1.0、Weight Decay=0.3、Dropout=0.1、bf16 精度。
+表格罗列ViT训练超参数：lr=0.003、Batch Size=4096、AdamW(β1=0.9, β2=0.999, ε=1e-8)、Cosine退火+10k步线性warmup、Mixup(α=0.2)、300 epoch、Weight Decay=0.3、Dropout=0.1、梯度裁剪1.0、bf16精度。
 
-2) **论证结论**：ViT 实验沿用成熟 ImageNet 训练配方（大 batch、长 epoch、cosine+warmup、强正则），证明 DHC 带来的增益来源于结构改进而非特殊调参，从而保证与基线 ViT 公平对比。
+该表与同节Figure 12（末层DHC权重分布可视化）相辅相成：前者提供标准化训练设置，后者展示训练后权重分布健康收敛，二者共同论证**超连接机制可在标准ViT训练范式下被稳定优化、未出现权重异常**。
 
-3) **链路作用**：作为附录的可复现性材料，支撑正文对 DHC 在 ViT-Base/16 等视觉骨干上性能与权重分布（图12）的实验结论，是论文"通用残差替代方案"主张在视觉域验证的实验基础。
+在论文链路中，此表作为附录性实验基线，为正文主对比实验与可视化分析提供统一复现条件，确保DHC相对基线方法的增益来源于架构本身而非调参差异。
 
 ### Table 13 (p.0) ⭐深度解读
 ![[assets/crops/hyper-connections-tab13.png]]
@@ -425,11 +419,16 @@ tags: []
 > OLMo’s default configuration was evaluated using multiple metrics. Perplexity (PPL) and loss were used for the V2 and V3 Validation Sets, while zero-shot testing was applied to the Downstream Benchmarks. However, the grey benchmarks were excluded from our analysis due to the instability of their per
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**核心对象与结构**：Table 13 是 OLMo 默认配置的评测基准清单，分三组：13 个 V2 验证集（覆盖 4chan、c4_en、gab、ice、m2d2_s2orc/wiki、manosphere、pile、ptb、twitterAEE 等）、11 个 V3 验证集（Dolma 子集：books、common-crawl、pes2o、reddit、stack、wiki 及 c4_en、ice、pile、m2d2、wikitext103 等），以及 10 个 Downstream 零样本基准（piqa、hellaswag、winogrande、openbook_qa、sciq、arc_easy、copa、commitment_bank、mrpc、rte、sst2）。V2/V3 用 PPL 与 loss，下游用 zero-shot，灰色行因指标不稳定被剔除。
+> 【图文联合解读】**注意：图像仅显示表格行标签（数据集/基准名称），未显示具体数值列，故无法读取量化结果，以下解读结合标签列表与 caption 原文。**
 
-**技术结论作用**：为 DHC 与基线对比定义统一、多维度评测协议，确保跨语料域与跨推理任务比较的公平性。
+**1) 核心结构与数据：**
+Table 13 三段共列出约 35 个评测条目：① **V2 Validation Sets** 14 项（涵盖 4chan、c4_100_domains、gab、ice、m2d2_s2orc/wiki、manosphere、pile、ptb、twitterAEE、wikitext_103 等）；② **V3 Validation Sets** 12 项（以 dolma 系列为主，含 books、common-crawl、pes2o、reddit、stack、wiki 等，加上 c4_en、ice、m2d2_s2orc、pile、wikitext_103）；③ **Downstream Benchmarks** 10 项（piqa、hellaswag、winogrande、openbook_qa、sciq、arc_easy、copa、commitment_bank、mrpc、rte、sst2）。
 
-**实验链路角色**：作为 Table 6 消融与 Fig.13–15 的配套表，提供"DHC 不增显式参数即可在长程训练下持续降低 loss、提升 zero-shot"的可复现多维证据，连接组件有效性至端到端训练有效性。
+**2) 原文论证的技术结论：**
+作为 OLMo 默认配置的全量评测图谱，V2/V3 用 PPL 与 loss 衡量泛化，下游用 zero-shot 测能力迁移；灰色条目因逐 prompt 性能不稳定被剔除，体现评测严谨性。
+
+**3) 在论文中的作用：**
+该表是 DHC 与 baseline 对比的"指标清单基线"，与 Table 6、Fig.13–15 共同构成"组件→长程训练→端到端验证"的证据链，为"隐式增深宽不增参即可提升性能"提供多任务量化支撑。
 
 ### Table 14 (p.31) ⭐深度解读
 ![[assets/crops/hyper-connections-tab14.png]]

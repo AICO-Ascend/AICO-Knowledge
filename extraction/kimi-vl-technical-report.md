@@ -117,11 +117,11 @@ tags: [multimodal]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**核心内容：** 该图为圆几何推理示例。题目设定⊙O中AB为直径，C、D在圆上，∠D=62°，求∠ACO，提供A.26°/B.28°/C.30°/D.32°四选项。模型分三步求解：①由直径推∠ACB=90°（圆周角定理）；②圆心角∠AOC=2×62°=124°（圆周角定理）；③由OA=OC设∠ACO=x列方程2x+124°=180°，得x=28°，选B。
+图示为一道圆几何推理题：圆O中AB为直径，点C、D在圆上，∠D=62°，求∠ACO（选项A-D：26°/28°/30°/32°）。模型分三步求解：①由AB为直径推出∠ACB=90°（圆周角定理）；②由圆心角定理得∠AOC=2×62°=124°；③利用OA=OC构成等腰三角形，设∠ACO=x，列方程2x+124°=180°，解得x=28°，选B。
 
-**论证结论：** 证明Kimi-VL具备符号推理与几何推断能力——能解析视觉条件、调用圆周角定理与三角形内角和等定理、多步符号演算后准确得出目标角。
+**技术结论：** 该例证明Kimi-VL具备链式符号推理能力，能识别视觉几何结构并调用圆周角/圆心角定理逐步推导。
 
-**论文作用：** 在第13页与MathVision基准论证衔接，作为定性示例佐证模型在复杂视觉数学推理（symbolic+geometric chain-of-thought）上的可靠性，与定量评测互补。
+**整体作用：** 作为定性案例，与定量评测（如MathVision基准）互证模型在视觉-数学跨模态推理任务上的有效性。
 
 ### Figure 9 (p.14) ⭐深度解读
 ![[assets/crops/kimi-vl-technical-report-fig09.png]]
@@ -130,13 +130,13 @@ tags: [multimodal]
 > Diverse OCR visualization. Kimi-VL demonstrates strong OCR capabilities across varied content types, including structured financial tables, complex mathematical formulas, and handwritten Chinese text. The model accurately parses tabular data into markdown, converts formulas to LaTeX, and transcribes handwritten paragraphs with contextual understanding, showcasing its versatility in multimodal text
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（≤220字）：**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 核心结构**：图采用 3列×2行 布局，共 6 个子面板。上排（蓝色）为 3 类输入：左为结构化金融表格（多列多行带分隔线），中为含分数/根号/上下标的复杂数学公式块，右为手写中文段落。下排为对应模型输出：左为 Markdown 表格（含多段小标题与数字行）、中为经 LaTeX 渲染后的公式矩阵、右为含数学符号与代码片段的转录文本（出现 `GP4a`、`FG3`、`]`、`P0` 等字符）。
+该图以三对"输入—输出"对照展示Kimi-VL的多场景OCR能力。**左列**为金融表格输入与多行Markdown表格输出（含列标题与数十行数值条目）；**中列**为手写公式图像与对应LaTeX源码，附"Rendered formula"渲染示意；**右列**为另一公式输入及完整LaTeX转写（含对齐环境`$$\begin{aligned}...$$`与多行变量结构）。
 
-**2）关键技术结论**：通过输入-输出对照，定性证明 Kimi-VL 在三类异质 OCR 任务上具备统一的结构化解析能力——表格转 Markdown、公式转 LaTeX、手写文本转录，三者共享同一视觉-语言编码器。
+原文借此论证三点关键技术结论：(1) 模型能将结构化表格**无损映射**为语义化Markdown；(2) 能将含分数、上下标的复杂公式**精确转译**为可编译的LaTeX；(3) 能基于上下文**理解性转录**手写段落。
 
-**3）论文链路作用**：作为定量基准测试（OCRBench 等）之外的**定性可视化样例**，位于能力展示章节中段，用具体例子支撑论文"versatile multimodal text understanding"的总体结论，强化读者对模型泛化能力的直观信任。
+在论文链路中，该图作为**定性可视化证据**，与前文的定量OCR基准（精度、编辑距离等指标）互补，向评审者直观证明Kimi-VL在"金融—数学—手写"三类异构文本上的通用多模态文本提取与解释能力，是其相对纯语言OCR模型差异化优势的核心展示。
 
 ### Figure 10 (p.15) ⭐深度解读
 ![[assets/crops/kimi-vl-technical-report-fig10.png]]
@@ -211,20 +211,11 @@ tags: [multimodal]
 > Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 1 联合解读**
+> 【图文联合解读】**Table 1 图文联合解读**
 
-**核心对象**：四阶段训练流水线的数据组成、token 量与序列长度。
+该表以四阶段列结构展示 Kimi-VL 训练流水线：**ViT Training**（仅训视觉编码器，2T+0.1T tokens，seq=8192）→ **Joint Pre-training**（联合训练 ViT&LLM，1.4T tokens，数据涵盖 Caption/Grounding/OCR/Video/Agent，seq=8192）→ **Joint Cooldown**（0.6T tokens，高质量学术与多模态数据精炼）→ **Joint Long-context**（0.3T tokens，seq 从 32768 扩展至 131072，处理长文本/视频/文档）。
 
-| 维度 | 数据多样性 | Token | 序列长度 | 训练组件 |
-|---|---|---|---|---|
-| ViT Training | alt text | 2T+0.1T | 8192 | 仅 ViT |
-| Joint Pre-training | 文本/知识、交织、视频/Agent | 1.4T | 8192 | ViT+LLM |
-| Joint Cooldown | 高质量文本/多模态/学术 | 0.6T | 8192 | ViT+LLM |
-| Joint Long-context | 长文/长视频/长文档 | 0.3T | 32768→131072 | ViT+LLM |
-
-**关键结论**：训练呈"广→精→长"渐进式——数据从海量通用过渡到高质量精选再扩展至长上下文；序列长度仅在末段拉长至 131k；ViT 先独立训练再与 LLM 联合对齐。
-
-**论文作用**：作为方法论总纲，为 Figure 1 所示 Kimi-VL-Thinking-2506 以仅 2.8B 激活参数达成强多模态推理的实验结果提供训练链路依据（注：所给正文引用实为 Figure 1 的 MathVision 基准对比，与本表无直接对应）。
+**论证的关键结论**：①采用"先视觉、后联合"的分阶段范式，LLM 仅在阶段 2 起参与训练以稳定收敛；②数据构成由粗到精、由短到长递进；③长上下文阶段通过 4× 序列长度扩展使模型具备长视频/长文档推理能力。该表是论文方法链路的核心路线图，为后续 Figure 1 在 MathVision 等基准上的强推理表现提供了训练配方的可复现说明。
 
 ### Table 2 (p.5) ⭐深度解读
 ![[assets/crops/kimi-vl-technical-report-tab02.png]]
@@ -232,13 +223,16 @@ tags: [multimodal]
 > Needle-in-a-Haystack (NIAH) test on text/video haystacks, where needles are uniformly distributed at various positions within the haystack. We report recall accuracy across different haystack lengths up to 131,072 tokens (128K).
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
+> 【图文联合解读】**Table 2 联合解读**
 
-**1) 核心对象与数据：** 该表为 NIAH（针在草堆中）检索测试，按草堆长度将区间划分为 (0,2048]、(2048,4096]、(4096,8192]、(8192,16384]、(16384,32768]、(32768,65536]、(65536,131072] 共 7 档，分别统计文本与视频两类草堆的召回准确率。数据显示：两种草堆在 0–32K 区间均保持 **100.0% 完美召回**；进入 (32768,65536] 后出现下滑——文本草堆降至 **87.0%**，视频草堆降至 **91.7%**；(65536,131072] 区间未给出数据。
+**1) 核心对象与数据：**
+该表展示 Kimi-VL 在 Needle-in-a-Haystack（NIAH）检索任务上的召回准确率，按 7 个长度区间（0–128K token）对比文本与视频两种 haystack。结果显示：在 0–32K 区间内，文本与视频均保持 **100%** 召回；进入 32K–65K 区间后均出现下滑，文本降至 **87.0%**，视频为 **91.7%**；65K–131K 区间标记为「-」，未给出数据。
 
-**2) 关键技术结论：** 论文以此论证 Kimi-VL 在 **32K token 以内具备近乎无损的跨模态长上下文检索能力**，且视频模态在 32K–64K 区间（91.7%）的退化幅度小于文本（87.0%），说明其原生视频编码在中等长程检索上略优于纯文本路径。
+**2) 关键技术结论：**
+模型在 32K 量级内对两种模态均具备完美的"针"定位能力，验证了其长上下文窗口的有效性；视频模态在长序列下（32K–65K）反而略优于文本（91.7% vs 87.0%），暗示视频帧表征的压缩/采样策略并未折损长程检索能力。
 
-**3) 论文链路作用：** 该表与 Figure 2 中 LongVideoBench、Video-MME、MMLongBench-Doc 等长上下文基准互为佐证，构成"长上下文能力"证据链的定量锚点，支撑"激活参数仅 2.8B 即可处理百万级视觉 token"的整体方法论论证。
+**3) 在论文中的作用：**
+NIAH 作为长上下文基线能力验证，与 Figure 2 所宣称的 LongVideoBench、Video-MME、MMLongBench-Doc 等长视频/长文档基准表现形成因果链——只有底层上下文检索稳健，上层多模态推理与 Agent 任务（ScreenSpot-Pro、OSWorld）的高分才有方法论根基。
 
 ### Table 3 (p.10) ⭐深度解读
 ![[assets/crops/kimi-vl-technical-report-tab03.png]]
@@ -246,13 +240,11 @@ tags: [multimodal]
 > presents a comprehensive evaluation of Kimi-VL against state-of-the-art vision-language models across multiple benchmarks. Although having a more parameter-efficient architecture (2.8B+0.4B activated parameters) compared to larger models such as GPT-4o, Llama-3.2-11B-Inst. and Gemma3-12B-IT, Kimi-VL
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**表3核心内容**：将2.8B+0.4B激活参数（16B总量）的Kimi-VL-A3B与GPT-4o、Qwen2.5-VL-7B、Llama3.2-11B、Gemma3-12B、DeepSeek-VL2在9大类（高校级/通用/多图/数学/OCR/OS代理/长文档/长视频/视频感知）约30项基准上对标。Kimi-VL多项夺粗体（最优）或下划线（次优），典型如OS Agent ScreenSpot-V2 92.8、ScreenSpot-Pro 34.5、OSWorld 8.22，OCR InfoVQA 83.2、OCRBench 867，长视频Video-MME 72.6、MLVU 74.2，MathVista 68.7、AI2D 84.9。
 
-**① 核心对象与数据**：Table 3 在 24 项基准（覆盖通用 MMMU/MMBench、OCR InfoVQA、多图 BLINK、长视频 LongVideoBench/Video-MME、长文档 MMLongBench-Doc、智能体 ScreenSpot-Pro/OSWorld 等）上，将 Kimi-VL 与 GPT-4o、Llama-3.2-11B-Inst.、Gemma3-12B-IT、DeepSeek-VL2、Qwen2.5-VL-7B 等对比。Kimi-VL 仅 2.8B+0.4B 激活参数、总参 16B。
+**论证结论**：以显著更少的激活参数即可匹配或超越参数量数倍于己的GPT-4o、Llama-3.2-11B、Gemma3-12B-IT，并在OS代理与长上下文场景上展现明显领先。
 
-**② 论证的关键结论**：以更少激活参数（2.8B vs DeepSeek-VL2 4.5B；总参 16B vs 28B）全面超越 DeepSeek-VL2，并在 24 项中 19 项胜过 Qwen2.5-VL-7B（实为 8.3B），证明 MoE 架构的参数量效率优势。
-
-**③ 论文链路中的作用**：作为核心定量证据，与 Figure 2 高亮图互补，串联"高效小模型对标/超越大模型"的方法主张，为多任务下游验证提供统一对照基准。
+**链路作用**：作为Figure 2亮点声明的定量后盾，验证MoonViT+MLP+MoE架构的"小激活、强能力"核心主张，是全文实验论证的主表。
 
 ### Table 4 (p.17) ⭐深度解读
 ![[assets/crops/kimi-vl-technical-report-tab04.png]]

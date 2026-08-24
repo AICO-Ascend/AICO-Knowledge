@@ -195,13 +195,13 @@ Figure 10 展示 ASearcher-Local-14B 在约 220 训练步内三个行为指标�
 > Examples of the synthetic questions, where red indicates injected facts and cyan represents fuzzed content.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**表1 联合解读：**
 
-该表以 **Round / Action / Question** 三列，展示了两个种子 QA 经多轮迭代合成复杂长程搜索问题的流程。例 1 从"M. P. Hein 生日"经 **2 轮 Injection**（注入 Eckerd College、Ulster County 行政官等事实）扩张为多层嵌套描述，再经 **1 轮 Fuzzing**（"Catskill Mountain Railroad"→"a historic mountain railway"）模糊化；例 2 从"美国军团位置"经 1 轮 Injection + 2 轮 Fuzzing（"1934"→"early 1930s"、"American Legion Post"→"veterans' organization's building"）逐级抽象。
+表1展示合成长程搜索问题的多轮构造流程，结构为 Round / Action / Question 三列。两组示例均从简短 Seed QA 出发：Round 1–2 执行"注入"（Injection）逐步叠加新事实（如"Eckerd College 校友""Ulster County County Executive"等），Round 3 执行"模糊化"（Fuzzing），将具体实体替换为通用指代（如 *Catskill Mountain Railroad* → *a historic mountain railway*、*American Legion Post* → *veterans' organization's building*、*1934* → *early 1930s*），切断直接检索路径。
 
-该表用以论证核心方法结论：**通过"事实注入 + 实体模糊化"的多轮变换，可由简短种子 QA 自动批量合成需要多跳深度检索才能解答的长程问题**，有效缓解长程搜索训练数据稀缺问题。
+该表论证的技术结论：通过注入与模糊化的多轮迭代，可构造需10+轮搜索推理才能解答的长程合成问题，从而缓解真实长程 QA 数据稀缺的瓶颈。
 
-在论文整体链路中，它是 **异步 RL 训练管线中"数据合成引擎"的可视化示例**，与 Figure 1 中 RL 带来的 +15.0/+22.4/+15.6 增益相互印证——可扩展的长程合成数据是支撑 ASearcher-Web-QwQ 突破十轮搜索瓶颈的前提。
+在论文链路中，此表所展示的合成机制是 ASearcher 训练数据的生成核心——为大规模异步 RL 提供高难度监督信号，使智能体学会在多跳、模糊、远距离事实间反复检索与整合。
 
 ### Table 2 (p.12) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab02.png]]
@@ -219,13 +219,7 @@ Figure 10 展示 ASearcher-Local-14B 在约 220 训练步内三个行为指标�
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 3 图文联合解读：**
 
-该表对比7B与14B/32B模型在**真实Web搜索**环境下，于多跳QA（2WikiMQA/HotpotQA/Bamboogle/Musique）与单跳QA（NQ/TriviaQA/PopQA）上的F1与LasJ表现，区分local与web两种训练设置。
-
-**量化亮点**：ASearcher-Web-14B在2WikiMQA上F1达**76.1**（全表最高）、HotpotQA **80.7**、Bamboogle 68.5；其平均F1为**61.5**，高于Search-o1（QwQ-32B）的55.8、Simple DS-QwQ的58.4，更远超QwQ-32B直接生成的42.1。7B阵营中ASearcher-Web-7B平均58.6，亦优于Search-R1-7B的56.9和DeepResearcher-7B的54.9。
-
-**论证结论**：表3证明端到端异步RL在**开放Web（含噪声、动态页面）**环境中依然有效，Web版ASearcher在平均指标上接近甚至略超Local版本，验证了方法从封闭语料到真实网络的迁移能力。
-
-**整体作用**：与Figure 3的定性案例互补——图3展示复杂查询的行为优势，表3给出多基准量化证据，共同支撑"长视野异步RL+Web检索"的核心叙事。
+表3对比Web搜索/浏览方法在7个QA基准（多跳：2WikiMQA、HotpotQA、Bamboogle、Musique；单跳：NQ、TriviaQA、PopQA）的F1与LasJ指标，按7B与14B/32B两组划分。ASearcher-Web-7B平均58.6/61.7，超越DeepResearcher-7B(54.9/58.3)、Simple-DS-7B(53.5/60.3)与Search-R1-7B(56.9/59.0)；ASearcher-Web-14B达61.5/64.5，亦胜Search-R1-32B(60.4/62.5)，并在多跳任务（如2WikiMQA 76.1）全面领先。该表证明异步RL框架由本地检索迁移到真实Web浏览后仍保持SOTA，验证方法在开放环境下的长程搜索泛化能力，构成论文"local→web"完整实验链路的收官。
 
 ### Table 4 (p.13) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab04.png]]

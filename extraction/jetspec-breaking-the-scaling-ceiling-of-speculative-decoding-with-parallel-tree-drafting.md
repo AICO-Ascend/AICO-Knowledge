@@ -184,13 +184,13 @@ Let me draft:
 > Model generalizability: JetSpec vs. DDTree on Qwen3-30B-A3B (MoE target), both trained with SFT on the same 800K-example data mixture as our Qwen3-8B main results. Each cell reports speedup / average accepted length τ at temperature 0 with tree budget 256 .
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**Table 5 图文联合解读**
 
-1) **表格结构与数据**：表5以Qwen3-30B-A3B（MoE目标模型）为评测对象，对比JetSpec与DDTree在GSM8K、MATH-500、AIME25、AIME24四个数学基准上的表现（温度0，树预算256，每格报告speedup/τ）。可见三列数据中，JetSpec速度提升达5.96–8.46×、τ达6.93–9.98；DDTree仅3.29–5.25×、τ 3.78–6.59；中间列在MATH-500上τ高达10.01，整体性能最佳。
+**1) 核心对象与结构**：表5对比 JetSpec 与 DDTree 在 MoE 目标模型 Qwen3-30B-A3B（同一 800K SFT 混合数据，tree budget=256，温度 0）下 7 项基准的 speedup/τ。JetSpec 全部 7 项胜出：GSM8K (7.40/8.18)、MATH-500 (9.45/10.65)、AIME25 (9.35/10.28)、HumanEval (6.51/7.23)、MBPP (6.53/7.29)、LCB (7.47/8.62)、MT-Bench (4.33/5.59)，其中 MATH-500 的 τ 提升约 +1.16 最显著。
 
-2) **关键技术结论**：在MoE目标上JetSpec相较DDTree实现约1.6–2×的speedup优势与近2倍τ提升，验证了并行树草稿机制对稀疏激活MoE同样有效，且加速比从稠密模型扩展到MoE并未衰减。
+**2) 关键结论**：JetSpec 的并行树草稿在 MoE 稀疏架构上仍稳定优于 DDTree，证明因果并行草稿范式不依赖密集模型假设。
 
-3) **论文整体作用**：此表是"模型泛化性"实验核心证据，证明JetSpec并非仅适配稠密Qwen3-8B，而是具备跨架构（dense→MoE）、跨规模的可迁移性，强化了方法作为通用投机解码方案的论证。
+**3) 实验链路作用**：弥补主实验仅覆盖 8B 密集模型的局限，验证方法对更大规模、稀疏架构的泛化能力，强化论文"打破推测解码缩放天花板"的核心论点。
 
 ### Table 6 (p.9) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab06.png]]

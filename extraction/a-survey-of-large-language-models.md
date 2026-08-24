@@ -199,13 +199,13 @@ tags: []
 > Model cards of several selected LLMs with public configuration details. Here, PE denotes position embedding, #L denotes the number of layers, #H denotes the number of attention heads, d model denotes the size of hidden states, and MCL denotes the maximum context length during training.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：所提供图片实际为论文正文段落（涉及 Prefix Decoder、Mamba、RWKV、RetNet 等架构变体），并非 Table 5 表格本体，故图像无法直接辨认，仅依据 caption 解读如下：
+> 【图文联合解读】**Table 5 图文联合解读：**
 
-该表以"模型卡片"形式罗列 GPT-2/3、PaLM、LLaMA、OPT、BLOOM、CodeGen 等主流 LLM 的公开配置，量化呈现 PE（位置编码）、#L（层数）、#H（头数）、d_model（隐藏维度）与 MCL（训练上下文长度）等超参。例如 LLaMA-13B 为 #L=40、#H=40、d_model=5120、MCL=2048；GPT-3 175B 则达 #L=96、#H=96、d_model=12288。
+该表罗列15款公开配置的LLM（11B–540B），涵盖GPT-3、PaLM、LLaMA、GLM-130B、T5等，对比归一化（Pre LayerNorm为主流，LLaMA/Chinchilla采用Pre RMSNorm）、位置编码（Learned→RoPE/ALiBi迁移）、激活函数（GeLU→SwiGLU趋势）、是否使用Bias、层数（24–118）、头数（48–128）、隐藏维度d_model（1024–20480）及训练上下文长度MCL（多2048，LLaMA 2达4096）。
 
-文中借此佐证两条关键技术结论：①主流 LLM 多采用 Decoder-only 架构并共享基本配置范式；②模型差异主要体现在规模伸缩（层数、隐藏维、上下文窗口）上，体现"扩展定律"驱动的设计思路。
+论文据此论证：①因果解码器已成LLM绝对主流（13/15，仅GLM为Prefix、T5为Encoder-decoder）；②架构选择正趋收敛——去Bias、RoPE定位、SwiGLU激活、RMSNorm归一化；③模型规模与深度并行增长，但MCL仍以2K为主。
 
-在论文整体论证链中，该表承担"实证支撑"职能：衔接前文架构分类（Transformer 与替代架构）与后文预训练/适配讨论，为读者提供具体量化基准，便于横向对比各家族模型的技术取向与规模差异。
+该表在论文中承担"经验证据库"职能，为前述架构分类与训练优化章节提供可量化的横向对比基准，支撑"标准化趋势"的结论。
 
 ### Table 6 (p.23) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab06.png]]
@@ -283,19 +283,13 @@ tags: []
 > Typical LLM utilization methods and their key points for ICL, CoT, and planning. Note that the key points only highlight the most important technical contribution.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 11 联合解读**
 
-图片仅显示表头三列（Approach / Representative Work / Key Point）与 caption，**未呈现具体数据行内容**，故无法逐条列举各方法细节，仅能依据表头结构与原文定位解读。
+该表分三列（方法类别、代表工作、关键技术点），系统梳理 24 项 LLM 利用方法，按三条递进路线组织：① **ICL（6 项）**——围绕演示样本的"选取"（KATE 用 k-NN、EPR 用稠密检索）、"格式"（APE 自动生成、Structured Prompting 分组编码）与"顺序"（GlobalE&LocalE 基于熵指标）三要素；② **CoT（6 项）**——聚焦演示构造（Complex CoT、Auto-CoT）与生成策略（Self-consistency 自集成、DIVERSE 路径验证、Rationale-augmented 推理采样）；③ **Planning（12 项，体量最大）**——分四类：纯文本规划（Least-to-most、DECOMP 分解子问题）、代码规划（PAL、PAL 用 Python、HuggingGPT 调用 HF 模型）、反馈获取（TIP 视觉、RAP/ChatCoT/ReAct 用工具、Reflexion 自反思、ToT 投票比较）与规划优化（AdaPlanner 技能记忆、RAP MCTS、Reflexion 动态记忆、ToT 树搜索）。
 
-该表归属论文第 45 页附近，归纳 LLM 三类典型"调用侧"使用范式：
+**论证结论**：LLM 利用从"示范驱动"逐步演进到"规划—执行—反馈"闭环，越复杂的任务越需显式计划、外部工具与自我修正机制。
 
-1. **ICL（上下文学习）**：聚焦示范示例（demonstration）的选取与排序设计；
-2. **CoT（思维链）**：聚焦中间推理步骤的激发与一致性聚合（如自洽性、思维树等）；
-3. **Planning（规划）**：聚焦任务分解、子目标生成与多步计划执行。
-
-每条记录以 "代表工作 + 单一最关键技术贡献" 形式呈现，强调"做了什么、亮点在哪"。
-
-**在论文链路中的作用**：与前述偏训练侧的方法表（如 Table 10 的预训练/微调）形成互补——前者回答"LLM 怎么训出来"，本表回答"训好后怎么用"。二者共同构成"训练—利用"完整图景，为读者快速索引 prompting 与推理增强技术提供对照表。
+**论文作用**：该表为综述第 4 章"下游适配与利用"提供技术全景，支撑"基础模型 + 利用策略"这一核心论点，是连接模型能力与实际应用的桥梁性分类参考。
 
 ### Table 12 (p.47) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab12.png]]
@@ -303,13 +297,13 @@ tags: []
 > A collection of useful tips for designing prompts that are collected from online notes [446–449] and experiences from our authors, where we also show the related ingredients and principles (introduced in Section 6.1.1). We abbreviate principles as Prin. and list the IDs of the related principles for
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 12 图文联合解读**
+> 【图文联合解读】**Table 12 联合解读**
 
-**1) 核心对象与结构**：表格按"Ingredient（成分）—Collected Prompts（收集的提示技巧）—Prin.（关联原则编号）"三列组织，列举LLM提示设计实用技巧。已可见部分以"Task Description（任务描述）"为成分项，收录T1（提示应尽可能详尽，举例"50词内概括文章，保留主线与结论"）和T2（用前缀提示让LLM扮演专家角色，如"你是…领域资深专家"），均对应原则①（清晰表达任务目标）。
+**(1) 核心结构**：按 5 大 Ingredient 分组——任务描述 T1–T4、输入数据 I1–I2、上下文信息 C1–C4、示例 D1–D9、其他设计 O1–O8，共 **27 条**具体提示技巧；每条在 Prin. 列标注其所对应的 4 项原理编号（①清晰表达目标 / ②分解为子任务 / ③提供少样本演示 / ④采用模型友好格式），且一条 tip 可对应多原理（如 D2 兼用 ①③）。
 
-**2) 论证的关键结论**：作者通过该表将零散的提示工程经验系统化，建立"成分—原则"映射，证明有效的提示设计需围绕四大原则（①清晰目标、②分解子任务、③少样本示范、④模型友好格式）展开。
+**(2) 关键技术结论**：提示工程不是单一维度的模板填充，而是多 ingredient × 多原则的协同优化；实证有效的技巧——检索增强、思维链、角色扮演、格式约束等——均可归并到 §6.1.1 提出的四原则框架。
 
-**3) 在论文中的作用**：作为第6.1.1节提示设计原则的实例化补充，连接理论原则与实操技巧，为读者提供可复用的prompt模板库。
+**(3) 链路作用**：将抽象的四原则理论下沉为可直接执行的工程清单，是论文方法论中"理论原则→实践技巧"转化的关键节点，为后续 LLM 应用实践章节提供操作指南。
 
 ### Table 13 (p.48) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab13.png]]
@@ -385,9 +379,11 @@ Table 13 以四色编码拆解一条指令样本的结构组成：蓝色任务�
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-该表将 LLaMA 前向各步的**激活显存**按 B/T/H/N/V/H' 等参数逐层量化（公式①–⑨）。核心数据揭示三点：① 多数线性映射（Q/K/V、O、FFN 门控）需存 2BTH；② 注意力 softmax 产生 2BT²N，**随序列长度 T 二次增长**，是长上下文的主要瓶颈；③ FFN 中间态 D 占 4BTH'，因 H'≫H，往往是单层最大开销。各步结果再乘以层数 L 即得总量。
+1) **表格核心**：列举LLaMA模型10个计算步骤（①-⑨逐层、⑩输出层）的激活显存开销，以 B/T/V/N/D/H/H'（H=ND）等参数化表达，并注明①-⑨需乘以层数 L。
 
-该表为论文**系统效率章节**提供显存分解依据，直接支撑 FlashAttention（避免存完整注意力矩阵）、激活重计算等优化技术的论证，是连接模型结构与训练/推理效率的关键桥梁。
+2) **关键结论**：注意力步骤③最昂贵（存Q/K/V共6BTH + softmax结果2BT²N，含 T² 项）；输出层CE ⑩占4BTV（与词表线性相关）；FFN中间态 G/U/D 为4BTH'。这些是训练时的显存瓶颈。
+
+3) **论文作用**：为激活重计算、FlashAttention、混合精度等优化技术提供量化依据，支撑"显存效率是LLM训练核心挑战"这一论点，串联资源效率方法章节。
 
 ### Table 19 (p.84) ⭐深度解读
 ![[assets/crops/a-survey-of-large-language-models-tab19.png]]

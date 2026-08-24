@@ -133,9 +133,7 @@ Table 2 对比 32k 长上下文下 MoE-27B 基线（50k 步, loss 1.63）与 Eng
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 5 图文联合解读**
 
-该表纵向列出4模型配置：① Dense-4B（4.1B总/3.8B激活，30层，dim 2560，262B tokens，MLA+RoPE θ=10000，mHC扩展率4，seq 4096，vocab 129280，batch 1280，50k步，Muon主干+Adam嵌入，LR 4e-4，weight decay 0.1）；② MoE-27B（26.7B，1层前置dense，72路由/6激活专家+2共享，Loss Free）；③ Engram-27B/40B叠加条件记忆模块：dim_dmem 1280，词表22.6M/72.4M，8头，层[2,15]，n-gram[2,3]，mHC融合、tokenizer压缩、Conv零初始化，LR×5，weight decay 0，Adam仅优化embed。
-
-该表与Figure 5消融互证：mHC多分支融合、上下文门控、tokenizer压缩三大组件缺一不可，共同支撑Engram将"可扩展查找"确立为LLM稀疏性的新轴，并保证全文实验可复现。
+表5对照Dense-4B、MoE-27B、Engram-27B/40B四模型的架构与训练设置：均30层、dim 2560、MLA注意力、RoPE θ=10000、seq 4096、batch 1280、262B tokens、50k步、Muon骨干+Adam嵌入、LR 4e-4、Step Decay；MoE/Engram采用Loss-Free均衡、6激活+2共享专家（路由72/55），首层为Dense。Engram新增dmem=1280、词表22.6M/72.4M、8头、嵌入第[2,15]层、n-gram[2,3]，启用mHC融合、tokenizer压缩、Conv零初始化，并独立用Adam优化、学习率×5。该统一训练配置为论文核心论断提供公平对照基线——证明在相同26.7B激活参预算下，Engram以查找式条件记忆作为**新稀疏轴**可匹配MoE性能，并将记忆由27B扩至40B时继续受益，从而将"条件记忆查找"确立为继MoE之后的第三种稀疏维度。
 
 ### Table 6 (p.35) ⭐深度解读
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab06.png]]

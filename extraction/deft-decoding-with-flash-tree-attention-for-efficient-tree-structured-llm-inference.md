@@ -300,13 +300,7 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 > Comparison of QKV partitioning strategies for baselines (most of which are shown in Figure 3) and DeFT. For IO redundancy, significant issues are highlighted in red, while negligible ones are in blue. “Q” refers to queries, and “KV” refers to the KV cache. “DCM” stands for Dense Causal Mask (a matri
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读：**
-
-1）表格横向对比9种Attention算法的5个维度（Grouping Indicator、KV Split Granularity、IO Redundancy、Load-balancing Level）。数据要点：Flash-Attention/Flash-Decoding/Radix均为Q-guided，IO冗余落在KV侧（●●●）；Tree Attention-M/Vanilla Tree采用entire tree分组，产生DCM和PA冗余；DeFT三个变体统一改为KV-guided，DeFT-Node/Node-Chunk的冗余仅剩Q（●/●●）。
-
-2）原文借此论证：现有baseline的Q-guided策略在树形解码下无法避免KV或BCM/PA/DCM的显著IO冗余，而DeFT通过KV-guided按树节点切分，把冗余压缩到可忽略的Q侧，实现IO与负载均衡的帕累托最优。
-
-3）该表是DeFT设计动机的核心证据，承接Figure 3的分块示意，并为Figure 2的整体框架与后续实验section提供"为什么必须KV-guided"的方法论铺垫。
+> 【图文联合解读】该表横向对比8种注意力算法在5个维度（分组指示符、KV切分粒度、IO冗余、负载均衡等级）的差异。核心结论：所有基线（Flash-Attention、Flash-Decoding、Radix、Tree Attention-S/M及Vanilla）均采用Q-guided分组，IO冗余集中于KV（量大）；DeFT三种变体（Node/Node-Chunk/Flatten）改用KV-guided，将冗余转移至尺寸更小的Q，并提供按树节点/按块切分与多级负载均衡。该表为DeFT"以KV-guided替代Q-guided"的核心设计提供系统性对比依据，奠定算法与实验动机。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab03.png]]
@@ -413,13 +407,16 @@ caption 指出基线内核均**绑定于单一内存管理**，无法跨范式�
 > Technique list of DeFT. What we propose is in red. The details of the first four techniques are in Section 3.3, while the details of the following techniques are discussed in this chapter.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】## 图文联合解读
 
-该表为DeFT技术清单（Technique / Goal 两列6行），列出6项优化技术：(1) KV-Guided Grouping（提升GPU利用率、最小化HBM↔shared memory的KV IO）；(2) Flattened Tree KV Splitting（平衡注意力计算负载）；(3) Bit Causal Mask[Miao 2023]（低IO记录树因果）；(4) Kernel Fusion[Dao 2022/2023]（减少中间结果IO）；(5) Tiling[Dao 2022/2023]（适配shared memory容量）；(6) Tree-topology Aware Global Reduction（保证整树注意力正确性）。其中(1)(2)(6)无引用标注，为本文所提（原文标红）；(3)(4)(5)承自FlashAttention系列工作。
+**1) 表格内容（核心对象与结构）：**
+Table 10 为 DeFT 的 6 项优化技术清单，结构为「Technique | Goal」两列 6 行：(1) KV-Guided Grouping、(2) Flattened Tree KV Splitting、(3) Bit Causal Mask、(4) Kernel Fusion、(5) Tiling、(6) Tree-topology Aware Global Reduction，分别对应高利用率/均衡计算/因果编码/算子融合/分片访存/全局归约六类目标。
 
-**论证结论**：三类目标——内存IO优化、计算平衡、树结构正确性——共同构成DEFT内核的优化栈。
+**2) 关键结论：**
+前四项（1–4）属 Section 3.3 基础设计；后两项（5–6）为本章新增——其中 (2) Flattened Tree KV Splitting 与 (6) Tree-topology Aware Global Reduction 为作者创新（"in red"），分别从"切分平衡"和"按 Query 归约"两端保障树状注意力正确性与高效性。
 
-**链路作用**：与Figure 10互证，作为实现章节总览：前四项支撑Section 3.3的FlashTreeAttention基础设计，后两项支撑DEFT-Node/Flatten内核在树状投机解码中的正确高效落地。
+**3) 在论文链路中的作用：**
+作为方法总纲清单，串联 Figure 10 的 DEFT-Node/Flatten 两阶段内核，向上承接 Figure 3 树结构，向下衔接后续章节对后两项技术的展开论证，构成"设计–实现–正确性"完整闭环。
 
 ### Table 11 (p.21) ⭐深度解读
 ![[assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab11.png]]

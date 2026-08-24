@@ -185,13 +185,13 @@ tags: [multimodal, disaggregated-serving]
 > Mean TTFT latency (in seconds) ( ↓ ) for varying video lengths at a fixed request rate of 1 request/sec. Results are averaged over 100 Video-MME samples. EPD achieves the lowest latency across all video lengths.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**表1图文联合解读：**
+> 【图文联合解读】**图文联合解读：**
 
-表1对比vLLM、DistServe、EPD在视频帧数8/16/32/64下的平均TTFT延迟（s，1 req/sec，Video-MME 100样本）：vLLM为0.42/0.82/1.59/3.11，DistServe为0.42/0.81/1.54/3.08，EPD仅0.24/0.30/0.49/1.00，64帧时比基线快约3倍。
+该表对比 vLLM、DistServe、EPD（本文）在固定 1 req/s 负载、100 个 Video-MME 样本上的平均 TTFT（秒），横轴为视频帧数 8/16/32/64。量化看：vLLM 与 DistServe 几乎随帧数翻倍而翻倍（8 帧 ≈0.42s → 64 帧 ≈3.1s）；EPD 全程最低（0.24/0.30/0.49/1.00s），64 帧时仅约为前者的 32%，优势随视频加长持续放大。
 
-论文借此论证EPD解耦对时序多模态负载同样有效，延迟随帧数增长明显平缓于聚合方案，泛化性强。
+原文借此论证：仅做 prefill-decode 解耦（DistServe）收益有限，因编码器与 LLM 仍共卡互扰；将 Encoder 独立解耦成 E-P-D 三阶段，能系统性消除端到端首 token 延迟瓶颈，且长视频场景收益更显著。
 
-在实验链中，该表与Figure 8（SLO达成率）互补，从绝对延迟维度强化"EPD全面优于vLLM与DistServe"的核心结论。
+该表是论文方法验证的核心定量证据，直接支撑"EPD 解耦优于既有聚合/两阶段方案"这一中心论点。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab02.png]]

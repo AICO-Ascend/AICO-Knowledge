@@ -219,13 +219,11 @@ tags: [kv-cache]
 > Comparison of KV Cache optimization techniques
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】表1以"技术/优化目标/权衡/代表方法/适用场景"五列，对比五类KV Cache优化：①Cache Eviction（9种方法，如H2O、SnapKV）减显存与延迟，损精度；②Cache Compression（KIVI、MiniCache等4种）压KV大小，引入反量化开销；③Hybrid Memory（PagedAttention等7种）解决TTFT与系统效率，硬件依赖高；④New Attention（Linear、KIMI Linear等4种）改复杂度但需重训；⑤Combination Methods（FlexGen等4种）平衡吞吐与延迟。
 
-1）**核心对象与结构**：Table 1 以 5 类技术（Cache Eviction、Cache Compression、Hybrid Memory、New Attention、Combination）为主行，列出其优化目标、权衡代价、代表方法与适用场景，共计覆盖约 30 种具体方案（如 H2O、KIVI、PagedAttention、KIMI Linear、FlexGen 等）。
+**论证结论**：五类技术并非互斥，而是覆盖"显存—吞吐—算法"三层优化，各有不同的部署代价与适用边界。
 
-2）**关键结论**：各类技术在内存占用、吞吐、首 token 延迟、推理速度上各有侧重，但均伴随精度损失、重建开销或硬件复杂度等代价——说明**单一策略难以兼顾效率与质量**，需根据工作负载（长上下文、边缘、数据中心、Agent 任务）选型。
-
-3）**链路作用**：该表作为综述性 baseline，为后续章节分门别类展开每类技术的原理与实验对比奠定分类框架，是论文方法谱系的总览图。
+**论文作用**：作为survey总纲，为后续各章节的方法分类、实验选型与对比分析提供统一坐标系。
 
 ### Table 2 (p.0) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab02.png]]
@@ -233,13 +231,11 @@ tags: [kv-cache]
 > Summary of KV Cache eviction techniques
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 联合解读**
+> 【图文联合解读】**Table 2 图文联合解读**
 
-表2以Method/Mechanism/Phase/Overview四列横向对比9种KV Cache驱逐方法。按执行时机归类：①Prefill阶段——NACL（代理+随机单次驱逐）、InfiniPot（持续上下文蒸馏、固定预算处理无限上下文）、KVzip（上下文重建+最大交叉注意力打分）；②After Prefill——SnapKV（观察窗投票+聚类）、Ada-KV（跨注意力头动态分配预算）；③Decoding阶段——H2O（保留Heavy-Hitter+近期token）、HASHEVICT（LSH+汉明距，无注意力计算）、MorphKV（相关性选择，消除首token偏置）；④RocketKV跨两阶段，采用SnapKV粗排+HSA细排的二级压缩。
+该表横向比较 9 种 KV Cache 淘汰方法，沿 *Method–Mechanism–Phase–Overview* 四列展开：H2O 保留 Heavy-Hitter 与近期 Token（Decoding），SnapKV 通过观察窗投票聚类关键特征（After Prefill），NACL 编码期全局混合随机淘汰（Prefill），InfiniPot 通过持续上下文蒸馏支持固定预算下的"无限"上下文（Prefill），HASHEVICT 以 LSH+汉明距无注意力估计重要性（Decoding），MorphKV 关联感知选择、消除早期偏差（Decoding），RocketKV 两阶段压缩（Prefill+Decoding），KVzip 用最大交叉注意力打分（Prefill），Ada-KV 按注意力头自适应分配预算（After Prefill）。Phase 分布显示三大触发时机：Prefill 3 项、After Prefill 2 项、Decoding 3 项、RocketKV 跨两阶段。
 
-**技术结论**：驱逐策略沿"静态滑窗→注意力打分→哈希近似→自适应分配"演进，但仍缺乏多阶段协同与"内存-精度"联合权衡。
-
-**论文作用**：作为相关工作总览，为本文差异化方法定位、基线选取及统一驱逐框架设计提供分类依据。
+原文借此论证：淘汰策略在**触发时点**与**重要性度量**上呈多样化，无单一最优路线。论文中它定位为相关工作综述表，为后续提出兼顾 Prefill/Decoding 的统一优化框架奠定分类基础。
 
 ### Table 3 (p.0) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab03.png]]
@@ -247,9 +243,9 @@ tags: [kv-cache]
 > Cache Compression Methods Comparison Table
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 3 图文联合解读**
+> 【图文联合解读】表格从机制、粒度、离群值处理三维度对比4种KV cache压缩方法：KIVI采用Key通道级+Value token级非对称量化并保留少量fp16残差；KVQuant使用NUQ非均匀量化，将top1%离群值隔离为稀疏fp16；MiniCache通过跨层KV合并保留不可合并状态对；PALU采用隐维低秩投影重建，关键层分配更高秩。
 
-该表横向对比四种缓存压缩方法（KIVI、KVQuant、MiniCache、PALU），沿**机制 / 粒度 / 异常值处理**三列展开：KIVI采用非对称量化（Key per-channel、Value per-token），KVQuant用Pre-RoPE非均匀量化并隔离top 1%异常值；MiniCache走跨层KV合并路线（粒度NA），PALU则以per-token per-head group低秩投影重建，并对关键层赋高秩。论文借此论证：现有压缩策略呈现"量化—合并—低秩"多样化路径，且均需配套异常值/关键层保护机制以保性能。该表为全文KV cache优化的方法分类与后续精度–效率权衡分析提供分类学基础。
+技术结论：四类方法分别针对量化、冗余、维度三类瓶颈，但共同保留关键/离群信息的高精度处理。该表为后续实验对比和方法选择提供分类基础，是KV cache优化技术综述的核心参考，支撑论文"可扩展高效LLM推理"的方法链路。
 
 ### Table 4 (p.0) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab04.png]]
@@ -257,7 +253,13 @@ tags: [kv-cache]
 > Hybrid Memory Solutions Comparison Table
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】该表对比7种KV cache混合内存方案，4列展示：方法、Offload目的地、机制、关键优化。6种以CPU DRAM为offload目标，仅INF2采用Host+NVMe SSDs(CSDs)。机制涵盖分页(Paged Attention)、注意力推测(InfiniGen)、分层调度(LayerKV)、存算一体ANS、重叠重算(KVPR)、参数重映射(Oneiros)、头级近似(CLO)。关键优化集中于降低PCIe传输量、减少GPU空闲、提升长上下文与多租户吞吐。论文借此论证混合内存方案的多样性及PCIe/CPU瓶颈，为后文方法设计提供基线对比，支撑可扩展LLM推理的整体方法链路。
+> 【图文联合解读】**图文联合解读（Table 4）**
+
+**1）核心结构与数据：** 表4以"Method / Offload destination / Mechanism / Key optimization"四列横向对比7种KV缓存混合内存方案。7种方法中，6种（Paged Attention、InfiniGen、LayerKV、KVPR、Oneiros、CLO）均以**CPU DRAM**为卸载目的地，仅**INF2 [8]**拓展至"Host Memory + NVMe SSDs (CSDs)"，借助计算存储设备内带宽服务长上下文。机制涵盖分页、注意力规范预取、分层SLO调度、ANS近存计算、异步传输重叠、参数重映射、头级近似缓存+零拷贝等。
+
+**2）关键技术结论：** 各方案分别针对**碎片化**（Paged Attention）、**PCIe带宽瓶颈**（InfiniGen/KVPR/CLO）、**排队时延**（LayerKV→TTFT）、**多租户显存复用**（Oneiros）、**长上下文吞吐**（INF2）等不同痛点，体现混合内存策略的多样性与互补性。
+
+**3）论文链路作用：** 作为分类学对照表，为后续章节中作者所提方法的定位、差异化与基线比较提供完整技术谱系。
 
 ### Table 5 (p.0) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab05.png]]
@@ -265,13 +267,18 @@ tags: [kv-cache]
 > Attention Variants – Mechanisms, Complexities, and Features
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 5 联合解读**
 
-1）**核心对象**：Table 5 比较 5 种 Attention 变体（Softmax、Linear、Log Linear、Local Linear、KIMI Linear）在机制、训练复杂度、解码时间/空间复杂度及特性上的差异。关键数据：Softmax 解码 O(T)/O(T)、Linear 达 O(1)/O(1)、Log Linear 为 O(logT)、KIMI Linear 凭借 KDA+MLA 混合（3:1 比例）也实现 O(1)/O(1)。
+该表横向对比 5 种注意力变体的机制与复杂度（训练 / 解码每步 / 解码空间）：
+- **Softmax**：MHA 缩放点积，三项均为 O(T²/T/T)，表达力强但开销高；
+- **Linear**：用核特征图线性点积替代 softmax，全部降至 O(1)，但表达力受限；
+- **Log Linear**：对数增长的隐藏状态，三项均为 O(T·logT / logT / logT)，效率–表达力折中；
+- **Local Linear**：逐查询局部线性回归，三项 O(T²/∼T/T)，偏置–方差更优但代价高；
+- **KIMI Linear**：KDA+MLA 混合架构（约 3:1），主要项 O(T) 而解码/空间 O(1)。
 
-2）**关键结论**：Softmax 高表达但代价高；Linear 极低成本但表达有限；Log Linear 折中；Local Linear 偏差-方差更优但开销大；KIMI Linear 以混合架构兼顾 O(1) 解码与近全注意力质量，验证"混合化"是兼顾效率与性能的有效路径。
+**论证结论**：纯线性注意力虽实现 O(1) 解码与 KV，但牺牲表达力；Log/Local Linear 提供中间路径；**KIMI Linear 以 3:1 混合 KDA+MLA 同时实现 O(1) 复杂度与超越全注意力的性能**，是该类方法中最优工程方案。
 
-3）**论文作用**：作为 KV cache 优化综述的方法学基础，本表从 attention 底层机制角度解释 KV 显存/计算瓶颈来源，为后续 Figure 5 的五类优化分类（量化、稀疏化、共享等）提供理论锚点。
+**论文作用**：作为 Figure 5 分类法"Attention Variants"分支的量化支撑表，为后续 KV 缓存优化策略（共享、压缩、卸载等）的复杂度基线与设计动机提供理论依据。
 
 ### Table 6 (p.18) ⭐深度解读
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab06.png]]
@@ -279,7 +286,11 @@ tags: [kv-cache]
 > Comparison of KV Cache Optimization Techniques
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表6横向对比28种KV Cache优化技术（H2O→TailKV），五列量化呈现：内存维度覆盖5–10×缩减（H2O/FlexGen）、400×压缩（RocketKV）、73.8% GPU减（TailKV）乃至O(1)（LinearAttn）；加速范围1.7–4000×（LinearAttn最长序列下）；精度多数为"可比基线/无损"（PagedAttention、LayerKV、INF2、KVPR、Oneiros等明确标注Lossless）。原文借此论证核心结论：现有方案无单一占优——驱逐类受累积注意偏置与重击风险、量化类承重构与反量化开销、卸载类受PCIe带宽制约、线性注意力在关联回归任务上逊于Softmax——从而为论文提出的统一分类法及新方法定位提供实证依据，构成survey→motivation的关键一环。
+> 【图文联合解读】**Table 6 图文联合解读**
+
+该表横向对比 28 种 KV Cache 优化技术，覆盖驱逐类（H2O、SnapKV、NACL、RocketKV 压缩高达 400×）、量化类（KIVI 2.6×、KVQuant 3.7–6.9×）、卸载类（PagedAttention/InfiniGen/Oneiros 等无损方案）、线性注意力类（O(1)–O(logT) 内存）及混合类（KIMI、FlexGen、ShadowKV、TailorKV），按 Memory、Speedups、Accuracy loss、Tradeoffs 四列量化呈现。
+
+原文借此论证：单一技术难以兼顾内存、速度与精度——驱逐类加速显著但存在注意力偏差，量化类吞吐提升有限，卸载类无损但依赖 PCIe/CPU-GPU 协同，线性注意力则牺牲精度换复杂度。该表作为综述实验链路的核心汇总，为读者按场景（长上下文、低显存、极致吞吐）选型提供量化依据，凸显"组合优化"是未来方向。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

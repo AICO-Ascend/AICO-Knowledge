@@ -1080,7 +1080,7 @@
    {
     "num": 2,
     "page": 4,
-    "caption": "DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s",
+    "caption": "DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s Key-Value cache to enable conditional speculation.",
     "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig02.png"
    },
    {
@@ -1092,7 +1092,7 @@
    {
     "num": 4,
     "page": 5,
-    "caption": "DFlash training attention. The target model provides",
+    "caption": "DFlash training attention. The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens p and clean response tokens r. Within each masked block, a subset of clean response tokens (yellow) is randomly sampled as anchors, while mask tokens",
     "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig04.png"
    },
    {
@@ -2898,7 +2898,7 @@
    {
     "num": 2,
     "page": 15,
-    "caption": "Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red .",
+    "caption": "Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red.",
     "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab02.png"
    },
    {
@@ -3539,7 +3539,7 @@
    {
     "num": 28,
     "page": 76,
-    "caption": "j C-EVAL evaluates a model’s breadth and depth of knowledge across 52 diverse",
+    "caption": "C-EVAL evaluates a model’s breadth and depth of knowledge across 52 diverse academic disciplines, spanning humanities, social sciences, STEM (Science, Technology, Engineering, and Mathematics), and other professional fields (e.g., medicine, law). All question in C-Eval are Chinese.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab28.png"
    },
    {
@@ -3557,7 +3557,7 @@
    {
     "num": 32,
     "page": 78,
-    "caption": "j An example of math evaluation, which applies to AIME, MATH, and CNMO. These",
+    "caption": "An example of math evaluation, which applies to AIME, MATH, and CNMO. These benchmarks evaluate model performance on mathematical tasks.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab32.png"
    }
   ],
@@ -5006,7 +5006,7 @@
    {
     "num": 10,
     "page": 23,
-    "caption": "Comparison of Memory Management Techniques for KV Cache",
+    "caption": "TABLE X: Comparison of Memory Management Techniques for KV Cache Optimization.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab10.png"
    },
    {
@@ -5018,13 +5018,13 @@
    {
     "num": 12,
     "page": 26,
-    "caption": "Comparison of Hardware-aware Design Approaches for KV Cache Optimization.",
+    "caption": "TABLE XII: Comparison of Hardware-aware Design Approaches for KV Cache Optimization.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab12.png"
    },
    {
     "num": 13,
     "page": 28,
-    "caption": "Long-context Text Benchmarks.",
+    "caption": "TABLE XIII: Long-context Text Benchmarks.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab13.png"
    },
    {

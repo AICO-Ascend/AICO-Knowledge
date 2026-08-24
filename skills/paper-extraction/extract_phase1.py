@@ -351,6 +351,23 @@ def main():
                     "fig":f["num"],"page":f["page"],"caption":f["caption"],
                     "img":crop or fig_paths.get(f["page"],""),
                     "page_img":fig_paths.get(f["page"],""),"tags":slugify_topic(meta["title"])})
+            # 长文/复杂排版的论文 MuPDF 文本提取不到全部 figure caption，导致 figures_catalog 漏裁好的图。
+            # 把 visuals.json 里的 crop 补齐进 catalog（caption 从 M3 解读或文件名兜底），
+            # 否则 figures_index.md 不收录、orphan crops 永不现身。
+            cat_keys={(c["slug"], c["fig"]) for c in figures_catalog}
+            for vfig in vis_all.get(slug,{}).get("figures",[]):
+                if (slug, vfig["num"]) in cat_keys: continue
+                cap=vfig.get("caption","")
+                if not cap and vfig.get("path"):
+                    # 从 M3 解读里截首段作 caption 兜底
+                    pkey=f"extraction/{vfig['path']}"
+                    mm_txt=mm.get(pkey,"") or mm.get(vfig["path"],"")
+                    cap=mm_txt[:200].replace("\n"," ").strip()
+                if not cap: cap=f"(extract_visuals 检测的 fig{vfig['num']}，PDF caption 未识别)"
+                figures_catalog.append({"num":num,"title":meta["title"],"slug":slug,
+                    "fig":vfig["num"],"page":vfig.get("page",0),"caption":cap,
+                    "img":vfig.get("path",""),"page_img":fig_paths.get(vfig.get("page",0),""),
+                    "tags":slugify_topic(meta["title"])})
             manifest.append({"num":int(num),"title":meta["title"],"slug":slug,
                 "date":meta["date"],"arxiv":meta["abs"],"pdf_url":meta["pdf"],
                 "tags":ptags[num],"pages":doc.page_count,"figs":len(figs),

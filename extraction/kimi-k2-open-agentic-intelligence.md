@@ -73,13 +73,11 @@ Figure 3 展示 Kimi K2 逐 step 训练 loss 曲线：横轴为 0–15.5 万亿 
 > • Fidelity verification: To ensure consistency between original and rewritten content, we perform fidelity checks that compare the semantic alignment of each rephrased passage with its source. This serves as an initial quality control step prior to training.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图示核心结构**：自回归分块改写流水线。将4096 token的"full input excerpt"切分为多个256 token的partial片段；每片段连同全量原文上下文输入rewrite model，前一片段的partial output以auto-regressive方式接入下一片段上下文，最终concat为完整改写输出。
 
-图4展示自回归分块改写流水线结构：长文本被切分为3个输入块（顶部蓝色"WRNHQV"上下文窗口保留），每块经紫色"UHUULWH SUR"改写提示生成绿色"SDUWLDO RXWSXW"局部输出，前后块通过"DXWR UHJUHVVLYH"反馈串联，最终拼接为完整改写段落。
+**论证的关键技术结论**：通过"分块（4096→256）+ 全文上下文保留 + 自回归衔接"三步设计，确保长文本改写中局部片段与全局语义的连贯一致性，为fidelity verification（语义保真度校验）提供机制保障，作为训练前的质量控制环节。
 
-**论证结论**：通过切块+滑动上下文+顺序改写，可在保证语义衔接的前提下处理超长输入；配合fidelity verification（逐块语义对齐校验），为训练数据构建提供前置质量控制。
-
-**链路作用**：该图对应数据预处理阶段，承担"长文本→训练可用改写语料"的转换职能，是模型训练前的关键清洗/改写环节。
+**在整体链路中的作用**：位于数据预处理阶段，将长篇幅语料高效改写为与原意对齐的训练语料，为K2-Base模型后续训练及Table 4所示多任务基准评测提供高质量数据基础。
 
 ### Figure 5 (p.7) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig05.png]]
@@ -268,7 +266,11 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 > Performance comparison of Kimi-K2-Instruct against leading open-source and proprietary models across diverse tasks. Bold denotes the global SOTA; underlined bold indicates the best open-source result. Data points marked with * are taken directly from the model’s technical report or blog.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 3 将 Kimi-K2-Instruct 与 2 个开源（DeepSeek-V3-0324、Qwen3-235B-A22B）及 4 个闭源模型（Claude Sonnet/Opus 4、GPT-4.1、Gemini 2.5 Flash）在 50 余项基准上横向对比，覆盖 Coding、Tool Use、Math & STEM、General 四类任务。数据上，Kimi-K2-Instruct 在绝大多数编码与智能体基准取得开源最优并部分对标 Claude Opus 4：LiveCodeBench v6 53.7、SWE-bench Verified 71.6、MultiPL-E 85.7、Terminal-Bench 30.0、Tau2 telecom 65.8、AceBench 76.5、AIME 2024 69.6、MATH-500 97.4、AutoLogi 89.5、GPQA-Diamond 75.1。结合 Figure 3 "全程无 loss spike"的训练稳定性证据，该表论证合成数据与 MuonClip 等策略使开源 MoE 在 agentic 任务上系统性逼近顶级闭源，是论文方法链路的最终性能验证。
+> 【图文联合解读】Table 3对比Kimi-K2-Instruct与3个开源（DeepSeek-V3-0324、Qwen3-235B-A22B）及4个闭源模型（Claude Sonnet/Opus 4、GPT-4.1、Gemini 2.5 Flash）于Coding/Tool Use/Math & STEM/General四类基准；加粗=全球SOTA，下划线=开源最优。
+
+K2多项领先：Coding类SWE-bench Verified 71.6、LiveCodeBench 53.7、Paper Bench 27.8；Tool Use全面开源最优（Tau2 retail 70.6、telecom 65.8、AceBench 76.5）；Math多项目开源SOTA（AIME 2024 69.6、ZebraLogic 89.0、GPQA-Diamond 75.1）。
+
+结合Figure 3训练loss全程无spike的稳定收敛证据，Table 3承担论文最终验证职能：证明Muon优化器+合成数据训练方案不仅收敛平稳，更转化为开源领先、逼近闭源的agentic综合能力，支撑核心结论。
 
 ### Table 4 (p.18) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-tab04.png]]
@@ -290,14 +292,9 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 > [!tip] 表格解读（多模态）
 > 【图文联合解读】**Table 5 联合解读**
 
-**1）核心对象与结构**
-该表枚举了安全评估（红队测试）中启用的全部插件与攻击策略，按风险维度分为 **6 大类约 50 项**：Harmful（9 项，如 Hate Speech、Sexual Content、ToxicChat）、Criminal（11 项，覆盖生化武器、童童、网络犯罪、知识产权等）、Misinformation（11 项，含幻觉、错误信息、政治倾向等）、Privacy（5 项 PII 泄露场景）、Security（11 项，如 ASCII Smuggling、CyberSecEval、Harmbench、Prompt Extraction 等基准与攻击）以及 Strategy（4 项：Basic、Prompt Injection、Iterative Jailbreak、Crescendo）。
+表列安全评测配置：**Plugin** 分 5 类约 48 项——Harmful（9，含 Graphic Content、ToxicChat 等）、Criminal（12，如 Chemical&Biological Weapons、Cybercrime）、Misinformation（11，含 Hallucination、Overreliance）、Privacy（5，PII 全链路泄露场景）、Security（11，如 ASCII Smuggling、Prompt Extraction、Tool Discovery）；**Strategy** 4 种（Basic、Prompt Injection、Iterative Jailbreak、Crescendo，由弱到强递进式越狱）。
 
-**2）论证结论**
-体现 Kimi K2 的安全评测覆盖面广、攻击手段多样，既涵盖内容合规（有害/违法/虚假），也涵盖技术对抗（越狱、注入、隐私窃取），说明作者对模型进行了系统化、多角度的红队压力测试。
-
-**3）在论文中的作用**
-该表是 K2 安全对齐与防御验证章节的关键补充，明确披露评测所用插件清单，保证实验可复现性，并支撑后续安全性能结论的可靠性。
+该表支撑论文核心结论：Kimi K2 的安全红队评估覆盖**有害、犯罪、隐私、虚假信息、对抗安全**等多维风险，并结合从单轮到 Crescendo 式的渐进攻击策略，配合"自动插件检测+多轮人工复核"流程。它是论文评估体系**完备性与攻防强度**的方法论基座。
 
 ### Table 6 (p.19) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-tab06.png]]

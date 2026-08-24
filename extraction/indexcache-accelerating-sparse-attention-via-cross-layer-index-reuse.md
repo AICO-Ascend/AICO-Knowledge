@@ -112,13 +112,7 @@ tags: [sparse-attention, kv-cache]
 > Preliminary results on GLM-5 (744B) with training-free IndexCache.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 4 图文联合解读**
-
-Table 4 在 GLM-5（744B）模型上对比 Original DSA 与训练免费 IndexCache 的性能，横跨 Long Avg、MRCR v2、GraphWalks、LongBench v2、RULER、AA-LCR 共 6 项基准。关键数据：Original DSA 的 Long Avg = 78.4；1/2 Uniform IndexCache 为 78.1（仅↓0.3），叠加搜索模式后升至 78.7（反超原模型）；1/4 Uniform IndexCache 大幅跌至 72.7（损失 5.7 分），而叠加搜索模式后回升至 78.0（仅差 0.4）。
-
-论文借此论证：跨层索引复用能否无损，极度依赖复用层的选择方式。均匀复用仅在低压缩比（1/2）下勉强可用，高压缩比（1/4）时性能崩塌；而采用搜索到的非均匀复用模式后，即使压缩到 1/4 也几乎保持原模型质量，证明**非均匀的跨层模式才是 IndexCache 的核心收益来源**。
-
-该表承接 Figure 4 关于层间索引高重叠率的发现，作为 744B 规模下的预实验，为 IndexCache 向超大模型的可扩展性提供了首个量化证据，支撑方法在大模型部署场景中的有效性。
+> 【图文联合解读】表4展示GLM-5（744B）训练免费IndexCache预实验，对比Original DSA基线与1/2、1/4压缩比下"均匀pattern / +搜索pattern"两类配置。数据表明：1/2压缩时各方法与原版DSA基本持平（Long Avg 78.7 vs 78.4）；1/4压缩下均匀pattern显著掉点（Long Avg 72.7、GraphWalks仅74.9），而加入搜索pattern后回升至78.0、90.3，逼近原版水平。论文以此论证：跨层索引复用机制可零成本迁移至千亿级模型，无需重训即保持质量；搜索pattern在激进压缩比下尤为关键，验证方法在大规模生产模型上的可扩展性与实用性。
 
 ### Table 5 (p.18) ⭐深度解读
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab05.png]]

@@ -121,7 +121,9 @@ tags: [disaggregated-serving]
 > (a)(b) Cache hit rate ablation study. (c) RadixAttention ablation study.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】图8含三子图：(a)(b)显示缓存命中率0–100%时吞吐由~0.4k升至1.2k token/s、总延迟由400s降至~130s；(c)对比LLM Judge、ToT、MMLU、Multi-Turn Chat四类负载下七种配置（无缓存/无树/FCFS/随机/无前端并行/无前端提示/全优化）的归一化吞吐，全优化（橙色）均达到1.0，明显优于任一组件缺失。该图论证RadixAttention、前端并行与提示协同显著提升性能，是论文方法链路的消融实验核心，支撑SGLang端到端优化有效性的关键证据。
+> 【图文联合解读】**图文联合解读：**
+
+图(a)(b)展示缓存命中率0→100%的影响：吞吐量由约300升至~1200 tokens/s，总延迟从~420s降至~120s，首token延迟由~25s降至~5s，量化证明RadixCache前缀共享对性能的增益。图(c)在LLM Judge、Tree of Thought、MMLU、Multi-Turn Chat四类任务上对七种配置（无缓存/无树结构/FCFS/随机调度/无前端并行/无前端提示/全优化）做消融，"Full Optimization"全部归一化为1.0，任一组件缺失均显著掉到0.1–0.9之间，验证树状调度、前端并行与提示工程各环节缺一不可。该图作为方法消融的关键证据，与后续API模型（GPT-3.5）上"推测执行降本约3倍"的论断共同构成sglang性能优势的核心实验支撑链路。
 
 ### Figure 9 (p.14) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig09.png]]

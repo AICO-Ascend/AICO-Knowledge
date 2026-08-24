@@ -163,11 +163,13 @@ tags: [training]
 > Zero-shot results. SOTA are from (Khandelwal et al. 2019) for Wikitext103 and (Radford et al. 2019) for LAMBADA.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**Table 3 图文联合解读**
 
-该表展示 355M / 2.5B / 8.3B 三档模型在 Wikitext103（困惑度↓）与 LAMBADA（准确率↑）的评测结果：355M 为 PPL 19.31 / 45.18%，2.5B 为 12.76 / 61.73%，8.3B 为 10.81 / 66.51%，前 SOTA 分别为 15.79 与 63.24%。随参数量增长，PPL 单调下降约 44%，LAMBADA 准确率提升约 21 个百分点；8.3B 双指标均刷新 SOTA。
+**核心对象与数据：** 表3展示三个模型规模（355M / 2.5B / 8.3B）在两个零样本基准上的表现。Wikitext103 困惑度由 19.31 → 12.76 → 10.81（↓），8.3B 超过前 SOTA 15.79；LAMBADA 准确率由 45.18% → 61.73% → 66.51%（↑），8.3B 亦超 SOTA 63.24%。
 
-该表处于"Table 2 训练配置 → 图 6 收敛曲线 → 本表下游零样本评测"扩展性论证链的终点，证明经模型并行训练出的十亿级 LM 不仅收敛更快、终值困惑度更低，且在零样本任务上确实获得可度量的下游增益，从而闭环论证模型并行在大规模 LM 训练中的有效性。
+**技术结论：** 参数规模扩大带来零样本性能**单调提升**，且 8.3B 模型在两项任务上**全面刷新 SOTA**，定量证明模型并行可有效训练十亿参数 Transformer 并具备真实泛化优势。
+
+**链路作用：** 作为扩展性论证的最终落点——承接 Table 2（配置）与训练收敛曲线，以真实下游基准结果闭合"能否高效训练十亿参数模型"这一中心问题，完成配置→收敛→下游评估的完整证据链。
 
 ### Table 5 (p.8) ⭐深度解读
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab05.png]]
@@ -175,13 +177,11 @@ tags: [training]
 > Development set results for MNLI, QQP, SQuAD 1.1 and SQuAD 2.0 and test set results for RACE. The trained tokens represents consumed tokens during model pretraining (proportional to batch size times number of iterations) normalized by consumed tokens during model pretraining for our 336M model.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图表联合解读：**
+> 【图文联合解读】**表5核心**：对比336M/1.3B/3.9B三个Megatron模型与RoBERTa、ALBERT、XLNet在5个下游任务（MNLI、QQP、SQuAD1.1/2.0、RACE）的成绩，参数与训练token量均以336M模型为基准归一化。
 
-表5对比Megatron-336M/1.3B/3.9B与RoBERTa、ALBERT、XLNet在MNLI、QQP、SQuAD 1.1/2.0、RACE五个下游任务表现。Megatron-3.9B仅消耗1×训练token即全面领先：MNLI 91.4/91.4、QQP 92.7、SQuAD 1.1 95.5/90.0、SQuAD 2.0 91.2/88.5、RACE 89.5；其集成模型RACE更达90.9，超越ALBERT集成（89.4）。
+**关键结论**：在仅用1×训练token量下，**Megatron-3.9B全面领先**——MNLI 91.4/91.4、SQuAD2.0 91.2/88.5、RACE 89.5均超RoBERTa、XLNet与ALBERT；3.9B单模型即逼近ALBERT ensemble水平，3.9B ensemble在SQuAD2.0（91.7/89.0）、RACE（90.9）刷新最优。证明**模型规模扩大即带来下游泛化提升**。
 
-**关键结论**：模型并行扩展至数十亿参数后，下游泛化能力显著提升，且训练效率更高（token量仅为RoBERTa的1/2、ALBERT的1/3）。
-
-**链路作用**：紧接Figure 5的弱扩展效率证据，本表证明工程扩展带来的实际性能回报，完成"并行方案可行→更大模型可训→下游更强"的论证闭环。
+**论文作用**：承接Figure 5弱扩展性——证明分布式并行训练工程可行后，本表给出大规模模型在标准基准上的实证收益，论证"模型并行→更大模型→更强性能"完整链路，为方法有效性收尾。
 
 ### Table 6 (p.11) ⭐深度解读
 ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab06.png]]

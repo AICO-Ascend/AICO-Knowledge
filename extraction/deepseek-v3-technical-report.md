@@ -106,7 +106,9 @@ tags: []
 > Ablation results for the MTP strategy. The MTP strategy consistently enhances the model performance on most of the evaluation benchmarks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 4 对比小规模（15.7B / 1.33T tokens）与大规模（228.7B / 540B）两组 MoE 的 Baseline 与 w/ MTP。推理激活参数（2.4B / 20.9B）、总参数（15.7B / 228.7B）和训练 token 完全一致，仅多一层 MTP，推理成本不变。Pile-test BPB 几乎持平（0.729→0.729；0.658→0.657），但下游任务普遍提升：小模型 HumanEval 20.7→26.8（+6.1）、GSM8K 25.4→31.4（+6.0）、MMLU 50.0→53.3；大模型 HumanEval 44.5→53.7（+9.2）、DROP 68.5→70.6，代码与数学收益最显著。该表证明 MTP 是"零推理成本"的训练增强手段，作为 V3 训练链路中的关键技巧被最终采纳。
+> 【图文联合解读】**Table 4 图文联合解读：**
+
+Table 4 以 4 列结构对比 Small MoE（15.7B 总参 / 2.4B 激活 / 1.33T tokens）与 Large MoE（228.7B / 20.9B / 540B）下 Baseline 与 w/ MTP 两组配置，推理激活参数与训练 token 完全相同，仅多一层 MTP。Pile-test BPB 几乎持平（小 0.729→0.729，大 0.658→0.657），但多数下游任务提升：HumanEval 20.7→26.8 / 44.5→53.7（+6.1 / +9.2），GSM8K 25.4→31.4 / 72.3→74.0，DROP +2.1 / +2.1，代码与数学收益最显著。该表论证 MTP 为"零推理成本"训练增强手段，作为 V3 训练链路最终采纳的关键技巧。
 
 ### Table 5 (p.27) ⭐深度解读
 ![[assets/crops/deepseek-v3-technical-report-tab05.png]]
@@ -122,15 +124,7 @@ tags: []
 > presents the evaluation results, showcasing that DeepSeek-V3 stands as the best- performing open-source model. Additionally, it is competitive against frontier closed-source models like GPT-4o and Claude-3.5-Sonnet.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图像说明**：图片仅显示该表的引用段落（caption），未呈现表格实际数据，故仅依据原文解读。
-
-**图文联合解读**：
-
-1）**核心对象与结构**：表6位于第5.3.2节"Standard Evaluation"，属于标准基准综合评测表，对比对象涵盖开源模型与前沿闭源模型（GPT-4o、Claude-3.5-Sonnet等），按多维度基准（推理、代码、数学、中文等）横向列出得分。
-
-2）**关键论证结论**：用"开源最佳 + 闭源可竞争"的双重定位支撑 DeepSeek-V3 的整体性能优势——既证明开源阵营领先，又证明其已逼近闭源前沿模型能力上限。
-
-3）**论文链路作用**：该表位于实验章节核心位置，是 FP8 训练、MLA、MoE 等架构/系统创新的最终落地验证；前文技术细节证明方法可行，本表则量化证明方法有效，构成"技术创新→性能实证"的闭环论证。
+> 【图文联合解读】表6将DeepSeek-V3（MoE，671B总参/37B激活）与Qwen2.5-72B、LLaMA-3.1-405B等开源模型及GPT-4o、Claude-3.5-Sonnet闭源模型，在英语、代码、数学、中文四类共21个基准上横向对比。V3在数学（MATH-500 90.2、AIME 2024 39.2、CNMO 43.2）、代码（LiveCodeBench 40.5、Codeforces百分位51.6）、中文（C-SimpleQA 64.8）等多项夺魁；英语MMLU 88.5亦领先其他开源，并与闭源前沿全面对标。该表作为论文结尾汇总性证据，集中验证FP8混合精度、MoE+MLA架构及无辅助损失负载均衡等创新使大规模模型同时取得"开源SOTA"与"逼近闭源前沿"的双重竞争力。
 
 ### Table 7 (p.33) ⭐深度解读
 ![[assets/crops/deepseek-v3-technical-report-tab07.png]]
@@ -160,11 +154,11 @@ tags: []
 > The contribution of distillation from DeepSeek-R1. The evaluation settings of LiveCodeBench and MATH-500 are the same as in Table 6.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**核心对象与数据**：对比 DeepSeek-V2.5 Baseline 与 +R1 Distill 两个版本在 LiveCodeBench-CoT 与 MATH-500 上的 Pass@1 及输出长度。LiveCodeBench：31.1→37.4（+6.3），长度 718→783；MATH-500：74.6→83.2（+8.6），长度 769→1510（近乎翻倍）。
+> 【图文联合解读】**Table 9 联合解读：**
 
-**技术结论**：R1 蒸馏在代码与数学推理上均带来显著准确率增益，但响应长度大幅膨胀，尤其数学任务几近倍增，推理效率得不偿失。
+该表对比 DeepSeek-V2.5 在 R1 蒸馏前后的指标：LiveCodeBench-CoT Pass@1 由 31.1→37.4（长度 718→783），MATH-500 Pass@1 由 74.6→83.2（长度 769→1510，近翻倍）。
 
-**论文作用**：作为关键消融依据，支撑 V3 最终放弃直接蒸馏 R1 的路线、转而自研内生推理能力的决策，体现"质量—效率"权衡。
+原文借此论证两点结论：①从 R1 蒸馏可显著提升基础模型的代码与数学推理精度；②R1 的"长链思维"知识可成功迁移到 V2.5，使其在精度提升的同时亦习得 R1 的长 CoT 推理范式。该表在论文实验链中起桥梁作用——以 V2.5 为前置实验，验证 R1→基座蒸馏的有效性，为 DeepSeek-V3 训练流程中引入 R1 蒸馏数据提供方法论与可行性依据。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

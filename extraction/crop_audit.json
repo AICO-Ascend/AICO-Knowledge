@@ -131,14 +131,6 @@
   "note": "完整层级树状图，结构清晰可读，无截断或文字重叠。",
   "ts": "2026-08-24 21:06"
  },
- "assets/crops/a-survey-of-large-language-models-fig19.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容为大段正文展示AI推理示例，非图/表/公式元素 [whitelisted: 展示模型回答样例的表格，含问答行结构]",
-  "ts": "2026-08-24 21:07"
- },
  "assets/crops/a-survey-of-large-language-models-tab01.png": {
   "ok": true,
   "issues": [],
@@ -367,14 +359,6 @@
   "note": "三子图组合的完整图，含caption(a)(b)(c)，无截断或混入",
   "ts": "2026-08-24 21:07"
  },
- "assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig06.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含两张独立柱状图(a)(b)，属于多元素混入 [whitelisted: (a)(b)子图同属一个Figure的多面板展示]",
-  "ts": "2026-08-24 21:07"
- },
  "assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab01.png": {
   "ok": true,
   "issues": [],
@@ -519,46 +503,6 @@
   "note": "完整清晰的系统架构图，含Switch、双Rack及内部组件，无缺失或污染",
   "ts": "2026-08-24 21:07"
  },
- "assets/crops/ascend-950-npu-architecture-whitepaper-fig420.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "顶部两交换机连线延伸至画面边缘被截断，缺少上方连接部分",
-  "ts": "2026-08-24 21:07"
- },
- "assets/crops/ascend-950-npu-architecture-whitepaper-fig421.png": {
-  "ok": true,
-  "issues": [
-   "overlap"
-  ],
-  "note": "ETH端口标签与Ethernet Switch和Ascend950组件名称文字重叠 [whitelisted: ETH端口标签贴合设备框边，属标准拓扑图设计]",
-  "ts": "2026-08-24 21:07"
- },
- "assets/crops/ascend-950-npu-architecture-whitepaper-tab101.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "末行DVPP描述被截断，底部不完整",
-  "ts": "2026-08-24 21:07"
- },
- "assets/crops/ascend-950-npu-architecture-whitepaper-tab301.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "表格底部Cube算力行被截断，后续子行缺失",
-  "ts": "2026-08-24 21:07"
- },
- "assets/crops/ascend-950-npu-architecture-whitepaper-tab401.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "最后一行(-INF)底边框被裁切，表格不完整",
-  "ts": "2026-08-24 21:07"
- },
  "assets/crops/ascend-950-npu-architecture-whitepaper-tab402.png": {
   "ok": true,
   "issues": [],
@@ -635,14 +579,6 @@
   "ok": true,
   "issues": [],
   "note": "表格完整，含caption、表头、分组数据行及脚注，清晰可读",
-  "ts": "2026-08-24 21:07"
- },
- "assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-fig01.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含两个并排子图，左全量右放大视图，属两张图 [whitelisted: 同一Figure两子图，展示相同主题的全局与局部对比]",
   "ts": "2026-08-24 21:07"
  },
  "assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab01.png": {
@@ -723,14 +659,6 @@
   "note": "三个子图(a)(b)(c)组成的完整复合图，含caption，结构清晰可读",
   "ts": "2026-08-24 21:08"
  },
- "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig11.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "两张独立折线图并排，应拆分为两张图 [whitelisted: 左右两图为同一Figure的子图，格式一致]",
-  "ts": "2026-08-24 21:08"
- },
  "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab01.png": {
   "ok": true,
   "issues": [],
@@ -771,22 +699,6 @@
   "ok": true,
   "issues": [],
   "note": "完整图表含标题、图例、坐标轴，顶部有论文页眉但非正文段落",
-  "ts": "2026-08-24 21:08"
- },
- "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig04.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容是Python代码段，非图/表/公式元素 [confirmed: 这是Python函数代码，无任何表格结构] [whitelisted: 代码/算子 listing 图，内容即代码]",
-  "ts": "2026-08-24 21:08"
- },
- "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig05.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "这是Python代码片段，不是图/表/公式元素 [confirmed: 代码片段非表格，无框线无表格结构] [whitelisted: 代码/算子 listing 图，内容即代码]",
   "ts": "2026-08-24 21:08"
  },
  "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab01.png": {
@@ -915,14 +827,6 @@
   "note": "单图含(a)(b)子图，完整可读，无乱码或截断",
   "ts": "2026-08-24 21:08"
  },
- "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig03.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "左右为两张独立图，x轴变量不同，无(a)(b)子图标记 [whitelisted: 两图为同一Figure的(a)(b)子图，主题一致且无独立编号]",
-  "ts": "2026-08-24 21:08"
- },
  "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig04.png": {
   "ok": true,
   "issues": [],
@@ -951,14 +855,6 @@
   "ok": true,
   "issues": [],
   "note": "表格完整，包含caption，数据行齐全无截断",
-  "ts": "2026-08-24 21:08"
- },
- "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab02.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表上方caption含多句解释性正文段落，远超常规简短说明 [whitelisted: 完整的多行Table 2 caption，含说明与格式约定]",
   "ts": "2026-08-24 21:08"
  },
  "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab04.png": {
@@ -1021,58 +917,10 @@
   "note": "完整的直方图，含阈值标注线，清晰可读",
   "ts": "2026-08-24 21:08"
  },
- "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig08.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容是Python代码片段，非图/表/公式，不符合裁剪目标 [confirmed: 这是源代码片段，非论文表格] [whitelisted: 代码/算子 listing 图，内容即代码]",
-  "ts": "2026-08-24 21:08"
- },
  "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig09.png": {
   "ok": true,
   "issues": [],
   "note": "完整CUDA代码片段，行号清晰，无截断或污染",
-  "ts": "2026-08-24 21:08"
- },
- "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig10.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容是Python代码片段，非图/表/公式元素 [confirmed: 纯Python代码片段，非表格结构] [whitelisted: 代码/算子 listing 图，内容即代码]",
-  "ts": "2026-08-24 21:08"
- },
- "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig11.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "裁剪的是Python源代码片段，非图/表/公式元素 [confirmed: 纯Python代码片段，非表格结构] [whitelisted: 代码/算子 listing 图，内容即代码]",
-  "ts": "2026-08-24 21:08"
- },
- "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig13.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "纯代码块，无caption，不属于图/表/公式元素 [confirmed: 这是Python代码片段，不是论文表格] [whitelisted: 代码/算子 listing 图，内容即代码]",
-  "ts": "2026-08-24 21:08"
- },
- "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig16.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容为C++函数代码列表，非图/表/公式，属于错误裁剪 [confirmed: 实为带行号的源代码，非表格结构] [whitelisted: 代码/算子 listing 图，内容即代码]",
-  "ts": "2026-08-24 21:08"
- },
- "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig17.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容为CUDA代码片段，非图/表/公式元素，无caption [confirmed: 代码片段，非表格，误裁] [whitelisted: 代码/算子 listing 图，内容即代码]",
   "ts": "2026-08-24 21:08"
  },
  "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-tab01.png": {
@@ -1099,26 +947,10 @@
   "note": "DeepSeek-R1训练流程图，完整清晰，含图例",
   "ts": "2026-08-24 21:08"
  },
- "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab01.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容为大段正文描述，无图/表/公式元素 [whitelisted: prompt模板表，散文内容+框线结构，属典型附录表]",
-  "ts": "2026-08-24 21:08"
- },
  "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab03.png": {
   "ok": true,
   "issues": [],
   "note": "单张完整基准测试对比表，多列数据清晰可读，无截断或混入",
-  "ts": "2026-08-24 21:09"
- },
- "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab04.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容为整段提示词散文文本，仅有方框样式，无图/表/公式 [whitelisted: 附录B.2提示模板，框线框住散文段属正常]",
   "ts": "2026-08-24 21:09"
  },
  "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab05.png": {
@@ -1199,34 +1031,10 @@
   "note": "完整表格，含PROMPT、选项、指令及JSON格式示例，单一元素",
   "ts": "2026-08-24 21:09"
  },
- "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab22.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容为PROMPT文本框，纯散文，无图无表无公式 [whitelisted: 附录PROMPT/Evaluation模板表，内容为散文属正常结构]",
-  "ts": "2026-08-24 21:09"
- },
- "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab23.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容为提示词正文段落，无图/表/公式元素 [whitelisted: 附录PROMPT/Evaluation框线表，内容为提示模板与评测协议]",
-  "ts": "2026-08-24 21:09"
- },
  "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png": {
   "ok": true,
   "issues": [],
   "note": "Table 24内容完整，含caption、PROMPT与Evaluation两行，文本清晰可读",
-  "ts": "2026-08-24 21:09"
- },
- "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab26.png": {
-  "ok": false,
-  "issues": [
-   "overlap"
-  ],
-  "note": "特殊token符号␞与文字重叠（Asystem、4$处） [confirmed: 特殊token渲染为符号与system/user文字重叠，无法辨认]",
   "ts": "2026-08-24 21:09"
  },
  "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab27.png": {
@@ -1463,14 +1271,6 @@
   "note": "单图含三子图(a)(b)(c)，均完整可读，无重叠或乱码",
   "ts": "2026-08-24 21:09"
  },
- "assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig04.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含4张小图、雷达图及多组文字对比，属多元素拼接图 [whitelisted: 单一图含多个示例面板，统一展示LLaVA-1.5与DeepStack对比]",
-  "ts": "2026-08-24 21:09"
- },
  "assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig05.png": {
   "ok": true,
   "issues": [],
@@ -1499,14 +1299,6 @@
   "ok": true,
   "issues": [],
   "note": "单一完整堆叠柱状图，标题、图例、轴标签均清晰可读",
-  "ts": "2026-08-24 21:09"
- },
- "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig05.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "左右为两个独立图：系统架构图与DeFT Attention细节图，非同一图多子图 [whitelisted: 单一系统架构图，左右两面板展示整体与细节，无多编号caption]",
   "ts": "2026-08-24 21:09"
  },
  "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig07.png": {
@@ -1815,24 +1607,6 @@
   "note": "SuperGLUE表格完整，含caption、表头与全部数据行，清晰可读。",
   "ts": "2026-08-24 21:10"
  },
- "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig01.png": {
-  "ok": false,
-  "issues": [
-   "mojibake",
-   "overlap",
-   "multi_element"
-  ],
-  "note": "三幅子图(a)(b)(c)文本大量乱码，标签与符号重叠错位，可读性差 [confirmed: 大量豆腐块乱码，文字不可读，属渲染错误]",
-  "ts": "2026-08-24 21:10"
- },
- "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig03.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "左右两张独立折线图，无caption且x轴范围不同，属两个独立图 [whitelisted: 两子图同主题并列，无独立编号caption]",
-  "ts": "2026-08-24 21:10"
- },
  "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig04.png": {
   "ok": true,
   "issues": [],
@@ -1885,16 +1659,6 @@
   "ok": true,
   "issues": [],
   "note": "图(a)Drafting和(b)Verification两子图完整清晰，含caption，文字无重叠无乱码",
-  "ts": "2026-08-24 21:10"
- },
- "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig05.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "truncated",
-   "prose_pollution"
-  ],
-  "note": "含子图(a)(b)(c)三个元素，右图被切缺caption和x轴标签，顶部混入论文标题 [whitelisted: 单一Figure含(a)(b)(c)多子图，仅有页眉标题]",
   "ts": "2026-08-24 21:10"
  },
  "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-tab01.png": {
@@ -1951,15 +1715,6 @@
   "note": "完整表格含caption，数据行齐全，无乱码或重叠",
   "ts": "2026-08-24 21:10"
  },
- "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig01.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "overlap"
-  ],
-  "note": "图表上方混入标题、作者、单位和链接等非caption文字；部分柱形数值标签互相重叠 [whitelisted: 仅含论文标题、作者信息及图表，无正文混入]",
-  "ts": "2026-08-24 21:10"
- },
  "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig08.png": {
   "ok": true,
   "issues": [],
@@ -2014,26 +1769,10 @@
   "note": "表格完整，含caption，数据齐全，无乱码或重叠",
   "ts": "2026-08-24 21:11"
  },
- "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig02.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "图顶部混入论文页眉标题文字，且缺少图标题caption [whitelisted: 图内仅含标题与结构标签，无正文混入]",
-  "ts": "2026-08-24 21:11"
- },
  "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig04.png": {
   "ok": true,
   "issues": [],
   "note": "流水线并行示意图，前后对比完整，含图例，清晰可读",
-  "ts": "2026-08-24 21:11"
- },
- "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig05.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "顶部混入论文标题/页眉文字，属于正文污染 [whitelisted: 标题、图内标注及(a)(b)小标题均属图本身内容]",
   "ts": "2026-08-24 21:11"
  },
  "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig06.png": {
@@ -2108,14 +1847,6 @@
   "note": "完整清晰的折线图，双曲线、坐标轴和图例均完整可读",
   "ts": "2026-08-24 21:11"
  },
- "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab01.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "表格缺少列标题行，仅有数据行和caption，不完整",
-  "ts": "2026-08-24 21:11"
- },
  "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab02.png": {
   "ok": true,
   "issues": [],
@@ -2132,14 +1863,6 @@
   "ok": true,
   "issues": [],
   "note": "完整的KV cache碎片化示意图，元素清晰可读，无异常",
-  "ts": "2026-08-24 21:11"
- },
- "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig09.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "左图为Copy-on-write KV blocks示意，右图为Beam候选树状图，两个独立图被裁在同一PNG中 [whitelisted: 左右两图为同一Figure的多面板，无独立caption]",
   "ts": "2026-08-24 21:11"
  },
  "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig11.png": {
@@ -2280,23 +2003,6 @@
   "note": "完整清晰的LLM训练容错分类树状图，无截断或污染",
   "ts": "2026-08-24 21:11"
  },
- "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig01.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "multi_element"
-  ],
-  "note": "混入论文标题、作者、摘要正文，非纯图裁剪 [whitelisted: 图为首页双栏布局，右图为系统示意，无混入正文]",
-  "ts": "2026-08-24 21:11"
- },
- "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig04.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "纯正文段落描述推理流水线流程，非图/表/公式元素 [confirmed: 纯正文段落，无框线无表格结构] [whitelisted: 代码 listing 图]",
-  "ts": "2026-08-24 21:11"
- },
  "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig05.png": {
   "ok": true,
   "issues": [],
@@ -2369,14 +2075,6 @@
   "note": "表格完整，含表头、数据行及Table 9说明，清晰可读",
   "ts": "2026-08-24 21:11"
  },
- "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-eq01.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "算法伪代码底部第7行被截断，公式未完整显示",
-  "ts": "2026-08-24 21:11"
- },
  "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig02.png": {
   "ok": true,
   "issues": [],
@@ -2425,15 +2123,6 @@
   "note": "CDF图完整清晰，含四条曲线、坐标轴和图例，无任何问题。",
   "ts": "2026-08-24 21:11"
  },
- "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig11.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "含ROFT和ZCube两个独立子图，且顶部混入论文页眉 [whitelisted: (a)ROFT与(b)ZCube为同一图的子图，比较两种网络架构]",
-  "ts": "2026-08-24 21:12"
- },
  "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig12.png": {
   "ok": true,
   "issues": [],
@@ -2444,14 +2133,6 @@
   "ok": true,
   "issues": [],
   "note": "完整散点图，含标题、坐标轴、数据点、图例及标注，无明显问题。",
-  "ts": "2026-08-24 21:12"
- },
- "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig14.png": {
-  "ok": true,
-  "issues": [
-   "overlap"
-  ],
-  "note": "中部多个标注(HPN、3-layer Rail-Optimized FT等)互相重叠压字 [whitelisted: 标注靠近曲线导致视觉重叠，文字本身完整可读]",
   "ts": "2026-08-24 21:12"
  },
  "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig15.png": {
@@ -2482,14 +2163,6 @@
   "ok": true,
   "issues": [],
   "note": "四子图合成图，轴标签一致，属同一完整图，清晰可读",
-  "ts": "2026-08-24 21:12"
- },
- "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig20.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "左右两张独立CDF图，各自标题、轴单位(ms/s)和图例不同，未合并为单图 [whitelisted: 仅一图含(a)(b)两子图，无多余编号或无关内容]",
   "ts": "2026-08-24 21:12"
  },
  "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig21.png": {
@@ -2592,16 +2265,6 @@
   "ok": true,
   "issues": [],
   "note": "表格完整，包含表头和全部4行数据，无污染。",
-  "ts": "2026-08-24 21:12"
- },
- "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig12.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "truncated",
-   "prose_pollution"
-  ],
-  "note": "顶部混入ICLR页眉文字，(a)(b)子图空白，右侧图例被截断 [whitelisted: 单图含(a)(b)(c)三子面板，仅一个Figure]",
   "ts": "2026-08-24 21:12"
  },
  "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-tab01.png": {
@@ -2730,22 +2393,6 @@
   "note": "含左右两子图的人形角色仿真图，各带动作序列条，属单一复合图",
   "ts": "2026-08-24 21:12"
  },
- "assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig02.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含两张独立图：左侧学习曲线+右侧热力图，应分别裁剪 [whitelisted: 同一图的多面板子图，无多编号caption混入]",
-  "ts": "2026-08-24 21:12"
- },
- "assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig03.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含两张独立子图（3D Biped 与 3D Quadruped）并列 [whitelisted: 单图含(a)(b)两子图，共用一个Figure，无独立编号]",
-  "ts": "2026-08-24 21:12"
- },
  "assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig04.png": {
   "ok": true,
   "issues": [],
@@ -2812,14 +2459,6 @@
   "note": "完整流水线架构图，含四个Key Technique标注，无截断或污染",
   "ts": "2026-08-24 21:12"
  },
- "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig11.png": {
-  "ok": null,
-  "issues": [
-   "audit_error"
-  ],
-  "note": "Expecting ',' delimiter: line 1 column 69 (char 68)",
-  "ts": "2026-08-24 21:12"
- },
  "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig12.png": {
   "ok": true,
   "issues": [],
@@ -2868,14 +2507,6 @@
   "note": "完整的时序调度图，含6行多流时间线及图例，清晰可读",
   "ts": "2026-08-24 21:12"
  },
- "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig20.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "左侧饼图与右侧表格是两个独立元素，共用一张图未加caption [whitelisted: 饼图与表格属同一figure，无多个编号caption]",
-  "ts": "2026-08-24 21:12"
- },
  "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig03.png": {
   "ok": true,
   "issues": [],
@@ -2887,22 +2518,6 @@
   "issues": [],
   "note": "完整的系统架构图，各层级清晰，无截断或污染",
   "ts": "2026-08-24 21:12"
- },
- "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig05.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "顶部混入大段代码片段，应仅保留下方图(a)(b) [whitelisted: 代码与子图(a)(b)caption均为同一图组成部分]",
-  "ts": "2026-08-24 21:12"
- },
- "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig07.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "顶部混入会议页眉文字'EuroSys '25...'，非图本身内容 [whitelisted: 仅含会议页眉、图例、图内标签及步骤说明，无正文混入]",
-  "ts": "2026-08-24 21:13"
  },
  "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig08.png": {
   "ok": true,
@@ -2916,25 +2531,6 @@
   "note": "四子图柱状图完整可读，标题为页眉无正文混入",
   "ts": "2026-08-24 21:13"
  },
- "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig12.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "truncated",
-   "overlap"
-  ],
-  "note": "顶部混入会议页眉文字；caption被截断且与第三图x轴重叠 [whitelisted: Figure 13 caption完整描述图表内容，无混入正文]",
-  "ts": "2026-08-24 21:13"
- },
- "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig13.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "truncated"
-  ],
-  "note": "顶部混入页眉（会议信息和作者名），右图右侧bar组被截断 [whitelisted: 仅含会议页眉与作者署名，无caption混入]",
-  "ts": "2026-08-24 21:13"
- },
  "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig14.png": {
   "ok": true,
   "issues": [],
@@ -2945,15 +2541,6 @@
   "ok": true,
   "issues": [],
   "note": "两子图(a)7B与(b)13B结构一致，柱状图完整清晰，无乱码或裁切问题。",
-  "ts": "2026-08-24 21:13"
- },
- "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig16.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "truncated"
-  ],
-  "note": "包含完整Figure14及其caption，但下方还有3个额外图表被截断 [whitelisted: 仅Figure 14一个编号，含(a)-(d)子图及底部续接面板]",
   "ts": "2026-08-24 21:13"
  },
  "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-tab02.png": {
@@ -2978,23 +2565,6 @@
   "ok": true,
   "issues": [],
   "note": "含(a)(b)两个子图的完整架构示意图，清晰可读",
-  "ts": "2026-08-24 21:13"
- },
- "assets/crops/hyper-connections-fig05.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "顶部混入「4 Results」章节标题，含两个并列独立图，缺caption难以判定是否同一图 [whitelisted: 两个子图均为同一图表的对比面板，标题一致，属合法单图]",
-  "ts": "2026-08-24 21:13"
- },
- "assets/crops/hyper-connections-fig08.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含两个独立子图(左Residual、右Hyper-Connections)及各自caption [whitelisted: 单图含两个子面板(a)/(b)对比两种架构]",
   "ts": "2026-08-24 21:13"
  },
  "assets/crops/hyper-connections-fig09.png": {
@@ -3153,14 +2723,6 @@
   "note": "完整柱状图，轴标签、数据标注、图例均清晰可读",
   "ts": "2026-08-24 21:13"
  },
- "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig02.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含两个独立子图(a)(b)及其各自caption，属多元素 [whitelisted: 单图含(a)(b)双子图，共用同一Figure编号]",
-  "ts": "2026-08-24 21:13"
- },
  "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig03.png": {
   "ok": true,
   "issues": [],
@@ -3215,14 +2777,6 @@
   "note": "Table 6 训练数据消融表，完整清晰，无问题",
   "ts": "2026-08-24 21:13"
  },
- "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab07.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格下方混入章节标题3.4.2及整段正文段落 [whitelisted: 节标题及正文段落为论文正常结构，描述Table 7内容]",
-  "ts": "2026-08-24 21:13"
- },
  "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab08.png": {
   "ok": true,
   "issues": [],
@@ -3253,27 +2807,10 @@
   "note": "完整的多面板基准对比图，含统一图例与脚注，无截断或污染。",
   "ts": "2026-08-24 21:13"
  },
- "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "blank"
-  ],
-  "note": "两张独立折线图并列，无subplot标识，下半部大片空白 [whitelisted: 仅一个标题MMMU Pro，两面板为同图子图]",
-  "ts": "2026-08-24 21:13"
- },
  "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig03.png": {
   "ok": true,
   "issues": [],
   "note": "完整的多智能体系统架构图，元素清晰可读",
-  "ts": "2026-08-24 21:13"
- },
- "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含两张独立图（训练准确率+平均并行度），非单一图元素 [whitelisted: 两个相关子图共享x轴概念，无独立编号，属单图多面板]",
   "ts": "2026-08-24 21:13"
  },
  "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig05.png": {
@@ -3324,14 +2861,6 @@
   "note": "完整表格，含caption、表头及三行数据，排版清晰",
   "ts": "2026-08-24 21:13"
  },
- "assets/crops/kimi-k2-open-agentic-intelligence-fig01.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含6个独立柱状图及两个分组标题，属多元素拼合图 [whitelisted: 单图含多子图，按类别分组排列，属合法复合图]",
-  "ts": "2026-08-24 21:13"
- },
  "assets/crops/kimi-k2-open-agentic-intelligence-fig03.png": {
   "ok": true,
   "issues": [],
@@ -3342,14 +2871,6 @@
   "ok": true,
   "issues": [],
   "note": "双子图figure，轴标签、图例、曲线均完整清晰",
-  "ts": "2026-08-24 21:13"
- },
- "assets/crops/kimi-k2-open-agentic-intelligence-fig06.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含左右两个独立子图（FLOPs图与Tokens图），属于多元素 [whitelisted: 左右两面板共享图例，为同一Figure的(a)(b)子图]",
   "ts": "2026-08-24 21:13"
  },
  "assets/crops/kimi-k2-open-agentic-intelligence-fig07.png": {
@@ -3460,26 +2981,10 @@
   "note": "完整单图，展示MLA KV缓存块与KDA checkpoint恢复机制",
   "ts": "2026-08-24 21:14"
  },
- "assets/crops/kimi-k3-open-frontier-intelligence-fig13.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含4个独立子图(a)(b)(c)(d)及其caption，属多元素合并 [whitelisted: 单一图表的(a)(b)(c)(d)四子图，无多个独立编号]",
-  "ts": "2026-08-24 21:14"
- },
  "assets/crops/kimi-k3-open-frontier-intelligence-fig14.png": {
   "ok": true,
   "issues": [],
   "note": "单张完整折线/散点图，四个模型曲线+图例+坐标轴齐全",
-  "ts": "2026-08-24 21:14"
- },
- "assets/crops/kimi-k3-open-frontier-intelligence-fig15.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含4个子图(a)(b)(c)(d)及各自caption，应只裁一个子图 [whitelisted: 单图含(a)(b)(c)(d)四个子面板，属合法多面板图]",
   "ts": "2026-08-24 21:14"
  },
  "assets/crops/kimi-k3-open-frontier-intelligence-fig16.png": {
@@ -3596,23 +3101,6 @@
   "note": "完整散点图，含多色标记和虚线连线，无文字污染",
   "ts": "2026-08-24 21:14"
  },
- "assets/crops/kimi-vl-technical-report-fig02.png": {
-  "ok": true,
-  "issues": [
-   "overlap"
-  ],
-  "note": "类别标签(GENERAL/OCR等)与y轴刻度数字重叠压字 [whitelisted: 类别标题作水印背景与柱状图共存，设计如此]",
-  "ts": "2026-08-24 21:14"
- },
- "assets/crops/kimi-vl-technical-report-fig03.png": {
-  "ok": true,
-  "issues": [
-   "mojibake",
-   "prose_pollution"
-  ],
-  "note": "多处文字显示为方框（字体缺失/乱码），右上角混入' The user asked'系统提示文本 [whitelisted: 图为MoonViT架构图，含各组件标注，无混入正文]",
-  "ts": "2026-08-24 21:14"
- },
  "assets/crops/kimi-vl-technical-report-fig04.png": {
   "ok": true,
   "issues": [],
@@ -3625,23 +3113,6 @@
   "note": "完整的三阶段训练流程图，文字清晰，无截断或混入",
   "ts": "2026-08-24 21:14"
  },
- "assets/crops/kimi-vl-technical-report-fig06.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容为LLM回复的纯文本散文，无图无表无公式 [whitelisted: 两列框线表含Instruction/Response标题，属prompt模板表]",
-  "ts": "2026-08-24 21:14"
- },
- "assets/crops/kimi-vl-technical-report-fig07.png": {
-  "ok": true,
-  "issues": [
-   "prose_only",
-   "multi_element"
-  ],
-  "note": "内容为三组对话示例文本框，无图无表，且含多个独立示例对 [whitelisted: 含框线表格，指令-回复示例两列多行结构]",
-  "ts": "2026-08-24 21:14"
- },
  "assets/crops/kimi-vl-technical-report-fig10.png": {
   "ok": true,
   "issues": [],
@@ -3652,15 +3123,6 @@
   "ok": true,
   "issues": [],
   "note": "完整的视频场景分割示例图，含指令面板和对应响应文本，内容清晰完整",
-  "ts": "2026-08-24 21:14"
- },
- "assets/crops/kimi-vl-technical-report-fig12.png": {
-  "ok": true,
-  "issues": [
-   "prose_only",
-   "multi_element"
-  ],
-  "note": "仅含Instruction和Response两个文字框，无图/表/公式，属散文内容 [whitelisted: 指令-响应模板框线结构，属prompt模板表]",
   "ts": "2026-08-24 21:14"
  },
  "assets/crops/kimi-vl-technical-report-fig13.png": {
@@ -3837,14 +3299,6 @@
   "note": "完整的系统架构图，各模块清晰可读",
   "ts": "2026-08-24 21:15"
  },
- "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig06.png": {
-  "ok": true,
-  "issues": [
-   "overlap"
-  ],
-  "note": "Dialogue&API文字略有重叠，其余图示完整清晰 [whitelisted: GitHub图标与标题文字相邻属设计排版，内容完整可读]",
-  "ts": "2026-08-24 21:15"
- },
  "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig07.png": {
   "ok": true,
   "issues": [],
@@ -3861,14 +3315,6 @@
   "ok": true,
   "issues": [],
   "note": "单一完整图，含Token/Chunk/Sentence三级交互结构图，清晰可读",
-  "ts": "2026-08-24 21:15"
- },
- "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig10.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含三个独立子图，违反单元素标准 [whitelisted: 三子图同属一图，无独立编号或无关内容]",
   "ts": "2026-08-24 21:15"
  },
  "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig11.png": {
@@ -3889,14 +3335,6 @@
   "note": "三幅子图组成的单一复合图，内容完整清晰",
   "ts": "2026-08-24 21:15"
  },
- "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig14.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含四个独立子图(a)(b)(c)(d)及各自caption，属多元素组合 [whitelisted: 单一Figure含(a)(b)(c)(d)四个子图，主题一致]",
-  "ts": "2026-08-24 21:15"
- },
  "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig15.png": {
   "ok": true,
   "issues": [],
@@ -3907,22 +3345,6 @@
   "ok": true,
   "issues": [],
   "note": "完整的胜率热力图，含标题、色标和所有数据",
-  "ts": "2026-08-24 21:15"
- },
- "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig17.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含15张独立截图(a–o)的多子图拼版，非单一元素 [whitelisted: 单一Figure含(a)-(o)子面板，跨模型截图对比]",
-  "ts": "2026-08-24 21:15"
- },
- "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig18.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含10个独立子图截图(b,c,e,f,h,i,k,l,n,o)，非单一图元素 [whitelisted: 单一Figure的多个子图(b)(c)(e)(f)...并列展示]",
   "ts": "2026-08-24 21:15"
  },
  "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab01.png": {
@@ -4003,14 +3425,6 @@
   "note": "5个子图横排的柱状图对比，结构完整，数据清晰，无文字重叠或乱码",
   "ts": "2026-08-24 21:15"
  },
- "assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig04.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "同时包含数据表格和Loss折线图两个独立元素 [whitelisted: 单图含表格与子图，无多编号caption]",
-  "ts": "2026-08-24 21:15"
- },
  "assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig05.png": {
   "ok": true,
   "issues": [],
@@ -4075,14 +3489,6 @@
   "ok": true,
   "issues": [],
   "note": "三幅子图组合的单图，含(a)(b)(c)子标题，完整可读",
-  "ts": "2026-08-24 21:15"
- },
- "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig09.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "顶部混入论文页眉标题，图本体完整可读 [whitelisted: 仅含图表标题与论文标题，无混入正文]",
   "ts": "2026-08-24 21:15"
  },
  "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig10.png": {
@@ -4277,22 +3683,6 @@
   "note": "表格完整，含表头、9行数据及caption，无任何问题",
   "ts": "2026-08-24 21:15"
  },
- "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig05.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "Table 1与下方另一张柱状图（Figure）被合并裁剪，含两个独立元素 [whitelisted: 仅Table 1一个编号，表格与柱状图同属其多面板内容]",
-  "ts": "2026-08-24 21:15"
- },
- "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig07.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含两个独立架构图(a)(b)及一个loss曲线图，属多元素混合 [whitelisted: 单图含(a)(b)子架构图与对应loss曲线，属同图多面板]",
-  "ts": "2026-08-24 21:15"
- },
  "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig08.png": {
   "ok": true,
   "issues": [],
@@ -4383,16 +3773,6 @@
   "note": "完整的双折线图，轴标签清晰，无文字重叠或截断",
   "ts": "2026-08-24 21:16"
  },
- "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig10.png": {
-  "ok": true,
-  "issues": [
-   "mojibake",
-   "multi_element",
-   "overlap"
-  ],
-  "note": "全图文字乱码严重，且含(a)(b)两个子图及各自caption，图(b)纵轴标签与图区有重叠 [whitelisted: 仅含(a)(b)两个子图caption，属同一Figure的多面板]",
-  "ts": "2026-08-24 21:16"
- },
  "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig11.png": {
   "ok": true,
   "issues": [],
@@ -4415,14 +3795,6 @@
   "ok": true,
   "issues": [],
   "note": "表格完整，含caption、表头和数据行，无异常",
-  "ts": "2026-08-24 21:16"
- },
- "assets/crops/muon-is-scalable-for-llm-training-fig01.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "一张图包含(a)(b)两个独立子图，属多元素 [whitelisted: 仅含(a)(b)两个子图，属同一图的子面板]",
   "ts": "2026-08-24 21:16"
  },
  "assets/crops/muon-is-scalable-for-llm-training-fig02.png": {
@@ -4449,26 +3821,10 @@
   "note": "三个子图组成的完整组合图，标题、轴标签、图例均清晰可读。",
   "ts": "2026-08-24 21:16"
  },
- "assets/crops/muon-is-scalable-for-llm-training-fig06.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "内容是Python源代码，不是论文中的图/表/公式元素 [confirmed: 这是Python代码，非论文表格] [whitelisted: 代码 listing 图]",
-  "ts": "2026-08-24 21:16"
- },
  "assets/crops/muon-is-scalable-for-llm-training-fig07.png": {
   "ok": true,
   "issues": [],
   "note": "2x2子图完整，含(a)-(d)子图标题与坐标轴标签，整体清晰可读",
-  "ts": "2026-08-24 21:16"
- },
- "assets/crops/muon-is-scalable-for-llm-training-fig08.png": {
-  "ok": true,
-  "issues": [
-   "overlap"
-  ],
-  "note": "OLMo-0424-7B与Llama-2-13B两个标签文字重叠 [whitelisted: OLMo-0424-7B与Llama-2-13B标签因数据点靠近而挤压，但文字仍可辨识，属正常排版拥挤。]",
   "ts": "2026-08-24 21:16"
  },
  "assets/crops/muon-is-scalable-for-llm-training-fig09.png": {
@@ -4541,16 +3897,6 @@
   "ok": true,
   "issues": [],
   "note": "单层架构图完整清晰，右侧虚线框为示意重复结构，属同一图",
-  "ts": "2026-08-24 21:16"
- },
- "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig07.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution",
-   "truncated"
-  ],
-  "note": "含Figure6管线图+两组柱状图，混入左侧正文段落，底部被截断 [whitelisted: 仅一个Figure 6，含(a)(b)子图，属合法单图]",
   "ts": "2026-08-24 21:16"
  },
  "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig08.png": {
@@ -4643,14 +3989,6 @@
   "note": "完整清晰的混合缓存池架构图，含图例，无截断或污染",
   "ts": "2026-08-24 21:16"
  },
- "assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig05.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含一个表格加两个独立子图(a)(b)，属于多元素混排 [whitelisted: (a)(b)为同一图的两个子面板，属单图]",
-  "ts": "2026-08-24 21:16"
- },
  "assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-tab01.png": {
   "ok": true,
   "issues": [],
@@ -4673,22 +4011,6 @@
   "ok": true,
   "issues": [],
   "note": "表格完整，含caption及全部数据行，格式清晰可读",
-  "ts": "2026-08-24 21:16"
- },
- "assets/crops/qwen2-5-vl-technical-report-fig01.png": {
-  "ok": null,
-  "issues": [
-   "audit_error"
-  ],
-  "note": "Expecting ',' delimiter: line 1 column 77 (char 76)",
-  "ts": "2026-08-24 21:16"
- },
- "assets/crops/qwen2-5-vl-technical-report-tab01.png": {
-  "ok": null,
-  "issues": [
-   "audit_error"
-  ],
-  "note": "Expecting ',' delimiter: line 1 column 67 (char 66)",
   "ts": "2026-08-24 21:16"
  },
  "assets/crops/qwen2-5-vl-technical-report-tab03.png": {
@@ -4731,14 +4053,6 @@
   "ok": true,
   "issues": [],
   "note": "表格完整，含caption、表头及全部数据行，干净可读",
-  "ts": "2026-08-24 21:16"
- },
- "assets/crops/qwen3-vl-technical-report-fig01.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "顶部混入正文片段'and videos here.'和'Picture 1 is an image from a blog'，左侧混入了正文片段'<0.0 seconds> Timestamp in text format' [whitelisted: 文字均为图内标注，无混入正文散文]",
   "ts": "2026-08-24 21:16"
  },
  "assets/crops/qwen3-vl-technical-report-fig02.png": {
@@ -4873,14 +4187,6 @@
   "note": "单图含Prefill/Decode两子图共享图例，完整可读",
   "ts": "2026-08-24 21:17"
  },
- "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig04.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含两个独立子图(a)(b)及其各自caption，应拆为两张图 [whitelisted: 仅含(a)(b)两个子图，属同一图的多面板布局]",
-  "ts": "2026-08-24 21:17"
- },
  "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig05.png": {
   "ok": true,
   "issues": [],
@@ -4903,14 +4209,6 @@
   "ok": true,
   "issues": [],
   "note": "三子图(a)(b)(c)完整，含图与caption，属标准多面板图",
-  "ts": "2026-08-24 21:17"
- },
- "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig11.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含两个独立子图(a)和(b)，应分别裁剪 [whitelisted: 单图含(a)(b)子图，同属一个Figure]",
   "ts": "2026-08-24 21:17"
  },
  "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig12.png": {
@@ -4985,14 +4283,6 @@
   "note": "MoE训练流程架构图，完整清晰，含标题及全部模块节点",
   "ts": "2026-08-24 21:17"
  },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig11.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含两个独立子图(a)(b)及各caption，应分别裁剪 [whitelisted: 仅(a)(b)子图，共属同一Figure，无多编号caption]",
-  "ts": "2026-08-24 21:17"
- },
  "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig12.png": {
   "ok": true,
   "issues": [],
@@ -5027,14 +4317,6 @@
   "ok": true,
   "issues": [],
   "note": "单张完整图，展示u-Batch合并策略，元素清晰可读",
-  "ts": "2026-08-24 21:17"
- },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig18.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "顶部混入论文标题页眉文字「Scalable Training of...」 [whitelisted: 所有文字均为图内子图标题与标注，无混入正文]",
   "ts": "2026-08-24 21:17"
  },
  "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig19.png": {
@@ -5103,15 +4385,6 @@
   "note": "单张完整图，展示三种量化粒度，清晰可读",
   "ts": "2026-08-24 21:17"
  },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig31.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "包含4个独立子图(a-d)各有caption，顶部混入论文页眉文字 [whitelisted: 单图4子面板(a)(b)(c)(d)，属合法多面板图]",
-  "ts": "2026-08-24 21:17"
- },
  "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig32.png": {
   "ok": true,
   "issues": [],
@@ -5130,26 +4403,10 @@
   "note": "单张完整图，含表格+流程图+图例，内容清晰可读",
   "ts": "2026-08-24 21:17"
  },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig36.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "顶部混入了论文页眉标题，属于多余文字 [whitelisted: 仅含子图标签(a)(b)，无混入正文]",
-  "ts": "2026-08-24 21:17"
- },
  "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig38.png": {
   "ok": true,
   "issues": [],
   "note": "三幅子图(a)(b)(c)构成一个完整的组合图，无截断、无重叠、文字清晰可读。",
-  "ts": "2026-08-24 21:17"
- },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig39.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含三个独立子图(a)(b)(c)，应拆分或属同一figure的子图需明确 [whitelisted: 单图含(a)(b)(c)三个子图，比较三种方法]",
   "ts": "2026-08-24 21:17"
  },
  "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig40.png": {
@@ -5230,24 +4487,6 @@
   "note": "表格完整，5列5行，清晰可读，无异常",
   "ts": "2026-08-24 21:17"
  },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab14.png": {
-  "ok": true,
-  "issues": [
-   "truncated",
-   "prose_only"
-  ],
-  "note": "仅含正文描述和Table 14标题，实际表格内容缺失 [whitelisted: 有表标题且含Symptom/Solutions结构化字段行]",
-  "ts": "2026-08-24 21:17"
- },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab15.png": {
-  "ok": true,
-  "issues": [
-   "truncated",
-   "prose_pollution"
-  ],
-  "note": "仅有Table 15的caption，表格内容缺失，且上方混入了Symptom/Solutions正文段落 [whitelisted: 多行内容为Table 15的完整caption，包含症状与解决方案说明]",
-  "ts": "2026-08-24 21:17"
- },
  "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab17.png": {
   "ok": true,
   "issues": [],
@@ -5276,22 +4515,6 @@
   "ok": true,
   "issues": [],
   "note": "完整架构图，含双流程管道与图例，清晰可读",
-  "ts": "2026-08-24 21:17"
- },
- "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig02.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含(a)(b)(c)(d)四个独立子图，各有独立caption，混入多元素 [whitelisted: 单图含(a)(b)(c)(d)四面板，属合法多子图]",
-  "ts": "2026-08-24 21:18"
- },
- "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig03.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "包含(a)和(b)两个独立子图，属于多元素 [whitelisted: 同一Figure的(a)(b)两子图，属合法单图]",
   "ts": "2026-08-24 21:17"
  },
  "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig04.png": {
@@ -5444,27 +4667,10 @@
   "note": "完整对比图，含GRPO/SAO流程图及Trust Region说明，整体清晰可读",
   "ts": "2026-08-24 21:18"
  },
- "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig03.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "顶部小表格与底部三子图折线图为两个独立元素 [whitelisted: 表格与三子图同属一个结果展示，无多编号caption]",
-  "ts": "2026-08-24 21:18"
- },
  "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig04.png": {
   "ok": true,
   "issues": [],
   "note": "三幅子图(a)(b)(c)完整清晰，属同一组合图，无异常",
-  "ts": "2026-08-24 21:18"
- },
- "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig05.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "truncated"
-  ],
-  "note": "含左右两张独立图表，各带caption，且caption底部被截断 [whitelisted: 仅一个Figure，含(a)(b)两个子图，属合法多面板]",
   "ts": "2026-08-24 21:18"
  },
  "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig06.png": {
@@ -5497,16 +4703,6 @@
   "note": "Table 5完整，包含caption与全部数据行，无异常",
   "ts": "2026-08-24 21:18"
  },
- "assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig01.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "multi_element",
-   "truncated"
-  ],
-  "note": "混入标题、作者、截断的摘要正文，右侧才是唯一的图 [whitelisted: 图为首页teaser图，无caption，文字均为标题/作者/摘要正文]",
-  "ts": "2026-08-24 21:18"
- },
  "assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig02.png": {
   "ok": true,
   "issues": [],
@@ -5517,14 +4713,6 @@
   "ok": true,
   "issues": [],
   "note": "两幅子图共享图例，结构完整清晰，无文本混入",
-  "ts": "2026-08-24 21:18"
- },
- "assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig04.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含两个独立子图(a)折线图和(b)堆叠条形图，应分别裁剪 [whitelisted: (a)(b)子图同属一个Figure，多面板合法]",
   "ts": "2026-08-24 21:18"
  },
  "assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig05.png": {
@@ -5653,15 +4841,6 @@
   "note": "表格完整，含caption，数据清晰可读",
   "ts": "2026-08-24 21:18"
  },
- "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab07.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "multi_element"
-  ],
-  "note": "含多段正文、两个公式及表格7，混合多个元素 [whitelisted: Table 7的完整caption，描述表格内容]",
-  "ts": "2026-08-24 21:18"
- },
  "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab08.png": {
   "ok": true,
   "issues": [],
@@ -5780,15 +4959,6 @@
   "ok": true,
   "issues": [],
   "note": "完整组合图，柱状+双折线，无caption但元素齐全可读",
-  "ts": "2026-08-24 21:18"
- },
- "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-fig04.png": {
-  "ok": true,
-  "issues": [
-   "truncated",
-   "multi_element"
-  ],
-  "note": "caption被截断，且包含左右两个独立图表 [whitelisted: 单Figure 5含左右两子图，仅1个编号caption]",
   "ts": "2026-08-24 21:18"
  },
  "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-fig05.png": {
@@ -6223,26 +5393,10 @@
   "note": "完整表格含caption，数据齐全可读",
   "ts": "2026-08-24 21:41"
  },
- "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig02.png": {
-  "ok": null,
-  "issues": [
-   "audit_error"
-  ],
-  "note": "Expecting ',' delimiter: line 1 column 53 (char 52)",
-  "ts": "2026-08-24 21:41"
- },
  "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig17.png": {
   "ok": true,
   "issues": [],
   "note": "完整roofline图，含标题、坐标轴、图例和caption，清晰可读",
-  "ts": "2026-08-24 21:41"
- },
- "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig03.png": {
-  "ok": null,
-  "issues": [
-   "audit_error"
-  ],
-  "note": "Expecting ',' delimiter: line 1 column 68 (char 67)",
   "ts": "2026-08-24 21:41"
  },
  "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab06.png": {
@@ -6303,14 +5457,6 @@
   "ok": true,
   "issues": [],
   "note": "完整的折线图，坐标轴、数据线和Figure 3 caption均完整清晰",
-  "ts": "2026-08-24 21:41"
- },
- "assets/crops/root-mean-square-layer-normalization-fig05.png": {
-  "ok": null,
-  "issues": [
-   "audit_error"
-  ],
-  "note": "Expecting ',' delimiter: line 1 column 66 (char 65)",
   "ts": "2026-08-24 21:41"
  },
  "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig01.png": {
@@ -6415,130 +5561,10 @@
   "note": "表格完整，包含caption、表头及全部数据行，无异常",
   "ts": "2026-08-24 21:53"
  },
- "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab04.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格下方混入正文片段'odels on Wikitext, LM1B, and AG News.' [whitelisted: Table 4 caption与表格完整呈现，无混入正文]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-fig01.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "图上方混入完整标题、作者及大段摘要正文 [whitelisted: 底部caption完整描述左右两幅图内容]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig16.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "truncated"
-  ],
-  "note": "含Figure15和Figure16两个完整图，底部还有第三个图的标题被截断 [whitelisted: 仅Figure 16一个编号，含左右两子图，合法单图]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab09.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "multi_element"
-  ],
-  "note": "表格下方混入大段正文段落（Comparison of differences 章节） [whitelisted: 多行文字是Table 9完整的caption，未混入正文]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab21.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "同时含Table 21表格和Algorithm 1伪代码块，两个独立元素 [whitelisted: 仅有Table 21一个编号，属合法单图]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab05.png": {
-  "ok": true,
-  "issues": [
-   "truncated",
-   "prose_only"
-  ],
-  "note": "仅含Table 5的caption文字，表本体数据完全缺失 [whitelisted: 标准表格结构，含多列并发数与数值数据]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab07.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格完整，但下方混入大段正文段落及下一节标题 [whitelisted: 多行文字均为Table 7的完整caption说明]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig04.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "包含图3和图4两个独立图，中间混有大段正文及章节标题 [whitelisted: 单一Figure 4，含EAGLE/EAGLE-2两个子图对比]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig06.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution",
-   "truncated"
-  ],
-  "note": "同时包含子图(b)与Figure 6两个独立图，左下混入被截断的正文段落，顶部标题行也被切掉 [whitelisted: 仅含Figure 6一个编号的单一图表，无混入其他元素]",
-  "ts": "2026-08-24 21:53"
- },
  "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig07.png": {
   "ok": true,
   "issues": [],
   "note": "完整柱状图，含图例、轴标签、数据标注及Figure 7 caption，无异常。",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig08.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "图8下方混入多段正文段落（rates a single sequence…） [whitelisted: 仅含Figure 8的简洁单行caption]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig13.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "含Figure12(6子图)、Figure13(2柱状图)及右侧正文段落，多元素混杂 [whitelisted: 单Figure 13含(a)(b)两子图，合法多面板]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab04.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "multi_element"
-  ],
-  "note": "表格上下均混入正文段落及4.4小节标题，裁剪范围过大 [whitelisted: 表格及其多行caption完整对应，无正文混入]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab05.png": {
-  "ok": true,
-  "issues": [
-   "prose_only"
-  ],
-  "note": "仅含Table 5的caption和正文段落，未裁到表格本身 [whitelisted: 含表头、数据行、框线及说明文字的完整表格]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab06.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "含Table 6但混入了大量正文段落、双栏文本及章节标题 [whitelisted: 完整的多行表格caption，含方法说明与符号注释]",
   "ts": "2026-08-24 21:53"
  },
  "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab08.png": {
@@ -6547,37 +5573,11 @@
   "note": "完整表格，含caption，内容清晰可读",
   "ts": "2026-08-24 21:53"
  },
- "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig13.png": {
-  "ok": true,
-  "issues": [
-   "truncated",
-   "multi_element"
-  ],
-  "note": "左侧子图(a)被裁切，caption起首为ure，含Figure 12与13两图 [whitelisted: 单一Figure 13含(a)(b)(c)三个子图]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig01.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "multi_element"
-  ],
-  "note": "裁剪了整页上半部含大段摘要正文与多元素（标题/导航/正文），仅底部图相关 [whitelisted: 单一图注，仅一行标题，无混入正文。]",
-  "ts": "2026-08-24 21:53"
- },
  "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig08.png": {
   "ok": true,
   "issues": [],
   "note": "完整柱状图含Figure 8 caption，清晰可读，无问题",
   "ts": "2026-08-24 21:53"
- },
- "assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig09.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "图表上下均混入正文段落，上为截断正文行，下为额外段落 [whitelisted: 单条完整的Figure 9 caption，无混入其他文本]",
-  "ts": "2026-08-24 21:54"
  },
  "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig01.png": {
   "ok": true,
@@ -6603,89 +5603,10 @@
   "note": "完整折线图含图例、坐标轴及Figure 6 caption，无异常",
   "ts": "2026-08-24 21:54"
  },
- "assets/crops/muon-is-scalable-for-llm-training-tab02.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "含表格和图表两个独立元素 [whitelisted: 仅含1个Table 2编号，是单一表格]",
-  "ts": "2026-08-24 21:53"
- },
- "assets/crops/muon-is-scalable-for-llm-training-tab08.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "multi_element"
-  ],
-  "note": "表格完整，但下方混入章节标题和多段正文，属于多元素裁剪 [whitelisted: 表标题与表内脚注完整，属合法]",
-  "ts": "2026-08-24 21:54"
- },
  "assets/crops/qwen2-5-vl-technical-report-tab02.png": {
   "ok": true,
   "issues": [],
   "note": "表格完整，含表头、数据行和caption，清晰可读",
-  "ts": "2026-08-24 21:54"
- },
- "assets/crops/root-mean-square-layer-normalization-tab03.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "truncated"
-  ],
-  "note": "含Figure3和Table3两个独立元素，且两表底部数据行均被截断 [whitelisted: 仅含Table 3一个编号，内容为单表格]",
-  "ts": "2026-08-24 21:54"
- },
- "assets/crops/root-mean-square-layer-normalization-tab09.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "含Table7、图表(Table9)及Table10三个独立元素，底部混入正文段落 [whitelisted: 仅一个Table 9编号，单图多曲线对比]",
-  "ts": "2026-08-24 21:54"
- },
- "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig08.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "右侧边缘混入相邻列的截断字符/文字片段 [whitelisted: Figure 8 caption完整描述该图内容，无混入正文]",
-  "ts": "2026-08-24 21:54"
- },
- "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-tab02.png": {
-  "ok": true,
-  "issues": [
-   "truncated",
-   "prose_pollution"
-  ],
-  "note": "表头行被截断，caption后混入正文段落 [whitelisted: 多行文字均为Table 2的完整caption解释]",
-  "ts": "2026-08-24 21:54"
- },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq01.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "含代码框、表格及上下两段正文，多元素混合 [whitelisted: 仅含Table 1一个编号，是合法单表]",
-  "ts": "2026-08-24 21:54"
- },
- "assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig01.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution",
-   "truncated",
-   "multi_element"
-  ],
-  "note": "含标题/作者/正文多元素，图表被淹没在大量正文中 [whitelisted: 图1完整多行caption，解释子图及实验设置]",
-  "ts": "2026-08-24 21:54"
- },
- "assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab03.png": {
-  "ok": true,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格上方混入大量正文段落和问句，仅表格本身干净 [whitelisted: 表格及其完整caption，无混入正文]",
   "ts": "2026-08-24 21:54"
  },
  "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig03.png": {
@@ -6694,66 +5615,16 @@
   "note": "完整的注意力掩码图，含网格、图例和Figure 3标题，清晰可读",
   "ts": "2026-08-24 23:33"
  },
- "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab05.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "truncated"
-  ],
-  "note": "上方Table 5 caption讲14任务accuracy，但图是Tokens/s折线图，内容不匹配且表格本体缺失 [whitelisted: 仅Table 5一个caption，含多数据系列单图]",
-  "ts": "2026-08-24 23:33"
- },
- "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab01.png": {
-  "ok": true,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "同时包含Table 1和一张柱状图，属于两个独立元素 [whitelisted: 仅有一个Table 1编号caption，柱状图是其数据可视化]",
-  "ts": "2026-08-24 23:34"
- },
- "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab06.png": {
-  "ok": false,
-  "issues": [
-   "mojibake"
-  ],
-  "note": "公式列与备注列大量希腊字母/数学符号显示为豆腐块",
-  "ts": "2026-08-24 23:59"
- },
  "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab13.png": {
   "ok": true,
   "issues": [],
   "note": "表格完整，包含表头与多行benchmark数据，文字清晰可读",
   "ts": "2026-08-24 23:59"
  },
- "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab02.png": {
-  "ok": false,
-  "issues": [
-   "mojibake"
-  ],
-  "note": "表头区间前的方框为缺失字形的乱码符号",
-  "ts": "2026-08-24 23:59"
- },
- "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab02.png": {
-  "ok": true,
-  "issues": [
-   "truncated",
-   "prose_pollution"
-  ],
-  "note": "表格内响应内容以省略号截断，且混入大量散文推理过程 [whitelisted: 这是展示问答示例的表格内容，非混合正文]",
-  "ts": "2026-08-24 23:59"
- },
  "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab28.png": {
   "ok": true,
   "issues": [],
   "note": "表格结构完整，含PROMPT与Evaluation两部分，内容清晰可读",
-  "ts": "2026-08-24 23:59"
- },
- "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab10.png": {
-  "ok": false,
-  "issues": [
-   "mojibake"
-  ],
-  "note": "Kernel Fusion行含□□T乱码符号",
   "ts": "2026-08-24 23:59"
  },
  "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig02.png": {
@@ -6780,170 +5651,11 @@
   "note": "完整清晰的重写模型流程图，含split、rewrite、concat等节点，无问题",
   "ts": "2026-08-24 23:59"
  },
- "assets/crops/kimi-vl-technical-report-fig08.png": {
-  "ok": true,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "非论文图截取，是AI教学界面截图，含题目图与完整解答正文，属多元素混入 [whitelisted: 仅含单个圆几何图，无多编号caption]",
-  "ts": "2026-08-24 23:59"
- },
- "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig02.png": {
-  "ok": false,
-  "issues": [
-   "overlap",
-   "mojibake"
-  ],
-  "note": "多处字母标签与中文/符号重叠，正文及标签出现乱码字符 [confirmed: 多处特殊符号渲染为豆腐块乱码，重叠无法辨认]",
-  "ts": "2026-08-25 00:01"
- },
- "assets/crops/kimi-vl-technical-report-fig09.png": {
-  "ok": true,
-  "issues": [
-   "mojibake",
-   "prose_pollution"
-  ],
-  "note": "所有面板文字均为乱码不可读，顶部混入页眉报告标题 [whitelisted: Figure 9的完整caption，描述OCR可视化内容]",
-  "ts": "2026-08-25 00:01"
- },
  "assets/crops/hc-manifold-constrained-hyper-connections-tab01.png": {
   "ok": true,
   "issues": [],
   "note": "表格完整，含caption、表头及全部数据行，无乱码或截断",
   "ts": "2026-08-25 00:02"
- },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig05.png": {
-  "ok": null,
-  "issues": [
-   "audit_error"
-  ],
-  "note": "[MiniMax-M3] empty content (reasoning ate the budget? usage={'total_tokens': 1637, 'total_characters': 0, 'prompt_tokens",
-  "ts": "2026-08-25 00:03"
- },
- "assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab06.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格下方混入正文段落\"e results demonstrate that AReaL...\"",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab06.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "仅显示表头，无数据行，表格内容被截断",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab03.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "仅有表格caption文字，表格数据行缺失",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig10.png": {
-  "ok": false,
-  "issues": [
-   "multi_element",
-   "prose_pollution"
-  ],
-  "note": "同时包含表格(Table 1)、图表(Figure 10)、公式及正文段落，多元素混杂",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-tab03.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "Dragonfly行数据被截断，表格底部不完整",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/hyper-connections-tab08.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution",
-   "multi_element"
-  ],
-  "note": "表格下方混入大段Memory Footprint正文段落",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab05.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格下方混入一段正文段落",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/kimi-k2-open-agentic-intelligence-tab03.png": {
-  "ok": false,
-  "issues": [
-   "truncated",
-   "overlap"
-  ],
-  "note": "表格底部General Tasks数据被截断；Terminal Bench行文字与数字重叠",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/kimi-k2-open-agentic-intelligence-tab05.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格下方混入正文段落\"anual Review We incorporated human review...\"",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab04.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格上方混入一行正文段落碎片",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/root-mean-square-layer-normalization-tab08.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格上方混入多行正文段落",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig37.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution",
-   "truncated"
-  ],
-  "note": "大半区域为正文段落，底部图表被截断，仅露出部分色块",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab13.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "表格下方混入Communication Bottleneck正文段落",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig08.png": {
-  "ok": false,
-  "issues": [
-   "prose_pollution"
-  ],
-  "note": "图表下方混入了完整正文段落",
-  "ts": "2026-08-25 00:04"
- },
- "assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig08.png": {
-  "ok": false,
-  "issues": [
-   "multi_element"
-  ],
-  "note": "同时包含 Figure 7 和 Figure 8 两个独立图表及其各自 caption",
-  "ts": "2026-08-25 00:05"
  },
  "assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig01.png": {
   "ok": true,
@@ -6951,63 +5663,788 @@
   "note": "完整Figure 1，含三面板图与对应caption，清晰无重叠",
   "ts": "2026-08-25 00:05"
  },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab10.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整流程图，含caption，清晰可读",
+  "ts": "2026-08-25 00:06"
+ },
+ "assets/crops/qwen2-5-vl-technical-report-fig01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Qwen2.5-VL整体架构图完整清晰，无截断或污染",
+  "ts": "2026-08-25 00:26"
+ },
+ "assets/crops/ascend-950-npu-architecture-whitepaper-fig420.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整架构示意图，含caption，元素清晰可读",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/ascend-950-npu-architecture-whitepaper-tab401.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表4-1完整清晰，含caption、表头和全部数据行，无问题",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-fig01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "左右两幅子图为同一数据的不同尺度视图，构成完整单一figure",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig11.png": {
+  "ok": true,
+  "issues": [],
+  "note": "左右两个子图组成一张完整figure，线条清晰无截断",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab04.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，标题、列头、数据行齐全，无重叠或乱码",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig03.png": {
+  "ok": true,
+  "issues": [],
+  "note": "两个子图组成的完整figure，内容清晰可读",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab22.png": {
+  "ok": true,
+  "issues": [],
+  "note": "包含PROMPT和Evaluation两行的完整表格，内容清晰可读",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab23.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整表格，含PROMPT和Evaluation两行，内容清晰可读",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig04.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单张复合定性结果图，含子图与对比文本，整体完整可读",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig16.png": {
+  "ok": true,
+  "issues": [],
+  "note": "双子图完整，含标题、坐标轴、图例和caption，无问题",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab09.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表9及其caption完整展示，表格行列齐全，文字清晰无重叠",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab21.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，含caption、表头、数据行及加速比汇总行，无异常",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab07.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，含caption、表头及数据行，无异常",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig04.png": {
+  "ok": true,
+  "issues": [],
+  "note": "图为EAGLE与EAGLE-2对比示意图，含完整图体与图注，清晰可读",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig06.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整校准图含caption，无问题",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig08.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 8 平行采样示例图，含 Logical/Physical KV blocks 及 caption，完整清晰",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig13.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 13 含两个子图(a)(b)及完整caption，干净可读",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig04.png": {
+  "ok": true,
+  "issues": [],
+  "note": "系统架构图完整，含Scheduler、三个Instance及连接关系，caption清晰",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab04.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，含caption，文字清晰可读，无异常。",
+  "ts": "2026-08-25 00:28"
+ },
+ "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，含表头、数据行及caption，文字清晰无重叠",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab06.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整表格含表头、数据行及caption，无污染或截断",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-eq01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整清晰的算法伪代码，包含标题、输入输出及全部12步",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig11.png": {
+  "ok": true,
+  "issues": [],
+  "note": "两个子图(a)ROFT和(b)ZCube并列展示，结构完整，可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig14.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整散点图，含标题、坐标轴、色条及标注，无问题",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-fig20.png": {
+  "ok": true,
+  "issues": [],
+  "note": "两个CDF子图，标题、坐标轴、图例、曲线均完整清晰",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig03.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单个组合图含两个子图(3D Biped和3D Quadruped)，完整可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig11.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 11 复合图，含两个子图(a)(b)及共享总标题，格式规范完整",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单一完整图，含代码片段与子图(a)(b)，内容连贯可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig07.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整清晰的系统工作流图，含图例与5个标注步骤",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/hyper-connections-fig08.png": {
+  "ok": true,
+  "issues": [],
+  "note": "两个子图并排对比Transformer架构变体，完整可读，属同一图的对称比较图。",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig02.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单个figure含(a)(b)两子图，结构完整，文字清晰无乱码",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/kimi-k2-open-agentic-intelligence-fig06.png": {
+  "ok": true,
+  "issues": [],
+  "note": "双面板图，左FLOPs右Tokens，共享图例，结构完整可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/kimi-k3-open-frontier-intelligence-fig15.png": {
+  "ok": true,
+  "issues": [],
+  "note": "2×2子图组合图，四个子图及子标题完整清晰，属单一图元素",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整Figure 1，含架构图与性能子图，caption清晰",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig06.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整的数据流程图，含Code Centric与Agentic两大模块，布局清晰无问题",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig10.png": {
+  "ok": true,
+  "issues": [],
+  "note": "三幅子图组成一个完整复合图，标题、坐标轴、图例均清晰可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig02.png": {
+  "ok": true,
+  "issues": [],
+  "note": "图2完整，含树结构图+注意力矩阵+caption",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig09.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整柱状图含caption，数据清晰可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig03.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 3含(a)MLP与(b)Self-Attention两个子图，均完整，配有caption，清晰可读。",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig07.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单一组合图，含子图(a)(b)架构示意及损失曲线，完整可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/muon-is-scalable-for-llm-training-fig01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "标准双面板图(a)(b)，内容完整清晰可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/muon-is-scalable-for-llm-training-fig08.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整散点图，含数据点和性能前沿线，清晰可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/muon-is-scalable-for-llm-training-tab02.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，包含标题、5行数据及脚注，清晰可读",
+  "ts": "2026-08-25 00:29"
+ },
+ "assets/crops/qwen2-5-vl-technical-report-tab01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，含ViT、Merger、LLM三部分配置及caption",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig11.png": {
+  "ok": true,
+  "issues": [],
+  "note": "含(a)(b)两个子图同属一张图，结构完整、清晰可读",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig36.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整图含(a)(b)子图及caption，顶部为页眉标题线，可接受",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig39.png": {
+  "ok": true,
+  "issues": [],
+  "note": "三栏对比图，结构完整、文本清晰，属单一组合图",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab14.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格内容完整，含表标题和caption，行可读",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab15.png": {
+  "ok": true,
+  "issues": [],
+  "note": "文本式表格内容完整，含Symptom/Solutions字段及Table 15 caption",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig02.png": {
+  "ok": true,
+  "issues": [],
+  "note": "四个子图构成单一组合图，各子图完整含坐标轴、图例、标题和子caption",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig03.png": {
+  "ok": true,
+  "issues": [],
+  "note": "两子图(a)(b)完整清晰，轴标签、图例、caption齐全",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig04.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单图含两个子图(a)(b)，完整可读，无异常",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "含两个子图(a)(b)及完整Figure 1说明，属于同一图的子图组合，合格。",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-tab03.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整可读，含caption，标题左侧略裁但不影阅读",
+  "ts": "2026-08-25 00:30"
+ },
+ "assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig06.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 6 含子图(a)(b)及主caption，属标准带子图的单一图元素",
+  "ts": "2026-08-25 00:32"
+ },
+ "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab02.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，含表头和三行数据，结构清晰无异常",
+  "ts": "2026-08-25 00:32"
+ },
+ "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab02.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格含caption、表头与4行数据，完整干净可读",
+  "ts": "2026-08-25 00:32"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab04.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整的提示词模板框，含B.2标题，文字清晰可读",
+  "ts": "2026-08-25 00:32"
+ },
+ "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表格完整，含caption、表头及三组数据行，清晰可读",
+  "ts": "2026-08-25 00:32"
+ },
  "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "条形图完整，含图例、数据标签及坐标轴，Figure 1 caption 较长但属该图自有说明",
+  "ts": "2026-08-25 00:32"
+ },
+ "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 5含子图(a)(b)及完整caption，结构完整可读",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig07.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整图+caption，注意力掩码表格清晰可读",
+  "ts": "2026-08-25 00:32"
+ },
+ "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单张完整图含caption，图示和说明文字均清晰可读",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig09.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单一完整的beam search示意图，含Figure 9 caption，清晰可读",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig02.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 2含caption及3D Biped/Quadruped两个子图，内容完整可读",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig20.png": {
+  "ok": true,
+  "issues": [],
+  "note": "图含饼图+关联表格，完整可读，caption较长但属图注",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/hyper-connections-fig05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整Figure 5，含两个子图及caption，清晰可读",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab07.png": {
+  "ok": true,
+  "issues": [],
+  "note": "表7完整，含caption、表头及Causal/Diffusion两行数据",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png": {
+  "ok": null,
+  "issues": [
+   "audit_error"
+  ],
+  "note": "Expecting ',' delimiter: line 1 column 59 (char 58)",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig17.png": {
+  "ok": true,
+  "issues": [],
+  "note": "单个组合图Figure 17，含15张子图截图(a-o)及统一caption，格式规范",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig09.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整的Roofline图，含标题、坐标轴、图例、注释和Figure 9 caption",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "图表完整，含legend、数据条和caption，无异常",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 5 含两个子图(a)(b)及完整caption，属单一图的标准subfigure布局",
+  "ts": "2026-08-25 00:33"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig18.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整Figure 18，三子图对比EP overlap策略，附caption，清晰可读",
+  "ts": "2026-08-25 00:34"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig31.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 31 含四个子图(a-d)及统一caption，完整可读",
+  "ts": "2026-08-25 00:34"
+ },
+ "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig05.png": {
+  "ok": true,
+  "issues": [],
+  "note": "图5含两个子图(a)(b)及完整caption，属于单个复合图，裁剪干净完整",
+  "ts": "2026-08-25 00:34"
+ },
+ "assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig01.png": {
+  "ok": true,
+  "issues": [],
+  "note": "完整图表含坐标轴、数据、图例及Figure 1 caption",
+  "ts": "2026-08-25 00:34"
+ },
+ "assets/crops/a-survey-of-large-language-models-fig19.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "内容为对话问答示例的纯散文，非图/表/公式元素",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab06.png": {
+  "ok": false,
+  "issues": [
+   "mojibake"
+  ],
+  "note": "公式列大量数学符号渲染为方框，字体缺失",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab06.png": {
   "ok": false,
   "issues": [
    "prose_pollution"
   ],
-  "note": "图表下方混入大段正文段落，caption过长已超出图注范畴",
-  "ts": "2026-08-25 00:05"
+  "note": "表格下方混入正文段落残句",
+  "ts": "2026-08-25 00:35"
  },
- "assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig07.png": {
+ "assets/crops/ascend-950-npu-architecture-whitepaper-fig421.png": {
+  "ok": false,
+  "issues": [
+   "truncated",
+   "overlap"
+  ],
+  "note": "顶部连线被截断；中间行ETH标记与交换机框文字重叠",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/ascend-950-npu-architecture-whitepaper-tab101.png": {
   "ok": false,
   "issues": [
    "truncated"
   ],
-  "note": "仅含Flatten和Attention mask部分，原图EAGLE-2树结构(橙绿蓝色块)缺失",
-  "ts": "2026-08-25 00:05"
+  "note": "表格底部DVPP行内容被截断，缺少表标题且最后一行文字延伸至边缘",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/ascend-950-npu-architecture-whitepaper-tab301.png": {
+  "ok": false,
+  "issues": [
+   "truncated"
+  ],
+  "note": "表格底部被截断，最后一行缺少下边框，显示不完整",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig04.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "整页仅为Python代码块，非论文图/表/公式元素",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig05.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "内容为Python代码片段，非图/表/公式元素",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-tab06.png": {
+  "ok": false,
+  "issues": [
+   "truncated"
+  ],
+  "note": "表仅有caption和表头，数据行被截断缺失",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig08.png": {
+  "ok": false,
+  "issues": [
+   "multi_element"
+  ],
+  "note": "包含Figure 7和Figure 8两个独立图，应分别裁剪",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig08.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "内容是Python源代码，不是论文中的图/表/公式元素",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig10.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "这是Python代码片段，非图/表/公式，属于假裁剪",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig11.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "内容为Python源代码，非图/表/公式元素",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig13.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "内容是Python代码片段，非论文中的图/表/公式元素",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig16.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "实际为C++源码片段，非图/表/公式，属假裁剪",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig17.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "代码片段非图/表/公式，属正文文本被误裁",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab01.png": {
+  "ok": false,
+  "issues": [
+   "mojibake"
+  ],
+  "note": "表格内多处特殊token显示为豆腐块/方框",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab02.png": {
+  "ok": false,
+  "issues": [
+   "mojibake",
+   "overlap"
+  ],
+  "note": "数学公式乱码且与正文多处重叠重叠，公式内容不可读",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab26.png": {
+  "ok": false,
+  "issues": [
+   "overlap"
+  ],
+  "note": "表格内复选框符号与文字标签重叠错位，如'APsystem'、'4$'处明显压字",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-fig01.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "图上方混入大段摘要正文，属假裁剪",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-fig05.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "图下方混入正文段落和脚注，裁剪边界超出caption",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab10.png": {
+  "ok": false,
+  "issues": [
+   "mojibake"
+  ],
+  "note": "Kernel Fusion行Goal列出现豆腐方块乱码（□□T）",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig01.png": {
+  "ok": false,
+  "issues": [
+   "mojibake",
+   "multi_element",
+   "overlap"
+  ],
+  "note": "文字大量乱码豆腐块，含三个子图(a)(b)(c)，部分文字重叠",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig02.png": {
+  "ok": false,
+  "issues": [
+   "mojibake",
+   "overlap"
+  ],
+  "note": "多处乱码字符（EEh、帧），Speedup数值被压字",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig03.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "底部混入正文段落「P. Left: We sweep...」与Figure 3 caption重叠",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab03.png": {
+  "ok": false,
+  "issues": [
+   "truncated"
+  ],
+  "note": "仅有Table 3的caption文字，缺少表格主体数据",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig01.png": {
+  "ok": false,
+  "issues": [
+   "multi_element"
+  ],
+  "note": "标题、作者、单位等论文头信息与柱状图拼接，非单一图元素",
+  "ts": "2026-08-25 00:35"
  },
  "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig03.png": {
   "ok": false,
   "issues": [
-   "multi_element",
-   "prose_pollution"
+   "multi_element"
   ],
-  "note": "同时包含Figure 2和Figure 3两幅图，顶部还混入了标题残片",
-  "ts": "2026-08-25 00:05"
- },
- "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig05.png": {
-  "ok": false,
-  "issues": [
-   "truncated"
-  ],
-  "note": "图顶部Medusa和EAGLE标签被截断，缺少上半部分结构",
-  "ts": "2026-08-25 00:05"
+  "note": "含图2柱状图和图3特征序列图两个独立元素",
+  "ts": "2026-08-25 00:35"
  },
  "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig06.png": {
   "ok": false,
   "issues": [
    "multi_element",
-   "prose_pollution"
+   "prose_pollution",
+   "truncated"
   ],
-  "note": "同时含Figure 5和Figure 6两幅独立图，且混入第3.1节正文段落及论文页眉",
-  "ts": "2026-08-25 00:05"
+  "note": "含两个图(Fig5+Fig6)、各自caption，以及3.1节大段正文，底部正文被截断",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig02.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "truncated"
+  ],
+  "note": "上方为完整的Figure 2，下方混入另一个流水调度图的开头部分且被截断",
+  "ts": "2026-08-25 00:35"
  },
  "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig03.png": {
   "ok": false,
   "issues": [
    "multi_element"
   ],
-  "note": "包含Figure 2和Figure 3两个独立完整图，各自带caption",
-  "ts": "2026-08-25 00:05"
+  "note": "包含Figure 2和Figure 3两个独立图元素",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig05.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "图下方混入大段正文段落，约6行散文文字",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig10.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "prose_pollution",
+   "truncated"
+  ],
+  "note": "同时含表格1、正文段落、公式及图10，多元素混杂且左侧正文被裁切",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab01.png": {
+  "ok": false,
+  "issues": [
+   "truncated"
+  ],
+  "note": "表格数据行完整但缺少表头行，列名不可见",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig01.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution",
+   "multi_element"
+  ],
+  "note": "图后混入Introduction标题及整段正文",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-tab03.png": {
+  "ok": false,
+  "issues": [
+   "truncated"
+  ],
+  "note": "表格底部被截断，仅显示3行数据，缺少其余GPU Scale对应的完整行",
+  "ts": "2026-08-25 00:35"
  },
  "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab02.png": {
   "ok": false,
   "issues": [
    "truncated"
   ],
-  "note": "仅有表标题，表格主体数据完全缺失",
-  "ts": "2026-08-25 00:05"
+  "note": "仅含表格标题行，缺少表头和数据内容",
+  "ts": "2026-08-25 00:35"
  },
  "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab03.png": {
   "ok": false,
@@ -7015,16 +6452,43 @@
    "multi_element",
    "truncated"
   ],
-  "note": "含多个架构图+截断的Figure1标题+完整Table3，多元素混合",
-  "ts": "2026-08-25 00:05"
+  "note": "同时包含Figure 1架构图及其caption和Table 3及其caption，且Figure 1 caption左右两端被截断",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab05.png": {
+  "ok": false,
+  "issues": [
+   "truncated"
+  ],
+  "note": "图表底部及x轴标签被截断，仅显示上半部分",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig12.png": {
+  "ok": false,
+  "issues": [
+   "truncated",
+   "multi_element"
+  ],
+  "note": "(a)(b)图缺失仅剩标签，底部混入下一图起始部分",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig13.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "truncated"
+  ],
+  "note": "含Figure 12和Figure 13两个图，且每个图只显示子图(c)，(a)(b)被截断",
+  "ts": "2026-08-25 00:35"
  },
  "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig05.png": {
   "ok": false,
   "issues": [
-   "multi_element"
+   "multi_element",
+   "prose_pollution"
   ],
-  "note": "含图4柱状图+图5折线图两个独立图及其中间正文段落",
-  "ts": "2026-08-25 00:05"
+  "note": "含Figure4柱状图与Figure5折线图两图，且图间混入正文散文",
+  "ts": "2026-08-25 00:35"
  },
  "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig01.png": {
   "ok": false,
@@ -7032,8 +6496,8 @@
    "multi_element",
    "truncated"
   ],
-  "note": "左侧Figure1与右侧另一图的(a)部分拼接，右侧图底部被截断",
-  "ts": "2026-08-25 00:06"
+  "note": "含Figure1完整图及caption，但右侧Figure2被截断，混入两个独立图元素",
+  "ts": "2026-08-25 00:35"
  },
  "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig02.png": {
   "ok": false,
@@ -7041,24 +6505,232 @@
    "multi_element",
    "prose_pollution"
   ],
-  "note": "含Figure1和Figure2两图，并混入正文段落及章节标题",
-  "ts": "2026-08-25 00:06"
+  "note": "含Figure1和Figure2两张独立图，且混入正文段落与章节标题",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig12.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution",
+   "multi_element"
+  ],
+  "note": "包含Figure12和Figure13两张图，且下方混入大段正文段落",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig13.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "prose_pollution",
+   "truncated"
+  ],
+  "note": "含Figure12子图(b)34B与Figure13两个独立图，且混入大段正文段落",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig16.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "prose_pollution",
+   "truncated"
+  ],
+  "note": "含图14三子图、图16、及左侧截断正文与8.5节段落，多元素混杂",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/hyper-connections-tab08.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "表格下方混入大段Memory Footprint正文段落",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab05.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "表格下方混入完整正文段落，未做干净裁剪",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png": {
+  "ok": false,
+  "issues": [
+   "blank",
+   "truncated"
+  ],
+  "note": "图内容缺失，仅剩Figure 4 caption，实际图表被裁掉",
+  "ts": "2026-08-25 00:35"
+ },
+ "assets/crops/kimi-k2-open-agentic-intelligence-fig01.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "图下方混入URL链接及大段正文段落",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-k2-open-agentic-intelligence-tab03.png": {
+  "ok": false,
+  "issues": [
+   "truncated",
+   "overlap"
+  ],
+  "note": "底部General Tasks数据行被截断；benchmark列多行文字重叠（如Pass@1)与S重叠）",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-k2-open-agentic-intelligence-tab05.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "表格下方混入正文段落且被左侧裁断",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-k3-open-frontier-intelligence-fig13.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "图下方混入一段完整正文段落",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-vl-technical-report-fig02.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 2 完整，含多组柱状图与 caption，无截断或乱码",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-vl-technical-report-fig03.png": {
+  "ok": false,
+  "issues": [
+   "mojibake",
+   "prose_pollution"
+  ],
+  "note": "全图大量方框乱码（字体缺失），顶部和中部混入正文碎片",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-vl-technical-report-fig06.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "纯文本内容，无图/表/公式元素，是AI对话的指令与回复",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-vl-technical-report-fig07.png": {
+  "ok": true,
+  "issues": [],
+  "note": "图7含三组指令-响应示例及完整caption，内容完整可读",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-vl-technical-report-fig08.png": {
+  "ok": false,
+  "issues": [
+   "mojibake",
+   "overlap"
+  ],
+  "note": "文字严重乱码如,QWXFV8Q、5HVSRQH，几何图形标签不可读",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-vl-technical-report-fig09.png": {
+  "ok": false,
+  "issues": [
+   "mojibake",
+   "prose_pollution",
+   "blank"
+  ],
+  "note": "顶部混入页眉文字，五个子图中三个几乎全空，文本乱码不可读",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/kimi-vl-technical-report-fig12.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "仅含Instruction和Response文本框，无图/表/公式元素",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig14.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "图14完整但下方混入大段正文段落",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-fig18.png": {
+  "ok": true,
+  "issues": [],
+  "note": "Figure 18含15个子图(a-o)展示各模型太阳系建模截图，含统一caption，完整可读",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig04.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "truncated"
+  ],
+  "note": "含Table2、Figure4、Figure5、Table3及另一被截断的表格，多元素混合",
+  "ts": "2026-08-25 00:36"
  },
  "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab01.png": {
   "ok": false,
   "issues": [
    "truncated"
   ],
-  "note": "图完整，但底部caption文字被截断，未显示完整",
-  "ts": "2026-08-25 00:05"
+  "note": "图注被截断，仅显示一半内容，末尾省略号处已到图片边缘",
+  "ts": "2026-08-25 00:36"
  },
  "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab02.png": {
   "ok": false,
   "issues": [
    "truncated"
   ],
-  "note": "Figure caption被截断在\"mul-\"处，文字不完整",
-  "ts": "2026-08-25 00:05"
+  "note": "图片本身完整，但底部caption被截断（仅显示前半句）",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab04.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution",
+   "multi_element"
+  ],
+  "note": "顶部混入了正文段落文本，下方才是完整表格",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab01.png": {
+  "ok": false,
+  "issues": [
+   "multi_element"
+  ],
+  "note": "包含完整表格Table 1及下方独立的柱状图两个元素",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig10.png": {
+  "ok": false,
+  "issues": [
+   "mojibake",
+   "multi_element"
+  ],
+  "note": "所有文字标签为乱码符号，且含(a)(b)两个独立子图",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/muon-is-scalable-for-llm-training-fig06.png": {
+  "ok": false,
+  "issues": [
+   "prose_only"
+  ],
+  "note": "内容为Python代码，不是图/表/公式元素",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/muon-is-scalable-for-llm-training-tab08.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "表格下方混入节标题与正文段落，左侧文本被裁切",
+  "ts": "2026-08-25 00:36"
  },
  "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig05.png": {
   "ok": false,
@@ -7066,30 +6738,176 @@
    "multi_element",
    "prose_pollution"
   ],
-  "note": "同一裁剪包含图4流水线、图5曲线图及中间大量正文段落",
-  "ts": "2026-08-25 00:06"
+  "note": "含Figure4管线图+中间散文段落+Figure5图表，混入多个独立元素",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig07.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "prose_pollution"
+  ],
+  "note": "包含Figure 6和Figure 7两个独立图，且混入正文段落和Section 5标题",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/qwen3-vl-technical-report-fig01.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution",
+   "mojibake",
+   "overlap"
+  ],
+  "note": "顶部混入正文片段\"and videos here.\"等；Picture 2尺寸标注乱码；时间戳文字与token条重叠",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/root-mean-square-layer-normalization-fig05.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution",
+   "truncated"
+  ],
+  "note": "顶部混入正文残留文字\"attentive reader model\"，caption被截断",
+  "ts": "2026-08-25 00:36"
  },
  "assets/crops/root-mean-square-layer-normalization-fig06.png": {
   "ok": false,
   "issues": [
-   "prose_pollution",
-   "multi_element"
+   "multi_element",
+   "prose_pollution"
   ],
-  "note": "顶部残留正文碎句，混入图6、表格8及大段正文段落",
-  "ts": "2026-08-25 00:06"
+  "note": "含Figure 6三个子图、大段正文及Table 8，非单一元素裁剪",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/root-mean-square-layer-normalization-tab03.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "truncated"
+  ],
+  "note": "左右并列两个独立表格(Table3与Figure3表)，且底部行被截断",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/root-mean-square-layer-normalization-tab08.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "表格上方混入多行正文段落",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/root-mean-square-layer-normalization-tab09.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "prose_pollution"
+  ],
+  "note": "含Table 7、训练误差图、Table 10及底部正文段落，多元素混杂",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig04.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "图下方混入正文段落，左侧混入邻栏文本碎片",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig08.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "右侧边缘混入相邻正文列的截断字符",
+  "ts": "2026-08-25 00:36"
  },
  "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig10.png": {
   "ok": false,
   "issues": [
    "multi_element"
   ],
-  "note": "含Figure 9和Figure 10两个独立图，违规",
-  "ts": "2026-08-25 00:06"
+  "note": "包含Figure 9和Figure 10两个独立图，均完整但合并在一起",
+  "ts": "2026-08-25 00:36"
  },
- "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab10.png": {
+ "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig11.png": {
   "ok": true,
   "issues": [],
-  "note": "完整流程图，含caption，清晰可读",
-  "ts": "2026-08-25 00:06"
+  "note": "Figure 11含两个子图(a)(b)及完整caption，内容完整清晰",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-tab02.png": {
+  "ok": false,
+  "issues": [
+   "truncated"
+  ],
+  "note": "表格顶部列标题被裁切，仅显示部分表头",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq01.png": {
+  "ok": false,
+  "issues": [
+   "multi_element",
+   "prose_pollution"
+  ],
+  "note": "含代码块+表格两个独立元素，且表格下方混入正文段落",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig05.png": {
+  "ok": false,
+  "issues": [
+   "overlap"
+  ],
+  "note": "右侧MoE Layer中Rank1-3的元素明显堆叠重叠，文字难以辨认",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig37.png": {
+  "ok": false,
+  "issues": [
+   "truncated",
+   "prose_pollution",
+   "multi_element"
+  ],
+  "note": "顶部Figure 37仅有caption缺图，混入大段正文，且底部含Figure 38部分",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab13.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "Table 13完整，但下方混入Communication Bottleneck段落文字",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig08.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "图表下方混入了正文段落'Results on API models...'",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig03.png": {
+  "ok": false,
+  "issues": [
+   "truncated",
+   "multi_element"
+  ],
+  "note": "顶部混入被截断的表格末行，中间图与caption完整但上方有多余元素",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab07.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "表格和caption完整，但下方混入大段正文段落",
+  "ts": "2026-08-25 00:36"
+ },
+ "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-fig04.png": {
+  "ok": false,
+  "issues": [
+   "prose_pollution"
+  ],
+  "note": "右上角残留'by ZeRO.'文字，疑为相邻正文混入",
+  "ts": "2026-08-25 00:36"
  }
 }

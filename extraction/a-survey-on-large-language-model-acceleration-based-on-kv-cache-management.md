@@ -32,13 +32,7 @@ _未检测到带 caption 的 figure_
 > TABLE II: Comparison of KV cache selection strategies.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 2 图文联合解读**
-
-该表横向对比22种KV Cache选择/淘汰方法（FastGen至LoopServe），按Initial tokens、Top-k、Recent tokens、Permanent eviction、Dynamic selection 5维度打勾，并标注选择粒度（token/block/cluster/event）与技术特征（如FastGen五类注意力结构、H2O累积注意力分数、MagicPIG采用LSH、EM-LLM按episodic events）。
-
-**关键结论**：早期方法（FastGen、SnapKV、StreamingLLM等）以token级+永久淘汰为主；近期方法（InfLLM、EM-LLM、MagicPIG等）转向动态选择，粒度粗化至block/cluster/event，淘汰范式由静态启发式演化为动态检索驱动。
-
-**论文作用**：与Tab1（量化）、Tab3（合并共享）并列支撑综述压缩类二维分类法，为免训练低开销方案提供选型图谱与范式演进证据。
+> 【图文联合解读】该表横向对比22种KV Cache选择方法，沿"初始/Top-k/近期token、永久驱逐、动态选择、粒度"四类特征勾选。数据上：Top-k使用最广（21/22），近期token约15种，初始token仅6种；16种支持永久驱逐；粒度以token为主（17种），另有block(3)、cluster、event各1种。原文借此论证：KV Cache管理已由单一保留策略演化为"多策略融合+动态选择+粗粒度"体系，Top-k与近期token为通用基线，永久驱逐成主流，block/cluster粒度与量化检索类方法代表新方向。本表是论文KV Cache分类总览的核心索引，为后文按"选择—驱逐—量化"展开提供全景参照。
 
 ### Table 4 (p.11) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab04.png]]
@@ -46,13 +40,11 @@ _未检测到带 caption 的 figure_
 > TABLE IV: The summary of existing KV Cache merging approaches.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 4 从合并层级、单元、度量、类型、是否免训练等6个维度，对比了12种KV Cache合并方法。
+> 【图文联合解读】**Table 4 联合解读**
 
-核心数据：①层级——11种为层内合并，仅KVSharer支持跨层；②单元——Token级10种（如CCM/LoMA/DMC等），CHAI为Head级，KVSharer为Layer级；③度量——余弦相似度最常用（D2O/AIM/ZeroMerge/Look-M），另有Attention Score、Sliding Window、Weighted Gaussian Kernel、Angular/Euclidean距离等；④类型——多为Many-to-One，LoMA为Many-to-Many，D2O/MinCache为Two-to-One；⑤免训练——9/12方法无需训练，仅CCM、LoMA、DMC需训练。
+该表对比12种KV Cache合并方法，从合并层级、单元、度量、类型、是否免训练6维度展开。统计显示：9种层内合并（仅ZeroMerge/MinCache/KVSharer跨层），合并单元以Token为主（10种，CHAI用Head、KVSharer用Layer），Many-to-One最多（9种），LoMA为Many-to-Many，D2O/MinCache为Two-to-One；Cosine Similarity度量最常用（4次）；仅CCM/LoMA/DMC需训练，其余9种免训练。
 
-技术结论：表4论证了"免训练+层内+Token级+余弦相似度+多对一"已成为合并策略的主流范式（训练免费方法占75%），体现该方向正向即插即用演进。
-
-论文作用：在KV Cache压缩分类中，该表为合并子策略提供横向基准，揭示跨层合并（KVSharer）与注意力驱动（CHAI）作为尚少探索方向的潜在机会。
+论文借此建立合并方法的系统分类体系，揭示"层内+Token级+Many-to-One+免训练"为主流范式，作为整篇KV Cache加速综述中合并策略子方向的核心归纳表。
 
 ### Table 5 (p.13) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab05.png]]
@@ -60,7 +52,7 @@ _未检测到带 caption 的 figure_
 > TABLE V: The summary of existing mixed-precision quantization models.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】Table 5 横向对比 11 种 KV Cache 混合精度量化方案（含 Intial 基线），沿 Keys 量化策略、Values 粒度、重要 Token、Outlier storing、Channel Reorder 五维展开。统计：6/11 方法同时启用"重要 Token + Outlier storing"（KVQuant、SKVQ、QAQ、MiKV、GEAR、ZIPVL）；仅 SKVQ、Atom、QAQ 采用 Channel Reorder；QAQ 五维齐备最完善。该表作为量化加速章节核心对比工具，支撑作者论证"低精度 KV Cache 须多机制协同（关键 Token 保留 + 异常值外存 + 通道重排）"的关键结论，并指明自适应位宽（QAQ）与 token-locality 感知（CacheGen）为未来方向。
+> 【图文联合解读】表5以11个条目（含Initial）为对象，按Key量化、Value粒度、重要Token、Outlier外存和通道重排5维比较。基线采用Middle Key、Recent Value；KIVI为Channel/Per-Token，QAQ采用自适应位宽，CacheGen强调分层与token-locality。6/11兼用重要Token与异常值外存，仅SKVQ、Atom、QAQ重排通道，QAQ机制最全。该表连接方案设计与实验讨论，支撑“多机制协同”结论，并指向自适应位宽与局部性方向；其本身不含精度、速度数据，不能单独验证性能。
 
 ### Table 6 (p.14) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab06.png]]
@@ -68,15 +60,13 @@ _未检测到带 caption 的 figure_
 > TABLE VI: The summary of outlier redistribution models in Sec. IV-D3.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 6 图文联合解读**
+> 【图文联合解读】**图文联合解读**
 
-**1) 核心对象与结构**：该表汇总 11 种离群值再分配（outlier redistribution）方法，按 Operation 分 6 类——Hadamard 旋转（QuaRot/Qserve/Q-INT4，共 3 种最多）、缩放（SmoothQuant、AWQ）、缩放+位移（QS+、OmniQuant）、旋转+置换（DuQuant）、仿射变换（AffineQuant、FlatQuant）、添加虚拟 token（MassiveAct）；5 种 Learnable（✓），6 种固定（✗）。
+表6归集Sec. IV-D3中**11种离群值再分配**模型，按操作分5族：①虚拟令牌——MassiveAct(1)；②Hadamard旋转——QuaRot/Qserve/Q-INT4(3)；③对角缩放/移位——SmoothQuant、QS+(2)；④可学习缩放移位——AWQ、OmniQuant(2)；⑤旋转+置换DuQuant、仿射变换AffineQuant/FlatQuant(3)。**6/11支持可学习参数**。
 
-**2) 关键结论**：论文用此表论证"通过预先对权重/激活做等价变换，可将离群值分散到各通道，使后续量化更易进行"，且变换可分为无参数（旋转）与有参数（学习缩放因子）两类。
+**关键结论**：离群值再分配是低位量化的前置步骤，操作路径沿"固定旋转→对角缩放→缩放+移位→可学习仿射变换"逐级增强表征能力；Hadamard族公式统一形式为$\hat{W}=WH^T$，约束$H^T H=I$以等方差抹平极端值。
 
-**3) 在论文中的作用**：作为 IV-D3 节"模型结构改造"分支的总览，与 Table 5 量化方法互补，支撑"改造注意力结构以降低 KV Cache 占用"的论述主线，为读者快速对比离群值处理范式提供索引。
-
-（注：原图公式列中希腊字母部分显示为方框，但表格结构清晰可辨。）
+**论文作用**：与Table 6、8并列构成"Transformer内KV优化→架构级替代"双轨框架，本表专责量化侧离群值处理方法学图谱，为低比特加速章节提供系统索引。
 
 ### Table 7 (p.18) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab07.png]]
@@ -84,19 +74,13 @@ _未检测到带 caption 的 figure_
 > TABLE VII: The summary of Model-based Attention Grouping and Sharing approaches.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table VII 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-该表汇总 **16 种**模型驱动的注意力分组/共享方法（MQA–SVFormer），按作用位置分三类：
+**1) 表格核心内容：** Table 7 系统汇总了 16 种 Model-based 注意力分组/共享方法，列维度包括：方法名、应用位置（层内/跨层）、层内分组组件、跨层共享组件、是否需重训练。其中纯跨层方法 7 种（MQA、GQA、AsymGQA、Weighted GQA、QCQA、KDGQA、GQKVA），纯层内 6 种（LCKV、SA、LISA、Wu et al.、CLLA、SVFormer），同时跨层+层内仅 3 种（CLA、MLKV、DHA）。
 
-- **纯层内（7种）**：MQA、GQA、AsymGQA、Weighted GQA、QCQA、KDGQA 均对 **K,V** 分组，仅 **GQKVA** 含 Q；
-- **纯跨层（6种）**：LCKV 共享 K,V，SA 共享 Attention Weight，SVFormer 仅共享 V，LISA/Wu et al./CLLA 共享 **Q,K,V**；
-- **双轨融合（3种）**：CLA、MLKV、DHA 同时具备层内分组与跨层共享。
+**2) 关键结论：** 跨层共享几乎都以 K、V 为主（7/7 仅共享 K,V），仅 GQKVA 共享 Q,K,V；层内分组则呈现"K,V"（MQA 类）与"Q,K,V/Attention Weight"（SA、LISA 等）两条路线。大多方法需重训练，但 MLKV 支持 Uptrain，LISA 与 DHA 支持 Lightweight adaption，体现从"训练改造"向"轻量适配"的演进。
 
-训练开销方面：绝大多数需完整重训或 Uptrain/Finetune，**仅 LISA 与 DHA 支持轻量适配**，是部署友好型代表。
-
-**论证结论**：层内以 K,V 分组为主流（9/10），跨层共享成分呈"由 K,V 向 Q,K,V 乃至 Attention Weight 演进"的趋势，体现"以结构化共享压缩 KV 缓存"的架构级加速思想。
-
-**论文作用**：与 Table 6、8 共同构成"Transformer 内部 KV 优化 → 架构级替代"双轨综述框架，扩展加速方法学视野。
+**3) 论文作用：** 作为综述方法分类的子表之一，与 Table 6（量化）、Table 8（合并）等并列，共同构成 KV Cache 管理的完整分类体系；该表聚焦"模型结构层面"的压缩策略，体现从单维度（仅层内或仅跨层）向双维度协同（CLA/MLKV/DHA）发展的技术趋势。
 
 ### Table 8 (p.19) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab08.png]]
@@ -104,14 +88,13 @@ _未检测到带 caption 的 figure_
 > TABLE VIII: The summary of Model-based Intra-layer approaches.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 图文联合解读**
+> 【图文联合解读】# Table 8 图文联合解读
 
-表8汇总7种基于模型的层内（Intra-layer）KV Cache加速方法，按改造方式分为两组：
+**核心对象与结构**：表格汇总7种"基于模型的层内（Intra-layer）"KV Cache管理方法，按改造方式分为两类——**Enhanced Attention（增强注意力，3种）**：MLA（潜在压缩）、FLASH（线性近似）、Infini-Attention（压缩缓存）；**第二类（4种）**：YOCO（单一全局KV）、CEPE（并行编码+交叉注意力）、XC-Cache（编码器交叉注意力）、Block Transformer（分层局部KV）。所有方法"Alteration Type"列均打勾（✓），且全部需要重训练或轻量训练。
 
-- **增强架构类（3种）**：MLA[28]采用潜在压缩、FLASH[195]采用线性近似、Infini-Attention[196]采用压缩缓存——三者均需**完全重训**。
-- **架构重构类（4种）**：YOCO[191]用单全局KV、CEPE[192]用并行编码交叉注意、XC-Cache[193]用编码器交叉注意、Block Transformer[194]用层级局部KV——其中CEPE与Block Transformer仅需**轻量重训**，其余2种需完全重训。
+**关键技术结论**：层内方法通过**修改模型内部架构**直接降低KV Cache开销；KV Cache管理策略呈多样化（压缩、线性化、全局共享、分层），且**无一例外需要训练**，这是与训练无关方法的本质区别；CEPE与Block Transformer为"Lightweight"，部署门槛相对较低。
 
-**技术结论**：该表论证了层内方案通过修改注意力/架构实现KV压缩的可行性，但普遍以重训为前提，体现"效率–训练成本"权衡。**论文作用**：作为"Model-based Intra-layer"子类的横向对照表，与层间（Inter-layer）及跨层（Cross-layer）表共同构成论文三维度分类法的关键实证支撑。
+**论文链路作用**：与Inter-layer、Cross-layer及训练无关方法并列，构成论文"Model-based vs Training-free"分类框架下的重要分支，系统呈现需改模型的层内优化全景。
 
 ### Table 9 (p.0) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab09.png]]
@@ -119,32 +102,29 @@ _未检测到带 caption 的 figure_
 > TABLE IX: The summary of Non-Transformer Architectures.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 9 联合解读**
+> 【图文联合解读】**Table 9 图文联合解读**
 
-**1) 核心对象与结构**：表格列出 7 种非 Transformer 架构，按加速策略分两类打勾——"无传统 KV Cache"（4 项）与"KV Cache 压缩"（3 项）。具体如下：
-- 无 KV Cache：RWKV（类 RNN+Transformer 并行）、Mamba（选择性状态空间）、MCSD（斜率衰减融合）、MixCon（Transformer+Conba+MoE 混合）。
-- KV Cache 压缩：RetNet（保留机制）、GoldFinch（RWKV+改进 Transformer）、RecurFormer（Mamba 替换部分注意力头）。
+该表汇总 7 种非 Transformer 架构对 KV Cache 的两类处理路径：
+- **4 种"无传统 KV Cache"**（RWKV、Mamba、MCSD、MixCon）：分别采用 RNN-like 线性并行、选择性状态空间、斜率衰减融合、Conba+MoE 混合机制，从架构层面彻底摒弃 KV Cache。
+- **3 种"KV Cache 压缩"**（RetNet、GoldFinch、RecurFormer）：分别用保留机制、RWKV 改进 Transformer、Mamba 替换部分注意力头，仍保留但压缩 Cache。
 
-**2) 关键结论**：论文借此证明，非 Transformer 路线通过**状态空间、保留机制、循环结构**替代 softmax 注意力，从根本上规避 KV Cache 线性膨胀问题（前三/四行），或对残余 Cache 做压缩（后三行），均能实现线性复杂度推理。
+**核心结论**：原文借此论证 LLM 加速存在两条替代路线——**架构原生规避**（线性/状态空间替代注意力）与**在 Transformer 内压缩**，二者均绕开标准 KV Cache 的显存与复杂度瓶颈。
 
-**4) 论文作用**：作为 KV Cache 加速综述的**替代方案章节**，与传统 Transformer 内 KV Cache 优化（量化、稀疏、淘汰等）形成对照，证明"换架构"是另一条加速路径。
+**论文作用**：与前文 Transformer-based KV Cache 优化方法互补，形成"主流架构内压缩 + 非 Transformer 架构替代"的完整加速图景，为读者提供体系化设计选型参考。
 
 ### Table 10 (p.23) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab10.png]]
 > [!quote] caption
-> Comparison of Memory Management Techniques for KV Cache
+> TABLE X: Comparison of Memory Management Techniques for KV Cache Optimization.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】图像无法直接呈现表格的具体行列内容，仅依据原文caption与正文段落解读如下：
+> 【图文联合解读】**Table 10 图文联合解读**
 
-**1. 核心对象与结构**
-Table 10 标题为"Comparison of Memory Management Techniques for KV Cache"，对照正文中提及的 LeanKV（统一分页+异构量化+动态稀疏，含vTensor Operation/Pool三组件）、DMS（动态内存稀疏化）、eLLM（受传统内存ballooning启发的管理框架）等方法，推测该表按"方法名 / 关键技术策略 / 内存组织方式 / 精度或稀疏粒度 / 适用场景"等维度横向对比KV Cache内存管理方案。
+**1) 核心对象与结构**：表格以9种代表性方法（vLLM、vTensor、LeanKV、DMS、eLLM、Apt-Serve、ChunkAttention、MemServe、FlashForge）为行，5种内存管理技术（Paged Memory、Virtual Memory、Dynamic Sparsity、Prefix Sharing、Distributed Memory）为列，用"✓"标记每种方法所采用的技术组合。其中vLLM同时采用分页+虚拟内存（2项），MemServe/eLLM/Apt-Serve则融合虚拟内存与分布式内存；LeanKV、DMS专注于动态稀疏；ChunkAttention、FlashForge则聚焦前缀共享。
 
-**2. 关键技术结论**
-通过横向对比，正文强调单一策略（如纯分页或纯量化）的局限，主张融合"分页+量化+稀疏化"的混合机制是当前KV Cache高效管理的主流方向，LeanKV的on-GPU统一分页（循环空闲页链表+双向页表）代表该路线。
+**2) 关键技术结论**：说明当前KV Cache优化无单一通用方案，各方法沿"分页/虚拟化/稀疏/共享/分布式"五条技术路径形成互补。
 
-**3. 论文整体作用**
-该表位于综述第23页Methods章节，承担分类学功能——为后续读者选取KV Cache内存优化方案提供决策依据，并与Table 9（压缩技术对比）、Table 11（注意力稀疏）等形成"压缩—管理—稀疏"的完整技术对照体系。
+**3) 论文中的作用**：作为综述分类表，建立KV Cache内存管理技术体系，为后续按技术维度展开的方法学分析提供索引框架。
 
 ### Table 11 (p.0) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab11.png]]
@@ -152,43 +132,31 @@ Table 10 标题为"Comparison of Memory Management Techniques for KV Cache"，�
 > TABLE XI: Comparison of Scheduling Approaches for KV Cache Optimization.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 11 联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-表格对12种KV Cache调度方法沿6维策略（前缀感知、抢占、面向公平、层级专属、分层、动态）做勾选式归类。量化分布：单一策略中"前缀感知""抢占""层级专属"各占3项，"动态"4项最多；组合策略占6/12，其中RadixAttention（前缀+动态）、FastServe/FastSwitch（抢占+公平）、CachedAttention（层级+分层）、ALISA/LAMPS/Apt-Serve（融合2–3种）体现"多策略协同"趋势。
+表11横向比较12种KV Cache调度方法在6维特征（Prefix-aware / Preemptive / Fairness-oriented / Layer-specific / Hierarchical / Dynamic）上的覆盖。量化数据：Dynamic维度最普遍（5/12：RadixAttention、ALISA、LAMPS、Apt-Serve、FGOS）；Prefix-aware、Preemptive、Layer-specific、Hierarchical各3项；Fairness-oriented仅2项，且必与Preemptive共现（FastServe、FastSwitch）。
 
-**关键技术结论**：单一调度维度难以同时满足吞吐、延迟与SLO公平，论文由此论证复合策略（如抢占+公平、层级+分层）已成为KV Cache调度的主流设计方向。
+**关键结论**：多数方法专精单一维度，而FastServe/FastSwitch以"抢占+公平"组合形成差异化定位，CachedAttention、LAMPS、Apt-Serve代表多维融合方向；整体揭示调度策略从单维优化向多维动态协作演进。
 
-**论文作用**：该表与Table 10（合并/共享）、Table 12（淘汰策略）并列，构成"调度—复用—淘汰"三位一体的KV Cache优化全景图，为读者按部署场景（高并发/低延迟/多租户）选择方案提供横向索引。
+**论文作用**：作为调度策略分类表，与压缩、稀疏类表构成"压缩—管理—稀疏"完整对照体系，为读者选取KV Cache优化方案提供决策依据。
 
 ### Table 12 (p.26) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab12.png]]
 > [!quote] caption
-> Comparison of Hardware-aware Design Approaches for KV Cache Optimization.
+> TABLE XII: Comparison of Hardware-aware Design Approaches for KV Cache Optimization.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**说明**：所提供图像实为论文正文文本（含6.2.4节与6.3/6.3.1节），并未显示Table 12表体；以下基于原图Caption与正文上下文进行解读。
-
-**图文联合解读**：
-
-1) **核心对象与结构**：Table 12横向对比KV Cache硬件感知优化方法，按部署硬件划分为Single/Multi-GPU、IO-based、Heterogeneous、SSD-based（含InstInfer利用CSD绕开PCIe带宽瓶颈）四类，纵向列示各方案在内存访问模式、注意力核设计、负载均衡、异步I/O、跨层调度等维度的优化策略。
-
-2) **关键结论**：硬件感知设计需结合组件特性与互连拓扑协同优化——单/多GPU聚焦访存与核并行；IO方案通过异步与预取缓解层级迁移；异构方案调度CPU–GPU任务分配；SSD方案从单纯卸载演进至近存计算。
-
-3) **链路作用**：与Table 10（合并/共享）、Table 11（淘汰）并列，构成"调度—复用—淘汰—硬件协同"四象限全景索引，按高并发/低延迟/多租户场景为读者横向选型提供依据。
+> 【图文联合解读】Table 12 横向对比 24 种硬件感知 KV Cache 优化方法，按 4 类硬件策略打标：Single/Multi-GPU（9 项，如 DeFT、vLLM、ORCA）、Heterogeneous（8 项，如 APEX、DistServ、HCache、InstInfer）、I/O-aware（6 项，如 Bifurcated Attention、FastDecode、Tree Attention）、SSD-based（3 项：Cake、FlexInfer、Multi-Bin Batching）。其中 FlashAttention 与 gLLM 同时占据 Single/Multi-GPU 与 Heterogeneous 两列，凸显"单/多卡+异构"跨层次融合趋势。该表与 Table 10、11 并列，构成"调度—复用—淘汰"三位一体全景图，为读者按高并发/低延迟/多租户等部署场景横向选型提供索引。
 
 ### Table 13 (p.28) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab13.png]]
 > [!quote] caption
-> Long-context Text Benchmarks.
+> TABLE XIII: Long-context Text Benchmarks.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 13 联合解读**
+> 【图文联合解读】Table 13 梳理了 13 个长上下文文本评测基准，沿 Q-A、摘要、推理、检索、生成、聚合 6 类任务和语种两维展开。数据要点：①LongBench、L-Eval、LongEval 任务覆盖面最广（5/6 类），LongBench 与 M4LE 支持中英双语，OneRuler 扩展至 26 种语言；②推理与生成是多数基准（≥10/13）的核心维度，Q-A 与摘要仅 LongBench 等少数覆盖；③检索维度被约 10 个基准采纳，BAMBOO/ZEROSCROLLS 覆盖最窄。
 
-**1) 核心结构与数据**：表格汇总 13 个长文本评测基准（MultiTurnBench、NumericBench、RULER、OneRuler、L-Eval、M4LE、BAMBOO、LongBench、SCROLLS、ZEROSCROLLS、LooGLE、LongEval、StreamingEval），行表示基准，列包括 6 类任务能力子项（标签略有模糊，涵盖 QA、检索/推理、多轮、代码、归纳等维度）及支持语言列（多数为 EN，少数为 EN/ZH，OneRuler 支持 26 种语言）。LongBench 是唯一在全部 6 项任务上均打勾的基准，覆盖最广；OneRuler 跨语言最广；其余多侧重英文单语、覆盖 3–5 项任务。
-
-**2) 关键结论**：长上下文评测呈"能力碎片化"——没有单一基准同时满足多任务与多语言需求；多轮对话（MultiTurnBench、LongBench）、数值推理（NumericBench、RULER）等专项基准互补出现，反映 KV Cache 管理技术需要在检索、推理、生成等不同长程依赖上分别验证。
-
-**3) 论文中的作用**：该表为后续比较 KV Cache 压缩/淘汰/量化等加速方法在长文本场景下的实验配置提供选型依据，强调需在多类长程任务上综合验证，而非依赖单一数据集，避免评测偏差。
+在论文方法链中，该表支撑"KV-Cache 加速方法需在多任务长上下文基准上验证"这一论断。它揭示了基准任务的覆盖不均（Q-A、摘要缺位）与多语种评估薄弱的现状，为加速方法的公平对比、评测协议选择以及后续研究指引（如补齐摘要与多语种评估）提供了工具清单与缺口依据。
 
 ### Table 14 (p.30) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab14.png]]
@@ -196,13 +164,13 @@ Table 10 标题为"Comparison of Memory Management Techniques for KV Cache"，�
 > TABLE XIV: Multi-modal Benchmark Tasks. Specifically, for task abbreviation, Conv: conversation task; Desc: description task; Reas: reasoning task; Perc: perception task; Pred: prediction task; SUMM: summary task.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table XIV 图文联合解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1）核心对象与结构：** 该表汇总 11 个多模态基准（每基准占两行重复），按 9 类任务维度打勾：Conv/Desc/Reas/Perc/Pred/Count/Retrieval/Order/SUMM，并标注语言。覆盖关系上，**MLVU 最广**（Perc、Pred、Retrieval、Order、SUMM 共 5 类），**MVBench** 次之（Pred、Count、Retrieval 共 3 类），LongVideoBench 覆盖 Pred+Order；语言上仅 **MMBench 为 EN/ZH 双语**，其余 10 个均为 EN。视觉问答类（MSVD-QA、MSRVTT-QA、NExT-QA）任务较窄（仅 Perc/Pred）。
+表格汇总10个多模态基准（LLaVA-Bench、MMBench、MileBench、MLVU、LongVideoBench、Video-MME、NExT-QA、MVBench、MSVD-QA、MSRVTT-QA），按 Conv/Desc/Reas/Perc/Pred/Count/Retrieval/Order/SUMM 共9类任务勾选支持能力并标注语种。MLVU覆盖最广（Reas+Perc+Pred+Retrieval+Order+SUMM共6类），多数基准聚焦"推理+感知+预测"组合；仅MMBench支持中英双语，其余均为英文。
 
-**2）论证结论：** 论文用此表说明现有 KV-cache 加速方法的多模态评测已覆盖感知、预测、检索、排序、摘要等多类下游任务，具备跨基准、跨任务的泛化验证基础；同时揭示 Conv 与 Desc 类对话/描述任务在当前多模态基准中覆盖偏少，提示评估缺口。
+**技术结论：** 表明多模态场景下KV-Cache加速方法需在推理、感知、预测、检索、排序、摘要等异构任务上保持鲁棒，加速方案应具备任务无关的通用性。
 
-**3）论文作用：** 属于"实验/评估链路"组件，与正文中 LLM/MLLM 加速方法（如 KV 压缩、量化、稀疏化）的效果对比章节配套，为读者按需选取多模态评测集提供索引清单。
+**论文作用：** 作为实验链路的多模态评测清单，为不同KV-Cache压缩/管理方法的横向对比提供统一任务维度，支撑长视频与多模态LLM加速的实证评估。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

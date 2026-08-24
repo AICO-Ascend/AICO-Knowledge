@@ -32,11 +32,11 @@ tags: [speculative]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-**1) 核心数据**：该图为温度=1（非贪婪采样）下四种目标模型（Vicuna 7B/13B、LLaMA2-Chat 7B/13B）上三种加速方法的推理加速比对比柱状图。EAGLE-2 分别取得 3.05×、3.80×、3.19×、3.92×，均显著高于 EAGLE（2.13×/2.32×/2.22×/2.68×）和 Speculative sampling（仅 Vicuna 系列为 1.50×、1.62×，LLaMA2-Chat 因无合适 draft 模型标 N/A）。
+1）图为分组柱状图，纵轴Speedup(0–4)，横轴四组模型（Vicuna 7B/13B、LLaMA2-Chat 7B/13B），每组三柱依次为EAGLE-2（粉）、EAGLE（蓝）、Speculative sampling（紫）。具体数值：Vicuna 7B 3.05x / 2.13x / 1.50x；Vicuna 13B 3.80x / 2.32x / 1.62x；LLaMA2-Chat 7B 3.19x / 2.22x / N/A；LLaMA2-Chat 13B 3.92x / 2.68x / N/A。LLaMA2-Chat 因无合适 draft 模型，对应 speculative sampling 标 N/A。
 
-**2) 关键结论**：在非贪婪设置下，EAGLE-2 相对 EAGLE 仍有 1.4×–1.5× 的提升，验证了"动态 draft tree"机制比静态 draft tree 在采样场景下更优；而 Medusa 等方法因放宽接受条件、无法保证输出分布一致性，故未参与比较。
+2）论证在 temperature=1 非贪婪采样下，EAGLE-2 的动态 draft 树仍稳定优于 EAGLE 与 speculative sampling；论文仅与保证输出分布不变的 lossless 方法对比，排除 Medusa。
 
-**3) 论文作用**：作为首页 Figure 1，是 EAGLE-2 方法有效性的"第一印象"证据，与 Figure 2（temperature=0 贪婪场景）互补，共同构成论文对动态 draft 树在两种采样模式下普适加速能力的核心实验支撑。
+3）作为首页首要证据，与 Figure 2（t=0 贪婪场景）互补，共同支撑"EAGLE-2 在两种采样模式下均具普适加速能力"的核心实验结论。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig02.png]]
@@ -112,9 +112,11 @@ tags: [speculative]
 > [!tip] 技术解读（多模态）
 > 【图文联合解读】**图文联合解读：**
 
-图示EAGLE-2两阶段流程：①扩张（Top-2）——以"It(1.0)"为根，按草稿模型置信度（0.6/0.2/0.8/0.1…）动态建树，从当前层选top-2高值节点 a(0.48)、to(0.14) 继续扩展生成绿块子节点 good/nice/be/do；②重排序（Top-8）——对全树节点按值排序后取 [It, is, has, a, the, to, good, be] 展平为1D序列，并配合树状 attention mask，使每 token 仅可见其祖先节点，保证分支互不可见。
+**核心对象**：图7展示EAGLE-2的最终重排阶段——将8个高值节点压平为1D序列"It is has a the to good be"，并据此构建8×8注意力掩码（红色✔标记）。每个token仅能关注其在draft tree中的祖先节点（如"good"只见"It/is/a/good"，"be"只见"It/has/to/be"），保持严格的前驱依赖。
 
-该图论证了 EAGLE-2 的核心技术：动态草稿树通过"扩张深化—重排保连通—树状掩码保障并行验证正确性"，在保持 speculative decoding 正确性的同时显著提升接受率与速度，是论文区别于 EAGLE-1（静态树）的关键方法论支撑，也直接服务于 §5 在 Vicuna、LLaMA2/3 多模型上的加速实验。
+**技术结论**：论证了EAGLE-2将动态draft tree线性化后，通过树形注意力掩码即可在一次目标模型前向传播中并行验证多条候选路径，同时不破坏自回归因果性，这是相比EAGLE-1静态树的效率来源。
+
+**方法链路作用**：衔接"扩展-重排-验证"流水线——把分支草稿转成目标模型可直接处理的结构化输入，是动态树推测解码落地验证的关键桥梁。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 

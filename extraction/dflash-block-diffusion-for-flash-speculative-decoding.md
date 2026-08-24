@@ -41,13 +41,11 @@ tags: [speculative]
 > DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图示DFlash推理架构：**目标模型从提示词抽取hidden context特征（蓝方块），融合后注入每层Draft Layer的KV Cache；Target Embedding并入Target Decode Token（黄）与多个Mask Token（绿），序列经Bidirectional Attention+MLP多层堆叠，最终由Target LM Head并行解码至`<eos>`。
 
-图2展示DFlash推理流程的三个阶段：(1) 左侧目标模型编码上下文（含`-./&01`等前缀token），提取**隐藏上下文特征**（顶部阴影方块）并向中间虚线框注入；(2) 中间虚线框为草稿模型，融合目标特征后以**块扩散**方式并行生成约**278个token候选**（如"45%5/0$*5…"），左下虚线框示意已确认/待确认/待生成三类token状态；(3) 右侧目标模型一次性并行验证候选块，部分token被拒绝（"!!!"），其余被接受并继续生成下一块。
+**图文论证结论：**把目标模型上下文特征融合注入草案层KV Cache，使草案模型可借助双向注意力并行填补掩码位置，实现条件式块级推测解码，区别于传统自回归逐token草案。
 
-**论证结论**：目标模型的隐藏特征可直接作为草稿模型各层的条件输入，无需从头预测；块级扩散+并行验证使每步解码一次前向即可生成数百token。
-
-**论文作用**：作为方法核心示意图，配合Table 2的**speedup/acceptance**数据，直观证明DFlash相较传统自回归推测解码的加速机理与收益来源。
+**论文整体作用：**作为DFlash核心推理机制设计，与表2解码加速比及平均接受率实验直接对应，为"扩散式块生成+Flash推测解码"提供方法学基础。
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig03.png]]
@@ -69,13 +67,13 @@ tags: [speculative]
 > DFlash training attention. The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens p and clean response tokens r.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读（≤220字）：**
+> 【图文联合解读】**图文联合解读：**
 
-**1）核心对象与结构**：图中为两个注意力掩码矩阵。左侧对应 prompt tokens（约 6 列 × 13 行），灰色格全连通——即 target model 输出的 context features 对所有 prompt 做无条件 attend；右侧对应 response tokens（约 14 列 × 14 行），呈**块对角**结构：每个深灰块内自回归、块间由浅灰相连、白色被 mask，字符取自语料噪声片段"+'.!%0-#!1."等。
+该图以矩阵可视化DFlash的训练注意力模式。左侧"From Target Model"为12×6网格，蓝格表示目标模型对prompt p1–p4与响应r1–r2提取的上下文特征（共4+2=6列）；右侧"Mask Blocks"为12×12网格，划分3个4×4块，每块含1个clean anchor（黄，如r1/r2/r3）+3个mask token（绿，<m>），其余为invisible（白）。每块4行体现块内并行解码结构。
 
-**2）论证结论**：该 attention pattern 严格匹配推理时的条件依赖——draft model 在生成第 *k* 块时仅 attend target model 给出的前一块 hidden states（context features，蓝色），与 block diffusion 训练目标一致，证明训练–推理 attention 一致性。
+该图论证的核心结论是：DFlash采用块扩散训练范式，以clean token作锚点条件化mask token预测，使草稿模型在单次前向中并行生成整块draft token，避免自回归串行依赖。
 
-**3）方法链路作用**：作为 method 部分核心可视化，奠定 DFlash "目标模型上下文驱动草模型逐块生成"的基础，是后续加速比与跨域泛化实验的前提。
+在论文链路中，此图为方法核心图，明确阐释了"目标特征条件化+块扩散掩码训练"的整体机制，是后续消融实验与投机解码加速比论证的可视化基础。
 
 ### Figure 5 (p.13) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig05.png]]

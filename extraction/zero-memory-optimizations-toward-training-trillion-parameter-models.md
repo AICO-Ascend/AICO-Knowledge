@@ -162,13 +162,11 @@ tags: [training]
 > Maximum model size through memory analysis (left) and the measured model size when running with ZeRO-OS (right). The measured model size with Po​s matches the theoretical maximum, demonstrating that our memory analysis provides realistic upper bounds on model sizes.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**1) 核心对象与结构**：表2对比 MP=1–16（对应 64–1024 GPU）下的**最大理论模型规模**（Baseline / Pos / Pos+g / Pos+g+p 四档）与**实测规模**（Baseline / ZeRO-DP 等）。例如 64 卡时 Baseline=2B、Pos+g+p=14.4B、ZeRO-DP 实测=1.3B；512 卡时 Pos+g+p 理论 115.2B；1024 卡时 Pos+g+p 理论 230.4B / Baseline 仅 32B。
 
-**核心数据**：表格展示不同MP(1–16)、GPU数(64–1024)下的最大理论模型规模与实测规模。左侧理论值：Pos从2B增至32B，Pos+g增至121.6B，Pos+g+p增至230.4B；右侧ZeRO-DP实测Pos从1.3B增至20B，PoS实测从6.2B增至100B。
+**2) 关键结论**：ZeRO-DP（Pos）实测值与理论上限吻合，证明内存分析给出的上界是**现实可达**的，Pos 阶段即可显著放大单卡可承载参数量（64 卡即从 2B→7.6B）。
 
-**技术结论**：PoS实测值（如64卡时6.2B）与其理论上限（7.6B）接近匹配，证明论文提出的内存分析模型给出了现实可达的上界，而非仅理论推测。
-
-**论文作用**：该表与图2的吞吐量数据互补——图2强调性能加速，本表则验证**可扩展性边界**，即ZeRO-OS通过切分优化器状态(Pos)、梯度(PoS)、参数(PoS+p)，可在千卡级GPU上训练达万亿参数模型，支撑全文"突破万亿参数训练"的核心主张。
+**3) 在论文中的作用**：作为 ZeRO 内存建模的**实证验证锚点**，为后文 Pos+g（优化器状态+梯度分片）至 Pos+g+p（参数分片）及 ZeRO-Os 的扩展分析提供正确性依据，构成"理论建模 → 实测校验 → 分阶段扩展"的实验链路起点。
 
 ### Table 3 (p.18) ⭐深度解读
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab03.png]]
@@ -176,13 +174,11 @@ tags: [training]
 > ZeRO configurations
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】## Table 3 图文联合解读
+> 【图文联合解读】Table 3 列出5种ZeRO组合配置：左列为ZeRO-DP分区策略（P_os或P_os+g），右列为ZeRO-R残差内存分区（C_B+M_D、+P_a、+P_a+cpu）。每行自上而下逐步叠加分区组件，形成由浅入深的内存优化梯度。
 
-**核心内容**：该表枚举了 ZeRO 的 5 种内存优化配置，通过 ZeRO-DP（切分优化器状态 Pos、再加切分梯度 g）与 ZeRO-R（切分常量缓冲 CB、动量 MD、参数 Pa，必要时卸载 cpu）的不同组合，从 Config 1 的"仅切分优化器状态（Pos/CB+MD）"逐步递进到 Config 5 的"全量切分并卸载 CPU（Pos+g/CB+MD+Pa+cpu）"。
+论文借此论证：ZeRO并非单一方案，而是可在DP维度（优化器状态/梯度分区）与R维度（激活检查点、模型、激活分区、CPU卸载）之间灵活组合，形成内存—通信—计算的多阶段权衡策略。
 
-**论证结论**：表格作为实验变量表，支撑了论文核心论点——随着切分维度增加，每 GPU 显存占用线性降低、可训练模型规模呈超线性扩展，从而在 60B 模型上实现 38 TFlops/GPU、15 PFlops 聚合吞吐（Figure 3），相比 SOTA 提升 10× 以上。
-
-**链路作用**：Table 3 是 ZeRO 方法体系的"配置总纲"，定义了从基础数据并行到极限切分的五档策略，为后续 Figure 3 的扩展性曲线与万亿参数训练可行性分析提供统一的实验标尺。
+该表是后续实验（如图3的60B吞吐测试、向万亿参数模型扩展）的配置输入矩阵，承担方法栈"配置枚举"的角色，为分级评估不同内存收益提供基础。
 
 ### Table 4 (p.19) ⭐深度解读
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab04.png]]
@@ -190,7 +186,13 @@ tags: [training]
 > Configurations for different model sizes, number of layers, and hidden dimensions (HD) across Figures 2, 3, 5.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】表4给出Figure 2与Figures 3、5中各模型规模的（层数, HD）对照表。Figure 2：1.5B(48,1600)、8B(72,3072)、40B-60B(88/132,4096)、80B-170B(100/125/150,8192)、140B-170B(175/212,8192)；Figures 3/5：1.16B-2.5B(24/34/54,1920)、4B(64,2304)、6B-8B(52/72,3072)、10B-13B(50/54/58/62,4096)、60B(75,8192)。该表统一了从1.16B到170B九个量级实验的模型规格，使ZeRO-DP等吞吐量对比具备可比性，是论文大规模训练实验设计的配置基线，保障了Figure 2/3/4/5结论的一致性与可复现性。
+> 【图文联合解读】**Table 4 解读**
+
+Table 4 罗列 ZeRO-DP 在 Figures 2–4 实验中的模型规模–层数–隐藏维度（HD）配置：1.5B/48层/1600、8B/72/3072、40–60B/88,132/4096、80–170B/100–150/8192、140–170B/175,212/8192；及 1.16–2.5B/1920、4B/2304、6–8B/3072、10–13B/4096、60B/8192。
+
+作者借此论证：随模型从 1.5B 扩至 170B，HD 由 1600 升至 8192、层数最高达 212，ZeRO-DP 仍保持吞吐与显存线性扩展能力。
+
+该表是 Figure 2–4 的"实验参数清单"，为定量论证 ZeRO 在百亿至千亿参数模型上的有效性提供可复现配置声明，是实验章节的支撑性数据底座。
 
 ### Table 8 (p.23) ⭐深度解读
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab08.png]]
@@ -198,13 +200,13 @@ tags: [training]
 > Model configurations for Figure 5 related to memory allocated with different ZeRO configurations.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 8 图文联合解读**
+> 【图文联合解读】**联合解读（≤220字）：**
 
-该表列出 Figure 5 所用模型的配置：均为 ZeRO 模式，规模涵盖 40B（400 卡、MP=16、50 层、hidden=8192、32 头、batch=16/总 batch=400）与 100B（同硬件、125 层、64 头、batch=32/总 800），统一 8192 隐层维度，便于纯显存分配对比。
+表格为Figure 5显存实验的模型配置：均采用ZeRO（共7行），固定400 GPU、MP=16；含40B组（50层、hidden 8192、32头、batch 16、总batch 400，5行对应各分片阶段）与100B组（125层、hidden 8192、64头、batch 32、总batch 800，2行）。
 
-表 8 与 Figure 5 互证：在相同硬件与并行设置下，**ZeRO 仅靠切分优化器状态/梯度/参数即可显著压低每卡显存**，从而将可训练模型从 8.3B 抬升至 17B（Turing-NLG）甚至 100B 级别，且模型质量（困惑度）不降反升。
+支撑的核心结论：ZeRO通过分片优化器状态、梯度与参数，使单卡显存不再随模型线性扩张，从而在400卡规模下即可训练40B乃至100B模型，为图5中各阶段显存消长曲线提供统一、可比的超参基准。
 
-在论文论证链中，表 8 是"ZeRO 方法有效性"的**配置基座**，支撑吞吐与万亿级可行性论证，与正文 SOTA 结果、表 7 共同完成"内存优化→规模跃升→质量无损"的闭环证明。
+在论文链路中，本表衔接表7的内存节省量化数据，支撑图5的可视化论证，并与Figure 8（吞吐量/可训练时间估算）共同构成"内存优化→算力可行→质量无损"的完整证据链，是ZeRO赋能SOTA大规模训练叙事的关键实验脚手架。
 
 ### Table 10 (p.24) ⭐深度解读
 ![[assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab10.png]]
@@ -212,15 +214,7 @@ tags: [training]
 > Model configurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.
 
 > [!tip] 表格解读（多模态）
-> 【图文联合解读】**Table 10 图文联合解读**
-
-该表罗列了 Figure 7 评测所采用的模型配置，横向对比 ZeRO 与 Baseline 在 128 GPU、MP=1（纯数据并行）条件下的最大可训练规模。
-
-**核心数据**：ZeRO 配置覆盖 1.5B–13B 九档模型，隐藏维度从 1920 扩至 4096，注意力头数 16–32，单卡 batch size 随模型增大从 24 递减至 2；Baseline 仅给出 1p16B（24 层）和 1p38B（40 层、hidden=1536、batch=1）两档，最大仅约 16B–38B 量级。
-
-**技术结论**：在固定 128 卡、不启用模型并行的前提下，Baseline 因每卡冗余存储参数/优化器状态，可承载模型很快触顶；而 ZeRO 通过分片这些状态，将纯数据并行可训练的模型规模上限提升至 13B（甚至图中推得更高），证明其消除了数据并行中的内存冗余瓶颈。
-
-**论文作用**：作为 Figure 7 的配置说明表，为"ZeRO 在不引入模型并行的情况下显著扩大可训练规模"这一关键实验结论提供超参数依据，支撑 ZeRO 作为内存优化而非并行策略的定位。
+> 【图文联合解读】表10为Figure 7实验的模型配置：128 GPU、MP=1纯数据并行条件下，ZeRO组覆盖1.5B–13B共8档（hidden 1920→4096、layers 34→72、heads 16→32、单卡batch 24→2随模型增大递减）；Baseline组仅1.6B与3.8B两档。对比论证：纯DP无张量并行时，ZeRO可训模型上限（~13B）较Baseline（~3.8B）提升超3倍，说明ZeRO通过分片优化器状态与梯度显著释放显存，使万亿参数训练不必依赖TP即可扩大模型规模，为Fig 7吞吐量-容量曲线提供配置支撑，凸显其内存效率的核心优势。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

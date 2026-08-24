@@ -61,13 +61,9 @@ tags: [speculative]
 > Uncertainty in feature sequences. The next fea- ture following fI is contingent on the sampling outcome and cannot be determined solely based on fI, where both “always” and “am” are possible to follow the token “I” and lead to two branches.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读**
+> 【图文联合解读】**图文联合解读（图3）：**
 
-图示三条"token→feature→下一token预测分布"的链节：左"always"（f_always: p(begin)=0.8, p(look)=0.2）、中"I"（f_I: p(am)=0.6, p(always)=0.4）、右"am"（f_am: p(excited)=0.3, p(ready)=0.7）；两条红色虚线"采样"从f_I分别外延至左右两节，呈现分叉结构。
-
-**技术结论**：f_I之后的下一特征取决于采样结果而非f_I本身，"always"与"am"均为合法后继，即自回归特征序列存在不可由前序特征唯一推断的内在不确定性。
-
-**论文作用**：作为EAGLE的核心动机图，挑战先前工作将特征序列视为确定性链的假设，从而论证必须把特征不确定性纳入预测设计，这正是EAGLE重写特征预测头、显著提升推测解码接受长度与加速比（Table 3）的理论起点。
+图3展示特征不确定性结构：中心 token "I" → f_I（p_I: p(am)=0.6, p(always)=0.4），经红色虚线"采样"分叉为两条分支——左支"always"→f_always（p(begin)=0.8, p(look)=0.2），右支"am"→f_am（p(excited)=0.3, p(ready)=0.7）。**核心论证**：f_I 之后的下一特征无法由 f_I 唯一确定，必须依赖实际采样结果，从而形成带不同概率分布的分支链，颠覆了先前工作将特征序列视为确定性链的假设。**论文作用**：该图是 EAGLE 重写特征预测头、显式建模特征不确定性的理论起点，支撑其在 Figure 2 中于 Vicuna/LLaMA2-Chat 7B/13B/33B/70B 上实现 2.13x–2.68x 的加速比。
 
 ### Figure 4 (p.3) ⭐深度解读
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig04.png]]
@@ -91,11 +87,11 @@ tags: [speculative]
 > A comparison of the methods for drafting the fourth and fifth tokens, t4 and t5. t (represented by blue blocks) denotes tokens, and f (orange blocks) signifies the features, with subscripts indicating their positions in the se- quence. The red border indicates the predictions of the draft model. For simplicity, the n in the n-gram for Lookahead, as shown in the figure, has been set to 2.
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图文联合解读：**
+> 【图文联合解读】**图5联合解读**
 
-图5横向对比四种草稿方法生成t4、t5的机制：Speculative Sampling以t1-t3送入小LLM输出t4，再以t1-t4输入得t5（纯token级）；Lookahead基于2-Gram+Jacobi迭代token；Medusa由特征f2经两个独立Head并行产出t4、t5；**EAGLE则将token(t2,t3)经Embedding层与特征(f1,f2)拼接，由自回归Head依次预测f3→t4、f4→t5**，实现"特征级自回归+token级解码"。
+图5对比Medusa（左）与EAGLE（右）生成t₄、t₅的机制（Lookahead的n取2）：Medusa仅用单一f₂经两个并行Head直接预测t₄、t₅；EAGLE则采用**级联自回归**——先用[t₂,t₃,f₁,f₂]经嵌入+自回归头预测f₃，再由f₃预测t₄；继而将t₄反馈，连同[t₂,t₃,f₁,f₂]预测f₄，再得t₅。蓝块=token，橙块=feature，红框=草稿预测。
 
-作者借此论证：**不确定性主要源自特征而非token**，故在特征空间做自回归比直接预测token更准，从而支撑EAGLE"特征不确定性"的核心立论。该图作为方法论总览，与右侧树注意力多采样扩展，共同构成论文方法部分的视觉骨架，为后续Table 5的加速比实验提供机制层面的依据。
+该图直观论证EAGLE把已生成token回灌至下一轮特征预测，**降低了特征不确定性**这一核心技术结论（呼应论文标题"speculative sampling requires rethinking feature uncertainty"）。它作为方法论核心图示，衔接Table 5关于EAGLE接受长度τ的量化验证，构成"机制示意→实证增益"的完整论证链。
 
 ### Figure 6 (p.4) ⭐深度解读
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig06.png]]
@@ -104,13 +100,13 @@ tags: [speculative]
 > Pipeline of EAGLE. The upper section illustrates the computational process, while the lower section displays the corresponding generation results for each step. In the upper section, green blocks represent token embeddings, or- ange blocks represent features, red boxes indicate the predic- tions of the draft model, and blue modules with snowflake icons represent the use of target LLM parameters, w
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**注：** 所提供图片主体为Figure 5（四种drafting方法对比），右半部分含Figure 6（EAGLE管线）元素。解读如下：
+> 【图文联合解读】**Figure 6 图文联合解读**
 
-**核心对象与结构：** 图右呈现EAGLE推断管线——target LLM前向1次（Embedding→Transformer→LM Head）采出"can/I"；Draft Model分Forward 1/2/3，每步将上一轮特征f（橙）与当前token embedding（绿）拼接，经单一Auto-regression Head预测下一特征f，再复用target LLM的LM Head（蓝色雪花模块）多次采样，形成五层候选树（make/help→a/our→with/you→the/your→to/feel）；下半对应"How can"查询下FeatExtrapolator逐层展开的实际生成树。
+① **核心结构**：上图展示 EAGLE 三步推理流水线——目标 LLM（Forward 1，带雪花标记的蓝色模块即冻结参数）输出特征 f_how、f_can，Draft model 经 Forward 1→2→3 复用 Embedding 层与 LM Head，中间仅训练一个 "One Auto-regression Head" 在特征层自回归，逐次预测 f_I→f_make→f_with→f_you，再经 LM Head 与"Sampling multiple times"并行生成候选树（"I"/"make/help"等）。下图以"How can"为 Query 画出树状生成结构：经 FeatExtrapolator 一次产出多层分支 token。
 
-**论证结论：** EAGLE在特征层（而非token层）自回归，并冻结复用目标LLM的Embedding与LM Head，使Draft仅需轻量Auto-regression Head即可一次前向生成多token候选，体现"重思考特征不确定性"的核心方法思想。
+② **论证结论**：EAGLE 区别于 Speculative Sampling/Lookahead 的 token 级预测及 Medusa 的单特征多 head 预测，转而在**特征序列**上做自回归，并冻结目标 LLM 的 Embedding 与 LM Head 仅训练轻量 auto-regression head，实现高效并行 draft。
 
-**论文作用：** 作为3.1节方法总览图，与Figure 5方法对比共同支撑Table 6等关于MT-bench加速比与平均接受长度τ的实验分析。
+③ **论文作用**：作为方法总图，配合 Figure 5 横向对比，奠定 §3.1 drafting phase 的核心叙事，为后续 Table 6 等加速比实验提供架构依据。
 
 ### Figure 7 (p.7) ⭐深度解读
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig07.png]]

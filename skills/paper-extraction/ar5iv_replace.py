@@ -245,9 +245,16 @@ def render_table(tab_node, caption, out_path):
     cw = [min(42, max(8, max((len(r[c]) for r in rows), default=8))) for c in range(ncol)]
     wrapped = [[wrap(c, cw[i]) for i, c in enumerate(r)] for r in rows]
     rh = [max(str(c).count("\n") + 1 for c in r) for r in wrapped]
-    W = sum(cw) * 0.105 + 0.8
-    H = sum(rh) * 0.24 + 0.9
-    fig = plt.figure(figsize=(min(W, 22), min(H, 30)), dpi=150)
+    total = sum(rh)
+    # 行高 = 该行折行数占比 × 图高；图高 = 总行数 × 每行英寸数。
+    # 铁律：cell.set_height 必须用 rh[r]——get_celld() 无 colLabels 时行号
+    # 0 起就是数据行，rh[r-1] 会把全部行高错位旋转一格（首行拿到末行高度），
+    # 行高差异大的 prompt 模板表因此叠字+大片空白（2026-08-24 tab23/29 事故，
+    # 此前误诊为"matplotlib 不适合长文本表"）。
+    line_in = 0.19   # ≈13.7pt，8pt 字体单行宽裕
+    W = min(sum(cw) * 0.105 + 0.8, 22)
+    H = min(total * line_in + 0.3, 200)   # prompt 巨表不封顶 30in
+    fig = plt.figure(figsize=(W, H), dpi=150)
     # 图内不画 caption —— MD 里 visuals.json 的 caption + M3 解读紧邻展示；
     # 图内长 caption 折行后必然压首行（2026-08-24 两轮实测）
     ax = fig.add_axes([0, 0, 1, 1])
@@ -255,13 +262,13 @@ def render_table(tab_node, caption, out_path):
     tbl = ax.table(cellText=wrapped, colWidths=[c / sum(cw) for c in cw],
                    cellLoc="left", loc="center")
     tbl.auto_set_font_size(False)
-    tbl.set_fontsize(7.5)
+    tbl.set_fontsize(8)
     for (r, c), cell in tbl.get_celld().items():
         cell.set_edgecolor("#888888")
         cell.set_linewidth(0.4)
         if r == 0:
             cell.set_facecolor("#e8e8e8")
-        cell.set_height(rh[r - 1] * 0.24 / H * 1.6)
+        cell.set_height(rh[r] / total)
     fig.savefig(str(out_path), bbox_inches="tight", facecolor="white")
     plt.close(fig)
     return True, f"{len(rows)}x{ncol} via matplotlib"

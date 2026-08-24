@@ -30,11 +30,7 @@ tags: [multimodal]
 > Left: Conventional large multimodal models (LMMs) string all visual tokens into a sequence for high- and low-resolution images. Middle: Our DeepStack LMMs stack the tokens into a grid and infuse them into the first and middle transformer layers from bottom to top (■↑■↑■↑) simply using a residual connection. With no architecture modification and context length increasing, our model can handle multi
 
 > [!tip] 技术解读（多模态）
-> 【图文联合解读】**图1联合解读：**
-
-图1含三部分：(1)**左**——Sequence LMMs将576或2880视觉token**拼成一条长序列**送入L层Transformer，序列长度随分辨率线性增长；(2)**中**——DeepStack LMMs把2880 token**堆叠为网格并分4组**（每组576），分别在l_a、l_b、l_c、l_d四层通过**残差连接注入**（■↑■↑■↑），ctx_len恒为576；(3)**右**——雷达图显示DeepStack-L（红，2880 tok/576 ctx）在VQAv2（80.9）、GQA（64.4）、TextVQA（71.9）、DocVQA（46.0）、InfoVQA（31.6）、SEED（62.6）、POPE（87.5）7项基准全面超越Sequence（蓝/橙）。
-
-**论证结论**：以"分层堆叠+残差注入"替代"长序列拼接"，无需改动架构即可在**不增加上下文长度**前提下保留高分辨率视觉信息，并在多基准取得最优。该图作为论文开篇总览，奠定了DeepStack方法在整篇方法/实验链路中的核心立论——以最简改动突破高分辨率LMM的上下文瓶颈。
+> 【图文联合解读】图1三栏并列：左为Sequence LMM将全部视觉令牌串为序列一次性注入；中为DeepStack按组堆叠令牌（■↑■↑■↑），经残差连接从la→ld由浅入深逐层注入、不改架构；右为7基准雷达图，DeepStack-L（vis_tok=2880, ctx_len=576）在VQAv2达80.9、TextVQA 58.3、DocVQA 46.0，全面超越同ctx基线、逼近ctx=2880的Sequence。该图以"架构示意+性能对比"同框论证"短上下文承载4倍视觉令牌即可胜出"的核心方法论，作为全文方法开篇总纲定调。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig02.png]]

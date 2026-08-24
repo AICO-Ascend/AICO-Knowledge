@@ -5,7 +5,7 @@
 
 > 标 ⭐ 的图已用 MiniMax 多模态深度解读（技术解读见对应论文 MD 的 Figure [!tip]）。
 
-共 685 张图，来自 68 篇论文；其中 ⭐673 张已深度解读。
+共 739 张图，来自 69 篇论文；其中 ⭐727 张已深度解读。
 
 ## ⭐ 精选架构图（MiniMax 深度解读，可直接插入技术报告）
 
@@ -301,18 +301,24 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.3 (p.3)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig03.png]]
-> [!tip] 【图文联合解读】**图3联合解读**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-1) **核心对象**：三幅上下对照的draft流程图。上为原EAGLE：Training时以特征序列$f_1\cdots f_t$输入Draft模型，Step1输出$\hat f_{t+1}$（$l_{fea}$），Step2经LM head输出$\hat t_{t+2}$（$l_{token}$）。中为EAGLE+$l_{fea}$去除：改用无约束向量$\hat a_{t+1}$，Test时$\hat t_{t+3}\neq t_{t+3}$（红字标错）。下为EAGLE-3：Training/Test均执行Step1→Step2自回归，并以红色虚线"Training-time test"将Step1预测$\hat a_{t+1}$回灌为Step2输入。
+1）图分三栏对比：上为EAGLE（训练单步、测试多步，依赖特征损失l_fea）；中为去掉l_fea后训练用未约束向量â，但测试时t̂ₜ₊₃ ≠ tₜ₊₃（红叉，暴露train-test不一致）；下为EAGLE-3的"training-time test"，将âₜ₊₁反馈送入草稿模型做第二步，使训练与测试流程对齐。
 
-2) **关键结论**：去掉特征预测会暴露train-test分布失配；将Step1纳入训练后，8×数据下α-α由~0.78升至~0.80、SP由~0.69升至~0.78，证明训练分布与测试对齐才能让数据规模转化为draft接受率增益。
+2）原文借此论证：传统EAGLE在测试时多步自回归会引入训练-测试分布偏差，移除l_fea后偏差明显（红叉）；通过训练时即模拟多步测试，可统一两阶段，提升草稿准确性。
 
-3) **作用**：作为EAGLE-3的核心创新，支撑"scaling law"与相对EAGLE-2的1.4×延迟加速结论。
+3）该图是EAGLE-3核心创新（training-time test）的动机与机制图，奠定了后续多步自回归训练范式，是论文方法链路的关键设计依据。
 *caption: Illustration of training-time test (the bottom part) and its comparison with other draft methods (the upper and middle parts). f denotes the feature, … ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.4 (p.2)
 ![[assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig04.png]]
-> [!tip] 【图文联合解读】图4左侧给出EAGLE训练/测试两阶段流程（特征f_t预测f̂_{t+1}，再经LM head预测token）；右侧两折线图横轴为ShareGPT 1×–8×数据量下的接受率：EAGLE（红）较平稳；无特征预测版（黄）左图升至≈0.81但右图仅≈0.2–0.3；EAGLE-3（蓝）起点最低但随数据增速最快，8×时反超达≈0.80/0.78。原文据此论证：将测试时推理结构（Step1特征预测）纳入训练（training-time test）可显著放大数据扩展收益，是EAGLE-3关键改进。该图与Figure 3方法图互补，配合Table 4吞吐数据共同构成"训练时测试"有效性的完整证据链。
+> [!tip] 【图文联合解读】图4以ShareGPT数据量1×–8×为x轴，对比EAGLE、EAGLE无特征预测、EAGLE-3在两种接受率指标下的曲线：
+- 左图（0-α，范围~0.72–0.81）：EAGLE-3随数据量从~0.72单调升至~0.80，于8×时反超EAGLE（~0.785），无特征预测版最高（~0.81）；
+- 右图（1-α）：EAGLE-3由~0.70升至~0.78，EAGLE平台于~0.69，无特征预测版仅0.22–0.32。
+
+论证结论：引入训练时测试（training-time test）后，EAGLE-3显著受益于数据规模扩展，突破了原EAGLE随数据增加增益饱和的局限。
+
+论文作用：为"训练时测试+特征预测"这一核心技术改进提供关键的缩放性实证支撑，衔接Figure 3的训练框架与Table 4的吞吐加速。
 *caption: We can address this issue by incorporating Step 1 into the training process (the bottom of Figure 3). Using this method, the benefits of increasing tr… ｜ 论文 [[eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-3: Scaling up Inference Acceleration of Large Language — Fig.5 (p.4)
@@ -378,13 +384,9 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.3 (p.2)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读**
+> [!tip] 【图文联合解读】**图文联合解读（图3）：**
 
-图示三条"token→feature→下一token预测分布"的链节：左"always"（f_always: p(begin)=0.8, p(look)=0.2）、中"I"（f_I: p(am)=0.6, p(always)=0.4）、右"am"（f_am: p(excited)=0.3, p(ready)=0.7）；两条红色虚线"采样"从f_I分别外延至左右两节，呈现分叉结构。
-
-**技术结论**：f_I之后的下一特征取决于采样结果而非f_I本身，"always"与"am"均为合法后继，即自回归特征序列存在不可由前序特征唯一推断的内在不确定性。
-
-**论文作用**：作为EAGLE的核心动机图，挑战先前工作将特征序列视为确定性链的假设，从而论证必须把特征不确定性纳入预测设计，这正是EAGLE重写特征预测头、显著提升推测解码接受长度与加速比（Table 3）的理论起点。
+图3展示特征不确定性结构：中心 token "I" → f_I（p_I: p(am)=0.6, p(always)=0.4），经红色虚线"采样"分叉为两条分支——左支"always"→f_always（p(begin)=0.8, p(look)=0.2），右支"am"→f_am（p(excited)=0.3, p(ready)=0.7）。**核心论证**：f_I 之后的下一特征无法由 f_I 唯一确定，必须依赖实际采样结果，从而形成带不同概率分布的分支链，颠覆了先前工作将特征序列视为确定性链的假设。**论文作用**：该图是 EAGLE 重写特征预测头、显式建模特征不确定性的理论起点，支撑其在 Figure 2 中于 Vicuna/LLaMA2-Chat 7B/13B/33B/70B 上实现 2.13x–2.68x 的加速比。
 *caption: Uncertainty in feature sequences. The next fea- ture following fI is contingent on the sampling outcome and cannot be determined solely based on fI, w… ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.4 (p.3)
@@ -400,22 +402,22 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.5 (p.4)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig05.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图5联合解读**
 
-图5横向对比四种草稿方法生成t4、t5的机制：Speculative Sampling以t1-t3送入小LLM输出t4，再以t1-t4输入得t5（纯token级）；Lookahead基于2-Gram+Jacobi迭代token；Medusa由特征f2经两个独立Head并行产出t4、t5；**EAGLE则将token(t2,t3)经Embedding层与特征(f1,f2)拼接，由自回归Head依次预测f3→t4、f4→t5**，实现"特征级自回归+token级解码"。
+图5对比Medusa（左）与EAGLE（右）生成t₄、t₅的机制（Lookahead的n取2）：Medusa仅用单一f₂经两个并行Head直接预测t₄、t₅；EAGLE则采用**级联自回归**——先用[t₂,t₃,f₁,f₂]经嵌入+自回归头预测f₃，再由f₃预测t₄；继而将t₄反馈，连同[t₂,t₃,f₁,f₂]预测f₄，再得t₅。蓝块=token，橙块=feature，红框=草稿预测。
 
-作者借此论证：**不确定性主要源自特征而非token**，故在特征空间做自回归比直接预测token更准，从而支撑EAGLE"特征不确定性"的核心立论。该图作为方法论总览，与右侧树注意力多采样扩展，共同构成论文方法部分的视觉骨架，为后续Table 5的加速比实验提供机制层面的依据。
+该图直观论证EAGLE把已生成token回灌至下一轮特征预测，**降低了特征不确定性**这一核心技术结论（呼应论文标题"speculative sampling requires rethinking feature uncertainty"）。它作为方法论核心图示，衔接Table 5关于EAGLE接受长度τ的量化验证，构成"机制示意→实证增益"的完整论证链。
 *caption: A comparison of the methods for drafting the fourth and fifth tokens, t4 and t5. t (represented by blue blocks) denotes tokens, and f (orange blocks) … ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.6 (p.4)
 ![[assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-fig06.png]]
-> [!tip] 【图文联合解读】**注：** 所提供图片主体为Figure 5（四种drafting方法对比），右半部分含Figure 6（EAGLE管线）元素。解读如下：
+> [!tip] 【图文联合解读】**Figure 6 图文联合解读**
 
-**核心对象与结构：** 图右呈现EAGLE推断管线——target LLM前向1次（Embedding→Transformer→LM Head）采出"can/I"；Draft Model分Forward 1/2/3，每步将上一轮特征f（橙）与当前token embedding（绿）拼接，经单一Auto-regression Head预测下一特征f，再复用target LLM的LM Head（蓝色雪花模块）多次采样，形成五层候选树（make/help→a/our→with/you→the/your→to/feel）；下半对应"How can"查询下FeatExtrapolator逐层展开的实际生成树。
+① **核心结构**：上图展示 EAGLE 三步推理流水线——目标 LLM（Forward 1，带雪花标记的蓝色模块即冻结参数）输出特征 f_how、f_can，Draft model 经 Forward 1→2→3 复用 Embedding 层与 LM Head，中间仅训练一个 "One Auto-regression Head" 在特征层自回归，逐次预测 f_I→f_make→f_with→f_you，再经 LM Head 与"Sampling multiple times"并行生成候选树（"I"/"make/help"等）。下图以"How can"为 Query 画出树状生成结构：经 FeatExtrapolator 一次产出多层分支 token。
 
-**论证结论：** EAGLE在特征层（而非token层）自回归，并冻结复用目标LLM的Embedding与LM Head，使Draft仅需轻量Auto-regression Head即可一次前向生成多token候选，体现"重思考特征不确定性"的核心方法思想。
+② **论证结论**：EAGLE 区别于 Speculative Sampling/Lookahead 的 token 级预测及 Medusa 的单特征多 head 预测，转而在**特征序列**上做自回归，并冻结目标 LLM 的 Embedding 与 LM Head 仅训练轻量 auto-regression head，实现高效并行 draft。
 
-**论文作用：** 作为3.1节方法总览图，与Figure 5方法对比共同支撑Table 6等关于MT-bench加速比与平均接受长度τ的实验分析。
+③ **论文作用**：作为方法总图，配合 Figure 5 横向对比，奠定 §3.1 drafting phase 的核心叙事，为后续 Table 6 等加速比实验提供架构依据。
 *caption: Pipeline of EAGLE. The upper section illustrates the computational process, while the lower section displays the corresponding generation results for … ｜ 论文 [[eagle-speculative-sampling-requires-rethinking-feature-uncertainty]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE: Speculative Sampling Requires Rethinking Feature Unce — Fig.7 (p.7)
@@ -449,11 +451,11 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig01.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心数据**：该图为温度=1（非贪婪采样）下四种目标模型（Vicuna 7B/13B、LLaMA2-Chat 7B/13B）上三种加速方法的推理加速比对比柱状图。EAGLE-2 分别取得 3.05×、3.80×、3.19×、3.92×，均显著高于 EAGLE（2.13×/2.32×/2.22×/2.68×）和 Speculative sampling（仅 Vicuna 系列为 1.50×、1.62×，LLaMA2-Chat 因无合适 draft 模型标 N/A）。
+1）图为分组柱状图，纵轴Speedup(0–4)，横轴四组模型（Vicuna 7B/13B、LLaMA2-Chat 7B/13B），每组三柱依次为EAGLE-2（粉）、EAGLE（蓝）、Speculative sampling（紫）。具体数值：Vicuna 7B 3.05x / 2.13x / 1.50x；Vicuna 13B 3.80x / 2.32x / 1.62x；LLaMA2-Chat 7B 3.19x / 2.22x / N/A；LLaMA2-Chat 13B 3.92x / 2.68x / N/A。LLaMA2-Chat 因无合适 draft 模型，对应 speculative sampling 标 N/A。
 
-**2) 关键结论**：在非贪婪设置下，EAGLE-2 相对 EAGLE 仍有 1.4×–1.5× 的提升，验证了"动态 draft tree"机制比静态 draft tree 在采样场景下更优；而 Medusa 等方法因放宽接受条件、无法保证输出分布一致性，故未参与比较。
+2）论证在 temperature=1 非贪婪采样下，EAGLE-2 的动态 draft 树仍稳定优于 EAGLE 与 speculative sampling；论文仅与保证输出分布不变的 lossless 方法对比，排除 Medusa。
 
-**3) 论文作用**：作为首页 Figure 1，是 EAGLE-2 方法有效性的"第一印象"证据，与 Figure 2（temperature=0 贪婪场景）互补，共同构成论文对动态 draft 树在两种采样模式下普适加速能力的核心实验支撑。
+3）作为首页首要证据，与 Figure 2（t=0 贪婪场景）互补，共同支撑"EAGLE-2 在两种采样模式下均具普适加速能力"的核心实验结论。
 *caption: Speedup ratios of different methods at tempera- ture=1. For speculative sampling, the Vicuna series uses… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### EAGLE-2: Faster Inference of Language Models with Dynamic Dr — Fig.2 (p.2)
@@ -505,9 +507,11 @@ Figure 4 is a two-panel scatter plot evaluating tree-attention configurations fo
 ![[assets/crops/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees-fig07.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-图示EAGLE-2两阶段流程：①扩张（Top-2）——以"It(1.0)"为根，按草稿模型置信度（0.6/0.2/0.8/0.1…）动态建树，从当前层选top-2高值节点 a(0.48)、to(0.14) 继续扩展生成绿块子节点 good/nice/be/do；②重排序（Top-8）——对全树节点按值排序后取 [It, is, has, a, the, to, good, be] 展平为1D序列，并配合树状 attention mask，使每 token 仅可见其祖先节点，保证分支互不可见。
+**核心对象**：图7展示EAGLE-2的最终重排阶段——将8个高值节点压平为1D序列"It is has a the to good be"，并据此构建8×8注意力掩码（红色✔标记）。每个token仅能关注其在draft tree中的祖先节点（如"good"只见"It/is/a/good"，"be"只见"It/has/to/be"），保持严格的前驱依赖。
 
-该图论证了 EAGLE-2 的核心技术：动态草稿树通过"扩张深化—重排保连通—树状掩码保障并行验证正确性"，在保持 speculative decoding 正确性的同时显著提升接受率与速度，是论文区别于 EAGLE-1（静态树）的关键方法论支撑，也直接服务于 §5 在 Vicuna、LLaMA2/3 多模型上的加速实验。
+**技术结论**：论证了EAGLE-2将动态draft tree线性化后，通过树形注意力掩码即可在一次目标模型前向传播中并行验证多条候选路径，同时不破坏自回归因果性，这是相比EAGLE-1静态树的效率来源。
+
+**方法链路作用**：衔接"扩展-重排-验证"流水线——把分支草稿转成目标模型可直接处理的结构化输入，是动态树推测解码落地验证的关键桥梁。
 *caption: Illustration of EAGLE-2. The numbers beside the edges represent the confidence scores of the draft model, and the numbers in brackets within the block… ｜ 论文 [[eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees]] ｜ arxiv 见 MD 元信息*
 
 ### BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DI — Fig.1 (p.2)
@@ -608,13 +612,11 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.2 (p.4)
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图示DFlash推理架构：**目标模型从提示词抽取hidden context特征（蓝方块），融合后注入每层Draft Layer的KV Cache；Target Embedding并入Target Decode Token（黄）与多个Mask Token（绿），序列经Bidirectional Attention+MLP多层堆叠，最终由Target LM Head并行解码至`<eos>`。
 
-图2展示DFlash推理流程的三个阶段：(1) 左侧目标模型编码上下文（含`-./&01`等前缀token），提取**隐藏上下文特征**（顶部阴影方块）并向中间虚线框注入；(2) 中间虚线框为草稿模型，融合目标特征后以**块扩散**方式并行生成约**278个token候选**（如"45%5/0$*5…"），左下虚线框示意已确认/待确认/待生成三类token状态；(3) 右侧目标模型一次性并行验证候选块，部分token被拒绝（"!!!"），其余被接受并继续生成下一块。
+**图文论证结论：**把目标模型上下文特征融合注入草案层KV Cache，使草案模型可借助双向注意力并行填补掩码位置，实现条件式块级推测解码，区别于传统自回归逐token草案。
 
-**论证结论**：目标模型的隐藏特征可直接作为草稿模型各层的条件输入，无需从头预测；块级扩散+并行验证使每步解码一次前向即可生成数百token。
-
-**论文作用**：作为方法核心示意图，配合Table 2的**speedup/acceptance**数据，直观证明DFlash相较传统自回归推测解码的加速机理与收益来源。
+**论文整体作用：**作为DFlash核心推理机制设计，与表2解码加速比及平均接受率实验直接对应，为"扩散式块生成+Flash推测解码"提供方法学基础。
 *caption: DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s… ｜ 论文 [[dflash-block-diffusion-for-flash-speculative-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.3 (p.3)
@@ -628,13 +630,13 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.4 (p.5)
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1）核心对象与结构**：图中为两个注意力掩码矩阵。左侧对应 prompt tokens（约 6 列 × 13 行），灰色格全连通——即 target model 输出的 context features 对所有 prompt 做无条件 attend；右侧对应 response tokens（约 14 列 × 14 行），呈**块对角**结构：每个深灰块内自回归、块间由浅灰相连、白色被 mask，字符取自语料噪声片段"+'.!%0-#!1."等。
+该图以矩阵可视化DFlash的训练注意力模式。左侧"From Target Model"为12×6网格，蓝格表示目标模型对prompt p1–p4与响应r1–r2提取的上下文特征（共4+2=6列）；右侧"Mask Blocks"为12×12网格，划分3个4×4块，每块含1个clean anchor（黄，如r1/r2/r3）+3个mask token（绿，<m>），其余为invisible（白）。每块4行体现块内并行解码结构。
 
-**2）论证结论**：该 attention pattern 严格匹配推理时的条件依赖——draft model 在生成第 *k* 块时仅 attend target model 给出的前一块 hidden states（context features，蓝色），与 block diffusion 训练目标一致，证明训练–推理 attention 一致性。
+该图论证的核心结论是：DFlash采用块扩散训练范式，以clean token作锚点条件化mask token预测，使草稿模型在单次前向中并行生成整块draft token，避免自回归串行依赖。
 
-**3）方法链路作用**：作为 method 部分核心可视化，奠定 DFlash "目标模型上下文驱动草模型逐块生成"的基础，是后续加速比与跨域泛化实验的前提。
+在论文链路中，此图为方法核心图，明确阐释了"目标特征条件化+块扩散掩码训练"的整体机制，是后续消融实验与投机解码加速比论证的可视化基础。
 *caption: DFlash training attention. The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens… ｜ 论文 [[dflash-block-diffusion-for-flash-speculative-decoding]] ｜ arxiv 见 MD 元信息*
 
 ### DFlash: Block Diffusion for Flash Speculative Decoding — Fig.5 (p.13)
@@ -659,6 +661,69 @@ Figure 8: Sample from an AR model (Sahoo et al., 2024a) with length L = 2003 (tr
 
 **论文作用**：作为方法总览图，具象化 Equation 1 的三项延迟权衡，并为 Table 1 中"DSpark 平均接受长度反超 Eagle3"的反直觉结论提供机制支撑。
 *caption: Recall from Equation 1 that the per-token latency of speculative decoding is 𝐿= (𝑇draft + 𝑇verify)/𝜏. Autoregressive drafters achieve high 𝜏but pay 𝑇d… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
+
+### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.2 (p.12)
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig02.png]]
+> [!tip] 【图文联合解读】图示Qwen3-4B目标模型下，DFlash、Eagle3、DSpark三种方法在Math、Code、Chat三域、7个草稿位置（k=1…7）的条件接受率。量化读图：DSpark在所有位置均领先——Math约0.88–0.91、Code约0.85–0.89、Chat由0.72升至0.76，曲线平稳；DFlash在位置2明显跌落（如Code由0.87降至0.81）后仅部分回升；Eagle3首位置偏弱，Chat域从0.53递增至0.73。
+
+该图论证的核心结论：DSpark的半自回归草稿在各位置上均提供更高、更稳定的基础预测质量，显著优于自回归草稿（Eagle3首位预测不足）与扩散式草稿（DFlash中段退化）。
+
+在论文中作用：作为位置级消融证据，支撑confidence-scheduled调度机制与整体加速比的优越性，体现DSpark跨域、跨位置的稳定增益。
+*caption: Position-wise conditional acceptance. We report the empirical conditional acceptance rate for each draft position, averaged across benchmarks within e… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
+
+### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.3 (p.13)
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig03.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图3横轴为9个基准（GSM8K/MATH500/AIME25、MBPP/HumanEval/LiveCodeBench、MT-Bench/Alpaca/Arena-Hard v2），纵轴为"接受长度"（Accepted Length，约2–6）。绿色为DSpark，蓝色为DFlash；同一方法内由小到大标记1L/2L/5L层数，连线展示随深度递增的提升。**量化关键点**：在GSM8K上，DSpark-2L约5.7，已高于DFlash-5L的5.4；MATH500（5.3 vs 4.9）、AIME25（4.5 vs 4.2）、MBPP（5.1 vs 4.4）等9个任务中均呈同样规律——浅层DSpark一致超越深层DFlash。
+
+原文借此论证**顺序半自回归建模的参数效率**：DSpark仅需2层draft即可匹敌5层DFlash，证实其在固定proposal长度下的结构性优势。该图属于消融/对比实验，与Fig.2（proposal长度）共同支撑"少层draft + 置信调度"的整体方法链路，证明深度并非必需，模型架构设计才是关键。
+*caption: Effect of drafter depth. With proposal length fixed, DSpark’s performance improves as drafter layers are added. Notably, a shallow 2-layer DSpark outp… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
+
+### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.4 (p.13)
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig04.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图含四个子图，横轴均为 Draft Length（4/8/12/16），比较 DSpark（markov/RNN）与 DFlash。前三幅（Math/Code/Chat）纵轴为 Accepted Length：DSpark 在各 block size 下均显著高于 DFlash，且随 draft 长度增加增益扩大——Math +16%→+30%、Code +15%→+26%、Chat +18%→+22%；第四幅（Latency）显示 DSpark 仅带来 +0.6%~+1.3% 的额外时延（188→194ms 量级）。原文借此论证两点：(1) DSpark 的 confidence-scheduled semi-autoregressive 提议在不同提议长度上均稳定优于 DFlash；(2) 串行 head 引入的推理开销可忽略。该图作为实验链路中"质量–效率权衡"的关键证据，支撑了 DSpark 在不牺牲吞吐的前提下提升接受长度这一核心方法主张。
+*caption: Effect of proposal length and latency overhead. DSpark consistently outperforms DFlash across various block sizes (left three panels). The rightmost p… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
+
+### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.5 (p.15)
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig05.png]]
+> [!tip] 【图文联合解读】**图5图文联合解读：**
+
+图含Math/Code/Chat三个子图，横轴为置信阈值(0.0–0.9)，绿柱表接受Token、斜纹柱表拒绝Token，蓝线表接受率。阈值0对应定长验证基线：接受率分别为Math 76.9%、Code 67.6%、Chat 45.7%；阈值0.9时升至92.5%、92.0%、95.7%。同时平均Token/步总柱高由~8降至~5，说明置信头提前剪枝了原本将被拒绝的Token。该图论证了置信调度机制在三类任务上均稳定提升接受率，且在低起点Chat任务增益最大(+50pp)，验证"置信头可有效识别并剪除无效假设"的合理性，属于方法消融/灵敏度分析，为整体投机解码加速方案提供关键经验支撑。
+*caption: Confidence threshold sweep. A threshold of 0 corresponds to standard fixed-length verification. As the threshold increases, the overall acceptance rat… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
+
+### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.6 (p.15)
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig06.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1) **核心对象与结构**：图6为Alpaca数据集上的可靠性图（Reliability Diagram），按前缀位置分四个子图（Position 1/3/5/7）。横轴为预测接受率，纵轴为实际接受率，含三条曲线（完美校准虚线、校准前橙线、校准后绿线）及样本分布直方图。定量指标显示：ECE从校准前的5.7%/8.2%/5.8%/3.3%降至校准后2.0%/1.7%/0.8%/0.4%；AUC依次为0.818/0.812/0.864/0.907。
+
+2) **论证结论**：原始置信度估计器判别力强（AUC均>0.81），但系统性过度自信（橙线偏离对角线）；经后处理校准后，曲线贴合对角线，ECE显著降低，证明校准可使"前缀存活概率"与经验接受率对齐。
+
+3) **论文作用**：为DSpark置信度调度机制中"是否提前验证/接受"的阈值决策提供校准后的可靠概率依据，是半自回归推测解码早停策略有效性的实证支撑。
+*caption: The Reliability Diagram on Alpaca Dataset. While the raw confidence estimator achieves strong discrimination, its predictions are inherently overconfi… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
+
+### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.7 (p.18)
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig07.png]]
+> [!tip] 【图文联合解读】**图7联合解读**
+
+1. **核心对象与数据**：左右两幅散点图分别对应 DeepSeek-V4-Flash（吞吐量 0–20k tok/s/gpu，TPS 50–225）与 DeepSeek-V4-Pro（0–6k+，TPS 20–120），对比 MTP（蓝）与 DSpark（绿）在真实流量下的吞吐–交互前沿。Flash 上 DSpark 相对 MTP 在等 TPS 下提升 +51%/+661% 吞吐，等吞吐下提升 +60%/+85% TPS；Pro 上对应为 +52%/+406% 吞吐与 +57%/+78% TPS。
+
+2. **关键结论**：DSpark 相比 MTP-1 基线在两种模型上均外推并主导了 Pareto 前沿，证明置信度调度的半自回归推测解码在生产引擎配置与真实流量下，能同时改善聚合吞吐与单请求交互速度，而非以牺牲其中一项为代价。
+
+3. **整体作用**：作为最终线上部署验证实验，图7将前文方法优势落地到真实服务指标，闭环论证 DSpark 在吞吐–延迟二维权衡上的实用性，支撑"可直接替代 MTP 部署"的结论。
+*caption: Throughput vs. TPS. Aggregate output token throughput against per-request genera- tion speed (tok/s/user) under live traffic. In our production deploy… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
+
+### DSpark: Confidence-Scheduled Speculative Decoding with Semi- — Fig.8 (p.19)
+![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig08.png]]
+> [!tip] 【图文联合解读】**图8图文联合解读：**
+
+图8为2×2面板，分别在DeepSeek-V4-Flash（左）与V4-Pro（右）模型上对比DSpark（绿）与MTP（蓝）随并发请求数（0–200）的表现。**上行（a,b）吞吐量**：并发200时DSpark聚合吞吐分别达约17k与6k tokens/s/gpu，系统性高于MTP的约14k与5k；**下行（c,d）验证预算**：DSpark随负载从约5.5自适应下降至约3.5，而MTP恒为2。
+
+该图论证的核心结论是：DSpark的动态调度器在高并发下主动收紧每请求的验证预算，把节省下来的计算资源用于提升整体服务吞吐，从而实现"负载自适应"——这是其优于固定预算MTP的关键技术证据，支撑了论文关于置信度调度策略在真实部署场景下有效性的实验论证。
+*caption: Load-adaptive throughput and verification budgets. Top row (a, b): Aggregate output throughput across varying levels of system concurrency. Bottom row… ｜ 论文 [[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]] ｜ arxiv 见 MD 元信息*
 
 ### JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin — Fig.1 (p.2)
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig01.png]]
@@ -1521,7 +1586,7 @@ Full CUDA Graph 把全部前反向+优化器操作纳入单一图，消除了 la
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.37 (p.61)
 ![[assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig37.png]]
-> [!tip] 【图文联合解读】图以3个4×4批次展示因果注意力掩码，彩色单元为有效计算：同样4个token，长度3+1需7个单元，2+2仅6个，未填充的长度4则有10个，负载在6～10间失衡。该对比论证Dynamic-CP需按序列长度和掩码动态调整QKV划分及CP通信组；它无需迁移参数或优化器状态，框架开销低。该图是从固定CP迈向可变长度动态并行的关键动机。
+> [!tip] 【图文联合解读】图像无法辨认，仅依据原文：当前页未显示 Fig.37 的可读图形或数据，底部为相关 Fig.38 示意。设 packed 序列含长度 \(n_i\) 的样本，因果注意力工作量约为 \(\sum_i n_i^2\)，长短悬殊会造成计算失衡。原文以此说明静态 CP 切分不适用于变长训练；Dynamic-CP 可按微批/序列选择 CP 组，长序列用 CP=2、短序列可各自用 CP=1，无需迁移参数或优化器状态。该图位于动机—方法论证链中，明确动态上下文并行的优化对象。
 *caption: Compute imbalance in causal attention over packed sequences. are partitioned and which CP communication group is used by attention operators, without … ｜ 论文 [[scalable-training-of-mixture-of-experts-models-with-megatron-core]] ｜ arxiv 见 MD 元信息*
 
 ### Scalable Training of Mixture-of-Experts Models with Megatron — Fig.38 (p.61)
@@ -1598,11 +1663,7 @@ Full CUDA Graph 把全部前反向+优化器操作纳入单一图，消除了 la
 
 ### DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim — Fig.1 (p.1)
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig01.png]]
-> [!tip] 【图文联合解读】**图1联合解读：**
-
-图1含三部分：(1)**左**——Sequence LMMs将576或2880视觉token**拼成一条长序列**送入L层Transformer，序列长度随分辨率线性增长；(2)**中**——DeepStack LMMs把2880 token**堆叠为网格并分4组**（每组576），分别在l_a、l_b、l_c、l_d四层通过**残差连接注入**（■↑■↑■↑），ctx_len恒为576；(3)**右**——雷达图显示DeepStack-L（红，2880 tok/576 ctx）在VQAv2（80.9）、GQA（64.4）、TextVQA（71.9）、DocVQA（46.0）、InfoVQA（31.6）、SEED（62.6）、POPE（87.5）7项基准全面超越Sequence（蓝/橙）。
-
-**论证结论**：以"分层堆叠+残差注入"替代"长序列拼接"，无需改动架构即可在**不增加上下文长度**前提下保留高分辨率视觉信息，并在多基准取得最优。该图作为论文开篇总览，奠定了DeepStack方法在整篇方法/实验链路中的核心立论——以最简改动突破高分辨率LMM的上下文瓶颈。
+> [!tip] 【图文联合解读】图1三栏并列：左为Sequence LMM将全部视觉令牌串为序列一次性注入；中为DeepStack按组堆叠令牌（■↑■↑■↑），经残差连接从la→ld由浅入深逐层注入、不改架构；右为7基准雷达图，DeepStack-L（vis_tok=2880, ctx_len=576）在VQAv2达80.9、TextVQA 58.3、DocVQA 46.0，全面超越同ctx基线、逼近ctx=2880的Sequence。该图以"架构示意+性能对比"同框论证"短上下文承载4倍视觉令牌即可胜出"的核心方法论，作为全文方法开篇总纲定调。
 *caption: Left: Conventional large multimodal models (LMMs) string all visual tokens into a sequence for high- and low-resolution images. Middle: Our DeepStack … ｜ 论文 [[deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms]] ｜ arxiv 见 MD 元信息*
 
 ### DeepStack: Deeply Stacking Visual Tokens is Surprisingly Sim — Fig.2 (p.4)
@@ -2304,13 +2365,13 @@ There is **no figure visible on this page**. Page 12 contains only textual conte
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.10 (p.10)
 ![[assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig10.png]]
-> [!tip] 【图文联合解读】**图10解读：**
+> [!tip] 【图文联合解读】**图10联合解读：**
 
-**1）核心对象与数据**：2×3 网格堆叠柱状图，对比 LLaMa-13B 在 A6000 上各操作（preproj/attn/postproj/ffn，单位秒）的耗时，橙=SARATHI 基线，青=SARATHI。上排 chunk=256、下排 chunk=512；列分别为 seq len 1K/2K/3K。量化读数：seq=1K、batch=18、chunk=256 时基线≈8.6s、SARATHI≈6.7s；同 batch=18 但 chunk=512 时基线≈6.5s、SARATHI≈5.2s；seq=3K、batch=6、chunk=256 时基线≈8.3s、SARATHI≈6.8s。ffn（实色段）为最大占比。
+图10以2×3网格呈现LLaMa 13B在A6000上四类操作（preproj/attn/postproj/ffn）的耗时堆叠分解：上排chunk=256、下排chunk=512，序列长1K/2K/3K对应最大批次18/8/6。蓝色SARATHI总耗时全面低于橙色baseline：1K批次18从~8.5s降至~6.7s（chunk=256）；3K批次6从~8.4s降至~6.8s；chunk=512进一步将绝对耗时压低（如1K批次18≈5.2s）。耗时主成分为ffn与attn。
 
-**2）论证结论**：增大 chunk（256→512）显著压缩总时延，且 SARATHI 在每个配置下均低于基线，收益主要来自 ffn 与 attn 段。
+**关键结论：** SARATHI的加速并非仅源于attention优化，而是preproj/attn/postproj/ffn四阶段均被压缩，说明分块预填充+解码piggybacking带来的是整体流水线效率提升。
 
-**3）作用**：作为 Figure 9 的操作级分解补充，从微观算子层面验证 chunked-prefill + decode piggyback 减开销的机制有效性。
+**论文作用：** 与图9吞吐量曲线互补，从微观操作分解角度定量验证SARATHI在系统级调度层面普遍有效，为其分块策略提供耗时级证据支撑。
 *caption: Breakdown of total time spent on different operations for LLaMa 13B on A6000 GPU with varying sequence lengths and batch sizes, using prefill chunk si… ｜ 论文 [[sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills]] ｜ arxiv 见 MD 元信息*
 
 ### SARATHI: Efficient LLM Inference by Piggybacking Decodes wit — Fig.11 (p.11)
@@ -2555,22 +2616,22 @@ Sarathi-Serve（下图）通过将prefill切分为等大小token块（如Ap1、B
 ![[assets/crops/kimi-vl-technical-report-fig08.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
 
-**核心内容：** 该图为圆几何推理示例。题目设定⊙O中AB为直径，C、D在圆上，∠D=62°，求∠ACO，提供A.26°/B.28°/C.30°/D.32°四选项。模型分三步求解：①由直径推∠ACB=90°（圆周角定理）；②圆心角∠AOC=2×62°=124°（圆周角定理）；③由OA=OC设∠ACO=x列方程2x+124°=180°，得x=28°，选B。
+图示为一道圆几何推理题：圆O中AB为直径，点C、D在圆上，∠D=62°，求∠ACO（选项A-D：26°/28°/30°/32°）。模型分三步求解：①由AB为直径推出∠ACB=90°（圆周角定理）；②由圆心角定理得∠AOC=2×62°=124°；③利用OA=OC构成等腰三角形，设∠ACO=x，列方程2x+124°=180°，解得x=28°，选B。
 
-**论证结论：** 证明Kimi-VL具备符号推理与几何推断能力——能解析视觉条件、调用圆周角定理与三角形内角和等定理、多步符号演算后准确得出目标角。
+**技术结论：** 该例证明Kimi-VL具备链式符号推理能力，能识别视觉几何结构并调用圆周角/圆心角定理逐步推导。
 
-**论文作用：** 在第13页与MathVision基准论证衔接，作为定性示例佐证模型在复杂视觉数学推理（symbolic+geometric chain-of-thought）上的可靠性，与定量评测互补。
+**整体作用：** 作为定性案例，与定量评测（如MathVision基准）互证模型在视觉-数学跨模态推理任务上的有效性。
 *caption: Kimi-VL demonstrates its capability to perform symbolic reasoning and geometric inference by solving a circle geometry problem step by step. The model… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.9 (p.14)
 ![[assets/crops/kimi-vl-technical-report-fig09.png]]
-> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**1) 核心结构**：图采用 3列×2行 布局，共 6 个子面板。上排（蓝色）为 3 类输入：左为结构化金融表格（多列多行带分隔线），中为含分数/根号/上下标的复杂数学公式块，右为手写中文段落。下排为对应模型输出：左为 Markdown 表格（含多段小标题与数字行）、中为经 LaTeX 渲染后的公式矩阵、右为含数学符号与代码片段的转录文本（出现 `GP4a`、`FG3`、`]`、`P0` 等字符）。
+该图以三对"输入—输出"对照展示Kimi-VL的多场景OCR能力。**左列**为金融表格输入与多行Markdown表格输出（含列标题与数十行数值条目）；**中列**为手写公式图像与对应LaTeX源码，附"Rendered formula"渲染示意；**右列**为另一公式输入及完整LaTeX转写（含对齐环境`$$\begin{aligned}...$$`与多行变量结构）。
 
-**2）关键技术结论**：通过输入-输出对照，定性证明 Kimi-VL 在三类异质 OCR 任务上具备统一的结构化解析能力——表格转 Markdown、公式转 LaTeX、手写文本转录，三者共享同一视觉-语言编码器。
+原文借此论证三点关键技术结论：(1) 模型能将结构化表格**无损映射**为语义化Markdown；(2) 能将含分数、上下标的复杂公式**精确转译**为可编译的LaTeX；(3) 能基于上下文**理解性转录**手写段落。
 
-**3）论文链路作用**：作为定量基准测试（OCRBench 等）之外的**定性可视化样例**，位于能力展示章节中段，用具体例子支撑论文"versatile multimodal text understanding"的总体结论，强化读者对模型泛化能力的直观信任。
+在论文链路中，该图作为**定性可视化证据**，与前文的定量OCR基准（精度、编辑距离等指标）互补，向评审者直观证明Kimi-VL在"金融—数学—手写"三类异构文本上的通用多模态文本提取与解释能力，是其相对纯语言OCR模型差异化优势的核心展示。
 *caption: Diverse OCR visualization. Kimi-VL demonstrates strong OCR capabilities across varied content types, including structured financial tables, complex ma… ｜ 论文 [[kimi-vl-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI-VL TECHNICAL REPORT — Fig.10 (p.15)
@@ -2764,13 +2825,11 @@ Figure 3 展示 Kimi K2 逐 step 训练 loss 曲线：横轴为 0–15.5 万亿 
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.4 (p.5)
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig04.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
+> [!tip] 【图文联合解读】**图示核心结构**：自回归分块改写流水线。将4096 token的"full input excerpt"切分为多个256 token的partial片段；每片段连同全量原文上下文输入rewrite model，前一片段的partial output以auto-regressive方式接入下一片段上下文，最终concat为完整改写输出。
 
-图4展示自回归分块改写流水线结构：长文本被切分为3个输入块（顶部蓝色"WRNHQV"上下文窗口保留），每块经紫色"UHUULWH SUR"改写提示生成绿色"SDUWLDO RXWSXW"局部输出，前后块通过"DXWR UHJUHVVLYH"反馈串联，最终拼接为完整改写段落。
+**论证的关键技术结论**：通过"分块（4096→256）+ 全文上下文保留 + 自回归衔接"三步设计，确保长文本改写中局部片段与全局语义的连贯一致性，为fidelity verification（语义保真度校验）提供机制保障，作为训练前的质量控制环节。
 
-**论证结论**：通过切块+滑动上下文+顺序改写，可在保证语义衔接的前提下处理超长输入；配合fidelity verification（逐块语义对齐校验），为训练数据构建提供前置质量控制。
-
-**链路作用**：该图对应数据预处理阶段，承担"长文本→训练可用改写语料"的转换职能，是模型训练前的关键清洗/改写环节。
+**在整体链路中的作用**：位于数据预处理阶段，将长篇幅语料高效改写为与原意对齐的训练语料，为K2-Base模型后续训练及Table 4所示多任务基准评测提供高质量数据基础。
 *caption: • Fidelity verification: To ensure consistency between original and rewritten content, we perform fidelity checks that compare the semantic alignment … ｜ 论文 [[kimi-k2-open-agentic-intelligence]] ｜ arxiv 见 MD 元信息*
 
 ### KIMI K2: OPEN AGENTIC INTELLIGENCE — Fig.5 (p.7)
@@ -3217,16 +3276,76 @@ No figure caption is present on this page. The page's opening line reads:
 The only in-line figure references are: *"Figure 2"* (ragged-boundary attention mask) and *"Figure 9"* (plotted speedup T_FA = T_8 ).
 *caption: 4.3… ｜ 论文 [[dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space]] ｜ arxiv 见 MD 元信息*
 
+### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.2 (p.8)
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig02.png]]
+> [!tip] 【图文联合解读】**图2图文联合解读**
+
+图2对比概念复制前后的跨注意力掩码。**左**：6个token以不等量映射到3个concept（蓝1/绿1/橙1），形成不规则L×M掩码（红框标出参差边界）。**右**：用`repeat_interleave`将concept扩展为6个槽位（蓝1/绿2/橙2），转化为标准L×L下三角因果掩码。
+
+**论证结论**：动态概念建模中的变长映射可通过概念复制规整为标准因果注意力结构，从而复用Flash Attention（FA）等优化算子。
+
+**论文作用**：它是LCM把"语义级动态推理"工程落地的关键桥梁，使模型兼具概念级推理灵活性与接近标准Transformer的推理速度（如图9所示的FA加速比）。
+*caption: Cross-Attention Optimization via Concept Replication. Left: The decoder’s cross-attention creates an irregular L×M mask due to variable token-to-conce… ｜ 论文 [[dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space]] ｜ arxiv 见 MD 元信息*
+
+### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.3 (p.10)
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig03.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**1. 核心对象与结构数据**
+Figure 3 包含两张子图，均展示 Loss 随 Learning Rate（占最优 η 的百分比）的变化。左图（单一曲线，U 型）：50% 时 Loss≈3.302，100% 处达到最小值≈3.276，200% 时回升至≈3.293。右图（四条曲线）：从大到小依次为 base（紫，≈2.71–2.87）、S（绿，≈2.83–3.00）、XS（红，≈2.96–3.11）、XXS（蓝，≈3.27–3.31），所有曲线最低点均落在 100%–120% 区间，两侧对称上升。
+
+**2. 关键技术结论**
+验证 µP（µ-Parameterization）假设：四档不同规模模型共享同一个最优学习率 η*（约 100%），曲线呈典型凸形，表明在小模型上扫出的最优超参可零成本迁移至 base 模型，无需重新调参。
+
+**3. 在论文中的作用**
+该图是 DLCM 训练流水线中的**可扩展性证据**——支撑"超参一次扫、多尺度复用"的工程主张，配合 Table 3 的架构配置，证明 DLCM（2.3B）在保持高效调参的同时优于 LLaMA-1.3B 基线。
+*caption: Hyperparameter tuning and transfer under µ P. Left: We sweep η… ｜ 论文 [[dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space]] ｜ arxiv 见 MD 元信息*
+
+### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.4 (p.12)
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig04.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1) **核心对象与结构**：3×3网格图，横轴为训练token量（0–160B），纵轴为Loss（2–14），覆盖274M/468M/833M三种模型规模与R∈{2,4,8}三种压缩率；每子图含Real Data（蓝实线）、Stable Law No-Decay（红虚线）、末端Decay Prediction（绿星）。Loss在前约10B tokens内从12–14陡降至~3后平稳，红色虚线全程贴合蓝线，九组R²>0.98。
+
+2) **关键技术结论**：式22预测损失在跨模型规模、压缩率与训练预算的全轨迹上与实测高度吻合，证明所提scaling law具有跨尺度普适性，并能在训练早期外推最终性能。
+
+3) **论文整体作用**：为Dynamic LCM提供理论预测工具，使其能在不同规模/压缩率下预判最优配置，是从理论框架走向工程决策的实验验证环节。
+*caption: Full training trajectory fit. Comparison between predicted loss (Equation 22) and empirical loss across model sizes (274M–833M), compression factors R… ｜ 论文 [[dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space]] ｜ arxiv 见 MD 元信息*
+
+### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.7 (p.0)
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig07.png]]
+> [!tip] 【图文联合解读】图7上图为Concept Model（蓝虚线）与Baseline（橙实线）在概念内相对位置0–19的平均损失对比，两线走势接近（自≈2.75降至0.2–1.7区间）；下图柱状显示差值，位置0、16、19呈绿色（Concept更优，最大≈−0.22），位置4–12多为红色（+0.05~+0.11），位置13、15红柱最大（≈+0.23、+0.20）。
+
+**技术结论**：Concept Model并非全局优于Baseline，仅在概念起止边界占优，中段位置损失反而更高，揭示概念级潜空间推理在token级损失度量上存在粒度切换带来的结构性折损。
+
+**作用**：作为损失级诊断证据，支撑动态LCM"自适应语义空间"设计中边界收益与中段开销的权衡论述。
+*caption: Top: Average loss comparison between concept model (blue) and baseline model (orange) across relative positions within concepts. Bottom: Loss differen… ｜ 论文 [[dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space]] ｜ arxiv 见 MD 元信息*
+
+### Dynamic Large Concept Models: Latent Reasoning in an Adaptiv — Fig.8 (p.0)
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig08.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**1) 核心对象与数据**：图8横轴为训练步数（23→10715），纵轴为压缩后序列平均长度（token数）。红线 Learned Boundary Predictor 从起始约 5150，急降至 step≈1000 的最低约 2500，再回升并稳定在约 4300–4400；紫线 Rule-Based Predictor 全程平稳围绕 2000–2100 波动，差异显著。
+
+**2) 关键结论**：Learned 预测器收敛后压缩后长度约为 Rule-Based 的两倍以上，表明学习型边界能保留更细粒度的语义单元，压缩比具备可学习、自适应特性。
+
+**3) 论文定位**：为 Dynamic LCM"自适应语义空间"提供实证——证明 boundary predictor 可随训练动态调节压缩粒度，支撑推理深度按需变化的整体方法链路。
+*caption: Average compressed sequence length over training steps. Red: Learned Boundary Predictor. Purple: Rule-Based Predictor. The x-axis represents training … ｜ 论文 [[dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space]] ｜ arxiv 见 MD 元信息*
+
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.1 (p.3)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig01.png]]
-> [!tip] 【图文联合解读】图展示(a) PPO、(b) Safe-RLHF、(c) ReMax 三种 RLHF 算法的三阶段数据流图，含 actor、critic、reference policy、reward model、cost model 五类模型节点：①生成(Actor Gen)、②准备(Ref/RM/Critic/Cost Fwd 等前向)、③训练(Actor/Critic Training)。Safe-RLHF 引入 cost model 与 L_ptx，ReMax 采用双 actor+双 RM+双 Ref 结构。该图论证：不同 RLHF 算法共享"生成—准备—训练"骨架，但模型组合与依赖各异，故 HybridFlow 须以灵活的多控制器架构统一调度异构数据流，为其模块化设计提供关键动机，并衔接后文对现有框架灵活性差、效率低两类缺陷的剖析。
+> [!tip] 【图文联合解读】**图文联合解读（Figure 1）：**
+
+该图以三层数据流图刻画 PPO、Safe-RLHF、ReMax 三种 RLHF 算法：(1) Generation 层（Actor Gen）调用次数分别为 1、1、2 次；(2) Preparation 层组合各异——PPO 使用 Ref+RM+Critic 前向，Safe-RLHF 额外引入 Cost 模型，ReMax 仅用 RM+Ref；(3) Training 层 PPO/ReMax 含 Actor 与 Critic 训练，Safe-RLHF 增加 Actor Fwd 与 $\mathcal{L}_{ptx}$ 约束。
+
+论文借此论证：**不同 RLHF 算法的模型依赖关系异构**（含 reward、cost、reference、critic 等多模型耦合），且不同算法生成/训练阶段对模型组合的需求差异显著，验证了现有多/单控制器方案在灵活性或效率上的不足。该图为 HybridFlow 提出的**多控制器分层抽象**（intra-/inter-node 划分）提供了直接动机，奠定后续 Auto-Mapping 与 3D-HybridEngine 设计的基础。
 *caption: Dataflow graph of 3 RLHF algorithms [19, 43, 55].… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.2 (p.3)
 ![[assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig02.png]]
-> [!tip] 【图文联合解读】**图文联合解读（≤220字）：**
+> [!tip] 【图文联合解读】**Figure 2 联合解读：**
 
-图2对比两种RLHF编程模型。(a)现有框架采用纯多控制器：Actor、Critic、Reward各worker独立调度，代码层嵌套`recv_actor()`/`broadcast()`递归调用，由此产生两大缺陷——**Inflexible**（计算与数据依赖深度耦合、难以适配多种LLM系统）与**Inefficient**（训推切换开销大、模型放置策略僵化）。(b) HybridFlow提出混合模型：**Inter-Node**用单控制器统一编排`actor.gen → critic.comp_value → reward.compute_reward`；**Intra-Node**仍保留多控制器并行`gen`/`comp_reward`（含`all_gather_weights`）。由此获得**Flexible**（解耦数据与计算依赖、无缝集成任意LLM）与**Efficient**（零冗余切换、支持灵活模型放置）。该图是论文方法动机的核心可视化，与Table 2实测的训推切换开销直接呼应，奠定后文HybridFlow编程抽象与性能优势的设计基础。
+图2对比两种RLHF编程模型。(a)现有框架采用纯多控制器——Actor/Critic/Reward各worker节点均独立设控制器，计算与数据依赖嵌套、模型放置僵化、训练-生成切换开销大；(b)HybridFlow采用混合范式：节点间由单控制器协调模型调度，节点内沿用多控制器执行分布式计算（如图中gen()、comp_values()、comp_reward()函数解耦）。技术结论：解耦数据与计算依赖、消除转换冗余、支持灵活模型放置、为异构LLM系统提供统一接入。该图是HybridFlow核心设计动机与方案的可视化，直接呼应并支撑Table 2对"训练↔生成切换开销"的实验量化，构成论文"问题剖析—方案提出—性能验证"方法学链路的枢纽环节。
 *caption: Programming model used in RLHF systems. (a)… ｜ 论文 [[hybridflow-a-flexible-and-efficient-rlhf-framework]] ｜ arxiv 见 MD 元信息*
 
 ### HybridFlow: A Flexible and Efficient RLHF Framework — Fig.3 (p.4)
@@ -3820,6 +3939,17 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 **Key Takeaway:** With the risk control system enabled, DeepSeek-V3/R1's multilingual safety approaches Claude-3.7-Sonnet (SOTA), while DeepSeek-R1 exhibits **zero high-risk languages** — indicating no obvious language-specific vulnerabilities.
 *caption: For DeepSeek-V3 and DeepSeek-R1, we evaluated safety scores for models with and without the risk control system (introduced in D.3.1). Additionally, w… ｜ 论文 [[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
 
+### DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via  — Fig.1 (p.4)
+![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig01.png]]
+> [!tip] 【图文联合解读】**图(a) 联合解读：**
+
+图示DeepSeek-R1-Zero在AIME基准上10000步纯强化学习训练的精度演化：蓝色pass@1从约0.15稳步攀升至≈0.77，红色cons@16从≈0.25升至≈0.87，二者均在步骤≈1700–2000处跨越人类参赛者均分基线(绿色虚线≈0.38)。
+
+原文借此论证核心论点：**仅依靠纯RL（GRPO）而无需任何SFT冷启动，模型即可自主涌现并持续增强数学推理能力**，pass@1的稳定上扬与cons@16的领先印证"自验证式推理"行为的产生。
+
+该图在论文中扮演**方法论先导证据**角色——先以R1-Zero证明"RL足以激励推理"的可行性假设，再为后续引入冷启动SFT的完整R1管线提供动机与对照基准。
+*caption: (a) AIME accuracy of DeepSeek-R1-Zero during training. AIME takes a mathematical problem as input and a number as output, illustrated in Table 32. Pas… ｜ 论文 [[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]] ｜ arxiv 见 MD 元信息*
+
 ### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.2 (p.6)
 ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig02.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
@@ -3854,6 +3984,51 @@ Since no figure is present, I can only transcribe the visible caption-adjacent t
 
 **论文链路作用**：该图作为质化证据，与定量检索命中率、困惑度互补，支撑"查找式记忆构成 LLM 稀疏性新维度"的核心论点——通过选择性门控，将稳定的模式化知识从注意力计算中剥离，使模型算力集中于需要组合推理的位置。
 *caption: The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static pa… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.1 (p.3)
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig01.png]]
+> [!tip] 【图文联合解读】图1展示Engram架构：左侧主干为Vocab Embedding→Transformer Block→Engram（仅特定层插入）→Attention→MoE的残差堆叠；右侧放大视图显示，对当前token的2-gram（"the Great"）与3-gram（"Alexander the Great"）上下文经h头Hash查静态Embedding表，Concat后双Linear分支，再经Scaled Dot Product与Conv与Input Hidden融合。该图论证"以静态查表记忆替代部分动态计算、记忆与计算解耦"这一新增稀疏维度，为Table 1中Engram-27B以3.8B激活参数（从专家参数重分配至5.7B Engram记忆）全面超越等激活参数MoE-27B提供核心架构支撑。
+*caption: The Engram Architecture. The module augments the backbone by retrieving static 𝑁 - gram memory and fusing it with dynamic hidden states via context-aw… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.3 (p.7)
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig03.png]]
+> [!tip] 【图文联合解读】**左图（稀疏分配）**：在 2e20 与 6e20 FLOPs 两种算力下，验证损失随 Engram/MoE 分配比 ρ 均呈 U 形——6e20 曲线最低约 1.710（ρ≈80%），2e20 曲线最低约 1.731（ρ≈70%），均显著低于纯 MoE（ρ=100%时分别约 1.725 与 1.830）。
+
+**右图（Engram 扩展）**：无限记忆机制下，Engram 与 OverEncoding 的损失随嵌入槽数（对数尺度）均呈幂律下降，Engram 从约 1.788 降至约 1.745，全程略优于 OverEncoding，表明其具备良好可扩展性。
+
+**作用**：图 3 从分配比与记忆容量两维度，定量论证"混合条件记忆+MoE 优于纯 MoE"，并验证 Engram 的 scaling law，是支撑"条件记忆作为新稀疏轴"的核心实验证据。
+*caption: Sparsity allocation and Engram scaling. Left: Validation loss across allocation ratios 𝜌 . Two compute budgets are shown (2 e 20 and 6 e 20 FLOPs). Bo… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.4 (p.13)
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig04.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图(a)为28层KL曲线：Engram-27B/40B在0-15层KL持续低于MoE-27B（落差0.5-1.0），15层后三者收敛重合；(b)(c)CKA热图呈"阶梯右移"——Engram第5层对齐MoE第12层，第20层才追上MoE第25层。
+
+**论证**：Engram让表征早熟——浅层KL更低、CKA显示Engram浅层即对齐MoE深层，加速预测收敛并压缩等效深度，证实条件查表真替代了若干Transformer层的语义抽象。
+
+**论文作用**：与Table 4（吞吐降幅仅1.9%-2.8%）互补——前者给"机理正确"，后者给"工程可行"，合力支撑"以查表式条件记忆换取规模扩展，不损质量、不损速度"的稀疏性新轴主张。
+*caption: Analysis of representational alignment and convergence speed. (a) Layer-wise KL Divergence via LogitLens ( nostalgebraist , 2020 ). The consistently l… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.6 (p.17)
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig06.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图6展示Engram模块消融后，各基准任务保留性能（% of Baseline）按类别分组的柱状图。数据呈明显梯度：阅读理解（C3 93%、RACE-Middle 89%、RACE-High 84%、DROP 81%）保留率最高；常识推理（HellaSwag 85%、ARC-Challenge 81%、PIQA 81%）次之；知识密集推理（CMMLU 78%、MMLU 75%、MMLU-PRO 72%）约七成；代码（76%–58%）与算法推理（67%–36%）居中；事实知识保留率最低（TriviaQA-ZH 44%、PopQA 44%、TriviaQA 29%）。
+
+该图支撑原文结论：Engram模块是事实知识存储的关键载体，移除后事实类任务近乎崩溃；而阅读理解等任务主要由backbone维持，Engram贡献有限。这说明Engram与backbone存在功能分工——前者负责"查表式"事实记忆，后者负责推理与理解。
+
+在论文链路中，该消融实验是证明Conditional Memory（Engram）作为LLM新稀疏轴有效性的核心证据：它通过解耦实验量化了"记忆"与"推理"的可分离性，为Engram作为独立模块的设计提供了实证支撑。
+*caption: Retained performance under Engram ablation. Factual knowledge relies heavily on the Engram module, whereas reading comprehension is largely preserved … ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### Conditional Memory via Scalable Lookup: A New Axis of Sparsi — Fig.8 (p.34)
+![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig08.png]]
+> [!tip] 【图文联合解读】1) 核心对象：28 个子图（7×4），横轴为预训练最后 10k 步（42k–50k），纵轴为各基准得分；红实线为 Engram-27B，黑虚线为 MoE-27B，覆盖 Pile-test 困惑度及 MMLU/MMLU-Redux/MMLU-PRO、CMMLU、CEval、AGIEval、ARC-Easy/Challenge、TriviaQA(-ZH)、PopQA、BBH、HellaSwag、PIQA、RACE、CCPM、C3、DROP、MBPP、HumanEval、Cruxeval-o/i、GSM8K、MGSM、MATH 等 28 项任务曲线。
+
+2) 关键结论：在绝大多数知识与多步推理基准（MMLU 系、ARC、TriviaQA、BBH、RACE、MBPP、GSM8K、MGSM、MATH 等）上 Engram-27B 持续高于 MoE-27B，差距随步数稳步扩大；Pile-test 困惑度亦略低（约 1.95 vs 1.96）；仅 WinoGrande、HumanEval、Cruxeval 上二者曲线接近或互有交叉。
+
+3) 论文作用：为"条件记忆作为新稀疏轴"提供大规模预训练末段的端到端对比证据，证明 lookup 式条件记忆在同激活参数预算下可达到甚至超越 MoE 的最终质量，构成支撑新稀疏范式的关键实验支柱。
+*caption: Last 10k pre-training benchmark curve.… ｜ 论文 [[conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models]] ｜ arxiv 见 MD 元信息*
 
 ### HC: Manifold-Constrained Hyper-Connections — Fig.1 (p.1)
 ![[assets/crops/hc-manifold-constrained-hyper-connections-fig01.png]]
@@ -3989,11 +4164,9 @@ mHC在所有token预算下均稳定优于Baseline（loss gap始终为负），�
 
 ### Root Mean Square Layer Normalization — Fig.6 (p.8)
 ![[assets/crops/root-mean-square-layer-normalization-fig06.png]]
-> [!tip] 【图文联合解读】**1) 核心对象与数据**：图6展示order-embedding模型验证集上Mean Recall@K曲线，含三子图——(a)Recall@1(34–42)、(b)Recall@5(71–78)、(c)Recall@10(84–90)，x轴为训练步数(×0.3k，0–250+)。对比Baseline、LayerNorm、RMSNorm、pRMSNorm四条曲线：三种归一化方法约在50–75k步迅速收敛达峰，Baseline收敛慢且峰值略低。
+> [!tip] 【图文联合解读】**图文联合解读：**
 
-**2) 关键结论**：RMSNorm与LayerNorm、pRMSNorm的召回性能基本相当，且均优于无归一化Baseline；结合Table 6，RMSNorm比LayerNorm训练快约15.1%，pRMSNorm快15.8%。
-
-**3) 链路作用**：与Figure 5（attentive reader误差收敛）、Table 6（耗时）、Table 7（测试结果）共同构成完整证据链，支撑"RMSNorm可替代LayerNorm、兼顾性能与效率"的核心方法论结论。
+图6展示order-embedding模型在COCO验证集上R@1（34→42）、R@5（71→78）、R@10（84→90）的收敛曲线（横轴0–250×0.3k步），对比Baseline、LayerNorm、RMSNorm、pRMSNorm四种方法。曲线显示三种归一化方法在约50k步后即快速逼近峰值Recall，明显优于Baseline（收敛慢且终值低）；RMSNorm与pRMSNorm略胜LayerNorm。该图与Fig.5（attentive reader误差收敛）、Table 6/8（训练耗时对比）、Table 7（测试集结果）共同构成完整证据链，支撑论文核心结论——**RMSNorm可替代LayerNorm，性能相当但训练速度提升15%–64%**。
 *caption: Recall@K values on validation set for the order-embedding models. worse than RMSNorm. Although in Figure 5 the performance of RMSNorm and LayerNorm is… ｜ 论文 [[root-mean-square-layer-normalization]] ｜ arxiv 见 MD 元信息*
 
 ### Root Mean Square Layer Normalization — Fig.7 (p.13)
@@ -4043,13 +4216,13 @@ mHC在所有token预算下均稳定优于Baseline（loss gap始终为负），�
 
 ### GQA: Training Generalized Multi-Query Transformer Models fro — Fig.5 (p.4)
 ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig05.png]]
-> [!tip] 【图文联合解读】## 图文联合解读
+> [!tip] 【图文联合解读】**图5图文联合解读**
 
-**核心数据**：横轴为 uptraining 比例 α（0/5%/10%），纵轴为模型性能。MHA 基线（粉色虚线）恒定约 57.5；GQA-8（蓝方块）从 α=0 时约 56.7 升至 α=10% 时约 57.4；MQA（橙三角）从约 54.0 急升至 5% 时的约 57.0，随后趋于平缓。
+图5展示T5 XXL模型在不同uptraining比例α（0、0.05、0.1）下，三种注意力配置的Performance曲线：MHA基线（红色虚线）稳定在约57.35–57.4；GQA-8（蓝色方块）由α=0的~56.75升至α=0.05的~57.35，再微增至α=0.1的~57.4；MQA（橙色三角）由~54.0急剧跃升至~56.95，α=0.1达~57.15。
 
-**关键结论**：α=0 时 MQA 落后 MHA 约 3.5 分，而 GQA-8 仅落后约 0.8 分，说明 GQA 在"无重训练"状态下就能很好地逼近 MHA 质量；仅需 5% uptraining，两者即获大幅提升且收益递减，证明极小额外成本即可恢复性能。
+**论证结论**：MQA起点最低（损失~3.4点），但5% uptraining即可追回近3点；GQA-8起点高、回升幅度小，二者均在α=0.05后出现明显边际递减，10%提升有限。
 
-**论文作用**：作为 uptraining 有效性的实证核心，支撑"用 GQA 替代 MHA 是推理效率与质量最优折中"的核心主张，使论文方案具备实际部署可行性。
+**论文作用**：作为uptraining方法可行性的关键验证，证明从MHA检查点转换为MQA/GQA仅需极少额外训练即可逼近原始质量，是支撑"低成本复用既有大模型"核心主张的关键实验证据。
 *caption: Performance as a function of uptraining pro- portion for T5 XXL models with MQA and GQA-8.… ｜ 论文 [[gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints]] ｜ arxiv 见 MD 元信息*
 
 ### GQA: Training Generalized Multi-Query Transformer Models fro — Fig.6 (p.4)
@@ -4098,6 +4271,81 @@ mHC在所有token预算下均稳定优于Baseline（loss gap始终为负），�
 
 在论文链路中，它是"低精度训练消融"章节的核心实证，与FP8 GEMM/累加策略、tile-wise与group-wise量化方案共同构成DeepSeek-V3以FP8完成全量训练可行性论证的关键依据。
 *caption: 48… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeek-V3 Technical Report — Fig.1 (p.1)
+![[assets/crops/deepseek-v3-technical-report-fig01.png]]
+> [!tip] 【图文联合解读】**图1图文联合解读**
+
+图1以分组柱状图对比DeepSeek-V3与V2.5、Qwen2.5-72B-Inst、Llama-3.1-405B-Inst、GPT-4o-0513、Claude-3.5-Sonnet-1022在MMLU-Pro、GPQA-Diamond、MATH 500、AIME 2024、Codeforces、SWE-bench Verified六项基准上的表现。量化层面，V3于MATH 500达90.2%、AIME 2024达39.2%（远超GPT-4o的9.3%）、Codeforces百分位51.6，全面碾压同体量开源模型并较V2.5大幅跃升（如MMLU-Pro 66.2→75.9、MATH 500 74.7→90.2）。相较闭源旗舰，V3在数学/代码类基准领先GPT-4o，但在GPQA-Diamond（V3 59.1 vs Claude 65.0）与SWE-bench（42.0 vs 50.8）上仍弱于Claude。
+
+该图作为论文开篇实验总览，集中论证V3"以开源可复现路径达到闭源前沿水平"的论点；与表1所示极低训练成本（约$5.58M）相互呼应，共同构成全文"低成本高性能MoE"核心方法叙事的关键支撑。
+*caption: Benchmark performance of DeepSeek-V3 and its counterparts.… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeek-V3 Technical Report — Fig.2 (p.7)
+![[assets/crops/deepseek-v3-technical-report-fig02.png]]
+> [!tip] 【图文联合解读】**图2解读（DeepSeek-V3 基础架构）**
+
+图示由三部分组成：①左侧 Transformer Block×L，采用双 RMSNorm 前置 + Attention + FFN，残差连接；②右上 DeepSeekMoE，输入隐向量 **u**ₜ 经 Router 选 Top-Kᵣ 个路由专家（共 Nᵣ 个，蓝色）与 Nₛ 个共享专家（绿色）加权求和得到输出 **h'**ₜ；③右下 MLA，**h**ₜ 经潜向量 **c**ᵠₜ 与 **c**ᴷⱽₜ 低秩压缩，分别生成 {**q**ᶜ, **q**ᴿ} 与 {**k**ᶜ, **k**ᴿ} 拼接，推理阶段仅缓存潜向量与 **k**ᴿ、**v**ᶜ。
+
+该图论证两大核心：MLA 通过 KV 联合压缩显著降低推理显存占用；DeepSeekMoE 通过细粒度路由 + 共享专家提升训练经济性。二者作为 V3 高效推理与经济训练的架构基石，贯穿后续 FP8 混合精度训练、DualPipe 流水线优化及无辅助损失的负载均衡等章节，奠定全文方法论的框架基础。
+*caption: Illustration of the basic architecture of DeepSeek-V3. Following DeepSeek-V2, we adopt MLA and DeepSeekMoE for efficient inference and economical trai… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeek-V3 Technical Report — Fig.3 (p.10)
+![[assets/crops/deepseek-v3-technical-report-fig03.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图展示DeepSeek-V3的MTP架构：主模型以输入t₁–t₄预测t₂–t₅（ℒ_Main）；MTP模块1以t₂–t₅预测t₃–t₆（ℒ¹_MTP）；模块2以t₃–t₆预测t₄–t₇（ℒ²_MTP），深度依次递增且**保留完整因果链**。每模块由共享Embedding、两个RMSNorm的拼接、Linear Projection、Transformer Block及共享Output Head组成。
+
+**原文论证的关键结论**：训练损失 ℒ = ℒ_Main + λ·Σℒᵢ_MTP，为每层提供更密集的预测监督信号，同时各模块复用主模型的Embedding/Output Head以控制参数量。
+
+**论文链路中的作用**：MTP作为训练阶段的辅助目标，一方面增强表征学习（这也是Table 3中V3-Base取得最优性能的训练机制之一），另一方面推理时可丢弃MTP模块或用于投机解码加速，是V3训练–推理管线的重要效率设计。
+*caption: Illustration of our Multi-Token Prediction (MTP) implementation. We keep the complete causal chain for the prediction of each token at each depth.… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeek-V3 Technical Report — Fig.4 (p.12)
+![[assets/crops/deepseek-v3-technical-report-fig04.png]]
+> [!tip] 【图文联合解读】## 图文联合解读
+
+**1) 核心对象与结构**
+图示 DualPipe 调度在一对前后向 chunk 内的时间线布局：
+- **计算行（6 段）**：MLP/ATTN 各含 F（△，橙）、B-输入（▲，绿）、B-权重（▲，蓝）三块，按 ATTN→MLP→ATTN 顺序排列；
+- **通信行（5 段）**：DISPATCH(F)△ 与 COMBINE(F)△（橙）、DISPATCH(B)▲ 与 COMBINE(B)▲（绿）、PP 跨阶段（紫），两端以红色 barrier 框定；
+- 关键时序错位：DISPATCH(F) 与 MLP(B) 对齐，COMBINE(F) 与 ATTN(B) 重叠，PP 通信被夹在 ATTN(W) 与 COMBINE(B) 之间。
+
+**2) 关键技术结论**
+通过将前向 chunk 的 all-to-all（DISPATCH/COMBINE）与后向 chunk 的输入梯度计算并行，以及把 PP 点对点通信塞入权重梯度计算的间隙，实现"all-to-all 与 PP 通信同时被计算掩盖"，近乎零气泡。
+
+**3) 在论文中的作用**
+支撑 V3 在 Expert 并行 + 流水并行双轴下的高效训练，是 DualPipe 区别于传统 1F1B 的核心创新点，直接服务于 FP8 MoE 训练的高吞吐目标。
+*caption: Overlapping strategy for a pair of individual forward and backward chunks (the boundaries of the transformer blocks are not aligned). Orange denotes f… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeek-V3 Technical Report — Fig.7 (p.16)
+![[assets/crops/deepseek-v3-technical-report-fig07.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图(a)展示**细粒度量化**：将Input沿行（块大小N_C=1）和Weight沿列（块大小N_C）分别分块，每块独立配备Scaling Factor；Tensor Core执行FP8 GEMM得到低精度累加结果，CUDA Core再以Scaling Factor做反量化输出。该设计使特征离群值仅影响所在小块，显著缓解量化误差。
+
+图(b)展示**累加精度提升**：在WGMMA 1至WGMMA 4连续低精度GEMM累加后，每隔N_C间隔将部分和提升至CUDA Core，在FP32寄存器中完成Scaling乘积，规避长程低精度累加的精度损失。
+
+二者协同构成DeepSeek-V3的FP8混合精度训练核心：在保持硬件Tensor Core高吞吐的同时保证数值精度，支撑671B参数MoE模型的高效低成本训练。
+*caption: (a) We propose a fine-grained quantization method to mitigate quantization errors caused by feature outliers; for illustration simplicity, only Fprop … ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeek-V3 Technical Report — Fig.8 (p.23)
+![[assets/crops/deepseek-v3-technical-report-fig08.png]]
+> [!tip] 【图文联合解读】**图文联合解读（Figure 8 · NIAH）：**
+
+该图为 DeepSeek-V3 的"大海捞针"压力测试热力图，横轴为上下文长度 2K–128K tokens（共 15 档），纵轴为文档插入深度 0–100%，颜色映射检索得分（1–10）。整张图近乎完全呈绿色（约 9.5–10 分），没有任何掉色格点，说明**在 2K 至 128K 全长度区间、所有文档深度位置上均稳定检索成功**。论文以此论证：DeepSeek-V3 经长文训练后，在 128K 窗口内未出现明显的长程衰减或"中间遗忘"，长上下文鲁棒性达标。该图与 Table 8（RewardBench）等评测共同构成"综合能力验证"链路，作为消解读者对长文能力质疑的关键可视化证据，衔接训练优化章节与综合性能宣称。
+*caption: Evaluation results on the ”Needle In A Haystack” (NIAH) tests. DeepSeek-V3 performs well across all context window lengths up to 128K.… ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
+
+### DeepSeek-V3 Technical Report — Fig.9 (p.28)
+![[assets/crops/deepseek-v3-technical-report-fig09.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1）**核心对象与结构**：图含4幅热力图，对比Aux-Loss-Based与Aux-Loss-Free两种MoE模型在Layer 9和Layer 18上、各64个专家在Pile测试集三类语料（Wikipedia英文、Github、DM Mathematics）上的相对负载（色阶0–10）。
+
+2）**关键结论**：Aux-Loss-Based版本负载分布近乎均匀浅黄（接近1），专家几无分化；而Aux-Loss-Free版本出现显著深色热点，如Layer 9在DM Mathematics的expert 25–27、Github的expert 44–47/57–58负载达8–10，证明无辅助损失下专家仍自发形成**领域特化**模式。
+
+3）**论文作用**：作为核心创新点（auxiliary-loss-free负载均衡策略）的**直接可视化证据**，论证仅靠动态偏置即可兼顾负载均衡与专家专业化，避免aux-loss对模型质量的损害，支撑了DeepSeek-V3架构设计的合理性。
+*caption: Expert load of auxiliary-loss-free and auxiliary-loss-based models on three domains in the Pile test set. The auxiliary-loss-free model shows greater … ｜ 论文 [[deepseek-v3-technical-report]] ｜ arxiv 见 MD 元信息*
 
 ### Step-3 is Large yet Affordable: Model-system Co-design for C — Fig.1 (p.1)
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig01.png]]
@@ -4269,7 +4517,9 @@ mHC在所有token预算下均稳定优于Baseline（loss gap始终为负），�
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.8 (p.9)
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig08.png]]
-> [!tip] 【图文联合解读】图8含三子图：(a)(b)显示缓存命中率0–100%时吞吐由~0.4k升至1.2k token/s、总延迟由400s降至~130s；(c)对比LLM Judge、ToT、MMLU、Multi-Turn Chat四类负载下七种配置（无缓存/无树/FCFS/随机/无前端并行/无前端提示/全优化）的归一化吞吐，全优化（橙色）均达到1.0，明显优于任一组件缺失。该图论证RadixAttention、前端并行与提示协同显著提升性能，是论文方法链路的消融实验核心，支撑SGLang端到端优化有效性的关键证据。
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图(a)(b)展示缓存命中率0→100%的影响：吞吐量由约300升至~1200 tokens/s，总延迟从~420s降至~120s，首token延迟由~25s降至~5s，量化证明RadixCache前缀共享对性能的增益。图(c)在LLM Judge、Tree of Thought、MMLU、Multi-Turn Chat四类任务上对七种配置（无缓存/无树结构/FCFS/随机调度/无前端并行/无前端提示/全优化）做消融，"Full Optimization"全部归一化为1.0，任一组件缺失均显著掉到0.1–0.9之间，验证树状调度、前端并行与提示工程各环节缺一不可。该图作为方法消融的关键证据，与后续API模型（GPT-3.5）上"推测执行降本约3倍"的论断共同构成sglang性能优势的核心实验支撑链路。
 *caption: (a)(b) Cache hit rate ablation study. (c) RadixAttention ablation study.… ｜ 论文 [[sglang-efficient-execution-of-structured-language-model-programs]] ｜ arxiv 见 MD 元信息*
 
 ### SGLang: Efficient Execution of Structured Language Model Pro — Fig.9 (p.14)
@@ -4850,13 +5100,7 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.3 (p.3)
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig03.png]]
-> [!tip] 【图文联合解读】**图文联合解读：**
-
-1) **核心对象与结构**：图中展示 GPipe 流水调度在 4 个 Device（Device 1–4）上的时间—任务分配。每个 mini-batch 被切分为 8 个 micro-batch（编号 1–8），先依次执行前向（蓝色 1→8）再依次执行反向（绿色 8→1），灰色区域表示设备空闲的"流水线气泡"，右侧"Pipeline flush"分界线后开始下一批（9–16）。
-
-2) **关键技术结论**：气泡（灰色）产生于流水线首尾的填充与排空阶段，其占比随 micro-batch 数 m 与流水级数 p 之比（p−1/m）决定；反向耗时设为前向 2 倍，但调度效率与该比值无关，仅由气泡比例主导——这是 GPipe 的固有瓶颈。
-
-3) **在论文中的作用**：Figure 3 揭示传统 GPipe 的气泡开销，以此作为动机，引出本文提出的 Interleaved 1F1B 调度策略（在后续 Figure 中展示），通过交错前反向显著缩小气泡，从而提升大规模 Transformer 在 GPU 集群上的训练效率，构成方法部分的核心改进点。
+> [!tip] 【图文联合解读】图3展示GPipe流水线调度：4个设备按时间轴依次对8个微批次执行前向（蓝，1时隙）与反向（绿，2时隙），灰色为气泡，"pipeline flush"处出现设备空闲。原文借此论证GPipe气泡显著、效率受限；以此为动机，本文在后续图中提出Interleaved 1F1B调度，交错前后向以缩小气泡，提升大规模Transformer在GPU集群上的训练效率，构成核心方法改进。
 *caption: GPipe pipeline schedule with forward passes (blue) for all microbatches (represented by numbers) followed by backward passes (green). The gray area re… ｜ 论文 [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.4 (p.3)
@@ -4915,11 +5159,13 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.10 (p.8)
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig10.png]]
-> [!tip] 【图文联合解读】图10核心展示：在固定全局batch size下，175B（虚线）与530B（实线）GPT模型分别用ZeRO-3（蓝）与PTD-P（橙）训练时，单卡吞吐（Achieved teraFLOP/s per GPU）随GPU数（768–1920）的变化。定量看：PTD-P 530B稳定在约170→160，PTD-P 175B约150→143，几无衰减；而ZeRO-3 175B从约143骤降至~45，ZeRO-3 530B从约138降至~50。
+> [!tip] 【图文联合解读】**图10联合解读：**
 
-原文借此论证：**纯数据并行（ZeRO-3，不含模型并行）随GPU规模增大吞吐严重退化**；PTD-P（张量+流水线并行）保持高且稳定的单卡效率，故千亿级以上模型必须引入模型并行。
+**1) 核心对象与结构**：横轴为GPU数量（约768–1920），纵轴为单卡达成teraFLOP/s（0–200）。四条曲线：PTD-P 530B（橙实线方块）稳定在160–170；PTD-P 175B（橙虚线三角）约150；ZeRO-3 530B（蓝实线菱形）从140骤降至约50；ZeRO-3 175B（蓝虚线圆点）从140降至约45。
 
-该图与Table 1互补，作为"为何需Megatron式TP+PP"的**关键经验依据**，支撑论文弱扩展至1T参数的核心结论。
+**2) 关键结论**：全局batch固定时，PTD-P单卡吞吐基本不随GPU数下降，而ZeRO-3因仅数据并行、参数需跨卡sharding，通信开销随GPU数线性增长，吞吐近乎崩塌。530B模型尤其明显——GPT-3级别训练中PTD-P相对ZeRO-3可获得3倍以上的每卡效率。
+
+**3) 在论文中的作用**：此图直接对比Megatron-LM的核心方案（PTD-P：张量+流水线并行）与同期最优数据并行方案ZeRO-3，证明在超千卡、万亿参数规模下，纯数据并行扩展性失效，必须引入模型并行，从而为本文"PTD-P即最优可扩展路径"的核心论断提供端到端实验支撑，奠定Table 1弱缩放结果的可信基础。
 *caption: Throughput per GPU of PTD-P and ZeRO-3 for two differ- ent GPT models (the 175B GPT-3 model is shown with dotted lines, and the 530B model is shown wi… ｜ 论文 [[efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Large-Scale Language Model Training on GPU Cluster — Fig.11 (p.9)
@@ -5078,6 +5324,59 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 
 **论文作用**：作为方法部分混合并行（hybrid parallelism）方案的拓扑实例，与Figure 7互补，支撑"在512卡集群上高效训练多百亿参数模型"这一核心可扩展性论断。
 *caption: Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel and 64-way data parallel. C. Text Samples… ｜ 论文 [[megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism]] ｜ arxiv 见 MD 元信息*
+
+### A Survey on Large Language Model Acceleration based on KV Ca — Fig.1 (p.3)
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig01.png]]
+> [!tip] 【图文联合解读】图示decoder-only Transformer：输入嵌入与位置编码相加后，进入N层堆叠块（每块含两层Multi-Head Attention、Add&Norm残差与Feed Forward），最末接Linear&Softmax输出概率；右侧展开多头注意力，展示Q/K/V经独立Linear投影→Scaled Dot-Product Attention→Concat→Linear的计算流程。
+
+论证结论：解码过程中Q逐token更新，而K/V随序列长度线性累积——KV缓存管理的核心动机正是跨步复用历史K/V以消除冗余计算，这是LLM推理加速的关键切入点。
+
+作用：作为综述技术基线，明晰K/V的产生、缓存与复用位置，为后续压缩、共享、淘汰等加速方法的分类与对比提供统一参照框架。
+*caption: Fig. 1: The decoder-only Transformer for LLMs.… ｜ 论文 [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] ｜ arxiv 见 MD 元信息*
+
+### A Survey on Large Language Model Acceleration based on KV Ca — Fig.2 (p.5)
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig02.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图为三层四级分类树，根节点"LLM的KV Cache管理"展开为三层级：Token级（Sec.4，5分支13叶节点：选择/预算分配/合并/量化/低秩分解）、Model级（Sec.5，3分支6叶节点：注意力分组共享/架构改造/非Transformer）、System级（Sec.6，3分支9叶节点：内存管理/调度/硬件感知），共覆盖约28种具体技术。
+
+**关键结论**：按优化粒度将KV Cache管理划分为token/model/system三个抽象层级，分别从压缩条目、重构注意力架构、协调系统资源三条技术路径降低显存与计算开销。
+
+**整体作用**：作为全文顶层分类骨架，每条分支映射至独立章节（如本文Table 2即归位于Token级4.3节），为后续量化、淘汰、共享、合并等子表及方法对比提供结构索引，是综述二维分类法的可视化总纲。
+*caption: Taxonomy of KV Cache Management for Large Language Models.… ｜ 论文 [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] ｜ arxiv 见 MD 元信息*
+
+### A Survey on Large Language Model Acceleration based on KV Ca — Fig.3 (p.7)
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig03.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图示以"Token-level Optimization"为根节点的3级分类树，5大类、13子类、共覆盖约**80篇**文献：①**Selection**（19篇：Static 4篇含FastGen/SnapKV；Dynamic永久淘汰6篇含H2O；Dynamic非永久9篇含InfLLM/Quest）；②**Budget Allocation**（11篇：Layer-wise 5篇含PyramidKV，Head-wise 6篇含AdaKV）；③**Merging**（12篇：Intra-layer 10篇含CCM/LoMA/D2O等，Cross-layer 2篇含MiniCache/KVSharer）；④**Quantization**（27篇：Fixed 4、Mixed 11、Outlier重分配12篇）；⑤**Low-rank Decomposition**（11篇：SVD 8、Tensor 1、Learned 2篇）。
+
+**关键结论**：Token级优化沿"选择→分配→合并→量化→低秩"形成完整谱系，每篇方法均精确归位，呈现"免训练+相似度驱动"等范式分布。
+
+**论文作用**：作为综述二维分类骨架（Token级×Bit级/系统级）中Token侧总图，与Table 1–3并列，支撑LLM KV Cache加速方案的全景分类与低开销压缩选型。
+*caption: Taxonomy of the Token-level Optimization for KV Cache Management.… ｜ 论文 [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] ｜ arxiv 见 MD 元信息*
+
+### A Survey on Large Language Model Acceleration based on KV Ca — Fig.7 (p.17)
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig07.png]]
+> [!tip] 【图文联合解读】**图7 图文联合解读**
+
+图7为三级分类树，根节点"Model-level Optimization"下分3支6叶，共约30种方法：①Attention Grouping and Sharing（Intra-Layer 7种如MQA/GQA，Cross-Layer 9种如CLA/LCKV）；②Architecture Alteration（Enhanced Attention 3种如MLA，Augmented 4种如YOCO）；③Non-transformer Architecture（自适应序列处理4种如RWKV/Mamba，混合架构3种如MixCon）。
+
+**论证结论**：模型级KV优化已形成"分组共享—架构改造—非Transformer"三轨并行的技术体系，证明加速路径已突破单纯Transformer内部优化的局限。
+
+**论文作用**：与Table 7、8共同构成"Transformer内部KV优化→架构级替代"的双轨综述框架，扩展加速方法学的整体视野。
+*caption: Taxonomy of the model based KV optimization for Large Language Models.… ｜ 论文 [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] ｜ arxiv 见 MD 元信息*
+
+### A Survey on Large Language Model Acceleration based on KV Ca — Fig.10 (p.22)
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig10.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图以"System-level Optimization"为根，将KV缓存管理的系统级优化分为三大主轴：**Memory Management（2子类）、Scheduling（3子类）、Hardware-aware Design（4子类）**，共9个分支，列举约40余项代表性工作。
+
+**论证结论：** 系统级优化需从内存分配、调度策略与硬件协同三个维度协同发力；不同方案在吞吐、延迟、显存开销间存在权衡（如Prefix-aware设计复用前缀KV、I/O-based Design降低访存）。
+
+**作用：** 该分类法是论文整体方法学的"系统层"框架（对应Sec.6），与模型级优化共同构成LLM加速的完整技术栈，为读者按部署场景快速定位适配方案提供索引。
+*caption: Taxonomy of the System-level Optimization for KV Cache Management.… ｜ 论文 [[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]] ｜ arxiv 见 MD 元信息*
 
 ### Efficient Training of Large Language Models on Distributed I — Fig.1 (p.2)
 ![[assets/crops/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey-fig01.png]]
@@ -5667,16 +5966,11 @@ DeFT-Flatten's relative advantage over Radix Attention grows monotonically with 
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.5 (p.8)
 ![[assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig05.png]]
-> [!tip] 【图文联合解读】## 图文联合解读
+> [!tip] 【图文联合解读】**图5结构：** 横轴为约18个GEMM-GEMV实现配对，纵轴为归一化性能P∈[0,1.2]。蓝色GEMM曲线从~1.0单调降至~0.45；橙色GEMV由~0升至~1.0；灰色×虚线（非最优GEMV）在两曲线间剧烈震荡。红色虚线在0.3与0.8处划分"GEMM优先"（左：GEMM≥0.8）与"GEMV优先"（右：GEMV≥0.8）两区。
 
-**1) 核心对象与结构：**
-Figure 5 以横轴为不同 GEMM-GEMV 实现对（共约 18 个配对），纵轴为归一化性能 P∈[0,1.2]，绘制三条曲线：蓝色圆点实线（GEMM）从 ~1.0 单调下降至 ~0.45；橙色圆点实线（GEMV）由近 0 上升至 ~1.0；灰色×虚线（非最优 GEMV）则在两曲线间剧烈震荡。图中以红色虚线标出 0.3 与 0.8 两个阈值，分别对应"GEMM 优先"（左）与"GEMV 优先"（右）两个分区。
+**技术结论：** 核间干扰不可直接控制且高度非线性，作者以GEMM性能R作为R_physical的代理，建模配对干扰并据此仲裁调度优先级。
 
-**2) 关键论证结论：**
-两曲线呈典型此消彼长——优先 GEMM 时 GEMV 跌至 0.3，反之 GEMM 降至 0.45；而非最优 GEMV 实现性能完全不可预测（0.2–0.7 间抖动）。这印证了 GPU 上计算、内存、缓存资源竞争导致的 kernel interference 不可显式控制，且实现选择对干扰程度有数量级影响。
-
-**3) 在论文中的作用：**
-为 NanoFlow 必须采用"逐实现穷举 profiling + R_physical 测量"的方法论提供直接依据——既然干扰不可预测且依赖实现，就必须靠实测建模来分配 SM/带宽，是后文搜索空间指数膨胀论证的实验支撑。
+**论文作用：** 为NanoFlow的纳米剖面建模提供核心标定，使同卡共跑的attention GEMM与decode GEMV能通过统一度量决定G/G优先级，直接服务于Figure 4所示pipeline中prefill–decode协同调度。
 *caption: Interference characteristics between GEMM and GEMV kernels. The points on the x-axis correspond unique GEMM-GEMV implementation pairs. The y-axis deno… ｜ 论文 [[nanoflow-towards-optimal-large-language-model-serving-throughput]] ｜ arxiv 见 MD 元信息*
 
 ### NanoFlow: Towards Optimal Large Language Model Serving Throu — Fig.6 (p.11)
@@ -6161,6 +6455,122 @@ Figure 5 以横轴为不同 GEMM-GEMV 实现对（共约 18 个配对），纵�
 > [!tip] 【图文联合解读】图17以两组对话展示LLM幻觉：(a)内在幻觉——输入"Bob之妻Amy、之女Cindy"的事实后，LLM却答"Cindy是Amy的儿媳"，与输入直接矛盾；(b)外在幻觉——问RLHF含义时，LLM凭空编造其代表"Rights, Limitations, Harms, and Freedoms"（实为Reinforcement Learning from Human Feedback）。原文借此定性论证：幻觉在GPT-4等顶级LLM中仍频发，且模型难以自识别已生成的幻觉内容。该图作为现象级案例证据，铺垫后文对幻觉分类（内在/外在）、检测与缓解方法的系统综述，是论述"可靠性挑战"这一关键议题的视觉锚点。
 *caption: Hallucination widely occurs in existing LLMs, even the most superior LLMs such as GPT-4 [46]. Furthermore, existing work shows that LLMs encounter dif… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
 
+### A Survey of Large Language Models — Fig.2 (p.2)
+![[assets/crops/a-survey-of-large-language-models-fig02.png]]
+> [!tip] 【图文联合解读】## 图文联合解读
+
+**1) 核心对象与结构**
+
+图以"任务解决能力"为纵轴、时间为横轴，用四级阶梯箭头展示语言模型的四代演进，每级标注了"代表模型—关键特征—所解决问题"三要素：
+
+| 阶段 | 时间 | 类型 | 代表 | 能力定位 |
+|---|---|---|---|---|
+| 一 | 1990s | Statistical LM | n-gram | 特定任务助手 |
+| 二 | 2013 | Neural LM | Word2vec、NPLM | 解决典型NLP任务 |
+| 三 | 2018 | Pre-trained LM | ELMO、BERT、GPT-1/2 | 解决多种NLP任务 |
+| 四 | 2020 | LLM | GPT-3/4、ChatGPT、Claude | 通用任务求解器 |
+
+**2) 论证的关键技术结论**
+
+能力沿"专用辅助→任务无关特征→可迁移求解→通用求解"阶梯式跃升；推动跃迁的两大核心范式是**预训练+微调**（三代）与**规模化+指令提示**（四代）。
+
+**3) 在论文整体中的作用**
+
+作为综述开篇的"演化全景图"，为后文关于LLM预训练数据、架构、对齐与涌现能力的章节提供时间线与方法论锚点，凸显研究焦点从统计方法向大模型范式的转向。
+*caption: An evolution process of the four generations of language models (LM) from the perspective of task solving capacity. Note that the time period for each… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### A Survey of Large Language Models — Fig.6 (p.17)
+![[assets/crops/a-survey-of-large-language-models-fig06.png]]
+> [!tip] 【图文联合解读】图以14张饼图比较LLM预训练语料中网页、对话、图书/新闻、科学文献、代码五类来源。通用模型偏重网页：T5、Falcon占100%，LLaMA 87%、GPT‑3 84%、Yi 83%，Chinchilla为56%。领域模型转向专业语料：Galactica含86%科学数据，CodeGen含39%代码，StarCoder 2达92%代码。这表明能力差异也受语料配比、质量过滤和领域选择影响；该图用于横向比较语料，连接数据构造与后续评测，并非单项实验验证。
+*caption: Ratios of various data sources in the pre-training data for existing LLMs.… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### A Survey of Large Language Models — Fig.10 (p.26)
+![[assets/crops/a-survey-of-large-language-models-fig10.png]]
+> [!tip] 【图文联合解读】**说明**：您引用的"Table 10 caption"与图片内容不匹配，图片实际呈现的是 **Figure 10**（词汇概率分布），而非指令微调消融实验表。以下基于图像本身解读：
+
+## 图文联合解读
+
+**1) 核心对象与数据**：图展示以" I am sleepy. I start a pot of ____"为上下文，词表上下一token概率的降序分布。**coffee 以 0.661 占绝对主导**（≈66%），water 0.119、tea 0.057 次之；语义合理的 rice/chai/strong/black/hot/oat/beans/soup 集中在 0.005–0.017；尾部如 happy、Boh 仅 ~4.3×10⁻⁶，跨越近 5 个数量级，呈典型**长尾分布**。
+
+**2) 论证结论**：作者借此直观说明 LLM 的解码机制——即便最高概率词显著领先，**分布中段仍保留大量语义合理候选项**（咖啡/茶/水皆可），尾部亦未归零，说明生成非"唯一确定"，温度/采样策略对输出多样性影响巨大。
+
+**3) 在论文中的角色**：作为前置概念铺垫，帮助读者建立对**词表概率分布与解码（采样/束搜索）**的直觉认知，为后续章节讲解采样策略、推理控制提供可视化锚点。
+*caption: The probability distribution over the vocabulary in descending order for the next token of the context “ I am sleepy. I start a pot of ”. For ease of … ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### A Survey of Large Language Models — Fig.11 (p.31)
+![[assets/crops/a-survey-of-large-language-models-fig11.png]]
+> [!tip] 【图文联合解读】图示三种指令格式实例构造法：(a)任务数据集格式化——人工撰写任务描述（如"Please answer this question:"）整合NLP数据集（含QA、NLI、翻译等10类）→任务描述+示范+输入/输出（问答样例）；(b)日常对话格式化——API采集+人工任务描述（如减肥建议）→人工撰写期望输出；(c)合成数据格式化——种子实例→LLM生成指令（如名言请求）→LLM生成输入输出→过滤回实例池。原文据此论证：指令数据需多元化（任务数据/人类对话/LLM自生成），合成路径必须配合过滤以保障质量。该图为论文"数据工程→指令微调→LLM对齐"链路提供可视化基础，支撑后文训练策略与评估章节。
+*caption: An illustration of instance formatting and three different methods for constructing the instruction-formatted instances.… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### A Survey of Large Language Models — Fig.12 (p.38)
+![[assets/crops/a-survey-of-large-language-models-fig12.png]]
+> [!tip] 【图文联合解读】## 图文联合解读
+
+**1) 核心对象与结构**
+该图展示RLHF算法三阶段流水线：
+- **阶段一（监督微调）**：Human Annotator产出Prompts与Demonstrations，合并为Demonstration Data，用于训练Pre-trained LM（🔥可训练）；
+- **阶段二（奖励模型训练）**：冻结的Pre-trained LM（❄️）生成LM Outputs，由人类Ranking产生Human Feedback，训练Reward Model；
+- **阶段三（RL微调）**：Reward Model对LM Outputs打分（😊/😞），通过PPO算法训练得到Aligned LM。
+
+**2) 关键技术结论**
+原文借此论证：RLHF将人类偏好量化为可微奖励信号，经"监督微调→奖励建模→策略优化"三步链路，把基础LM转化为与人类意图对齐的模型。
+
+**3) 在论文中的作用**
+作为Section 6对齐章节的可视化锚点，统一介绍InstructGPT、ChatGPT等主流LLM的标准化对齐范式，为后续讨论RLAIF、DPO等改进方法提供基线参照。
+*caption: The workflow of the RLHF algorithm.… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### A Survey of Large Language Models — Fig.14 (p.51)
+![[assets/crops/a-survey-of-large-language-models-fig14.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**1) 核心对象与结构**：图并排展示ICL（左）与CoT（右）两种提示范式，均采用"任务描述（绿）+ N×示例（蓝）+ 查询（黄）"三段式结构。区别在于：ICL示例仅含Q/A对（如"答案是18 cm"），CoT示例在A中插入推理链（"(6+3)×2=18 cm"）。同一查询"分1/4弹珠"下，ICL直接输出"答案是9"，CoT则生成"12×1/4=3, 12-3=9"。
+
+**2) 关键结论**：CoT通过显式中间步骤引导LLM进行多步推理，优于ICL的输入-输出直接映射，能显著提升数学推理准确率。
+
+**3) 论文作用**：作为提示工程章节的核心对比图，支撑"提示设计可激发LLM涌现能力"的主线论点，为后续CoT变体（如Self-Consistency、ToT）研究奠定基础。
+*caption: A comparative illustration of in-context learning (ICL) and chain-of-thought (CoT) prompting. ICL prompts LLMs with a natural language description, se… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### A Survey of Large Language Models — Fig.15 (p.53)
+![[assets/crops/a-survey-of-large-language-models-fig15.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**1）核心对象与结构：** 图示横向呈现CoT提示策略的5种演进范式——①基础CoT为单链线性结构（Input→Output）；②Sampling-based CoT采用多条并行推理链，经Ensemble汇聚；③Verification-based CoT对多条路径经Verification筛选，以"✗"淘汰负向思维（粉色）、保留正向（绿色）；④ToT为树形结构，引入虚线Backtrack回溯；⑤GoT升级为图结构，支持多节点间虚线Aggregate聚合。图例区分三种连接（Reason/Backtrack/Aggregate）与三种思维状态（未评估/正向/负向）。
+
+**2）关键技术结论：** 论证了CoT方法沿"单链→采样增强→验证筛选→树图结构化"的递进逻辑：采样提升覆盖度，验证提升可靠性，树/图结构引入探索回溯与多路径聚合以应对复杂推理任务。
+
+**3）论文整体作用：** 作为Prompt Engineering章节的方法演进总览图，为后续Agent规划与多步复杂推理研究建立分类框架，是连接基础提示与高级推理策略的桥梁。
+*caption: An illustration of the evolution of CoT prompting strategies. It begins with the basic CoT approach and progresses to enhanced CoT generation techniqu… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### A Survey of Large Language Models — Fig.18 (p.71)
+![[assets/crops/a-survey-of-large-language-models-fig18.png]]
+> [!tip] 【图文联合解读】**核心结构**：根节点"LLM for Application"二分——①Research Directions 涵盖三大类场景（Classic / Enhanced / New Scenarios），下分7个子方向（Classic NLP Tasks、IR、Recommendation、Multimodal、KG Enhanced、LLM-based Agent、LLM for Evaluation），共约20个具体技术点；②Specific Domains 列5个垂直领域（Healthcare / Finance / Scientific Research / Law / Education）。
+
+**论证结论**：以分类树形式系统映射LLM应用全景——纵向上从经典NLP（信息抽取、文本生成）、检索/推荐增强，扩展至多模态对齐（视觉指令微调）、知识图谱融合、Agent（Memory/Planning/Execution）、自动评估（Meta-Evaluation）；横向下沉至医疗、金融、科研、法律、教育五大行业，体现"能力扩展—新兴范式—行业落地"三层覆盖格局。
+
+**论文作用**：作为应用章总领性分类框架，充当目录索引与研究路线图，引导读者纵览后续各章技术细节与产业实证。
+*caption: The applications of LLMs in representative research directions and downstream domains.… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
+### A Survey of Large Language Models — Fig.19 (p.93)
+![[assets/crops/a-survey-of-large-language-models-fig19.png]]
+> [!tip] 【图文联合解读】# Figure 19 图文联合解读
+
+**【注意】** 提示中引用的"Table 19 (p.84) 预填充阶段"段落与本图（Figure 19，DeepSeek-R1 长思维链示例）并非同一对象。以下解读严格基于图像本身。
+
+## 1) 核心对象与结构
+图像展示 **DeepSeek-R1 的两段长链思维（long CoT）示例**，结构完全相同：
+- **Example A（数学推理）**：用户问"196 有多少个正因子"。灰色思维部分包含 6 步——分解 196=2²×7²、套用 (e₁+1)(e₂+1)=9 的公式、回溯验证、系统枚举 1,2,4,7,14,28,49,98,196、二次确认。斜体最终答案："196 has **9** positive whole-number divisors"。
+- **Example B（事实推理）**：用户问"中国人口最多城市"。思维涵盖核实 2023/2024 数据、区分"城区人口 vs 行政区人口"、列出上海 2490 万 vs 重庆 3200 万、提示避免术语。答案：上海城区最多，重庆行政区更大但非纯城市。
+
+## 2) 原文论证的关键结论
+体现 R1 类推理模型的 **三大涌现行为**：
+- **自我验证/反思**（"double-check"、"confirm once more"）；
+- **多视角规划**（区分数学定义、数据时效、概念边界）；
+- **结构化思考→精炼回答**的两阶段输出格式（灰色思考 + 斜体结论）。
+
+## 3) 在论文中的作用
+作为 §推理模型 章节的**定性证据**，为"long CoT 提升复杂任务表现"的论点提供具体案例支撑，与定量基准（数学/代码）互补。
+*caption: Examples of long CoT reasoning from DeepSeek- R1 (accessed on January 25, 2025). Grey fonts denote the thought part of the model output, and italic fo… ｜ 论文 [[a-survey-of-large-language-models]] ｜ arxiv 见 MD 元信息*
+
 ### KV Cache Optimization Strategies for Scalable and Efficient  — Fig.1 (p.2)
 ![[assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-fig01.png]]
 > [!tip] 【图文联合解读】**图文联合解读：**
@@ -6577,6 +6987,159 @@ Muon 经 Newton–Schulz 正交化后，其训练得到的 FFN 权重矩阵奇�
 **论文作用：** 作为 CloudMatrix384 解耦推理架构的蓝图，衔接底层硬件拓扑与上层调度策略，为后续吞吐/延迟实验提供方法基线。
 *caption: 1. A request first arrives at a randomly selected Job Executor (JE), which assigns it to a prefill… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
 
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.1 (p.1)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig01.png]]
+> [!tip] 【图文联合解读】**图文联合解读**
+
+图1展示xDeepServe在CloudMatrix384上的双层解耦架构：Request Scheduler(JE)将Chat/Response API请求分发至910B Cluster与Prefill TE；"Disaggregated Prefill and Decode"区将Prefill TE与Decode TE分离部署（各含Serving Engine、多NPU及Dispatch/Combine），预填充结果由蓝箭头送至解码端；"Disaggregated MoE and Attention"区以3个Attention TE与多Expert TE经A2E/E2A互联，替代张量并行；Cluster Manager统一调度资源。
+
+原文据此论证PD与MA双重解耦可独立扩展两类负载，配合JE/TE两级调度实现NPU弹性分配，为后续xDeepServe系统方法与性能实验奠定部署基线。
+*caption: xDeepServe Architecture over CloudMatrix384 SuperPod.… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.3 (p.7)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig03.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图(a) Single-op模式下，CPU需对op1-op6逐一下发NPU，共产生6次以上CPU↔NPU往返（含三次连续下发、控制流算子op4回CPU执行后再下发op5-op6），调度开销大；图(b) Graph模式下，CPU仅首尾两次交互，op1-op6在NPU上连续流水执行。
+
+**论证结论：** 图模式通过算子融合与一次性下发，将控制流留在CPU、数据流算子留在NPU，显著降低逐算子分发开销，是Ascend NPU上提升推理吞吐的关键执行范式。
+
+**作用：** 该图作为方法论基础图，为论文后续在CloudMatrix384 SuperPod上部署大模型服务、讨论推理延迟与吞吐优化提供执行模式的原理支撑。
+*caption: Compare Single-Op and Graph Mode Execution on Ascend NPU.… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.5 (p.9)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig05.png]]
+> [!tip] 【图文联合解读】图5展示不同数据大小（36 KB–9216 KB）与AIV核数（2–48）对单对Send/Receive延迟的影响：9216 KB、4608 KB等大消息随核数增加显著下降，例如9216 KB由约145 μs降至约60 μs；而36–576 KB等小消息延迟稳定在10–15 μs，呈现overhead-bound特征。该图论证了AIV在大数据量通信下具有良好的并行扩展性，而小消息受限于固定开销，从而为MoE等大模型通信场景下依据负载规模选择AIV核数提供了量化实验依据。
+*caption: Evaluation of Send/Receive. We vary the data size and the number of AIV cores used for a single send/receive pair.… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.6 (p.9)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig06.png]]
+> [!tip] 【图文联合解读】**图文联合解读**
+
+**1) 核心对象与数据：** 图中展示在专家并行度 EP128 配置下，MoE-Dispatch（蓝）与 MoE-Combine（橙）两类通信原语随每 die batch size（4→128）变化的延迟曲线（单位 us）。Dispatch 从 batch=4 时约 41 us 单调增至 batch=128 时约 123 us；Combine 从 28 us 增至 143 us。两条曲线在 batch≈32 附近交叉——小 batch 时 Dispatch 高于 Combine，大 batch 时 Combine 反超 Dispatch，Combine 末端斜率更陡。
+
+**2) 关键技术结论：** Dispatch/Combine 通信开销与 batch size 近似线性增长，验证了 CloudMatrix 384 高带宽互联下 all-to-all 原语的可扩展性；同时揭示不同 batch 阶段的瓶颈切换：小 batch 受固定延迟主导（Dispatch 包含更多 metadata/路由），大 batch 受数据量主导（Combine 需聚合更多 expert 输出）。这为 MoE 推理/训练中 batch 调优与 dispatch/combine 算子协同设计提供量化依据。
+
+**3) 在论文中的作用：** 属于系统级微基准实验，支撑论文"CloudMatrix 384 SuperPoD 具备高效 MoE 通信能力"的核心主张，是论证大规模专家并行 MoE 服务可行性的关键性能证据。
+*caption: Evaluation of Dispatch/Combine. We vary the batch size per die with a fixed… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.7 (p.10)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig07.png]]
+> [!tip] 【图文联合解读】图7展示基于UB全局共享内存的Pull-based Dispatch机制：3个NPU经Scale-up UB Fabric互联，各NPU含AIV（Scalar/Vector）、DMA Engine、Unified Buffer，内存侧分App Data Area、Metadata Area（eventID / offset_of_rank / nr_token_per_rank）和Managed Data Area（R1~RN每rank固定槽位）。七步流程：①AIV经MTE2从App Data读token入UB；②BF16/FP16→INT8量化（可选）；③AIV经MTE3按rank-id写token入Managed Data；④更新各peer元数据（红虚线）；⑤各NPU轮询元数据区；⑥⑦收齐后pull数据经UB写入out token（红实线，可走DMA）。
+
+论证结论：全局共享内存解耦元数据信令与数据搬运，固定槽位支持O(1)寻址，轮询同步免中断，单dispatch kernel可并行多AIV核，从而降低MoE跨NPU dispatch延迟。
+
+论文作用：支撑CloudMatrix384超节点上expert parallelism的token路由，是MaaS推理通信原语的关键设计依据。
+*caption: Pull-based Dispatch based on UB’s Global Shared Memory. Dashed red lines are metadata transfer. Bulk data transfer in step 6 and 7 can also use the DM… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.9 (p.13)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig09.png]]
+> [!tip] 【图文联合解读】**图文联合解读（Figure 9 – FlowServe 架构）**
+
+1) **核心对象与结构**：图示 FlowServe 推理引擎，顶层 TE-shell 含 Infra（健康/扩缩容）、DP Load Balancer、MoE-LB Controller；其下挂 N 个 DP 组（Group #1…#N），每组含 Master（Tokenizer+API Parser+Scheduler 含 Running/Waiting Q、Policy、RTC 含 Index/D/H、MoE Load Balance）与按 NPU Die 部署的 Executor（Generator + DistFlow C++ Executor，集成 XCCL/Socket 后端），Master↔Executor 经 Broadcast IPC，组间经 All-to-All 域互联，整引擎可扩展至 48 Servers / 768 NPU Dies。
+
+2) **原文论证结论**：FlowServe 以 DP 组为粒度封装完整服务流水线，单引擎即可横跨整 SuperPod；主–从架构解耦避免单点瓶颈与失效，支持 MoE 负载均衡与弹性扩缩。
+
+3) **整体作用**：作为 CloudMatrix384 上 MoE 大模型推理服务的系统级底座，支撑后续吞吐/延迟等性能实验。
+*caption: The Architecture of FlowServe. A single FlowServe engine can span an entire CloudMatrix384 SuperPod—48 Ascend 910C servers with 768 NPU dies. FlowServ… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.11 (p.16)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig11.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图(a)展示 DeepSeek-R1 单层 MoE 专家在 ShareGPT 负载下的命中率 CDF 曲线（横轴 0–7%，纵轴 0–1.0）。红色虚线为均衡命中率（约 0.5%）。曲线在 0.5% 附近急剧攀升至接近 1.0，随后形成长尾延伸至 ~7%——表明约 80% 专家命中率接近均衡值，但剩余约 20% 专家承担了数倍于均值的请求量，呈现严重偏斜（highly skewed）分布。
+
+该图核心论证：在 CloudMatrix 384 上部署 MoE 模型时，若沿用静态均衡映射，将导致热门专家所在 NPU 过载、冷门专家闲置，破坏推理吞吐与时延均衡。故论文需引入 **Expert Placement 负载均衡机制**（如重映射/冗余部署），将热点请求分散到多卡以拉平利用率曲线。该图属于系统层调优的实验支撑证据，串联"MoE 路由偏斜→专家放置策略→CloudMatrix 384 实测性能"的论证链路，为后文吞吐/时延改进提供因果前提。
+*caption: A Study of Expert Placement Load Balancing .… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.13 (p.18)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig13.png]]
+> [!tip] 【图文联合解读】**图13图文联合解读**
+
+**1) 核心结构与数据流：**
+图示FlowServe基于MTP（Multi-Token Prediction）的推测解码执行流程，分两段：
+- **Prefill阶段**（粉色框）：输入prompt经"Main Model"处理后由"MTP"模块产出draft tokens；
+- **Decode阶段**（蓝色框）：按 `MTP Forward → Sampling → Main Model Forward → Sampling → Verify` 五步循环执行，Verify通过后回环至MTP Forward，否则重生成。
+
+**2) 论证的关键技术结论：**
+MTP单次前向一次性生成多个候选token，主模型仅需一次前向即可并行验证多token，从而以"一次主模型推理开销换取多token产出"，显著提升吞吐、降低单token时延；Verify环节确保最终输出与标准自回归解码一致，实现无损精度的推理加速。
+
+**3) 在论文整体方法链中的作用：**
+该流程是CloudMatrix384 SuperPod上LLM推理服务的核心加速机制，串联MoE主模型与MTP模块，呈现"推测解码+并行验证"的端到端高效解码路径，支撑高吞吐模型即服务能力。
+*caption: An Overview of FlowServe’s MTP Execution Workflow.… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.14 (p.20)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig14.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+该图系统展示了DeepSeek模型Transformer Block内的INT8量化架构，包含两个细节图：
+
+**❶ MLA模块**：对Wq_a、Wq_b、Wkv_a、W_o权重采用QMM（INT8量化矩阵乘），RMSNorm后split为KV Cache（Rope, 8bit/16bit）与KV Cache（Non-Rope, ❹ 8bit/16bit），其中非RoPE路径使用更激进的低bit量化以节省显存。
+
+**❷ MoE模块**：Router经Top-k后由❸ Dispatch完成专家分发，每个Expert内Wgate/Wup经SiLU门控后与Wdown串接，量化一致覆盖gate、up、down三层；Shared Expert结构同理。
+
+**作用**：论证三个关键结论——（1）MLA与MoE采用差异化优化量化；（2）KV Cache按Rope与否分精度存储；（3）Dispatch通信层采用融合量化以减小开销。该图为论文"INT8全栈量化+通信融合"技术方案提供结构级证据，支撑低精度推理部署的可行性论证。
+*caption: An Overview of INT8 Quantization in DeepSeek Models. We use optimized quantization strategies for MLA and MLP/MoE components, and fused quantization i… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.15 (p.21)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig15.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1）该图以4幅3D曲面图展示DeepSeek-R1某线性层中激活（X≈2500，Y≈1000，Z∈[-4,6]）与权重（X≈1500，Y≈25000，Z∈[-1,1]）张量逐元素的幅值分布；左两幅为smoothing前，右两幅为smoothing后。
+
+2）左图Activation曲面存在显著尖峰（峰值≈6，谷值≈-4），离群值严重；右图Activation曲面被显著压平，极值得到有效抑制；Weight前后均较平坦，说明smoothing主要作用于激活。
+
+3）该图作为量化统计实证，支撑"smoothing通过抑制激活离群点降低量化难度"这一关键技术结论，是CloudMatrix384量化部署流水线的预处理步骤，为后续低比特推理精度提供保障。
+*caption: Quantization Stats. Input activation and weight magnitudes in a DeepSeek-R1 linear layer. The left two subfigures represent the distributions prior to… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.16 (p.21)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig16.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+图16展示LLM推理服务架构从刚性Transformer向无Transformer数据流的演进路径，分为三个阶段：
+
+1. **Disaggregated PD**：两个独立框内分别为Prefill与Decode阶段，每层注意力（蓝）与MoE/FFN（粉）内部全连接，阶段间通过箭头串行衔接，实现Prefill-Decode解耦。
+
+2. **Disaggregated MA**：进一步将Attention与MoE解耦为独立算子——MoE的"top-k路由"特性以实线（命中专家）与虚线（未命中）显式呈现，凸显其计算稀疏性与可独立调度性。
+
+3. **Dataflow Serving @ SuperPod**：跨层Attention与MoE节点在SuperPod上自由互连，token以异步数据流方式跨多层调度，不再受制于"一个transformer块=Attention+MoE"的固定结构。
+
+**论证结论**：Transformer内部算子天然具备不同并行度与计算密度（MoE稀疏、Attention密集），解耦后可独立扩缩；SuperPod的高带宽互联使token级异步数据流调度可行，从而突破传统Transformer推理范式。**论文作用**：该图作为方法路线的总览图，为后续性能/吞吐实验章节提供架构演进的逻辑前提，论证CloudMatrix384在异构算子独立部署与跨层流水线方面的设计合理性。
+*caption: The Trend Towards Transformerless Serving. Our system evolves from a PD- colocated setting to disaggregated Prefill-Decode, then to disaggregated MoE-… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.18 (p.24)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig18.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+1) **核心结构**：图示单个 CloudMatrix384 SuperPod 内 768 个 NPU die 的解耦部署——480 个 die 划分为 3 个 Attention DP 域（各 160 组、TP=1），每组 NPU 流水线为 KV$→MLA→Gate→A2E→E2A；288 个 die 构成 DeepSeek EP288（256 路由专家+32 共享专家），每 die 跑 A2E→MoE→E2A，三组 A2E/E2A Sync. 跨域对接。
+
+2) **关键技术结论**：Attention 侧"有状态、随 #Seq 扩展"（KV cache），MoE 侧"无状态、随 #BSZ 扩展"；二者通过 A2E/E2A 同步解耦，可独立扩缩容。
+
+3) **论文作用**：作为消融/部署案例，证明 MoE-Attention 解耦架构能在单 SuperPod 内实现 attention/moe 资源池化与弹性伸缩。
+*caption: The Architecture of Disaggregated MoE-Attention over CloudMatrix384. Our deployment spans a full SuperPod with 768 NPU dies: 288 run EP288 (256 routed… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.19 (p.25)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig19.png]]
+> [!tip] 【图文联合解读】**图文联合解读：**
+
+**1) 图示核心对象与结构：** 展示三个 DP-Domain（各含 160 DP 组，TP=1）按时间轴流水线执行 MLA 注意力块（bsz=96），如 D0_M1_L0→D0_M2_L0→D0_M1_L1，块间串入 G（门控）、A2E（Attn→Expert）、E2A（Expert→Attn）通信；下方为 288 个 MoE NPU 上三条并发流：Stream#1 的 A2E/A2E' 两段路由、Stream#2 的 MoE 计算、Stream#3 的 E2A'/E2A 两段路由。
+
+**2) 原文论证的关键结论：** 解耦架构使 Attention 计算、MoE 通信、MoE 计算可在 288 NPU 上通过 persistent kernel 与三流并发实现时序重叠（pipelined overlap），Domain 间交错启动消除空泡，XCCL 两段路由缓解通信热点。
+
+**3) 在论文中的作用：** 作为方法实证，展示 CloudMatrix384 上 MoE-Attention 解耦推理的端到端调度编排与吞吐优化机制，是论证超节点级高利用率的关键时序图。
+*caption: The Execution Pipeline of Disaggregated MoE-Attention. Note that each DP domain has 160 DP groups with TP set to 1. XCCL A2E and E2A use two-stage rou… ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
+### Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperP — Fig.20 (p.27)
+![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig20.png]]
+> [!tip] 【图文联合解读】**图文联合解读（Figure 20）**
+
+**1）核心对象与量化数据：** 图为饼图+表格组合，刻画在CloudMatrix384上以DP288/EP288、batch=60运行的DeepSeek单次decode迭代（≈93 ms）内部各环节耗时占比。饼图六大算子——QuantBatchMatmul 22.1%（最高）、MultiLatentAttention 21.8%、MoE-Combine 20.4%、MoE-Dispatch 15.3%、Others 11.7%、MlaPreprocess 8.7%；附表给出MoE Dispatch/Combine 的微秒级延时（Avg 234/312 μs，Min 185/165 μs，Max 1231/2939 μs）。
+
+**2）关键结论：** 量化矩阵乘与MLA计算合计≈43.9%，MoE通信（Dispatch+Combine）合计≈35.7%，构成主要开销；通信尾部抖动剧烈（Combine极差近18倍），印证大规模EP下的all-to-all通信是性能瓶颈与调度优化重点。
+
+**3）论文作用：** 该图为论文"方法/实验链路"中的诊断性数据，量化了推理各环节相对重要性，为后续通信算子融合、重叠调度及超Pod互联优化提供依据。
+*caption: Latency Breakdown for One DeepSeek Decode Iteration. Evaluation is conducted on 288 NPU dies with DP288 and EP288. Each die (or DP) uses a batch size … ｜ 论文 [[huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod]] ｜ arxiv 见 MD 元信息*
+
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.1 (p.2)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig01.png]]
 > [!tip] 【图文联合解读】图1由四个子图横向对比四种KV缓存策略：(a)完整KV重算——对全输入做prefill，最慢但质量好；(b)前缀缓存——仅复用前缀KV，略快且质量好；(c)全KV复用——直接拼接各块KV并忽略跨注意力，虽快但质量低；(d)CacheBlend（本文）——复用全部KV但仅选择性重算其中一小部分，实现"又快又好"。原文借此构建"速度-质量"二维权衡空间，明确指出前三类方案各有缺陷：全重算延迟超线性增长，RAG场景下尤为严重；前缀缓存收益有限；全复用损害质量。从而论证CacheBlend选择性重算同时兼得两端收益的必要性，为全文核心方法定位与动机奠基。
@@ -6651,16 +7214,13 @@ Muon 经 Newton–Schulz 正交化后，其训练得到的 FFN 权重矩阵奇�
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.8 (p.7)
 ![[assets/crops/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion-fig08.png]]
-> [!tip] 【图文联合解读】## Figure 8 图文联合解读
+> [!tip] 【图文联合解读】**图8联合解读**
 
-**1) 核心对象与数据**
-该图以三组柱状图分别展示 Mistral-7B（4 对层：5/6、12/13、21/22、31/32）、Yi-34B（5/6、16/17、31/32、46/47）与 Llama-70B（11/12、21/22、41/42、61/62）中**相邻层间逐 token KV 偏差的 Spearman 秩相关系数**。三个模型在所有采样层对上的秩相关均稳定在 **≈0.95–1.0** 区间，接近完全正相关。
+图8展示了Mistral-7B、Yi-34B、Llama-70B三种模型在多组相邻层对（如Mistral-7B的5 vs 6、12 vs 13、21 vs 22、31 vs 32等）上KV偏差的Spearman秩相关系数，所有柱形均接近1.0，量化表明相邻层间HKVD token的排序高度一致。
 
-**2) 关键技术结论**
-HKVD（高 KV 偏差）token 在不同层之间**并非独立**：一旦某 token 在某一层被识别为"重要"，其相邻层几乎必然也属于重要 token。这一强跨层相关性为后续策略提供了统计支撑——无需对每层独立、逐 token 重算 KV 偏差。
+该高相关性直接验证了原文关键观察"不同层的HKVD token并非独立"——若上层某token KV偏差大，则其下层大概率同样偏差大。
 
-**3) 在论文方法链路中的作用**
-该结论直接支撑 CacheBlend 的**选择性 KV 重算（selective KV recompute）** 设计：可利用层间秩相关，仅在少量代表层中识别关键 token，并将其"扩散"应用到相邻层缓存，从而**以极低开销完成关键 KV 的重计算与融合**，避免全 token、全层重算带来的高昂代价，是 CacheBlend 实现"快"的核心经验依据之一。
+这一结论支撑CacheBlend核心设计：仅需对少数层HKVD token选择性重计算，其余层直接复用缓存，避免逐层全量重算，从而实现RAG场景下多chunk KV缓存的快速融合推理。
 *caption: Rank correlation of the KV deviation per token be- tween two consecutive layers. expensive and defeats the purpose of selective KV recom- pute. Instea… ｜ 论文 [[cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion]] ｜ arxiv 见 MD 元信息*
 
 ### CacheBlend: Fast Large Language Model Serving for RAG with C — Fig.9 (p.7)
@@ -6943,6 +7503,15 @@ The block performs inference-time **BN-folding**, absorbing each BatchNorm's γ/
 Figure 18. Custom operator for Resnet BasicBlock (Case D.4).
 *caption: Custom operator for Resnet BasicBlock (Case D.4).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
 
+### CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA — Fig.16 (p.30)
+![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig16.png]]
+> [!tip] 【图文联合解读】**图文联合解读**
+
+图示为 Case D.4 中 `conv_cuda_workspace_size` 函数（约 40 行 C++ 代码，行号 103–144）。结构上依次完成：① 创建张量/滤波器/卷积三类 `cudnnDescriptor`；② 配置 NCHW float32 输入、权重及 padding/stride/dilation 参数；③ 调用 `cudnnGetConvolution2dForwardOutputDim` 推导输出维度；④ 通过 `cudnnGetConvolutionForwardAlgorithm_v7` 自动选取前向算法（请求 1 个候选）；⑤ 用 `cudnnGetConvolutionForwardWorkspaceSize` 查得所需工作区字节并返回，期间销毁所有描述符。
+
+该代码呈现了 cuDNN 库的标准化卷积资源管理流程：在论文实验链路中，它充当"成熟库参考实现"的基线，用以衡量 Agent 生成 CUDA kernel 在算子行为与性能上能否逼近甚至超越工业级优化库的水平，为 Case D.4 的对比实验提供标尺。
+*caption: cuDNN convolution implementation, part 2 (Case D.4 ).… ｜ 论文 [[cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation]] ｜ arxiv 见 MD 元信息*
+
 ### Single-Rollout Asynchronous Optimization for Agentic Reinfor — Fig.1 (p.1)
 ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig01.png]]
 > [!tip] 【图文联合解读】图示对比SAO、GRPO与Baseline在5项基准的准确率（%）：AIME2025（80.4 / 84.2 / 97.3）、BeyondAIME（53.3 / 54.8 / 74.8）、HMMT Nov 2025（75.2 / 76.0 / 88.3）、IMOAnswerBench（53.3 / 55.8 / 74.0）、SWE-Bench Verified（23.0 / 27.0 / 29.8）。
@@ -7145,7 +7714,7 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 - ⭐ ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.12 (p.16): End-to-end experiments of Mooncake and vLLM on simulated data.…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ⭐ ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p17.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.13 (p.17): Request TTFT and TBT distributions of Mooncake and vLLM under real workloads…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 
-### kv-cache (53)
+### kv-cache (58)
 
 - ⭐ ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig01.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.1 (p.1): Benchmark comparison between GLM-5 and GLM-5 + IndexCache. IndexCache removes 50…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 - ⭐ ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p03.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.2 (p.3): Side-by-side comparison of inference loops. (a) Standard DSA runs the lightning …  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
@@ -7164,6 +7733,11 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 - ⭐ ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig11.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.11 (p.16): End-to-end experiments of Mooncake and vLLM on the ArXiv Summarization and L-Eva…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ⭐ ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.12 (p.16): End-to-end experiments of Mooncake and vLLM on simulated data.…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
 - ⭐ ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p17.png]] — **Mooncake: A KVCache-centric Disaggregated Architec** Fig.13 (p.17): Request TTFT and TBT distributions of Mooncake and vLLM under real workloads…  `[[mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving]]`
+- ⭐ ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig01.png]] — **A Survey on Large Language Model Acceleration base** Fig.1 (p.3): Fig. 1: The decoder-only Transformer for LLMs.…  `[[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]]`
+- ⭐ ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig02.png]] — **A Survey on Large Language Model Acceleration base** Fig.2 (p.5): Taxonomy of KV Cache Management for Large Language Models.…  `[[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]]`
+- ⭐ ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig03.png]] — **A Survey on Large Language Model Acceleration base** Fig.3 (p.7): Taxonomy of the Token-level Optimization for KV Cache Management.…  `[[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]]`
+- ⭐ ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig07.png]] — **A Survey on Large Language Model Acceleration base** Fig.7 (p.17): Taxonomy of the model based KV optimization for Large Language Models.…  `[[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]]`
+- ⭐ ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig10.png]] — **A Survey on Large Language Model Acceleration base** Fig.10 (p.22): Taxonomy of the System-level Optimization for KV Cache Management.…  `[[a-survey-on-large-language-model-acceleration-based-on-kv-cache-management]]`
 - ⭐ ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig01.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.1 (p.2): Comparison of two deployment paradigms for PD-disaggregated LLM serving.…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
 - ⭐ ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig02.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.2 (p.4): KV throughput of MiniMax-M2.5 on an 8×H200 instance at various input lengths.…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
 - ⭐ ![[assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-fig03.png]] — **Prefill-as-a-Service: KVCache of Next-Generation M** Fig.3 (p.6): Deployment topology of the PrfaaS-PD architecture.…  `[[prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter]]`
@@ -7306,7 +7880,7 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 - ⭐ ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig11.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.11 (p.13): SLO attainment (↑) for end-to-end inference across multiple models and image cou…  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 - ⭐ ![[assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-fig12.png]] — **Efficiently Serving Large Multimodal Models Using ** Fig.12 (p.16): Breakdown of latency for encode and prefill stages using the InternVL2-8B model …  `[[efficiently-serving-large-multimodal-models-using-epd-disaggregation]]`
 
-### rl (68)
+### rl (69)
 
 - ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig01.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.1 (p.1): A comparison of learning behavior of the GEPA prompt optimizer against a state-o…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
 - ⭐ ![[assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig02.png]] — **GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM ** Fig.2 (p.3): This figure shows an example prompt generated by GEPA for the second-hop documen…  `[[gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning]]`
@@ -7370,6 +7944,7 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 - ⭐ ![[assets/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-p37.png]] — **DeepSeek-R1: Incentivizing Reasoning Capability in** Fig.7 (p.37): As can be seen, without the LC reward, language consistency gradually deteriorat…  `[[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]]`
 - ⭐ ![[assets/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-p48.png]] — **DeepSeek-R1: Incentivizing Reasoning Capability in** Fig.13 (p.48): We have categorized potential content safety challenges faced by language models…  `[[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]]`
 - ⭐ ![[assets/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-p53.png]] — **DeepSeek-R1: Incentivizing Reasoning Capability in** Fig.14 (p.53): For DeepSeek-V3 and DeepSeek-R1, we evaluated safety scores for models with and …  `[[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]]`
+- ⭐ ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig01.png]] — **DeepSeek-R1: Incentivizing Reasoning Capability in** Fig.1 (p.4): (a) AIME accuracy of DeepSeek-R1-Zero during training. AIME takes a mathematical…  `[[deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning]]`
 - ⭐ ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig01.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.1 (p.1): The performance of SAO on reasoning and coding benchmarks. The four reasoning be…  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
 - ⭐ ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig02.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.2 (p.3): Overview of SAO with single rollout design. The numbers denote the generation or…  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
 - ⭐ ![[assets/crops/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning-fig03.png]] — **Single-Rollout Asynchronous Optimization for Agent** Fig.3 (p.6): Performance comparison between SAO and GRPO (w/ DIS) during training. It can be …  `[[single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning]]`
@@ -7384,7 +7959,7 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 - ⭐ ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig03.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.3 (p.8): Relative speedup of IndexCache over the DSA baseline across three inference sett…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 - ⭐ ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig04.png]] — **IndexCache: Accelerating Sparse Attention via Cros** Fig.4 (p.16): Pairwise top-k index overlap ratio between all layer pairs of the 30B DSA model.…  `[[indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse]]`
 
-### speculative (78)
+### speculative (85)
 
 - ⭐ ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig01.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.1 (p.2): MEDUSA introduces multiple heads on top of the last hidden states of the LLM, en…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
 - ⭐ ![[assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig02.png]] — **MEDUSA: Simple LLM Inference Acceleration Framewor** Fig.2 (p.3): Remarkably, similar ideas have also been explored in independent works like Miao…  `[[medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads]]`
@@ -7446,6 +8021,13 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 - ⭐ ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig04.png]] — **DFlash: Block Diffusion for Flash Speculative Deco** Fig.4 (p.5): DFlash training attention. The target model provides context features (blue) tha…  `[[dflash-block-diffusion-for-flash-speculative-decoding]]`
 - ⭐ ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig05.png]] — **DFlash: Block Diffusion for Flash Speculative Deco** Fig.5 (p.13): The loss decay makes training converge faster and better. A.5.2. RANDOM SAMPLING…  `[[dflash-block-diffusion-for-flash-speculative-decoding]]`
 - ⭐ ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig01.png]] — **DSpark: Confidence-Scheduled Speculative Decoding ** Fig.1 (p.4): Recall from Equation 1 that the per-token latency of speculative decoding is 𝐿= …  `[[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]]`
+- ⭐ ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig02.png]] — **DSpark: Confidence-Scheduled Speculative Decoding ** Fig.2 (p.12): Position-wise conditional acceptance. We report the empirical conditional accept…  `[[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]]`
+- ⭐ ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig03.png]] — **DSpark: Confidence-Scheduled Speculative Decoding ** Fig.3 (p.13): Effect of drafter depth. With proposal length fixed, DSpark’s performance improv…  `[[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]]`
+- ⭐ ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig04.png]] — **DSpark: Confidence-Scheduled Speculative Decoding ** Fig.4 (p.13): Effect of proposal length and latency overhead. DSpark consistently outperforms …  `[[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]]`
+- ⭐ ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig05.png]] — **DSpark: Confidence-Scheduled Speculative Decoding ** Fig.5 (p.15): Confidence threshold sweep. A threshold of 0 corresponds to standard fixed-lengt…  `[[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]]`
+- ⭐ ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig06.png]] — **DSpark: Confidence-Scheduled Speculative Decoding ** Fig.6 (p.15): The Reliability Diagram on Alpaca Dataset. While the raw confidence estimator ac…  `[[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]]`
+- ⭐ ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig07.png]] — **DSpark: Confidence-Scheduled Speculative Decoding ** Fig.7 (p.18): Throughput vs. TPS. Aggregate output token throughput against per-request genera…  `[[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]]`
+- ⭐ ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig08.png]] — **DSpark: Confidence-Scheduled Speculative Decoding ** Fig.8 (p.19): Load-adaptive throughput and verification budgets. Top row (a, b): Aggregate out…  `[[dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation]]`
 - ⭐ ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig01.png]] — **JETSPEC: Breaking the Scaling Ceiling of Speculati** Fig.1 (p.2): End-to-end decoding speedup over standard autoregressive decoding on H100 GPUs a…  `[[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]]`
 - ⭐ ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig02.png]] — **JETSPEC: Breaking the Scaling Ceiling of Speculati** Fig.2 (p.3): Expected speculative decoding speedup scales as a function of draft length γ, un…  `[[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]]`
 - ⭐ ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig03.png]] — **JETSPEC: Breaking the Scaling Ceiling of Speculati** Fig.3 (p.4): JetSpec design overview. JetSpec extracts fused hidden features from the frozen …  `[[jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting]]`
@@ -7778,6 +8360,20 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
 
 - ⭐ Fig.1 (p.4) ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig01.png]]
   - Recall from Equation 1 that the per-token latency of speculative decoding is 𝐿= (𝑇draft + 𝑇verify)/𝜏. Autoregressive drafters achieve high 𝜏but pay 𝑇draft ∝𝛾; parallel drafters collapse 𝑇draft to a si
+- ⭐ Fig.2 (p.12) ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig02.png]]
+  - Position-wise conditional acceptance. We report the empirical conditional acceptance rate for each draft position, averaged across benchmarks within each domain using the Qwen3- 4B target model. Unlik
+- ⭐ Fig.3 (p.13) ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig03.png]]
+  - Effect of drafter depth. With proposal length fixed, DSpark’s performance improves as drafter layers are added. Notably, a shallow 2-layer DSpark outperforms a deeper 5-layer DFlash baseline, highligh
+- ⭐ Fig.4 (p.13) ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig04.png]]
+  - Effect of proposal length and latency overhead. DSpark consistently outperforms DFlash across various block sizes (left three panels). The rightmost panel demonstrates that the sequential head introdu
+- ⭐ Fig.5 (p.15) ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig05.png]]
+  - Confidence threshold sweep. A threshold of 0 corresponds to standard fixed-length verification. As the threshold increases, the overall acceptance rate steadily rises because the confidence head effec
+- ⭐ Fig.6 (p.15) ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig06.png]]
+  - The Reliability Diagram on Alpaca Dataset. While the raw confidence estimator achieves strong discrimination, its predictions are inherently overconfident. Applying post-hoc calibration helps to align
+- ⭐ Fig.7 (p.18) ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig07.png]]
+  - Throughput vs. TPS. Aggregate output token throughput against per-request genera- tion speed (tok/s/user) under live traffic. In our production deployment, DSpark improves the observed throughput–inte
+- ⭐ Fig.8 (p.19) ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-fig08.png]]
+  - Load-adaptive throughput and verification budgets. Top row (a, b): Aggregate output throughput across varying levels of system concurrency. Bottom row (c, d): The average target verification budget al
 
 ### #9 JETSPEC: Breaking the Scaling Ceiling of Speculative Decodin
 
@@ -8312,6 +8908,16 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
   - 3.1
 - ⭐ Fig.9 (p.7) ![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p07.png]]
   - 4.3
+- ⭐ Fig.2 (p.8) ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig02.png]]
+  - Cross-Attention Optimization via Concept Replication. Left: The decoder’s cross-attention creates an irregular L×M mask due to variable token-to-concept mappings. Right: By replicating concepts via re
+- ⭐ Fig.3 (p.10) ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig03.png]]
+  - Hyperparameter tuning and transfer under µ P. Left: We sweep η
+- ⭐ Fig.4 (p.12) ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig04.png]]
+  - Full training trajectory fit. Comparison between predicted loss (Equation 22) and empirical loss across model sizes (274M–833M), compression factors R∈{2,4,8}, and training budgets. The joint fit achi
+- ⭐ Fig.7 (p.0) ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig07.png]]
+  - Top: Average loss comparison between concept model (blue) and baseline model (orange) across relative positions within concepts. Bottom: Loss difference (Concept - Baseline), where green indicates imp
+- ⭐ Fig.8 (p.0) ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig08.png]]
+  - Average compressed sequence length over training steps. Red: Learned Boundary Predictor. Purple: Rule-Based Predictor. The x-axis represents training steps, and the y-axis represents the average numbe
 
 ### #30 HybridFlow: A Flexible and Efficient RLHF Framework
 
@@ -8443,6 +9049,8 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
   - We have categorized potential content safety challenges faced by language models into 4 major categories and 28 subcategories.
 - ⭐ Fig.14 (p.53) ![[assets/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-p53.png]]
   - For DeepSeek-V3 and DeepSeek-R1, we evaluated safety scores for models with and without the risk control system (introduced in D.3.1). Additionally, we tested the multilingual safety performance of Cl
+- ⭐ Fig.1 (p.4) ![[assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig01.png]]
+  - (a) AIME accuracy of DeepSeek-R1-Zero during training. AIME takes a mathematical problem as input and a number as output, illustrated in Table 32. Pass@1 and Cons@16 are described in Supplementary D.1
 
 ### #35 Conditional Memory via Scalable Lookup: A New Axis of Sparsi
 
@@ -8452,6 +9060,16 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
   - We find that three components yield the most significant gains: (i) branch- specific fusion within the multi-branch backbone, (ii) context-aware gating, and (iii) tokenizer compression. Removing any o
 - ⭐ Fig.7 (p.18) ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig07.png]]
   - The results demonstrate a distinct pattern of selectivity. The gating mechanism consistently activates (shown in red) upon completing local, static patterns. In English, we observe strong activations 
+- ⭐ Fig.1 (p.3) ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig01.png]]
+  - The Engram Architecture. The module augments the backbone by retrieving static 𝑁 - gram memory and fusing it with dynamic hidden states via context-aware gating. This module is applied only to specifi
+- ⭐ Fig.3 (p.7) ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig03.png]]
+  - Sparsity allocation and Engram scaling. Left: Validation loss across allocation ratios 𝜌 . Two compute budgets are shown (2 e 20 and 6 e 20 FLOPs). Both regimes exhibit a U-shape, with hybrid allocati
+- ⭐ Fig.4 (p.13) ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig04.png]]
+  - Analysis of representational alignment and convergence speed. (a) Layer-wise KL Divergence via LogitLens ( nostalgebraist , 2020 ). The consistently lower divergence in early layers indicates that Eng
+- ⭐ Fig.6 (p.17) ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig06.png]]
+  - Retained performance under Engram ablation. Factual knowledge relies heavily on the Engram module, whereas reading comprehension is largely preserved by the backbone.
+- ⭐ Fig.8 (p.34) ![[assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-fig08.png]]
+  - Last 10k pre-training benchmark curve.
 
 ### #36 HC: Manifold-Constrained Hyper-Connections
 
@@ -8524,6 +9142,20 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
   - Firstly, in order to accelerate model training, the majority of core computation kernels, i.e., GEMM operations, are implemented in FP8 precision. These GEMM operations accept FP8 tensors as inputs an
 - ⭐ Fig.10 (p.48) ![[assets/crops/deepseek-v3-technical-report-fig10.png]]
   - 48
+- ⭐ Fig.1 (p.1) ![[assets/crops/deepseek-v3-technical-report-fig01.png]]
+  - Benchmark performance of DeepSeek-V3 and its counterparts.
+- ⭐ Fig.2 (p.7) ![[assets/crops/deepseek-v3-technical-report-fig02.png]]
+  - Illustration of the basic architecture of DeepSeek-V3. Following DeepSeek-V2, we adopt MLA and DeepSeekMoE for efficient inference and economical training.
+- ⭐ Fig.3 (p.10) ![[assets/crops/deepseek-v3-technical-report-fig03.png]]
+  - Illustration of our Multi-Token Prediction (MTP) implementation. We keep the complete causal chain for the prediction of each token at each depth.
+- ⭐ Fig.4 (p.12) ![[assets/crops/deepseek-v3-technical-report-fig04.png]]
+  - Overlapping strategy for a pair of individual forward and backward chunks (the boundaries of the transformer blocks are not aligned). Orange denotes forward, green denotes "backward for input", blue d
+- ⭐ Fig.7 (p.16) ![[assets/crops/deepseek-v3-technical-report-fig07.png]]
+  - (a) We propose a fine-grained quantization method to mitigate quantization errors caused by feature outliers; for illustration simplicity, only Fprop is illustrated. (b) In conjunction with our quanti
+- ⭐ Fig.8 (p.23) ![[assets/crops/deepseek-v3-technical-report-fig08.png]]
+  - Evaluation results on the ”Needle In A Haystack” (NIAH) tests. DeepSeek-V3 performs well across all context window lengths up to 128K.
+- ⭐ Fig.9 (p.28) ![[assets/crops/deepseek-v3-technical-report-fig09.png]]
+  - Expert load of auxiliary-loss-free and auxiliary-loss-based models on three domains in the Pile test set. The auxiliary-loss-free model shows greater expert specialization patterns than the auxiliary-
 
 ### #42 Step-3 is Large yet Affordable: Model-system Co-design for C
 
@@ -8736,6 +9368,19 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
   - Training loss for BERT model using the original architec- ture (a) and the rearranged architecture (b). Left ﬁgure shows the training loss for 336M and 752M BERT model. While the original architecture
 - ⭐ Fig.8 (p.12) ![[assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig08.png]]
   - Grouping of GPUs for hybrid model and data parallelism with 8-way model parallel and 64-way data parallel. C. Text Samples
+
+### #50 A Survey on Large Language Model Acceleration based on KV Ca
+
+- ⭐ Fig.1 (p.3) ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig01.png]]
+  - Fig. 1: The decoder-only Transformer for LLMs.
+- ⭐ Fig.2 (p.5) ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig02.png]]
+  - Taxonomy of KV Cache Management for Large Language Models.
+- ⭐ Fig.3 (p.7) ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig03.png]]
+  - Taxonomy of the Token-level Optimization for KV Cache Management.
+- ⭐ Fig.7 (p.17) ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig07.png]]
+  - Taxonomy of the model based KV optimization for Large Language Models.
+- ⭐ Fig.10 (p.22) ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig10.png]]
+  - Taxonomy of the System-level Optimization for KV Cache Management.
 
 ### #51 Efficient Training of Large Language Models on Distributed I
 
@@ -8995,6 +9640,24 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
   - In this paradigm, there are typically three components: task planner, plan executor, and environment36. Specifically, task planner, which is played by LLMs, aims to generate the whole plan to solve a 
 - ⭐ Fig.17 (p.59) ![[assets/crops/a-survey-of-large-language-models-fig17.png]]
   - Hallucination widely occurs in existing LLMs, even the most superior LLMs such as GPT-4 [46]. Furthermore, existing work shows that LLMs encounter difficulties in recognizing the hallucinated con- ten
+- ⭐ Fig.2 (p.2) ![[assets/crops/a-survey-of-large-language-models-fig02.png]]
+  - An evolution process of the four generations of language models (LM) from the perspective of task solving capacity. Note that the time period for each stage may not be very accurate, and we set the ti
+- ⭐ Fig.6 (p.17) ![[assets/crops/a-survey-of-large-language-models-fig06.png]]
+  - Ratios of various data sources in the pre-training data for existing LLMs.
+- ⭐ Fig.10 (p.26) ![[assets/crops/a-survey-of-large-language-models-fig10.png]]
+  - The probability distribution over the vocabulary in descending order for the next token of the context “ I am sleepy. I start a pot of ”. For ease of discussion, this example is given in word units in
+- ⭐ Fig.11 (p.31) ![[assets/crops/a-survey-of-large-language-models-fig11.png]]
+  - An illustration of instance formatting and three different methods for constructing the instruction-formatted instances.
+- ⭐ Fig.12 (p.38) ![[assets/crops/a-survey-of-large-language-models-fig12.png]]
+  - The workflow of the RLHF algorithm.
+- ⭐ Fig.14 (p.51) ![[assets/crops/a-survey-of-large-language-models-fig14.png]]
+  - A comparative illustration of in-context learning (ICL) and chain-of-thought (CoT) prompting. ICL prompts LLMs with a natural language description, several demonstrations, and a test query, while CoT 
+- ⭐ Fig.15 (p.53) ![[assets/crops/a-survey-of-large-language-models-fig15.png]]
+  - An illustration of the evolution of CoT prompting strategies. It begins with the basic CoT approach and progresses to enhanced CoT generation techniques, including sampling-based and verification-base
+- ⭐ Fig.18 (p.71) ![[assets/crops/a-survey-of-large-language-models-fig18.png]]
+  - The applications of LLMs in representative research directions and downstream domains.
+- ⭐ Fig.19 (p.93) ![[assets/crops/a-survey-of-large-language-models-fig19.png]]
+  - Examples of long CoT reasoning from DeepSeek- R1 (accessed on January 25, 2025). Grey fonts denote the thought part of the model output, and italic fonts denote the final answer.
 
 ### #62 KV Cache Optimization Strategies for Scalable and Efficient 
 
@@ -9102,6 +9765,34 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
   - Step 1: Collecting Expert Load Distribution. First, we collect data on expert loads across NPUs. We define expert load as the total number of tokens routed to each expert within a given time interval.
 - ⭐ Fig.17 (p.22) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig17.png]]
   - 1. A request first arrives at a randomly selected Job Executor (JE), which assigns it to a prefill
+- ⭐ Fig.1 (p.1) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig01.png]]
+  - xDeepServe Architecture over CloudMatrix384 SuperPod.
+- ⭐ Fig.3 (p.7) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig03.png]]
+  - Compare Single-Op and Graph Mode Execution on Ascend NPU.
+- ⭐ Fig.5 (p.9) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig05.png]]
+  - Evaluation of Send/Receive. We vary the data size and the number of AIV cores used for a single send/receive pair.
+- ⭐ Fig.6 (p.9) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig06.png]]
+  - Evaluation of Dispatch/Combine. We vary the batch size per die with a fixed
+- ⭐ Fig.7 (p.10) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig07.png]]
+  - Pull-based Dispatch based on UB’s Global Shared Memory. Dashed red lines are metadata transfer. Bulk data transfer in step 6 and 7 can also use the DMA engine. A single dispatch kernel can use multipl
+- ⭐ Fig.9 (p.13) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig09.png]]
+  - The Architecture of FlowServe. A single FlowServe engine can span an entire CloudMatrix384 SuperPod—48 Ascend 910C servers with 768 NPU dies. FlowServe scales at the granularity of a DP group, where e
+- ⭐ Fig.11 (p.16) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig11.png]]
+  - A Study of Expert Placement Load Balancing .
+- ⭐ Fig.13 (p.18) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig13.png]]
+  - An Overview of FlowServe’s MTP Execution Workflow.
+- ⭐ Fig.14 (p.20) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig14.png]]
+  - An Overview of INT8 Quantization in DeepSeek Models. We use optimized quantization strategies for MLA and MLP/MoE components, and fused quantization in MoE- dispatch communication to minimize overhead
+- ⭐ Fig.15 (p.21) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig15.png]]
+  - Quantization Stats. Input activation and weight magnitudes in a DeepSeek-R1 linear layer. The left two subfigures represent the distributions prior to smoothing, and the right two show how smoothing l
+- ⭐ Fig.16 (p.21) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig16.png]]
+  - The Trend Towards Transformerless Serving. Our system evolves from a PD- colocated setting to disaggregated Prefill-Decode, then to disaggregated MoE-Attention, and ultimately into a fully asynchronou
+- ⭐ Fig.18 (p.24) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig18.png]]
+  - The Architecture of Disaggregated MoE-Attention over CloudMatrix384. Our deployment spans a full SuperPod with 768 NPU dies: 288 run EP288 (256 routed experts and 32 shared experts), and 480 handle ML
+- ⭐ Fig.19 (p.25) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig19.png]]
+  - The Execution Pipeline of Disaggregated MoE-Attention. Note that each DP domain has 160 DP groups with TP set to 1. XCCL A2E and E2A use two-stage routing. All 288 MoE NPUs run the same persistent ker
+- ⭐ Fig.20 (p.27) ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig20.png]]
+  - Latency Breakdown for One DeepSeek Decode Iteration. Evaluation is conducted on 288 NPU dies with DP288 and EP288. Each die (or DP) uses a batch size of 60. One decode iteration—which includes MTP for
 
 ### #67 CacheBlend: Fast Large Language Model Serving for RAG with C
 
@@ -9174,6 +9865,8 @@ Figure 1 由左右两幅子图组成，定量呈现 2010–2025 年趋势：
   - Fused add-relu kernel implementation (Case D.4).
 - ⭐ Fig.18 (p.31) ![[assets/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-p31.png]]
   - Custom operator for Resnet BasicBlock (Case D.4).
+- ⭐ Fig.16 (p.30) ![[assets/crops/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation-fig16.png]]
+  - cuDNN convolution implementation, part 2 (Case D.4 ).
 
 ### #69 Single-Rollout Asynchronous Optimization for Agentic Reinfor
 
