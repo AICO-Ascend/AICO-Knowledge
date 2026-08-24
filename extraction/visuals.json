@@ -105,8 +105,8 @@
    },
    {
     "num": 18,
-    "page": 33,
-    "caption": "summarizes these optimizations. The baseline (top) executes sequentially, where all-to-all blocks computation. The 1F1B FWD-BWD scheme (bottom) interleaves adjacent micro-batches so communication can be hidden behind compute. The W/D split further increases overlap opportunities. Together, these met",
+    "page": 34,
+    "caption": "EP all-to-all communication overlap strategies: baseline vs. 1F1B with W/D split.",
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig18.png"
    },
    {
@@ -182,6 +182,12 @@
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig30.png"
    },
    {
+    "num": 31,
+    "page": 52,
+    "caption": "The computation of a linear layer with various FP8 recipes. Note the differences in quantization",
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-fig31.png"
+   },
+   {
     "num": 32,
     "page": 53,
     "caption": "FP8 primary weight quantization scheme for blockwise scaling.",
@@ -250,16 +256,16 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 11,
-    "caption": "MoE component to process group mapping.",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab01.png"
-   },
-   {
     "num": 2,
     "page": 15,
     "caption": "Contrasting parallelism requirements of attention and MoE layers within a single Transformer block.",
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab02.png"
+   },
+   {
+    "num": 4,
+    "page": 23,
+    "caption": "summarizes the memory reduction achieved by different recomputation targets for the DeepSeek-V3 configuration in Table 3 .",
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab04.png"
    },
    {
     "num": 5,
@@ -268,16 +274,16 @@
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab05.png"
    },
    {
-    "num": 6,
-    "page": 29,
-    "caption": "summarizes the memory optimization techniques described in this section and their primary targets.",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab06.png"
-   },
-   {
     "num": 7,
     "page": 32,
     "caption": "EP Scaling Performance for HybridEP and all-to-all (in µs).",
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab07.png"
+   },
+   {
+    "num": 8,
+    "page": 49,
+    "caption": "Summary of the impact from reduced-precision training on the Three",
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab08.png"
    },
    {
     "num": 9,
@@ -300,7 +306,7 @@
    {
     "num": 12,
     "page": 70,
-    "caption": "Impact of parallelism strategies on memory and communication. 𝑑 = parallelism degree. † Requires",
+    "caption": "Impact of parallelism strategies on memory and communication. d = parallelism degree. †Requires distributed optimizer (--use-distributed-optimizer).",
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab12.png"
    },
    {
@@ -342,7 +348,7 @@
    {
     "num": 19,
     "page": 86,
-    "caption": "summarizes the notation used throughout this report.",
+    "caption": "Notation and abbreviations used throughout this report.",
     "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab19.png"
    },
    {
@@ -354,19 +360,9 @@
   ],
   "formulas": [
    {
-    "page": 9,
-    "text": "(𝑝𝑖= 𝜎(𝑙𝑖)/ ∑︀",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq01.png"
-   },
-   {
-    "page": 16,
-    "text": "World Size = TP × CP × PP × DP,",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq02.png"
-   },
-   {
     "page": 64,
     "text": "output(x) = 𝑊↑·",
-    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq03.png"
+    "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-eq01.png"
    }
   ]
  },
@@ -488,12 +484,6 @@
     "path": "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig01.png"
    },
    {
-    "num": 2,
-    "page": 3,
-    "caption": "Side-by-side comparison of inference loops. (a) Standard DSA runs the lightning indexer at every layer. (b) IndexCache adds a single conditional branch (red lines): F layers compute and cache fresh indices; S layers reuse the cached indices. Note that T cache is a temporary buffer holding only the c",
-    "path": "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig02.png"
-   },
-   {
     "num": 3,
     "page": 8,
     "caption": "Relative speedup of IndexCache over the DSA baseline across three inference settings on the 30B model. DSA baseline is normalized to 100%.",
@@ -518,6 +508,12 @@
     "page": 8,
     "caption": "Training-free IndexCache at 1/2, 1/4, and 1/8 indexer retention. ‘Long’ and ‘G&R’ aggregate benchmark scores. We compare uniform interleaving against searched patterns.",
     "path": "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab02.png"
+   },
+   {
+    "num": 3,
+    "page": 9,
+    "caption": "Training-aware IndexCache at 1/2 and 1/4 indexer retention with uniform inter- leaving. w/ searched pattern : the greedy-searched pattern replaces uniform interleaving. w/o cross-layer loss : each indexer is distilled only against its own layer.",
+    "path": "assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab03.png"
    },
    {
     "num": 4,
@@ -555,16 +551,16 @@
     "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig03.png"
    },
    {
-    "num": 4,
-    "page": 8,
-    "caption": "a compares the acceleration rate of randomly sampled dense tree configurations (Section. 2.1.2 , depicted by blue dots) against optimized sparse tree settings (Section. 2.3.3 ,",
-    "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig04.png"
-   },
-   {
     "num": 5,
     "page": 8,
     "caption": "Performance comparison of M EDUSA using proposed",
     "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig05.png"
+   },
+   {
+    "num": 6,
+    "page": 15,
+    "caption": "Visualization of a sparse tree setting for M EDUSA -2 Vicuna-7B. The tree has 64 nodes representing candidate tokens and a",
+    "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig06.png"
    },
    {
     "num": 7,
@@ -684,8 +680,8 @@
    },
    {
     "num": 3,
-    "page": 9,
-    "caption": "Impact of Techniques on Speedup Technique Speedup",
+    "page": 0,
+    "caption": "Impact of Techniques on Speedup",
     "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab03.png"
    },
    {
@@ -696,8 +692,8 @@
    },
    {
     "num": 5,
-    "page": 17,
-    "caption": "Computational and space complexity of the main operators in different phases. The table is based on Table 2 in the report ( Chen ,",
+    "page": 0,
+    "caption": "Computational and space complexity of the main operators in different phases. The table is based on Table 2 in the report (Chen 2023).",
     "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab05.png"
    },
    {
@@ -768,10 +764,28 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 7,
+    "caption": "Speedup ratios and average acceptance lengths τ of different methods. V represents Vicuna, L31 represents LLaMA-Instruct 3.1, L33 represents LLaMA-Instruct 3.3, and DSL represents DeepSeek-R1-Distill-LLaMA. SpS denotes standard speculative sampling, with its draft model being Vicuna-68M. Methods lik",
+    "path": "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab01.png"
+   },
+   {
     "num": 2,
     "page": 8,
     "caption": "Ablation study results with LLaMA-Instruct 3.1 8B as the target model. “Remove fea con” refers to the first improvement of EAGLE-3, which removes the feature prediction constraint. “Fused features” refers to the second improvement of EAGLE-3, where low, middle, and high-level feature fusion replaces",
     "path": "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab02.png"
+   },
+   {
+    "num": 3,
+    "page": 8,
+    "caption": "Throughput improvement under different batch sizes on H100 and LLaMA-Instruct 3.1 8B for the MT- Bench dataset, with SGLang without speculative sam- pling as the baseline (1.00x). The experiments were conducted by the SGLang team.",
+    "path": "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab03.png"
+   },
+   {
+    "num": 4,
+    "page": 8,
+    "caption": "Throughput at batch size = 1 on H100 when the target model is LLaMA-Instruct 3.1 8B and the testing dataset is MT-bench. The experiments were conducted by the SGLang team.",
+    "path": "assets/crops/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-tab04.png"
    },
    {
     "num": 5,
@@ -841,6 +855,12 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 6,
+    "caption": "Speedup ratio and average acceptance length τ on HumanEval, GSM8K, and Alpaca. T denotes temperature, V represents Vicuna, and LC stands for LLaMA2-Chat.",
+    "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab01.png"
+   },
+   {
     "num": 2,
     "page": 6,
     "caption": "Average acceptance length τ and acceptance rate α on MT-bench. T denotes temperature.",
@@ -849,8 +869,26 @@
    {
     "num": 3,
     "page": 6,
-    "caption": "reveals that EAGLE achieved a 1.5x speedup with the Mixtral 8x7B Instruct model. This modest acceleration, compared to models like LLaMA, is due to a shorter average acceptance length and the complexity of accelerating MoE models via speculative sampling. MoE models typically require reading the wei",
+    "caption": "Speedup ratio, average acceptance length τ , and acceptance rate α on MT-bench at temperature=0. The target LLM is Mixtral 8x7B Instruct-v0.1.",
     "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab03.png"
+   },
+   {
+    "num": 4,
+    "page": 6,
+    "caption": "Generation speed of EAGLE combined with gpt- fast, evaluated on MT-bench with LLaMA2-Chat 7B at temperature=0.",
+    "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab04.png"
+   },
+   {
+    "num": 5,
+    "page": 7,
+    "caption": "Average acceptance length τ of EAGLE with and without the use of tree attention. The evaluation dataset is MT-bench, with the temperature parameter set to 0.",
+    "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab05.png"
+   },
+   {
+    "num": 6,
+    "page": 7,
+    "caption": "The speedup ratios and average acceptance length τ using different training datasets evaluated on the MT-bench, with the target LLM being LLaMA2-Chat 7B and the tem- perature set to 0. “Fixed dataset” refers to both questions and answers originating from the ShareGPT dataset. “Data generated by targ",
+    "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab06.png"
    },
    {
     "num": 7,
@@ -860,8 +898,8 @@
    },
    {
     "num": 8,
-    "page": 12,
-    "caption": "displays the speedup ratio, average acceptance length τ and acceptance rate α of EAGLE on HumanEval, GSM8K, and Alpaca datasets.",
+    "page": 13,
+    "caption": "Speedup ratio, average acceptance length τ and acceptance rate α on HumanEval, GSM8K, and Alpaca at temperature = 0.",
     "path": "assets/crops/eagle-speculative-sampling-requires-rethinking-feature-uncertainty-tab08.png"
    }
   ],
@@ -965,24 +1003,6 @@
     "page": 23,
     "caption": "Attention computation using FlexAttention with our proposed custom mask.",
     "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig05.png"
-   },
-   {
-    "num": 6,
-    "page": 26,
-    "caption": "Sample from MDLM ( Sahoo et al. , 2024a ) of length L = 1024 and T = 5 K diffusion steps. The generative perplexity of this sample under GPT2-Large is 69.26 and its entropy is 5.6.",
-    "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig06.png"
-   },
-   {
-    "num": 7,
-    "page": 27,
-    "caption": "Sample from BD3-LM for block size L ′ = 16 of length L = 2031 under T = 5 K diffusion steps (trained with a context length of L = 1024 ). The generative perplexity of this sample under GPT2-Large is 24.3, and its entropy is 5.5.",
-    "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig07.png"
-   },
-   {
-    "num": 8,
-    "page": 28,
-    "caption": "Sample from an AR model ( Sahoo et al. , 2024a ) with length L = 2003 (trained with a context length of L = 1024 ). The generative perplexity of this sample under GPT2-Large is 10.6 and its entropy is 5.5.",
-    "path": "assets/crops/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models-fig08.png"
    }
   ],
   "tables": [
@@ -1072,12 +1092,6 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 6,
-    "caption": "Decoding speedup over baseline and average acceptance length ( τ ) on Qwen3 models with thinking mode disabled and a",
-    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab01.png"
-   },
-   {
     "num": 2,
     "page": 7,
     "caption": "Decoding speedup over baseline and average acceptance",
@@ -1090,22 +1104,16 @@
     "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab03.png"
    },
    {
-    "num": 4,
-    "page": 8,
-    "caption": "Acceptance length of the base Qwen3.5-27B DFlash",
-    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab04.png"
-   },
-   {
     "num": 5,
     "page": 8,
     "caption": "Speedup over baseline and average acceptance length",
     "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab05.png"
    },
    {
-    "num": 8,
+    "num": 7,
     "page": 8,
-    "caption": "Ablation study of training–inference block size (BS)",
-    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab08.png"
+    "caption": "More hidden features from target model increases the",
+    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab07.png"
    },
    {
     "num": 9,
@@ -1130,12 +1138,6 @@
     "page": 12,
     "caption": "vLLM results for Qwen3.5-9B. Each cell reports DFlash",
     "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab12.png"
-   },
-   {
-    "num": 13,
-    "page": 13,
-    "caption": "Randomly sample anchor tokens to construct masked",
-    "path": "assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab13.png"
    }
   ],
   "formulas": []
@@ -1195,7 +1197,7 @@
    {
     "num": 1,
     "page": 11,
-    "caption": "presents a counter-intuitive observation: the parallel drafter (DFlash) and the semi- autoregressive drafter (DSpark) often yield longer accepted lengths than the fully autoregressive drafter (Eagle3). This finding contrasts with the standard expectation that step-by-step autore- gression produces h",
+    "caption": "| Main speculative decoding results. We report accepted length ( 𝜏 ) per decoding round (higher is better) for different target models and domains. Bold marks the best results.",
     "path": "assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-tab01.png"
    }
   ],
@@ -1242,10 +1244,28 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 7,
+    "caption": "Low-budget regime comparison of JetSpec and baselines trained with the same Qwen3-8B model and data recipe. We report results on math, coding, and chat benchmarks using non-thinking mode with a 3072 max tokens. We report end-to-end decoding speedup over standard AR decoding and average accepted leng",
+    "path": "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab01.png"
+   },
+   {
+    "num": 2,
+    "page": 7,
+    "caption": "High-budget comparison on Qwen3-8B with at least 64 draft tokens. EAGLE-3 uses tree mode with max depth 8; larger budgets give minimal or worse gains due to training mismatch.",
+    "path": "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab02.png"
+   },
+   {
     "num": 3,
     "page": 8,
     "caption": "Learning-rate ablation with J ET S PEC and without loss weighting training ( γ = 0 ). See Section 3.4.2 for γ ’s definition and ablations. We report speedup and average accepted length τ .",
     "path": "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab03.png"
+   },
+   {
+    "num": 4,
+    "page": 9,
+    "caption": "Loss-objective ablation with J ET S PEC at LR 6 × 10 − 4 and γ = 0 . We report speedup and average accepted length τ . All cells use checkpoints from a single training pipeline trained on math-only data ( ∼ 3 epochs); we report on math benchmarks to keep the comparison in-distribution.",
+    "path": "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab04.png"
    },
    {
     "num": 5,
@@ -1278,9 +1298,15 @@
     "path": "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab09.png"
    },
    {
+    "num": 10,
+    "page": 18,
+    "caption": "Tree-construction algorithm ablation on MATH-500 ( n = 500 ) with JetSpec at the pro- duction setting (causal head, LR 3 × 10 − 4 , Forward-KL distillation, γ = 0 ). Hybrid scoring is P",
+    "path": "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab10.png"
+   },
+   {
     "num": 11,
-    "page": 19,
-    "caption": "reports an example end-to-end vLLM run on HumanEval with a single H100 GPU. The results show how tree budget interacts with serving batch size: larger budgets improve low-batch latency by reducing verification rounds, while their relative gain decreases at larger batch sizes as verification and memo",
+    "page": 20,
+    "caption": "vLLM serving performance of J ET S PEC on Math-500 with Qwen3-8B on a single H100 GPU, evaluated across batch sizes and tree budgets (in parentheses). Each setting reports end-to-end throughput over AR decoding in tokens per second (TPS).",
     "path": "assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab11.png"
    },
    {
@@ -1469,6 +1495,12 @@
     "page": 21,
     "caption": "Configurations of the evaluated topology in § 6.",
     "path": "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-tab07.png"
+   },
+   {
+    "num": 8,
+    "page": 21,
+    "caption": "Detailed model hyperparameters and training configurations in § 4.1.",
+    "path": "assets/crops/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training-tab08.png"
    }
   ],
   "formulas": [
@@ -1489,8 +1521,8 @@
    },
    {
     "num": 2,
-    "page": 3,
-    "caption": "illustrates the RL training curves, where the starting points are obtained from zero-vision SFT. The results show that zero-vision SFT is sufficient for activating vision capabilities while ensuring generalization across modal- ities. This phenomenon is likely due to the joint pretraining of text an",
+    "page": 4,
+    "caption": "Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve, demonstrating that zero-vision activation paired with long-running RL is sufficient for acquiring robust visual capabilities.",
     "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png"
    },
    {
@@ -1502,7 +1534,7 @@
    {
     "num": 4,
     "page": 6,
-    "caption": "In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as train- ing progresses. At the same time, the level of parallelism during training also gradually increases.",
+    "caption": "In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as training progresses. At the same time, the level of parallelism during training also gradually increases.",
     "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png"
    },
    {
@@ -1587,16 +1619,22 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 4,
-    "caption": "Training setup and hyperparameters across different stages for Qwen3-VL.",
-    "path": "assets/crops/qwen3-vl-technical-report-tab01.png"
-   },
-   {
     "num": 2,
     "page": 15,
     "caption": "Performance of Qwen3-VL-235B-A22B and top-tier models on visual benchmarks. The highest scores of the reasoning and non-reasoning models are shown in bold and underlined , respectively. Results marked with an ∗ are sourced from the technical report. + denotes results with tool use.",
     "path": "assets/crops/qwen3-vl-technical-report-tab02.png"
+   },
+   {
+    "num": 3,
+    "page": 16,
+    "caption": "Performance of medium-sized Qwen3-VL models and previous models on visual benchmarks. The highest scores are shown in bold . Results marked with an ∗ are sourced from the technical report. + denotes results with tool use.",
+    "path": "assets/crops/qwen3-vl-technical-report-tab03.png"
+   },
+   {
+    "num": 4,
+    "page": 18,
+    "caption": "Performance of small-sized Qwen3-VL models and GPT-5-nano on visual benchmarks.",
+    "path": "assets/crops/qwen3-vl-technical-report-tab04.png"
    },
    {
     "num": 5,
@@ -1688,18 +1726,6 @@
     "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig403.png"
    },
    {
-    "num": 404,
-    "page": 19,
-    "caption": "HiF8 数值精度",
-    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig404.png"
-   },
-   {
-    "num": 405,
-    "page": 21,
-    "caption": "Vector Core 架构示意图",
-    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig405.png"
-   },
-   {
     "num": 406,
     "page": 22,
     "caption": "AI Core Cube-Vector 融合示意图",
@@ -1716,18 +1742,6 @@
     "page": 27,
     "caption": "STARS2.0 架构示意图",
     "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig411.png"
-   },
-   {
-    "num": 412,
-    "page": 31,
-    "caption": "URMA 异步访存通信的过程示意图",
-    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig412.png"
-   },
-   {
-    "num": 413,
-    "page": 32,
-    "caption": "UB Memory 同步访存语义地址通信过程示意图",
-    "path": "assets/crops/ascend-950-npu-architecture-whitepaper-fig413.png"
    },
    {
     "num": 417,
@@ -1785,34 +1799,10 @@
     "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig02.png"
    },
    {
-    "num": 3,
-    "page": 5,
-    "caption": "GEPA proposes a new candidate in every iteration by improving existing candidates using one of the two strategies (Reflective Prompt Mutation (Section 3) or System Aware Merge (Appendix D.1)), first evaluating them on a minibatch, and if improved, evaluating on a larger dataset. Instead of selecting",
-    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig03.png"
-   },
-   {
-    "num": 4,
-    "page": 6,
-    "caption": "( Left ) GEPA’s core algorithm for reflective prompt evolution. GEPA works iteratively, in each iteration, selecting some of the current candidates to evolve (line 7), executing the identified candidate on a minibatch of rollouts, while utilizing a special feedback function \u0016 f to gather module spec",
-    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig04.png"
-   },
-   {
     "num": 6,
     "page": 10,
     "caption": "Comparing the impact of different candidate selection strategies. (Left) As can be seen, selecting the best-performing candidate in every iteration led to a local-optima after one iteration, leading to subopti- mal search performance. (Right) On the other hand, using pareto-based candidate selection",
     "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig06.png"
-   },
-   {
-    "num": 7,
-    "page": 13,
-    "caption": "GEPA with GPT-4o is able to generate kernels for AMD NPUs that achieve vector utilization rates as high as 70%, with a mean utilization score of 30.52%. In comparison, GPT-4o, even after up to 10 sequential refinements with environment feedback, achieves an aggregate score of only 4.25%. When enhanc",
-    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig07.png"
-   },
-   {
-    "num": 9,
-    "page": 24,
-    "caption": "Details of System Aware Merge. r represents a seeded stochastic sampler.",
-    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig09.png"
    },
    {
     "num": 12,
@@ -1825,30 +1815,6 @@
     "page": 29,
     "caption": "IFBench: rollout vs. score for different models/settings.",
     "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig13.png"
-   },
-   {
-    "num": 16,
-    "page": 27,
-    "caption": "visualizes the generalization gap for different optimization methods.",
-    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig16.png"
-   },
-   {
-    "num": 18,
-    "page": 31,
-    "caption": "Comparing the token counts of optimized programs across benchmarks.",
-    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig18.png"
-   },
-   {
-    "num": 20,
-    "page": 32,
-    "caption": "HotpotQA Qwen3 8B",
-    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig20.png"
-   },
-   {
-    "num": 23,
-    "page": 33,
-    "caption": "HoVer GPT-4.1 Mini",
-    "path": "assets/crops/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning-fig23.png"
    }
   ],
   "tables": [
@@ -1883,8 +1849,8 @@
    },
    {
     "num": 2,
-    "page": 2,
-    "caption": "shows the architecture of a transformer decoder block. Each decoder block consists of two primary modules: self-attention and feed-forward network (FFN). These mod- ules can be divided into the following six operations: pre- proj , attn , postproj (within the attention module), and ffn_ln1 , ffn_ln2",
+    "page": 3,
+    "caption": "High-level architecture of a decoder block.",
     "path": "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig02.png"
    },
    {
@@ -1892,6 +1858,12 @@
     "page": 4,
     "caption": "Per-token prefill and decode time with different batch sizes (sequence length = 1024) for LLaMa-13B on A6000 GPU. Prefill saturates GPU compute even at batch size of 1 and results in almost constant per-token time across batch sizes. Decode under-utilizes GPU compute and costs as much as 200 × prefi",
     "path": "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig03.png"
+   },
+   {
+    "num": 4,
+    "page": 4,
+    "caption": "Impact of the arithmetic intensity (bottom) on the throughput (top) of prefills and decodes for LLaMA-13B on A6000 GPU.",
+    "path": "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig04.png"
    },
    {
     "num": 5,
@@ -1919,8 +1891,8 @@
    },
    {
     "num": 9,
-    "page": 9,
-    "caption": "plots the results of our experiments. We find that the peak efficiency of our techniques occurs at different P : D ratios for different prefill chunk size and batch size scenar- ios. If C is the chunk size and B is the batch size, then we can show that this peak will occur when the decodes per- fect",
+    "page": 10,
+    "caption": "Normalized throughput (tokens/ms) for LLaMa 13B on A6000 GPU with different sequence lengths, P:D ratios, and chunk sizes.",
     "path": "assets/crops/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills-fig09.png"
    },
    {
@@ -1999,7 +1971,7 @@
    {
     "num": 4,
     "page": 5,
-    "caption": "breaks down the prefill and decode compute times",
+    "caption": "Prefill and decode time with different input sizes for Mistral-7B running on single A100 GPU. Linear layers contribute to the majority of runtime in both prefill and decode phases. Due to the low arithmetic intensity in decode batches, the cost of linear operation for 1 decode token is nearly same a",
     "path": "assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig04.png"
    },
    {
@@ -2017,7 +1989,7 @@
    {
     "num": 7,
     "page": 6,
-    "caption": "compares different scheduling policies. The ex- ample shows a timeline (left to right) of requests A, B, C and D. Requests A and B are in decode phase at the start of the interval and after one iteration, requests C and D enter the system. Orca and vLLM both use FCFS iteration-level batching with ea",
+    "caption": "A generation stall occurs when one or more prefills are scheduled in between consecutive decode iterations of a request. A, B, C and D represent different requests. Sub- script d represents a decode iteration, p represents a full prefill and p 0 , p 1 represent two chunked prefills of a given prompt",
     "path": "assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig07.png"
    },
    {
@@ -2034,8 +2006,8 @@
    },
    {
     "num": 10,
-    "page": 10,
-    "caption": "and Figure 11 show the results of our capacity",
+    "page": 11,
+    "caption": "Capacity (in queries per second) of Mistral-7B and Yi-34B with different schedulers under strict (SLO-S) and",
     "path": "assets/crops/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve-fig10.png"
    },
    {
@@ -2120,7 +2092,7 @@
    {
     "num": 3,
     "page": 3,
-    "caption": "The model architecture of Kimi-VL and Kimi-VL-Thinking, consisting of a MoonViT that allows native- resolution images, an MLP projector, and a Mixture-of-Experts (MoE) language decoder.",
+    "caption": "The model architecture of Kimi-VL and Kimi-VL-Thinking, consisting of a MoonViT that allows native-resolution images, an MLP projector, and a Mixture-of-Experts (MoE) language decoder.",
     "path": "assets/crops/kimi-vl-technical-report-fig03.png"
    },
    {
@@ -2168,7 +2140,7 @@
    {
     "num": 11,
     "page": 16,
-    "caption": "Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along with fine-grained natural language descriptions for each scene. †",
+    "caption": "Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along with fine-grained natural language descriptions for each scene.‡‡footnotemark: ‡",
     "path": "assets/crops/kimi-vl-technical-report-fig11.png"
    },
    {
@@ -2185,12 +2157,6 @@
    }
   ],
   "tables": [
-   {
-    "num": 1,
-    "page": 5,
-    "caption": "Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.",
-    "path": "assets/crops/kimi-vl-technical-report-tab01.png"
-   },
    {
     "num": 2,
     "page": 5,
@@ -2265,7 +2231,7 @@
    {
     "num": 3,
     "page": 5,
-    "caption": "Per-step training loss curve of Kimi K2, without smoothing or sub-sampling . It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity.",
+    "caption": "Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity.",
     "path": "assets/crops/kimi-k2-open-agentic-intelligence-fig03.png"
    },
    {
@@ -2303,12 +2269,6 @@
     "page": 10,
     "caption": "t-SNE visualizations of tool embeddings. (a) Real-world MCP tools exhibit natural clustering based on their original source categories. (b) Synthetic tools are organized into pre-defined domain categories, providing systematic coverage of the tool space. Together, they ensure comprehensive represent",
     "path": "assets/crops/kimi-k2-open-agentic-intelligence-fig09.png"
-   },
-   {
-    "num": 13,
-    "page": 32,
-    "caption": "pipeline for RL weight update",
-    "path": "assets/crops/kimi-k2-open-agentic-intelligence-fig13.png"
    }
   ],
   "tables": [
@@ -2319,12 +2279,6 @@
     "path": "assets/crops/kimi-k2-open-agentic-intelligence-tab01.png"
    },
    {
-    "num": 2,
-    "page": 6,
-    "caption": "Architectural comparison between Kimi K2 and DeepSeek-V3",
-    "path": "assets/crops/kimi-k2-open-agentic-intelligence-tab02.png"
-   },
-   {
     "num": 3,
     "page": 16,
     "caption": "Performance comparison of Kimi-K2-Instruct against leading open-source and proprietary models across diverse tasks. Bold denotes the global SOTA; underlined bold indicates the best open-source result. Data points marked with * are taken directly from the model’s technical report or blog.",
@@ -2332,8 +2286,8 @@
    },
    {
     "num": 4,
-    "page": 17,
-    "caption": "presents a comprehensive comparison of Kimi-K2-Base against leading open-source foundation models across diverse evaluation benchmarks. The results demonstrate that Kimi-K2-Base achieves state-of-the-art performance across the majority of evaluated tasks, establishing it as a leading foundation mode",
+    "page": 18,
+    "caption": "Performance comparison of Kimi-K2-Base against leading open-source models across diverse tasks.",
     "path": "assets/crops/kimi-k2-open-agentic-intelligence-tab04.png"
    },
    {
@@ -2345,7 +2299,7 @@
    {
     "num": 6,
     "page": 19,
-    "caption": "presents the passing rates of different models under various plugin–strategy combinations.",
+    "caption": "Safety Evaluation Results",
     "path": "assets/crops/kimi-k2-open-agentic-intelligence-tab06.png"
    }
   ],
@@ -2385,8 +2339,8 @@
    },
    {
     "num": 6,
-    "page": 18,
-    "caption": "presents the training reward curves under these settings. We observe that all three configurations exhibit similar overall training trajectories. Notably, top-k = 5 achieves the fastest initial convergence, reaching the highest training reward within the first 200 steps. However, its reward graduall",
+    "page": 19,
+    "caption": "The training dynamics of S EARCH -R1 with a different number of retrieved pas- sages. (LLM: Qwen2.5-7b-base, RL: PPO)",
     "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-fig06.png"
    },
    {
@@ -2397,12 +2351,6 @@
    }
   ],
   "tables": [
-   {
-    "num": 1,
-    "page": 5,
-    "caption": "Template for S EARCH -R1. question will be replaced with the specific question during training and inference.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab01.png"
-   },
    {
     "num": 2,
     "page": 8,
@@ -2450,72 +2398,6 @@
     "page": 20,
     "caption": "A case study of R1 and S EARCH -R1.",
     "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab09.png"
-   },
-   {
-    "num": 10,
-    "page": 22,
-    "caption": "S EARCH -R1 case study 1 (successful): S EARCH -R1 conduct multi-step reasoning, search, with self-verification and finally answer the question.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab10.png"
-   },
-   {
-    "num": 11,
-    "page": 23,
-    "caption": "S EARCH -R1 case study 2 (failed): S EARCH -R1 sometimes fail to decompose the complex problem and can be mislead by irrelevent searched passages.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab11.png"
-   },
-   {
-    "num": 12,
-    "page": 23,
-    "caption": "S EARCH -R1 case study 3 (successful): S EARCH -R1 can easily answer the question if the relevant information can be found with one search engine call.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab12.png"
-   },
-   {
-    "num": 13,
-    "page": 24,
-    "caption": "S EARCH -R1 case study 4 (successful): S EARCH -R1 can write the right query to search for auxiliary information not provided in the previous search engine calls.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab13.png"
-   },
-   {
-    "num": 14,
-    "page": 25,
-    "caption": "S EARCH -R1 case study 5 (failed): S EARCH -R1 fails to answer the question with insufficient or misleading retrieved information.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab14.png"
-   },
-   {
-    "num": 15,
-    "page": 26,
-    "caption": "S EARCH -R1 case study 6 (successful): S EARCH -R1 can easily answer the question with multi-hop reasoning when sufficient and accurate context is retrieved.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab15.png"
-   },
-   {
-    "num": 16,
-    "page": 27,
-    "caption": "S EARCH -R1 case study 7 (failed): S EARCH -R1 failed to write the right queries to decompose a complex problem at the beginning. The model answer the question without obtaining enough evidence.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab16.png"
-   },
-   {
-    "num": 17,
-    "page": 28,
-    "caption": "S EARCH -R1 case study 8 (successful): S EARCH -R1 can write query to search for insufficient information.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab17.png"
-   },
-   {
-    "num": 18,
-    "page": 29,
-    "caption": "S EARCH -R1 case study 9 (successful): The first query written by the LLM is not very meaningful. However, upon that, LLM starts to write the query and solve the problem step by step.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab18.png"
-   },
-   {
-    "num": 19,
-    "page": 30,
-    "caption": "S EARCH -R1 case study 10 (successful): S EARCH -R1 learns to stop searching when it finds out the external knowledge source is not sufficient to answer the question.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab19.png"
-   },
-   {
-    "num": 20,
-    "page": 31,
-    "caption": "S EARCH -R1 case study 11 (failed): The LLM can be misled by irrelevant retrieved information and provide a wrong answer.",
-    "path": "assets/crops/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning-tab20.png"
    }
   ],
   "formulas": []
@@ -2645,6 +2527,30 @@
     "path": "assets/crops/hyper-connections-tab02.png"
    },
    {
+    "num": 3,
+    "page": 8,
+    "caption": "Ablation study on OLMo-1B-DHC × 4. In the B or WC column, the symbol \" ✗ \" denotes parameters that are not trainable from initialization.",
+    "path": "assets/crops/hyper-connections-tab03.png"
+   },
+   {
+    "num": 4,
+    "page": 8,
+    "caption": "Performance of related methods on OLMo-1B models.",
+    "path": "assets/crops/hyper-connections-tab04.png"
+   },
+   {
+    "num": 5,
+    "page": 9,
+    "caption": "Performance of 7B models. FLOPs refers to the computation per token in the forward pass.",
+    "path": "assets/crops/hyper-connections-tab05.png"
+   },
+   {
+    "num": 6,
+    "page": 9,
+    "caption": "Downstream evaluations for MoE models training with 500B tokens under the OLMoE evaluation setting. ARC-C stands for ARC-Challenge, and ARC-E for ARC-Easy. MMLU Var is a modified version of MMLU that includes varying few-shot examples, providing stable feedback during early training, as outlined in ",
+    "path": "assets/crops/hyper-connections-tab06.png"
+   },
+   {
     "num": 7,
     "page": 15,
     "caption": "Comparison of number of parameters.",
@@ -2682,7 +2588,7 @@
    },
    {
     "num": 13,
-    "page": 30,
+    "page": 0,
     "caption": "OLMo’s default configuration was evaluated using multiple metrics. Perplexity (PPL) and loss were used for the V2 and V3 Validation Sets, while zero-shot testing was applied to the Downstream Benchmarks. However, the grey benchmarks were excluded from our analysis due to the instability of their per",
     "path": "assets/crops/hyper-connections-tab13.png"
    },
@@ -2777,12 +2683,6 @@
     "page": 10,
     "caption": "Throughput (queries per second, higher is better). Classification uses a pooled head at inference (no decoding). Reasoning uses CoT-style decoding (train-time only in DHRD). The rightmost column shows the speedup of our deployed path over CoT decoding on the same backbone.",
     "path": "assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab05.png"
-   },
-   {
-    "num": 6,
-    "page": 12,
-    "caption": "Third-party assets and licenses.",
-    "path": "assets/crops/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning-tab06.png"
    }
   ],
   "formulas": []
@@ -2798,7 +2698,7 @@
    {
     "num": 2,
     "page": 8,
-    "caption": "Cross-Attention Optimization via Concept Replication. Left: The decoder’s cross-attention creates an irregular L \u0002 M mask due to variable token-to-concept mappings. Right: By replicating concepts via repeat_- interleave to match token positions, we obtain a standard L \u0002 L causal mask, enabling optim",
+    "caption": "Cross-Attention Optimization via Concept Replication. Left: The decoder’s cross-attention creates an irregular L×M mask due to variable token-to-concept mappings. Right: By replicating concepts via repeat_interleave to match token positions, we obtain a standard L×L causal mask, enabling optimized F",
     "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig02.png"
    },
    {
@@ -2810,40 +2710,34 @@
    {
     "num": 4,
     "page": 12,
-    "caption": "Full training trajectory fit. Comparison between predicted loss (Equation 22 ) and empirical loss across model sizes (274M–833M), compression factors R 2 f 2 , 4 , 8 g , and training budgets. The joint fit achieves R 2 > 0 . 98 .",
+    "caption": "Full training trajectory fit. Comparison between predicted loss (Equation 22) and empirical loss across model sizes (274M–833M), compression factors R∈{2,4,8}, and training budgets. The joint fit achieves R2>0.98.",
     "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig04.png"
    },
    {
-    "num": 6,
-    "page": 11,
-    "caption": "(a) illustrates the Loss/FLOPs efficiency across different backbone proportions P and compression ratios R .",
-    "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig06.png"
-   },
-   {
     "num": 7,
-    "page": 14,
-    "caption": "illustrates the average loss at the first 20 positions within each concept. The top panel compares raw loss values, while the bottom panel visualizes the differential: ∆ L = L \u0000 L . Here, green bars ( ∆ L < 0 ) indicate the concept model outperforms the baseline, while red bars ( ∆ L > 0 ) indicate ",
+    "page": 0,
+    "caption": "Top: Average loss comparison between concept model (blue) and baseline model (orange) across relative positions within concepts. Bottom: Loss difference (Concept - Baseline), where green indicates improvement (lower loss) and red indicates degradation.",
     "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig07.png"
    },
    {
     "num": 8,
-    "page": 15,
-    "caption": "reveals starkly different behaviors. The learned predictor (red) exhibits severe instability: after initial compression to \u0018 2000 tokens, the compressed length steadily increases, eventually stabilizing at \u0018 4300 tokens ( 1 . 9 compression). This \"creep-up\" indicates the model progressively learns t",
+    "page": 0,
+    "caption": "Average compressed sequence length over training steps. Red: Learned Boundary Predictor. Purple: Rule-Based Predictor. The x-axis represents training steps, and the y-axis represents the average number of tokens post-compression.",
     "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig08.png"
    }
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 9,
-    "caption": "Statistics of the pretraining data.",
-    "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab01.png"
-   },
-   {
     "num": 2,
     "page": 15,
     "caption": "Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red .",
     "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab02.png"
+   },
+   {
+    "num": 3,
+    "page": 16,
+    "caption": "Architecture Configuration Details. A unified view of the parameter settings for Baseline (LLaMA-1.3B) and DLCM (2.3B). Values are presented as Baseline / Ours .",
+    "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab03.png"
    },
    {
     "num": 4,
@@ -2860,7 +2754,7 @@
    {
     "num": 6,
     "page": 7,
-    "caption": "provides detailed performance . To more intuitively analyze the performance trends, we have plotted the speedup ( T /T ) in Figure 9 .",
+    "caption": "Performance comparison (Batch=1, Heads=32, Interval=6)",
     "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab06.png"
    }
   ],
@@ -2888,8 +2782,8 @@
    },
    {
     "num": 4,
-    "page": 5,
-    "caption": "depicts the architecture of HybridFlow, which con- sists of three major components: Hybrid Programming Model ,",
+    "page": 6,
+    "caption": "Architecture of HybridFlow.",
     "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig04.png"
    },
    {
@@ -2941,6 +2835,12 @@
     "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig14.png"
    },
    {
+    "num": 15,
+    "page": 13,
+    "caption": "Time breakdown on different generation parallel sizes of the actor model on 16 GPUs.",
+    "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-fig15.png"
+   },
+   {
     "num": 16,
     "page": 13,
     "caption": "Runtime of device mapping algorithm. The model size and # of GPUs are simultaneously scaled.",
@@ -2955,13 +2855,7 @@
     "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-tab02.png"
    }
   ],
-  "formulas": [
-   {
-    "page": 7,
-    "text": "batch[“pretrain_loss”] = pretrain_loss",
-    "path": "assets/crops/hybridflow-a-flexible-and-efficient-rlhf-framework-eq01.png"
-   }
-  ]
+  "formulas": []
  },
  "let-it-flow-agentic-crafting-on-rock-and-roll": {
   "figures": [
@@ -3076,10 +2970,22 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 29,
+    "caption": "Performance on Terminal-Based Benchmarks (Normal Models).",
+    "path": "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab01.png"
+   },
+   {
     "num": 2,
     "page": 29,
     "caption": "Performance on Terminal-Based Benchmarks (Large Models).",
     "path": "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab02.png"
+   },
+   {
+    "num": 3,
+    "page": 30,
+    "caption": "Performance on Tool-Use Benchmarks (Normal Models).",
+    "path": "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab03.png"
    },
    {
     "num": 4,
@@ -3090,7 +2996,7 @@
    {
     "num": 5,
     "page": 31,
-    "caption": "and Table 6 report the performance of ROME compared with a wide range of strong baselines, including both normal-scale and large-scale models. Additionally, ROME achieves performance com- parable to that of larger open-source agentic models across most benchmarks, as shown in Table 6 . Notably, our ",
+    "caption": "Performance on General-Agent Benchmarks (Normal Models).",
     "path": "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab05.png"
    },
    {
@@ -3098,6 +3004,12 @@
     "page": 31,
     "caption": "Performance on General-Agent Benchmarks (Large Models).",
     "path": "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab06.png"
+   },
+   {
+    "num": 8,
+    "page": 35,
+    "caption": "Case-study evaluation scores, reported as the average ratings across 30 experts.",
+    "path": "assets/crops/let-it-flow-agentic-crafting-on-rock-and-roll-tab08.png"
    }
   ],
   "formulas": []
@@ -3171,7 +3083,26 @@
     "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig11.png"
    }
   ],
-  "tables": [],
+  "tables": [
+   {
+    "num": 2,
+    "page": 12,
+    "caption": "Results with Local Knowledge Base.",
+    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab02.png"
+   },
+   {
+    "num": 4,
+    "page": 13,
+    "caption": "Results on GAIA, xBench-DeepSearch, and Frames. The results are evaluated with LLM- as-Judge. For baselines, we run the corresponding official codes for 4 seeds and report Avg@4 and Pass@4.",
+    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab04.png"
+   },
+   {
+    "num": 5,
+    "page": 14,
+    "caption": "Pass@1 results of ASearcher-Web-QwQ-v2 and baselines, evaluated on GAIA [ 24 ], xBench- DeepSearch [ 41 ], Frames [ 14 ], and HLE-500 [ 19 ]. † indicates results are obtained from official reports.",
+    "path": "assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab05.png"
+   }
+  ],
   "formulas": []
  },
  "areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning": {
@@ -3264,13 +3195,13 @@
    {
     "num": 1,
     "page": 4,
-    "caption": "j (a) AIME accuracy of DeepSeek-R1-Zero during training. AIME takes a mathematical",
+    "caption": "(a) AIME accuracy of DeepSeek-R1-Zero during training. AIME takes a mathematical problem as input and a number as output, illustrated in Table 32. Pass@1 and Cons@16 are described in Supplementary D.1. The baseline is the average score achieved by human participants in the AIME competition. (b) The ",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig01.png"
    },
    {
     "num": 2,
     "page": 6,
-    "caption": "j The multi-stage pipeline of DeepSeek-R1. A detailed background on DeepSeek-V3",
+    "caption": "The multi-stage pipeline of DeepSeek-R1. A detailed background on DeepSeek-V3 Base and DeepSeek-V3 is provided in Supplementary A.1. The models DeepSeek-R1 Dev1, Dev2, and Dev3 represent intermediate checkpoints within this pipeline.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig02.png"
    }
   ],
@@ -3278,19 +3209,19 @@
    {
     "num": 1,
     "page": 3,
-    "caption": "j Template for DeepSeek-R1-Zero. prompt will be replaced with the specific reasoning",
+    "caption": "Template for DeepSeek-R1-Zero. prompt will be replaced with the specific reasoning question during training.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab01.png"
    },
    {
     "num": 2,
     "page": 5,
-    "caption": "j An interesting “aha moment” of an intermediate version of DeepSeek-R1-Zero. The",
+    "caption": "An interesting “aha moment” of an intermediate version of DeepSeek-R1-Zero. The model learns to rethink using an anthropomorphic tone. This is also an aha moment for us, allowing us to witness the power and beauty of reinforcement learning.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab02.png"
    },
    {
     "num": 3,
     "page": 8,
-    "caption": "summarizes the performance of DeepSeek-R1 across multiple developmental stages, as outlined in Figure 2. A comparison between DeepSeek-R1-Zero and DeepSeek-R1 Dev1 reveals substantial improvements in instruction-following, as evidenced by higher scores on the IF-Eval and ArenaHard benchmarks. Howeve",
+    "caption": "Experimental results at each stage of DeepSeek-R1. Numbers in bold denote the performance is statistically significant (t−test with p<0.01).",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab03.png"
    },
    {
@@ -3344,13 +3275,13 @@
    {
     "num": 13,
     "page": 57,
-    "caption": "j Performance on latest math competitions. Participants with their USAMO index",
+    "caption": "Performance on latest math competitions. Participants with their USAMO index (AMC score+10×AIME score) surpassing 251.5 are qualified for USAMO.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab13.png"
    },
    {
     "num": 14,
     "page": 60,
-    "caption": "j Experimental results for each stage of DeepSeek-R1 on problems with varying",
+    "caption": "Experimental results for each stage of DeepSeek-R1 on problems with varying difficulty levels in the LiveCodeBench dataset.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab14.png"
    },
    {
@@ -3362,7 +3293,7 @@
    {
     "num": 16,
     "page": 61,
-    "caption": "j Comparison of distilled and RL Models on Reasoning-Related Benchmarks.",
+    "caption": "Comparison of distilled and RL Models on Reasoning-Related Benchmarks.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab16.png"
    },
    {
@@ -3373,50 +3304,32 @@
    },
    {
     "num": 18,
-    "page": 40,
-    "caption": "to Table 32 present examples of our evaluation formats on different benchmarks. We also detail the specific capabilities of large language models assessed by each benchmark in",
+    "page": 66,
+    "caption": "j MMLU assesses a model’s factual and conceptual understanding across 57 tasks spanning STEM (science, technology, engineering, mathematics), humanities, social sciences, and professional fields (e.g., law, medicine). The benchmark is commonly used to evaluate a",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab18.png"
    },
    {
     "num": 19,
     "page": 67,
-    "caption": "j MMLU-Redux is a subset of 5,700 manually re-annotated questions across all 57 MMLU subjects. MMLU-Redux focuses on improving the quality, clarity, and robustness of the benchmark by reducing noise, ambiguities, and potential biases in the MMLU, while potentially",
+    "caption": "MMLU-Redux is a subset of 5,700 manually re-annotated questions across all 57 MMLU subjects. MMLU-Redux focuses on improving the quality, clarity, and robustness of the benchmark by reducing noise, ambiguities, and potential biases in the MMLU, while potentially adjusting the scope or difficulty of ",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab19.png"
-   },
-   {
-    "num": 20,
-    "page": 68,
-    "caption": "j LiveCodeBench aims to evaluate model performance on the algorithm competition task, which collects new problems over time from contests across three competition platforms,",
-    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab20.png"
    },
    {
     "num": 22,
     "page": 70,
-    "caption": "j DROP assesses a model’s ability to understand and extract relevant information from",
+    "caption": "DROP assesses a model’s ability to understand and extract relevant information from extended textual passages. Unlike simpler question-answering benchmarks that focus on factual recall, DROP requires models to process and interpret context-rich paragraphs.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab22.png"
    },
    {
     "num": 23,
     "page": 71,
-    "caption": "j Instruction-Following Evaluation (IFEval) is a benchmark designed to assess a model’s ability to comply with explicit, verifiable instructions embedded within prompts. It",
+    "caption": "Instruction-Following Evaluation (IFEval) is a benchmark designed to assess a model’s ability to comply with explicit, verifiable instructions embedded within prompts. It targets a core competency of large language models (LLMs): producing outputs that meet multiple, clearly defined constraints spec",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab23.png"
    },
    {
-    "num": 24,
-    "page": 72,
-    "caption": "j FRAMES (Factuality, Retrieval, And reasoning MEasurement Set) is a comprehensive",
-    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab24.png"
-   },
-   {
-    "num": 25,
-    "page": 73,
-    "caption": "j Arena-Hard is an open-ended evaluation benchmark specifically designed to assess",
-    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab25.png"
-   },
-   {
     "num": 27,
-    "page": 75,
-    "caption": "j The CLUEWSC (Chinese Language Understanding Evaluation Benchmark - Winograd Schema Challenge) is a specialized task within the CLUE benchmark suite designed to evaluate",
+    "page": 0,
+    "caption": "The CLUEWSC (Chinese Language Understanding Evaluation Benchmark - Winograd Schema Challenge) is a specialized task within the CLUE benchmark suite designed to evaluate a model’s commonsense reasoning and contextual understanding capabilities in Chinese.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab27.png"
    },
    {
@@ -3428,26 +3341,14 @@
    {
     "num": 29,
     "page": 76,
-    "caption": "j GPQA (Graduate-Level Google-Proof QA Benchmark) is a rigorous evaluation",
+    "caption": "GPQA (Graduate-Level Google-Proof QA Benchmark) is a rigorous evaluation framework designed to measure an LLM’s ability to tackle complex, graduate-level multiple-choice problems in STEM domains—specifically biology, physics, and chemistry.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab29.png"
    },
    {
-    "num": 30,
-    "page": 77,
-    "caption": "j SimpleQA is a factuality evaluation benchmark that measures a model’s ability to",
-    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab30.png"
-   },
-   {
     "num": 31,
-    "page": 78,
-    "caption": "j An example of C-SimpleQA. It measures a model’s ability to answer short,",
+    "page": 0,
+    "caption": "An example of C-SimpleQA. It measures a model’s ability to answer short, fact-seeking questions in Chinese with precise, verifiable correctness.",
     "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab31.png"
-   },
-   {
-    "num": 32,
-    "page": 78,
-    "caption": "j An example of math evaluation, which applies to AIME, MATH, and CNMO. These",
-    "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab32.png"
    }
   ],
   "formulas": []
@@ -3525,14 +3426,8 @@
    {
     "num": 5,
     "page": 33,
-    "caption": "| Detailed model architecture information and training hyper parameters.",
+    "caption": "Detailed model architecture information and training hyper parameters.",
     "path": "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab05.png"
-   },
-   {
-    "num": 6,
-    "page": 35,
-    "caption": "| The table illustrates Top-5 merged tokens by Tokenizer Compression and the overall compression ratio is 23.43% for our 128k tokenizer.",
-    "path": "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab06.png"
    }
   ],
   "formulas": []
@@ -3608,6 +3503,12 @@
     "path": "assets/crops/hc-manifold-constrained-hyper-connections-tab03.png"
    },
    {
+    "num": 4,
+    "page": 13,
+    "caption": "| System-level Benchmark Results for 27B Models. This table compares the zero- shot and few-shot performance of the Baseline, HC, and m HC across 8 diverse downstream benchmarks. m HC consistently outperforms the Baseline and surpasses HC on the majority of benchmarks, demonstrating its effectivenes",
+    "path": "assets/crops/hc-manifold-constrained-hyper-connections-tab04.png"
+   },
+   {
     "num": 5,
     "page": 19,
     "caption": "| Detailed Model Specifications and Hyper-parameters. This table presents the architec- tural configurations for the 3B, 9B, and 27B models based on the DeepSeek-V3 (Liu et al., 2024b) architecture. It outlines the specific hyper-parameters for m HC and HC, including the residual stream expansion an",
@@ -3648,28 +3549,13 @@
   "formulas": [
    {
     "page": 2,
-    "text": "matrix C = (cij) ∈Rn×m, where cij represents",
-    "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq01.png"
-   },
-   {
-    "page": 2,
-    "text": "γ = (γij) that redistributes mass from X to Y,",
-    "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq02.png"
-   },
-   {
-    "page": 2,
     "text": "Γp,q = {γ ∈(R+)n×m : γ1m = µ, γT 1n = ν}.",
-    "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq03.png"
+    "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq01.png"
    },
    {
     "page": 3,
     "text": "Fσ(µ) = T µ",
-    "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq04.png"
-   },
-   {
-    "page": 3,
-    "text": "LOTT(dk1, dk2) = ∥Fσ( ¯dk1) −Fσ( ¯dk2)∥σ",
-    "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq05.png"
+    "path": "assets/crops/linear-optimal-topic-transport-for-document-similarity-eq02.png"
    }
   ]
  },
@@ -3701,8 +3587,8 @@
    },
    {
     "num": 5,
-    "page": 7,
-    "caption": "and Table 6 show the results. After normalizing RNN by BatchNorm with separate statistics for each time step in a sequence, both BatchNorm-LSTM and BatchNorm-Everywhere help speed up the convergence of training process. By contrast, LayerNorm and RMSNorm not only converge faster than BatchNorm, but ",
+    "page": 8,
+    "caption": "Error rate on validation set for the attentive reader model.",
     "path": "assets/crops/root-mean-square-layer-normalization-fig05.png"
    },
    {
@@ -3716,21 +3602,9 @@
     "page": 13,
     "caption": "SacreBLEU score curve over train- ing steps on newstest2013 (devset) for the RNNSearch. Models are trained with Nema- tus in Theano.",
     "path": "assets/crops/root-mean-square-layer-normalization-fig07.png"
-   },
-   {
-    "num": 9,
-    "page": 8,
-    "caption": "and Table 10 show the results. Models enhanced with a normalization technique converge faster than Baseline, among which BatchNorm performs the best. Similar to previous observation [ 3 ],",
-    "path": "assets/crops/root-mean-square-layer-normalization-fig09.png"
    }
   ],
   "tables": [
-   {
-    "num": 1,
-    "page": 4,
-    "caption": "Invariance properties of different normalization methods. “ \u0013 ” indicates invariant, while “ \u0017 ” denotes the opposite.",
-    "path": "assets/crops/root-mean-square-layer-normalization-tab01.png"
-   },
    {
     "num": 2,
     "page": 6,
@@ -3739,8 +3613,8 @@
    },
    {
     "num": 3,
-    "page": 6,
-    "caption": "further lists translation results of different models implemented in Theano and Pytorch. Overall, RMSNorm yields comparable translation quality compared with LayerNorm but incurs less computational overhead, outperforming LayerNorm with speedups ranging from 11% ∼ 34%. In addition, we observe that t",
+    "page": 7,
+    "caption": "SacreBLEU score on newstest2014 (Test14) and new- stest2017 (Test17) for RNNSearch. “ Th ”: Theano-version Nema- tus, “ Py ”: an in-house PyTorch-based RNNSearch.",
     "path": "assets/crops/root-mean-square-layer-normalization-tab03.png"
    },
    {
@@ -3775,7 +3649,7 @@
    {
     "num": 3,
     "page": 3,
-    "caption": "shows average performance over all datasets as a function of average inference time for MHA T5-Large and T5-XXL, and uptrained MQA and GQA- 8 XXL models with uptraining proportion α = 0 . 05 . We see that a larger up- trained MQA model provides a favorable trade- off relative to MHA models, with hig",
+    "caption": "Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality and faster speed than MHA-Large, and GQA achieves even better performance with similar speed gains and comparable quality to MHA-XXL. Average perfor- mance on all tasks as a function of average inference time per sample fo",
     "path": "assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig03.png"
    },
    {
@@ -3818,6 +3692,12 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 4,
+    "caption": "Configuration of Qwen2.5-VL.",
+    "path": "assets/crops/qwen2-5-vl-technical-report-tab01.png"
+   },
+   {
     "num": 2,
     "page": 8,
     "caption": "Training data volume and composition across different stages.",
@@ -3840,6 +3720,12 @@
     "page": 13,
     "caption": "Performance of Qwen2.5-VL and other models on OCR, chart, and document understanding benchmarks.",
     "path": "assets/crops/qwen2-5-vl-technical-report-tab05.png"
+   },
+   {
+    "num": 6,
+    "page": 14,
+    "caption": "Performance of Qwen2.5-VL and other models on grounding.",
+    "path": "assets/crops/qwen2-5-vl-technical-report-tab06.png"
    },
    {
     "num": 7,
@@ -3959,7 +3845,7 @@
    {
     "num": 6,
     "page": 31,
-    "caption": "| Comparison between DeepSeek-V3 and other representative chat models. All models are evaluated in a configuration that limits the output length to 8K. Benchmarks containing fewer than 1000 samples are tested multiple times using varying temperature settings to derive robust final results. DeepSeek-",
+    "caption": "presents the evaluation results, showcasing that DeepSeek-V3 stands as the best- performing open-source model. Additionally, it is competitive against frontier closed-source models like GPT-4o and Claude-3.5-Sonnet.",
     "path": "assets/crops/deepseek-v3-technical-report-tab06.png"
    },
    {
@@ -4036,17 +3922,11 @@
    {
     "num": 9,
     "page": 13,
-    "caption": "StepMesh framework for multiple accelerators. AF- TensorWorker and AFTensorServer APIs are for attention and FFN instances respectively.",
+    "caption": "StepMesh framework for multiple accelerators. AFTensorWorker and AFTensorServer APIs are for attention and FFN instances respectively.",
     "path": "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig09.png"
    }
   ],
   "tables": [
-   {
-    "num": 1,
-    "page": 3,
-    "caption": "Model card for Step-3.",
-    "path": "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab01.png"
-   },
    {
     "num": 2,
     "page": 5,
@@ -4179,7 +4059,14 @@
     "path": "assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig14.png"
    }
   ],
-  "tables": [],
+  "tables": [
+   {
+    "num": 2,
+    "page": 9,
+    "caption": "Throughput comparison on multi-modal LLaVA image and video models.",
+    "path": "assets/crops/sglang-efficient-execution-of-structured-language-model-programs-tab02.png"
+   }
+  ],
   "formulas": []
  },
  "efficiently-serving-large-multimodal-models-using-epd-disaggregation": {
@@ -4309,7 +4196,7 @@
    {
     "num": 9,
     "page": 16,
-    "caption": "outlines the SLO criteria for TTFT and TPOT across various models and different numbers of images per request (#I/R). These criteria are empirically derived based on the characteristics of the underlying models, such as the compu- tational complexity of the MME and LLM. We also consider what is real",
+    "caption": "TTFT and TPOT values (in seconds) used as SLO thresholds for different models and image counts per request (#I/R). Respective values are shown for MiniCPM-V 2.6, InternVL2-8B, and InternVL2-26B models.",
     "path": "assets/crops/efficiently-serving-large-multimodal-models-using-epd-disaggregation-tab09.png"
    }
   ],
@@ -4338,7 +4225,7 @@
    {
     "num": 4,
     "page": 6,
-    "caption": "Workflow of inference instances. ( \u0003 ) For prefill instances, the load and store operations of the KVCache layer are performed layer-by-layer and in parallel with the prefill computation to mitigate transmission overhead (see §5.2). ( y ) For decoding instances, asynchronous loading is performed con",
+    "caption": "Workflow of inference instances. (∗) For prefill instances, the load and store operations of the KVCache layer are performed layer-by-layer and in parallel with the prefill computation to mitigate transmission overhead (see §5.2). (†) For decoding instances, asynchronous loading is performed concurr",
     "path": "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig04.png"
    },
    {
@@ -4483,6 +4370,12 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 9,
+    "caption": "Model configurations.",
+    "path": "assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab01.png"
+   },
+   {
     "num": 2,
     "page": 10,
     "caption": "Strong-scaling training performance for the 175B model. We set the batch size to 6144 when training with 3072 to 12288 GPUs. For 256 to 1024 GPUs, we decrease the batch size to 768 due to GPU memory limit. We report the training time required for training 300B tokens here. The number in parentheses ",
@@ -4558,7 +4451,7 @@
    {
     "num": 2,
     "page": 13,
-    "caption": "Maximum model size through memory analysis (left) and the measured model size when running with ZeRO-OS (right). The measured model size with P os matches the theoretical maximum, demonstrating that our memory analysis provides realistic upper bounds on model sizes.",
+    "caption": "Maximum model size through memory analysis (left) and the measured model size when running with ZeRO-OS (right). The measured model size with Po​s matches the theoretical maximum, demonstrating that our memory analysis provides realistic upper bounds on model sizes.",
     "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab02.png"
    },
    {
@@ -4576,14 +4469,8 @@
    {
     "num": 8,
     "page": 23,
-    "caption": "Model conﬁgurations for Figure 5 related to memory allocated with diﬀerent ZeRO conﬁgurations.",
+    "caption": "Model configurations for Figure 5 related to memory allocated with different ZeRO configurations.",
     "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab08.png"
-   },
-   {
-    "num": 10,
-    "page": 24,
-    "caption": "Model conﬁgurations for Figure 7 related to evaluating maximum model sizes vs throughput while using only data-parallelism.",
-    "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab10.png"
    }
   ],
   "formulas": []
@@ -4750,7 +4637,7 @@
    {
     "num": 6,
     "page": 7,
-    "caption": "shows validation perpelixity as a function of num- ber of iterations. As the model size increases, the validation perpelixity decreases and reaches a validation perplexity of 9.27 for the 8.3B model. We report the zero-shot evaluation of the trained models on the LAMBADA and WikiText103 datasets in ",
+    "caption": "Validation set perplexity. All language models are trained",
     "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-fig06.png"
    },
    {
@@ -4786,21 +4673,9 @@
     "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab03.png"
    },
    {
-    "num": 4,
-    "page": 7,
-    "caption": "Model conﬁgurations used for BERT. Parameter Layers Hidden Attention Total Count Size Heads GPUs 336M 24 1024 16 128 1.3B 24 2048 32 256 3.9B 48 2560 40 512",
-    "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab04.png"
-   },
-   {
-    "num": 5,
-    "page": 8,
-    "caption": "Development set results for MNLI, QQP, SQuAD 1.1 and SQuAD 2.0 and test set results for RACE. The trained tokens represents",
-    "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab05.png"
-   },
-   {
     "num": 6,
     "page": 11,
-    "caption": "presents the hyperparameters used for each model and task during ﬁnetuning.",
+    "caption": "Hyperparameters for ﬁnetuning BERT model on down-",
     "path": "assets/crops/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism-tab06.png"
    },
    {
@@ -4839,12 +4714,6 @@
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig03.png"
    },
    {
-    "num": 6,
-    "page": 12,
-    "caption": "Three types of quantization. Then matrix X ∈ C , where T is the number of tokens and C is the feature dimension.",
-    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-fig06.png"
-   },
-   {
     "num": 7,
     "page": 17,
     "caption": "Taxonomy of the model based KV optimization for Large Language Models.",
@@ -4859,58 +4728,58 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 2,
-    "caption": "Notation Summary",
-    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab01.png"
+    "num": 2,
+    "page": 8,
+    "caption": "TABLE II: Comparison of KV cache selection strategies.",
+    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab02.png"
    },
    {
     "num": 4,
     "page": 11,
-    "caption": "The summary of existing KV Cache merging approaches.",
+    "caption": "TABLE IV: The summary of existing KV Cache merging approaches.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab04.png"
    },
    {
     "num": 5,
     "page": 13,
-    "caption": "The summary of existing mixed-precision quantization models.",
+    "caption": "TABLE V: The summary of existing mixed-precision quantization models.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab05.png"
    },
    {
     "num": 6,
     "page": 14,
-    "caption": "The summary of outlier redistribution models in Sec. 4.4.3.",
+    "caption": "TABLE VI: The summary of outlier redistribution models in Sec. IV-D3.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab06.png"
    },
    {
     "num": 7,
     "page": 18,
-    "caption": "The summary of Model-based Attention Grouping and Sharing approaches.",
+    "caption": "TABLE VII: The summary of Model-based Attention Grouping and Sharing approaches.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab07.png"
    },
    {
     "num": 8,
     "page": 19,
-    "caption": "The summary of Model-based Intra-layer approaches.",
+    "caption": "TABLE VIII: The summary of Model-based Intra-layer approaches.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab08.png"
    },
    {
     "num": 9,
-    "page": 20,
-    "caption": "The summary of Non-Transformer Architectures.",
+    "page": 0,
+    "caption": "TABLE IX: The summary of Non-Transformer Architectures.",
     "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab09.png"
    },
    {
-    "num": 10,
-    "page": 23,
-    "caption": "Comparison of Memory Management Techniques for KV Cache",
-    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab10.png"
+    "num": 11,
+    "page": 0,
+    "caption": "TABLE XI: Comparison of Scheduling Approaches for KV Cache Optimization.",
+    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab11.png"
    },
    {
-    "num": 11,
-    "page": 25,
-    "caption": "Comparison of Scheduling Approaches for KV Cache Optimization.",
-    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab11.png"
+    "num": 14,
+    "page": 30,
+    "caption": "TABLE XIV: Multi-modal Benchmark Tasks. Specifically, for task abbreviation, Conv: conversation task; Desc: description task; Reas: reasoning task; Perc: perception task; Pred: prediction task; SUMM: summary task.",
+    "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab14.png"
    }
   ],
   "formulas": []
@@ -5054,6 +4923,12 @@
     "page": 6,
     "caption": "Storing the KV cache of two requests at the same time in vLLM.",
     "path": "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig07.png"
+   },
+   {
+    "num": 8,
+    "page": 7,
+    "caption": "Parallel sampling example.",
+    "path": "assets/crops/efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig08.png"
    },
    {
     "num": 9,
@@ -5227,34 +5102,28 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 2,
-    "caption": "Comparison of efficiency in sequence-based CoT (Wei et al., 2022) and tree-based ToT (Yao et al., 2023) decoding for a reasoning task. The task is sort- ing 128 numbers from Besta et al. (2023). The total gen- erated tokens of CoT is only 525 while 38 , 315 in ToT, resulting in inefficiency in end-t",
-    "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab01.png"
-   },
-   {
-    "num": 2,
-    "page": 7,
-    "caption": "Comparison of QKV partitioning strategies for baselines (most of which are shown in Figure 3) and D E FT. For IO redundancy, significant issues are highlighted in red , while negligible ones are in blue . “Q” refers to queries, and “KV” refers to the KV cache. “DCM” stands for Dense Causal Mask (a m",
-    "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab02.png"
-   },
-   {
     "num": 3,
     "page": 8,
     "caption": "Comparison of baselines and D E FT. Attention kernels of baselines are implemented to fit its memory management. Therefore, for a fair comparison with baselines, we implement D E FT-Node and D E FT-Flatten that fit both paged (Kwon et al., 2023)/unpaged memory management.",
     "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab03.png"
    },
    {
-    "num": 4,
-    "page": 8,
-    "caption": "Workloads generation . ToT-BFS stands for Tree-of-Thoughts (Yao et al., 2023) using breadth-first search. APPS (Hendrycks et al., 2021) is a competitive programming problem dataset. Medusa (Cai et al., 2024) is a speculative decoding framework. “GoT” stands for Graph-of-Thoughts (Besta et al., 2023)",
-    "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab04.png"
+    "num": 5,
+    "page": 9,
+    "caption": "Comparison of D E FT-Flatten and baselines in average decoding latency (in seconds) for tree-based decoding. Here, b represents the tree width, and t denotes the token tree size (i.e., the number of tree-structured queries). The fastest method is in bold , and the second fastest is underlined . Radi",
+    "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab05.png"
    },
    {
     "num": 6,
     "page": 10,
     "caption": "[Different KV Splitting Strategies] Comparison of D E FT-Node, D E FT-Node-Chunk and D E FT- Flatten in average attention latency (second) with NVIDIA A100 (80GB) for Llama3-8B model(GQA). This table is supplementary to Table 16. The fastest method is in bold , and the second fastest is underlined .",
     "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab06.png"
+   },
+   {
+    "num": 7,
+    "page": 10,
+    "caption": "[Different Prompt Lengths] Comparison of D E FT-Flatten and Radix Attention in the efficiency of multi-step reasoning task sorting . The original prompt length is approx- imately 1K tokens, and we pad it to lengths of 5K, 8K, or 10K tokens.",
+    "path": "assets/crops/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference-tab07.png"
    },
    {
     "num": 8,
@@ -5389,8 +5258,8 @@
    },
    {
     "num": 8,
-    "page": 12,
-    "caption": "demonstrates the normalized latency of the NanoFlow instance compared to baselines at various request rates. At lower rates, the NanoFlow instance has compara- ble but slightly higher latency, because NanoFlow targets throughput-oriented scenarios and therefore employs a large dense batch size.",
+    "page": 13,
+    "caption": "Latency comparison. The x-axis shows the number of incoming requests per second and the y-axis shows the normalized latency. NanoFlow handles higher request within 200ms SLO constraints.",
     "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-fig08.png"
    },
    {
@@ -5414,16 +5283,16 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 6,
+    "caption": "Characteristics of accelerator models across various vendors and release years.",
+    "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-tab01.png"
+   },
+   {
     "num": 2,
     "page": 7,
     "caption": "Comparison of operation runtimes between cost model estimation and real-world measurements.",
     "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-tab02.png"
-   },
-   {
-    "num": 3,
-    "page": 9,
-    "caption": "Performance P of GEMV and network kernels with different resource utilization R .",
-    "path": "assets/crops/nanoflow-towards-optimal-large-language-model-serving-throughput-tab03.png"
    },
    {
     "num": 4,
@@ -5463,6 +5332,12 @@
     "path": "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab01.png"
    },
    {
+    "num": 2,
+    "page": 5,
+    "caption": "Zero-shot performance comparison on S-NIAH benchmark suite for 1.3B models (see § 4 for setups)",
+    "path": "assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab02.png"
+   },
+   {
     "num": 3,
     "page": 7,
     "caption": "Performance comparison on language modeling and zero-shot common-sense reasoning.",
@@ -5487,8 +5362,8 @@
   "figures": [
    {
     "num": 3,
-    "page": 3,
-    "caption": "1 shows the Ascend architecture where the Cube and Vector units are separate cores. In the 910B architecture, data can only be exchanged using global memory and/or L2 cache.",
+    "page": 4,
+    "caption": "1: Architecture of Ascend 910B accelerators. Each AI core contains one cube and two vector units.",
     "path": "assets/crops/parallel-scan-on-ascend-ai-accelerators-fig03.png"
    },
    {
@@ -5614,12 +5489,6 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 11,
-    "caption": "Architectural comparison between Kimi K2 and Kimi K3.",
-    "path": "assets/crops/kimi-k3-open-frontier-intelligence-tab01.png"
-   },
-   {
     "num": 2,
     "page": 27,
     "caption": "Performance comparison of Kimi K3 against proprietary and open-source models. Bold denotes the best result for each benchmark and underline the second-best. Unless otherwise noted, Kimi K3 results are obtained with reasoning effort set to max and temperature equal to 1 . 0 . For HLE-Full, MMMU-Pro, ",
@@ -5681,16 +5550,16 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 3,
+    "caption": "Configurations of representative models. Type A denotes the linear-complexity block, and Type B denotes the quadratic-complexity full attention block.",
+    "path": "assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-tab01.png"
+   },
+   {
     "num": 3,
     "page": 4,
     "caption": "KV throughput Φ kv (Gbps) at various input lengths. All models are benchmarked on 8 × H200 with SGLang v0.5.9 [7].",
     "path": "assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-tab03.png"
-   },
-   {
-    "num": 4,
-    "page": 8,
-    "caption": "Notation used in the PrfaaS-PD throughput model. Traffic System",
-    "path": "assets/crops/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter-tab04.png"
    },
    {
     "num": 5,
@@ -5754,6 +5623,18 @@
     "path": "assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab01.png"
    },
    {
+    "num": 2,
+    "page": 8,
+    "caption": "Performance comparison with and with- out Anchor-Offset Indices on the Multi-News and RepoBench-P datasets. Models with Anchor-Offset In- dices achieve higher output speed and larger acceptance length, highlighting their efficiency and effectiveness.",
+    "path": "assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab02.png"
+   },
+   {
+    "num": 3,
+    "page": 8,
+    "caption": "Performance of our method on the QwQ-32B model on four math reasoning datasets, using a maxi- mum output length of 32k tokens. The table shows the tokens generated per second and the mean number of accepted tokens τ , where our approach achieves about 2.34 × higher speed compared to the baseline on ",
+    "path": "assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab03.png"
+   },
+   {
     "num": 4,
     "page": 16,
     "caption": "Average acceptance length τ and decoding speed (tokens/s) across different models and settings. Specifically, “Vanilla HF” refers to HuggingFace’s PyTorch-based attention implementation, while “Vanilla FA” employs Flash",
@@ -5781,6 +5662,12 @@
     "page": 2,
     "caption": "Overview of SpecExtend. FlashAttention accelerates the prefill phases of both target and draft models, and Hybrid Tree Attention accelerates the verification phase. We use the target model’s attention scores obtained from verification to select the most relevant input chunks to retain in the draft m",
     "path": "assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig02.png"
+   },
+   {
+    "num": 3,
+    "page": 4,
+    "caption": "Left figure shows acceptance rates for hard and easy tokens, where CMR enables more accurate drafting in both cases compared to StreamingLLM. Right figure shows the natural divergence between the target and draft models at the first three accepted to- kens and the resampled token. CMR consistently y",
+    "path": "assets/crops/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences-fig03.png"
    },
    {
     "num": 4,
@@ -5990,16 +5877,16 @@
     "path": "assets/crops/a-survey-of-large-language-models-tab03.png"
    },
    {
+    "num": 4,
+    "page": 14,
+    "caption": "A list of available collections for alignment.",
+    "path": "assets/crops/a-survey-of-large-language-models-tab04.png"
+   },
+   {
     "num": 5,
     "page": 23,
     "caption": "Model cards of several selected LLMs with public configuration details. Here, PE denotes position embedding, #L denotes the number of layers, #H denotes the number of attention heads, d model denotes the size of hidden states, and MCL denotes the maximum context length during training.",
     "path": "assets/crops/a-survey-of-large-language-models-tab05.png"
-   },
-   {
-    "num": 6,
-    "page": 23,
-    "caption": "Comparison of parallelism and complexity of dif- ferent models. T represents sequence length, H represents the dimension of the input representation, N represents the dimension after compression in SSMs, and M represents the number of layers in each Hyena module.",
-    "path": "assets/crops/a-survey-of-large-language-models-tab06.png"
    },
    {
     "num": 7,
@@ -6014,18 +5901,6 @@
     "path": "assets/crops/a-survey-of-large-language-models-tab08.png"
    },
    {
-    "num": 9,
-    "page": 33,
-    "caption": "Basic statistics of the required number of GPUs, tuning time, batch size (denoted as BS) per device (full tuning and LoRA tuning), and inference rate (the number of generated tokes per second). Our experiments are conducted based on two Linux servers having 8 A800-80G SXM4 GPUs with 6 NVSwitch and 8",
-    "path": "assets/crops/a-survey-of-large-language-models-tab09.png"
-   },
-   {
-    "num": 10,
-    "page": 35,
-    "caption": "Results of instruction-tuning experiments (all in a single-turn conversation) based on the LLaMA (7B) and LLaMA (13B) model under the chat and QA setting. We employ four instruction improvement strategies on the Self- Instruct-52K dataset, i.e., enhancing the complexity ( w/ complexity ), increasing",
-    "path": "assets/crops/a-survey-of-large-language-models-tab10.png"
-   },
-   {
     "num": 11,
     "page": 45,
     "caption": "Typical LLM utilization methods and their key points for ICL, CoT, and planning. Note that the key points only highlight the most important technical contribution.",
@@ -6038,22 +5913,10 @@
     "path": "assets/crops/a-survey-of-large-language-models-tab12.png"
    },
    {
-    "num": 13,
-    "page": 48,
-    "caption": "Example instructions collected from [447, 457]. The blue text denotes the task description, the red text denotes the contextual information, the green text denotes the demonstrations, and the gold text denotes the prompt style.",
-    "path": "assets/crops/a-survey-of-large-language-models-tab13.png"
-   },
-   {
     "num": 14,
     "page": 57,
     "caption": "Representative basic and advanced abilities and corresponding representative datasets for evaluating.",
     "path": "assets/crops/a-survey-of-large-language-models-tab14.png"
-   },
-   {
-    "num": 15,
-    "page": 64,
-    "caption": "A category of existing evaluation work. “General” denotes that the evaluation focuses on an overall performance of multiple abilities. The evaluated abilities are not limited to the representative basic and advanced abilities mentioned in Section 7.1 and 7.2.",
-    "path": "assets/crops/a-survey-of-large-language-models-tab15.png"
    },
    {
     "num": 16,
@@ -6078,6 +5941,12 @@
     "page": 84,
     "caption": "The computation, data transfer, and arithmetic intensity during the prefill stage. We use the asymptotic notation O to denote the complexity of data transfer amount, where the constant factor of the complexity is related to the specific implementation method. Table source: [983].",
     "path": "assets/crops/a-survey-of-large-language-models-tab19.png"
+   },
+   {
+    "num": 20,
+    "page": 84,
+    "caption": "The computation, data transfer, and arithmetic intensity during the decoding stage. Table source: [983].",
+    "path": "assets/crops/a-survey-of-large-language-models-tab20.png"
    },
    {
     "num": 21,
@@ -6177,26 +6046,32 @@
   ],
   "tables": [
    {
+    "num": 1,
+    "page": 0,
+    "caption": "Comparison of KV Cache optimization techniques",
+    "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab01.png"
+   },
+   {
     "num": 2,
-    "page": 8,
+    "page": 0,
     "caption": "Summary of KV Cache eviction techniques",
     "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab02.png"
    },
    {
     "num": 3,
-    "page": 10,
+    "page": 0,
     "caption": "Cache Compression Methods Comparison Table",
     "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab03.png"
    },
    {
     "num": 4,
-    "page": 13,
+    "page": 0,
     "caption": "Hybrid Memory Solutions Comparison Table",
     "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab04.png"
    },
    {
     "num": 5,
-    "page": 16,
+    "page": 0,
     "caption": "Attention Variants – Mechanisms, Complexities, and Features",
     "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab05.png"
    },
@@ -6302,12 +6177,6 @@
     "page": 28,
     "caption": "Performance of Kimi-Linear-Base and Moonlight-Base across diverse tasks.",
     "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab08.png"
-   },
-   {
-    "num": 9,
-    "page": 28,
-    "caption": "Performance of Kimi-Linear-Instruct and Moonlight-Instruct across diverse tasks.",
-    "path": "assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab09.png"
    }
   ],
   "formulas": []
@@ -6377,10 +6246,10 @@
   ],
   "tables": [
    {
-    "num": 1,
-    "page": 6,
-    "caption": "Controlling Muon’s Update RMS Across Different Model Params",
-    "path": "assets/crops/muon-is-scalable-for-llm-training-tab01.png"
+    "num": 2,
+    "page": 7,
+    "caption": "Scaling Law Models and Hyper-Parameters",
+    "path": "assets/crops/muon-is-scalable-for-llm-training-tab02.png"
    },
    {
     "num": 3,
@@ -6407,6 +6276,18 @@
     "path": "assets/crops/muon-is-scalable-for-llm-training-tab06.png"
    },
    {
+    "num": 7,
+    "page": 10,
+    "caption": "Comparison of Adam and Muon optimizers applied to the SFT of the Qwen2.5-7B pretrained model.",
+    "path": "assets/crops/muon-is-scalable-for-llm-training-tab07.png"
+   },
+   {
+    "num": 8,
+    "page": 14,
+    "caption": "Muon Update RMS Experiments",
+    "path": "assets/crops/muon-is-scalable-for-llm-training-tab08.png"
+   },
+   {
     "num": 9,
     "page": 14,
     "caption": "Empirical Relationships Between Scaling Law Parameters and Computational Budget (FLOPs)",
@@ -6414,8 +6295,8 @@
    },
    {
     "num": 10,
-    "page": 16,
-    "caption": "presents a comparative analysis between our Moonlight model (optimized with Muon) and publicly available models trained with greater computational resources, including LLama3.1-8B (Grattafiori et al. 2024), Gemma-9B (Gemma Team et al. 2024) and Qwen2.5-7B (Yang et al. 2024). Figure 8 illustrates the",
+    "page": 17,
+    "caption": "Comparison of different models on various benchmarks.",
     "path": "assets/crops/muon-is-scalable-for-llm-training-tab10.png"
    }
   ],
@@ -6428,12 +6309,6 @@
     "page": 1,
     "caption": "Overview of Attention Residuals. ( a ) Standard Residuals: standard residual connections with uniform additive accumulation. ( b ) Full AttnRes: each layer selectively aggregates all previous layer outputs via learned attention weights. ( c ) Block AttnRes: layers are grouped into blocks, reducing m",
     "path": "assets/crops/attention-residuals-fig01.png"
-   },
-   {
-    "num": 2,
-    "page": 5,
-    "caption": "PyTorch-style pseudo code for Block Attention Residuals. block_attn_res computes softmax attention over block representations using a learned pseudo-query w l ; forward is a single-layer pass that maintains partial_block ( b i",
-    "path": "assets/crops/attention-residuals-fig02.png"
    },
    {
     "num": 3,
@@ -6588,8 +6463,8 @@
    },
    {
     "num": 14,
-    "page": 19,
-    "caption": "summarizes our quantization approach, described in four key components:",
+    "page": 20,
+    "caption": "An Overview of INT8 Quantization in DeepSeek Models. We use optimized quantization strategies for MLA and MLP/MoE components, and fused quantization in MoE- dispatch communication to minimize overhead.",
     "path": "assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig14.png"
    },
    {

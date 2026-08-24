@@ -30,20 +30,13 @@ tags: []
 > Kimi K2 main results.2 1https://huggingface.co/moonshotai/Kimi-K2-Instruct 2All models evaluated above are non-thinking models. For SWE-bench Multilingual, we evaluated only Claude 4 Sonnet because the cost of Claude 4 Opus was prohibitive.[cs.LG] 3 Feb 2026
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】图1为首页主结果条形图，对比 Kimi-K2-Instruct 与 DeepSeek-V3-0324、Qwen3-235B-A22B、GPT-4.1、Claude 4 Opus/Sonnet、Gemini 2.5 Flash（非思考模式）在四类基准的得分（%）：
+- SWE-bench Verified：65.8 vs Opus 72.5、GPT-4.1 54.6
+- SWE-bench Multilingual：47.3 vs Sonnet 51.0、GPT-4.1 31.5
+- Agentic & Competitive Coding：66.1 vs Opus 67.6、DeepSeek 48.8
+- AceBench(en)工具使用：76.5 vs GPT-4.1 80.1、Opus 75.6
 
-Figure 1 is a composite of **seven bar-chart panels** comparing Kimi-K2-Instruct against five baselines (DeepSeek-V3-0324, Qwen3-235B-A22B, OpenAI GPT-4.1, Claude 4 Opus/Sonnet, Gemini 2.5 Flash non-thinking) across two grouped categories:
-
-1. **Agentic & Competitive Coding** (top row): SWE-bench Verified, SWE-bench Multilingual, LiveCodeBench v6, OJBench
-2. **Tool Use** (bottom row): AceBench (en), AIME 2025
-
-Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2-Instruct's score. **Data flow**: model name (x-axis) → benchmark score (y-label) — a pure comparison view, not a pipeline diagram.
-
-**Key takeaway**: Kimi-K2-Instruct leads open-source non-thinking models on SWE-bench Verified (65.8) and Multilingual (47.3), matches Claude 4 Sonnet on LiveCodeBench (53.7), but trails Claude 4 Opus (72.5) on Verified — positioning it as the strongest open agentic coder without extended reasoning.
-
-## Caption (verbatim)
-
-**Figure 1: Kimi K2 main results.**²
+原文借此论证：Kimi-K2 在 SWE 与智能体编码达开源 SOTA、逼近闭源旗舰，工具使用接近 GPT-4.1。作为摘要级证据，支撑"开源领先、可比肩闭源旗舰"这一中心性能主张。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig02.png]]
@@ -52,22 +45,13 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 > Left: During a mid-scale training run, attention logits rapidly exceed 1000, which could lead to potential numerical instabilities and even training divergence. Right: Maximum logits for Kimi K2 with MuonClip and t = 100 over the entire training run. The max logits rapidly increase to the capped value of 100, and only decay to a stable range after approximately 30% of the training steps, demonstra
 
 > [!tip] 技术解读（多模态）
-> # Figure 2 Description
+> 【图文联合解读】**图2解读：**
 
-**Components / Layout:** Two side-by-side line plots sharing the same metric (Max Logits on y-axis) plotted against Training Steps (x-axis). 
+**核心数据**：左图（Vanilla + Muon）显示注意力 logits 在约16k步内单调上升至1200+且无收敛迹象；右图（Kimi K2 + MuonClip, τ=100）在约220k步训练中，logits 迅速触及封顶值100，持续约30%训练步后衰减至稳定的30–40区间。
 
-- **Left (red curve, "Vanilla run with Muon"):** Uncontrolled trajectory — starts near zero and rises monotonically/super-linearly past 1000 by ~16,000 steps.
-- **Right (blue curve, "Kimi K2 with MuonClip"):** Bounded trajectory — rises sharply to the cap of 100, plateaus, then decays after ~30% of training to a stable band around 30.
+**关键结论**：对比证明 Muon 优化器单独使用会引发注意力 logits 爆炸（>1000），导致数值不稳定甚至训练发散；而 QK-Clip 通过按头裁剪 W_q 权重，将 logits 硬性限制在 τ=100 以内，使其在训练前期触发后自然回落，验证了 QK-Clip 对注意力 logit 增长的有效调控。
 
-**Data flow:** Same diagnostic (per-step maximum attention logit) measured under two regimes — baseline Muon optimizer vs. MuonClip (τ=100). The comparison isolates QK-Clip's effect.
-
-**Key takeaway:** Without intervention, attention logits explode (>1000) causing potential divergence; QK-Clip caps them at τ, after which they self-stabilize — proving the mechanism is both safe and self-correcting at MoE scale.
-
----
-
-**Caption (verbatim):**
-
-> Figure 2: Left: During a mid-scale training run, attention logits rapidly exceed 1000, which could lead to potential numerical instabilities and even training divergence. Right: Maximum logits for Kimi K2 with MuonClip and t = 100 over the entire training run. The max logits rapidly increase to the capped value of 100, and only decay to a stable range after approximately 30% of the training steps, demonstrating the effective regulation effect of QK-Clip.
+**方法链路作用**：作为论文核心创新 MuonClip 的直接经验证据，衔接"问题暴露（logits爆炸）→ 机制设计（QK-Clip）→ 规模化可行性证明（K2全量训练）"，为后续百万亿token级训练稳定性背书。
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig03.png]]
@@ -76,24 +60,13 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 > Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity. A key advancement in the pre-training data of Kimi K2 over Kimi K1.5 is the introduction of a synthetic data generation strategy to increase token utility. Specifically, a carefully designed rephrasing p
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图3 图文联合解读**
 
-**Type:** A 2D line plot (training loss curve), though the data series itself is not rendered/visible in this rendering — only the axis frame is shown.
+图3展示Kimi K2逐步训练loss曲线（未经平滑/抽样）：横轴约0–15.5T tokens，纵轴loss从≈2.0单调下降至≈1.35；密集蓝色震荡带约1.35–1.65，全程**未见异常尖峰或发散**。
 
-**Axes / components:**
-- **X-axis:** "Tokens (Trillion)" — ranging 0 to 16, in increments of 2.
-- **Y-axis:** "Loss" — ranging 1.3 to 2.0, in increments of 0.1.
-- **Plot area:** Empty (no curve, markers, or annotations drawn).
-
-**Intended content (per caption):** A raw, per-step training loss trajectory across the full ~15+ trillion-token pretraining run of Kimi K2.
-
-**Key technical takeaway:** Loss should decrease smoothly from ~2.0 toward ~1.3 across the 0–15T token span with no spikes, indicating exceptional training stability — a non-trivial result at trillion-token scale.
-
----
-
-## Caption (verbatim)
-
-> **Figure 3:** Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity.
+①**核心对象**：K2预训练全过程的step级loss轨迹，跨度约15.5万亿token。
+②**关键论证**：作者借此证明，相比K1.5新引入的合成数据/重述策略与训练栈协同良好，预训练在超大规模下保持单调收敛且无中断尖峰，间接佐证数据管线与基础设施的稳健性。
+③**链路作用**：作为"预训练无异常"的实证前提，为后续MuonClip优化器设计、后训练SFT/RL及智能体能力评测奠定可信基线。
 
 ### Figure 4 (p.5) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig04.png]]
@@ -102,21 +75,13 @@ Each panel uses a shared y-axis (0–100), with darker bars highlighting Kimi-K2
 > • Fidelity verification: To ensure consistency between original and rewritten content, we perform fidelity checks that compare the semantic alignment of each rephrased passage with its source. This serves as an initial quality control step prior to training.
 
 > [!tip] 技术解读（多模态）
-> **Architecture Description**
+> 【图文联合解读】**图文联合解读：**
 
-The figure depicts a multi-stage streaming/pipelined processing architecture organized into two parallel recompute lanes plus a third (bottom) lane. Data flow proceeds as follows:
+**核心对象与结构**：Figure 4 展示自动回归式分块改写（auto-regressive chunk-wise rephrasing）流水线。输入长文本经切分后，顶部蓝色高亮框保留滑动上下文窗口，每块文本经紫色"rephrase-prompt"改写，生成绿色"partial output"（SDUWLDO RXWSXW），三块按自回归顺序（DXWR UHJUHVVLYH）依次处理，最终拼接为完整改写段落。
 
-- A blue top-left **"Full Input / Impulse"** block feeds three green **"Partial Input"** buffers in parallel.
-- Each Partial Input is routed into a purple **"Recompute Module"**, which forwards results to a green **"Partial Output"** buffer.
-- An **"Auto Resume"** control line loops each Partial Output forward into the next stage and ultimately up into a blue top-right **"Extract / Count Output"** block.
-- A second top-left **"Enabled/Trigger"** block gates the entire pipeline.
+**关键技术结论**：通过分块+上下文保留机制，突破单次改写长度上限，确保长文本改写时块间语义连贯；结合 fidelity verification 做语义对齐检验，作为训练前的质量把关。
 
-**Key Technical Takeaway (≈110 words):**
-The design decouples a large input into partial slices, processes them through independent recompute modules, and uses an **auto-resume** feedback path to chain outputs into a final extraction stage. This yields a fault-tolerant, streaming architecture where partial failures can be recovered via recomputation without re-feeding the full input, and where downstream aggregation (count/output) is decoupled from upstream latency — a useful pattern for incremental or resumable signal-processing pipelines.
-
-**Caption (verbatim transcription):**
-
-> `WRNHQV` · `VSOLW IXOO LQVXW H[WUDFW` · `LPXOVW KHU` · `FRQW W RXWSXW H[WUDFW` · `WRNHQV` · `SDUWLDO LQVXW` · `UH]XOWH PR` · `SDUWLDO RXWSXW` · `DXWR UH]XH` (repeated for both lanes)
+**论文链路作用**：该流水线是 Kimi-K2 训练数据构造（特别是 Long Context 改写语料）的核心预处理环节，为后续 MuonClip 优化与多任务训练提供高质量、改写后的长上下文监督信号。
 
 ### Figure 5 (p.7) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig05.png]]
@@ -125,14 +90,13 @@ The design decouples a large input into partial slices, processes them through i
 > Sparsity Scaling Law. Increasing sparsity leads to improved model performance. We fixed the number of activated experts to 8 and the number of shared experts to 1, and varied the total number of experts, resulting in models with different sparsity levels. 10 11
 
 > [!tip] 技术解读（多模态）
-> **Main Figure (Figure 5): Sparsity Scaling Law**
+> 【图文联合解读】**图文联合解读：**
 
-**Components/Data flow:** A log-scale scatter/line plot with Training FLOPs on the x-axis (10²⁰ → 10²¹) and Validation Loss on the y-axis (1.3 → 1.8). Multiple colored curves (green, orange, purple, blue) drawn as solid and dashed segments trace loss trajectories across different sparsity levels; each curve terminates in a small "V"-shaped dip indicating converged loss at its respective compute budget. A reference dashed line sits beneath all curves.
+1) **核心对象与数据**：左图为 Validation Loss vs Training FLOPs（对数轴），含绿、紫、蓝、橙多条 MoE 训练曲线，每条对应"激活专家=8、共享专家=1、总专家数不同"的稀疏度配置，曲线呈典型 lr schedule 的"陡降–回升"末端形态；右图为 Loss vs Training Tokens，4 条虚线对应 1.2/2.2/4.5/9.0×10²⁰ FLOPs 四档算力，比较"层数=头数"方形模型与"头数翻倍"圆形对照。
 
-**Key technical takeaway:** Under fixed activated parameters (constant FLOPs), increasing total experts (higher sparsity) consistently lowers validation loss — at matched loss = 1.5, sparsity-48 MoE reduces FLOPs by 1.69×, 1.39×, and 1.15× versus sparsity 8, 16, and 32 — motivating Kimi K2's choice of sparsity 48 (8 of 384 experts activated).
+2) **关键技术结论**：固定激活专家数下，增大总专家数（即提高稀疏度）能持续压低验证损失，呈现稳定的稀疏度 scaling law——同等算力时模型越稀疏越优。
 
-**Caption verbatim:**
-"Figure 5: Sparsity Scaling Law. Increasing sparsity leads to improved model performance. We fixed the number of activated experts to 8 and the number of shared experts to 1, and varied the total number of experts, resulting in models with different sparsity levels."
+3) **论文链路作用**：为 Kimi K2 选用高稀疏 MoE 架构（众多专家、少量激活）提供 scaling 实证支撑，奠定"以稀疏换性能"的设计前提，并与右图共同验证最优训练资源分配策略。
 
 ### Figure 6 (p.7) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig06.png]]
@@ -141,14 +105,13 @@ The design decouples a large input into partial slices, processes them through i
 > Scaling curves for models with number of atten- tion heads equals to number of layers and their counter- parts with doubled attention heads. Doubling the number of attention heads leads to a reduction in validation loss of approximately 0:5% to 1:2%.
 
 > [!tip] 技术解读（多模态）
-> **Main Figure (Figure 5): Sparsity Scaling Law**
+> 【图文联合解读】**左图**：横轴为Training FLOPs（10²⁰–10²¹，对数刻度），纵轴为Validation Loss（≈1.3–1.8）。展示蓝、紫、绿、橙四组不同规模模型的loss下降轨迹——实线为含cosine学习率重启的原始训练loss（可见周期性尖峰回弹），虚线为对应的拟合下降趋势。
 
-**Components/Data flow:** A log-scale scatter/line plot with Training FLOPs on the x-axis (10²⁰ → 10²¹) and Validation Loss on the y-axis (1.3 → 1.8). Multiple colored curves (green, orange, purple, blue) drawn as solid and dashed segments trace loss trajectories across different sparsity levels; each curve terminates in a small "V"-shaped dip indicating converged loss at its respective compute budget. A reference dashed line sits beneath all curves.
+**右图**：横轴为Training Tokens（≈10¹¹），按1.2 / 2.2 / 4.5 / 9.0 ×10²⁰ FLOPs四档绘出U形loss曲线。方块标记代表"头数=层数"基线，圆点标记为"头数翻倍"对照组——在同一计算量档位下，圆点曲线稳定低于方块，降幅约0.5%–1.2%（最优loss由≈1.75降至≈1.38）。
 
-**Key technical takeaway:** Under fixed activated parameters (constant FLOPs), increasing total experts (higher sparsity) consistently lowers validation loss — at matched loss = 1.5, sparsity-48 MoE reduces FLOPs by 1.69×, 1.39×, and 1.15× versus sparsity 8, 16, and 32 — motivating Kimi K2's choice of sparsity 48 (8 of 384 experts activated).
+**技术结论**：在Kimi K2的规模区间内，适度增加注意力头数（而非单纯加深层数）可稳定带来validation loss收益，且对所有四个计算档位一致生效。
 
-**Caption verbatim:**
-"Figure 5: Sparsity Scaling Law. Increasing sparsity leads to improved model performance. We fixed the number of activated experts to 8 and the number of shared experts to 1, and varied the total number of experts, resulting in models with different sparsity levels."
+**论文作用**：属于架构消融scaling实验，为Kimi K2选择"层数较浅、头数较多"的配置提供实证依据，支撑后续Muon优化器与MLA等结构设计决策。
 
 ### Figure 7 (p.8) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig07.png]]
@@ -157,23 +120,11 @@ The design decouples a large input into partial slices, processes them through i
 > Computation, communication and offloading overlapped in different PP phases.
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components:**
-The figure is a timeline diagram showing three horizontal tracks (Computation, Communication, Offload) divided into three pipeline-parallelism phases. Above each phase, computation blocks (Attn/MLP/WGrad) and communication blocks (EP-D dispatch, EP-C combine, PP) are scheduled; below, a grid of numbered micro-batches (1–8) shows forward passes (blue), backward passes (red), and PP communications (green).
+图7上半部用横向时序条展示两个PP阶段内的算子重叠：计算侧（MLP/Attn/WGrad）与通信侧（EP-D 蓝、EP-C 黄、PP 绿）及卸载侧（Onload/Load 黄）嵌套并行。下半部呈典型流水线阶梯（微批次1–8错列），绿色边框标注的"8"块凸显PP通信气泡被EP dispatch/combine及其他算子"填满"，空闲时间大幅压缩。
 
-- **Phase 1 (Warm-up):** Attn + MLP compute overlapped with EP-D/EP-C comms; activations offloaded to CPU.
-- **Phase 2 (Steady-state 1F1B):** Attn → MLP → MLP → Attn → WGrad; EP comms and weight-gradient compute run in parallel with PP traffic; offload/onload transitions occur at phase boundaries.
-- **Phase 3 (Cooldown):** Remaining backward stages (MLP → Attn → WGrad) with EP comms and PP traffic; weights re-loaded.
-
-**Data flow:** Micro-batches progress left-to-right through forward→backward stages, with expert-parallel all-to-all and pipeline peer-to-peer transfers hidden under compute or offload operations.
-
-**Key technical takeaway (≤120 words):**
-Kimi K2's training scheduler achieves near-full hardware utilization by overlapping three orthogonal operations across pipeline phases: (1) expert-parallel dispatch/combine all-to-alls are hidden under attention/MLP compute using a small EP=16 group size, (2) PP peer-to-peer communication is overlapped with backward-pass weight-gradient computation by decoupling it from the micro-batch's main backward flow, and (3) optimizer-state offload/onload transitions occur only at PP phase boundaries. The only unscheduled interval is the warm-up phase, where activations must reside on-GPU. This design enables a single parallelism configuration to scale across node counts without retuning.
-
-## Caption (verbatim)
-
-**Figure 7:** Computation, communication and offloading overlapped in different PP phases.
+论文借此论证核心结论：在不同PP阶段（warm-up、稳态、cool-down）中，计算、集合通信（EP收发、PP点对点）与CPU offload可被深度流水重叠，从而隐藏通信与I/O开销，是Kimi K2实现高MFU万卡训练的关键调度基础。
 
 ### Figure 8 (p.10) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig08.png]]
@@ -182,16 +133,11 @@ Kimi K2's training scheduler achieves near-full hardware utilization by overlapp
 > Data synthesis pipeline for tool use. (a) Tool specs are from both real-world tools and LLMs; agents and tasks are the generated from the tool repo. (b) Multi-agent pipeline to generate and filter trajectories with tool calling. (a) t-SNE visualization of real MCP tools, colored by their original source categories (b) t-SNE visualization of synthetic tools, colored by pre-defined domain categories
 
 > [!tip] 技术解读（多模态）
-> **Figure 8 — Architecture & Data Flow:**
+> 【图文联合解读】**(a) 核心结构**：图分两部分。**(a) 工具规格合成**——MCP 真实工具与由 Domains→Applications 衍生的合成工具共同汇入 Tool Repository，进而生成 Agents 与带 rubric 的 Tasks；**(b) 轨迹生成与过滤**——Task 驱动 User Agent 与 Agent 交互，Agent 通过 observation/call 调用 Tool Simulator 产出 trajectories，再由 Judge Agent 依据 Rubrics 筛选为 Filtered Data。
 
-*(a) Synthesizing layer:* Domains and MCP tools feed into a Tool Repository containing real-world and synthesized tool specs, which drives Agents and Tasks-with-rubrics generation.
+**论证结论**：真实+合成双源工具库配合"多智能体—rubric 过滤"管道，可规模化产出高质量工具调用训练轨迹。
 
-*(b) Trajectory generation layer:* A User Agent interacts with an Agent that observes and calls a Tool Simulator; the resulting trajectories are routed to a Judge Agent (informed by rubrics) to produce Filtered Data.
-
-**Key takeaway:** The pipeline couples tool-synthesis with a multi-agent simulation-and-judgment loop, enabling rubric-scored, multi-turn tool-calling trajectories at scale.
-
-**Caption (verbatim):**
-Figure 8: Data synthesis pipeline for tool use. (a) Tool specs are from both real-world tools and LLMs; agents and tasks are the generated from the tool repo. (b) Multi-agent pipeline to generate and filter trajectories with tool calling.
+**整体作用**：作为 Kimi K2 agentic 能力 SFT 训练的数据合成基石，为下游 tool-use 评测与对齐提供可验证的监督数据。
 
 ### Figure 9 (p.10) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-fig09.png]]
@@ -200,16 +146,13 @@ Figure 8: Data synthesis pipeline for tool use. (a) Tool specs are from both rea
 > t-SNE visualizations of tool embeddings. (a) Real-world MCP tools exhibit natural clustering based on their original source categories. (b) Synthetic tools are organized into pre-defined domain categories, providing systematic coverage of the tool space. Together, they ensure comprehensive representation across different tool functionalities.
 
 > [!tip] 技术解读（多模态）
-> **Figure 8 — Architecture & Data Flow:**
+> 【图文联合解读】**图文联合解读：**
 
-*(a) Synthesizing layer:* Domains and MCP tools feed into a Tool Repository containing real-world and synthesized tool specs, which drives Agents and Tasks-with-rubrics generation.
+图(a)为真实MCP工具的t-SNE二维投影，数百点按源类别着色(黄/绿/紫/蓝/橙/红等)，可见同色点呈局部弱聚类(如右侧黄色簇、左上绿色簇)，整体仍混合；图(b)区域在图中未渲染出散点，仅保留标题文字。
 
-*(b) Trajectory generation layer:* A User Agent interacts with an Agent that observes and calls a Tool Simulator; the resulting trajectories are routed to a Judge Agent (informed by rubrics) to produce Filtered Data.
+作者借此论证：真实工具自然聚类反映来源多样性，合成工具按预定义域系统铺开以补足盲区，二者融合使训练所用工具空间在功能维度上既多样又完备。
 
-**Key takeaway:** The pipeline couples tool-synthesis with a multi-agent simulation-and-judgment loop, enabling rubric-scored, multi-turn tool-calling trajectories at scale.
-
-**Caption (verbatim):**
-Figure 8: Data synthesis pipeline for tool use. (a) Tool specs are from both real-world tools and LLMs; agents and tasks are the generated from the tool repo. (b) Multi-agent pipeline to generate and filter trajectories with tool calling.
+该图位于工具库构建环节，是面向后续SFT训练的数据分布证据——证明真实+合成双源策略能为工具调用训练提供均衡且覆盖充分的工具集合，而非偏倚于单一来源。
 
 ### Figure 10 (p.14) ⭐深度解读
 ![[assets/kimi-k2-open-agentic-intelligence-p14.png]]
@@ -268,8 +211,7 @@ The referenced figure (Figure 12) compares training loss curves between two smal
 > Figure 12: Applying QK-Clip to Muon in a small-scale setting with an aggressive threshold (t = 30) has negligible impact on loss, indicating that it is a safe and effective method for constraining attention logits.
 
 ### Figure 13 (p.32) ⭐深度解读
-![[assets/crops/kimi-k2-open-agentic-intelligence-fig13.png]]
-*整页渲染: ![[assets/kimi-k2-open-agentic-intelligence-p32.png]]*
+![[assets/kimi-k2-open-agentic-intelligence-p32.png]]
 > [!quote] caption
 > pipeline for RL weight update
 
@@ -300,37 +242,9 @@ The figure presents **Figure 13: pipeline for RL weight update** in three varian
 > SimpleQA Accuracy under three rephrasing-epoch configurations
 
 > [!tip] 表格解读（多模态）
-> **Description & Key Takeaway (≈120 words):**
+> 【图文联合解读】该表展示 SimpleQA 准确率在三种「改写次数-训练轮次」配置下的表现：0 次改写/10 轮 = 23.76%，1 次改写/10 轮 = 27.39%，10 次改写/1 轮 = 28.94%。
 
-The table is an ablation-style results grid comparing SimpleQA accuracy across three training configurations, varying two hyperparameters: the number of data rephrasings (# Rephrasings) and training epochs (# Epochs). Three configurations are shown:
-
-1. **0 rephrasings (raw wiki-text), 10 epochs → 23.76**
-2. **1 rephrasing, 10 epochs → 27.39**
-3. **10 rephrasings, 1 epoch → 28.94**
-
-**Key takeaway:** Rephrasing the training data once yields a substantial +3.63-point jump over raw wiki-text, and scaling to 10 rephrasings with a single epoch further raises accuracy to 28.94—indicating that *diversification of training-text surface forms is more impactful than additional training epochs on the same raw text*.
-
-**Caption (verbatim):**
-
-Table 1: SimpleQA Accuracy under three rephrasing-epoch configurations
-
-### Table 2 (p.6) ⭐深度解读
-![[assets/crops/kimi-k2-open-agentic-intelligence-tab02.png]]
-> [!quote] caption
-> Architectural comparison between Kimi K2 and DeepSeek-V3
-
-> [!tip] 表格解读（多模态）
-> **Description:**
-
-The table compares the architectures of two MoE (Mixture-of-Experts) language models, Kimi K2 and DeepSeek-V3, across nine structural dimensions: layer count, total/activated parameters, total experts, experts-per-token, shared experts, attention heads, dense layers, and expert grouping.
-
-**Data flow / structure:** Both models are 61-layer sparse transformers. At inference, only ~8 routed experts (+1 shared expert) are activated per token from the full expert pool. DeepSeek-V3 groups its 256 experts; Kimi K2 uses 384 ungrouped experts, processed through 64 attention heads with just 1 dense layer.
-
-**Key technical takeaway:**
-Kimi K2 achieves ~1.55× total capacity (1.04T vs 671B, +54%) without increasing activated parameters, by adding more fine-grained experts (384 vs 256) and removing expert grouping, at the cost of fewer attention heads and dense layers.
-
-**Caption (verbatim):**
-"Table 2: Architectural comparison between Kimi K2 and DeepSeek-V3"
+量化结论：仅引入 1 次改写即带来 +3.63 点增益，累计相对原始维基文本基线提升 5.18 点；且 10 次改写 + 1 轮的结果反超 1 次改写 + 10 轮。该实验为论文核心论点——**「数据多样性改写可替代更多训练轮次」**——提供关键证据：表明在 Kimi K2 SFT 流水线中，规模化改写增强能以更少训练量获得更高事实问答准确率，是其「数据质量优于训练量」设计哲学的有力支撑。
 
 ### Table 3 (p.16) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-tab03.png]]
@@ -338,41 +252,23 @@ Kimi K2 achieves ~1.55× total capacity (1.04T vs 671B, +54%) without increasing
 > Performance comparison of Kimi-K2-Instruct against leading open-source and proprietary models across diverse tasks. Bold denotes the global SOTA; underlined bold indicates the best open-source result. Data points marked with * are taken directly from the model’s technical report or blog.
 
 > [!tip] 表格解读（多模态）
-> **Note:** The image provided contains only the document header and the caption for Table 3 — no actual figure, architecture diagram, or data-flow illustration is visible. I cannot describe components that are not shown.
+> 【图文联合解读】**Table 3 图文联合解读**
 
-**Caption transcription (verbatim):**
+Table 3 将 Kimi-K2-Instruct 与两大开源基座（DeepSeek-V3-0324、Qwen3-235B-A22B）和四大闭源旗舰（Claude Sonnet 4 / Opus 4、GPT-4.1、Gemini 2.5 Flash）在 **3 大维度——Coding、Tool Use、Math & STEM，约 20 项基准**上横向打分；加粗=全球 SOTA，下划线加粗=开源最优。
 
-Table 3: Performance comparison of Kimi-K2-Instruct against leading open-source and proprietary models across diverse tasks. **Bold** denotes the global SOTA; <u>**underlined bold**</u> indicates the best open-source result. Data points marked with * are taken directly from the model's technical report or blog.
+**量化亮点**：编程维度，Kimi-K2 在 LiveCodeBench v6 取得 53.7、MultiPL-E 85.7、SWE-Lancer 39.1、Paper Bench 27.8，皆为开源第一；SWE-bench Verified 单次 Pass@1 报出 51.8 / 65.8 / 71.6 三档递增结果，体现测试时算力扩展效应。工具使用维度，Tau2 airline 56.5、Tau2 telecom 65.8、AceBench 76.5 均为开源最佳。数学与 STEM 维度表现最强：AIME 2024 69.6、AIME 2025 49.5、MATH-500 97.4、HMMT 2025 38.8、ZebraLogic 89.0、GPQA-Diamond 75.1 共六项刷新全球 SOTA，明显反超 Claude Opus 4 与 GPT-4.1。
 
-### Table 4 (p.17) ⭐深度解读
+**论证作用**：该表是论文"能力对标"的主战场。与 Figure 3 的训练损失曲线（证明 Muon 优化器 + 合成数据带来无尖峰稳定收敛）首尾呼应——前者展示训练稳定性，后者给出下游全面 SOTA 的实证闭环，从而支撑"开源 MoE 可超越闭源旗舰"的核心主张。
+
+### Table 4 (p.18) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-tab04.png]]
 > [!quote] caption
-> presents a comprehensive comparison of Kimi-K2-Base against leading open-source foundation models across diverse evaluation benchmarks. The results demonstrate that Kimi-K2-Base achieves state-of-the-art performance across the majority of evaluated tasks, establishing it as a leading foundation mode
+> Performance comparison of Kimi-K2-Base against leading open-source models across diverse tasks.
 
 > [!tip] 表格解读（多模态）
-> **Note:** The provided image contains only text content (a section describing Kimi-K2 evaluation methodology, benchmarks, baselines, and configurations) — there is no architectural figure with components or data flow visible. Below I describe the textual content structure and transcribe it verbatim.
+> 【图文联合解读】**Table 4 联合解读**
 
-**Structure overview:** The passage is organized hierarchically as Section 4.2 (Pre-training Evaluations) → 4.2.1 (Evaluation Settings) → 4.2.2 (Evaluation Results). It enumerates *Benchmarks* (grouped into general, coding, math, Chinese-language), *Baselines* (DeepSeek-V3-Base, Qwen2.5-72B-Base, Llama 4-Maverick), and *Evaluation Configurations* (perplexity-based vs. generation-based protocols). A key takeaway: the evaluation pipeline splits tasks by metric type (perplexity vs. generation) and averages across 8 runs for high-variance benchmarks like GPQA-Diamond, all run through an internal LM-Harness-derived framework for consistency.
-
-**Verbatim transcription:**
-
-**General Capabilities** Kimi-K2-Instruct exhibits strong, balanced performance across general knowledge, math, instruction following, and long-context tasks. It surpasses open-source peers on SimpleQA (31.0%), MMLU (89.5%) and MMLU-Redux (92.7%), and leads all models on instruction benchmarks (IFEval: 89.8%, Multi-Challenge: 54.1%). In math and STEM, it achieves top-tier scores (AIME 2024: 69.6%, GPQA-Diamond: 75.1%), and remains competitive on long-context factuality and retrieval (DROP: 93.5%, MRCR: 55.0%). These results position Kimi-K2-Instruct as a well-rounded and capable generalist across both short- and long-context settings.
-
-**Open-Ended Evaluation** On the LMSYS Arena leaderboard (July 17, 2025), Kimi-K2-Instruct ranks as the top-1 open-source model and 5th overall based on over 3,000 user votes. This real-world preference signal—across diverse, blind prompts—underscores Kimi-K2's strengths in generating high-quality responses on open-ended tasks.
-
-**4.2 Pre-training Evaluations**
-
-**4.2.1 Evaluation Settings**
-
-**Benchmarks** We evaluate Kimi-K2-Base across diverse capability areas. For general capabilities, we assess on MMLU [24], MMLU-Pro [77], MMLU-Redux [18], BBH [68], TriviaQA [35], SuperGPQA [14], SimpleQA [79], HellaSwag [89], AGIEval [90], GPQA-Diamond [62], ARC-Challenge [9], and WinoGrande [63]. For coding capabilities, we employ EvalPlus [46] (averaging HumanEval [8], MBPP [1], HumanEval+, and MBPP+), LiveCodeBench v6 [32], and CRUXEval [19]. For mathematical reasoning, we utilize GSM8K [10], GSM8K-Platinum [75], MATH [25], and CMATH [80]. For Chinese language capabilities, we evaluate on C-Eval [30], CMMLU [41], and CSimpleQA [23].
-
-**Baselines** We benchmark against leading open-source foundation models: DeepSeek-V3-Base [11], Qwen2.5-72B-Base [60] (Note that Qwen3-235B-A22B-Base is not open-sourced, and the largest open-sourced base model in the Qwen series is Qwen2.5-72B-Base), and Llama 4-Maverick [71] (Llama 4-Behemoth is also not open-sourced). All models are evaluated under identical configurations to ensure fair comparison.
-
-**Evaluation Configurations** We employ perplexity-based evaluation for MMLU, MMLU-Redux, GPQA-Diamond, HellaSwag, ARC-Challenge, C-Eval, and CMMLU. Generation-based evaluation is used for MMLU-Pro, SuperGPQA, TriviaQA, BBH, CSimpleQA, MATH, CMATH, GSM8K, GSM8K-Platinum, CRUXEval, LiveCodeBench, and EvalPlus. To mitigate the high variance inherent to GPQA-Diamond, we report the mean score across eight independent runs. All evaluations are conducted using our internal framework derived from LM-Harness-Evaluation [4], ensuring consistent settings across all models.
-
-**4.2.2 Evaluation Results**
-
-Table 4 presents a comprehensive comparison of Kimi-K2-Base against leading open-source foundation models across diverse evaluation benchmarks. The results demonstrate that Kimi-K2-Base achieves state-of-the-art performance across the majority of evaluated tasks, establishing it as a leading foundation model in the open-source landscape.
+该表横向对比 Kimi-K2-Base（MoE，32B激活/1043B总参数）与 DeepSeek-V3-Base（37B/671B）、Llama4-Maverick-Base（17B/400B）、Qwen2.5-72B-Base（72B Dense）四模型，纵向覆盖英文12项、代码4项、数学4项、中文3项共23项基准。Kimi-K2-Base 在绝大多数任务领先，例如 MMLU 87.79、SuperGPQA 44.67、SimpleQA 35.25、CRUXEval-O 83.50、EvalPlus 80.33、MATH 70.22、C-Eval 92.50、CMMLU 90.90，仅 GQA-Diamond、HellaSwag、CMATH 略逊。原文借此论证其作为领先基础模型的 SOTA 定位；该表是预训练阶段的核心性能证据，验证 MoE 架构与训练策略有效性，为后续 instruct/agent 后训练奠定能力基座。
 
 ### Table 5 (p.19) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-tab05.png]]
@@ -380,29 +276,25 @@ Table 4 presents a comprehensive comparison of Kimi-K2-Base against leading open
 > Enabled Plugins and Strategies
 
 > [!tip] 表格解读（多模态）
-> The image provided does not contain a main figure—only the caption header "Table 5: Enabled Plugins and Strategies" is visible, without any underlying figure data, architecture diagram, or data flow illustration.
+> 【图文联合解读】**Table 5 图文联合解读**
 
-**Caption transcription (verbatim):**
+Table 5 罗列 Kimi K2 安全评估启用的 6 大类插件与策略，共约 50 项测试用例：①Harmful（9 项，如 Graphic Content、Hate Speech、Sexual Content、ToxicChat）；②Criminal（11 项，含 Chemical&Biological Weapons、Cybercrime、Violent Crime、Sex Crimes）；③Misinformation（11 项，含 Hallucination、Political Opinions、Overreliance）；④Privacy（4 项，均为 PII 泄露场景，跨 API/Session/社交工程）；⑤Security（11 项，如 ASCII Smuggling、CyberSecEval、Harmbench、Prompt Extraction）；⑥Strategy（4 项：Basic、Prompt Injection、Iterative Jailbreak、Crescendo）。
 
-"Table 5: Enabled Plugins and Strategies"
-
-No further content (figure, table body, or technical detail) is shown in the provided image, so I cannot describe architecture, components, data flow, or extract a technical takeaway. If you intended to share a different image (e.g., the figure associated with Table 5 or a different figure from the Kimi K2 technical report), please re-upload it and I'll provide the requested analysis.
+它支撑论文中 **agentic 模型的安全护栏论证**——通过系统化红队测试覆盖内容有害、违法、虚假信息、隐私泄露、安全漏洞与越狱攻击六大维度，量化评估模型在开放智能体（工具调用、多步规划）场景下抵御恶意指令的鲁棒性，为 Kimi K2 安全合规发布提供核心评测清单，也是后续能力/对齐章节实验链路的安全基线依据。
 
 ### Table 6 (p.19) ⭐深度解读
 ![[assets/crops/kimi-k2-open-agentic-intelligence-tab06.png]]
 > [!quote] caption
-> presents the passing rates of different models under various plugin–strategy combinations.
+> Safety Evaluation Results
 
 > [!tip] 表格解读（多模态）
-> **Description**
+> 【图文联合解读】**Table 6 联合解读**
 
-This is *Table 5*, a two-column categorical matrix rather than a schematic diagram. The left column lists the **plugin taxonomy** organized into five risk domains — Harmful (graphic content, harassment, self-harm, etc.), Criminal (weapons, cybercrime, drug violations), Misinformation (hallucination, political/religious bias, unsafe advice), Privacy (PII exposure in APIs, session data, social engineering), and Security (prompt extraction, malicious code, ASCII smuggling, reasoning DoS). The right column enumerates the four adversarial **strategies** applied on top: Basic, Prompt Injection, Iterative Jailbreak, and Crescendo. There is no visual data flow shown; the implicit flow is *{Risk Plugin} × {Attack Strategy} → adversarial prompt → target model*.
+1) **核心对象与结构**：表格横向对比 Kimi-K2-Instruct、DeepSeek-V3-0324、DeepSeek-R1、Qwen3-235B-A22B 四款模型，纵向为 Harmful、Criminal、Misinformation、Privacy、Security 五类插件，分别施加 Basic、Base64、Prompt Injection、Iterative Jailbreak、Crescendo 五种攻击策略，共 25 组场景的安全通过率（%）。
 
-**Key takeaway**: Safety testing is structured as a 5-domain × 4-strategy Cartesian product, enabling systematic coverage of both **content hazards** (harm/crime) and **interaction hazards** (privacy/security) under progressively escalating jailbreak tactics.
+2) **关键结论**：K2-Instruct 多项满分（Harmful-Base64、Criminal-Basic、Privacy-Basic/Base64 均 100），整体与 Qwen3 互有胜负（Qwen3 在 Harmful-Crescendo 86.27 vs K2 64.71 领先；K2 在 Security-Base64 82.93 反超 63.41）；DeepSeek-V3 在 Criminal-Iterative Jailbreak 仅 21.21%，显著偏弱；Crescendo 与 Iterative Jailbreak 是各模型共性失分项。
 
-**Caption (verbatim):**
-
-Table 5: Enabled Plugins and Strategies
+3) **作用**：作为安全评估章节核心实证，验证 K2 在 agentic 框架下面对多样化插件攻击的鲁棒性，与 Figure 6 的 scaling 结论共同支撑论文"能力 + 可靠性"双重叙事。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

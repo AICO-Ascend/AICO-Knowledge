@@ -30,22 +30,13 @@ tags: [training]
 > Data parallel training with ZeRO2. dependencies that contribute to stability issues. We develop a robust training framework to automate fault localization and recovery. We design heartbeat messages encapsulating various forms of information to facilitate real-time anomaly detection and provide early warnings. We implement a suite of diagnostic tests to identify nodes causing disruptions. We optimi
 
 > [!tip] 技术解读（多模态）
-> **Figure Description:**
+> 【图文联合解读】**图文联合解读：**
 
-The diagram depicts a two-stage data-parallel training loop using ZeRO2, shown as two identical, parallel pipelines (one per model replica) connected by two synchronization operations.
+该图展示 **ZeRO-2 数据并行的计算流水**：两个 Model Replica（GPU）分别输入 Data 0 / Data 1，各自执行 **Forward → Backward → Reduce-Scatter → Update Params → All-Gather**。两副本在 Reduce-Scatter 阶段通过 *"sync grads"* 同步分片梯度，在 All-Gather 阶段通过 *"gather params"* 拉取完整参数。
 
-**Per-replica data flow (left → right):**
-`Model Replica` → `Forward` (consumes `Data 0` / `Data 1`) → `Backward` → `Reduce-Scatter` → `Update Params` → `All-Gather` → (loops back to Model Replica)
+**论证的关键结论**：相比传统 All-Reduce，ZeRO-2 将**梯度与优化器状态按数据并行维度切分存储**，消除每卡冗余，显著降低单卡显存占用，使超大模型可在数据并行规模上线性扩展。
 
-**Cross-replica communication:**
-- `sync grads`: vertical arrow between the two Reduce-Scatter nodes
-- `gather params`: vertical arrow between the two All-Gather nodes
-
-**Key technical takeaway (≤120 words):**
-ZeRO2 eliminates memory redundancy in data-parallel training by partitioning gradients and optimizer states across devices instead of replicating them. After Backward, Reduce-Scatter ensures each rank retains only its slice of the globally averaged gradients (memory-efficient synchronization), enabling local parameter updates. The subsequent All-Gather temporarily reconstructs the full parameter set on every rank so the next Forward pass can proceed — then the partition resumes. This pipelined scatter-then-gather pattern achieves Megatron-LM–comparable throughput on a 175B model (55.2% MFU, 1.34× speedup) across 12,288 GPUs while keeping per-device memory proportional to 1/N rather than the full model+optimizer footprint.
-
-**Caption (verbatim):**
-Figure 1: Data parallel training with ZeRO2.
+**在论文中的作用**：该图给出 MegaScale 的**基础并行范式**，作为后续万卡级扩展框架（通信优化、流水线编排、故障定位与心跳检测等）的算子级前提，支撑"超过 10,000 GPU 训练 LLM"的可行性论证。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig02.png]]
@@ -54,17 +45,7 @@ Figure 1: Data parallel training with ZeRO2.
 > Interleaved 1F1B pipeline. update the model. Instead of duplicating model states (like the optimizer states, gradients, and parameters), Zero Redun- dancy Optimizer (ZeRO) [11] shards these states across every data-parallel process. As a result, the traditional all-reduce operations that aggregate gradients are decomposed into sep- arate reduce-scatter and all-gather operations. This is because ev
 
 > [!tip] 技术解读（多模态）
-> **1) 架构/组件/数据流描述**
-
-该图为**交错式 1F1B 流水线调度图**（Interleaved 1F1B Pipeline）。纵轴为 3 个流水线阶段（stage 0/1/2），横轴为时间步。每个阶段被细分为多个**虚拟子阶段**（图中以红、蓝色块区分），相同数字（如 0、1、2…5）代表同一 micro-batch 的前向/反向传递。红色虚线标出阶段内的交错切换点。整体体现"前向-反向交替执行"的 1F1B 节奏，以及通过虚拟子阶段增加流水线深度来减少气泡（pipeline bubble）的设计。
-
-**2) 关键技术要点**
-
-**核心创新**：将每个流水线阶段再切分为多个虚拟子阶段（virtual stages / model chunks），在相同内存占用下使同一时刻处于 in-flight 的 micro-batch 数翻倍，从而**显著降低流水线气泡比例**，提升训练吞吐——这是 Megatron-LM 交错调度相较于经典 1F1B 的关键改进。**
-
-**3) 逐字转录 Caption**
-
-> **Figure 2: Interleaved 1F1B pipeline.**
+> 【图文联合解读】该图展示Interleaved 1F1B流水线调度：3个stage（0/1/2）在时间轴排列，粉色为前向、蓝色为反向（编号0–5代表micro-batch），灰色为warmup/cooldown区段；红色虚线将时间轴划分为warmup（重复出现0,1,2,0,1,2,3）、稳态1F1B（4,0,5,1,3,2,4,0,5,1,3,2…）、cooldown三阶段。warmup阶段同一组micro-batch号重复出现，说明每个stage承担多个模型chunk并交错执行前向，从而用更少气泡填满流水线。原文据此论证：交错调度与ZeRO状态分片结合可显著压缩气泡率，是支撑千卡–万卡规模强扩展（对应Table 2中3072→12288 GPU仍保持高吞吐）的关键调度策略。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig03.png]]
@@ -73,23 +54,13 @@ Figure 1: Data parallel training with ZeRO2.
 > Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB). with a large receptive field created by stacking layers of such windowed attention. This enables faster training without com- promising the accuracy. LAMB optimizer. Efficient training at a large scale is often hindered by batch size constraints. Particularly, increasing the ba
 
 > [!tip] 技术解读（多模态）
-> ## Figure 3 Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture / Components / Data Flow**
+图分三子图：(a) 标准PTB含SP区LayerNorm+All-Gather/Reduce-Scatter与TP区QKV ColParaLinear→Self Attention→RowParaLinear；(b) 将AG融合进ColParaLinear、RS融合进RowParaLinear，消除独立通信节点；(c) 双CUDA流S0(GEMM)与S1(comm)并行，使A×W与all-gather Copy交错、B×W与reduce-scatter交错执行。
 
-The figure compares three transformer-block designs for hiding communication in 3D parallelism:
+**技术结论**：算子级融合＋流级重叠，使TP的集合通信与GEMM计算时间线重合，隐藏通信时延。
 
-- **(a) PTB with SP + TP (baseline):** LayerNorm → **All-Gather** (SP) → QKV *ColParaLinear* ‖ *ColParaLinear* (TP) → Self-Attention → *RowParaLinear* ‖ *RowParaLinear* → **Reduce-Scatter** → LayerNorm. SP and TP regions are explicitly delineated.
-
-- **(b) Fuse communication into Linears:** Same logical flow, but the All-Gather is folded into a fused *ColParaLinear-with-AG*, and the Reduce-Scatter is folded into a fused *RowParaLinear-with-RS*, removing the standalone comm nodes.
-
-- **(c) Overlap communication with GEMM:** Two CUDA streams (S0 = kernel, S1 = comm). *Top* — input chunks A0…AN are copied on S1 while A×W GEMM runs on S0, producing B0…BN. *Bottom* — output chunks C0…CN are reduce-scattered on S1 concurrently with B×W GEMM on S0. Legend distinguishes kernel (pink) vs. comm (green) regions.
-
-**Key Technical Takeaway (≈55 words):** By fusing all-gather/reduce-scatter into the linear layers and issuing them on a separate CUDA stream, MegaScale overlaps collective communication with the GEMM kernel on the critical path, hiding inter-rank latency without altering the tensor-parallel math—reducing SP/TP overhead to near-zero.
-
-## Caption (verbatim)
-
-**Figure 3: Overlapping communication in tensor parallelism (TP) and sequence parallelism (SP) with parallel transformer block (PTB).**
+**整体作用**：作为Megascale万卡训练系统栈的算子层关键改造，为后续大规模扩展实验提供PTB结构级通信优化基础。
 
 ### Figure 4 (p.4) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig04.png]]
@@ -98,21 +69,16 @@ The figure compares three transformer-block designs for hiding communication in 
 > The cool-down phase can be viewed as the inverse of the warm-up phase, allowing for the inverse application of the same technique. As for the steady phase, both the forward and backward computation are independent of adjacent communication operations. Taking the backward as an example, as shown in the right part of
 
 > [!tip] 技术解读（多模态）
-> **Figure Description (≈110 words)**
+> 【图文联合解读】**图文联合解读：**
 
-This diagram illustrates a **pipeline-parallel deep learning training schedule**, decomposed into a *Warm-up Phase* (left) and a *Steady Phase* (right) across two consecutive pipeline stages (`stage i` and `stage i+1`). Each horizontal dashed line represents a **stream** (a sub-batch / micro-batch), with solid arrows denoting **forward (FWD)** and **backward (BWD)** computation dependencies. Inter-stage communication is captured by **Send (S)** and **Receive (R)** operations attached to the streams. A large gray downward arrow at the top highlights **Communication Overlap**, showing how gradient/activation transfers are scheduled concurrently with computation. The warm-up phase fills the pipeline (only forward passes plus S/R ops), while the steady phase interleaves FWD/BWD blocks so that backward passes overlap with the sends from the next stage.
+**1) 图示核心对象与结构**
+该图对比流水线并行相邻两阶段（stage i、stage i+1）的两个阶段时序：左侧 Warm-up 阶段，每阶段呈现 R→FWD→S 的串行序列；右侧 Steady 阶段，FWD（绿）与 BWD（紫）计算块沿独立 stream（虚线）与顶部的 R、底部的 S 通信块并行排布，标注 "Communication Overlap"。
 
-**Key Takeaway:** Backward computation is deliberately overlapped with the *Send* of activations/gradients, hiding communication latency behind compute—a core optimization in pipelined distributed training.
+**2) 原文论证的关键结论**
+稳态下前向与反向计算均与相邻 Send/Receive 通信相互独立，因此通信可分流并行、覆盖计算，从而隐藏集合通信延迟；冷启动（cool-down）阶段则为该重叠技术的逆向复用。
 
----
-
-**Caption (transcribed verbatim):**
-
-> *Communication Overlap*
-> stage i | stage i+ 1
-> Warm-up Phase | Steady Phase
->
-> **Legend:** S — Send | R — Receive | --- Stream → Dependency | FWD — Forward | BWD — Backward
+**3) 在论文整体方法中的作用**
+此图为 MegaScale 在 10000+ GPU 规模下流水线并行的核心系统优化之一，通过通信-计算解耦降低通信占比、提升 GPU 利用率，是实现高吞吐大规模训练的关键设计。
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig05.png]]
@@ -121,14 +87,13 @@ This diagram illustrates a **pipeline-parallel deep learning training schedule**
 > Robust training workflow. interval and help recover the transmission more quickly when the link flapping period is short. 4
 
 > [!tip] 技术解读（多模态）
-> **Description:**
+> 【图文联合解读】**图文联合解读：**
 
-The figure depicts a fault-tolerant LLM training architecture split into a **Driver** (green) and **Executors** (yellow) cluster managed by **Kubernetes**. The Driver contains a User API (submits jobs), a Checker (triggers "stop && check" on executors and receives "check results"), a Log Analyser (collects executor "heartbeats" and triggers the Checker on anomalies), and state stores for Training Job Info, Evicted Pods, and Blocked IPs. Executors (0…N) each run training processes on one node.
+图5呈现Megascale万卡训练的容错工作流，采用**Driver-Executor双层架构**。Driver侧含User API、Checker、Log Analysisor、Evicted Pods/Blocked IPs四个模块；Executor侧含Executor 0~N并行节点。关键交互包括：User API提交作业并生成驱逐Pod/封禁IP列表；Checker对Executor执行stop & check并回收结果；Log Analysisor通过心跳（heartbeat）触发Checker；Driver经Kubernetes管理资源。
 
-**Key takeaway:** The system achieves automated fault recovery by combining heartbeat-based anomaly detection with lightweight self-check diagnostics; when a node fails, the driver blocks its IP via Kubernetes, evicts the pod, and replenishes it with a healthy node, then resumes from the latest checkpoint — yielding fault tolerance at >10,000-GPU scale with negligible human intervention.
+原文借此论证：在>10,000 GPU规模下，网络链路抖动（flapping）、Pod驱逐等故障不可避免，需通过心跳监测+主动检测+IP封禁的闭环机制实现快速恢复，确保长稳训练不中断。
 
-**Caption (verbatim):**
-"Figure 5: Robust training workflow."
+该图在论文中起到承上启下作用：上承底层网络/通信栈的可靠性设计，下启具体故障应对策略（链路恢复、节点替换），是证明"万卡可持续训练"系统可信度的核心架构图。
 
 ### Figure 6 (p.8) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig06.png]]
@@ -137,21 +102,13 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 > Inconsistent MFU observed in large-scale training. Differ- ent colors denote distinct executions of the same training job. mitigates the bandwidth constraints of HDFS, leading to a substantial reduction in the recovery time. 5
 
 > [!tip] 技术解读（多模态）
-> # Main Figure Description (Figure 7)
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components:** A 2D grid layout depicting a distributed training cluster of 12 hosts (host 0–11), each containing 4 GPU ranks, totaling 48 ranks (numbered 0–47). A vertical color bar maps execution time from 2.0s (light pink) to 2.5s (dark red). Three communication types are shown via dashed arrows: **TP Comm** (green, tensor parallelism), **DP Comm** (purple, data parallelism), and **PP Comm** (orange, pipeline parallelism). Rank 20 is rendered with a hatched pattern indicating user selection, revealing 3D dependency visualization.
+图6横轴为训练步数（0–30000），纵轴为MFU（0–0.6）。多色折线代表同一训练任务的多次独立执行，MFU整体落在0.35–0.45区间，但波动显著：红色线段（约7000–17000步）MFU仅0.35–0.38，低于蓝/橙/粉/紫/绿等其余执行（约0.40–0.43），同一任务不同run间MFU差异可达5–10%。
 
-**Data flow:** Latency measurements from the forward/backward computation phase across ranks are aggregated and rendered as a heat-map, exposing inter-machine variance and communication dependencies.
+论文借此论证：**大规模训练中性能不一致是常态而非异常**——即便软硬件配置相同，跨次执行的MFU仍存在系统性偏差，单次观测无法代表真实训练效率，必须建立可重复、可量化的可靠性度量。
 
-**Key Technical Takeaway:** Approximately **0.5% of machines are stragglers** (e.g., ranks 40, 41 on host 10; rank 32 on host 8 shown in dark red) that disproportionately bottleneck end-to-end training, since the slowest rank dictates overall throughput—explaining why peak MFU fluctuates across runs despite identical configurations.
-
----
-
-# Verbatim Caption
-
-**Figure 6:** Inconsistent MFU observed in large-scale training. Different colors denote distinct executions of the same training job.
-
-**Figure 7:** Performance heat-map. The color denotes the running time of the code segments on a rank. The figure also shows the 3D visualization feature, where rank 20 has been selected and the dependency across different parallelism dimensions become visible.
+该图在论文链路中作为**现象驱动的开篇实证**，支撑后文提出的全栈诊断工具与故障恢复机制（如HDFS带宽缓解），说明仅靠扩大GPU规模并不能保证稳定高效训练，必须配套工程化可靠性保障。
 
 ### Figure 7 (p.8) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig07.png]]
@@ -160,21 +117,13 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 > We gather latency data of the computation phase (forward and backward) across devices and average the latency across steps. The aggregated data is visualized host 0 0 1 2 3 host 3 12 13 14 15 host 6 24 25 26 27 host 9 36 37 38 39 host 4 16 17 18 19 host 7 28 29 30 31 host 10 40 41 42 43 host 5 20 21 22 23 host 8 32 33 34 35 host 11 44 45 46 47 host 1 4 5 6 7 host 2 8 9 10 11 DP Comm TP Comm PP Com
 
 > [!tip] 技术解读（多模态）
-> # Main Figure Description (Figure 7)
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components:** A 2D grid layout depicting a distributed training cluster of 12 hosts (host 0–11), each containing 4 GPU ranks, totaling 48 ranks (numbered 0–47). A vertical color bar maps execution time from 2.0s (light pink) to 2.5s (dark red). Three communication types are shown via dashed arrows: **TP Comm** (green, tensor parallelism), **DP Comm** (purple, data parallelism), and **PP Comm** (orange, pipeline parallelism). Rank 20 is rendered with a hatched pattern indicating user selection, revealing 3D dependency visualization.
+1) **核心对象与结构**：该图为48个rank（rank 0–47，分布在host 0–11共12台主机，每机4卡）的计算阶段（前向+反向）延迟热力图。色阶由2.0s（浅粉）到2.5s（深红），并标注三类通信依赖：TP Comm（绿色）、DP Comm（紫色）、PP Comm（橙色箭头）。rank 20（host 5）被选中高亮，可展开3D视图观察跨并行维度的依赖关系。多数rank稳定在~2.0s，但rank 32（host 8）显著偏红，存在掉队。
 
-**Data flow:** Latency measurements from the forward/backward computation phase across ranks are aggregated and rendered as a heat-map, exposing inter-machine variance and communication dependencies.
+2) **关键结论**：热力图直观暴露了大规模训练中的延迟分布不均——个别rank（如32）成为straggler；同时揭示了TP/DP/PP三种并行维度间的通信耦合关系，便于诊断瓶颈来源。
 
-**Key Technical Takeaway:** Approximately **0.5% of machines are stragglers** (e.g., ranks 40, 41 on host 10; rank 32 on host 8 shown in dark red) that disproportionately bottleneck end-to-end training, since the slowest rank dictates overall throughput—explaining why peak MFU fluctuates across runs despite identical configurations.
-
----
-
-# Verbatim Caption
-
-**Figure 6:** Inconsistent MFU observed in large-scale training. Different colors denote distinct executions of the same training job.
-
-**Figure 7:** Performance heat-map. The color denotes the running time of the code segments on a rank. The figure also shows the 3D visualization feature, where rank 20 has been selected and the dependency across different parallelism dimensions become visible.
+3) **论文作用**：作为性能剖析与可视化工具，支撑MegaScale诊断流水线中"识别长尾、定位通信热点"的核心能力，是其全栈优化体系（算法/网络/调度）发现问题→定位根因的关键一环。
 
 ### Figure 8 (p.9) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig08.png]]
@@ -183,14 +132,13 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 > The trace shows events collected in a pipeline group on a unified timeline. Dependencies become visible when an event is selected.
 
 > [!tip] 技术解读（多模态）
-> **Figure 8 — Pipeline Trace Visualization**
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components/Data Flow:** The figure is a horizontally-stacked per-rank timeline visualization. Each row corresponds to a GPU worker (rank[0], rank[4], rank[8], rank[12]) within a pipeline-parallel group. Along each row, colored blocks denote discrete events — "forward" (green), "bac…" (backward, pink/red), "L" (loss/optimizer, gray), and short pink vertical spikes (likely all-reduce/comms). Time advances left→right, and curved pink arrows above/below the lanes represent inter-rank data-flow dependencies between producer and consumer stages. Selection of an event highlights its causal chain across ranks.
+**核心对象与结构**：该图呈现 Megascale 调试框架的流水线并行轨迹视图。横向为统一时间轴，纵向为同一 pipeline group 内的 4 个 stage（rank[0]、rank[4]、rank[8]、rank[12]，共 16 个 stage 中的子集）。事件块按类型着色：绿色为 forward（f...），橙色为 backward（bac...），灰色为前/反向大块（forwar.../bac...），短箭头显示跨 rank 的数据依赖（选中事件后高亮）。
 
-**Key Technical Takeaway:** Unified per-rank timeline plus dependency edges makes cascading NCCL timeouts visually traceable to a single stalled GPU worker, enabling rapid fault localization in 3D-parallel training.
+**论证结论**：图中清晰呈现 1F1B 调度模式——各 stage 交错启动形成流水气泡，forward 波从 rank[0] 向右传播、backward 波回传，可视化工具将这种跨 stage 时序与显式依赖关系一并暴露，便于在大规模训练中定位流水线停顿与通信瓶颈。
 
-**Caption (verbatim):**
-"Figure 8: The trace shows events collected in a pipeline group on a unified timeline. Dependencies become visible when an event is selected."
+**论文作用**：支撑文中 Nezha 大规模分布式调试系统章节，作为"能在万卡规模下对复杂流水线 schedule 做细粒度可视化"的实证。
 
 ### Figure 9 (p.10) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig09.png]]
@@ -199,20 +147,13 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 > Weak-scaling training performance of Megatron-LM and
 
 > [!tip] 技术解读（多模态）
-> ## Figure 9 Description
+> 【图文联合解读】**图9解读：**
 
-**Components:** A grouped bar chart comparing Model FLOPs Utilization (MFU, %) between two systems — Megatron-LM (gray bars) and MegaScale (red hatched bars) — across three GPU counts (2,240 / 4,480 / 11,200) for the 530B model under weak-scaling conditions.
+**1) 图示数据：** 该柱状图展示530B模型在弱扩展设置下（batch size随GPU数同比放大）的MFU对比，横轴为GPU规模（2240/4480/11200），纵轴为MFU(%)。MegaScale在三种规模下MFU分别为54.30%、54.10%、54.30%，几乎水平；Megatron-LM则为49.20%、48.80%、48.20%，两者存在约5–6个百分点的稳定差距，且两条序列随规模扩大均无明显下降。
 
-**Data values (annotated on bars):**
-- 2,240 GPUs: Megatron-LM 49.20% vs MegaScale 54.30%
-- 4,480 GPUs: Megatron-LM 48.80% vs MegaScale 54.10%
-- 11,200 GPUs: Megatron-LM 48.20% vs MegaScale 54.30%
+**2) 关键结论：** 论文以此证明MegaScale相对Megatron-LM具有**规模无关的持续效率增益**——其全栈优化（通信overlap、并行策略、可靠性机制等）在大规模下仍稳定保持约54% MFU，弱扩展性良好。
 
-**Key takeaway:** MegaScale sustains ~54% MFU across a 5× GPU range, while Megatron-LM degrades slightly (49.2→48.2%), showing MegaScale's near-linear weak-scaling enabled by overlapping 3D-parallel communication.
-
-## Caption (verbatim)
-
-**Figure 9:** Weak-scaling training performance of Megatron-LM and MegaScale on the 530B model, where the batch size is scaled proportionally with the number of GPUs.
+**3) 论文作用：** 该图是论文"万卡级高效训练"主张的核心量化证据之一，与强扩展、收敛性、故障恢复等实验共同构成对MegaScale系统级性能的完整论证链。
 
 ### Figure 10 (p.11) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig10.png]]
@@ -221,23 +162,16 @@ The figure depicts a fault-tolerant LLM training architecture split into a **Dri
 > The training loss curves in microbenchmark experiments.
 
 > [!tip] 技术解读（多模态）
-> # Figure 11: Production-Scale LLM Training Loss Curve
+> 【图文联合解读】**图10解读：ADAM与LAMB优化器训练损失对比**
 
-## Description
+**1) 核心对象与数据**
+图(b)展示两条训练loss曲线：蓝色为1×batch_size下的ADAM，橙色为4×batch_size下的LAMB。横轴为已消费tokens（B，0–270B+），纵轴为loss（2–8）。ADAM起点约4.5，LAMB起点近8且在~90B处出现尖峰；两条曲线在~150B tokens后基本重合，最终loss稳定在≈2.2。
 
-**Architecture/Components:**
-- **Axes:** X-axis shows normalized "consumed tokens rate" (0.0–1.0, i.e., training progress from start to completion); Y-axis shows "loss" (≈0.2–0.8).
-- **Curve:** A single composite line formed of many colored segments, exhibiting a sharp early drop from ~0.8 down to ~0.2 within the first ~5% of tokens, then a long flat plateau around 0.2.
-- **Color encoding:** Each distinct color marks a fresh training restart after a fault; the curve is continuous across restarts because loss normalization anchors each segment.
-- **System context:** Production run on **>10,000 GPUs**, several weeks long, training a **hundreds-of-billions-parameter** model on **multi-trillion tokens**.
+**2) 关键技术结论**
+证明在batch_size扩大4倍的情况下，LAMB优化器能达到与ADAM（1×batch_size）几乎一致的收敛loss，说明大batch训练不会损失模型质量，验证了LAMB优化器在大batch场景下的有效性。
 
-**Data flow:** Tokens are fed continuously into the GPU cluster → loss is computed and logged per checkpoint → on failure, state is restored and training resumes from the last checkpoint → the new segment is plotted in a fresh color but joined seamlessly to the prior curve via shared loss scale.
-
-## Key Technical Takeaway
-MegaScale sustains smooth convergence across **100+ restarts** at >10K-GPU scale, demonstrating that its automatic fault detection and recovery pipeline (covering >90% of hardware/software faults) introduces no visible loss regression versus an uninterrupted run — validating reliability for multi-week, multi-trillion-token production LLM training.
-
-## Caption (verbatim)
-> Figure 11: The normalized training loss curve of a real production run on more than 10,000 GPUs for several weeks. This run trains a model with hundreds of billions of parameters on multi-trillion tokens. Different colors indicate training restarts. MegaScale repairs and recovers the training process for over 100 times in presence of failures.
+**3) 在论文中的作用**
+此图属于微基准实验（microbenchmark），为整篇论文万卡级训练提供优化器选型依据：在大规模集群中必须使用大batch以摊销通信开销，而本实验证明LAMB可在保持loss不退化的前提下支撑4×batch扩展，是后续端到端万卡训练可扩展性论证的关键支撑。
 
 ### Figure 11 (p.11) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig11.png]]
@@ -246,23 +180,13 @@ MegaScale sustains smooth convergence across **100+ restarts** at >10K-GPU scale
 > The normalized training loss curve of a real production run on more than 10,000 GPUs for several weeks. This run trains a model with hundreds of billions of parameters on multi-trillion tokens. Different colors indicate training restarts. MegaScale repairs and recovers the training process for over 100 times in presence of failures.
 
 > [!tip] 技术解读（多模态）
-> # Figure 11: Production-Scale LLM Training Loss Curve
+> 【图文联合解读】**图11联合解读：**
 
-## Description
+图示万卡规模（10 000+ GPU）训练千亿参数、多token模型的归一化loss曲线：X轴为已消费token比例(0–1)，Y轴为loss。曲线初始≈0.85骤降至~0.2，再缓降至≈0.15；多色段对应100+次故障重启，loss衔接平滑无明显跳变。
 
-**Architecture/Components:**
-- **Axes:** X-axis shows normalized "consumed tokens rate" (0.0–1.0, i.e., training progress from start to completion); Y-axis shows "loss" (≈0.2–0.8).
-- **Curve:** A single composite line formed of many colored segments, exhibiting a sharp early drop from ~0.8 down to ~0.2 within the first ~5% of tokens, then a long flat plateau around 0.2.
-- **Color encoding:** Each distinct color marks a fresh training restart after a fault; the curve is continuous across restarts because loss normalization anchors each segment.
-- **System context:** Production run on **>10,000 GPUs**, several weeks long, training a **hundreds-of-billions-parameter** model on **multi-trillion tokens**.
+**关键结论**：MegaScale的故障检测与恢复机制可在万卡、跨周长周期训练中保持收敛稳定性，多次重启不影响loss趋势。
 
-**Data flow:** Tokens are fed continuously into the GPU cluster → loss is computed and logged per checkpoint → on failure, state is restored and training resumes from the last checkpoint → the new segment is plotted in a fresh color but joined seamlessly to the prior curve via shared loss scale.
-
-## Key Technical Takeaway
-MegaScale sustains smooth convergence across **100+ restarts** at >10K-GPU scale, demonstrating that its automatic fault detection and recovery pipeline (covering >90% of hardware/software faults) introduces no visible loss regression versus an uninterrupted run — validating reliability for multi-week, multi-trillion-token production LLM training.
-
-## Caption (verbatim)
-> Figure 11: The normalized training loss curve of a real production run on more than 10,000 GPUs for several weeks. This run trains a model with hundreds of billions of parameters on multi-trillion tokens. Different colors indicate training restarts. MegaScale repairs and recovers the training process for over 100 times in presence of failures.
+**论文作用**：作为production-scale端到端验证，证明系统在真实超大规模长周期训练中的鲁棒性与可落地性，是整套方法从单点优化走向规模化可靠训练的最终佐证。
 
 ### Figure 12 (p.12) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-fig12.png]]
@@ -271,28 +195,30 @@ MegaScale sustains smooth convergence across **100+ restarts** at >10K-GPU scale
 > The MFU becomes stable after addressing the stragglers and problematic code segments. Different colors represent different training trials with the same setup. executing diagnostic tests is less than 10 minutes. Moreover, the system can catch up to the training progress prior to the crash within 15 minutes from the latest checkpoints, maintain- ing over 90% effective training time rate, which is c
 
 > [!tip] 技术解读（多模态）
-> # Figure 12 Description
+> 【图文联合解读】**图文联合解读：**
 
-**Chart Type:** Line plot tracking Model FLOPs Utilization (MFU) over training steps.
+图12横轴为训练步数（0–30000），纵轴为MFU（0–0.6）。橙色线对应前约1万步，蓝色线对应1万–3万步，两条同配置试验曲线MFU均稳定在约0.48–0.50，仅偶现向下尖刺（落后节点瞬时拖累）。橙色段尖刺稍频，蓝色段更平直，说明排查straggler与问题代码段后MFU趋于平稳。
 
-**Axes:**
-- **Y-axis:** MFU, ranging from 0.0 to 0.6
-- **X-axis:** step, ranging from 0 to ~30,000
-
-**Components / Data:**
-- Multiple overlapping time-series traces (rendered in different colors — warm orange/red tones for early steps, transitioning to blue tones for later steps)
-- Early steps (0–~10,000): visible dips/spikes where MFU momentarily drops well below 0.5
-- Later steps (~10,000–30,000): traces flatten tightly around ~0.48–0.50 with only minor perturbations
-- Each trace = one independent training trial with the same setup
-
-**Key Technical Takeaway (≈115 words):**
-After diagnosing and removing computational stragglers plus garbage-collection–induced noise, MFU converges to a stable plateau near 0.48–0.50 across all trials. The residual variance seen early on was traced to the forward pass — specifically irregular garbage collection and certain PyTorch operations on the critical path, *not* hardware. Synchronous collective communication forces every rank to wait for the slowest one, so any per-rank timing fluctuation propagates into step latency. The figure is empirical proof that disciplined code profiling (CUDA event timers, reverse chronological inspection) directly translates to stable, reproducible throughput at scale.
-
-# Caption (verbatim)
-
-> Figure 12: The MFU becomes stable after addressing the stragglers and problematic code segments. Different colors represent different training trials with the same setup.
+原文借此图论证：万卡级规模下，经诊断与代码优化，训练利用率可长期保持稳定，支撑"有效训练时间率>90%"的可靠性声明；在论文链路中，它是衔接"问题诊断→针对性优化→长期稳定性验证"实验闭环的关键实证证据。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.9) ⭐深度解读
+![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab01.png]]
+> [!quote] caption
+> Model configurations.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 1 图文联合解读**
+
+**1) 核心对象与结构**
+Table 1 列出了两种规模的 LLM 训练配置：175B 模型（128 heads、12288 hidden、96 layers，TP=8、PP=8）与 530B 模型（160 heads、20480 hidden、105 layers，TP=8、PP=35）。两模型张量并行度 TP 保持 8，而 530B 的层数（105）显著多于 175B（96），导致其流水线并行度 PP 从 8 跃升至 35；隐藏维度也由 12288 增至 20480，head 数从 128 增至 160，对应整体参数量约 3 倍膨胀。
+
+**2) 关键技术结论**
+该表为论文在万卡规模下进行 ZeRO-2 数据并行 + 张量/流水线混合并行的实验提供模型基底。TP 固定为 8 反映单节点内 GPU 拓扑约束，PP 在 530B 上大幅拉长（35 段）则印证了"模型越大、流水线越深、跨节点通信与故障面越广"这一核心观察——即论文后续讨论的容错、心跳检测与节点隔离方案必须应对 PP=35、长流水线带来的稳定性挑战。
+
+**3) 在论文链路中的作用**
+Table 1 是全文规模化实验的"模型规格锚点"，与 Figure 1（ZeRO-2 数据并行示意）共同支撑 10000+ GPU 训练框架的可行性论证，为后续性能、可靠性及扩展效率分析提供统一基线。
 
 ### Table 2 (p.10) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab02.png]]
@@ -300,15 +226,13 @@ After diagnosing and removing computational stragglers plus garbage-collection�
 > Strong-scaling training performance for the 175B model. We set the batch size to 6144 when training with 3072 to 12288 GPUs. For 256 to 1024 GPUs, we decrease the batch size to 768 due to GPU memory limit. We report the training time required for training 300B tokens here. The number in parentheses 
 
 > [!tip] 表格解读（多模态）
-> **Description (≤120 words):**
+> 【图文联合解读】**Table 2 图文联合解读**
 
-The figure is a grouped bar chart plotting **Model FLOPs Utilization (MFU, %)** on the y-axis against **#GPUs** (2240, 4480, 11200) on the x-axis, comparing two systems: **Megatron-LM** (gray hatched bars) versus **MegaScale** (red hatched bars). Data labels sit atop each bar. Across all three GPU counts, MegaScale consistently delivers ~5–6 percentage points higher MFU than Megatron-LM, and unlike Megatron-LM (which slightly degrades from 49.20% → 48.80% → 48.20%), MegaScale stays flat at ~54%.
+**①核心对象与数据**：表展示175B模型强扩展训练性能，对比MegaScale与Megatron-LM在两档batch size下的表现——小batch（768）跑256–1024卡，大batch（6144）跑3072–12288卡，记录迭代时间、吞吐(tok/s)、300B tokens训练天数、MFU与PFlops/s。关键数据如：12288卡+6144 batch时，MegaScale将训练时间由2.37天压缩至**1.75天**，MFU由41.2%提升至**55.2%（1.34×）**，算力达2166.3 PFlops/s；1024卡下MFU也由44.7%升至59.0%。
 
-**Key takeaway:** MegaScale's optimizations preserve near-constant MFU as GPU count grows — demonstrating strong-scaling efficiency that Megatron-LM lacks.
+**②关键技术结论**：MegaScale在全规模、全batch档下均稳定取得1.19×–1.34×加速，MFU绝对值较Megatron-LM提升约10–15个百分点，验证其在万卡级仍能保持高算力利用率与良好的强扩展性。
 
-**Caption (verbatim):**
-
-Table 2: Strong-scaling training performance for the 175B model. We set the batch size to 6144 when training with 3072 to 12288 GPUs. For 256 to 1024 GPUs, we decrease the batch size to 768 due to GPU memory limit. We report the training time required for training 300B tokens here. The number in parenthesis in the MFU column represents the speedup of MegaScale compared to Megatron-LM.
+**③论文方法链中的作用**：该表作为全文最重要的端到端基准，与图2的流水线和ZeRO切分设计相互印证，将"系统级工程优化"具体化为可量化的训练加速与算力效率证据，是支撑"MegaScale可工业级扩展到万卡"这一核心论点的决定性实验依据。
 
 ### Table 3 (p.11) ⭐深度解读
 ![[assets/crops/megascale-scaling-large-language-model-training-to-more-than-10000-gpus-tab03.png]]
@@ -316,15 +240,13 @@ Table 2: Strong-scaling training performance for the 175B model. We set the batc
 > MFU improvement breakdown when training the 175B model with 256 GPUs and batch size 256.
 
 > [!tip] 表格解读（多模态）
-> **Caption Verbatim (the only caption present in the provided text):**
+> 【图文联合解读】**表3解读：**
 
-"Table 3: MFU improvement breakdown when training the 175B model with 256 GPUs and batch size 256."
+**1) 核心数据：** 175B模型在256 GPU、BS=256下，MFU从基线47.7%经9项逐项叠加优化升至65.3%（累计+17.6%）。单项增益：PTB +4.6%、SWA +1.0%、TP/PP/DP通信重叠累计+5.2%、高效算子+1.7%、杂项优化+1.1%、LAMB(BS×3)再+3.0%。
 
----
+**2) 关键结论：** ①PTB是单点最大增益源；②三层通信-计算重叠（TP+PP+DP）累计约6.2%（含PTB），验证重叠策略对扩展性关键；③LAMB解耦batch与收敛，使BS×3仍可训练，将大batch从瓶颈转为加速手段，呼应Figure 3所示PTB与TP/SP重叠设计。
 
-**Note:** The passage does not contain a description or caption of an actual figure. It references **Figure 10a** (convergence comparison — MegaScale with parallel transformer block + sliding window attention vs. baseline) and **Figure 10b** (effect of LAMB optimizer vs. ADAM with 4× larger batch size), but only provides a Table 3 caption. Without the figure itself or its caption text, I cannot describe an "architecture/components/data flow" diagram or its specific caption.
-
-If you can share the figure's caption text (e.g., "Figure 10: ...") or an image of the figure, I'd be happy to provide the requested architecture description and verbatim transcription.
+**3) 论文作用：** 作为消融实验，量化MegaScale在单节点规模（256 GPU）上每项系统优化贡献，验证"算法-系统协同"设计原则，为后续跨节点万卡线性扩展提供基线支撑。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

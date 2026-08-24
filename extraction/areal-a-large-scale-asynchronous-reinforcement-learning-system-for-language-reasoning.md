@@ -30,14 +30,11 @@ tags: [rl]
 > Execution timeline of a synchronous (left) and a one-step overlap (right) RL system showing underutilized inference devices. … Rollout Controller Reward Service
 
 > [!tip] 技术解读（多模态）
-> **Figure 2 — AREAL Architecture**
+> 【图文联合解读】**图文联合解读：**
 
-**Components & Data Flow:** Two decoupled GPU clusters. The *Generation* side hosts multiple Interruptible Rollout Workers (GPU) that send prompts (green) and trajectories (blue) through a Rollout Coordinator to a Replay Buffer. A Reward Service (CPU) returns rewards via the coordinator. The Replay Buffer sends aggregated batches through a Replay Buffer to Trainer Workers (GPU, Training cluster), which feed a Parameter Service. The Parameter Service emits interrupt signals (red) and parameter save/load updates (purple) back to the rollout workers, closing the async loop.
+该图以时间轴横向对比两种RL系统的执行流：左侧同步系统将24次生成任务（蓝条1-24，分布于4张GPU）依次排布，待全部生成完毕后才执行3轮训练块（橙块"1-8/9-16/17-24"）与权重加载（黄条），导致GPU在训练与加载阶段完全闲置；右侧一步重叠方案则把训练固定在单张GPU上进行，其余3张GPU持续滚动生成，使推理设备空置时间显著减少。
 
-**Key takeaway (≤120 words):** AREAL fully decouples generation and training across separate GPU clusters coordinated via a Replay Buffer and Parameter Service. Rollout workers are *interruptible*: upon receiving new weights they discard stale KV state and continue decoding—enabling continuous, weight-updated trajectory generation without waiting for synchronized training steps. This eliminates the GPU underutilization and memory-IO bottleneck of synchronous RL.
-
-**Caption (verbatim):**
-*"Figure 2: The AREAL architecture featuring asynchronous generation and training components."*
+原文借此论证：**同步流水线存在严重的推理—训练串行空泡，是端到端吞吐的关键瓶颈**；即便仅做一步重叠也能回收大量空闲算力，从而为AReaL所提出的"全异步、生成与训练深度交叠"的整体架构提供量化动机，是其方法设计的核心起点，并在后续Table 1中转化为对AIME24/LiveCodeBench上端到端效率提升的实验依据。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig02.png]]
@@ -46,14 +43,13 @@ tags: [rl]
 > The AREAL architecture featuring asynchronous generation and training components.
 
 > [!tip] 技术解读（多模态）
-> **Figure 2 — AREAL Architecture**
+> 【图文联合解读】**图文联合解读：**
 
-**Components & Data Flow:** Two decoupled GPU clusters. The *Generation* side hosts multiple Interruptible Rollout Workers (GPU) that send prompts (green) and trajectories (blue) through a Rollout Coordinator to a Replay Buffer. A Reward Service (CPU) returns rewards via the coordinator. The Replay Buffer sends aggregated batches through a Replay Buffer to Trainer Workers (GPU, Training cluster), which feed a Parameter Service. The Parameter Service emits interrupt signals (red) and parameter save/load updates (purple) back to the rollout workers, closing the async loop.
+图示AREAL异步架构核心组成：①**生成端**（左虚线框）含多个Interruptible Rollout Worker（GPU节点，以"…"示意可扩展），受Rollout Controller（CPU）调度，由Reward Service（CPU）打分；②**训练端**（右虚线框）含多个Trainer Worker（GPU节点），通过Parameter Service做参数Save/Load（紫色箭头）；③数据通路为Rollout Controller → Aggregate Batch → Replay Buffer → Send Full Batch，左→右流动（蓝箭头Trajectory、绿箭头Prompt）；④红箭头Interrupt Signal支持生成途中刷新权重。
 
-**Key takeaway (≤120 words):** AREAL fully decouples generation and training across separate GPU clusters coordinated via a Replay Buffer and Parameter Service. Rollout workers are *interruptible*: upon receiving new weights they discard stale KV state and continue decoding—enabling continuous, weight-updated trajectory generation without waiting for synchronized training steps. This eliminates the GPU underutilization and memory-IO bottleneck of synchronous RL.
+原文论证结论：解耦generation与training，避免同步RLHF的吞吐瓶颈；"可中断rollout"机制使轨迹可基于近实时策略生成，保证数据新鲜度。
 
-**Caption (verbatim):**
-*"Figure 2: The AREAL architecture featuring asynchronous generation and training components."*
+论文整体作用：该架构是AREAL方法落地的系统工程核心，支撑其在大规模语言推理任务上实现高吞吐、近实时策略更新的RL训练链路。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig03.png]]
@@ -62,14 +58,11 @@ tags: [rl]
 > Illustration of generation management in AREAL. Vertical lines show the ready time for the next step training. Blue crosses show the interrupted requests when new parameters arrive. 4
 
 > [!tip] 技术解读（多模态）
-> **Figure 2 — AREAL Architecture**
+> 【图文联合解读】**图文联合解读：**
 
-**Components & Data Flow:** Two decoupled GPU clusters. The *Generation* side hosts multiple Interruptible Rollout Workers (GPU) that send prompts (green) and trajectories (blue) through a Rollout Coordinator to a Replay Buffer. A Reward Service (CPU) returns rewards via the coordinator. The Replay Buffer sends aggregated batches through a Replay Buffer to Trainer Workers (GPU, Training cluster), which feed a Parameter Service. The Parameter Service emits interrupt signals (red) and parameter save/load updates (purple) back to the rollout workers, closing the async loop.
+该图以时间轴展示AREAL的异步生成-训练流水线：GPU1/GPU2并行执行生成任务（蓝色，编号1–9及字母a–g），GPU3负责训练（橙色，Batch1=1–4、Batch2=5–8、Batch3=9–c），三批之间通过黄色Load Weight加载新参数（θ₀→θ₁→θ₂），竖虚线标出"下一批次训练就绪时刻"。
 
-**Key takeaway (≤120 words):** AREAL fully decouples generation and training across separate GPU clusters coordinated via a Replay Buffer and Parameter Service. Rollout workers are *interruptible*: upon receiving new weights they discard stale KV state and continue decoding—enabling continuous, weight-updated trajectory generation without waiting for synchronized training steps. This eliminates the GPU underutilization and memory-IO bottleneck of synchronous RL.
-
-**Caption (verbatim):**
-*"Figure 2: The AREAL architecture featuring asynchronous generation and training components."*
+图中蓝叉标记θ₁/θ₂到达时被中断的旧请求，中断后必须以新权重重做绿色KV Cache Recompute才能复用。该图论证了AREAL的核心机制：**用"可中断生成+重计算"换取参数新鲜度**——避免stale data的同时，量化了异步带来的KV重算开销，是支撑文中"训练不被生成阻塞、生成不因训练而等待"的关键设计图示。
 
 ### Figure 4 (p.8) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig04.png]]
@@ -78,15 +71,11 @@ tags: [rl]
 > The strong scaling trend. Dotted lines indicate ideal linear scaling. verl consistently encounters OOM with 32k context length and the 32B model so the data points are missing. 8
 
 > [!tip] 技术解读（多模态）
-> **Description of Figure 4 (Strong Scaling Trend):**
+> 【图文联合解读】**图4联合解读：**
 
-The figure is a 2×3 grid of line plots comparing training throughput across model size and context length. Rows distinguish context length (ctx=16384 top, ctx=32768 bottom); columns distinguish model size (1.5B, 7B, 32B left-to-right). The y-axis shows throughput in tokens/second; the x-axis shows the number of GPUs (ranging 32–512 depending on model size). Three series are plotted: AReaL (blue solid), verl (orange dashed), and ideal linear scaling (black dotted).
+图4以2×2子图展示强扩展性实验，对比AREAL（蓝实线）与verl（橙虚线）在GPU数从128增至512时的吞吐量，纵轴约18k–37k tokens/秒，覆盖7B/32B模型与16k/32k上下文四种组合。AREAL扩展接近理想线性线，32B模型下吞吐由约18k提升至35k；verl斜率显著偏低，且在32B+32k上下文时直接OOM导致数据缺失。
 
-**Key Takeaway:** AReaL tracks the ideal linear scaling line closely across all six configurations, while verl falls progressively further below it as the number of GPUs grows — confirming AReaL's superior multi-node scaling efficiency for RL training.
-
-**Caption (verbatim):**
-
-Figure 4: The strong scaling trend. Dotted lines indicate ideal linear scaling. verl consistently encounters OOM with 32k context length and the 32B model so the data points are missing.
+该图用以论证AREAL异步RL框架的扩展性优势：在更大模型、更长上下文场景下仍保持近线性加速比，而同步基线verl已触及显存瓶颈，从而为论文"大规模异步RL可行且高效"的核心结论提供关键实证支撑。
 
 ### Figure 5 (p.9) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig05.png]]
@@ -95,15 +84,13 @@ Figure 4: The strong scaling trend. Dotted lines indicate ideal linear scaling. 
 > Ablation studies of the decoupled PPO objective and staleness control with a 1.5B model on math reasoning tasks. Both algorithmic choices are essential. With a moderate staleness value and the decoupled objective, training progress can be accelerated by over 2× while maintaining final evaluation performance.
 
 > [!tip] 技术解读（多模态）
-> ## Figure 5 Description
+> 【图文联合解读】**图文联合解读（图5，p.9）**
 
-**Components/Data flow:** Figure 5 is a three-panel ablation study on a 1.5B model for math reasoning. Panel (a) plots training-reward learning curves under naive PPO across MaxStaleness values {0, 1, 2, 4, 8, 16, ∞}; panel (b) reproduces the same experiment with the decoupled PPO objective (eq. 5), where curves cluster tightly near the oracle (η=0). Panel (c) is a horizontal bar chart of effective training throughput (k tokens/s) vs. MaxStaleness, rising monotonically from 128.7 (η=0) to 396.8 (η=∞).
+**1）核心对象与数据：** 三面板消融实验，基于1.5B模型在数学推理任务上的训练。(a)(b)分别为naive PPO与解耦目标（式5）下MaxStaleness∈{0,1,2,4,8,16,∞}的奖励曲线；(c)为有效吞吐量条形图，定量数据为128.7→269.3→356.6→356.6→371.7→382.4→396.8 k tokens/s，随staleness单调递增。
 
-**Key technical takeaway:** The decoupled PPO objective stabilizes training against stale data, enabling moderate staleness (η ≤ 8) to more than triple throughput (≈3.1×) with negligible loss in final accuracy, whereas naive PPO collapses as staleness grows.
+**2）关键结论：** 仅增大staleness会劣化naive PPO（曲线发散、奖励下降）；而解耦目标使所有staleness曲线紧贴η=0 oracle，性能几乎无损。二者结合即"适度staleness+解耦目标"可获得>2×训练加速且保持最终评估性能——证实两个算法选择缺一不可。
 
-## Caption (verbatim)
-
-**Figure 5:** Ablation studies of the decoupled PPO objective and staleness control with a 1.5B model on math reasoning tasks. Both algorithmic choices are essential. With a moderate staleness value and the decoupled objective, training progress can be accelerated by over 2× while maintaining final evaluation performance.
+**3）论文链路作用：** 该图为AREAL异步RL框架的核心算法决策提供实证：它把"解耦PPO目标"与"staleness容忍度"确立为系统级最优配置，支撑后文大规模实验的高吞吐-高性能主张，是方法论可行性的关键消融证据。
 
 ### Figure 6 (p.10) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-fig06.png]]
@@ -112,13 +99,7 @@ Figure 4: The strong scaling trend. Dotted lines indicate ideal linear scaling. 
 > Ablation studies on system optimizations. experimental setup, we configured 32 micro-batches for the standard setting and established a token budget of 32,768 per micro-batch for the dynamic batching approach. As demonstrated in Figure 6a, dynamic batching yields an average of 30% throughput improvements across various model sizes.
 
 > [!tip] 技术解读（多模态）
-> **Figure description (≤120 words):**
-
-Figure 6 presents two ablation bar charts rather than an architecture diagram. **Left (6a) — Dynamic vs. Normal Batching:** Compares throughput (TFLOPs/GPU) across model scales (1B/1 node, 7B/2 nodes, 32B/8 nodes). Dynamic batching consistently outperforms normal batching: 427.4 vs 404.4 (1B), 454.7 vs 303.1 (7B), and 387.7 vs 283.0 (32B), with the largest gap (~50%) at 7B. **Right (6b) — Interruptible Generation:** Compares average throughput (tokens/s) at 1.5B and 7B on 4 nodes. Interruptible generation yields 231k vs 207k (1.5B) and 130k vs 111k (7B). **Key takeaway:** Both optimizations are validated quantitatively—dynamic micro-batch allocation delivers ~30% throughput gains, and interruptible generation adds 12–17%, confirming their inclusion in the AREAL system design.
-
-**Caption (verbatim):**
-
-Figure 6: Ablation studies on system optimizations.
+> 【图文联合解读】图6(b)展示中断式生成消融：1.5B模型吞吐量231k vs 207k tokens/s，7B为130k vs 111k，可中断机制带来约12%–17%提升。结合未渲染的图6(a)：动态批处理在1B/7B/32B较常规批处理分别达427.4/454.7/387.7 vs 404.4/303.1/283.0 TFLOPs/GPU，平均~30%吞吐增益。两图共同量化验证AREAL的两项系统优化——动态微批次分配与可中断生成——均显著提升吞吐，在论文方法链中为异步RL框架的工程可行性提供关键实验支撑。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -128,15 +109,9 @@ Figure 6: Ablation studies on system optimizations.
 > End-to-End Performance Comparison. We evaluate on the AIME24 benchmark for math and LiveCodeBench (8/1/24-2/1/25) for coding. We limit the maximum generation length to 32K tokens and sample 32 responses per question, reporting the average pass@1 accuracy. * represents the best known reproducible res
 
 > [!tip] 表格解读（多模态）
-> **Description of the main figure (Table 1):**
+> 【图文联合解读】**Table 1 联合解读**
 
-The table compares end-to-end RL training performance across four model scales (1.5B, 7B, 14B, 32B) on AIME24 (math) and LiveCodeBench (coding). Each block reports: model variant (basemodel / VeRL / Sync.AReaL / AReaL), benchmark score (pass@1 avg), number of training nodes, PPO steps, and total training hours. The data flow implies rollout generation → advantage computation → PPO updates, with AReaL asynchronously overlapping generation and training.
-
-**Key takeaway:** AReaL matches or exceeds VeRL/Sync.AReaL accuracy while cutting training hours roughly 2× (e.g., 1.5B: 14.8 vs 33.6 h; 7B: 25.4 vs 52.1 h; 14B: 21.9 vs 44.4 h).
-
-**Caption (verbatim):**
-
-Table 1: End-to-End Performance Comparison. We evaluate on the AIME24 benchmark for math and LiveCodeBench (8/1/24-2/1/25) for coding. We limit the maximum generation length to 32K tokens and sample 32 responses per question, reporting the average pass@1 accuracy. * represents the best known reproducible results obtained via RL, as cited from DeepScaler [25] and DeepCoder [24] respectively. AReaL achieves comparable performance with 2× fewer training hours.
+表1在AIME24（1.5B/7B）与LiveCodeBench（14B/32B）上对比AReaL与VeRL、Sync.AReaL，统一32K长度、32样本、平均pass@1。AReaL精度与最优基线持平或略优：42.2 vs 43.1*（1.5B）、63.1 vs 63.0（7B）、58.1 vs 57.9*（14B）、61.0 vs 61.2（32B），但训练小时数显著降低：14.8 vs 33.6（1.5B）、25.4 vs 57.7（7B）、21.9 vs 44.4（14B）、31.1 vs 51.1（32B），普遍约2×加速。该表直接量化证明论文核心结论——"异步RL以一半训练时间达到同等精度"，呼应Figure 1对推理设备闲置的诊断，确立AReaL在效率–性能权衡上的优势。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab02.png]]
@@ -144,18 +119,13 @@ Table 1: End-to-End Performance Comparison. We evaluate on the AIME24 benchmark 
 > Evaluation scores when varying data staleness, comparing performance with and without the decoupled objective. Numbers within ± 1 of the oracle score are underlined.
 
 > [!tip] 表格解读（多模态）
-> **Description (≤120 words):**
+> 【图文联合解读】**表2图文联合解读：**
 
-This is an evaluation **table**, not an architecture diagram. Its structure:
-- **Rows:** "Max.Stale." — varying levels of data staleness during training (values cut off in the visible crop).
-- **Columns:** four math benchmarks — **AIME24, AIME25, AMC23, MATH 500** — each split into two sub-columns: **W/o** (without decoupled objective) vs. **With** (with decoupled objective).
-- **Cell content:** evaluation accuracy scores; values underlined are within ±1 of the oracle (upper-bound) score.
+表2在Max.Stale∈{0(Oracle),1,2,4,8,16,∞}下，对比AIME24/25、AMC23、MATH500四个基准在使用/不使用解耦目标(W/o/With)时的得分，Oracle分别为42.0/32.9/84.4/89.2。
 
-**Key takeaway:** The decoupled objective is being tested for robustness to stale/off-policy data across diverse math reasoning benchmarks, with the underline marker acting as a salience convention to flag near-oracle performance.
+**核心结论：** 无解耦目标时，性能随陈旧度增大显著衰减（如AIME24在Stale=4仅23.3、∞为34.0）；引入解耦目标后表现稳健，多数cell与Oracle差距≤1（图中下划线标示，如AIME24在Stale=4仍达42.2、AMC23在Stale=4为85.1）。
 
-**Caption (verbatim):**
-
-"Table 2: Evaluation scores when varying data staleness, comparing performance with and without the decoupled objective. Numbers within ±1 of the oracle score are underlined."
+**方法作用：** 异步RL系统中训练端不可避免消费陈旧 rollout 数据，该表实证解耦目标可有效抑制staleness带来的优化偏差，为AREAL异步生成-训练架构的可行性提供关键实验支撑。
 
 ### Table 4 (p.25) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab04.png]]
@@ -163,17 +133,13 @@ This is an evaluation **table**, not an architecture diagram. Its structure:
 > Results on math benchmarks. Model AIME24 AIME25 AMC23 MATH 500
 
 > [!tip] 表格解读（多模态）
-> ## Description
+> 【图文联合解读】**Table 4 图文联合解读**
 
-**Components:** A benchmark comparison table evaluating two base model scales (1.5B and 7B) under three training regimes — *baseline*, *Sync. AReaL*, and *AReaL* — across four math reasoning benchmarks (AIME24, AIME25, AMC23, MATH 500).
+Table 4 横向对比 1.5B/7B 基模型与同步、异步 AReaL 在 AIME24/25、AMC23、MATH 500 上的表现。1.5B 基线 29.3/24.4/71.0/84.3 → 异步 AReaL 升至 42.2/32.0/85.1/89.5；7B 基线 54.3/41.7/89.5/92.8 → 升至 63.1/47.3/93.6/94.3。
 
-**Data flow:** Rows group each model variant; columns report accuracy per benchmark. We compare relative deltas across rows to measure the effect of each RL recipe over the base model.
+**关键结论**：异步 AReaL 与同步版精度几乎持平，多项指标略优（如 AMC23：1.5B +0.7、7B +0.4；MATH 500：7B +0.1），且均显著优于基模型（1.5B AIME24 提升 12.9，7B 提升 8.8）。
 
-**Key takeaway:** AReaL training yields consistently larger gains on the smaller 1.5B model (e.g., AIME24 +12.9 pts) than the 7B model (+8.8 pts), with the asynchronous AReaL variant slightly outperforming the synchronous version on most benchmarks, especially harder ones like AIME.
-
-## Caption (verbatim)
-
-**Table 4: Results on math benchmarks.**
+**论文作用**：此表与 Figure 4（强可扩展性）构成"精度+效率"双重证据链，支撑 AReaL 核心论点——异步训练机制在可扩展性优势的同时未牺牲模型准确率，验证系统设计的有效性。
 
 ### Table 5 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab05.png]]
@@ -181,13 +147,15 @@ This is an evaluation **table**, not an architecture diagram. Its structure:
 > Results on coding benchmarks. Model LiveCodeBench v5 Codeforces CodeContests
 
 > [!tip] 表格解读（多模态）
-> **Clarification:** The provided item is **Table 5** (a results table), not an architecture figure. It does not contain components, data-flow diagrams, or model architecture imagery, so an "architecture/data flow" description is not applicable. Below I describe the table's content and key takeaway, then transcribe the caption verbatim.
+> 【图文联合解读】**图文联合解读（Table 5）：**
 
-**Description of the table:** Table 5 compares six language-model variants against three coding benchmarks (LiveCodeBench v5, Codeforces rating/percentile, CodeContests score). Six rows are split into two parameter scales — **14B** and **32B** — each containing a *base model*, a synchronously-trained *Sync. AReaL* baseline, and the authors' proposed *AReaL* method. Numbers generally rise from base → Sync. AReaL → AReaL within each scale.
+**注：** 您提供的原文讲解段落对应的是 *Figure 5（消融实验）*，与本图 *Table 5* 并非同对象；以下基于图片内容解读 Table 5。
 
-**Key takeaway:** The proposed AReaL method consistently outperforms its base model on all three benchmarks at both 14B and 32B scales (e.g., 14B base 53.4 → AReaL 58.1 on LiveCodeBench v5; 32B base 57.4 → AReaL 61.0), demonstrating effective reinforcement-learning-based coding improvement, while remaining roughly comparable to the synchronous AReaL baseline.
+**核心数据：** 表5对比 base / Sync. AReaL / AReaL 三档模型在 LiveCodeBench v5、Codeforces、CodeContests 上的结果。14B 组：AReaL 在 LiveCodeBench 以 58.1 领先（+4.7 vs base 53.4）；32B 组：Sync. AReaL 在 LiveCodeBench 61.2、Codeforces 1911/96.9% 居首，AReaL 在 CodeContests 36.5% 最高。
 
-**Caption (verbatim):** *Table 5: Results on coding benchmarks.*
+**关键结论：** 异步 AReaL 相对同步版在 LiveCodeBench 提升（14B +1.4）；32B 整体优于 14B，验证异步 RL 系统在代码推理任务上的可扩展性。
+
+**整体作用：** 与 Figure 5 消融（算法设计）互补，Table 5 提供真实编程基准上的最终性能证据，闭环支撑"异步 RL + 解耦目标"完整方法链。
 
 ### Table 6 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab06.png]]
@@ -195,18 +163,13 @@ This is an evaluation **table**, not an architecture diagram. Its structure:
 > Generalization results on DeepSeek-Distilled-Llama-8B across math benchmarks.
 
 > [!tip] 表格解读（多模态）
-> I'm unable to provide an architecture/components/data flow description because no figure is present in the input — only **Table 6** (a benchmark results table). I'll describe the table's structure, the key takeaway, and transcribe its caption verbatim.
+> 【图文联合解读】**Table 6 图文联合解读**
 
-**Table structure:**
-- **Columns:** Model | AIME24 | AMC23 | MATH500 | AIME25
-- **Rows:** Three model variants (one baseline + two fine-tuned).
-- **Data:** Numeric accuracy scores (%) per benchmark.
+**1) 核心对象与数据**：表6展示DeepSeek蒸馏Llama在数学基准上的泛化对比（注意：caption写8B，但可见行为14B与32B模型）。三个数据列对应不同数学基准得分。14B：base 53.4/32.0、Sync AReaL 56.7/37.0、AReaL异步版58.1/35.9；32B：base 57.4/34.3、Sync 61.2/36.3、AReaL异步61.0/36.5。
 
-**Key technical takeaway (≤120 words):**
-AREAL fine-tuning consistently outperforms the DeepSeek-Distilled-Llama-8B baseline across all four math benchmarks. Gains are modest on well-saturated tests (AMC23: +8.1, MATH500: +3.1) but dramatic on harder, out-of-distribution benchmarks — most notably AIME25, where performance nearly doubles from **23.3 → 42.6** (+19.3 points, an ~83% relative improvement). The smaller exploration parameter (η=4) slightly edges out η=8 across every benchmark (e.g., AIME25: 42.6 vs. 41.6; AMC23: 92.3 vs. 91.5), suggesting lower exploration yields better generalization in this regime. Overall, AREAL delivers its largest absolute wins where reasoning difficulty is highest.
+**2) 关键结论**：异步AReaL相较base模型在14B上提升约4.7分（53.4→58.1），32B上提升3.6分（57.4→61.0），且与同步版本得分基本持平（14B甚至略超），证明异步训练未牺牲泛化质量。
 
-**Caption (verbatim):**
-*Table 6: Generalization results on DeepSeek-Distilled-Llama-8B across math benchmarks.*
+**3) 在论文中的作用**：该表是方法验证的关键支撑——在系统效率（图6消融的吞吐优化）之外，证明AReaL异步RL范式在数学推理任务上保持了与同步RL相当甚至更优的最终性能，强化了"效率-效果兼得"的核心论点。
 
 ### Table 7 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab07.png]]
@@ -214,15 +177,13 @@ AREAL fine-tuning consistently outperforms the DeepSeek-Distilled-Llama-8B basel
 > Staleness-throughput trade-off on small-scale academic setup.
 
 > [!tip] 表格解读（多模态）
-> ## Description
+> 【图文联合解读】**Table 7 图文联合解读**
 
-The table presents a **staleness-throughput trade-off study** for AREAL fine-tuned 1.5B models. **Components shown:** (1) a baseline row (DeepSeek-Distilled-Qwen-1.5B), and (2) six AREAL Fine-Tuned rows sweeping the staleness hyperparameter η ∈ {0, 1, 2, 4, 8, 16}. **Metrics columns:** accuracy on four math-reasoning benchmarks (AIME24, AIME25, AMC23, MATH500) plus generation throughput (k tokens).
+该表以 DeepSeek-Distilled-Llama-8B 为基线，对比 AReaL 在两个超参设置（η=4 与 η=8）下于 AIME24/AMC23/MATH500/AIME25 四项数学基准上的准确率：基线 50.4/84.2/89.1/23.3；η=4 提升至 58.4/92.3/92.2/42.6；η=8 仍达 57.2/91.5/91.9/41.6。
 
-**Key takeaway:** Throughput nearly **doubles** as η grows (27.1k → 52.0k), while accuracy stays competitive (e.g., η=4 achieves 34.1 on AIME24 vs. 31.7 at η=0). This empirically validates that controlled staleness in asynchronous RL training buys substantial throughput with negligible—and occasionally positive—accuracy impact.
+**关键结论**：在小型学术配置（DeepSeek-Qwen-1.5B、8k 上下文、batch 64×16、8 GPU）下，将 η（staleness）从 4 翻倍至 8，性能仅下降约 1 个百分点，表明 AReaL 对异步带来的陈旧性高度鲁棒，与大规 Table 2 的结论一致。
 
-## Caption (verbatim)
-
-**Table 7:** Staleness-throughput trade-off on small-scale academic setup.
+**作用**：在小规模下复现 staleness–throughput 权衡实验，验证了系统对异步陈旧性的容忍度，为大规工业部署中提高吞吐量（允许更大 η）提供了可推广的实证支撑。
 
 ### Table 8 (p.26) ⭐深度解读
 ![[assets/crops/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning-tab08.png]]
@@ -230,14 +191,11 @@ The table presents a **staleness-throughput trade-off study** for AREAL fine-tun
 > Staleness-throughput trade-off using RLOO algorithm. Model AIME24 AIME25 AMC23 MATH500 Throughput
 
 > [!tip] 表格解读（多模态）
-> **Description:**
+> 【图文联合解读】**核心内容**：表格对比 DeepSeek-Distilled-Qwen-1.5B 基线与 η∈{0,1,2,4,8,16} 共 6 个 AREAL RLOO 变体在 AIME24、AIME25、AMC23、MATH500 上的准确率及训练吞吐量（k tokens/s）。
 
-Table 8 presents a structured performance comparison across mathematical reasoning benchmarks. The leftmost "Model" column lists a baseline (DeepSeek-Distilled-Qwen-1.5B) followed by six RLOO variants parameterized by staleness coefficient η ∈ {0, 1, 2, 4, 8, 16}. Four accuracy columns (AIME24, AIME25, AMC23, MATH500) report benchmark scores, while the rightmost "Throughput" column measures training token throughput (tokens/sec, scaled to thousands). Data flow progresses left-to-right: model configuration → accuracy metrics → efficiency metric.
+**关键结论**：吞吐量随 η 单调上升（27.1k → 52.0k）；准确率 η=4 达峰（AIME24=34.1、AIME25=28.1，MATH500=86.9），η=8 跌至谷底（29.9/23.2），η=16 回升（32.8/25.9）；所有 RL 版本均显著优于无 RL 基线（29.3/24.4）。
 
-**Key Takeaway (≤120 words):** Increasing the staleness coefficient η from 0 → 16 in asynchronous RLOO training nearly doubles throughput (27.1k → 52.0k, ~91% gain) while keeping accuracy largely stable—AIME24 fluctuates only within a narrow 31.5–34.1 band, and MATH500 stays flat near 87. This demonstrates a favorable staleness-throughput trade-off: permitting "stale" gradients in distributed RL fine-tuning substantially accelerates training at minimal cost to downstream reasoning performance, suggesting η≈2–8 offers a practical sweet spot.
-
-**Caption (verbatim):**
-Table 8: Staleness-throughput trade-off using RLOO algorithm.
+**论文作用**：作为附录 C.4 消融，与正文 PPO 陈旧性实验呼应，论证 RLOO 对异步陈旧训练的容忍性优于 PPO，支撑 AREAL 异步 RL 框架可行性的核心论断。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

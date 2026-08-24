@@ -44,16 +44,13 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 > Step 1: The sender’s serving engine invokes XCCL’s send, passing the source buffer in the app data area (e.g., KV cache), an eventID (e.g., number of sends), the receiver NPU’s ID, and the number of AIV cores to use. XCCL launches a kernel on the sender NPU. The send kernel uses MTE2 to copy data from the app data area to each AIV’s unified buffer in parallel. Step 2: The send kernel then reads th
 
 > [!tip] 技术解读（多模态）
-> **Main Figure Description (Figure 4 – Distributed Send/Receive Workflow)**
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture & Components:** Two symmetric NPUs (Sender left, Receiver right). Per-NPU blocks: AI Vector (Scalar + Vector units), DMA Engine, and Unified Buffer split as a Ping-Pong Buffer. Each connects to its Memory partition via MTE2/MTE3 links, partitioned into App Data Area (KV cache), Metadata Area (eventID, chunkID, TailPtr), and Managed Data Area (Ring with head/tail).
+图示两NPU经XCCL分布式传输协议交互：每端含AIV核、DMA引擎、片上Unified Buffer（Ping-Pong双区）；外存分App Data（KV$）、Metadata（eventID/chunkID/TailPtr）、Managed Data（Ring含head/tail）。8步红箭头串联MTE2读→MTE3写→元数据轮询全流程。
 
-**Data Flow (8 steps):** ① Sender AIV loads app→unified buffer (MTE2). ② Unified buffer → receiver's on-chip memory via MTE3 (ping-pong overlaps with step 1). ③ Sender updates receiver's metadata. ④ Sender polls. ⑤ Receiver kernel validates metadata match. ⑥ Receiver copies back to its app area (MTE2/MTE3). ⑦ Receiver notifies sender via metadata. ⑧ Sender returns to CPU.
+论证：①MTE2/MTE3内存语义实现zero-copy传输；②Ping-Pong双区使步骤1/2并行，隐藏片间延迟；③元数据轮询替代CPU中断，降低kernel launch开销；④同时支持DMA引擎双路径。
 
-**Key Takeaway:** Ping-pong buffering in the unified buffer enables MTE2 and MTE3 to run concurrently, hiding transfer latency — with an optional DMA-engine zero-copy variant that bypasses the unified buffer at the cost of higher startup latency.
-
-**Caption (verbatim):**
-> Figure 4 | **Distributed Send/Receive Workflow.** *We show two NPUs and the distributed memory transfer protocol. We only show memory-semantic-based transfer using MTE2/MTE3 while remote memory copies can also be performed using the DMA engine. We also have a zero-copy version in which the send and receive kernels directly manipulate the app data area.*
+作用：作为CloudMatrix384跨NPU集合通信（PD分离推理中KV cache transfer）的硬件原生机制，支撑高吞吐低延迟MoE推理服务。
 
 ### Figure 8 (p.12) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig08.png]]
@@ -62,13 +59,11 @@ Because no figure or caption is actually rendered on the supplied image, I canno
 > Trade-off between MTE and DMA. To improve communication efficiency, we employ NPU-Direct Unified Remote Memory Access (URMA), a technique on Ascend NPUs similar to IBGDA on GPUs [15]. NPU-Direct URMA enables AIV cores to issue remote memory access requests directly to the DMA engine, bypassing both the host CPU and AI CPU as shown in §2.2. Although NPU-Direct URMA incurs higher startup latency com
 
 > [!tip] 技术解读（多模态）
-> **Description**
+> 【图文联合解读】图8展示A2E与E2A两种MoE通信原语。结构：上方Attention NPU组（含NPU/DMA/AIV/Mem(data)），下方Expert组（Mem含meta+data），红色箭头标注5步流程。A2E以最左侧Expert为trampoline：①Attention下发meta，②AIV处理，③拉取data回Attention，④⑤跨Expert级联更新meta与data；E2A反向：Expert先横向汇聚，再经Attention端AIV回流meta与data。
 
-The figure contrasts two data-flow patterns (A2E and E2A) between stacked Attention NPUs (top) and Experts NPUs (bottom), each containing DMA, AIV, and Mem (holding *meta* and *data*). In **A2E** (left), metadata is pushed downward first (① Update Meta), loaded into the Expert's AIV (②), then Attention pulls data from the Expert (③ Pull), with cross-expert data movement (④) and a combined update (⑤). In **E2A** (right), data flows directly between Experts (①), while only small metadata is pushed up to Attention (②) before the large data payload follows (③→④). 
+论证关键：采用两阶段路由，以trampoline NPU解耦meta与data传输，避免Attention↔Expert直连开销；结合URMA绕过主机CPU直连DMA，降低MTE与DMA延迟权衡。
 
-**Key takeaway:** A2E is bandwidth-heavy because it pulls full data up-then-down to coordinate; E2A keeps data local among Experts and only ships lightweight metadata to Attention, drastically reducing cross-module traffic.
-
-**Caption (verbatim):** *A2E* and *E2A*
+作用：是CloudMatrix384 MoE推理中dispatch/combine的核心通信原语，支撑大规模专家并行的可扩展调度。
 
 ### Figure 10 (p.12) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig10.png]]
@@ -77,27 +72,13 @@ The figure contrasts two data-flow patterns (A2E and E2A) between stacked Attent
 > This redesign centers on three key components: • First, we introduce the Data Parallel (DP) group abstraction, inspired by SGLang [24].
 
 > [!tip] 技术解读（多模态）
-> ## Description (≤120 words)
+> 【图文联合解读】**图文联合解读：**
 
-The figure depicts a **multi-die pipeline** for a transformer layer with Mixture-of-Experts (MoE), spanning N+1 dies (Die 0 … Die N), each handling a token batch in parallel. Tokens flow left-to-right through eight sequential stages: **MLAPrologue → MLA → All2All → O → Gating → Dispatch → MoE → Combine**, then proceed to the next layer. Two **Global Sync** barriers (red dashed ovals) align dies — one after All2All/Dispatch, and one after Combine — before downstream layers consume outputs. Four optimization levers are annotated: **DP-LB** smooths MLA latency, **MoE-LB** smooths expert latency, **Proactive GC** mitigates CPU stragglers, and **MTP + Dynamic MicroBatch** boosts compute efficiency.
+**核心对象与结构：** 该图展示 DeepSeek 单个 MoE 层在多 Die（Die 0–3 及 N–1/N）上的并行执行时间线，每 Die 依次执行 MLAPrologue（红）→ MLA（黄）→ All2All（绿）→ O → Gating 序列。关键视觉差异：(1) Die 0/1 的 MLA 块宽度明显大于 Die 2/3，量化呈现 MLA 延迟的 die 间差异；(2) 各 Die 的 All2All 被红色虚线垂直对齐，标示同步点；(3) Die 2/3 在 Gating 之后出现蓝色空白段，代表空闲等待。
 
-**Key takeaway:** Cross-die load balancing (DP-LB + MoE-LB) at the two global sync points is the critical mechanism for keeping the heterogeneous pipeline balanced, since MLA and MoE stages are the dominant sources of latency variance across dies.
+**论证的技术结论：** 配合三种 Key Technique——① DP-LB 调度将不同 Die 的 MLA 延迟拉齐，避免 All2All 同步时的短板效应；② MLAPrologue 与 MLA 采用 TP=1 配合 All2All，避免 KV cache 重复；③ Proactive GC 回收 Gating 后空闲 Die 的 CPU 资源，消除 stragglers。
 
-## Caption / Annotation Text (verbatim)
-
-> **Key Technique 1:** Use **DP-LB** to reduce MLA latency variation
->
-> **Key Technique 2:** Use **MoE-LB** to reduce MoE Latency variation
->
-> Die 0 · Die 1 · Die 2 · Die 3 · … · Die *N*−1 · Die *N*
->
-> MLAPrologue | MLA | All2All | O | Gating | Dispatch | MoE | Combine → Next Layer
->
-> *Global Sync* (×2)
->
-> **Key Technique 3:** Use **Proactive GC** to reduce CPU stragglers
->
-> **Key Technique 4:** Use **MTP** and **Dynamic MicroBatch** to improve overall computing efficiency
+**论文作用：** 该图作为 FlowServe 推理架构中分布式 MoE 调度章节的标志性图示，直观串联"延迟变异—同步阻塞—资源闲置"三大痛点与其解决方案，是论文分布式执行优化的核心证据。
 
 ### Figure 12 (p.16) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig12.png]]
@@ -106,21 +87,7 @@ The figure depicts a **multi-die pipeline** for a transformer layer with Mixture
 > Step 1: Collecting Expert Load Distribution. First, we collect data on expert loads across NPUs. We define expert load as the total number of tokens routed to each expert within a given time interval. Token count directly reflects both communication overhead (MoE-Dispatch and
 
 > [!tip] 技术解读（多模态）
-> **Main Figure Description:**
-
-The figure illustrates an **Expert Parallel Load Balancing (EPLB) system** for DeepSeek-style MoE inference, organized in two halves:
-
-**Top — Control Plane (numbered 1–4):**
-1. **Expert Stats** (database) — collects per-token expert usage statistics
-2. **EPLB Algorithm** — computes optimal expert placement
-3. **Expert Reconfig.** — plans redistribution
-4. **Logical-Physical Expert Map** — table mapping tokens (Token 1–4) to expert IDs
-
-**Bottom — Data Plane (two NPU Dies):** Each die runs the pipeline MLA → Gating → Collect → LB → Dispatch, hosting a subset of Experts (e.g., {0,1} on left, {1,255} on right). Blue arrows pipe stats back to the database; red arrows push the load-balancer plan into each die's LB; green dashed arrows route token-to-expert dispatch via the map.
-
-**Key Technical Takeaway:** EPLB decouples *logical* expert IDs from *physical* NPU placement, enabling runtime rebalancing based on live token-expert statistics — mitigating MoE load imbalance across dies without model retraining.
-
-**Caption (verbatim):** *Expert Parallel (up to 288 for DeepSeek Models)*
+> 【图文联合解读】图示FlowServe EPLB四阶段闭环：①两NPU Die内MLA→Gating→Collect采集Expert Stats；②EPLB算法基于token计数（如表中Expert 1承载Token3的510 tokens/step）决策冗余专家布局；③Expert Reconfig更新Logical-Physical Expert Map；④LB→Dispatch按新映射执行，支持DeepSeek模型最高288路专家并行。原文以"token数代理负载"统一表征通信与计算开销，论证可同时优化MoE-Dispatch均衡与计算均衡，构成论文MoE推理服务的核心调度链路。
 
 ### Figure 17 (p.22) ⭐深度解读
 ![[assets/crops/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod-fig17.png]]
@@ -129,15 +96,11 @@ The figure illustrates an **Expert Parallel Load Balancing (EPLB) system** for D
 > 1. A request first arrives at a randomly selected Job Executor (JE), which assigns it to a prefill
 
 > [!tip] 技术解读（多模态）
-> ## Figure 17 Description
+> 【图文联合解读】**核心对象与结构：** 图示 M prefill × N decode 异构部署（示意各 3 组），含 Job Executor 全局调度器、Prefill/Decode 两侧 TE 集群，每 TE 为二级结构：TE Shell → DP（Master + 多 Executor）→ Generator + RTC-DistFlow，共 9 步箭头（1–9 及 8a/8b）刻画"JE 路由 → Prefill Shell → DP 内调度 → 跨 TE KV 直传 → Decode Shell → 重新生成"的端到端请求流。
 
-The diagram illustrates a **disaggregated inference architecture** with a central **Job Executor (scheduler)** routing requests across independent **M prefill Task Executors (TEs)** and **N decode TEs** connected via full-mesh links. Each TE contains a shell wrapping a **Data-Parallel (DP) group** with a *Master* coordinating *Executors* that host a *Generator* and an *RTC-DistFlow* engine. The numbered workflow (1→9) traces a request: Job Executor assignment → prefill DP scheduling → RTC-DistFlow KV-cache registration → JE dispatch to decode TE → decode DP execution → deferred KV transfer → completion.
+**论证结论：** 证明解耦方案全互联可落地——RTC-DistFlow 实现低开销跨 TE KV cache 迁移，JE 统一弹性调度 M prefill/N decode 实例，达成资源解耦与负载均衡。
 
-**Key takeaway:** Prefill (compute-bound, TP=4) and decode (memory-bound, TP=1) require distinct DP groupings; the system co-locates length-homogeneous requests per DP group to avoid stragglers that degrade tail latency and TTFT.
-
-## Caption (verbatim)
-
-> **Figure 17 | The Workflow of Disaggregated Prefill-Decode over CloudMatrix384.** *We support M prefill and N decode deployments with full-mesh connectivity. We illustrate the end-to-end workflow of sending a request from a prefill TE to a decode TE.*
+**论文作用：** 作为 CloudMatrix384 解耦推理架构的蓝图，衔接底层硬件拓扑与上层调度策略，为后续吞吐/延迟实验提供方法基线。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

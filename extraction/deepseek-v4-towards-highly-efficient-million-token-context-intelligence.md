@@ -30,20 +30,13 @@ tags: [long-context]
 > 2.4. Muon Optimizer
 
 > [!tip] 技术解读（多模态）
-> ## Description of the Main Figure
+> 【图文联合解读】**图文联合解读**
 
-The figure is a composite plot from a DeepSeek technical report illustrating **test-time scaling behavior**:
+图左为分组柱状图，横轴并列7项基准，每组三柱（蓝条纹=DeepSeek-V4-Pro-Max，深灰/浅灰柱为对比模型），蓝柱在多数指标上达到或超过对应灰柱；图右上下两块楔形面积图分别刻画推理FLOPs与KV cache随序列长度增长的斜率，V4系列曲线显著低于V3.2基准线。
 
-- **Left panel (bar chart):** Grouped bar chart comparing four model variants (hatched blue, dark gray, medium gray, light gray) across ~9 task categories. Brackets underneath cluster the categories into two groups, with a vertical dashed reference line separating them. The y-axis appears to represent task performance/accuracy.
-- **Right panels (two stacked area-style charts):** Each shows compute-vs-performance scaling curves with a dashed reference line, a solid blue trend line, and a wide blue shaded envelope. A semi-transparent rectangular band marks a highlighted compute/performance regime, and a vertical double-arrow annotates the gain span. Legends (dashed, solid blue) appear in the upper-left of each subplot.
+该图论证核心结论：V4-Pro-Max以**更低推理算力与KV占用**实现基准性能对标或反超同类模型，呼应2.4节Muon优化器对训练效率的改进。
 
-**Key technical takeaway:** The new model variants (likely V3.x → V4) close the gap to the dashed upper-bound baseline across most benchmarks while exhibiting a steeper test-time compute scaling slope, indicating that additional inference compute yields disproportionately larger performance gains.
-
-## Verbatim Caption Transcription
-
-> "making long-horizon tasks and further test-time scaling more feasible. The model checkpoints are available at https://huggingface.co/collections/deepseek-ai/deepseek-v4."
-
-*(Note: This appears to be the trailing portion of the figure's caption; the preceding sentence was not captured in the provided image crop.)*
+在论文链路中，它起到总览性"性能–效率"双重证据作用，支撑"百万token高效上下文智能"主旨，为后文长horizon任务与测试时扩展的可行性提供定量依据。
 
 ### Figure 5 (p.15) ⭐深度解读
 ![[assets/deepseek-v4-towards-highly-efficient-million-token-context-intelligence-p15.png]]

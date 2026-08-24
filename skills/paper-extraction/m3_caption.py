@@ -54,8 +54,18 @@ def get_key():
 
 def caption(image_path, prompt, model=None, max_tokens=8000):
     model = model or os.environ.get("M3_MODEL", "MiniMax-M3")
-    img = base64.b64encode(Path(image_path).read_bytes()).decode()
-    ext = Path(image_path).suffix.lstrip(".").lower() or "png"
+    raw = Path(image_path).read_bytes()
+    # 网关对超大图 400（kimi-vl fig11 2.4MB 实测）：>1.5MB 先等比缩到 ≤2048px
+    if len(raw) > 1_500_000:
+        import io
+        from PIL import Image
+        im = Image.open(io.BytesIO(raw))
+        im.thumbnail((2048, 2048))
+        buf = io.BytesIO()
+        im.convert("RGB").save(buf, "PNG", optimize=True)
+        raw = buf.getvalue()
+    img = base64.b64encode(raw).decode()
+    ext = "png"
     body = {
         "model": model,
         "messages": [{"role": "user", "content": [

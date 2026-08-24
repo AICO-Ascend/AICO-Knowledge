@@ -26,164 +26,133 @@ _未检测到带 caption 的 figure_
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
-### Table 1 (p.2) ⭐深度解读
-![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab01.png]]
+### Table 2 (p.8) ⭐深度解读
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab02.png]]
 > [!quote] caption
-> Notation Summary
+> TABLE II: Comparison of KV cache selection strategies.
 
 > [!tip] 表格解读（多模态）
-> # Description
+> 【图文联合解读】**Table 2 联合解读**
 
-The image does not contain a **figure** — it displays **Table 1 ("Notation Summary")**, a two-column reference table pairing mathematical symbols with their definitions for a paper on **Key-Value (KV) cache management in transformer-based LLMs**. 
+**核心对象与结构**：该表横向汇总了 22 种 KV cache 选择/淘汰方法（如 FastGen、H2O、StreamingLLM、SnapKV、InfLLM、Quest、RetrievalAttention、MagicPIG、LoopServe 等），纵向沿 5 个维度进行二进制勾选——是否保留 Initial/Top-k/Recent tokens、是否 Permanent eviction、是否 Dynamic selection，并标注 Selection granularity（token/block/cluster/event）与核心 Remark（如 accumulative attention score、ANN search、Local Sensitive Hash、block-level KV management 等）。
 
-**Architecture/components covered:**
-- **Inputs:** tokens X, dense embeddings X, positional encoding ℙ(X), embedding matrix E ∈ ℝ^(d_vocab × d_x)
-- **Attention mechanism:** Query/Key/Value matrices (Q_i, K_i, V_i), weight matrices W_Qi, W_Ki, W_Vi, output weight W_O, head dimensions d_k, d_v
-- **Self-attention output:** Z_i
-- **Feed-forward layer:** weights W₁, W₂ and biases b₁, b_2
-- **KV-cache specifics:** sequence index t, cache size t_c, current K^t, V^t, and cached K^(t-1), V^(t-1)
-- **Model scale:** h heads per layer, L transformer layers
-- **Output:** conditional probability P(x_{t+1} | x_1; …; x_t)
+**关键结论**：约 17/22 方法以 token 为粒度，3 种（InfLLM、Quest、PQCache）转向 block 粒度，SqueezedAttention 采用 cluster、EM-LLM 采用 event，体现"由 token → block/cluster/event"的粗粒化趋势；同时 Dynamic selection 已被 15 种方法采用，Top-k + Recent 组合成为主流范式，反映出动态、自适应、按重要性筛选已成为 KV cache 管理的主流设计共识。
 
-**Key technical takeaway:** The notation makes explicit that KV caching stores past **keys/values across layers and heads** (K̂^(t-1), V̂^(t-1)), enabling autoregressive decoding to reuse previously computed attention states rather than recomputing them at every step — the central efficiency lever the survey explores.
-
-# Caption (verbatim)
-
-**TABLE 1**
-**Notation Summary**
+**论文作用**：该表是综述"selection strategy"章节的核心归纳工具，用统一框架横向对比方法族，支撑后续关于"粗粒度 + 动态选择"加速范式趋势的论证，并为方法分类与实验基准选择提供索引。
 
 ### Table 4 (p.11) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab04.png]]
 > [!quote] caption
-> The summary of existing KV Cache merging approaches.
+> TABLE IV: The summary of existing KV Cache merging approaches.
 
 > [!tip] 表格解读（多模态）
-> **Description (≤120 words)**
+> 【图文联合解读】**Table 4 联合解读**
 
-The image displays **Table 4**, which is intended as a summary of existing KV Cache merging approaches in LLM inference optimization. The visible table structure shows a column-based layout comparing multiple methods (categorized by what appear to be broad grouping columns followed by individual method columns), with hierarchical row headers on the left side likely categorizing approaches by a key axis (e.g., whether merging was the focus, training-free vs. needs training, with/without parameter updates, or retention criterion such as attention scores). However, the table body is heavily garbled/corrupted in the image, so per-method details (technique name, compression ratio, performance, etc.) are not legible. **Key takeaway:** Existing KV Cache merging methods can be systematically classified along multiple axes, but the current visible rendering prevents extracting specific numerical or methodological comparisons.
+**1) 核心对象与结构**：该表汇总13种KV Cache合并方法，按Merge Layer分为两组——Cross-layer组（含CCM、LoMA、DMC、D2O、CaM、AIM、Look-M、KVMerger、CHAI等10种，✓标记在Merge Layer列）与Intra-layer组（含ZeroMerge、MinCache、KVSharer）。其余维度为Merge Unit（Token/Head/Layer）、Merge Metric（Cosine Similarity、Attention Score、Sliding Window、Weighted Gaussian Kernel、Euclidean/Angular Distance等）、Merge Type（Many-to-One / Two-to-One / Many-to-Many）、Training-free。
 
-**Caption transcribed verbatim:**
+**2) 关键技术结论**：Token级合并单元、Many-to-One合并类型为主导路线；训练方法上10/13为Training-free（仅CCM/LoMA/DMC需训练）；Cross-layer合并数量（10）远超Intra-layer（3），说明跨层冗余利用为合并策略的研究重心。
 
-> TABLE 4
-> The summary of existing KV Cache merging approaches.
+**3) 论文整体作用**：作为KV Cache管理总分类"压缩"大类下的合并策略子表，与Table 1（量化）、Table 2（淘汰）、Table 3（共享）并列支撑综述的二维分类法，明确合并在"免训练+相似度驱动"范式下的技术定位，为后续低开销压缩方案提供选型图谱。
 
 ### Table 5 (p.13) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab05.png]]
 > [!quote] caption
-> The summary of existing mixed-precision quantization models.
+> TABLE V: The summary of existing mixed-precision quantization models.
 
 > [!tip] 表格解读（多模态）
-> # Main Figure Description
+> 【图文联合解读】Table 5 系统对比了 11 种 KV Cache 混合精度量化方法（含 Intial 基线），沿 **Keys 量化策略、Values 量化粒度、重要 Token 处理、Outlier storing、Channel Reorder** 等多维特征横向展开。
 
-**Architecture/Components/Data Flow:** The image contains only the header portion of **Table 5**, consisting of a title bar, a descriptive caption line, and the topmost row of column headers. No body content, data rows, architecture diagram, or data flow is visible — the table appears truncated, with the column headers rendered as garbled/illegible glyphs (showing symbols resembling "N", "B", "M", "N", "B", etc.). Consequently, the figure cannot convey any structural or quantitative information beyond its labeled purpose: a summary/comparison of existing mixed-precision quantization models.
+**Keys 量化呈多元路径**：KVQuant 用 Channel+Pre-RoPE；SKVQ/MiKV/GEAR 采用 Dynamic outlier-aware；WKVQuant 用 Learnable shifting；QAQ 实现自适应位宽；Atom 按 Group 分组；ZIPVL 仍采常规方案。Values 多为 Per-Token 或保留 Recent/Middle 窗口。辅助技术上，QAQ 同时勾选四项最为完整，SKVQ、Atom 引入 Channel Reorder 优化分布。
 
-**Key Technical Takeaway:** Because only the table heading is legible, no method, bit-width allocation strategy, or quantization framework can be identified from the figure itself. Any takeaway must come from the caption's stated intent — that the table is intended to benchmark or contrast prior mixed-precision quantization approaches — rather than from rendered content. (~95 words)
-
----
-
-## Caption (Verbatim Transcription)
-
-> **TABLE 5**
-> The summary of existing mixed-precision quantization models.
+原文借此论证：混合精度量化的核心思想是 **"差异化位宽 + 异常值/重要 Token 保护"**，用以在精度与效率间取得权衡，奠定论文对 KV Cache 量化路径的系统化归纳。
 
 ### Table 6 (p.14) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab06.png]]
 > [!quote] caption
-> The summary of outlier redistribution models in Sec. 4.4.3.
+> TABLE VI: The summary of outlier redistribution models in Sec. IV-D3.
 
 > [!tip] 表格解读（多模态）
-> **Description (≤120 words):**
-The figure shows a fragment of Table 6 listing outlier redistribution attention formulations. The visible row presents the standard softmax attention block: query (Q) and key (K) matrices interact via scaled dot-product (Q K^T / √d), while a separate outlier/key component k⁰ is paired with V and v^T (likely the outlier-aware value projection). The data flow is Q,K → scaled dot-product → softmax → weighted combination with V, with k⁰/v^T handling redistributed outlier tokens. The table summarizes how different papers treat these outlier tokens in attention.
+> 【图文联合解读】**Table 6 图文联合解读（离群值再分配模型汇总）**
 
-**Key takeaway:** Outlier redistribution models adapt the attention block by introducing dedicated k⁰/v^T pathways to handle outlier tokens separately from the standard softmax(QK^T/√d)·V pipeline.
+1) **核心对象与结构**：表汇总 **11 种**再分配方法，按 Operation 分 **6 类**——添加虚拟 token（MassiveAct）、Hadamard 旋转（QuaRot/Qserve/Q-INT4，3 种共占 27%）、缩放（SmoothQuant）、缩放+移位（QS+/OmniQuant）、旋转+置换（DuQuant）、仿射变换（AffineQuant/FlatQuant）。Learn 列以 ✓/× 区分可学习性（约 6 个 ✓），Remarks 标注参数空间（如 H,s∈ℝᶜ）。注：图中部分公式字符（□）因字体缺失乱码，可据上下文还原为对角矩阵 diag(·)、转置 T 等。
 
-**Caption (verbatim):**
-"TABLE 6 — The summary of outlier redistribution models in Sec. 4.4.3."
+2) **原文论证的关键结论**：支撑"再分配策略由刚性→柔性"演进——从固定 Hadamard（3 种）到可学习缩放（AWQ），再到参数化仿射变换（AffineQuant、FlatQuant 叠加分解），离群值抑制能力随参数自由度提升。
+
+3) **论文链路作用**：作为 Sec. IV-D3 小结，串联 KV cache 量化主轴，论证"再分配→抑制离群→提升量化精度"的核心论点，为后续部署策略章节铺垫。
 
 ### Table 7 (p.18) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab07.png]]
 > [!quote] caption
-> The summary of Model-based Attention Grouping and Sharing approaches.
+> TABLE VII: The summary of Model-based Attention Grouping and Sharing approaches.
 
 > [!tip] 表格解读（多模态）
-> **Main Figure Description:**
+> 【图文联合解读】**Table 7 图文联合解读：**
 
-The visible portion shows the header section of a comparison table titled "TABLE 7" with the caption "The summary of Model-based Attention Grouping and Sharing approaches." Below the caption, the table appears to have multiple columns, each featuring a small stylized "M"-like icon in the header row (likely a model/network symbol). The columns are subdivided into rows containing additional smaller icons (resembling module or attention-head markers). The bottom portion of the table is cropped, so the underlying comparative content (method names, parameters, accuracy metrics) is not legible.
+该表汇总 **16 种**基于模型的注意力分组/共享方法，沿四条维度横向对比：① 方法名、② 应用位置（层内/跨层）、③ 层内分组组件、④ 跨层共享组件、⑤ 是否需重训练。
 
-**Key Technical Takeaway (≤120 words):**
-The figure is a summary table cataloging various Model-based Attention Grouping and Sharing methods, organized in a multi-column grid layout. Each column represents a distinct approach, while sub-rows group or share attention components (heads/layers) across the model. The repeating "M" icons visually emphasize the model-centric framing of these techniques. Although most numerical/textual data is cropped, the structural takeaway is that these methods differ primarily in *how* attention units are grouped (e.g., by layer, task, or shared parameters) versus independently allocated. This taxonomy aids readers in selecting grouping/sharing strategies based on desired trade-offs between parameter efficiency, representational capacity, and cross-task generalization in multi-task or multi-head transformer architectures.
+**1）核心结构与数据**：层内类 8 种（含 MQA、GQA、AsymGQA、Weighted GQA、QCQA、KDGQA、GQKVA、MLKV、DHA），其中 7 种对 K、V 分组，仅 GQKVA 对 Q、K、V 全分组；跨层类 6 种（LCKV、SA、LISA、Wu et al.、CLLA、SVFormer），共享对象覆盖 K&V、Q/K/V、仅 V 或 Attention Weight；混合位置仅 CLA、MLKV、DHA 三种。所有方法几乎都需重训练，仅 LISA、DHA 采用轻量适配。
 
-**Caption Transcribed Verbatim:**
-"TABLE 7
-The summary of Model-based Attention Grouping and Sharing approaches."
+**2）关键结论**：K、V 是分组/共享的最普遍组件；层内方法聚焦多头压缩，跨层方法侧重层间冗余消除，两者结合（MLKV、DHA）成为趋势。
+
+**3）论文作用**：作为 KV Cache 管理分类体系中"模型结构改造"分支的总览表，与 Table 6（量化/合并）互补，支撑论文"通过修改注意力结构降低 KV Cache 占用"的论述主线。
 
 ### Table 8 (p.19) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab08.png]]
 > [!quote] caption
-> The summary of Model-based Intra-layer approaches.
+> TABLE VIII: The summary of Model-based Intra-layer approaches.
 
 > [!tip] 表格解读（多模态）
-> **Description:**
+> 【图文联合解读】## Table 8 图文联合解读
 
-The image shows only the header portion of a table (Table 8), so the full architecture/data flow cannot be assessed. Visible components include:
+**1) 核心对象与结构**
+表格汇总了 7 种**模型驱动的层内（Intra-layer）** KV Cache 管理方法，分为两大类：
+- **Enhanced Attention**（增强注意力，3 种，均属 Augmented Architecture）：MLA（Latent compression）、FLASH（Linear approximation）、Infini-Attention（Compressive cache）；
+- **Transformer 架构改造类**（4 种）：YOCO（Single global KV cache）、CEPE（Parallel encoding with cross-attn）、XC-Cache（Encoder cross-attention）、Block Transformer（Hierarchical local KV）。
+最后一列标注训练代价：MLA/FLASH/Infini-Attention/YOCO/XC-Cache 需**完全重训**，仅 CEPE 与 Block Transformer 为 **Lightweight**。
 
-- **Title block:** "TABLE 8 / The summary of Model-based Intra-layer approaches."
-- **Column header row:** A "Method" label on the left, followed by several column headers whose text appears corrupted or rendered as garbled glyphs (showing scattered black shapes such as "¶," "¶," "¶," "♦," "K," "K"), making the column names illegible.
+**2) 论证的关键技术结论**
+该表说明层内优化并非单一路径：可通过**注意力机制重写**（压缩、线性化、压缩记忆）实现 KV 压缩，也可通过**全局缓存、跨注意力编码、分层局部 KV**重构整体架构；多数方案需重训练，少数支持轻量适配。
 
-**Key technical takeaway (inferred):** Because the visible content is limited to the header and column labels are unreadable, no substantive technical claim can be drawn from this figure alone — the rendering artifacts obscure the comparative metrics that the table is meant to summarize for model-based intra-layer methods.
+**3) 在论文中的作用**
+作为综述的核心对照表之一，与 Table 5/6/7（Cross-layer / Within-layer 等）并列，从**改动粒度维度**系统呈现 KV Cache 加速方法谱系，为读者横向比较方法代价与适用场景提供依据。
 
-**Caption (transcribed verbatim):**
-
-> TABLE 8
-> The summary of Model-based Intra-layer approaches.
-
-### Table 9 (p.20) ⭐深度解读
+### Table 9 (p.0) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab09.png]]
 > [!quote] caption
-> The summary of Non-Transformer Architectures.
+> TABLE IX: The summary of Non-Transformer Architectures.
 
 > [!tip] 表格解读（多模态）
-> **Description of the Figure:**
+> 【图文联合解读】**Table 9 联合解读**
 
-The figure is labeled **TABLE 9** and titled "The summary of Non-Transformer Architectures." Below the title is a horizontal divider line, beneath which the table body appears as garbled, illegible glyphs (likely a rendering/font issue where text or symbols failed to display properly). No discernible architecture diagram, component labels, or data flow arrows are readable. As such, the intended structural elements—architectural components, layer types, or inter-module data flow—cannot be described from the visual content.
+**1) 核心结构与数据**：该表汇总 7 种非 Transformer 架构，分四列——Method、Key Mechanism、No Traditional KV Cache、KV Cache Compression。其中 RWKV（线性注意力+RNN 并行）、Mamba（选择性状态空间）、MCSD（斜率衰减融合）、MixCon（Transformer+Conba+MoE）共 4 项标注"无传统 KV 缓存"；RetNet（保留机制）、GoldFinch（RWKV+改进 Transformer）、RecurFormer（Mamba 替换部分注意力头）共 3 项标注"KV 缓存压缩"。
 
-**Key Technical Takeaway (inferred from context):**
+**2) 关键结论**：非 Transformer 架构并非简单优化 KV 缓存，而是从根本上规避或替代注意力缓存机制，从架构层面实现推理加速，与 Transformer 内的 KV 缓存管理形成互补的技术路径。
 
-Non-Transformer architectures (e.g., RNN, CNN, state-space, and MLP-based models) are typically summarized in a comparative table highlighting their core building blocks, recurrence versus convolution versus token-mixing mechanisms, and information propagation pathways that differ from self-attention.
+**3) 论文作用**：与 Table 7、8 共同构成"Transformer 内部 KV 缓存优化→架构级替代"的双轨综述框架，扩展加速方法学的视野。
 
-**Caption Transcribed Verbatim:**
-
-> "TABLE 9
-> The summary of Non-Transformer Architectures."
-
-### Table 10 (p.23) ⭐深度解读
-![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab10.png]]
-> [!quote] caption
-> Comparison of Memory Management Techniques for KV Cache
-
-> [!tip] 表格解读（多模态）
-> **Caption (verbatim):**
-> TABLE 10
-> Comparison of Memory Management Techniques for KV Cache Optimization
-
-**Note on description:** The table's body content (rows, columns, technique names, metrics) is not visible in the provided image — only the table heading, caption, and page number ("23") are shown. Without the underlying data (likely comparing techniques such as PagedAttention, vLLM-style paging, offloading, quantization, or eviction strategies across memory, latency, and throughput dimensions), I cannot accurately describe specific architecture/components, data flow, or derive a grounded technical takeaway.
-
-If you can share the table rows (or a clearer image including the body), I can immediately provide a ≤120-word synthesis covering the compared techniques, their core mechanism, and one key insight (e.g., "paged allocation reduces fragmentation vs. contiguous pre-allocation" or "offloading trades recompute latency for memory headroom").
-
-### Table 11 (p.25) ⭐深度解读
+### Table 11 (p.0) ⭐深度解读
 ![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab11.png]]
 > [!quote] caption
-> Comparison of Scheduling Approaches for KV Cache Optimization.
+> TABLE XI: Comparison of Scheduling Approaches for KV Cache Optimization.
 
 > [!tip] 表格解读（多模态）
-> **Description (≤120 words):**
+> 【图文联合解读】**表11图文联合解读：**
 
-Table 11 is a comparison matrix that cross-references 12 KV cache scheduling systems (rows) against a set of taxonomy criteria (columns; column headers appear garbled in the figure). Each "X" marks whether a given approach implements a specific scheduling feature. Architecturally, the table organizes systems by optimization strategy: batch-oriented schemes (BatchLLM, RadixAttention, Echo), multi-stage/switching schedulers (FastServe, FlowKV, FastSwitch), layer/attention-cached methods (LayerKV, CachedAttention), and hybrid/context-aware systems (ALISA, LAMPS, Apt-Serve, FGOS). The principal takeaway is that no single system covers all dimensions—each approach addresses a specific subset, and recent systems (LAMPS, Apt-Serve, FGOS) tend to combine hybrid caching with adaptive/multi-stage scheduling, reflecting a broader trend toward context-aware, multi-objective KV cache management.
+表11以6项调度特征（Prefix-aware、Preemptive、Fairness-oriented、Layer-specific、Hierarchical、Dynamic）为列、12种KV缓存调度系统为行构建对照矩阵。数据呈明显策略聚类：批量类（BatchLLM/RadixAttention/Echo）独占Prefix-aware；切换类（FastServe/FlowKV/FastSwitch）含Preemptive，且FastServe/FastSwitch额外覆盖Fairness-oriented；层缓存类（LayerKV/CachedAttention）聚焦Layer-specific；混合感知类（ALISA/LAMPS/Apt-Serve/FGOS）主导Hierarchical与Dynamic，每系统仅实现1-2维特征。原文据此论证KV缓存调度无通用最优方案、各机制互补而非替代，作为全文按策略分类综述加速方法学体系的核心支撑。
 
-**Caption verbatim:**
+### Table 14 (p.30) ⭐深度解读
+![[assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab14.png]]
+> [!quote] caption
+> TABLE XIV: Multi-modal Benchmark Tasks. Specifically, for task abbreviation, Conv: conversation task; Desc: description task; Reas: reasoning task; Perc: perception task; Pred: prediction task; SUMM: summary task.
 
-TABLE 11
-Comparison of Scheduling Approaches for KV Cache Optimization.
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table XIV 图文联合解读：**
+
+1) **核心结构与数据**：该表枚举10个多模态基准（LLaVA-Bench、MMBench、MileBench、MLVU、LongVideoBench、Video-MME、NExT-QA、MVBench、MSVD-QA、MSRVTT-QA），沿9个任务维度（Conv/Desc/Reas/Perc/Pred/Count/Retrieval/Order/SUMM）打勾标注，并附语言支持。MLVU覆盖最广（含Conv、Perc、Pred、Retrieval、Order、SUMM 6类），任务最单一的是MSVD-QA、MSRVTT-QA（仅Reas）。语言上仅MMBench支持EN/ZH双语，其余9项均为EN。
+
+2) **技术结论**：原文借此论证——多模态场景下的KV-Cache压缩方案必须同时应对**长视频、检索、计数、排序、摘要**等多类异构任务，而非仅文本对话；并揭示当前评估生态以英文为主，对中文多模态的覆盖明显不足。
+
+3) **论文作用**：作为KV-Cache加速方法在**多模态LLM**分支的评测清单，与前面表格的纯文本基准互补，为后续方法对比提供统一任务坐标。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

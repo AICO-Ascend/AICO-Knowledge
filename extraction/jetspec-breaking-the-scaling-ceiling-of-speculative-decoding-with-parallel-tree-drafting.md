@@ -30,22 +30,13 @@ tags: [speculative]
 > End-to-end decoding speedup over standard autoregressive decoding on H100 GPUs across math, coding, and chat benchmarks. DFlash denotes the original block-parallel drafting method, DDTree is tree-based variant of DFlash, and JetSpec denotes our method. Both employ a tree budget of 256 tokens using Algorithm 1. acceleration. Despite these advances, head-based SD still faces a causality-efficiency d
 
 > [!tip] 技术解读（多模态）
-> # Figure 1 Description
+> 【图文联合解读】**图1解读：**
 
-**Architecture / Components:**
-- Bar chart with y-axis "Speedup over AR (×)" (0–11 range) and x-axis listing 7 benchmarks (GSM8K, MATH-500, AIME25, HumanEval, MBPP, LCB, MT-Bench).
-- Three grouped bars per benchmark: **DFlash** (blue, block-parallel drafter), **DDTree** (orange, tree-based DFlash variant), and **JetSpec** (green, the proposed method).
-- Numeric labels sit above each bar (e.g., MATH-500: 6.12 / 8.78 / 9.64).
+该图以分组柱状图形式对比三种推测解码方法（DFlash蓝、DDTree橙、JetSpec绿）在四个基准上的端到端加速比。HumanEval：DFlash≈?.4×、DDTree 6.31×、JetSpec **7.12×**；MBPP：3.96/6.09/**6.73×**；LCB：4.70/6.75/**7.67×**；MT-Bench：2.72/4.26/**4.58×**。
 
-**Data Flow:** Each benchmark is evaluated under a fixed tree budget of 256 draft tokens (Algorithm 1); measured end-to-end decoding speedup on H100 GPUs is compared across the three drafters.
+原文借此论证两点结论：①树形草稿（DDTree、JetSpec）显著优于块并行草稿（DFlash），证明因果性-效率瓶颈可突破；②JetSpec在所有基准上均取得最高加速，尤其在HumanEval和LCB上较DDTree额外提升约0.6–0.9×。
 
-## Key Technical Takeaway (≤120 words)
-
-JetSpec consistently outperforms both block-parallel (DFlash) and tree-based (DFlash-DDTree) drafters across all seven math, code, and chat benchmarks under a 256-token tree budget. The largest gain appears on MATH-500, where JetSpec reaches **9.64×** speedup versus 8.78× (DDTree) and 6.12× (DFlash). Even on the harder chat workload MT-Bench, JetSpec delivers 4.58× versus DDTree's 4.26× and DFlash's 2.72×. This demonstrates that combining a *causal parallel draft head* with *branch-wise causal attention over hidden states* resolves the causality–efficiency dilemma in speculative decoding, yielding branch-aware path-conditioning without the cost of sequential drafting.
-
-## Caption (verbatim)
-
-Figure 1: End-to-end decoding speedup over standard autoregressive decoding on H100 GPUs across math, coding, and chat benchmarks. DFlash denotes the original block-parallel drafting method, DDTree is tree-based variant of DFlash, and JetSpec denotes our method. Both employ a tree budget of 256 tokens using Algorithm 1.
+该图作为开篇主结果图，确立了JetSpec并行树形草稿的SOTA地位，为后续方法详解和消融实验提供总体性能基线。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig02.png]]
@@ -54,7 +45,11 @@ Figure 1: End-to-end decoding speedup over standard autoregressive decoding on H
 > Expected speculative decoding speedup scales as a function of draft length γ, under different per-token drafting costs c and acceptance rates α. Comparing the two panels shows that reducing c substantially improves the scalability of speculative decoding with respect to γ, and increasing α further amplifies this effect. The results highlight that pushing per-token drafting cost c low and acceptanc
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】JetSpec 因果并行草稿头(Fig.3)：轻量 draft head 接冻结目标模型 M_q 中间层融合特征，单次前向并行预测所有 γ 个 draft 位的 top-k 候选→组成 k^γ 候选树；输出重排为广度优先、分支级因果序列再回灌 M_q 验证（满足 tree-SD 左到右依赖）。M_q 冻结只训 head。把草稿成本 c 压到 head 级、接受率 α 保持高→加速随 γ 单调增长，破解 c/α 鱼与熊掌。架构核心图。
+> 【图文联合解读】图(a)横轴为对数刻度γ∈[2,256]，纵轴为加速比，在c=0.05条件下绘制6条曲线对应α=0.70~0.95。数据呈典型"先升后降"形态：α=0.95在γ=16处达~6.5×峰值，α=0.90峰值~4.6×(γ=16)，α=0.85峰值~3.7×(γ=8)，α=0.70仅在γ=2处~2.2×；γ>32后所有曲线骤降至<1.5×，在γ=256收敛至~0.5–1×。
+
+论证结论：即便c已压至0.05，传统推测解码仍存在"加速比天花板"——单纯增大γ收益递减甚至恶化；必须**同时**降低每token起草成本c并提高接受率α才能突破。Table 12给出不同L、N下实测c值，为本图参数标定提供依据。
+
+论文作用：作为Eq.(2)理论预测的可视化锚点，定量揭示传统推测解码γ扩展失效的瓶颈，为JetSpec以**并行树形起草**大幅降低c、从而突破天花板的核心动机提供关键支撑。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig03.png]]
@@ -63,15 +58,11 @@ Figure 1: End-to-end decoding speedup over standard autoregressive decoding on H
 > JetSpec design overview. JetSpec extracts fused hidden features from the frozen target model and conditions a causal-parallel draft head to generate high-quality candidate trees in one forward pass.
 
 > [!tip] 技术解读（多模态）
-> **Description (≤120 words):**
+> 【图文联合解读】**【核心对象】** 图示JetSpec三阶段流水线：①抽取冻结目标模型 $M_p$ 多层（Layer M…N）中间隐藏态，经Feature Fusion压缩为单条Fused Feature；②以"return"为anchor、γ个[init]为草稿槽，输入m层因果并行Draft Head $M_q$，单次前向产出7节点候选树（return为根，a(s=-0.51)/+(s=-2.48)/B(s=-4.05)/sum(s=-1.39)/b(s=-2.91)等分支）并配tree-causal注意力掩码矩阵；④BFS排序后回灌 $M_p$ 做tree-SD验证。
 
-Figure 3 illustrates the JetSpec architecture in three stages for one decoding step *i*. **Stage 1** extracts fused target features by passing the frozen target model's Layer M hidden state through a **Feature Fusion** module, producing a unified hidden representation from verified tokens (`return`, `add`, `a`, `B`). **Stage 2** performs **Parallel Tree Drafting**: the **Causal-parallel Draft Head M_q** (Layers 1…m) takes the fused feature plus an anchor (`return`) and draft slots, generating a full candidate tree (root → branches like `a`, `-`, `B` with their scores) in a single forward pass, governed by a **tree-causal attention mask** that restricts each node to its prefix ancestors. **Stage 3** runs the **Frozen Target Model M_p** (Layers 1, M, N, t) over this tree via the same mask to produce verified tokens for step *i+1*.
+**【技术结论】** 草稿成本c被压至轻量head级，接受率α借中间层融合特征保持高位，破解c/α权衡，使加速比随γ单调上升。
 
-**Key takeaway:** Causal-parallel drafting with a tree-structured attention mask preserves correct autoregressive conditioning across sibling branches, enabling higher acceptance than branch-agnostic per-position drafting.
-
-**Caption (verbatim):**
-
-> Figure 3: JetSpec design overview. JetSpec extracts fused hidden features from the frozen target model and conditions a causal-parallel draft head to generate high-quality candidate trees in one forward pass.
+**【链路作用】** 作为方法总览图，串联"特征抽取→并行树生成→tree验证"完整推理链，为后续实验论证加速上限提供架构依据。
 
 ### Figure 4 (p.15) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig04.png]]
@@ -80,19 +71,15 @@ Figure 3 illustrates the JetSpec architecture in three stages for one decoding s
 > Tree-quality failure mode at MATH-500 prompt #0, decode step 0. Both heads draft from the same prefix (last token “We”). The causal head’s rank-1 branch (“ are told that”) is faithful: target joint Σ log p ≈Σ log r, so tree verification walks 6 tokens along it. The diffusion head’s rank-1 branch (“ given told that”) is incoherent (target joint Σ log p = −63.32 nats, i.e. probability ≈e−63) because
 
 > [!tip] 技术解读（多模态）
-> # Figure 4 Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture / components / data flow:**
-The figure contrasts tree-drafting behavior between two heads (causal vs. diffusion) at the same decode step (root token "We"). Each panel shows a *rank-1* branch and a *rank-3* branch rendered as colored token chips (green = faithful, red = incoherent/poor), with the **gap** (Σ log p − Σ log r) annotated alongside qualitative verdicts (*faithful* / *incoherent*) and the verifier's accepted-token count. Panel (a) shows the **causal head** where rank-1 ("are told that") is faithful (gap = −0.34) and the verifier walks 6 tokens, while its rank-3 ("are given that the2product") carries a +42.50 gap. Panel (b) shows the **diffusion head** where the roles invert: rank-1 ("given told that") is incoherent (gap = +59.56), accepting only 4 tokens, while the coherent "are given that the" sits at rank 3 (gap = −3.69). The arrows thus encode: tokens → surrogate ranking → gap metric → verifier acceptance length.
+图4对比因果头与扩散头从相同前缀"We"出发的草稿树质量。
 
-**Key technical takeaway (≤120 words):**
-The diffusion head's branch-agnostic per-position predictor composes tokens (e.g., "given" + "told") independently in the surrogate, even though no real continuation places them consecutively. Consequently, the *actually-coherent* branch "are given that the" exists in the diffusion tree but only at rank 3; the surrogate fails to promote it, so the verifier accepts just 4 tokens versus the causal head's 6. This exposes a **failure mode of unconditional-per-position drafting**: surrogate scoring can rank incoherent concatenations above coherent continuations, truncating accepted drafts and degrading tree-drafting quality.
+**核心对象与数据：** 因果头rank-1分支"are told that"忠实（gap=−0.34），验证器接受6 token；扩散头rank-1分支"given told that"不连贯（gap=+42.50，目标联合概率≈e⁻⁶³），仅接受4 token；但扩散头rank-3分支（gap=−3.69）反而忠实。
 
----
+**关键技术结论：** 扩散头采用分支无关的逐位预测器q_sur，将"given"(depth 1)与"told"(depth 2)独立组合——两者局部合理但全局不相邻，导致rank-1分支虽高概率却全局荒谬。即：树质量而非单一token概率才是speculative decoding扩展的真正瓶颈。
 
-**Caption (verbatim):**
-
-Figure 4: **Tree-quality failure mode at MATH-500 prompt** #0, **decode step** 0. Both heads draft from the same prefix (last token "We"). The causal head's rank-1 branch (" `are told that`") is faithful: target joint Σ log p ≈ Σ log r, so tree verification walks 6 tokens along it. The diffusion head's rank-1 branch (" `given told that`") is incoherent (target joint Σ log p = −63.32 nats, i.e. probability ≈ e^(−63)) because its branch-agnostic per-position predictor composes " `given`" (depth 1) and " `told`" (depth 2) independently in the surrogate, even though no real continuation places these two words consecutively (the surrogate q_sur is formally defined in Equation 3). The actually-coherent " `are given that the`" is in the diffusion tree but only at rank 3; the surrogate fails to promote it, and the verifier accepts only 4 tokens.
+**论文作用：** 揭示并行树草稿在扩散头下的典型失败模式，论证JetSpec需要专门解决"局部合理、全局不连贯"的草稿质量问题，支撑其方法设计的必要性。
 
 ### Figure 5 (p.18) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig05.png]]
@@ -101,20 +88,9 @@ Figure 4: **Tree-quality failure mode at MATH-500 prompt** #0, **decode step** 0
 > Figure 5: Causal attention mask used for training with multiple sampled blocks. Each query can attend to the full verified prefix and to the anchor plus earlier positions within its own block, but cannot attend to future positions or positions from other sampled blocks. JETSPEC reuses intermediate representations from the frozen target model as draft-head context. For
 
 > [!tip] 技术解读（多模态）
-> **Description:**
+> 【图文联合解读】图示注意力掩码矩阵，行=3 blocks × 6 query positions（anchor + 5），列=verified prefix（x₀–x₃）+ sampled blocks。**所有 query 对 verified prefix 全 ✓（黄色）**；仅 block 1 内部呈**左上三角因果掩码**——attend anchor a₁ 及更早位；block 2、3 对 block 1 列**全深紫遮蔽**，实现块间隔离。
 
-The figure depicts a 2D causal attention mask for training a draft head with multiple sampled blocks. The matrix is partitioned into four column regions: a "Verified prefix" (tokens x₀–x₃) followed by three "Sampled blocks," each containing an anchor (aᵢ) and five subsequent positions (aᵢ,₁ … aᵢ,₅). Rows correspond to query draft positions, grouped by block. Yellow (✓) cells mark allowed attention; dark cells mark forbidden attention.
-
-**Data flow / pattern:**
-- All query positions attend fully to the verified prefix (leftmost columns).
-- Within each sampled block, attention is strictly lower-triangular: a query sees only the block's anchor and earlier positions within that same block.
-- No cross-block attention and no future-position attention are permitted, enforcing a block-local causal order.
-
-**Key takeaway:** The mask enables parallel prediction of all masked tokens across multiple blocks while preserving autoregressive causality within each block, which is essential for efficient speculative-decoding draft-head training.
-
-**Caption (verbatim):**
-
-"Figure 5: Causal attention mask used for training with multiple sampled blocks. Each query can attend to the full verified prefix and to the anchor plus earlier positions within its own block, but cannot attend to future positions or positions from other sampled blocks."
+该掩码直接支撑 JetSpec 的**并行树形 draft 训练机制**：使多个采样块在同一前向中并行计算的同时，仍保留块内自回归约束与块间独立性，避免长串行展开；从而把 draft 规模从线性扩展转为批量扩展，论证其打破 speculative decoding 缩放上限的核心技术结论。
 
 ### Figure 6 (p.19) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-fig06.png]]
@@ -123,20 +99,37 @@ The figure depicts a 2D causal attention mask for training a draft head with mul
 > Each sampled block includes an anchor position and multiple future token positions. The anchor is retained as block context and excluded from the loss, while loss is applied only to future token positions within each block. allowing the causal draft head to condition on rich target-model features while keeping the target model frozen.
 
 > [!tip] 技术解读（多模态）
-> **Figure Description**
+> 【图文联合解读】**图文联合解读**
 
-The diagram illustrates "Block-wise supervision for sampled training blocks" with three rows representing Block 1, Block 2, and Block 3. Each block contains 6 token positions arranged horizontally:
-- **Anchor token** (a₁/a₂/a₃): white box labeled "no loss" — serves as context only
-- **5 future token positions** (b_{i,1} … b_{i,5}): orange boxes each labeled "loss"
+图中展示 JetSpec 的**训练块采样结构**：每个 block 含 1 个 anchor（隐于上下文、无 loss）与多个 future token（带 loss），具体可见三行共 9 个标注 "loss" 的橙色块，索引形如 b_{i,j}（i=block 行号 1–3，j=块内位置 3–5），对应"predicted token position with loss"。
 
-A legend below distinguishes the white "Anchor (no loss)" from orange "Predicted token position with loss." The horizontal layout conveys sequential positions within each sampled block, while vertical stacking shows that the same supervision pattern repeats across blocks.
+原文借此论证关键结论：通过 block-wise 采样把 anchor 留作上下文、仅对 future 位置施加 loss，使因果 draft head 能在**冻结目标模型**条件下，以目标模型特征为条件学习多 token 联合预测，从而支撑其并行树状 draft 的可扩展性，缓解传统 speculative decoding 的 scaling ceiling。
 
-**Key Technical Takeaway:** The anchor decouples context from the training objective — by excluding it from the loss, the model learns to predict *future* positions conditioned on a preserved anchor, preventing the leakage problem of standard causal masking.
-
-**Caption (verbatim):**
-Figure 6: Each sampled block includes an anchor position and multiple future token positions. The anchor is retained as block context and excluded from the loss, while loss is applied only to future token positions within each block.
+在整体链路中，此图属于**训练策略说明**模块，与 §3.3 的 draft head 设计衔接，为后续实验（墙钟加速比）提供方法论基础。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
+
+### Table 1 (p.7) ⭐深度解读
+![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab01.png]]
+> [!quote] caption
+> Low-budget regime comparison of JetSpec and baselines trained with the same Qwen3-8B model and data recipe. We report results on math, coding, and chat benchmarks using non-thinking mode with a 3072 max tokens. We report end-to-end decoding speedup over standard AR decoding and average accepted leng
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 1 图文联合解读**
+
+1) **核心数据**：基于 Qwen3-8B，在 7 个基准（GSM8K/MATH-500/AIME24/HumanEval/MBPP/LCB/MT-Bench）上对比 EAGLE-3、DFlash、JetSpec 三种方法在 Budget=16/32、温度 T=0 与 T=1 下的端到端加速比与平均接受长度 τ。低预算下 EAGLE-3 仅约 2.0×–2.4×；DFlash 与 JetSpec 普遍达 4×–6×；其中 JetSpec(B=32) 在多数任务上最优——T=0 时 MATH-500 达 6.35×、GSM8K 达 4.89×、HumanEval 达 4.29×，τ 同步最高（6.14、8.23、5.35）。
+
+2) **关键结论**：JetSpec 在低预算（树规模小）条件下显著超越 head-based EAGLE-3，并在多数任务上击败 block-parallel DFlash/DDTree，证明其并行树草稿机制在有限预算下仍能维持高接受率与高加速。
+
+3) **论文作用**：该表是实验链路中"低预算可行性"的核心证据，配合 Figure 1 高预算图，共同论证 JetSpec 打破了 SD 随预算缩放受限的天花板。
+
+### Table 2 (p.7) ⭐深度解读
+![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab02.png]]
+> [!quote] caption
+> High-budget comparison on Qwen3-8B with at least 64 draft tokens. EAGLE-3 uses tree mode with max depth 8; larger budgets give minimal or worse gains due to training mismatch.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】该表在Qwen3-8B上（batch 16/32，T=0/1，≥64 draft tokens）对比三方法加速比：EAGLE-3因训练失配最高仅约4.0×，预算增大几无收益；DFlash峰值7.83×（T=0，bs=16），但bs=32多列明显下滑；JetSpec在bs=32下多列加粗领先，T=0最高达8.23×、6.48×，T=1最高6.44×。结合Fig.2的速度公式（依赖c与α）与Tab.12的低c实测，论证"压低逐token草稿成本c并提升接受率α"可让加速随draft长度γ持续增长，从而打破EAGLE-3的扩展饱和，构成论文高预算场景下方法有效性的关键实证。
 
 ### Table 3 (p.8) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab03.png]]
@@ -144,23 +137,17 @@ Figure 6: Each sampled block includes an anchor position and multiple future tok
 > Learning-rate ablation with J ET S PEC and without loss weighting training ( γ = 0 ). See Section 3.4.2 for γ ’s definition and ablations. We report speedup and average accepted length τ .
 
 > [!tip] 表格解读（多模态）
-> # Figure Description
+> 【图文联合解读】该表展示JetSpec在LR∈[5e-5, 1e-3]、γ=0无加权训练下的加速比与平均接受长度τ，分GSM8K/MATH-500两基准、对比SFT与Forward KL两种训练目标。数据呈倒U型：3×10⁻⁴为峰值（GSM8K SFT 5.79×/6.78；MATH-500 FK 8.29×/9.81），两端衰减；SFT与FK差异<0.2×几近重合；MATH-500加速峰值8.30×显著高于GSM8K的5.87×。论文借此论证：γ=0下Fig.3因果并行草稿头已获高接受率与强加速，验证设计有效性，并为后续γ消融与突破scaling ceiling提供训练基线。
 
-The visible portion of **Table 3** is a learning-rate ablation comparing JETSPEC under two configurations—(1) full method and (2) without loss weighting (γ = 0)—evaluated on GSM8K and MATH-500 benchmarks. The table is structured as a matrix:
+### Table 4 (p.9) ⭐深度解读
+![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab04.png]]
+> [!quote] caption
+> Loss-objective ablation with J ET S PEC at LR 6 × 10 − 4 and γ = 0 . We report speedup and average accepted length τ . All cells use checkpoints from a single training pipeline trained on math-only data ( ∼ 3 epochs); we report on math benchmarks to keep the comparison in-distribution.
 
-- **Rows:** learning-rate values (LR) — specific values not visible in the provided excerpt.
-- **Columns (grouped by dataset):** under each benchmark (GSM8K, MATH-500), two metrics are reported: **Speedup** and **Found KL** (mean accepted length τ).
-- **Data flow:** each LR setting is evaluated on each dataset, producing paired (speedup, τ) scores, enabling sensitivity analysis of the acceptance criterion against training-step magnitude.
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 4 图文联合解读**
 
-**Key takeaway (preview):** The ablation is designed to isolate whether training acceleration stems from the rejection-sampling weighting or simply from larger updates—an essential disentanglement claim.
-
-*(Note: numerical rows are cut off in the supplied image.)*
-
----
-
-# Caption (verbatim)
-
-> Table 3: Learning-rate ablation with JETSPEC and without loss weighting training (γ = 0). See Section 3.4.2 for γ's definition and ablations. We report speedup and average accepted length τ.
+该表对比 JetSpec 在 LR=6×10⁻⁴、γ=0 时三种训练目标（SFT、Forward-KL Distill、Reverse-KL Distill）在四个数学基准（GSM8K/MATH-500/AIME25/AIME24）上的 speedup 与平均接受长度 τ。结果显示：**Forward-KL 与 SFT 持平略优**（如 MATH-500：8.46/10.01 vs 8.42/9.98），**Reverse-KL 全面退化**（如 GSM8K 仅 3.29/3.78，约为前者一半）。论文借此论证：训练 draft 模型应选 **Forward-KL 蒸馏**——其 mass-covering 特性保证高召回率与长接受序列；而 Reverse-KL 的 mode-seeking 易导致草稿早夭。该消融为 JetSpec 整体训练配方中损失函数的选择提供了关键实验依据。
 
 ### Table 5 (p.9) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab05.png]]
@@ -168,15 +155,11 @@ The visible portion of **Table 3** is a learning-rate ablation comparing JETSPEC
 > Model generalizability: JetSpec vs. DDTree on Qwen3-30B-A3B (MoE target), both trained with SFT on the same 800K-example data mixture as our Qwen3-8B main results. Each cell reports speedup / average accepted length τ at temperature 0 with tree budget 256 .
 
 > [!tip] 表格解读（多模态）
-> **Figure description & key takeaway**
+> 【图文联合解读】**1) 核心对象与数据**：表格对比 JetSpec 与 DDTree 在 Qwen3-30B-A3B（MoE）目标上的泛化表现，在 GSM8K / MATH-500 / AIME25 / AIME24 四个数学基准、tree budget 256、T=0 下报告 speedup 与 τ。JetSpec 加速 5.96–8.42×、τ 6.93–9.98；DDTree 加速 6.11–8.46×、τ 7.09–10.01；第三列基线仅 3.29–5.25×、τ 3.78–6.59，明显落后。
 
-Table 5 benchmarks two speculative-decoding draft models—**JetSpec** and **DDTree**—paired with the Qwen3-30B-A3B MoE target. Both drafts were SFT-trained on the same 800K-example data mixture used for the Qwen3-8B main runs. Evaluation protocol is fixed at temperature 0 with a tree budget of 256; each cell reports two numbers: **wall-clock speedup** and **average accepted length τ**. Seven benchmarks span math (GSM8K, MATH-500, AIME25), code (HumanEval, MBPP, LCB), and chat (MT-Bench).
+**2) 关键技术结论**：以 Qwen3-8B 主实验同款 800K SFT 数据训练，可成功迁移至 30B MoE 目标；JetSpec 与 DDTree 接受长度接近 10、加速达 5–8×，远胜基线，证明并行树状 draft 在 MoE 架构上仍然高效。
 
-**Key takeaway:** JetSpec beats DDTree on every benchmark in *both* speedup and average accepted length, with the largest absolute gains on math-heavy tasks (e.g., AIME25: 9.35 / 10.28 vs. 9.01 / 9.71), showing that the approach transfers robustly to a 30B-A3B MoE target rather than overfitting to the 8B setup.
-
-**Caption verbatim**
-
-Table 5: Model generalizability: JetSpec vs. DDTree on Qwen3-30B-A3B (MoE target), both trained with SFT on the same 800K-example data mixture as our Qwen3-8B main results. Each cell reports speedup / average accepted length τ at temperature 0 with tree budget 256.
+**3) 论文整体作用**：作为 generalizability 实验，验证 JetSpec 不仅适用于 dense 主结果模型，也可推广至 MoE 大模型，扩展其部署范围与方法适用边界。
 
 ### Table 6 (p.9) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab06.png]]
@@ -184,15 +167,11 @@ Table 5: Model generalizability: JetSpec vs. DDTree on Qwen3-30B-A3B (MoE target
 > Training-data ablation: J ET S PEC vs. J ET S PEC -Corpus, both trained with SFT on the same 800K-example data mixture (Qwen3-8B target). JetSpec uses model-regenerated continuations as supervision targets; JetSpec -Corpus uses the original training corpus. Each cell reports speedup / average accept
 
 > [!tip] 表格解读（多模态）
-> **Description:**
+> 【图文联合解读】【对象与数据】图为 DDTree vs JetSpec 主结果对比表，而非 caption 所述 JetSpec–Corpus 训练数据消融；七列基准覆盖数学（GSM8K / MATH-500 / AIME25）、代码（HumanEval / MBPP / LCB）与对话（MT-Bench），每格 speedup / 平均接受长度 τ。DDTree 在 MATH-500 为 8.61 / 9.49、GSM8K 为 7.26 / 7.93；JetSpec 全面胜出：9.45 / 10.65、7.40 / 8.18，余项亦均略高。
 
-The table presents a training-data ablation comparing two self-speculative decoding methods on a Qwen3-8B target model, both trained via SFT on the same 800K-example mixture. Rows group results by **budget** (16, 64, 256 speculative tokens) and **method** (`JetSpec` vs. `JetSpec-Corpus`), while columns list six evaluation benchmarks spanning math (GSM8K, AIME25), code (HumanEval, MBPP, LCB), and chat (MT-Bench). Each cell reports two metrics: **inference speedup** and **average accepted length τ**. The data flow is straightforward: each configuration is evaluated end-to-end on every benchmark, producing a 6-method × 6-benchmark comparison grid.
+【关键结论】JetSpec 全基准稳定超越当前最强基线 DDTree：数学域增益最显著（MATH-500 speedup +0.84、τ +1.16；AIME25 +0.34 / +0.57），代码与对话域增益较温和（+0.07 ~ +0.33）；τ 多接近甚至超过树深，并行草稿高接受率得到量化验证。
 
-**Key takeaway:** Using model-regenerated continuations as supervision targets (`JetSpec`) yields dramatically stronger acceptance behavior than training on the original corpus (`JetSpec-Corpus`) — at budget 256, `JetSpec` reaches 7–9× speedups with τ ≈ 8–10, whereas `JetSpec-Corpus` plateaus near 3–4× with τ ≈ 3–4, confirming that the regeneration step is the critical ingredient for learning an effective draft policy.
-
-**Caption (verbatim):**
-
-"Table 6: Training-data ablation: JetSpec vs. JetSpec-Corpus, both trained with SFT on the same 800K-example data mixture (Qwen3-8B target). JetSpec uses model-regenerated continuations as supervision targets; JetSpec-Corpus uses the original training corpus. Each cell reports speedup / average accepted length τ at temperature 0."
+【论文作用】作为主结果表，定量支撑 "打破 speculative decoding scaling ceiling" 的核心论断；与 Figure 6 锚点–未来 token 块采样结构相呼应，共同证明 JetSpec 训练目标与解码策略在多域的有效性。
 
 ### Table 7 (p.9) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab07.png]]
@@ -200,15 +179,18 @@ The table presents a training-data ablation comparing two self-speculative decod
 > compares causal and diffusion heads under different choices of γ , the parameter that controls how aggressively the DFlash training objective downweights per-position loss at positions far from each anchor token. Specifically, position i within a block contributes to the training loss with weight w 
 
 > [!tip] 表格解读（多模态）
-> I'm unable to fully complete this request because the actual figure (referred to as "Figure 4 in Appendix A" in the text) is not included in the provided content. The excerpt only **references** the figure textually rather than displaying it.
+> 【图文联合解读】**说明**：所提供图片上方展示的并非 Table 7 本身（实为含 JetSpec/JetSpec-Corpus 的另一表格），Table 7 内容仅以正文段落形式出现于图片下方。以下依据原文段落对 Table 7 进行解读：
 
-What the text tells us about Figure 4 indirectly:
-- It visualizes a tree-verification comparison between a **causal-head draft** and a **diffusion-head draft** on MATH-500 prompt 0 at decode step 0.
-- The diffusion-head draft (γ = 0) ranks `"given told that"` first (surrogate −3.76 vs. target joint −63.32 nats), combining two mutually exclusive openers — a failure mode of q_sur.
-- The causal-head draft ranks `" are told that"` first with surrogate ≈ target joint (gap −0.34).
-- Tree verification accepts **6 tokens** from the causal-head tree but only **4** from the diffusion-head tree.
+**1) 核心对象与结构**
+Table 7 在不同 γ 值下比较 **causal head** 与 **diffusion head** 两种草稿头的推测加速比。γ 控制 DFlash 训练损失对远离 anchor token 位置的衰减权重，定义为 $w_i=\exp(-\max(i-i_{\text{anchor}},0)/\gamma)$；γ=0 退化为均匀加权。
 
-To produce the architecture/components description and verbatim caption, I would need the actual figure image and its printed caption. Could you please share Figure 4 (or the relevant figure from Appendix A) along with its caption text?
+**2) 关键技术结论**
+- causal head 对 γ 不敏感，全区间表现稳健；
+- diffusion head 对 γ 高度敏感，呈倒 U 形：γ=7 达峰值 **8.36×**，端点显著塌缩（γ=0 仅 5.46×，γ=15 为 6.17×）；
+- 因此 γ=7 被确立为 DFlash 最优宏观损失加权设置。
+
+**3) 在论文整体方法链路中的作用**
+该消融为 3.4.2 节 "Tree Drafting with Diffusion Head" 的核心依据，证明扩散头搭配适度衰减（γ=7）方可释放并行树形草稿的并行潜力，是 JetSpec 突破线性 scaling 上限的关键设计前提，并直接被 Table 9 在 MATH-500 上的 rank-1 gap 分布进一步验证。
 
 ### Table 8 (p.15) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab08.png]]
@@ -216,19 +198,16 @@ To produce the architecture/components description and verbatim caption, I would
 > extends Figure 4 to the full top- 5 branches of each head’s tree at MATH-500 prompt #0 , decode step 0 (root token “We” ). The pattern reported in the main text repeats throughout the tree. For the diffusion head, top- 2 and top- 4 both combine “ given ” at depth 1 and “ told ” at depth 2 with targe
 
 > [!tip] 表格解读（多模态）
-> **Figure 4 description (inferred from surrounding text):**
+> 【图文联合解读】**图文联合解读：**
 
-The figure depicts per-head decoding trees for the diffusion head and the causal head at MATH-500 prompt #0, decode step 0 (root "We"). Each tree plots the top-*k* token continuations at successive depths, annotated with joint probabilities (nats) and gap metrics. The diffusion head shows rank-1 ("We"), rank-2 ("We given"), and rank-3 ("We told") as coherent branches, while ranks 4–5 collapse (joints below −50). The causal head's rank-1 (" are told that") stays faithful; ranks 2–5 share the off-argmax depth-2 token " given" and degrade downstream ("the2product" at rank 3, gap +42.5).
+**1) 表格对象与数据：** Table 8 扩展 Figure 4，展示 MATH-500 prompt #0、decode step 0（根 token "We"）处 diffusion head 与 causal head 各自的 **top-5 完整分支树**，逐 depth 给出 token、target joint（nats）与 gap 值。
 
-**Key takeaway:** Off-argmax branches inherit the depth-*d*−1 argmax context rather than their own ancestor, propagating a mismatched conditioning that drives gap blow-ups — only branches whose full prefix matches the true decoding context remain coherent.
+**2) 关键技术结论：**
+- **扩散头**：仅 rank-3（target joint −0.08）连贯；rank-2/4 共享 off-argmax "given"+"told" 组合，target joint 均 **< −50 nats** → 分布崩溃。
+- **因果头**：仅 rank-1（" are told that"，gap **−0.34**）忠实；rank 2–5 一致继承 off-argmax depth-2 token "given"（非 rank-1 的 argmax "told"），depth 4–5 急剧退化（如 rank-3 "the2product" gap **+42.50**）。
+- 二者共同印证 §A.4 的 **off-argmax inheritance**：每条分支 depth-*d* 的 marginal 被锚定到上一层的 argmax 延拓，因此非 argmax 分支继承了与其祖先 token **不匹配** 的条件上下文。
 
----
-
-**Caption transcription note:** No standalone figure caption appears in the provided content. The visible text reads verbatim:
-
-> "Table 8 extends Figure 4 to the full top-5 branches of each head's tree at MATH-500 prompt #0, decode step 0 (root token "We"). The pattern reported in the main text repeats throughout the tree. For the diffusion head, top-2 and top-4 both combine " given" at depth 1 and " told" at depth 2 with target joints below −50 nats; only rank-3 (target joint −0.08) is coherent. For the causal head, the rank-1 branch (" are told that") is faithful (gap −0.34); ranks 2–5 all share the off-argmax depth-2 token " given" (vs. rank-1's argmax " told") and degrade at depths 4–5 (e.g. "the2product" at rank 3, gap +42.50), consistent with the off-argmax inheritance described in §A.4: each branch's depth-*d* marginal was anchored to the argmax extension at depth *d* − 1, so off-argmax branches inherit a conditioning context that does not match their own ancestor token."
-
-This is the body text (plus the A.3 heading) accompanying Figure 4 / Table 8 — not a caption proper.
+**3) 论文中的作用：** 作为案例证据，定量揭示 parallel tree drafting 随树规模扩大时缩放天花板（scaling ceiling）的根因——非 argmax 分支的条件错配累积导致 acceptance rate 衰减，从而支撑 JetSpec 用专用 diffusion-style head 重构 drafting 树的必要性。
 
 ### Table 9 (p.15) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab09.png]]
@@ -236,29 +215,31 @@ This is the body text (plus the A.3 heading) accompanying Figure 4 / Table 8 —
 > reports the rank- 1 gap distribution across MATH-500 prompts 0 – 49 for both heads at γ = 0 and at γ = 7 (DFlash’s best macroscopic loss-weighting setting, Table 7). At γ = 0 , the diffusion
 
 > [!tip] 表格解读（多模态）
-> **Description of the figure (Table 9)**
+> 【图文联合解读】**图文联合解读：**
 
-*Architecture/components/data flow*: Table 9 is not a diagram but a tabular summary that stratifies the **rank-1 generation gap** (top-1 token discrepancy between the draft and target heads, a measure of speculative-decoding acceptance failure) over the first 50 prompts of the **MATH-500** benchmark. It contrasts two configurations of the same DFlash-style draft head: (i) γ = 0 (no macroscopic loss re-weighting) and (ii) γ = 7 (DFlash's best macro loss-weighting from Table 7). Likely columns include per-prompt rank-1 gap values or aggregate statistics (mean/median/p95) that quantify how often the draft head's argmax diverges from the target.
+该表以 MATH-500 前 50 条 prompt 为样本，逐条列出 draft head 与 target head 的 **rank-1 gap**（top-1 token 不一致度），并对比 γ=0 与 γ=7 两种宏观损失加权设定。
 
-*Key technical takeaway*: Increasing the macroscopic loss weight (γ = 7) substantially tightens the rank-1 gap distribution on MATH-500 relative to γ = 0, indicating that downstream acceptance/length gains from aggressive loss weighting are concentrated in reducing top-token disagreements on the hardest math prompts.
+原文据此论证核心结论：**即使采用 DFlash 最优的宏观损失加权（γ=7）**，diffusion-style draft head 在 rank-1 上仍与 target head 存在**显著、普遍**的差距，即单 token 草稿的接受率有结构性瓶颈，仅靠损失加权不足以弥合二者的 top-1 失配。
 
-**Caption (verbatim)**
+在论文链路中，该表为 JetSpec 提出 **并行树形草稿（parallel tree drafting）** 提供关键经验依据：既然单点采样难以命中 target，说明必须通过多分支并行生成候选树来提升草稿命中率，从而突破 speculative decoding 的 scaling ceiling。
 
-"Table 9 reports the rank-1 gap distribution across MATH-500 prompts 0–49 for both heads at γ = 0 and at γ = 7 (DFlash's best macroscopic loss-weighting setting, Table 7). At γ = 0, the diffusion"
-
-### Table 11 (p.19) ⭐深度解读
-![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab11.png]]
+### Table 10 (p.18) ⭐深度解读
+![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab10.png]]
 > [!quote] caption
-> reports an example end-to-end vLLM run on HumanEval with a single H100 GPU. The results show how tree budget interacts with serving batch size: larger budgets improve low-batch latency by reducing verification rounds, while their relative gain decreases at larger batch sizes as verification and memo
+> Tree-construction algorithm ablation on MATH-500 ( n = 500 ) with JetSpec at the pro- duction setting (causal head, LR 3 × 10 − 4 , Forward-KL distillation, γ = 0 ). Hybrid scoring is P
 
 > [!tip] 表格解读（多模态）
-> I can't complete this request as specified. The content you've provided is text from a paper appendix (pages discussing Table 11 and Section F "Ablation Study Details"), but **no figure is included** in what you've shared. There is no figure with architecture, components, or data flow visible in the provided text, and consequently no figure caption to transcribe.
+> 【图文联合解读】该表消融JetSpec在MATH-500上的树构建打分策略，比较Speedup与平均接受长度τ。纯熵引导最差（4.76/5.52）；累积对数概率（默认）达8.15/9.81；混合∑log rᵢ+α·Hᵢ在α=0.25时最优（8.27/9.81），且随α增大单调下降至α=8.0的7.42/9.00。结论：以对数概率为主、熵仅做小幅正则即可，默认配置近似最优，证明JetSpec并行树草稿中token级置信度排序是关键，而非依赖深度级不确定性；该消融为生产配置选择提供了闭环验证。
 
-What the text actually contains:
-- A paragraph summarizing results from Table 11 (an end-to-end vLLM run on HumanEval with a single H100 GPU, discussing how tree budget interacts with serving batch size).
-- The heading and introductory paragraph of Section F (Ablation Study Details), describing ablations on the Nemotron Post-Training Dataset V2 math split using Qwen3-8B with block size 16, tree node budget 255, and accumulated draft log-probability for tree construction.
+### Table 11 (p.20) ⭐深度解读
+![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab11.png]]
+> [!quote] caption
+> vLLM serving performance of J ET S PEC on Math-500 with Qwen3-8B on a single H100 GPU, evaluated across batch sizes and tree budgets (in parentheses). Each setting reports end-to-end throughput over AR decoding in tokens per second (TPS).
 
-To fulfill your request, could you please attach the actual figure (image) and its caption? I can then describe the architecture/components/data flow, distill a technical takeaway within 120 words, and transcribe the caption verbatim.
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**图文联合解读**
+
+表11测量JetSpec在Qwen3-8B/单H100/Math-500上的端到端TPS，按batch(1–16)与树预算(16/32/64/128)交叉。结果：小batch时预算越大越好（batch=1，预算128达553.3 TPS，4.33×）；batch≥8后预算32最优（batch=16达1094.6 TPS，3.81×），预算128反降至2.80×。原文借此论证：树预算与batch强耦合——低batch靠大预算减少验证轮次降延迟，大batch时验证与显存开销反客为主，相对增益递减。作为"打破扩展天花板"主张的核心实测支撑，该表说明JetSpec在真实vLLM服务中需按负载自适应选择树预算，方获最优吞吐，呼应论文"并行树草稿→按需预算"的设计闭环。
 
 ### Table 12 (p.21) ⭐深度解读
 ![[assets/crops/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting-tab12.png]]
@@ -266,22 +247,13 @@ To fulfill your request, could you please attach the actual figure (image) and i
 > Per-draft-token drafting cost ratio c = T draft / ( N T verify ) (%) on a single H200 NVL GPU, sweeping context length L and draft depth N . This is the cost coefficient used in Eq. equation 2 and Fig. 2. Lower is better.
 
 > [!tip] 表格解读（多模态）
-> ## Description
+> 【图文联合解读】**图文联合解读：**
 
-**Type:** Data table (Table 12) presenting empirical measurements, not an architectural diagram.
+**1）核心对象与数据：** 该表为每个 draft token 的成本系数 c = T_draft/(N·T_verify) (%)，行扫描上下文长度 L∈{128,256,512,1024,2048,4096}，列扫描草稿深度 N∈{1,2,4,…,512}。定量看：N=1 时 c≈15.0%；N=512 时 c 仅 ≈0.034%（L=128）。固定 L 后，c 几乎随 N 翻倍而减半，呈近似 1/N 规律；L 从 128 到 2048 各列数值高度稳定，L=4096 整体上浮约 20%（如 N=1 升至 18.295%）。
 
-**Components shown:**
-- **Row axis:** Context length *L* (values not visible in the cropped view)
-- **Column axis:** Draft depth *N* ∈ {1, 2, 4, 8, 16, 32, 64, 128, 256, 512} (powers of 2)
-- **Cell values:** Cost ratio *c* = T_draft / (N · T_verify) in percent
+**2）关键技术结论：** c 随 N 增大而趋近于零，说明并行树形草稿（parallel tree drafting）每额外分支的边际成本几乎可忽略，从硬件层面证实 JetSpec"草稿可并行化、可深可宽"的论断，突破了传统 speculative decoding 因串行草稿开销而限制草稿深度的天花板。
 
-**Data flow:** This table serves as a **lookup/reference dataset** consumed by Equation 2 and Figure 2 elsewhere in the paper — it parameterizes the drafting-overhead coefficient *c* so the rest of the analysis can model throughput/speedup without re-measuring every (L, N) combination.
-
-**Key takeaway:** Drafting cost is **not constant** — the ratio *c* varies with both *N* (must be measured, not assumed) and *L* (longer contexts shift the draft-vs-verify balance), so any speculative-decoding speedup model needs this empirical sweep rather than a single scalar assumption. ("Lower is better" because smaller *c* means drafting is cheaper per generated token.)
-
-## Caption (verbatim)
-
-> **Table 12:** Per-draft-token drafting cost ratio *c* = T_draft/(N T_verify) (%) on a single H200 NVL GPU, sweeping context length *L* and draft depth *N*. This is the cost coefficient used in Eq. equation 2 and Fig. 2. Lower is better.
+**3）论文中的作用：** 该 c 代入 Eq. 2 推导 JetSpec 理论加速比，并支撑 Fig. 2 的趋势曲线；是连接"草稿算法设计"与"端到端加速效果"的关键实测参数。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

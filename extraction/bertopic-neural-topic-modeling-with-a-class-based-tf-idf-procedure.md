@@ -30,13 +30,11 @@ tags: []
 > Computation time (wall time) in seconds of each topic model on the Trump dataset. Increasing sizes of vocabularies were regulated through selection of documents ranging from 1000 documents until 43000 documents with steps of 2000. Left: computational results with CTM. Right: computational results without CTM as it inﬂates the y-axis making differentiation between other topic models difﬁcult to vis
 
 > [!tip] 技术解读（多模态）
-> **Figure Description (≤120 words):**
+> 【图文联合解读】1) 两子图对比9个主题模型在Trump数据集上的墙钟耗时（秒），横轴为词汇量≈2500–18000（由文档数1000→43000调控）。左图含CTM-MPNET（紫），随词量陡升至~1500s，其余8模型均<100s；右图剔除CTM后y轴缩至0–100s：NMF（棕）最快~33s，LDA~45s，Top2Vec-MPNET（灰）与BERTopic-MPNET（绿）最高达~95–100s。
 
-The figure presents two side-by-side line plots comparing wall-time (seconds) of nine topic models on the Trump dataset as a function of vocabulary size (~2,500 to ~17,500 words). Models include BERTopic variants (Doc2Vec, MiniLM, MPNET, USE), Top2Vec variants (Doc2Vec, MPNET), plus CTM-MPNET, LDA, and NMF. The **left** plot includes all models; CTM-MPNET dominates the chart, scaling steeply to ~1,500 s, flattening the visibility of other curves near zero. The **right** plot excludes CTM-MPNET, rescaling the y-axis to 0–100 s, revealing that BERTopic-MPNET and Top2Vec-MPNET scale worst (~100 s), while LDA stays fastest (~35 s). **Key takeaway:** Classical models (LDA, NMF) scale most efficiently with vocabulary, whereas neural embedding–based models—especially CTM-MPNET—exhibit super-linear growth.
+2) 论证BERTopic（非MPNET变体）效率可比LDA/NMF，并显著优于CTM等神经主题模型；CTM极端耗时会掩盖其他模型差异。
 
-**Caption (verbatim):**
-
-Figure 1: Computation time (wall time) in seconds of each topic model on the Trump dataset. Increasing sizes of vocabularies were regulated through selection of documents ranging from 1000 documents until 43000 documents with steps of 2000. **Left**: computational results with CTM. **Right**: computational results without CTM as it inflates the y-axis making differentiation between other topic models difficult to visualize.
+3) 为BERTopic的类TF-IDF流程提供可扩展性证据，支撑其"质量+效率"双重卖点，奠定后文主题质量比较的可行性前提。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -46,9 +44,11 @@ Figure 1: Computation time (wall time) in seconds of each topic model on the Tru
 > Ranging from 10 to 50 topics with steps of 10, topic coherence (TC) and topic diversity (TD) were calculated at each step for each topic model. All results were averaged across 3 runs for each step. Thus, each score is the average of 15 separate runs.
 
 > [!tip] 表格解读（多模态）
-> **Description:** The figure (Table 1) outlines the experimental setup for evaluating topic modeling pipelines. *Components:* BERTopic, CTM (Song et al., 2020), and two Top2Vec variants (one with Doc2Vec, one with SBERT "all-mpnet-base-v2"); SBERT candidates include USE, Doc2Vec, "all-MiniLM-L6-v2", and "all-mpnet-base-v2". *Data flow:* topic count sweeps from 10→50 in steps of 10, producing TC and TD scores at each step; for dynamic topic models, NPMI is computed at K=50 across timesteps. *Protocol:* UMAP + HDBSCAN hyperparameters are held fixed across models for fair comparison. 
+> 【图文联合解读】图中未呈现Table 1的实际数值，仅显示其caption与5.3节正文段落。据caption，该表记录各主题模型在10–50个主题（步长10）下的TC（topic coherence）与TD（topic diversity）得分，每个数值是5档×3次共15次运行的均值。
 
-**Key takeaway:** Every reported score is the mean of 3 independent runs × 5 topic-count steps = 15 runs, controlling for stochastic variation in embedding-based clustering.
+正文表明，TC/TD是评估主题质量的代理指标，结合NPMI用于横向对比BERTopic与LDA、CTM、Top2Vec等基线在一致性与多样性上的表现；同时指出NPMI与人类判断的相关性可能仅对经典模型成立，对神经主题模型未必可靠。
+
+该表作为§5.3 Evaluation的核心量化结果，支撑BERTopic在主题质量与多样性上的相对优势论证，回应引言中"提升一致性同时保留多样性"的核心主张。
 
 ### Table 2 (p.6) ⭐深度解读
 ![[assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab02.png]]
@@ -56,15 +56,17 @@ Figure 1: Computation time (wall time) in seconds of each topic model on the Tru
 > Using four different language models in BERTopic, coherence score (TC) and topic diversity (TD) were calculated ranging from 10 to 50 topics with steps of 10. All results were averaged across 3 runs for each step. Thus, each score is the average of 15 separate runs.
 
 > [!tip] 表格解读（多模态）
-> **Note:** The image contains a table (Table 2), not a figure. Describing its structure below.
+> 【图文联合解读】**说明**：图像中 Table 2 的标题与 6.1、6.3 节正文清晰可见，但表格的数值内容并未呈现于该截图中，故数值细节仅依据原文 caption 推断。
 
-**Description (≤120 words):**
-The table presents a comparative evaluation of a single BERTopic pipeline architecture instantiated with four interchangeable embedding-model components: **USE**, **Doc2Vec**, **MiniLM**, and **MPNET**. The data flow is: corpus → chosen sentence/document encoder → BERTopic's transformer-based clustering & c-TF-IDF topic extraction → evaluation. Six numeric columns report averaged coherence (TC) and topic-diversity (TD) scores across topic counts {10, 20, 30, 40, 50}.
+---
 
-**Key takeaway:** Doc2Vec yields the highest coherence scores (up to .819) but the worst topic diversity (–.088), indicating semantically tight yet semantically redundant topics. In contrast, MiniLM and MPNET deliver more balanced coherence–diversity trade-offs (.802–.851 coherence, ~.660–.663 diversity), making transformer-based sentence encoders the preferable default for general-purpose BERTopic deployments.
+**图文联合解读（≤220字）**
 
-**Caption transcribed verbatim:**
-> Table 2: Using four different language models in BERTopic, coherence score (TC) and topic diversity (TD) were calculated ranging from 10 to 50 topics with steps of 10. All results were averaged across 3 runs for each step. Thus, each score is the average of 15 separate runs.
+**1) 表格结构（基于 caption）**：行为 4 种语言模型，列为主题一致性（TC）与主题多样性（TD），主题数从 10 到 50、步长 10，每格为 3 次运行均值（共 15 次）。
+
+**2) 支撑的关键技术结论**：在 6.2 节（"mains competitive regardless of the embedding model"）语境下，该表用以论证 BERTopic 对嵌入模型选择不敏感——因其将文档嵌入与词-主题分布构建解耦，嵌入步骤可灵活替换。
+
+**3) 在论文整体链路中的作用**：作为"模块化设计"主张的实证依据，衔接 6.1 节整体性能对比与 6.3 节动态主题建模的灵活性论述，凸显 BERTopic 方法的工程可替换性。
 
 ### Table 3 (p.6) ⭐深度解读
 ![[assets/crops/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure-tab03.png]]
@@ -72,18 +74,13 @@ The table presents a comparative evaluation of a single BERTopic pipeline archit
 > The topic coherence (TC) and topic diversity (TD) scores were calculated on dynamic topic model- ing tasks. The TC and TD scores were calculated for each of the 9 timesteps in each dataset. Then, all results were averaged across 3 runs for each step. Thus, each score represents the average of 27 val
 
 > [!tip] 表格解读（多模态）
-> **Note:** The main figure (Figure 1, referenced in §6.4 "Wall time") is not visible in the provided page — only body text appears. I can only infer its contents from textual references and cannot transcribe a figure caption that isn't shown.
+> 【图文联合解读】**图文联合解读**
 
-**Description of Figure 1 (inferred from §6.4 text):**
-The figure appears to be a wall-time comparison chart showing the runtime of various dynamic topic models, with "the left graph" comparing models like CTM (with MPNet/SBERT embeddings), classical models such as NMF, and likely Top2Vec variants. The figure likely plots execution time (y-axis) against something like dataset or timestep, with "both left" and "right graphs" suggesting a two-panel layout.
+该表对比 **LDA Sequence、BERTopic、BERTopic-Evolve** 三种方法在**动态主题建模（DTM）**任务上的 **TC（主题一致性）** 与 **TD（主题多样性）** 得分，每个数值为 9 个时间步 × 3 次运行共 27 个结果的均值，应分两组数据集呈现。
 
-**Key takeaway:** CTM using MPNet-based SBERT embeddings is a significant computational bottleneck (slowest), while classical models like NMF are much faster; this trade-off between embedding quality and inference speed is critical for selecting topic models at scale.
+**核心结论**：BERTopic 显著优于 LDA Sequence——首组数据 TC 由 .009 提升至 **.079**，TD 由 .715 提升至 **.862**；次组数据 TC 由 .173 升至 **.231**（加粗为最佳）。BERTopic-Evolve 与 BERTopic 表现几近持平（.079/.226 vs .079/.231），表明动态演化版本未以牺牲质量为代价。
 
-**Caption verbatim (Table 3, the only caption actually shown):**
-
-> Table 3: The topic coherence (TC) and topic diversity (TD) scores were calculated on dynamic topic modeling tasks. The TC and TD scores were calculated for each of the 9 timesteps in each dataset. Then, all results were averaged across 3 runs for each step. Thus, each score represents the average of 27 values.
-
-If you can share the actual figure page, I'd be happy to provide a more accurate description of its architecture and components.
+**作用**：作为论文主实验证据之一，量化支撑 BERTopic 凭借 class-based TF-IDF 流程，在主题一致性与多样性上对传统 LDA 的双重超越，奠定其"神经主题建模新范式"的核心论点。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

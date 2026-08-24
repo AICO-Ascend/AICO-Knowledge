@@ -30,43 +30,26 @@ tags: [speculative]
 > Recall from Equation 1 that the per-token latency of speculative decoding is 𝐿= (𝑇draft + 𝑇verify)/𝜏. Autoregressive drafters achieve high 𝜏but pay 𝑇draft ∝𝛾; parallel drafters collapse 𝑇draft to a single pass but sacrifice 𝜏because each position is predicted independently. Meanwhile, fixed-length verification wastes 𝑇verify on low-confidence suffix tokens that are almost certain to be rejected. D
 
 > [!tip] 技术解读（多模态）
-> **Architecture / Components / Data Flow**
+> 【图文联合解读】**图示 DSpark 三轮解码循环**：
+① 目标模型由 prompt A/B/C 自回归生成锚点 D；
+② D 进入起草模块——并行主干对 E–H 一次输出 logits，序贯头顺次解码得到置信度 c₁–c₄，硬件感知调度器按置信保留 E/F/G、丢弃低置信的 H；
+③ 目标模型并行验证 D–G，接受 E/F（✓），否决 G（✗）并改写为 G* 作为下一轮锚点。
 
-The figure depicts a three-stage speculative-style decoding pipeline with hardware-aware prefix scheduling:
+**原文论证**：自回归起草 T_draft∝γ、纯并行起草则牺牲 τ；DSpark 以"并行主干＋序贯头"折中，并以**置信调度**取代定长验证，避免在 c₄ 这类低置信 token 上浪费 T_verify，整体压缩 L = (T_draft + T_verify)/τ。
 
-1. **Draft stage (1):** A *Target Model* consumes input tokens **A, B, C** and emits the first real output token **D**.
-2. **Parallel candidate generation (2):** Token **D**, plus three `Mask` placeholders, are fed in parallel into a *Parallel Block* producing **Logits**. These logits are scanned by a *Sequential Block* that emits candidate tokens **E, F, G, H** with confidence scores **C₁…C₄**. A *Hardware-Aware Prefix Scheduler* then partitions the prefix into **Keep** (E, F, G) and **Drop** (H, low confidence) buckets.
-3. **Verification / next round (3):** The kept prefix [D, E, F, G] is replayed through the *Target Model*, which validates them (E, F ✓; G ✗ — replaced by **G\***) and proceeds to the **next round**.
-
-**Key technical takeaway**
-
-Prefix scheduling decouples *candidate generation* (cheap, parallel, mask-filled) from *candidate acceptance* (target-model-verified, hardware-budgeted), allowing only high-confidence tokens to consume verification compute.
-
-**Caption (verbatim transcription of all figure text)**
-
-> ❶ Target Model — A, B, C → D → **❷** Parallel Block (D | Mask | Mask | Mask) → Logits → Sequential Block → E, F, G, H with confidences C₁, C₂, C₃, C₄ → Hardware-Aware Prefix Scheduler → **Keep** | **Drop** → **❸** Target Model inputs {D, E, F (✓), G (✗)} → outputs {E, F, G\*} → **next round**
+**论文作用**：作为方法总览图，具象化 Equation 1 的三项延迟权衡，并为 Table 1 中"DSpark 平均接受长度反超 Eagle3"的反直觉结论提供机制支撑。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
 ### Table 1 (p.11) ⭐深度解读
 ![[assets/crops/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation-tab01.png]]
 > [!quote] caption
-> presents a counter-intuitive observation: the parallel drafter (DFlash) and the semi- autoregressive drafter (DSpark) often yield longer accepted lengths than the fully autoregressive drafter (Eagle3). This finding contrasts with the standard expectation that step-by-step autore- gression produces h
+> | Main speculative decoding results. We report accepted length ( 𝜏 ) per decoding round (higher is better) for different target models and domains. Bold marks the best results.
 
 > [!tip] 表格解读（多模态）
-> # Response
+> 【图文联合解读】**Table 1 图文联合解读**
 
-I cannot complete this request as posed. The excerpt you've provided contains only body text discussing a prior finding (referenced as "Table 1") and introducing a methodology for analyzing speculative decoding behavior. It does **not** include:
-
-- Any figure (with architecture, components, or data flow), or
-- Any figure caption to transcribe verbatim.
-
-What the text *does* describe (paraphrased):
-
-1. **Observation:** Parallel (DFlash) and semi-autoregressive (DSpark) drafters sometimes accept longer token spans than a fully autoregressive drafter (Eagle3), contradicting the usual assumption that step-by-step autoregression yields higher-quality drafts.
-2. **Methodology introduced:** Using Qwen3-4B as the target model on benchmarks from §4.1, the authors track *position-wise conditional acceptance* during actual speculative decoding rollouts, where the denominator at draft position *k* is restricted only to rollout instances where preceding positions *are* accepted.
-
-If you can share the figure image and its caption text, I'd be happy to produce the architecture/flow description and the verbatim transcription you requested.
+该表汇报 4 个目标模型（Qwen3-4B/8B/14B、Gemma4-12B）×3 种 Drafter（Eagle3 自回归、DFlash 并行、DSpark 半自回归）×9 个领域（Math/Code/Chat）的每轮接受长度 τ。结果显示 **DSpark 在全部 36 个格点均取得最佳**（粗体），如 Qwen3-4B GSM8K：5.14→5.40→6.11；Qwen3-14B AIME25：3.71→3.98→4.94；Gemma4-12B HumanEval：5.37→4.95→5.64。原文借此论证一个反直觉结论：**并行与半自回归 Drafter 的 τ 反而普遍超过自回归 Eagle3**，否定"逐 token 自回归必优"的传统假设。该表是论文实验链路的"主结果锚点"，为后续 DSpark 配合置信度调度验证带来的端到端加速（结合图 1 的 L=(Tdraft+Tverify)/τ 公式）提供 τ 层面的实证支撑。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -30,13 +30,13 @@ tags: []
 > k-NN classification performance across datasets affects mean test error in the CLASSIC dataset. 531
 
 > [!tip] 技术解读（多模态）
-> **Figure description (≤120 words):**
+> 【图文联合解读】**图1 解读**
 
-The figure is a **grouped bar chart** comparing 10 document representation/classification methods across six benchmark text datasets (ohsumed, twitter, amazon, reuters, bbcsport, classic). The y-axis shows Mean Test Error (%) [0–60]; each dataset has 10 colored bars labeled with numeric values above them. Methods compared include classical baselines (nBoW, SIF, Cosine), optimal-transport–based methods (RWMD, HOTT×2, WMD-T20), and the authors' proposed variants (LOTT, LOTT-5, LOTT-10). **Data flow:** error values → per-dataset grouping → method-level color encoding → numeric labels above bars. **Key takeaway:** LOTT-5 and LOTT-10 consistently match or outperform all baselines, most dramatically on ohsumed (cutting error from ~58% to ~46%) and classic, demonstrating the robustness of LOTT's parametrizable topic geometry over fixed optimal-transport methods.
+**1) 核心对象与数据**：该柱状图比较了10种文档表示/距离方法（nBOW、SIF、Cosine、RWMD、HOfTT、HOTT、WMD-T20、LOTT、LOTT-5、LOTT-10）在6个数据集上的k-NN分类平均测试误差（%）。其中LOTT系本文提出的三种变体（含不同rank或embed层选择）。
 
-**Caption (verbatim):**
+**2) 关键结论**：在ohsumed上LOTT表现偏弱（52%），但加锚点增强的LOTT-5/10降至48/46，差距收窄；而在其余5个数据集上，LOTT/LOTT-5/10均处于最低误差区间，例如bbcsport LOTT-10=7%（仅略低于WMD-T20的6%），classic LOTT-10=5%为该数据集最优，amazon/reuters LOTT-10=11/9%与WMD-T20持平或更优。整体说明LOTT系列在跨数据集下与WMD-T20、RWMD这一类SOTA基线具有可比或更优的k-NN表现，验证其在标准距离度量路线下的有效性。
 
-*Figure 1: k-NN classification performance across datasets*
+**3) 在论文中的作用**：该图为方法实验链路的**主结果展示**，为后续段落所引"影响CLASSIC均值误差"等更细致的分析提供全景对比，支撑本文关于"线性最优主题传输可作为文档相似度替代度量"的核心论断。
 
 ### Figure 2 (p.8) ⭐深度解读
 ![[assets/crops/linear-optimal-topic-transport-for-document-similarity-fig02.png]]
@@ -45,13 +45,7 @@ The figure is a **grouped bar chart** comparing 10 document representation/class
 > t-SNE on CLASSIC
 
 > [!tip] 技术解读（多模态）
-> **Figure Description (≤120 words):**
-
-Figure 2 presents a 2×2 grid of t-SNE scatter plots visualizing document embeddings on the CLASSIC dataset across four methods: **LOTT** (top-left), **SBERT** (top-right), **HOTT** (bottom-left), and **nBoW** (bottom-right). Each plot maps four classes—**CACM** (magenta), **MED** (light purple), **CRAN** (light blue), **CISI** (orange)—as colored point clouds. The data flow: raw CLASSIC documents → method-specific encoder (LOTT/HOTT/SBERT/nBoW) → high-dimensional embeddings → t-SNE dimensionality reduction → 2D projection. **Key takeaway:** LOTT produces distinct, homogeneous clusters with strong intra-class consistency and clear inter-class separation, matching HOTT's quality while surpassing the diffuse, poorly-separated nBoW baseline—visually confirming its competitive embedding quality alongside the reported 182× speedup over HOTT.
-
-**Caption (verbatim):**
-
-Figure 2: t-SNE on CLASSIC
+> 【图文联合解读】该图以 2×2 网格对比 LOTT、SBERT、HOTT、nBoW 四种方法在 CLASSIC 数据集（4 类、CACM/MED/CRAN/CISI）上的 t-SNE 二维投影。直观可见：LOTT 与 HOTT 形成颜色分明、类内紧凑的簇群；SBERT 各类有重叠；nBoW 散点几乎混为一体。原文借此论证 LOTT 嵌入具备良好的语义结构，类内一致性与类间分离度均优，为文档相似度度量提供可解释的表征依据，支撑其在主实验中的优越性。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -61,20 +55,7 @@ Figure 2: t-SNE on CLASSIC
 > Dataset statistics for evaluation
 
 > [!tip] 表格解读（多模态）
-> **Description:**
-
-The image presents **Table 1** (titled *"Dataset statistics for evaluation"*), which tabulates five columns of metadata across six benchmark datasets used in the evaluation:
-
-- **Dataset** (row label, in small caps): BBCSPORT, TWITTER, OHSUMED, CLASSIC, REUTERS, AMAZON
-- **|D|** (number of documents): ranging from 737 (BBCSPORT) to 9,152 (OHSUMED)
-- **V** (vocabulary size): ranging from 1,205 (TWITTER) to 16,753 (AMAZON)
-- **Avg(w)** (average document length in words): ranging from 9.7 (TWITTER) to 116.5 (BBCSPORT)
-- **Classes** (number of target labels): ranging from 3 (TWITTER) to 10 (OHSUMED)
-
-**Key takeaway:** The benchmarks span diverse regimes—short social-media texts (TWITTER), long news articles (BBCSPORT), and multi-label medical text (OHSUMED)—ensuring evaluation is not skewed by one document length, domain, or class granularity.
-
-**Caption (verbatim):**
-> Table 1: Dataset statistics for evaluation
+> 【图文联合解读】表1列出6个评估数据集的统计：BBCSPORT(737篇，词典3657，均长116.5词，5类)、TWITTER(3108/1205/9.7/3)、OHSUMED(9152/8261/59.4/10)、CLASSIC(7093/5813/38.5/4)、REUTERS(7674/5495/35.7/8)、AMAZON(8000/16753/44.3/4)。原文借此论证LOT方法在词典规模(1205–16753)、文档平均长度(9.7–116.5词)、类别数(3–10)高度异构的语料上均有效，体现主题传输的领域普适性。该表是后续k-NN分类(图1)与迁移距离对比实验的数据基础，支撑方法在跨域文档相似性任务中的鲁棒性结论。
 
 ### Table 2 (p.6) ⭐深度解读
 ![[assets/crops/linear-optimal-topic-transport-for-document-similarity-tab02.png]]
@@ -82,39 +63,23 @@ The image presents **Table 1** (titled *"Dataset statistics for evaluation"*), w
 > Standardized throughput of LOTT and other methods, normalized relative to the throughput of HOTT.
 
 > [!tip] 表格解读（多模态）
-> **Note on the image:** The provided image contains only a table caption and the header row of Table 2 — no figure (chart, architecture diagram, or data plot) is visible. Below I describe what can be inferred from the table header structure, then provide a verbatim caption transcription.
+> 【图文联合解读】**Table 2 联合解读**
 
-**Description of Table 2 (based on visible header):**
+1) **核心数据**：6 个数据集（BBCSPORT、AMAZON、OHSUMED、CLASSIC、REUTERS、TWITTER）上，WMD20、HOFTT、HOTT 与 LOTT-{1,5,10,15} 的标准化吞吐（以 HOTT=1 为基准）。WMD20/HOFTT 均 <0.4，慢于 HOTT；而 LOTT 系列均显著高于 HOTT——BBCSPORT 仅约 11–13 倍，TWITTER/CLASSIC/REUTERS 约 85–102 倍，AMAZON 高达 165–182 倍，呈现"数据集越大、加速越显著"的趋势。
 
-- **Structure:** A tabular comparison with rows representing datasets and columns representing different methods/algorithms.
-- **Columns (Methods):** WMD20, HOFTT, HOTT, LOTT-1, LOTT-5, LOTT-10, LOTT-15 — suggesting WMD20 and HOFTT as baseline/competitor methods, HOTT as the reference baseline, and four LOTT variants differing by a parameter (likely tree depth or candidate count: 1, 5, 10, 15).
-- **Metric:** Standardized throughput, normalized relative to HOTT's throughput (so HOTT = 1.0 by construction).
-- **Key takeaway:** The LOTT family is being benchmarked against standard optimal transport baselines (WMD20, HOFTT) using HOTT as the reference; the multiple LOTT-k variants allow sensitivity analysis across a configuration knob.
+2) **论证结论**：LOTT 在保持与 HOTT 同等聚类质量（呼应 Figure 2 的 t-SNE 视觉对比）的前提下，实现数量级推理加速，并优于 WMD20、HOFTT 等基线，验证了"线性最优主题传输"在效率上的优势。
 
-**Caption (verbatim):**
-> Table 2: Standardized throughput of LOTT and other methods, normalized relative to the throughput of HOTT.
+3) **论文链路作用**：与 Figure 2（质量证据）互补，构成"质量持平 + 吞吐飞跃"的双重论证，支撑 LOTT 作为 HOTT 可扩展替代方案的核心贡献。
 
 ## 关键公式（原文截图，无 LaTeX 源 — 引用前请核对图片）
 
 ### 公式截图 (p.2)
 ![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq01.png]]
-> 原文文本线索：`matrix C = (cij) ∈Rn×m, where cij represents`
-
-### 公式截图 (p.2)
-![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq02.png]]
-> 原文文本线索：`γ = (γij) that redistributes mass from X to Y,`
-
-### 公式截图 (p.2)
-![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq03.png]]
 > 原文文本线索：`Γp,q = {γ ∈(R+)n×m : γ1m = µ, γT 1n = ν}.`
 
 ### 公式截图 (p.3)
-![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq04.png]]
+![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq02.png]]
 > 原文文本线索：`Fσ(µ) = T µ`
-
-### 公式截图 (p.3)
-![[assets/crops/linear-optimal-topic-transport-for-document-similarity-eq05.png]]
-> 原文文本线索：`LOTT(dk1, dk2) = ∥Fσ( ¯dk1) −Fσ( ¯dk2)∥σ`
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

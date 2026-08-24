@@ -30,23 +30,13 @@ tags: [multimodal]
 > Left: Conventional large multimodal models (LMMs) string all visual tokens into a sequence for high- and low-resolution images. Middle: Our DeepStack LMMs stack the tokens into a grid and infuse them into the first and middle transformer layers from bottom to top (■↑■↑■↑) simply using a residual connection. With no architecture modification and context length increasing, our model can handle multi
 
 > [!tip] 技术解读（多模态）
-> ## Description (architecture, components, data flow + key takeaway)
+> 【图文联合解读】**图文联合解读（Figure 1）**
 
-The figure contrasts DeepStack with conventional LMMs in three panels.
+该图分两部分：左为架构示意，将视觉token分4组（标注1–4）通过残差连接沿Transformer由浅至深（层l_a…l_d）分层注入，而非一次性串入序列；右为七维雷达图，对比7个基准（VQAv2 78.5/80.9/87.6、GQA 62.0/64.4、TextVQA 58.2/61.9、DocVQA 28.1/46.0、InfoVQA 25.8/31.6、SEED 58.6/62.9、POPE 85.9/87.6），四曲线分别为Sequence-576ctx、Sequence-2880ctx、DeepStack-V与DeepStack-L（均2880token/576ctx）。
 
-**Left ("Sequence LMMs")**: Visual tokens from high/low-resolution images are concatenated into a flat sequence fed entirely into one Transformer stack (×L).
+原文借此论证：仅靠"分层堆叠+残差注入"，在不增上下文长度前提下，DeepStack-L即可全面碾压同ctx的串接基线，并逼近5×ctx的串接模型。
 
-**Middle ("DeepStack LMMs")**: Tokens form a grid of groups (1–4) infused into transformer layers from bottom to top via residual connections—1→*l_a*, 2→*l_b*, 3→*l_c*, 4→*l_d*—requiring no architecture modification.
-
-**Right (Radar chart)**: Compares Sequence baselines (vis_tok=576/2880, ctx_len=576/2880) with DeepStack-V (Vicuna-7B) and DeepStack-L (CLIP ViT-L), both using vis_tok=2880, ctx_len=576, across VQAv2, GQA, TextVQA, DocVQA, InfoVQA, SEED, POPE.
-
-**Key takeaway**: Distributing token groups across intermediate layers lets DeepStack process 4× more visual tokens at the same context length, yielding major gains without altering the underlying architecture.
-
----
-
-## Caption (verbatim)
-
-> Figure 1: Left: Conventional large multimodal models (LMMs) *string* all visual tokens into a sequence for high- and low-resolution images. Middle: Our DeepStack LMMs *stack* the tokens into a grid and infuse them into the first and middle transformer layers from bottom to top (■ ↑ ■ ↑ ■ ↑), simply using a residual connection. With no architecture modification and context length increasing, our model can handle multiple times more visual tokens as inputs. Right: We apply *DeepStack* separately to Vicuna-7B (DeepStack-L) and CLIP ViT-L (DeepStack-V). Our models can take 4× more visual tokens, and significantly outperforms the sequence LMM with same context length and rival the one using a much longer context, over a wide range of benchmarks.
+论文作用：以一张图同时完成"动机（高分辨率需更多token）→方法（分层注入）→收益（4× token且不增ctx）"的全链路论证，作为后续Vicuna-7B/CLIP ViT-L实验的可视化总纲。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig02.png]]
@@ -55,19 +45,13 @@ The figure contrasts DeepStack with conventional LMMs in three panels.
 > Architecture of DeepStack. The main innovation lies in the DeepStack strategy that infuses visual tokens into different layers. Left: DeepStack for LLMs. Given an input image, we feed the tokens extracted from the low-resolution version to the input layer of LLM. Considering the 2D nature of images, we extra the neighbors from the high-resolution version and reorganize them into DeepStack, which a
 
 > [!tip] 技术解读（多模态）
-> ## Figure 2 Description
+> 【图文联合解读】**图文联合解读**
 
-**Architecture & Data Flow:** The figure illustrates two variants of the DeepStack strategy for infusing visual tokens across layers:
+图示 **DeepStack-V**（视觉编码器侧架构）：高分辨率图像被切分为多块网格（如编号 1–5 的彩色区域），低分辨率版本对应 1 块；经 Patch Embed 与首层 ViT Block 处理后，串接多层 ViT Block，每层间分别注入 4 个来自不同图像区域/分辨率的视觉 token 组（图中红/橙/绿/紫标号的 1-1-1-1、2-2-2-2、5-5-5-5），最终经 Connector 接入 LLM 与文本 token 融合。
 
-- **DeepStack-L (left, for LLMs):** Both a low-resolution image and a high-resolution image are processed through a shared **Vision Encoder** and **Connector**. The low-resolution visual tokens enter the *first* LLM Block, while successive groups of high-resolution neighbor tokens (numbered 2–5) are stacked and progressively injected into *deeper* LLM Blocks alongside text tokens.
+**技术结论**：DeepStack 将视觉 token 分散堆叠至 ViT 多个中间层（而非仅输入层），借助高分辨率邻域块在不同深度强化细粒度视觉表征。
 
-- **DeepStack-V (right, for ViTs):** The same dual-resolution idea is applied earlier in the pipeline. Low-res and high-res images pass through a **Patch Embed** and a **ViT Block**, with progressive visual-token groups inserted at successive ViT Blocks before a **Connector** feeds the final representation into the **LLM** along with text tokens.
-
-**Key Technical Takeaway:** DeepStack improves fine-grained visual understanding without expanding the visual context length by *distributing* visual tokens across layers rather than concatenating them at the input — a global-view stream at shallow layers plus stacked high-resolution features at deeper layers.
-
-## Caption (verbatim)
-
-**Figure 2: Architecture of DeepStack.** The main innovation lies in the *DeepStack* strategy that infuses visual tokens into different layers. Left: *DeepStack* for LLMs. Given an input image, we feed the tokens extracted from the low-resolution version to the input layer of LLM. Considering the 2D nature of images, we extra the neighbors from the high-resolution version and reorganize them into *DeepStack*, which are then fed to the consequent layers in LLMs. Right: *DeepStack* for ViTs. We apply similar sampling strategy but feed the visual tokens into the ViT layers of vision encoder.
+**方法作用**：作为论文核心架构图，证明"多层视觉 token 注入"在视觉编码器和 LLM 两侧均通用，是后续消融与基准实验的方法基石。
 
 ### Figure 3 (p.8) ⭐深度解读
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig03.png]]
@@ -76,20 +60,11 @@ The figure contrasts DeepStack with conventional LMMs in three panels.
 > Analysis on using LLM layers to process visual tokens. (a) We insert the visual tokens into different starting layers and initialize the correspondence input embeddings as zero; (b) We fix the first layer to insert global visual tokens and ablation on the interval s for stacking high-resolution tokens; (c) We ablation number of layers for token stacking. 8
 
 > [!tip] 技术解读（多模态）
-> **Figure 3 Description:**
+> 【图文联合解读】**图3核心内容**：左图(b)展示插入全局token后，高分辨率token堆叠间隔*s*∈{3,4,5}对性能的影响——平均得分稳定在49.7–49.9，几乎无变化；右图(c)展示堆叠层数N∈{0,2,4,6,9}的影响——0层约49.5，4层达到峰值约50.7，9层回落至约49.5。
 
-**Components:** Three side-by-side ablation line plots, each plotting "Mean score" (y-axis, ~48–51) against a hyperparameter (x-axis), all comparing DeepStack configurations on a 7-benchmark suite.
+**关键结论**：间隔*s*鲁棒（间隔1–2即可覆盖所有层），无需精细调参；层数需折中，过少无法充分融合、过多反而引入干扰，4层为最优。
 
-**(a) Starting layer to insert visual tokens:** Layer index (0–24). Score remains ~49 for early layers (0–8), then drops sharply at layer 24. ⇒ Earliest insertion is best.
-
-**(b) Layer interval for DeepStack:** Interval *s* (0–5). Score peaks at *s*=1–2 (~51) and gradually declines. ⇒ Moderate spacing optimal.
-
-**(c) Number of layers for DeepStack:** N-Layers (0–9). Score peaks at N=4 (~51). ⇒ ~4 stacking layers optimal.
-
-**Key takeaway (≤120 words):** DeepStack is robust to insertion location at early LLM layers but degrades if visual tokens are injected too late (≥16). Performance is maximized when stacking spans roughly 4 intermediate layers with a small interval (~1–2), confirming that interleaving visual features across multiple mid-layers—not just the input—yields the strongest gains, while too few or too many stacking layers both hurt.
-
-**Caption (verbatim):**
-"Figure 3: **Analysis on using LLM layers to process visual tokens.** (a) We insert the visual tokens into different starting layers and initialize the correspondence input embeddings as zero; (b) We fix the first layer to insert global visual tokens and ablation on the interval *s* for stacking high-resolution tokens; (c) We ablation number of layers for token stacking."
+**论文作用**：为DeepStack"深层堆叠"策略提供超参依据，证明该设计轻量且对堆叠密度不敏感，仅需选好堆叠次数即可稳定获益，是方法实用性的关键验证。
 
 ### Figure 4 (p.10) ⭐深度解读
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig04.png]]
@@ -98,14 +73,13 @@ The figure contrasts DeepStack with conventional LMMs in three panels.
 > Visualization. Both LLaVA-1.5 and DeepStack use 576 visual context length for a fair comparison.
 
 > [!tip] 技术解读（多模态）
-> **Figure 4 — Description:**
+> 【图文联合解读】**图像无法有效辨认**——所展示的图片内容为循环图表（VOQA/POP/GAQA 等标注）与 DeepStack Figure 4（视觉问答对比示例）无关，疑似加载错误，故仅依据原文进行解读：
 
-**Components / Layout:** The figure presents qualitative comparisons between LLaVA-1.5 and DeepStack (both using 576 visual tokens). The **top row** shows four images (a card, a "Welcome to Washington DC" board, candy/wine bottles, and a phone) with question–answer pairs; red circles highlight the queried area. The **middle panel** compares detailed captions on a people/cow scene, with correct facts highlighted in blue and hallucinations in red. The **bottom** is a heptagonal radar chart benchmark across VQAv2, GQA, POPE, SEED, TextVQA, DocVQA, and InfoVQA, with DeepStack (green/red) consistently enclosing LLaVA-1.5 (blue).
+1) **核心对象与结构**：图分两栏对比 LLaVA-1.5 与 DeepStack，两者均使用 576 视觉 token 的同等上下文长度；上方样本在图像中以**红圈**标注问题对应区域，下方样本展示细粒度图像描述任务。
 
-**Key takeaway:** DeepStack's multi-layer stacking of high-resolution tokens preserves fine-grained details (small text, brand labels, background objects) that single-layer low-resolution baselines like LLaVA-1.5 hallucinate or miss.
+2) **关键技术结论**：在 token 数严格公平的前提下，DeepStack 通过多层叠加（stacking）策略，在需要**高分辨率与细粒度视觉理解**的 VQA（上方示例）以及**细节图像描述**（下方示例）上显著优于 LLaVA-1.5，验证视觉表征的层级堆叠优于单层扩张。
 
-**Caption (verbatim):**
-"Figure 4: **Visualization.** Both LLaVA-1.5 and DeepStack use 576 visual context length for a fair comparison. Top: We mark the area corresponding to each question with a **red circle**. DeepStack can well answer the questions which need high-resolution and fine-grained understanding. Bottom: DeepStack demonstrates a more accurate visual understanding in detailed visual captioning."
+3) **整体链路作用**：作为定性可视化（qualitative visualization），与论文中量化的 LLaVA-Bench、MMBench、MM-Vet、TextVQA、POPE、MMMU 等基准结果相互印证，支撑"深度堆叠视觉 token 而非简单增加 token 数"这一核心方法论主张。
 
 ### Figure 5 (p.9) ⭐深度解读
 ![[assets/crops/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms-fig05.png]]
@@ -114,21 +88,7 @@ The figure contrasts DeepStack with conventional LMMs in three panels.
 > Visualization of three sam- pling methods for DeepStack.
 
 > [!tip] 技术解读（多模态）
-> ## Description
-
-**Main figure (Figure 5): Visualization of three sampling methods for DeepStack**
-
-The figure presents three 4×4 grids of color-coded, numbered cells (1–4) that illustrate how high-resolution visual tokens are sampled and arranged before being stacked across the DeepStack layers.
-
-- **2d Spatial (default):** Each 2×2 block shares the same number/color, reflecting a 4-neighbor spatial sampling that preserves local 2D coherence across layers.
-- **1d Sequential:** Numbers progress linearly (1→4) within the grid; tokens are first flattened into a 1D sequence and then uniformly resampled per layer, destroying spatial locality.
-- **2d Grid:** Tokens are partitioned into 2D sub-grids that are then stacked per layer, producing a checker-like interleaved pattern.
-
-**Key technical takeaway:** Preserving 2D spatial coherence in how high-resolution tokens are organized before stacking (the *2d Spatial* strategy) is critical — Table 5 shows it achieves the best average score (51.1 AVG) compared to *2d Grid* (49.0) and *1d Sequential* (49.3), confirming that geometry-aware sampling materially improves multimodal performance.
-
-## Caption (verbatim)
-
-**Figure 5:** Visualization of three sampling methods for **DeepStack**.
+> 【图文联合解读】图5展示DeepStack对4×4视觉token的三种采样分组方案：2D Spatial（行内交替"1,2,1,2 / 3,4,3,4"，行列均交替）、1D Sequential（按行同色，"1,1,1,1 → 4,4,4,4"纵向排列）、2D Grid（2×2块同色，"1,1,2,2 / 3,3,4,4"分块均匀）。相同编号token在同一层被堆叠送入LMM。论文借此论证分组策略的多样性与鲁棒性——2D Spatial细粒度空间交替、1D Sequential保持序列连续性、2D Grid强化局部块一致性，三者均支撑多层视觉token整合。作为消融可视化，它验证了"深度堆叠视觉token"对采样方式不敏感的核心结论，是证明DeepStack通用性的关键图示。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

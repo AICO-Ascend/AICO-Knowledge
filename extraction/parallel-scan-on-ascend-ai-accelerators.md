@@ -30,7 +30,11 @@ tags: []
 > 1 shows the Ascend architecture where the
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】⭐Ascend 910B AI Core 架构(Fig.3)：单 AI Core = 1 个 AI Cube(AIC 矩阵乘引擎) + 2 个 AI Vector(AIV SIMD 核)，各有独立 Unified Buffer(UB) scratchpad，加 Memory Transfer Engine(MTE)+标量+控制块。AIC/AIV 共享全局 HBM/L2，Cube↔Vector 数据交换须走全局内存/L2（AIC 无直接写 AIV UB 的本地路径）。并行 scan：AIV 跑 element-wise/局部 scan + 解耦 look-back（在 UB 上），AIC 改作跨块前缀累积（矩阵乘式），MTE 编排块级 tile 传输。⭐结论：Ascend 非对称 Cube/Vector 划分 + UB 局部计算 + Cube↔Vector 仅全局通信→偏好 block-tiled、通信最小化的解耦 scan 设计，而非密集 GEMM 中心。直击昇腾线性注意力/SSM scan。
+> 【图文联合解读】**1) 图示对象与结构**：展示Ascend 910B单AI Core架构：含1个AI Cube Unit（Cube核心+L0A/L0B/L0C、BT/FP、L1 Buffer+FixPipe+Scalar）与2个AI Vector Unit（各含Vector核+Vector Scratchpad+Scalar），三者均经左侧Global Memory互联。
+
+**2) 关键技术结论**：Cube与Vector各持独立scratchpad，跨单元无本地直连通路，仅能经全局内存/L2交换数据；非对称划分迫使parallel scan采用block-tiled、解耦look-back的通信最小化设计，而非GEMM中心方案。
+
+**3) 论文方法链作用**：为解耦scan方法提供硬件依据——AIV跑element-wise/局部scan，AIC做跨块前缀累积，MTE编排块级tile传输，从而在Ascend上高效实现线性注意力/SSM scan。
 
 ### Figure 4 (p.4) ⭐深度解读
 ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig04.png]]
@@ -39,11 +43,13 @@ tags: []
 > 1: Data path from an input tile xℓto an output tile yℓof the ScanU (Algorithm 4.1).
 
 > [!tip] 技术解读（多模态）
-> **Description (≤120 words):**
-Figure 3.1 depicts the Ascend 910B AI core architecture. Global Memory connects bidirectionally to the L1 Buffer, which fans out to L0A/L0B/BT/FP Buffers feeding the Cube Unit; its output flows through the L0C Buffer and FixPipe back to Global Memory. Two AI Vector Units flank a shared Scalar Unit, each comprising a Scalar Unit, Vector Unit, and Vector Scratchpad Memory. The Cube Unit also interfaces with the Scalar Unit via the FixPipe. **Key takeaway:** the 2:1 vector-to-cube ratio (with dedicated vector scratchpads) enables flexible load balancing — a critical design point when mapping data-parallel scan kernels across these heterogeneous compute units.
+> 【图文联合解读】**图4核心内容：**
 
-**Caption (verbatim):**
-Figure 3.1: Architecture of Ascend 910B accelerators. Each AI core contains one cube and two vector units.
+图示 ScanU 单 tile（x_l → y_l）的片上数据通路。左下为 Global Memory，含输入张量 x（含 tile x_l）、上方的 U_s（通常为上一轮的累加结果），以及输出 y（含 y_l）。右上 Cube unit：从 GM 读 x_l 至 L0A（矩阵缓冲），与 L0B 中 1/0 选择矩阵（实现下三角扫描矩阵）做矩阵乘，结果落入 L1C；随后 L1C 数据经 DMA 进入右下 Vector unit 的 UB，并在 UB 内通过一串 "+" 链式累加（向量级 prefix-sum），最终写回 y_l。
+
+**论证结论：** ScanU 把"扫描"拆解为 Cube 端的大规模矩阵乘（构造 partial sum）+ Vector 端的链式累加（完成 prefix-sum），即"超立方算子 + 向量归约"混合实现，避开显式多步同步扫描。
+
+**在论文中的作用：** 作为 Algorithm 4.1 的微观数据流证据，支撑其"用 Cube unit 完成并行扫描主体、用 Vector unit 完成剩余归约"的核心设计；与性能模型及实验部分呼应，论证该混合策略在 Ascend 上的吞吐与访存优势。
 
 ### Figure 5 (p.7) ⭐深度解读
 ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig05.png]]
@@ -52,20 +58,13 @@ Figure 3.1: Architecture of Ascend 910B accelerators. Each AI core contains one 
 > 1: A diagram of well-known parallel scan applica- tions considered here along with their dependencies.
 
 > [!tip] 技术解读（多模态）
-> **Figure 5.1 Description**
+> 【图文联合解读】**图文联合解读：**
 
-The diagram is a directed acyclic graph (DAG) showing dependencies among parallel scan applications, organized top-down by abstraction level.
+该图以有向依赖图形式，自顶向下展示了"Parallel Scan"作为根节点，向下派生出 **Weighted Sampling** 与 **Split** 两条主线；Split 又分出 **Radixsort** 与 **Compress**；Radixsort 进一步支撑 **Top-K Sampling**，Weighted Sampling 衍生 **Top-P Sampling**（含虚线连接）。各应用间以实/虚箭头标注直接调用与衍生依赖。
 
-**Components (top→bottom):**
-- **Parallel Scan** (root primitive, no incoming edges)
-- **Split**, **Compress**, **Weighted Sampling**, **Radixsort** (intermediate operators)
-- **Top-P Sampling** and **Top-K Sampling** (high-level end applications at the bottom)
+原文借此论证关键结论：**多种主流算法（采样、基数排序、压缩、Top-K/Top-P）均可被归约为 parallel scan 原语**，因此在 Ascend 加速器上高效实现 parallel scan 即能同时加速整条应用链路。
 
-**Data flow / dependencies:** Solid arrows show direct implementation dependencies — `Parallel Scan` feeds into `Split`, `Compress`, `Radixsort`, and `Weighted Sampling`. `Split` underpins `Compress`, `Radixsort`, and both sampling routines. `Compress` and `Radixsort` further feed `Top-K` and `Top-P` sampling. Dotted lines indicate indirect/transitive links (e.g., Parallel Scan ↔ Weighted Sampling, Parallel Scan ↔ Radixsort).
-
-**Key technical takeaway:** A single low-level primitive — multi-core parallel scan (MCScan) — composes into a rich hierarchy of operators, ultimately enabling critical LLM inference primitives (top-k, top-p / nucleus sampling, radix sort) on AscendC hardware.
-
-**Caption (verbatim):** "Figure 5.1: A diagram of well-known parallel scan applications considered here along with their dependencies."
+在论文整体定位上，该图属于**动机图（motivating figure）**，位于方法章节前部，为后续面向 Ascend 的并行扫描算子设计与性能实验提供应用场景清单，论证研究工作的覆盖面与实用价值。
 
 ### Figure 6 (p.8) ⭐深度解读
 ![[assets/crops/parallel-scan-on-ascend-ai-accelerators-fig06.png]]
@@ -74,20 +73,7 @@ The diagram is a directed acyclic graph (DAG) showing dependencies among paralle
 > 1:
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
-
-**Main figure (Figure 6.1):** A line plot titled "MCSCAN Bandwidth (fp16)" showing achieved memory bandwidth (GB/s, y-axis) versus input length (x-axis, 0 to 1.0×10⁸) on the Ascend 910B4 accelerator. Five curves are compared:
-- **memcpy** (yellow) — hardware peak reference, saturating near ~560 GB/s
-- **s = 128** (red) — MCScan with segment size 128, saturating near ~300 GB/s
-- **s = 64** (orange dashed) — saturating near ~200 GB/s
-- **s = 32** (blue) — saturating near ~100 GB/s
-- **PyTorch** (light blue dashed) — `torch.cumsum` baseline, remaining very low
-
-**Key technical takeaway:** MCScan's bandwidth utilization grows monotonically with segment size *s*, with s=128 reaching ~300 GB/s versus near-zero for the PyTorch cumsum baseline — a 15.2× speedup that demonstrates larger tile sizes better saturate Ascend's memory bandwidth on 20 AI cores.
-
-## Caption (Verbatim)
-
-> Figure 6.1: Bandwidth of MCScan (Algorithm 4.3) for s = 32, 64, 128. MCScan has 15.2× speedup against ScanU on 910B4 (20 AI cores).
+> 【图文联合解读】图示910B4上fp16 MCSCAN带宽随输入长度(0~1×10⁸)的变化：memcpy峰值~560 GB/s，s=128/64/32分别饱和约300/200/100 GB/s，PyTorch cumsum近0。段长越大带宽越高，s=128达memcpy约53%，验证其相对ScanU 15.2×加速。作为Algorithm 4.3的实测支撑，定量呈现段长对硬件利用率的影响，佐证分段扫描方案在910B4上的高效性。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

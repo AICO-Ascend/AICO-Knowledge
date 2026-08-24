@@ -30,18 +30,11 @@ tags: []
 > 6.2.1 ARCHITECTURE
 
 > [!tip] 技术解读（多模态）
-> **Description:**
+> 【图文联合解读】该图上部展示3D仿生机器人：球形躯干+4条腿肢（每肢2自由度，共8维连续动作空间），置于棋盘格地面/蓝天的MuJoCo仿真环境；下部以5帧序列呈现习得步态，证明策略可驱动多肢协调移动。
 
-The figure presents a side-by-side comparison of two simulated agents in a physics-based 3D environment (checkerboard-floored scene, MuJoCo-style). 
+原文在6.2.1 ARCHITECTURE节以该图建立具身仿真基准，论证GAE能处理躯干姿态与肢体关节耦合的高维连续控制，相对TD(λ)在多步信用分配上具优势。
 
-**Left panel:** A bipedal humanoid torso with two legs, rendered in an upright T-pose, shown in a standard reference configuration. **Right panel:** A quadrupedal/arachnid-like creature with a central body and four radiating limbs, shown in a crouched/grounded pose.
-
-**Bottom strips (data flow / temporal sequence):** Below each main render is a timeline of five smaller snapshots showing learned motion primitives — a walking gait for the humanoid (sequential forward-stepping frames) and a crawling/locomotion gait for the quadruped (sequential reaching/contact frames). The arrows imply temporal progression from left → right.
-
-**Key technical takeaway:** The figure illustrates that a single learned policy framework can generalize across morphologically distinct embodiments (biped vs. quadruped), producing stable cyclic locomotion gaits purely from physics simulation without hand-engineered controllers.
-
-**Caption (verbatim):**
-*No caption text is rendered within the figure itself; only image panels are shown.*
+该图位于方法/实验链路起点，为后续TRPO+GAE训练提供高维任务载体，支撑策略学习的定量对比。
 
 ### Figure 2 (p.10) ⭐深度解读
 ![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig02.png]]
@@ -50,15 +43,7 @@ The figure presents a side-by-side comparison of two simulated agents in a physi
 > Left: learning curves for cart-pole task, using generalized advantage estimation with varying values of λ at γ = 0.99. The fastest policy improvement is obtain by intermediate values of λ in the range [0.92, 0.98]. Right: performance after 20 iterations of policy optimization, as γ and λ are varied. White means higher reward. The best results are obtained at intermediate values of both. 0 100 200 
 
 > [!tip] 技术解读（多模态）
-> **Description:** The page presents two figures from an ICLR 2016 paper on generalized advantage estimation (GAE). **Figure 2 (top)** compares cart-pole performance: the left panel plots cost vs. policy iterations for varying λ (0–1) at γ=0.99, while the right panel is a heatmap of final performance across a γ×λ grid (white = higher reward). **Figure 3 (bottom)** shows learning curves for 3D bipedal locomotion (left, 9 runs, varying γ∈[0.96,1] and λ∈[0.96,1]) and 3D quadrupedal locomotion (right, 5 runs, comparing γ=0.995 with no value fn, λ=1, and λ=0.96). All plots share axes of cost (vertical) vs. number of policy iterations (horizontal).
-
-**Key takeaway:** Intermediate λ values (≈0.92–0.99) consistently outperform extreme settings, empirically validating the bias–variance sweet spot in GAE across tasks.
-
-**Caption (verbatim):**
-
-*Figure 2:* Left: learning curves for cart-pole task, using generalized advantage estimation with varying values of λ at γ = 0.99. The fastest policy improvement is obtain by intermediate values of λ in the range [0.92, 0.98]. Right: performance after 20 iterations of policy optimization, as γ and λ are varied. White means higher reward. The best results are obtained at intermediate values of both.
-
-*Figure 3:* Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algorithm. Right: learning curves for 3D quadrupedal locomotion, averaged across five runs.
+> 【图文联合解读】左图：cart-pole在γ=0.99下10种λ设置（0/0.36/0.68/…/1.0及No VF）的cost-迭代曲线，λ∈[0.92,0.98]约30次迭代降至≈-10，No VF与λ=0仅≈-2。右图：5×7的γ-λ网格热图，20次迭代后白色（高reward）集中于γ、λ均取中间值处。论证：GAE通过λ实现偏差-方差权衡，中间值在收敛速度与最终性能上最优。该图为GAE超参选择提供经验依据，并支撑后续三维双足/四足运动等复杂任务的方法推广。
 
 ### Figure 3 (p.10) ⭐深度解读
 ![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig03.png]]
@@ -67,15 +52,13 @@ The figure presents a side-by-side comparison of two simulated agents in a physi
 > Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algo- rithm. Right: learning curves for 3D quadrupedal locomotion, averaged across ﬁve runs.
 
 > [!tip] 技术解读（多模态）
-> **Description:** The page presents two figures from an ICLR 2016 paper on generalized advantage estimation (GAE). **Figure 2 (top)** compares cart-pole performance: the left panel plots cost vs. policy iterations for varying λ (0–1) at γ=0.99, while the right panel is a heatmap of final performance across a γ×λ grid (white = higher reward). **Figure 3 (bottom)** shows learning curves for 3D bipedal locomotion (left, 9 runs, varying γ∈[0.96,1] and λ∈[0.96,1]) and 3D quadrupedal locomotion (right, 5 runs, comparing γ=0.995 with no value fn, λ=1, and λ=0.96). All plots share axes of cost (vertical) vs. number of policy iterations (horizontal).
+> 【图文联合解读】**图3图文联合解读**
 
-**Key takeaway:** Intermediate λ values (≈0.92–0.99) consistently outperform extreme settings, empirically validating the bias–variance sweet spot in GAE across tasks.
+**1) 核心对象与数据：** 左图为3D双足机器人9次平均的学习曲线，横轴为策略迭代次数0–500，纵轴代价由0降至约−2.5，涵盖10组(γ, λ)配置；其中红色曲线(γ=0.995, λ=0.98)最低降至≈−2.2。右图为3D四足机器人5次平均曲线，横轴0–1000，代价0至−12，三条γ=0.995曲线对比：λ=0.96(黄)≈−11.5最优，λ=1(橙)≈−10.5次之，无value函数(绿)≈−8.5最差。
 
-**Caption (verbatim):**
+**2) 关键结论：** 在双足上(γ, λ)敏感、最优组合落在偏倚-方差折中区；四足上明确显示GAE引入value函数(λ<1)显著优于无baseline与λ=1的vanilla策略梯度。
 
-*Figure 2:* Left: learning curves for cart-pole task, using generalized advantage estimation with varying values of λ at γ = 0.99. The fastest policy improvement is obtain by intermediate values of λ in the range [0.92, 0.98]. Right: performance after 20 iterations of policy optimization, as γ and λ are varied. White means higher reward. The best results are obtained at intermediate values of both.
-
-*Figure 3:* Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algorithm. Right: learning curves for 3D quadrupedal locomotion, averaged across five runs.
+**3) 在论文中的作用：** 在高维连续运动控制任务上实证GAE的有效性与超参鲁棒性区间，支撑其作为TRPO优势估计核心组件的实证依据。
 
 ### Figure 4 (p.11) ⭐深度解读
 ![[assets/crops/high-dimensional-continuous-control-using-generalized-advantage-estimation-fig04.png]]
@@ -84,22 +67,16 @@ The figure presents a side-by-side comparison of two simulated agents in a physi
 > (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up. 7 DISCUSSION
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图4（c）可见内容解读**（图中仅含站立片段，(a)(b)学习曲线未呈现，故结合原文caption综合解读）：
 
-The main figure (Figure 4) contains two side-by-side panels evaluating the 3D Standing Up task for simulated robotic locomotion:
+**1) 核心对象与结构**
+图4(c)以编号1–6的6个连续姿态，呈现3D模拟人形体由仰卧（1）→侧卧（2）→蜷缩撑地（3）→双手触地推起（4）→近直立并抬臂平衡（5）→完全站立举手（6）的运动序列；每帧姿态由MuJoCo渲染的多刚体棒人组成，对应二维状态特征。
 
-**Left panel — Learning curve:** A 2D plot of *cost* (y-axis, 0.0–2.5) versus *number of policy iterations* (x-axis, 0–500). Three configurations are compared:
-- γ=0.99, No value fn (green) — plateaus highest at ~1.0
-- γ=0.99, λ=1 (orange) — converges to ~0.5
-- γ=0.99, λ=0.96 (yellow) — achieves lowest cost (~0.4), with error bars
+**2) 论证的关键技术结论**
+该序列与(a)四足行走、(b)3D站立学习曲线互相印证，证明GAE在高维连续控制任务（含63维髋膝踝力矩+17维刚体姿态）中可稳定收敛，并习得具备"翻身—撑起—平衡—直立"语义结构的有意义行为，而非局部最优。
 
-**Right panel — Trajectory clips:** Six sequential 3D humanoid poses (labeled 1–6) depicting the simulated robot transitioning from a supine position (1) through intermediate pushing/rising poses (2–5) to a fully upright standing posture (6).
-
-**Key technical takeaway:** Introducing a learned value-function baseline with λ=0.96 yields substantially faster and lower asymptotic cost than omitting the value function entirely, demonstrating that variance reduction via the generalized advantage estimator is critical for high-dimensional locomotion control.
-
-## Verbatim Caption
-
-**Figure 4:** (a) Learning curve from quadrupedal walking, (b) learning curve for 3D standing up, (c) clips from 3D standing up.
+**3) 在论文链路中的作用**
+作为GAE从低维基准推广至类人/多足高维运动控制的核心实验证据，支撑第7节"Discussion"中关于GAE可扩展至复杂3D locomotion与manipulation类任务的结论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

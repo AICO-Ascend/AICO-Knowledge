@@ -143,8 +143,13 @@ def main():
     print("\n[3/8] extract_visuals (figure/table/formula crops)")
     run("extract_visuals.py")
 
-    print("\n[4/8] m3_caption for new crops")
-    batch_caption(uncaptioned_crops())
+    print("\n[4/8] m3_caption for new crops (context-enriched)")
+    # 上下文增强解读（图/表/公式 + 论文正文引用段落联合喂 M3）；幂等：
+    # 已有【图文联合解读】前缀的 crop 自动跳过，只补新增/失效的
+    if (SKILL / "context_caption.py").exists():
+        run("context_caption.py", "--workers", "6", timeout=5400)
+    else:
+        batch_caption(uncaptioned_crops())
 
     print("\n[5/8] eprint_formulas (latex source; background-safe)")
     run("eprint_formulas.py", timeout=600)

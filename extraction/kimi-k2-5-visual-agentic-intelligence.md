@@ -30,15 +30,21 @@ tags: [multimodal]
 > Kimi K2.5 main results. 1
 
 > [!tip] 技术解读（多模态）
-> ## Description of Figure 1
+> 【图文联合解读】## Figure 1 图文联合解读
 
-The figure is a grouped bar chart comparing Kimi K2.5 (blue) against three baselines — GPT‑5.2 (xhigh), Claude Opus 4.5, and Gemini 3 Pro (gray) — across ten benchmarks organized into four panels: **Agents** (Humanity's Last Exam, BrowseComp, DeepSearchQA), **Coding** (SWE‑bench Verified, SWE‑bench Multilingual), **Image** (MMMU Pro, MathVision, OmniDocBench 1.5), and **Video** (VideoMMMU, LongVideoBench). Each panel shows four bars per benchmark with numeric scores labeled above and model logos embedded in the bar tops. The y‑axis is percentile (%) accuracy, except OmniDocBench which uses a normalized Lévenshtein‑distance metric (higher = better).
+**1) 核心对象与数据：**
+该图为多面板条形图，对比 Kimi K2.5（蓝色 K 标）与 Claude Opus 4.5、Gemini 3 Pro 及另两款模型在四大类基准上的得分：
+- **Coding – SWE-bench Verified**：K2.5 = 76.8，其余为 80.0 / 80.9 / 76.2
+- **Coding – SWE-bench Multilingual**：K2.5 = 73.0（最高），余为 72.0 / 77.5 / 65.0
+- **Video – VideoMMBU**：K2.5 = 86.6（领先），余为 85.9 / 84.4 / 87.6
+- **Video – LongVideoBench**：K2.5 = 79.8（大幅领先），余为 76.5 / 67.2 / 77.7
+另有 SearchQA（76.1 vs 63.2）与视频类基准（87.7 vs 88.5）的局部对比。
 
-**Key takeaway:** Kimi K2.5 dominates agentic benchmarks (e.g., 74.5 on BrowseComp vs. ≤60.6 for others) and achieves top scores in 7/10 tasks, with its largest margins in multi‑step agentic search — supporting the claim of joint text‑vision RL optimization and Agent Swarm's concurrent task decomposition.
+**2) 关键论证结论：**
+K2.5 在 **多语言代码修复**与**长/多模态视频理解**任务上取得 SOTA，在 SWE-bench Verified 上接近最优，证明其在视觉-智能体（coding + video）双线均具竞争力。
 
-## Caption (verbatim)
-
-**Figure 1: Kimi K2.5 main results.**
+**3) 在论文中的作用：**
+作为首页总览图，定量支撑论文核心卖点——"visual-agentic intelligence"，为后续 Table 1 的联合训练策略消融提供基线锚点。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig02.png]]
@@ -47,13 +53,13 @@ The figure is a grouped bar chart comparing Kimi K2.5 (blue) against three basel
 > Vision RL training curves on vision benchmarks starting from minimal zero-vision SFT. By scaling vision RL FLOPs, the performance continues to improve, demonstrating that zero-vision activation paired with long-running RL is sufficient for acquiring robust visual capabilities.
 
 > [!tip] 技术解读（多模态）
-> **Note:** The image provided contains only a block of body text from a paper — there is no actual figure (diagram/architecture) or figure caption shown. Below I describe the text content and provide a verbatim transcription.
+> 【图文联合解读】**图2联合解读：**
 
-**Description of the text block (treating it as the main content shown):**
-The passage introduces a method called **zero-vision SFT** (Supervised Fine-Tuning). The pipeline conceptually works as follows: (1) start with abundant, diverse text-only SFT data; (2) during post-training, all visual/image manipulations are executed as **programmatic Python operations** rather than through pixel input; (3) this proxies "vision tool-use," letting the model perform pixel-level tasks (binarization, object sizing, counting) and ground tasks (localization, OCR). **Key takeaway:** Text-only SFT data is sufficient to elicit emergent visual reasoning capabilities in a model, by routing image operations through code.
+**① 核心数据**：图含两条RL训练曲线。左图MMMU Pro（粉）起点≈0.71–0.72，随RL FLOPs攀升并逼近≈0.76虚线参考；右图（绿）起点≈0.69，最终稳定在≈0.78左右，基线虚线位于≈0.70。两条曲线均呈持续上升趋势并伴随明显振荡收敛。
 
-**Verbatim transcription:**
-> An observation is that high-quality text SFT data are relatively abundant and diverse. We propose a novel approach, zero-vision SFT, that uses only text SFT data to activate the visual, agentic capabilities during post-training. In this approach, all image manipulations are proxied through programmatic operations in Python, effectively serving as a generalization of traditional vision tool-use. This "zero-vision" activation enables diverse reasoning behaviors, including pixel-level operations such as object size estimation via binarization and counting, and generalizes to visually grounded tasks such as object localization, counting, and OCR.
+**② 关键结论**：作者以"minimal zero-vision SFT"为起点，仅靠加大视觉RL算力即在两个基准上获得显著且单调的增益（MMMU Pro +4–5pp，右图 +8–9pp），证明无需预先大量视觉微调，长程RL即可"涌现"出鲁棒的视觉能力。
+
+**③ 方法链路作用**：此图为全文核心证据——支撑"文本能力先于视觉激活、视觉能力由RL后激活获得"的设计哲学，与Table 2的跨模态迁移结果呼应，共同论证MoE+RL的后训练范式无需显式视觉SFT即可获得多模态智能。
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig03.png]]
@@ -62,20 +68,9 @@ The passage introduces a method called **zero-vision SFT** (Supervised Fine-Tuni
 > An agent swarm has a trainable orchestrator that dynamically creates specialized frozen subagents and decomposes complex tasks into parallelizable subtasks for efficient distributed execution.
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components:** The diagram depicts a centralized **Orchestrator** (left, trainable) with tool access (`create_subagent`, `assign_task`, `search`, `browser`, …) that manages a swarm of **frozen subagents** (right), including AI Researcher, Physics Researcher, Life Sciences Researcher, Anthropology Researcher, Fact Checker, and Web Developer.
-
-**Data Flow (three stages):**
-1. **Create subagents** — Orchestrator instantiates specialized agents (each equipped with search/python/browser icons); a `success` signal returns.
-2. **Assign Tasks** — Tasks are dispatched in parallel batches (e.g., AI Researcher Tasks 1–4, Physics Task 5, then Tasks 96–100 in a second wave; Fact Checker/File Downloader/Web Developer in another pool), with `task N result` streams flowing back.
-3. **Final Results** — Aggregated output returned to caller.
-
-**Key Technical Takeaway:** The orchestrator is **trainable while subagents remain frozen**, decoupling high-level coordination logic from low-level execution—this avoids end-to-end credit-assignment ambiguity and stabilizes RL training.
-
-## Caption (verbatim)
-
-> **Figure 3:** An agent swarm has a trainable orchestrator that dynamically creates specialized frozen subagents and decomposes complex tasks into parallelizable subtasks for efficient distributed execution.
+该图展示 Agent Swarm 系统架构。**核心对象**：左侧为可训练 Orchestrator，配备 create_subagent、assign_task、search、browser 等工具；右侧为动态生成的约 6 类冻结子智能体（AI / Physics / Life Sciences / Anthropology Researcher、Fact Checker、Web Developer），每个内置搜索与浏览工具。**结构与数据**：Orchestrator 先执行"create subagents"并收到 success 回执，再分两批"Assign Tasks"——首批拆为 100 个子任务（4×AI Researcher + 1×Physics + 4×Life Sciences + 1×Anthropology），次批 25 个（2×Fact Checker + 1×File Downloader + ... + Web Developer），各子智能体并行完成后逐一回传 task N result，最终聚合为 Final Results。**论证结论**：可训练 Orchestrator 通过"动态创建专用子智能体 + 任务并行分解 + 结果汇聚"实现复杂任务的分布式高效执行。**论文作用**：该图是 Kimi K2.5 方法链路的架构骨架，定义了"一个训练中枢 + 多个冻结专家"的协同范式，为后续能力扩展与实验评测提供框架基础。
 
 ### Figure 4 (p.6) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png]]
@@ -84,15 +79,13 @@ The passage introduces a method called **zero-vision SFT** (Supervised Fine-Tuni
 > In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as train- ing progresses. At the same time, the level of parallelism during training also gradually increases. many subagents without meaningful task decomposition. By rewarding completed subtasks, r finish enforces feasibility and guides the policy toward valid and effective decompositions.
 
 > [!tip] 技术解读（多模态）
-> **Figure Description & Technical Takeaway**
+> 【图文联合解读】**图4 图文联合解读**
 
-The figure (Figure 4) visualizes two co-evolving training metrics over the course of parallel-agent reinforcement learning: (1) **training accuracy** as the primary performance signal, and (2) the **level of parallelism** within the agent environment. Both curves trend upward together, plotted against training progress (likely steps/epochs on the x-axis, with accuracy and a parallelism measure as dual y-axes, or as overlaid normalized curves).
+图含左右两子图，横轴均为 RL flops。左图（Training Accuracy vs Steps）以散点+红色平滑曲线呈现训练准确率，由初始约 36% 平滑上升至末段约 64%；右图（Average Parallelism vs Steps）显示平均并行度：初期约 8.5、中段长期平稳徘徊于 7.5–9、后期加速攀升至约 14。
 
-**Key takeaway:** Parallelism is not a fixed hyperparameter but an *emergent property* induced by training—accuracy and concurrency scale jointly, suggesting the orchestrator learns to decompose tasks into parallel subagents as a side effect of reward shaping rather than explicit instruction.
+该图以双指标共演化论证两点核心结论：① 并行 Agent 强化学习训练过程平稳收敛、无发散崩溃，证明 r_finish 等奖励机制驱动的训练可行性；② 准确率与并行度同向增长，说明模型不仅"答对任务"，还主动学习提升任务分解的并行深度，回应了正文中"避免无意义切分过多子智能体"的设计目标——分解是有效而非冗余的。
 
-**Caption (verbatim):**
-
-> Figure 4: In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as training progresses. At the same time, the level of parallelism during training also gradually increases.
+在论文方法链中，该图承担 RL 后训练阶段"策略正确性 + 并行分解合理性"的双重实证支撑，为后续 agentic 能力评测提供训练可信度背书。
 
 ### Figure 5 (p.10) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig05.png]]
@@ -101,14 +94,13 @@ The figure (Figure 4) visualizes two co-evolving training metrics over the cours
 > Comparison of model performance and token usage for Kimi K2 Thinking following token-efficient RL. compromise alleviates memory pressure, it does not fundamentally resolve the load imbalance caused by multimodal input sizes. More critically, it precludes the direct reuse of parallel strategies that have been highly optimized for text-only training.
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components/Data Flow:** The figure is a two-panel comparative visualization titled "Token Efficiency before and after Toggle across Benchmarks." The left panel plots **Performance (%)** and the right panel plots **Token Usage**, each listing multiple benchmarks (e.g., AIME, GPQA, MMLU-Pro) along the x-axis. Data points are color-coded — gray for **Before Toggle** and orange/blue for **After Toggle** — allowing side-by-side comparison of model accuracy and compute cost.
+1) **图表内容**：左雷达图为"Performance (%)"，覆盖 AIME2025、GPQADIAMOND、HMMT25_Feb/Nov、MMLUPro、LiveCodeBenchV6 及 Overall 共 7 个基准；Toggle 前（灰虚线）vs 后（蓝实线）显示 5 项提升（如 LiveCodeBenchV6 +2.2%、AIME2025 +1.1%）、2 项下降（GPQADIAMOND −1.0%、MMLUPro −2.0%），Overall +0.3%。右雷达图为"Token Usage"，7 项全部减少（绿标 0 增加），幅度 −745 至 −8127 tokens，Overall 节省 4791。
 
-**Key Technical Takeaway:** Despite the figure being redacted in this rendering, the surrounding text reveals that toggling **token-efficient RL** on Kimi K2 Thinking preserves (and in some cases slightly improves) benchmark performance while substantially reducing token usage — demonstrating that reasoning length can be compressed without sacrificing capability.
+2) **关键结论**：token-efficient RL 在 7 个基准上**全部**显著降低 token 消耗，同时整体性能仅微涨 0.3%，证明"省 token 不损精度"。
 
-**Caption (verbatim):**
-> Figure 5: Comparison of model performance and token usage for Kimi K2 Thinking following token-efficient RL.
+3) **论文作用**：作为方法有效性的核心证据，支撑 Kimi K2 Thinking "降本保效"的核心卖点，为后续推理效率与多模态训练优化提供量化锚点。
 
 ### Figure 6 (p.14) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig06.png]]
@@ -117,14 +109,13 @@ The figure (Figure 4) visualizes two co-evolving training metrics over the cours
 > The word cloud visualizes heterogeneous K2.5-based sub-agents dynamically instantiated by the
 
 > [!tip] 技术解读（多模态）
-> **Description (≤120 words):**
+> 【图文联合解读】**注意**：所提供图片实为一张性能对比表格，与caption所述"词云"不符，以下按图像实际内容解读。
 
-The main figure (Figure 7) is a performance comparison chart on the **BrowseComp** benchmark contrasting Kimi K2.5 under two context-handling regimes. Architecture/components depicted: (1) **Agent Swarm** pathway — central Orchestrator decomposes the query and dynamically instantiates specialized K2.5 sub-agents, each operating on a bounded local context, with only task-relevant outputs routed back; (2) **Discard-all** pathway — a reactive, single-agent baseline that periodically compresses/discards accumulated history. Data flow: query → orchestrator (or single agent) → sub-agent invocations → aggregated answer. **Key takeaway:** proactive context sharding via orchestrated sub-agents outperforms reactive history compression, indicating that explicit decomposition preserves task-relevant reasoning signal better than truncating the trajectory.
+该表横向比较K2.5 Agent Swarm、Kimi K2.5、Claude Opus 4.5、GPT-5.2、GPT-5.2 Pro在三项基准上的得分：BrowseComp为78.4/60.6/37.0/65.8/77.9；WideSearch为79.0/72.7/76.2/—/—；In-house Swarm Bench为58.3/41.6/45.8/—/—。
 
-**Captions (verbatim):**
+论证结论：Agent Swarm相对Kimi K2.5基座在BrowseComp提升17.8分、In-house Swarm Bench提升16.7分，且在BrowseComp以78.4超越GPT-5.2 Pro（77.9），证明Orchestrator动态调度多异构子代理的架构有效。
 
-- *Figure 6:* "The word cloud visualizes heterogeneous K2.5-based sub-agents dynamically instantiated by the Orchestrator across tests."
-- *Figure 7:* "Comparison of Kimi K2.5 performance under Agent Swarm and Discard-all context management in BrowseComp."
+整体作用：作为论文方法链路的终点证据，量化呈现"Orchestrator+子代理群"框架相比单模型基座与同级前沿模型的综合优势。
 
 ### Figure 7 (p.14) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-fig07.png]]
@@ -133,14 +124,11 @@ The main figure (Figure 7) is a performance comparison chart on the **BrowseComp
 > Comparison of Kimi K2.5 performance un- der Agent Swarm and Discard-all context management in BrowseComp. (60.6%) and surpassing even GPT-5.2 Pro (77.9%). Similarly, WideSearch sees a 6.3% improvement (72.7% → 79.0%) on Item-F1, enabling K2.5 Agent Swarm to outperform Claude Opus 4.5 (76.2%) and establish a new state- of-the-art. The gains are most pronounced on In-house Swarm bench (16.7%), where
 
 > [!tip] 技术解读（多模态）
-> **Description (≤120 words):**
+> 【图文联合解读】**图7实质为一张多基准成绩对比表**（caption仅提BrowseComp，但实际涵盖三项）：列依次为K2.5 Agent Swarm、K2.5 单代理基线（即Discard-all）、Claude Opus 4.5、GPT-5.2、GPT-5.2 Pro；行依次为 BrowseComp（78.4 / 60.6 / 37.0 / 65.8 / 77.9）、WideSearch（79.0 / 72.7 / 76.2 / — / —）、In-house Swarm Bench（58.3 / 41.6 / 45.8 / — / —）。
 
-The main figure (Figure 7) is a performance comparison chart on the **BrowseComp** benchmark contrasting Kimi K2.5 under two context-handling regimes. Architecture/components depicted: (1) **Agent Swarm** pathway — central Orchestrator decomposes the query and dynamically instantiates specialized K2.5 sub-agents, each operating on a bounded local context, with only task-relevant outputs routed back; (2) **Discard-all** pathway — a reactive, single-agent baseline that periodically compresses/discards accumulated history. Data flow: query → orchestrator (or single agent) → sub-agent invocations → aggregated answer. **Key takeaway:** proactive context sharding via orchestrated sub-agents outperforms reactive history compression, indicating that explicit decomposition preserves task-relevant reasoning signal better than truncating the trajectory.
+**技术结论**：Agent Swarm在三项基准上均大幅超越Discard-all基线——BrowseComp +17.8、WideSearch +6.3、Swarm +16.7，并在BrowseComp上反超GPT-5.2 Pro（77.9）、远超Claude Opus 4.5（37.0），印证"Orchestrator主动上下文分片优于被动压缩"。
 
-**Captions (verbatim):**
-
-- *Figure 6:* "The word cloud visualizes heterogeneous K2.5-based sub-agents dynamically instantiated by the Orchestrator across tests."
-- *Figure 7:* "Comparison of Kimi K2.5 performance under Agent Swarm and Discard-all context management in BrowseComp."
+**在论文中的作用**：作为核心实验证据，验证多代理编排方法相较单代理上下文管理的有效性，并完成K2.5与顶级闭源模型的横向定位。
 
 ### Figure 8 (p.15) ⭐深度解读
 ![[assets/kimi-k2-5-visual-agentic-intelligence-p15.png]]
@@ -267,20 +255,13 @@ Kimi K2.5 augments its native visual perception with **external tool calls** to 
 > Performance comparison across different vision-text joint-training strategies. Early fusion with a lower vision ratio yields better results given a fixed total vision-text token budget.
 
 > [!tip] 表格解读（多模态）
-> I'm unable to complete this request because **no figure is present in the image you provided**. The image only contains:
+> 【图文联合解读】**图像无法辨认**：裁图仅显示表标题与页眉"Kimi K2.5 Technical Report"，表格的具体行/列与数值未呈现，以下解读仅依据原文 caption。
 
-- A page header: "Kimi K2.5 — Technical Report"
-- A caption labeled "Table 1" (text only — no chart, diagram, or visual element)
+**1) 核心对象**：该表对比多种"视觉-文本联合训练"策略（即不同的融合时机 early/late fusion 与视觉 token 占比配置），控制变量为"固定视觉-文本总 token 预算"，输出某项任务性能分数。
 
-Without an actual architecture diagram, components, or data-flow illustration to examine, I cannot describe figures, modules, or data flow. If you intended to share a specific figure (e.g., the Moonshot Kimi K2.5 system architecture diagram), please re-upload that image.
+**2) 关键结论**：在总 token 预算一致时，采用**早融合（early fusion）**并**降低视觉 token 占比**的策略组合取得最佳结果，说明图文信息在浅层即交互、并为视觉让出更多文本容量，比后期拼接或高视觉占比更优。
 
----
-
-### Verbatim transcription of the visible caption:
-
-> **Table 1:** Performance comparison across different vision-text joint-training strategies. Early fusion with a lower vision ratio yields better results given a fixed total vision-text token budget.
-
-If you can share the intended figure, I'll happily provide the requested description and key technical takeaway within the 120-word limit.
+**3) 论文作用**：作为消融依据，为 K2.5 选定"早融合 + 低视觉比例"的联合训练范式提供经验支撑，是其视觉能力接入主模型训练链路中的关键设计决策证据。
 
 ### Table 2 (p.4) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab02.png]]
@@ -288,20 +269,13 @@ If you can share the intended figure, I'll happily provide the requested descrip
 > Cross-Modal Transfer: Vision RL Improves Textual Knowledge Benchmark Before Vision-RL After Vision-RL Improvement
 
 > [!tip] 表格解读（多模态）
-> There is **no figure** on this page — it contains only Table 2 and body text. I cannot describe architecture, components, or data flow that aren't shown. Here is what the page actually contains, with the table title transcribed verbatim:
+> 【图文联合解读】**Table 2 图文联合解读**
 
-**Table title (verbatim):** "Table 2: Cross-Modal Transfer: Vision RL Improves Textual Knowledge"
+Table 2 对比 Vision-RL 前后三个文本基准表现：MMLU-Pro 84.7→86.4（+1.7）、GPQA-Diamond 84.3→86.4（+2.1）、LongBench v2 56.7→58.9（+2.2），均升 1.7–2.2 分。
 
-**Table contents:**
-| Benchmark | Before Vision-RL | After Vision-RL | Improvement |
-|---|---|---|---|
-| MMLU-Pro | 84.7 | 86.4 | +1.7 |
-| GPQA-Diamond | 84.3 | 86.4 | +2.1 |
-| LongBench v2 | 56.7 | 58.9 | +2.2 |
+该表论证关键结论：在最小化零视觉 SFT 启动后，长程视觉 RL 不仅获得视觉能力，还通过跨模态正向迁移，同步提升纯文本知识与长上下文理解，证伪"视觉训练损害语言能力"的传统担忧。
 
-**Key technical takeaway (from the surrounding text, ≤120 words):** Outcome-based visual RL unexpectedly improves *text-only* benchmarks (MMLU-Pro +1.7, GPQA-Diamond +2.1, LongBench v2 +2.2), suggesting visual RL enhances calibration on queries resembling visually grounded reasoning (counting, OCR). Motivated by this, Kimi K2.5's post-training abandons modality-specific expert routing in favor of a **Joint Multimodal RL** paradigm: RL domains are organized by *ability* (knowledge, reasoning, coding, agentic) rather than input modality, and a shared Generative Reward Model (GRM) judges traces across both text and vision — enabling cross-modal transfer without capability degradation.
-
-If you intended a different page containing an architecture/flow figure, please re-upload it.
+论文链路中，本表承接 Figure 2 对视觉能力随 RL FLOPs 持续增长的展示，将结论从单模态延伸到跨模态迁移维度，为作者"零视觉激活 + 长程视觉 RL"训练范式提供文本侧量化支撑，证明视觉与语言能力可协同增益。
 
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab03.png]]
@@ -309,18 +283,18 @@ If you intended a different page containing an architecture/flow figure, please 
 > Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.
 
 > [!tip] 表格解读（多模态）
-> I only have access to the header and a single caption from the document — not the underlying figure or table content itself. The page shared shows:
+> 【图文联合解读】**图文联合解读：**
 
-- **Header:** "K Kimi K2.5 — TECHNICAL REPORT"
-- **Visible caption:** Table 3's caption
+⚠️ 图片仅显示页眉"K Kimi K2.5 Technical Report"与 Table 3 的标题行，表格本体（各阶段的 Data、Tokens、Seq Len、Trainable 模块）未在截图中呈现，故具体数值无法从图像读取，以下解读依据标题语义与上下文推断。
 
-Since the actual table body (training stages, data composition, token volumes, sequence lengths, trainable components) and any architecture/data-flow figure are not included in the input, I cannot describe their structure, components, or flow.
+**1) 核心对象与结构**
+Table 3 以"训练阶段"为行，列出四列量化维度：数据组成（多模态/智能体任务配比）、训练 token 量级、上下文序列长度、可训练参数范围（冻结 vs 解冻）。它本质是一份"训练配方总览表"，把多阶段 pipeline 压缩为可对比的规格清单。
 
-**Transcribed caption verbatim:**
+**2) 论证的关键技术结论**
+通过对照各阶段 token 量与可训练组件占比，论文据此说明：智能体能力（如 Figure 3 中可训练的 orchestrator + 冻结子代理）并非靠堆通用预训练数据获得，而是依赖后期针对 agentic 轨迹的小规模、组件选择性训练。
 
-> **Table 3:** Overview of training stages: data composition, token volumes, sequence lengths, and trainable components.
-
-If you can share the figure image or the table rows, I can produce the architecture/components/data-flow description plus the ≤120-word technical takeaway you asked for.
+**3) 在论文中的作用**
+该表位于方法章节，向下衔接数据构造、训练策略与消融实验，是读者快速理解"视觉 + 智能体"能力来源的入口；同时为后续基准评测的能力归因提供训练侧解释依据。
 
 ### Table 4 (p.12) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab04.png]]
@@ -328,15 +302,7 @@ If you can share the figure image or the table rows, I can produce the architect
 > Performance comparison of Kimi K2.5 against open-source and proprietary models. Bold denotes the global SOTA; Data points marked with * are taken from our internal evaluations. † refers to their scores of text-only subset.
 
 > [!tip] 表格解读（多模态）
-> **No figure provided.** The submitted content contains only a table caption (Table 4) from the Kimi K2.5 Technical Report, not a figure or diagram. Therefore, I cannot describe architecture, components, or data flow, as no architectural figure has been shared.
-
-If you intended to attach a figure (e.g., a diagram of model architecture, training pipeline, or system components), please re-upload the image, and I will provide the requested description and verbatim caption transcription.
-
-**What is present — caption of Table 4 (verbatim):**
-
-> "Table 4: Performance comparison of Kimi K2.5 against open-source and proprietary models. Bold denotes the global SOTA; Data points marked with * are taken from our internal evaluations. ^† refers to their scores of text-only subset."
-
-Please share the figure you would like analyzed, and I'll deliver a ≤120-word technical summary plus an exact caption transcription.
+> 【图文联合解读】Table 4 将 Kimi K2.5 与 Claude Opus 4.5、GPT-5.2 (xhigh)、Gemini 3 Pro 等专有模型及 DeepSeek-V3.2、Qwen3-VL-235B-A22B 等开源模型，在推理/编码/智能体/图像四大类共 40 余基准上系统对比。K2.5 在智能体类全面领先：BrowseComp 60.6、BrowseComp (Agent Swarm) 78.4、WideSearch (Agent Swarm) 79.0 均为全球 SOTA；图像类 InfoVQA 92.6、CharXiv 77.5、编码 LiveCodeBench v6 85.0 亦夺冠。原文结合 Figure 4 论证：并行智能体 RL 训练中精度与并行度同步上升，"奖励完成子任务"机制引导策略学会有效任务分解。该表处于论文实验链终端，为"并行 RL→有效子任务分解→代理能力领先"核心论点提供量化证据。
 
 ### Table 5 (p.13) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab05.png]]
@@ -344,20 +310,13 @@ Please share the figure you would like analyzed, and I'll deliver a ≤120-word 
 > Performance and token efficiency of some reasoning models. Average output token counts (in thousands) are shown in parentheses.
 
 > [!tip] 表格解读（多模态）
-> Looking at the provided image, I can only see a header banner and a table caption — **no main figure is present** in this image. The image contains text only:
+> 【图文联合解读】**Table 5 图文联合解读**
 
-**Header:** "Kimi K2.5 — TECHNICAL REPORT"
+**1) 核心对象与数据**：Table 5 对比 Kimi K2.5、Kimi K2 Thinking、Gemini-3.0 Pro、DeepSeek-V3.2 Thinking 四款模型在 7 个推理基准（AIME 2025、HMMT Feb/Nov 2025、IMO-AnswerBench、LiveCodeBench、GPQA Diamond、HLE-Text）上的得分与平均输出 token（括号内，千计）。
 
-**Caption text (transcribed verbatim):**
-> "Table 5: Performance and token efficiency of some reasoning models. Average output token counts (in thousands) are shown in parentheses."
+**2) 关键技术结论**：Kimi K2.5 在全部 7 项任务上得分均高于 Kimi K2 Thinking，同时输出 token 显著更少（AIME：96.1/25k vs 94.5/30k；IMO：81.8/36k vs 78.6/37k；HLE-Text：31.5/24k vs 23.9/29k）。这定量证明 token-efficient RL 可同步实现性能提升与推理成本压缩。
 
-**Technical takeaway (inferred from caption context, ≤120 words):**
-
-Since no figure/table data is visible, the key insight derivable from the caption itself is:
-
-> The figure compares reasoning models on **two axes** — task performance and **token efficiency** (output token count, reported in thousands in parentheses). The key takeaway for reasoning models is that **higher accuracy does not necessarily imply better efficiency**: a model can achieve competitive performance while generating substantially fewer output tokens, making token cost a critical second axis for evaluating reasoning systems alongside raw benchmarks. This dual metric helps identify Pareto-optimal reasoning models that balance capability with inference cost.
-
-If you can share the actual Table 5 contents or the main figure you'd like analyzed, I can provide a more specific architecture/components/data-flow description.
+**3) 论文链路作用**：与 Figure 5 互为表里，以数据支撑"K2.5 更高分、更少 token"的核心卖点，是论证 token-efficient RL 方法有效性的关键实验证据。
 
 ### Table 6 (p.14) ⭐深度解读
 ![[assets/crops/kimi-k2-5-visual-agentic-intelligence-tab06.png]]
@@ -365,15 +324,7 @@ If you can share the actual Table 5 contents or the main figure you'd like analy
 > Performance comparison of Kimi K2.5 Agent Swarm against single-agent and proprietary baselines on agentic search benchmarks. Bold denotes the best result per benchmark.
 
 > [!tip] 表格解读（多模态）
-> **Figure description (Table 6):**
-
-*Structure & components:* A 5-column × 4-row benchmark table comparing five agentic search systems — **K2.5 Agent Swarm** (multi-agent), single-agent **Kimi K2.5**, **Claude Opus 4.5**, **GPT-5.2**, and **GPT-5.2 Pro** — evaluated on three benchmarks: BrowseComp, WideSearch, and In-house Swarm Bench. Bold entries mark per-benchmark winners.
-
-*Data flow logic:* Each row reports a single accuracy score per system, enabling vertical comparison of swarm coordination gains vs. monolithic single-agent/proprietary baselines.
-
-*Key technical takeaway:* Coordinated agent swarms dominate on challenging, broad-scope search (e.g., +17.8 over Claude Opus 4.5 on BrowseComp, 78.4), while matched-cost single-agent models remain competitive on narrow retrieval (WideSearch). Multi-agent decomposition appears to pay off most when queries exceed a single model's effective search horizon.
-
-**Caption (verbatim):** *Table 6: Performance comparison of Kimi K2.5 Agent Swarm against single-agent and proprietary baselines on agentic search benchmarks. Bold denotes the best result per benchmark.*
+> 【图文联合解读】表6对比K2.5 Agent Swarm与单agent及专有基线在3项agentic search基准上的表现：BrowseComp 78.4（最高，>GPT-5.2 Pro 77.9）、WideSearch 79.0（最高，>Claude Opus 4.5 76.2）、In-house Swarm Bench 58.3（最高），三项均加粗领先。BrowseComp上较单agent K2.5（60.6）提升17.8分，内部Swarm Bench提升16.7分。该表作为核心实验证据，支撑Orchestrator动态调度异构子agent的Swarm范式同时优于单一推理与闭源强基线，是论文Agent Swarm方法主张的关键验证。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

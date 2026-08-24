@@ -30,28 +30,11 @@ tags: [kv-cache, disaggregated-serving]
 > Mooncake Architecture. remote location will prolong the TTFT, and a large batch size will lead to a larger TBT. Thus, the utilization of both these throughput-oriented optimizations may lead to violations of latency-related SLOs.
 
 > [!tip] 技术解读（多模态）
-> ## Description
+> 【图文联合解读】图示Mooncake架构：左侧KVCache-centric Conductor含三调度器（Cache-aware Prefill Scheduler、KVCache Balance Scheduler、Load-balance Decoding Scheduler）；纵向分三层资源池——Prefill Pool（GPU/VRAM+本地分块预fill+分页KVCache）、KVCache Pool（CPU/DRAM/SSD分布式KVCache）、Decoding Pool（GPU/VRAM+分页KVCache），节点间以RDMA传输KVCache、Prefill节点间用PP/SP通信。右侧明示两阶段优化目标：Prefill max Cache Reuse受TTFT SLO、最低MFU、KVCache<DRAM约束；Decoding max Throughput受TBT SLO、KVCache<VRAM约束。
 
-**Architecture & Data Flow:**
-The figure depicts a **KVCache-centric Conductor** system with three coordinated schedulers (left) managing four GPU instances arranged in a 2×2 layout. The top row holds **Prefill Instances** (GPU/VRAM with Local Chunked Prefill Scheduler + Paged KVCache) connected via PP/SP, while the bottom row holds **Decoding Instances** (GPU/VRAM with Paged KVCache + Local Scheduler). A shared middle layer — the **KVCache Pool** (CPU/DRAM/SSD-based Distributed KVCache Pools) — bridges prefill and decoding, with **RDMA-based Inter-node KVCache Transfer** (⊗) enabling cross-node cache movement. Three pools govern flow: **Prefill Pool** (Cache-aware Prefill Scheduler → maximize cache reuse), **KVCache Pool** (Balance Scheduler), and **Decoding Pool** (Load-balance Decoding Scheduler).
+技术结论：解耦prefill/decoding并将KVCache显式提升为一等公民资源，通过分布式RDMA池化跨节点复用cache，从而兼顾延迟SLO与吞吐。
 
-**Key Technical Takeaway:**
-The system separates stage-specific optimization goals — **Prefill maximizes cache reuse** (subject to TTFT SLO, minimum MFU, KVCache < DRAM), while **Decoding maximizes throughput** (subject to TBT SLO, KVCache < VRAM) — by decoupling scheduling across the prefill/decode boundary through a unified, RDMA-shared distributed KVCache pool.
-
-## Caption (verbatim transcription)
-
-There is no separate numbered figure caption in the image. The in-figure annotations read verbatim:
-
-> **KVCache-centric Conductor**
-> 
-> Prefill Pool / KVCache Pool / Decoding Pool
-> Cache-aware Prefill Scheduler → Prefill Instance → GPU/VRAM (Local Chunked Prefill Scheduler | Paged KVCache) ↕ CPU/DRAM/SSD (Distributed KVCache Pool) ↔ RDMA ⊗ Inter-node KVCache Transfer
-> KVCache Balance Scheduler ↔ Decoding Instance → GPU/VRAM (Paged KVCache | Local Scheduler) ↕ CPU/DRAM/SSD (Distributed KVCache Pool)
-> Load-balance Decoding Scheduler
-> 
-> **Prefill Stage Optimization Goal:** max Cache Reuse s.t. TTFT SLO, Minimum MFU, KVCache < DRAM
-> 
-> **Decoding Stage Optimization Goal:** max Throughput s.t. TBT SLO, KVCache < VRAM
+作用：全文方法总览图，奠定后续调度器设计与Table 1缓存命中率实验的分析框架。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig02.png]]
@@ -60,7 +43,13 @@ There is no separate numbered figure caption in the image. The in-figure annotat
 > Normalized throughput and latency of prefill and decoding stages with different sequence lengths or batch sizes for the dummy LLaMA2-70B model. the computational complexity of attention networks scales quadratically with input length while the complexity of MLP scales linearly, computation time in the prefill stage generally increases superlinearly with input length, as shown in the left part of F
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】Mooncake 解耦式 KVCache 服务架构：prefill（compute-bound，注意力二次复杂度）与 decode（memory-bound，自回归批处理）分到独立节点池。核心是 disaggregated KVCache 层，池化 CPU/DRAM/SSD/RDMA 资源→跨节点 cache 复用、减冗余计算；调度器做 early rejection + SLO 准入(TTFT/TBT)+负载均衡。把计算阶段与 KVCache 存储解耦→弹性扩展、严 SLO 下更高吞吐。架构核心图。
+> 【图文联合解读】## 图2（右半·解码阶段）联合解读
+
+**核心数据**：横轴为 Batch Size 1–16（序列长度固定 8k）。绿色柱（归一化吞吐量）从约 0.07 近似线性增长至 1.0；红色折线（解码延迟）几乎平稳，仅在 Batch 15–16 处轻微上扬至 1.0。
+
+**论证结论**：解码阶段吞吐随 batch 近似线性放大，而延迟几乎不增长——这是「**解码高 batch 友好**」的关键实测证据。结合左半图 prefill 阶段计算量随序列长度超线性增长的事实，作者论证 prefill 与 decode 具有截然不同的扩缩特性。
+
+**论文作用**：作为 Mooncake 提出 **prefill/decode 分离架构（disaggregation）** 的核心动机支撑——将计算密集、低延迟敏感的 prefill 与可大批并行、可吞吐优先的 decode 解耦部署，由 KVCache-centric 调度器协同，才能同时兼顾吞吐与 SLO。
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig03.png]]
@@ -69,22 +58,13 @@ There is no separate numbered figure caption in the image. The in-figure annotat
 > The KVCache pool in CPU memory. Each block is attached with a hash value determined by both its own hash and its prefix for deduplication.
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description
+> 【图文联合解读】**图3联合解读（≤220字）**
 
-The figure illustrates a **prefix-cache-aware KV cache transfer** workflow across distributed LLM serving instances.
+① **核心对象与结构**：展示CPU内存中的KVCache池，含9个Token块(a–i)。每个块采用**链式哈希**：A=Hash(a)、B=Hash(A+b)、…、F=Hash(E+f)，哈希值由自身内容与前缀哈希共同决定。三色分类：黄色=前缀缓存块、粉色=增量缓存块、灰色=未分配块。
 
-**Components & data flow:**
-- **Token blocks** (a–i) are hashed cumulatively (A=Hash(a), B=Hash(A+b), …, F=Hash(E+f)) to produce compact identifiers.
-- The hashed signatures are compared against an existing **Prefix Cache**; five blocks match (A–E) while the sixth mismatches (F).
-- A **Prefill Instance** initially loads/stores the full cache.
-- A **Messenger** reads the matched prefix cache and transfers only the **incremental cache blocks** (F–I) to another Messenger.
-- The receiving Messenger **writes** the prefix plus incremental blocks, and the **Decoding Instance** loads them — avoiding recomputation.
+② **关键技术结论**：示例中a–e五个前缀块全部Match✓复用，f处Mismatch✗触发失配；增量块F–I(粉色)被新计算并写入新位置。证明链式哈希+块粒度可实现**精确前缀去重**，避免整请求重复计算前缀KVCache。
 
-**Key takeaway:** By hashing chained token blocks for prefix matching, only the divergent suffix (incremental blocks) is shipped over the network, slashing redundant prefill compute and inter-instance bandwidth for shared contexts.
-
-## Caption Transcription
-
-No caption / figure number text is visible in the provided image — only in-figure labels (e.g., "Token Blocks," "Prefix Cache Blocks," "Incremental Cache Blocks," "Unallocated Cache Blocks," and the action arrows "Load/Store/Read/Write/Transfer KVCache") are present.
+③ **论文整体作用**：该池是Mooncake解耦架构的存储底层，通过Prefill Instance→Messenger→Decoding Instance间的Load/Store/Transfer/Write/Read五路径实现跨实例KVCache流转，为后续Prefix Caching复用与Early Rejection（表3所示过载场景拒请求）提供基础设施支撑。
 
 ### Figure 4 (p.6) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig04.png]]
@@ -93,31 +73,7 @@ No caption / figure number text is visible in the provided image — only in-fig
 > Workflow of inference instances. ( ) For prefill instances, the load and store operations of the KVCache layer are performed layer-by-layer and in parallel with the prefill computation to mitigate transmission overhead (see §5.2). (y ) For decoding instances, asynchronous loading is performed concurrently with GPU decoding to prevent GPU idle time. 4) Decoding: After all the KVCache is received i
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
-
-The diagram illustrates a **disaggregated LLM inference architecture** with two instances:
-
-**Prefill Instance (left, blue):**
-- **CPU side:** holds *Prefix KVCache* and *Incremental KVCache* in host memory
-- **GPU side:** mirrors both caches in device memory
-- *Layer-wise Load and Store* moves tensors between CPU↔GPU
-- (s1) Reuses prefix cache; (s2) runs incremental prefill on the GPU; (s3) transfers the full/updated KVCache to the decoder
-
-**Decoding Instance (right, orange):**
-- Receives the transferred cache via *Async Load* (CPU→GPU)
-- (s4) Performs token decoding on the GPU using the assembled **Full KVCache**
-
-**Key takeaway:** Splitting prefill and decoding, combined with *layer-wise pipelined* CPU↔GPU cache movement and *asynchronous* transfer, overlaps data movement with compute, maximizing hardware utilization and throughput.
-
-## Caption Transcription (verbatim, as shown in figure)
-
-*(No standalone caption text is present; the in-figure labels read as follows)*
-
-- "**Prefill Instance**" / "**Decoding Instance**"
-- "GPU", "CPU"
-- "Prefix KVCache", "Incremental KVCache", "Full KVCache"
-- "(s1) KVCache Reuse", "s2: Incremental Prefill", "s3: KVCache Transfer", "s4: Decoding"
-- "Layer-wise Load and Store*", "Async Load†"
+> 【图文联合解读】图分两栏：左为Prefill实例，含CPU/GPU双层，按Prefix与Incremental KVCache分块；右为Decoding实例，含Full KVCache。流程含s1前缀复用、s2增量prefill、s3跨实例KVCache传输、s4解码四个步骤。Prefill侧(∗)逐层Load/Store与计算并行，隐藏传输开销；Decoding侧(†)异步加载与GPU解码重叠，避免GPU空泡。该图论证Mooncake分离架构"计算与传输并发"的核心优化设计，是KVCache中心化方法论的关键图示。
 
 ### Figure 5 (p.6) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig05.png]]
@@ -126,16 +82,11 @@ The diagram illustrates a **disaggregated LLM inference architecture** with two 
 > Input and output length distributions in the request trace. 4
 
 > [!tip] 技术解读（多模态）
-> **Figure description (≤120 words):**
+> 【图文联合解读】图5展示请求trace的输入（蓝）与输出（绿）长度分布，频率为log刻度。**输入高度右偏**：峰值集中于0–5k tokens（~10⁴），但长尾延伸至120k+，跨度达4个数量级；**输出近似双峰**：主峰在300–500 tokens（~10³），次峰近2000，最大约2100。
 
-The figure consists of two side-by-side log-scale histograms characterizing sequence length distributions in a dataset.
+**关键论证**：实际负载中输入长度极端异构——长输入使prefill阶段产生巨大KV cache却仅生成少量token，与decode阶段轻量增量KV形成严重的内存–计算失衡；而输出相对短且有界，prefill/decode资源需求极不对称。
 
-- **Left panel (blue):** *Input Length* on the x-axis (~0 to 120,000 tokens) versus *Frequency* on a log y-axis (~10⁰ to 10⁴). The distribution is heavily right-skewed, peaking near 5,000–10,000 tokens (~10⁴ samples) and decaying roughly monotonically across three orders of magnitude, with a sparse long tail extending to ~125,000.
-- **Right panel (green):** *Output Length* on the x-axis (~0 to 2,000 tokens) versus *Frequency* on a log y-axis (~10⁰ to 10⁴). It shows a bimodal pattern: a large spike at very short outputs (~1,000 tokens, ~1.5×10⁴ samples), a broad mode centered around 400–500 tokens (~10³), and an outlier spike near 2,000 tokens.
-
-**Key technical takeaway:** Inputs are ~10–50× longer than outputs, and output length is effectively bounded near 2,048 — suggesting a context-window truncation at the maximum generation length.
-
-**Caption (verbatim):** No caption text is rendered in the image; only axis labels ("Input Length", "Output Length", "Frequency") and tick values are present.
+**论文作用**：此图为后续"以KVCache为中心的prefill–decode解耦架构"提供数据驱动的动机支撑，是Mooncake分离式设计合理性的关键实证基础，也为调度策略与cache复用讨论奠定前提。
 
 ### Figure 6 (p.7) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig06.png]]
@@ -144,19 +95,13 @@ The figure consists of two side-by-side log-scale histograms characterizing sequ
 > CDF (Cumulative Distribution
 
 > [!tip] 技术解读（多模态）
-> **Figure 6 — CDF of Block Hit Count**
+> 【图文联合解读】**图文联合解读（Figure 6）**
 
-**Architecture/Components:**
-- **Axes:** X = Block Hit Count (log scale, 10⁰–10⁴); Y = CDF (0.0–1.0)
-- **Curve:** A monotonic blue step function rising sharply at the low end and asymptotically saturating near 1.0
-- **Inputs:** Aggregated hash-block reuse counts from the request trace dataset
+1) **图示数据**：横轴 Block Hit Count（对数刻度 1–10⁴），纵轴 CDF。约 55% 的块命中次数=1，约 77% ≤2 次，约 95% ≤10 次；命中≥10² 的块占比可忽略，最大值延伸至 ~10⁴ 但概率极小。整体呈极度长尾分布。
 
-**Data flow:** Block hit counts → sorted empirical distribution → cumulative step function → CDF visualization.
+2) **关键结论**：少量"热门"块承担绝大多数重用请求，证实 LLM 请求间 KV cache 复用潜力大、冗余重计算成本高，从而为"以 KV cache 为中心"的设计提供量化依据。
 
-**Key takeaway (≈120 words):** The CDF reveals an extremely skewed, long-tailed reuse pattern: roughly 60% of blocks are reused only once and ~90% fewer than ten times, with only a tiny tail of "hot" blocks reaching 10⁴ hits. This implies that KVCache reuse is highly concentrated in a small minority of prefix blocks, while the vast majority contribute negligibly to hit rate. Consequently, cache-sizing policies and eviction strategies (LRU/LFU/LengthAware) should prioritize capturing the high-frequency prefix tail rather than uniformly caching all blocks — capacity beyond ~10 hits per block yields diminishing returns, consistent with the paper's reported saturation around 50% hit ratio at 50,000 blocks.
-
-**Caption (verbatim):**
-*Figure 6: CDF (Cumulative Distribution Function) of the block hit count in the request trace.*
+3) **论文作用**：支撑 Mooncake 的核心动机——将 prefill 计算与 KV cache 存储解耦、池化共享，使小部分热块可被多次复用，显著降低 prefix 重算开销。
 
 ### Figure 7 (p.9) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig07.png]]
@@ -165,14 +110,11 @@ The figure consists of two side-by-side log-scale histograms characterizing sequ
 > Latency of storing KVCache of different request lengths (Layer-wise latency refers to the difference in latency between Layer-wise Prefill and Prefill without storing KVCache).
 
 > [!tip] 技术解读（多模态）
-> **Figure 7 — Description (≤120 words):**
+> 【图文联合解读】**图7联合解读**
 
-The figure is a grouped bar chart comparing two KVCache-storing strategies across five input lengths. The **x-axis** lists Sequence Lengths (8k, 16k, 32k, 64k, 128k); the **y-axis** is Latency (seconds, 0 – ~0.85). Two series are plotted per length: **Serialized** (blue) and **Layer-wise** (orange). Data flow: each request's prefill executes layer-by-layer, with the KVCache for layer *i* stored asynchronously while layer *i+1* computes — overlapping memory writes with attention. The blue bars grow steeply (~0.10 s → ~0.85 s) while the orange bars stay nearly flat (~0.10 s) at all lengths.
+图7对比两种KVCache存储策略（Serialized序列化 vs Layer-wise分层）在不同请求长度（8K–128K）下的存储延迟。量化数据：Serialized延迟近似线性增长（8K约0.11s→128K约0.86s）；Layer-wise全程稳定在约0.10s，128K时仅为Serialized的~1/8.6。
 
-**Key takeaway:** Overlapping KVCache storage with the next layer's attention keeps prefill latency roughly constant regardless of sequence length, eliminating VRAM-induced TTFT growth.
-
-**Caption (verbatim):**
-Figure 7: Latency of storing KVCache of different request lengths (Layer-wise latency refers to the difference in latency between Layer-wise Prefill and Prefill without storing KVCache).
+**关键结论**：原文借此论证"分层并发存储KVCache"可消除长序列下存储开销的线性放大，是Mooncake采用Transformer层间流水线调度、并把prefill计算与KVCache写入重叠的核心实验依据，支撑其长上下文场景下的高吞吐设计。
 
 ### Figure 8 (p.11) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig08.png]]
@@ -181,21 +123,15 @@ Figure 7: Latency of storing KVCache of different request lengths (Layer-wise la
 > The prefill scheduling experiment in the Mooncake cluster.
 
 > [!tip] 技术解读（多模态）
-> **Figure 8 Description:**
+> 【图文联合解读】**图文联合解读：**
 
-Figure 8 is a **box plot** comparing Time-To-First-Token (TTFT) distributions across four scheduling strategies evaluated in the Mooncake cluster. The Y-axis measures TTFT in seconds (0–250+), with a dashed horizontal SLO line at ~30s. The four categories on the X-axis are:
+该图为箱线图，纵轴为TTFT（秒），含一条约30秒的SLO虚线。横轴对比四种调度策略：
 
-- **KVCache-centric** – tightest distribution, median near 0s
-- **cache-aware** – compact distribution, median ~2s
-- **load-balancing** – wide IQR (~30–100s), median ~60s
-- **random** – largest spread, median ~100s with extreme outliers up to ~270s
+1. **核心数据**：KVCache-centric中位数约7–8s，分布极紧凑，远低于SLO；cache-aware中位数约18s，仅少量离群点；load-balancing均值89.41s、箱体伸至~105s，须线达~220s；random均值92.92s、箱体最高~150s、须线逼近285s。
 
-Triangular markers (▲) denote the mean. The plot clearly shows that cache-aware/KVCache-centric policies achieve both lower medians and tighter tails, while load-only and random strategies violate the SLO frequently.
+2. **关键结论**：论文提出的KVCache-centric调度策略TTFT最低且稳定，证明以KVCache为中心的调度远优于负载均衡与随机策略，能稳定满足SLO；而load-balancing和random因忽略cache局部性，导致大量长尾延迟。
 
-**Key takeaway:** Pure load-balancing ignores cache locality, producing TTFT distributions that frequently breach the SLO — confirming that cache-hit awareness is essential for prefilling latency guarantees in Mooncake.
-
-**Caption (verbatim):**
-> *Figure 8: The prefill scheduling experiment in the Mooncake cluster.*
+3. **链路作用**：作为消融/对比实验，量化验证核心调度设计（KVCache-centric）的有效性，支撑论文"以KVCache为中心"这一核心架构主张。
 
 ### Figure 9 (p.13) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig09.png]]
@@ -204,15 +140,13 @@ Triangular markers (▲) denote the mean. The plot clearly shows that cache-awar
 > The load of prefill and decoding instances over 20 minutes, before using the prediction- based early rejection.
 
 > [!tip] 技术解读（多模态）
-> **Figure Description & Key Takeaway:**
+> 【图文联合解读】**图文联合解读：**
 
-Figure 9 is a time-series line chart spanning a 20-minute window (x-axis: 0:00 → 20:00) with load percentage on the y-axis (0–100%). Two curves are plotted: a **green line** representing the load on **prefill instances** and a **yellow line** representing the load on **decoding instances**. Both oscillate roughly between 10% and 95%, exhibiting pronounced anti-phase behavior—when one peaks, the other tends to dip, and vice versa.
+1) 图示20分钟窗口内 prefill（绿线）与 decoding（黄线）实例的负载率随时间变化曲线，y 轴负载范围约 10%–95%。两条曲线呈明显**反相位**：prefill 飙升时 decoding 多处低位，反之亦然，且 prefill 振幅显著更大，深谷多次逼近底部。
 
-**Key takeaway:** The chart empirically demonstrates the load-coupling instability introduced by naive early rejection: scheduling decisions lag behind actual decoding load, causing phase-staggered oscillation between prefill and decoding pools and resulting in poor cluster utilization. This motivates the prediction-based early rejection framework introduced in §7.4.
+2) 原文借此论证：在未启用基于预测的 early rejection 机制之前，解耦架构下 prefill 与 decoding 节点负载严重不均衡、波动剧烈，暴露出传统调度难以稳定 SLO 的缺陷，从而为引入**预测式早拒**以均衡负载提供动机。
 
-**Caption (verbatim):**
-
-Figure 9: The load of prefill and decoding instances over 20 minutes, before using the prediction-based early rejection.
+3) 该图作为**对比基线**，与后续启用 early rejection 后的负载曲线（图10/11）形成对照，串联起"暴露问题 → 提出方案 → 实验验证"的完整论证链，是 Mooncake 调度策略章节的关键支撑。
 
 ### Figure 10 (p.14) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig10.png]]
@@ -221,23 +155,13 @@ Figure 9: The load of prefill and decoding instances over 20 minutes, before usi
 > Instance load when applying Early Rejection and Early Rejection Based on Prediction. conditions where resources are scarce and accurate predictions are necessary, making request-level predictions particularly difficult.
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-The figure illustrates a four-stage scheduling/load-balancing process along a time axis, organized into two stacked rows tracking system loads.
+1）**核心对象与数据**：图分上下两行4个Stage，沿时间轴展示实例**解码负载（上，橙）与预填充负载（下，蓝）**的动态变化。Stage1解码≈0.15（低）/预填充≈0.95（高，新请求密）→Accept；Stage2解码≈0.8（高）/预填充≈0.15（低）→Reject；Stage3再次解码≈0.15/预填充≈0.8→Accept；Stage4解码≈0.6/预填充≈0.3→Reject。曲线连接呈现"高-低"振荡。
 
-**Components & Layout:**
-- **Top row (Decoding Load):** Orange horizontal bars whose *width = request length* and *height = utilization* (0–1). A yellow dashed threshold line and a smooth yellow curve track utilization over time.
-- **Bottom row (Prefill Load):** Light-blue bars represent prefill requests; darker blue bars represent *newly added* prefill requests. A green dashed threshold and green curve track prefill utilization.
-- **Connectors:** Black arrows flow horizontally across each row (load evolution between stages); red arrows point vertically from decoding to prefill rows (cross-stage influence).
-- **Decisions:** Pink stars = "Accept," purple stars = "Reject."
+2）**关键结论**：早期拒绝依据预测的解码负载阈值（≈0.6，橙色虚线）切换Accept/Reject，避免预填充过载溢出，同时印证原文"资源稀缺、需精确预测时，请求级预测尤为困难"——单纯看当前预填充会误判（Stage2本应Reject时预填充低），必须预测解码端未来负载。
 
-**Data Flow:** Stage 1 (low decode, high prefill → Accept) → Stage 2 (decode surges, prefill drops → Reject) → Stage 3 (decode drops, prefill rises → Accept) → Stage 4 (decode moderate, prefill low → Reject).
-
-**Key Technical Takeaway:** Accept/reject decisions are jointly driven by **both** decoding and prefill utilization thresholds; the scheduler must account for **cross-stage coupling** (vertical red arrows) where decoding load from a prior stage suppresses prefill acceptance in the next stage, preventing resource overcommitment.
-
-## Caption (Verbatim Transcription)
-
-> "Length [bracket]; Utilization [bracket] — Legend: Prefill Request | Prefill Request (New Added) | Decoding Request — Y-axes: Decoding Load, Prefill Load — X-axis: Stage 1, Stage 2, Stage 3, Stage 4 — Time — Outcomes: Accept, Reject"
+3）**方法链作用**：该图为Mooncake**过载预测与早期拒绝策略**提供可视化依据，是调度器在Prefill/Decode解耦架构中保护KVCache节点不被预填冲击的关键决策环节。
 
 ### Figure 11 (p.16) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig11.png]]
@@ -246,15 +170,11 @@ The figure illustrates a four-stage scheduling/load-balancing process along a ti
 > End-to-end experiments of Mooncake and vLLM on the ArXiv Summarization and L-Eval datasets instances. In real-world clusters, the demand for prefill and decoding instances generally remains stable over certain periods, with only minor temporary imbalances. Thus, the proportion of prefill and decoding instances can be preset. Future research will explore more flexible deployment and conversion meth
 
 > [!tip] 技术解读（多模态）
-> **Description (≤120 words):**
+> 【图文联合解读】**图文联合解读：**
 
-Figure 11 presents a 2×2 grid of end-to-end performance benchmarks comparing Mooncake against vLLM variants on two long-context datasets (ArXiv Summarization, L-Eval). The top row plots normalized P90 TTFT (Time To First Token) versus request rate, while the bottom row plots normalized P90 TBT (Time Between Tokens). Three series are compared: Mooncake-[3P+1D] (blue) plus two baseline configurations (red, orange). Across all four panels, Mooncake's disaggregated architecture sustains lower latency values at substantially higher request rates before saturating the SLO thresholds (dashed lines at 1.0). The bottom-row TBT curves particularly show Mooncake flattening near ~0.5 while baselines climb toward violation.
+该图呈现2×2网格中的L-Eval列（ArXiv列未显示）：横轴为请求速率（0.25–2.0 req/s），纵轴为归一化P90 TTFT（上）与P90 TBT（下），虚线1.0为SLO阈值；蓝、红、橙三曲线分别对应Mooncake与两种vLLM基线。TTFT图中，Mooncake在1.5 req/s前维持在0.1–0.3，至~2.0才破线；基线分别在1.25与1.5处即触线。TBT图中，Mooncake与红色基线先后在~1.0与~0.75 req/s突破SLO，而橙色基线始终平坦于~0.2–0.3。
 
-**Key takeaway:** Mooncake's prefill–decode disaggregation decouples TTFT from TBT bottlenecks, enabling 2–3× higher sustainable request rates under identical SLOs.
-
-**Verbatim caption:**
-
-Figure 11: End-to-end experiments of Mooncake and vLLM on the ArXiv Summarization and L-Eval datasets
+原文借此论证：解耦架构在端到端长文本场景中显著提升SLO吞吐上限，TTFT增益尤为突出；该图为论文整体方法链路的"系统级压测"收尾，呼应§3.2调度与KV缓存传输设计，并以真实基准数据支撑"以KV Cache为中心"的可行性结论。
 
 ### Figure 12 (p.16) ⭐深度解读
 ![[assets/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-p16.png]]
@@ -308,15 +228,11 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 > Cache hit rates under different cache policies and capacities.
 
 > [!tip] 表格解读（多模态）
-> **Description of the Main Figure (Table 1):**
+> 【图文联合解读】**Table 1 图文联合解读：**
 
-**Architecture/Components/Data Flow:** Table 1 presents a comparative evaluation matrix of cache hit rate performance across two dimensions:
-- **Rows (Cache Policies):** Three eviction strategies — LRUCache (Least Recently Used), LFUCache (Least Frequently Used), and LengthAwareCache (length-aware eviction).
-- **Columns (Block Capacity):** A descending capacity gradient from Inf (unbounded) → 100000 → 50000 → 30000 → 10000 → 1000, simulating cache pressure scenarios.
+表1对比LRUCache、LFUCache、LengthAwareCache三种策略在6种block容量（Inf、100000、50000、30000、10000、1000）下的命中率。数据量化显示：无限容量时三者均仅约0.51；容量缩至1000时统一跌至0.30；LRU在中段容量（30000/10000）略优于LFU（0.48/0.40 vs 0.43/0.35）与LengthAware（0.42/0.35），其余容量下三者差距均≤0.03。
 
-**Key Technical Takeaway:** All three policies yield near-identical hit rates (~0.51) at unbounded capacity, but diverge under tight capacity (1000 blocks), where LRUCache outperforms LFUCache and LengthAwareCache (0.30 vs. 0.30, with intermediate advantages at 10000 blocks: 0.40 vs. 0.35). This indicates eviction strategy becomes critical only under memory pressure, with recency-based heuristics holding a slight edge at extreme constraints.
-
-**Caption (verbatim):** "Table 1: Cache hit rates under different cache policies and capacities."
+论文借此论证关键结论：LLM真实负载下，KVCache命中率天然存在约51%的上限，传统淘汰策略收益微弱且差异不显著，说明**单实例缓存远远不足以复用prefix token**。因此必须借助跨实例共享来突破容量瓶颈，这直接支撑了Mooncake"以KVCache为中心、prefill与decode解耦"的核心架构：全局Store层汇聚多实例缓存、Early-rejection调度器挑选高复用价值请求，使得长上下文请求能复用远端prefix KVCache、显著降低TTFT，构成其区别于传统vLLM/Tensor Parallel-Serve的差异化设计基础。
 
 ### Table 2 (p.15) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-tab02.png]]
@@ -324,13 +240,13 @@ TTFT compliance is near-identical (~100%) for both systems, but **TBT SLO adhere
 > Datasets used in the end-to-end experiment.
 
 > [!tip] 表格解读（多模态）
-> **Description:**
-This table (Table 2) is a comparison matrix summarizing four datasets used in an end-to-end experiment for LLM inference/serving. Its **components** are the dataset names plus four evaluation dimensions: Avg Input Length, Avg Output Length, Cache Ratio, and Arrival Pattern. The **data flow** is implicitly a workload characterization—each row profiles a distinct request distribution, ranging from short-output summarization (ArXiv, L-Eval) to synthetic multi-length sweeps (Simulated Data) and timestamp-driven production traces (Real Data).
+> 【图文联合解读】**图文联合解读：**
 
-**Key technical takeaway:** The benchmark deliberately spans divergent regimes—input lengths from ~8K to 128K tokens, cache hit-ratios from ~0% to >80%, and both stochastic (Poisson) and bursty (timestamp-based) arrivals—to stress-test the system across compute-, memory-, and I/O-bound regimes within a single evaluation harness.
+该表列出4类端到端实验数据集的量化参数：ArXiv Summarization（输入8088/输出229，缓存命中率~0%）、L-Eval（19019/72，>80%）、Simulated Data（输入16k–128k/输出512，50%）和Real Data（7955/194，~50%），到达模式分别为泊松过程或时间戳驱动。
 
-**Caption (verbatim):**
-Table 2: Datasets used in the end-to-end experiment.
+该表用以论证Mooncake架构需适配**多样化负载**：覆盖长输入（最长128k）、长输出（512）、近零与高命中率（0%→>80%）以及不同请求到达模式，体现KVCache-centric解耦架构对上下文缓存复用与吞吐优化的普适性。
+
+在论文链路中，它是端到端实验前的**场景定义**，为后续吞吐、延迟、SLO达成率等性能评估提供可对比、可复现的测试基准。
 
 ### Table 3 (p.17) ⭐深度解读
 ![[assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-tab03.png]]
@@ -338,17 +254,13 @@ Table 2: Datasets used in the end-to-end experiment.
 > Number of requests rejected by the system under the overloaded-scenario experiment.
 
 > [!tip] 表格解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**Table 3 解读**
 
-**Architecture/Components:** The figure is a comparative data table (Table 3) presenting experimental results across three request-handling strategies evaluated under an overloaded-scenario workload. The columns represent distinct system configurations: a **Baseline** (no early-rejection mechanism), an **Early Rejection** policy (rules-based admission control), and an **Early Rejection based on Prediction** (ML/forecasting-driven admission control). The single metric row quantifies the absolute count of requests rejected by each approach.
+1) **对象与数据**：该表量化过载场景下三种策略的拒绝量——Baseline 4183、Early Rejection 3771、Early Rejection based on Prediction 3589，呈单调递减。
 
-**Data Flow:** Workload → system admission controller (variant-specific) → rejection counter → tabular aggregation.
+2) **论证结论**：表说明仅靠早期拒绝已降低约10%被拒请求；叠加负载预测后进一步降至3589（较Baseline降幅≈14%），证明早拒绝+负载预测策略能显著减少过载下被系统拒之门外的高负载请求。
 
-**Key Technical Takeaway:** Predictive early rejection achieves the lowest rejection count (3589 vs. Baseline's 4183, ~14% reduction) while outperforming naive early rejection (3771), demonstrating that forecasting-driven admission control is more selective than rule-based gating.
-
-## Caption (Verbatim)
-
-> **Table 3:** Number of requests rejected by the system under the overloaded-scenario experiment.
+3) **链路作用**：作为Mooncake"预测–早拒绝–调度"前端机制的实验锚点，与吞吐/时延指标互补，量化验证了KVCache-centric架构在高压负载下的鲁棒性与请求接纳能力。
 
 ## 相关论文
 

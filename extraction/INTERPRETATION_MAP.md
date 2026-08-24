@@ -52,7 +52,9 @@ papers.json               ← 论文 manifest（RAG 摄取入口）
 
 - `minimax_captions.json` 的 key = **图片相对 repo 的路径**（如 `extraction/assets/crops/xxx-tab01.png`）
 - 查某张图有没有解读：`python3 -c "import json; print('extraction/assets/crops/xxx.png' in json.load(open('extraction/minimax_captions.json')))"`
+- **【图文联合解读】前缀 = 上下文增强版**（2026-08-24 起）：crop 图 + 论文 caption + 正文中引用该图/表的段落联合喂 M3，解读锚定论文自己的论述，不再只看孤立图片。`context_caption.py` 幂等（有前缀即跳过），full_pipeline step 4 自动跑。
 - **fig 裁剪图可能没有自己的 key**——它继承同页整页图（`assets/<slug>-pNN.png`）的解读（同一内容，不重复解读省 token）。表格/公式裁剪图**都有**自己的 key。
+- **乱码 PDF 的裁剪来自 ar5iv 原图**（登记在 `ar5iv_crops.json`）：源头字体坏的论文（kv-management survey、deepseek-r1、dynamic-lcm 等 6 篇 19 张）从 arxiv HTML 取原始图/表重新生成，内容以 ar5iv 为准。
 - 引用串格式：`[slug, Fig.N, p.X]`（arxiv 号在 `papers.json` 或 MD frontmatter）
 
 ## 全量覆盖率自查

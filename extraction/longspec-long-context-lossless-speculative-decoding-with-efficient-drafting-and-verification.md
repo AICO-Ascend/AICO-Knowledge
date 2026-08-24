@@ -30,15 +30,14 @@ tags: [speculative, long-context]
 > The SoTA SD method, EAGLE, has a training context length of 2048, which is significantly shorter than the context lengths of modern LLMs. 2023), and their ability to handle extensive con- texts is becoming crucial for emerging applications such as LLM agents and long reasoning tasks (Tan et al., 2025; Guo et al., 2025), which now oper- ate over context windows extending to millions of tokens (Team
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (≤120 words)
+> 【图文联合解读】**1) 核心对象与数据**
+对数刻度柱状图（y 轴 2k→10M），对比 7 个前沿 LLM 的上下文窗口：DeepSeek-V3、Qwen3-235B-A22B 约 128k；Claude 3.7 Sonnet 约 200k；Grok 3、GPT-4.1、Gemini 2.5 Pro 约 1M；Llama 4 Scout 约 10M（最高）。红色虚线标 2k，为 EAGLE 训练上下文长度。
 
-**Figure 1** is a **bar chart** with a logarithmic y-axis (context length, 2k → 10M tokens) comparing the supported context windows of seven frontier LLMs — DeepSeek-V3, Qwen3-235B-A22B, Llama 4 Scout, Grok 3, Claude 3.7 Sonnet, GPT-4.1, and Gemini 2.5 Pro — each rendered as a colored bar topped with the model's logo. A horizontal red dashed reference line marks **2k tokens**, denoting EAGLE's training context length.
+**2) 关键结论**
+现代 LLM 实际上下文窗口为 EAGLE 训练长度的 **64×~5000×**，EAGLE 根本无法覆盖真实长上下文场景，直接迁移将失效。
 
-**Key technical takeaway:** The chart exposes a stark training–inference mismatch: although modern LLMs operate over 100k–10M-token contexts, the SoTA speculative decoding method EAGLE was trained on only **2,048 tokens**, rendering it ill-suited for long-context speculative decoding and motivating the proposed LONGSPEC framework.
-
-## Caption (verbatim)
-
-> **Figure 1:** The SoTA SD method, EAGLE, has a training context length of 2048, which is significantly shorter than the context lengths of modern LLMs.
+**3) 论文作用**
+作为核心动机图，揭示 SOTA 推测解码方法在长上下文下的根本局限，为 LongSpec（长上下文无损推测解码）的研究必要性提供直观量化依据。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig02.png]]
@@ -47,7 +46,9 @@ tags: [speculative, long-context]
 > Illustration of the memory-efficient draft model, the Anchor-Offset Indices, and the Hybrid Tree Attention. (a) We use a sliding window self-attention layer to capture the local context information and a cross-attention layer to gather long-context information. (b) The differences between the vanilla indexing and the Anchor-Offset
 
 > [!tip] 技术解读（多模态）
-> LongSpec 三件套：(a) 内存高效 draft 模型——滑窗自注意力（定长窗口捕捉局部）+ 无 KV cache 的 cross-attention（直接读 target 模型 last-layer K/V 收长程信息），draft KV 占用变常数；(b) Anchor-Offset Indices——保留前 4 个位置作 attention sink，其余 token 从随机大 offset 连续编号，短上下文训练即可覆盖大位置索引、且 target 模型不 OOD（loss 仅 +0.001），弥合训练-推理位置错配；(c) Hybrid Tree Attention——前缀走 FlashAttention（快）+ tree 走 Triton mask attention（灵活），兼得两者。
+> 【图文联合解读】**图文联合解读：**
+
+图(a)展示内存高效草稿模型：对输入"deep"用定长3-token窗口（gaunt/with/deep）做局部自注意力，再通过交叉注意力读取Target LLM的历史KV缓存，最终经LM Head预测"wrinkles"，实现以小内存消费长上下文。图(b)对比Vanilla索引（大间隔如0,1,2,803）与Anchor-Offset索引（锚点0-3+偏移段如10204-11221、30004-30055），证明后者能将短文本训练的位置分布拉近长文本训练，显著缩小能力Gap。图(c)将Flash Attention（全✓的prefix快路径）与Mask Attention（按speculative tree掩码的灵活路径）合并为Hybrid Attention。三组件分别解决草稿建模内存、训练分布对齐、树形验证效率问题，共同支撑LongSpec在长上下文下的无损推测解码。
 
 ### Figure 3 (p.7) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig03.png]]
@@ -56,15 +57,7 @@ tags: [speculative, long-context]
 > Decoding speed (tokens/s) across different models and settings. All results are computed at T = 1. The letters G, Q, M, L, and R on the horizontal axis represent the datasets GovReport, QMSum, Multi-News, LCC, and
 
 > [!tip] 技术解读（多模态）
-> ## Figure 3 Description
-
-**Layout/Components:** A horizontal array of five grouped bar charts, each panel dedicated to one LLM (Vicuna-7B, Vicuna-13B, LongChat-7B, LongChat-13B, LLaMA-3.1-8B). Each panel plots decoding speed (Tokens/s, 0–120 y-axis) against five long-context datasets on the x-axis: GovReport (G), QMSum (Q), Multi-News (M), LCC (L), RepoBench-P (R). Per dataset, two paired bars compare **MagicDec** (light blue) vs **LongSpec** (dark blue), with numeric values annotated above each bar.
-
-**Key Technical Takeaway:** LongSpec consistently outperforms MagicDec by roughly 2–2.5× across every model/dataset combination (e.g., Vicuna-7B on LCC: 50 vs 119 tokens/s; LongChat-7B on LCC: 51 vs 124 tokens/s), demonstrating that the proposed speculative decoding approach yields robust throughput gains independent of backbone model and dataset choice.
-
-## Caption (Verbatim)
-
-**Figure 3:** Decoding speed (tokens/s) across different models and settings. All results are computed at $T = 1$. The letters G, Q, M, L, and R on the horizontal axis represent the datasets GovReport, QMSum, Multi-News, LCC, and RepoBench-P respectively.
+> 【图文联合解读】图3以5子图×5数据集（G/Q/M/L/R）柱状对比LongSpec（深蓝）与MagicDec（浅蓝）在T=1下的解码速度（tokens/s），覆盖Vicuna-7B/13B、LongChat-7B/13B与LLaMA-3.1-8B。LongSpec在所有25组组合中均显著领先：7B/8B模型实现约2.4–2.5×加速（如LongChat-7B在LCC：51→124 tokens/s，Vicuna-7B在LCC：50→119），13B模型约2×加速（如LongChat-13B在LCC：37→93）。该图证明其高效草稿生成与验证机制在跨模型、跨长文任务下稳定有效，是论文实验链路中支撑"长上下文无损加速"结论的核心证据。
 
 ### Figure 4 (p.8) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig04.png]]
@@ -73,14 +66,11 @@ tags: [speculative, long-context]
 > Training loss curves on long-context data.
 
 > [!tip] 技术解读（多模态）
-> **Figure 5 – Architecture / Components / Data Flow:**
+> 【图文联合解读】**图文联合解读：**
 
-A horizontal stacked bar chart comparing per-loop latency (ms) of two speculative-decoding implementations — "EAGLE" vs. "Hybrid" — broken into four sequential stages: draft-model forward (red hatched), target-model attention (yellow), target-model FFN (green hatched), and verification (blue outline). The EAGLE bar totals ~75 ms, with target attention dominating (~49.9 ms); the Hybrid bar totals ~25 ms, with target attention compressed to ~12.5 ms, while draft, FFN, and verification stages remain roughly equal.
+图中展示长上下文训练过程中两条Loss曲线（横轴Steps 0–1200）：红色为启用了Anchor-Offset Indices的预训练模型，初始Loss约4.2并快速收敛至~3.5；蓝色为未启用版本，初始Loss高达~6.3，需经约1200步才降至同等水平。红色箭头标注"3.93×"，定量说明无Anchor-Offset需多花近4倍训练步数才能追上。
 
-**Key takeaway:** Hybrid Tree Attention cuts the target-model attention latency by ~75% (49.92 → 12.54 ms), which is where almost all the end-to-end speedup originates, since the other three pipeline stages are unchanged.
-
-**Caption verbatim:**
-"Figure 5: Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latency reduction is observed in the target model's attention layer (the yellow part) using our approach."
+该图作为训练阶段的实证依据，证明Anchor-Offset位置编码策略在长上下文建模中具备显著更优的起点Loss与收敛效率，为后续投机解码中Draft模型对超长位置信息的准确预测提供了关键的模型质量前提，从而支撑Table 4中更高的平均接受长度τ与解码加速结论。
 
 ### Figure 5 (p.8) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig05.png]]
@@ -89,14 +79,17 @@ A horizontal stacked bar chart comparing per-loop latency (ms) of two speculativ
 > Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latency reduction is observed in the target model’s at- tention layer (the yellow part) using our approach.
 
 > [!tip] 技术解读（多模态）
-> **Figure 5 – Architecture / Components / Data Flow:**
+> 【图文联合解读】**核心对象与量化数据**
 
-A horizontal stacked bar chart comparing per-loop latency (ms) of two speculative-decoding implementations — "EAGLE" vs. "Hybrid" — broken into four sequential stages: draft-model forward (red hatched), target-model attention (yellow), target-model FFN (green hatched), and verification (blue outline). The EAGLE bar totals ~75 ms, with target attention dominating (~49.9 ms); the Hybrid bar totals ~25 ms, with target attention compressed to ~12.5 ms, while draft, FFN, and verification stages remain roughly equal.
+Figure 5 以水平堆叠条形图分解单次投机解码循环的延迟，对比 **EAGLE（~78 ms）** 与 **Hybrid Tree Attention（~40 ms）**，分四段：draft model forward、target model attention、target model FFN、verification。EAGLE 中 target attention 约 50 ms（占绝对主体）；Hybrid 将其压缩至 ~12 ms（约 4× 加速），draft、FFN、verification 三段基本不变，总耗时近乎减半。
 
-**Key takeaway:** Hybrid Tree Attention cuts the target-model attention latency by ~75% (49.92 → 12.54 ms), which is where almost all the end-to-end speedup originates, since the other three pipeline stages are unchanged.
+**关键技术结论**
 
-**Caption verbatim:**
-"Figure 5: Latency breakdown for a single speculative decoding loop comparing the EAGLE implementation and the proposed Hybrid Tree Attention. Significant latency reduction is observed in the target model's attention layer (the yellow part) using our approach."
+该图量化佐证 caption 论述：Hybrid Tree Attention 的收益**集中体现在目标模型注意力层**，直接缓解长上下文验证阶段的注意力计算瓶颈，验证了作者"目标模型 attention 层显著降低"的论断。
+
+**在论文整体链路中的作用**
+
+作为 LongSpec 核心效率实证证据，支撑其"长上下文无损 + 高效"的设计主张；与吞吐、接受率等实验数据相互呼应，证明优化并非以牺牲无损性为代价。
 
 ### Figure 6 (p.9) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-fig06.png]]
@@ -105,13 +98,7 @@ A horizontal stacked bar chart comparing per-loop latency (ms) of two speculativ
 > Throughput comparison of Vanilla, MagicDec, and LONGSPEC. not suitable for such long-output scenarios because the initial inference stage of the long reasoning task is not the same as the traditional long-context task. In long reasoning tasks, where the prefix is relatively short, the draft model in MagicDec will completely degrade into the target model, failing to achieve acceleration.
 
 > [!tip] 技术解读（多模态）
-> **Figure Description**
-
-The figure is a line chart comparing throughput (tokens/s) across batch sizes 1, 2, 4, and 8 for three methods: Vanilla (blue), MagicDec (orange), and LongSpec (green). All three curves rise with batch size, but LongSpec scales much more steeply, reaching ~561 tokens/s at batch size 8, versus MagicDec (~310) and Vanilla (~287). Vanilla and MagicDec track closely at small batches; MagicDec pulls slightly ahead at batch 4–8.
-
-**Key technical takeaway:** LongSpec's advantage over Vanilla and MagicDec grows with batch size, demonstrating superior scalability for high-throughput inference scenarios.
-
-**Caption (verbatim):** Figure 6: Throughput comparison of Vanilla, MagicDec, and LONGSPEC.
+> 【图文联合解读】图6展示Vanilla、MagicDec、LongSpec在批大小1–8下的吞吐量。LongSpec全面领先——批大小8时达约560，是Vanilla(~290)与MagicDec(~312)的近2倍；而MagicDec与Vanilla曲线几乎重合，差距<10%。原文据此论证：在长输出推理场景中，前缀较短使MagicDec的草稿模型退化为目标模型而失效；LongSpec通过高效草稿与验证机制突破了这一瓶颈，是支撑"无损推测解码可应用于长上下文/长输出"这一核心结论的关键实验证据。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -121,13 +108,39 @@ The figure is a line chart comparing throughput (tokens/s) across batch sizes 1,
 > and Figure 3 show the decoding speeds and average acceptance lengths across the five evalu- ated datasets at T = 0 and T = 1 , where T denotes the temperature used in LLM sampling. Our pro- posed method significantly outperforms all other approaches on both summarization tasks and code completion ta
 
 > [!tip] 表格解读（多模态）
-> I don't see a figure with architecture/components/data flow in the image you provided. The image contains only text — two paragraphs from what appears to be Section X (experimental results) of a paper about "LongSpec," referencing Table 1 and Figure 3 but not depicting them. Here is the caption-able text verbatim:
+> 【图文联合解读】**说明：** 所提供图片实为论文 §4.2 "Main Results" 正文页（对 Table 1 的文字论述），并非 Table 1 表格本体，故依据原文进行解读。
 
-> "Table 1 and Figure 3 show the decoding speeds and average acceptance lengths across the five evaluated datasets at T = 0 and T = 1, where T denotes the temperature used in LLM sampling. Our proposed method significantly outperforms all other approaches on both summarization tasks and code completion tasks. When T = 0, on summarization tasks, our method can achieve an average acceptance length of around 3.5 and a speedup of up to 2.67×; and on code completion tasks, our method can achieve an average acceptance length of around 4 and a speedup of up to 3.26×. This highlights the robustness and generalizability of our speculative decoding approach, particularly in long-text generation tasks. At T = 1, our method achieves around 2.5× speedup, maintaining a substantial lead over MagicDec. This indicates that our approach is robust across different temperature settings, further validating its soundness and efficiency.
->
-> Although PLD can accelerate generation on many datasets, it still does not match the performance of our proposed LongSpec. In some scenarios (e.g., when retrieval is minimal), PLD can even result in negative acceleration. For another baseline, MagicDec, while it demonstrates competitive acceptance rates compared to LongSpec, its speedup is noticeably lower in our experiments. This is because MagicDec is primarily designed"
+---
 
-If you intended to share an architectural diagram (e.g., the LongSpec system figure showing draft/target model interaction, the tree-based speculative decoding flow, or a model pipeline), could you re-upload it? I'd be glad to describe its components and produce the verbatim caption once I can see it.
+**1) 核心对象与数据：** Table 1 展示 LongSpec 在 5 个评测数据集（含摘要与代码补全两类长文本任务）上，于 T=0 与 T=1 两种采样温度下的解码速度（speedup）与平均接受长度。T=0 时，摘要任务接受长度约 3.5、加速比最高 2.67×；代码补全任务接受长度约 4、加速比最高 3.26×。T=1 时仍保持约 2.5× 加速，持续领先 MagicDec。
+
+**2) 关键结论：** 证明 LongSpec 在长文本生成场景下兼具高接受率与显著加速，且对温度鲁棒，方法具备通用性与稳健性。
+
+**3) 论文作用：** 作为主实验核心定量证据，支撑"长上下文无损推测解码"在摘要、代码两类典型长序列任务上的 SOTA 主张，与图3互补，回应引言中 EAGLE 训练上下文仅 2k 的痛点。
+
+### Table 2 (p.8) ⭐深度解读
+![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab02.png]]
+> [!quote] caption
+> Performance comparison with and with- out Anchor-Offset Indices on the Multi-News and RepoBench-P datasets. Models with Anchor-Offset In- dices achieve higher output speed and larger acceptance length, highlighting their efficiency and effectiveness.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 2 图文联合解读**
+
+该表在 Multi-News（摘要）与 RepoBench-P（代码）两个长文本基准上，对比启用/不启用 Anchor-Offset Indices 时的接受长度 τ 与吞吐量 Tokens/s。
+
+具体数据：Multi-News 上 τ 由 3.20 升至 3.36（+5.0%），Tokens/s 由 85.98 升至 91.11（+6.0%）；RepoBench-P 上 τ 由 3.26 升至 3.39（+4.0%），Tokens/s 由 85.21 升至 91.28（+7.1%）。两数据集两指标同步提升，且吞吐量增益（6–7%）略高于 τ 增益。
+
+原文借此论证：Anchor-Offset Indices 是 LongSpec 长上下文无损投机解码的核心工程优化——它弥补了朴素索引在长序列下压缩率与检索精度的双重损失，使轻量草稿模型更准确地预测目标 token，从而在 lossless 前提下同时提升接受长度与端到端解码速度。
+
+在论文链路中，本表属组件消融环节，紧承 Figure 2(b) 索引机制示意图，为后续端到端长文评测中 LongSpec 的速度优势提供单变量因果证据。
+
+### Table 3 (p.8) ⭐深度解读
+![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab03.png]]
+> [!quote] caption
+> Performance of our method on the QwQ-32B model on four math reasoning datasets, using a maxi- mum output length of 32k tokens. The table shows the tokens generated per second and the mean number of accepted tokens τ , where our approach achieves about 2.34 × higher speed compared to the baseline on 
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】Table 3展示QwQ-32B在AIME24/AMC/Minerva/MATH500四个数学推理集（32k最大输出）上的性能：Vanilla tokens/s仅18.92–19.59，LongSpec提升至42.63–48.36，加速比2.25–2.47×；τ由1.00升至3.65–3.95（平均3.81）。原文据此论证：LongSpec在长输出思维链场景下仍能无损地实现平均2.34×加速，验证其n-gram+动态树草稿机制对长链路CoT的有效性。该表与Figure 3（摘要/代码等短输出场景）互补，证明方法在不同任务、不同输出长度下均稳定加速，支撑论文"无损长上下文推测解码"的核心结论。
 
 ### Table 4 (p.16) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab04.png]]
@@ -135,17 +148,14 @@ If you intended to share an architectural diagram (e.g., the LongSpec system fig
 > Average acceptance length τ and decoding speed (tokens/s) across different models and settings. Specifically, “Vanilla HF” refers to HuggingFace’s PyTorch-based attention implementation, while “Vanilla FA” employs Flash
 
 > [!tip] 表格解读（多模态）
-> **Note:** The image provided contains only the caption text for Table 4 — the actual table with numerical values is not visible in the image. I'll describe what the caption conveys and transcribe it.
+> 【图文联合解读】**1) 核心对象与数据**
+表4对比V-7B与LC-7B两个模型在GovReport、QMSum、MultiNews、LCC、RB-P五个长文数据集上,Vanilla HF/FA、TR、EAGLE、LongSpec五种设置的接受长度τ与解码速度(tokens/s)。LongSpec在所有数据集均取得最高τ(V-7B:3.14–3.86;LC-7B:3.06–4.21)与最快速度(85.23–122.30 tok/s),全面领先;EAGLE τ≈1.91–2.10,但tokens/s仅26–40;TR速度近LongSpec(64.96–100.41)但τ偏低(2.13–3.05)。
 
-## Description of the Referenced Figure/Table
+**2) 关键结论**
+LongSpec同时实现更长接受长度与更高吞吐量,体现高效draft+verify机制的优越性;EAGLE速度慢表明短文训练的draft在长上下文失效;TR速度可但验证开销大。
 
-The referenced Table 4 reports **average acceptance length τ** (a metric in speculative/sampling-based generation indicating how many tokens a draft is accepted per verification round) and **decoding speed in tokens/s** across multiple model configurations. It compares three implementations: a baseline, "Vanilla HF" (HuggingFace's PyTorch attention), and "Vanilla FA" (Flash Attention), all evaluated at temperature T = 0 (greedy decoding).
-
-**Key Technical Takeaway (≈120 words):** The table benchmarks decoding throughput across attention backends for speculative decoding at greedy settings (T = 0). Acceptance length τ measures how many draft tokens the verifier accepts before a rejection — higher τ reduces verification overhead. Flash Attention (FA) typically yields higher tokens/s than HuggingFace's PyTorch attention due to reduced memory bandwidth via tiled/scaled-dot-product optimization, while τ remains roughly comparable across backends since acceptance depends on logits, not the attention kernel. The takeaway is that the attention implementation choice primarily affects raw decoding speed rather than acceptance behavior, and FA provides the fastest inference path when speculative acceptance is fixed.
-
-## Verbatim Caption Transcription
-
-> Table 4: Average acceptance length τ and decoding speed (tokens/s) across different models and settings. Specifically, "Vanilla HF" refers to HuggingFace's PyTorch-based attention implementation, while "Vanilla FA" employs Flash Attention. All results are computed at T = 0.
+**3) 论文作用**
+与图4训练曲线协同,作为核心实验结论表,支撑"长上下文无损推测解码"的整体主张。
 
 ### Table 5 (p.16) ⭐深度解读
 ![[assets/crops/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification-tab05.png]]
@@ -153,24 +163,15 @@ The referenced Table 4 reports **average acceptance length τ** (a metric in spe
 > A detailed breakdown of performance as the prefill length increases, with LongChat-7B on GovReport.
 
 > [!tip] 表格解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components/Data Flow:**
-This table (Table 5) presents a performance breakdown of a **speculative decoding system** running LongChat-7B on the GovReport long-context benchmark, sliced across six prefill-length buckets (0–5k through 25k–32k tokens). The components measured are:
-- **Tokens/s** — end-to-end decoding throughput
-- **τ** — speculative decoding parameter (avg. draft length/acceptance)
-- **Draft time (ms)** — small model proposing tokens
-- **Target time (ms)** — large model forward pass
-- **Verify time (ms)** — token acceptance check
+表格对比 **V-7B** 与 **LC-7B** 两模型在 GovReport、QMSum、MultiNews、LCC、RB-P 五个长文数据集上，Vanilla HF、Vanilla FA、TR、EAGLE、LongSpec 五种方法的接受长度 τ 与生成吞吐量 Tokens/s。
 
-Data flow: input prompt → target prefill → draft proposes k tokens → target verifies batch → accepted tokens appended, looping until stop.
+**关键结论：** LongSpec 在所有数据集上 τ 最高（3.06–4.21），Tokens/s 较 Vanilla HF 提速约 **4×**（如 LC-7B LCC：122.30 vs 25.27）；而 EAGLE 在长文下 Tokens/s（29.75–40.64）反低于 Vanilla FA（42.69–54.17），暴露其长上下文退化。
 
-**Key Technical Takeaway:**
-Throughput stays nearly flat (~113–117 tok/s) from 0–25k prefill, then drops ~10% to 103.68 tok/s at 25k–32k. This degradation is driven almost entirely by **target-model latency** (25.6 → 30.9 ms, +20%), while draft and verify times grow negligibly (<0.2 ms total), indicating that the large model's attention/KV-cache cost—not the speculative overhead—dominates long-context slowdown.
+**实验链路作用：** 以多模型×多数据集的横向基准，定量证明 LongSpec 相对 TR/EAGLE 在长上下文场景具备稳定无损加速优势，构成论文核心实验证据。
 
-## Caption (Verbatim)
-
-**Table 5:** A detailed breakdown of performance as the prefill length increases, with LongChat-7B on GovReport.
+（注：原文表格 caption 与正文实际内容存在轻微出入——caption 仅提 GovReport，但表中实为五数据集联合对比。）
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

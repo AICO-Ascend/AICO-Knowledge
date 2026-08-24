@@ -30,7 +30,13 @@ tags: [disaggregated-serving]
 > System architecture: An interpreter executes language primitives with optimized runtime.
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】SGLang 系统架构(Fig.1)：Python 嵌入式前端+高性能 runtime，流式 interpreter 提交原语(extend/gen/fork)异步执行并保留依赖。RadixAttention 用 LRU 基数树缓存 KV，跨请求共享前缀自动复用中间注意力态。Frontiers&Dependencies 跟踪就绪原语+数据依赖→批独立操作、重叠执行藏延迟。DSL+radix-cache+依赖调度统一，比 vLLM/Guidance/LMQL 快至 6.4x。架构核心图。
+> 【图文联合解读】**图文联合解读**
+
+图示SGLang三层架构：**前端**(SGLang Client，含Sec.2语言原语extend/gen/fork) → **Interpreter**(黄色调度器) → **后端Runtime**(蓝色，集成Sec.3 RadixAttention、Sec.4 压缩FSM、Sec.5 API推测执行)。
+
+该图论证的核心结论：以**嵌入式DSL前端+流式Interpreter+优化Runtime**的分层设计，将原语依赖解析、KV缓存复用、状态机压缩统一抽象；Interpreter记录数据依赖使独立原语并行批执行，前缀自动命中RadixAttention。
+
+作为论文方法链路总纲图(Fig.1)，它在Sec.1结尾铺垫后三章技术细节(§2原语→§3缓存→§4 FSM→§5推测)，并支撑§6实验：在HumanEval/MTBench等基准上较vLLM/Guidance/LMQL实现最高6.4×加速。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig02.png]]
@@ -39,7 +45,23 @@ tags: [disaggregated-serving]
 > The implementation of a multi-dimensional essay judge in SGLang utilizes the branch-solve-merge prompting technique [40]. Primitives provided by SGLang are shown in red. 2
 
 > [!tip] 技术解读（多模态）
-> 这张图展示了一段使用SGLang实现多维度文章评判器的Python代码示例，通过分支-求解-合并（branch-solve-merge）提示技术来评估一篇关于图像的文章，从清晰度、原创性和证据性等多个维度并行评判，并附有关于编程模型、语言原语和执行模式的文字说明。
+> 【图文联合解读】# Figure 2 图文联合解读
+
+**1) 核心对象与结构**
+
+该图为代码注释图，展示 SGLang 中多维作文评判器（multi-dimensional essay judge）的完整实现，调用 `gen`、`select`、`fork` 等原语（红色高亮），由右侧黄色箭头逐行标注功能：
+- **入口**：`run` 函数——运行 SGLang 程序，支持 chat 模板与多模态输入；
+- **分支（branch）**：`fork()` 并行触发多个 `gen` 调用，按"dimension"逐项评判；
+- **求解（solve）**：单维度调用采用 **KV Cache Reuse**（Sec. 3）复用前文 prompt；用 `select` 从候选选项中选最高概率答案；
+- **合并（merge）**：汇总各维度 JSON 结果，并采用 **快速约束解码**（Sec. 4，正则 `[ABCD][+-]?\s`）与 **API 投机执行**（Sec. 5）输出最终字母等级与摘要。
+
+**2) 关键论证结论**
+
+图示证明：仅用 7 个原语即可将论文 [40] 的 branch-solve-merge 提示范式实现为高效程序，且 SGLang 的三类运行时优化（KV cache 复用、约束解码、投机执行）可无缝嵌入。
+
+**3) 在论文链路中的作用**
+
+该图作为"方法示例"，承上（Sec. 2 编程模型）启下（Sec. 3–5 各项优化），直观体现 SGLang 用高层原语 + 自动优化替代手工工程，是后续性能基准（Figure 3）与消融实验的应用载体。
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig03.png]]
@@ -48,32 +70,13 @@ tags: [disaggregated-serving]
 > Examples of RadixAttention operations with an LRU eviction policy, illustrated across nine time points. The figure demonstrates the dynamic evolution of the radix tree in response to various requests. These requests include two chat sessions, a batch of few-shot learning inquiries, and a self-consistency sampling. Each tree edge carries a label denoting a substring or a sequence of tokens. The nod
 
 > [!tip] 技术解读（多模态）
-> **图3 (Figure 3) 概览**
+> 【图文联合解读】**图文联合解读：**
 
-这张图展示了 **RadixAttention** 操作在 9 个时间点的示例，使用 **LRU (最近最少使用) 淘汰策略**。
+图示9个时间点RadixAttention基数树的演化：根节点出发，两类聊天分支共享系统提示"You are a helpful assistant."公共前缀；少样本链（Question1–Answer1…Question3）与自一致性多采样（"This is…/Let us…/We can…/To solve…"）依次挂载为子分支。节点c、j等在(5)(8)(9)经LRU驱逐（橙色×标记）。
 
-**节点颜色编码：**
-- 🟢 **绿色**：新添加的节点
-- 🔵 **蓝色**：该时间点访问的缓存节点
-- 🔴 **红色**：已被淘汰的节点
+**技术结论：** 基数树实现自动前缀共享KV缓存，无需手动提示管理；LRU策略保证热点prompt常驻、冷分支及时淘汰。
 
-**9个时间点的演化过程：**
-1. **步骤 (1)**：radix 树初始为空
-2. **步骤 (2)**：处理用户消息 "Hello"，系统提示 + 对话被合并到树的单个边
-3. **步骤 (3)**：新提示到达，复用前缀的 KV 缓存
-4. **步骤 (4)**：新聊天会话开始，节点 "b" 被分裂以共享系统提示
-5. **步骤 (5)**：因内存限制，节点 "c" 被淘汰
-6. **步骤 (6)**：few-shot 学习查询到达，根节点被分裂
-7. **步骤 (7)**：批量 few-shot 查询，节点 "e" 被分裂以支持共享
-8. **步骤 (8)**：第二个聊天会话的消息到达，其中节点 "g" 和 "h" 被淘汰
-9. **步骤 (9)**：采样更多答案（自一致性提示），节点 "i"、"k"、"l" 被淘汰
-
-**关键概念：**
-- **Radix 树**结构用于动态管理 KV 缓存
-- **前缀匹配**实现缓存复用
-- **Frontend-Runtime 协同设计**：前端解释器发送完整提示，运行时执行前缀匹配和复用
-
----
+**论文作用：** 作为SGLang运行时核心机制的可视化证据，为后续提示复用吞吐量与延迟基准实验提供机制基础。
 
 ### Figure 4 (p.6) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig04.png]]
@@ -82,46 +85,11 @@ tags: [disaggregated-serving]
 > The decoding process of normal and compressed FSMs (the underscore _ means a space). requests by matched prefix length and prioritize requests with longer matched prefixes instead of using a first-come, first-served schedule. Alg. 1 (Appendix) shows the pseudo-code for cache-aware scheduling with contiguous batching. The algorithm uses longest-shared-prefix-first order. In more latency-sensitive s
 
 > [!tip] 技术解读（多模态）
-> **图4 深度解读**
+> 【图文联合解读】**图(a)**：Normal FSM为regex `{"summary":_`构建**12状态(0-11)**线性结构，每个状态对应单个字符`{ " s u m m a r y " : _`；**(c)**：解码过程显示FSM校验与LLM前向频繁交替——每token（`{"`、`summary`、`":`、`_`）均触发**独立LLM调用**，调度粒度过细。
 
-**1) 图类型**
-**架构/机制对比图** —— 展示 SGLang 提出的**压缩有限状态机（Compressed FSM）**相对于传统 FSM 的解码机制差异。属于算法/系统设计图，而非性能数据图。**
+**关键结论**：原文借助Normal FSM对照Compressed FSM论证——后者通过合并具有相同未来转移的等价状态节点，把逐字符校验压缩为多 token批量匹配，从而**单次LLM解码可同时校验多字符**，显著降低调度与前向开销。
 
-**2) 核心内容**
-
-**图例符号系统：**
-- 🔵 蓝色方块/圆 = **FSM state**（状态节点）
-- 🟠 橙色方块 = **Token**（已确定的 token）
-- 🟢 绿色六边形 = **LLM decode**（一次模型前向调用）
-
-**四个子图的对比：**
-
-| 子图 | 内容 | 状态数 | 解码调用次数 |
-|------|------|--------|-------------|
-| **(a) Normal FSM** | 14 个状态 (0→13)，每条边对应**单一字符** `{`, `"`, `s`, `u`, `m`, `m`, `a`, `r`, `y`, `"`, `:`, `_` | 14 | — |
-| **(b) Compressed FSM** | 仅 2 个状态 (0→1)，整个字符串 `{"summary":_` 被**压缩为单条边** | 2 | — |
-| **(c) Normal 解码流程** | `{" → LLM → summary → LLM → " → LLM → : → LLM → "_ → LLM` | — | **4 次 LLM 前向** |
-| **(d) Compressed 解码流程** | `{" → summary → ":_ → LLM`（确定性 token 直接放行，仅歧义处调用模型） | — | **1 次 LLM 前向** |
-
-**关键数据流逻辑：**
-- (c) 中每生成一个字符级 token 都需一次完整 LLM 前向传播，即使后续字符在 FSM 中**完全确定**。
-- (d) 利用 FSM 分析，识别出**单例转移边（singular-transition edges）**——即当前状态下只有唯一合法 token 的边——将其压缩为单边，从而在该位置**跳过 LLM 调用**，直接放行 token。仅在必须由模型采样歧义 token 时才触发前向传播。
-
-**3) 一个关键技术要点**
-
-**核心创新：Singular-Transition 压缩** —— 将 FSM 中那些**没有分支的链式转移**（如 `s→u→m→m→a→r→y` 这一必然序列）合并为单一跳变，使确定性输出段**完全绕过 LLM 前向计算**。这与现有的 logits-mask 式逐 token 解码（如 Guidance、Outlines）形成本质区别：后者即使在 FSM 状态完全确定时仍会触发一次完整的 Transformer 前向，造成巨大浪费。对长确定性前缀（如 JSON schema、代码骨架）场景，加速比可与确定性 token 数线性成正比。**
-
-**4) Caption 逐字转录**
-
-> **Figure 4:** The decoding process of normal and compressed FSMs (the underscore `_` means a space).
->
-> 子图标注：
-> - (a) Normal FSM for regex `{"summary":_`
-> - (b) Compressed FSM for regex `{"summary":_`
-> - (c) Decoding process with normal FSM
-> - (d) Decoding process with compressed FSM
->
-> （脚注 2）：In practice, the computation is not the same as what is described in the proof of Theorem 3.1 because the unpredictable number of output tokens can cause the recomputation of the KV cache.
+**作用**：作为第3节"压缩FSM等价性"(Theorem 3.1)的可视化证据，与算法1的cache-aware调度共同构成"问题刻画→压缩优化→延迟基准"方法链路中的核心论据，支撑sglang高效结构化生成的性能优势。
 
 ### Figure 5 (p.7) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig05.png]]
@@ -130,56 +98,13 @@ tags: [disaggregated-serving]
 > Normalized throughput on Llama-7B models. Higher is better. pattern: s += context + "name:" + gen("name", stop="\n") + "job:" + gen("job", stop="\n"). Naively, the two gen primitives correspond to two API calls, meaning that the user needs to pay for the input token fee on the context twice. In SGLang, we can enable speculative execution on the first call and let it continue the generation of a fe
 
 > [!tip] 技术解读（多模态）
-> **SGLang论文 Figure 5 深度解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 图类型**
-**结果对比型柱状图（Bar Chart）**——属于端到端性能评估（End-to-End Performance）章节的标准基准对比图，用于展示 SGLang 与多个基线系统在多种 LLM 工作负载下的吞吐量对比。**
+1) 图为 Llama-7B 上 6 个结构化生成任务（LLM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat 短/长、DSPy RAG）的归一化吞吐条形对比。橙色条（SGLang）在全部任务上柱高均显著领先蓝色（Guidance）与绿色（LMQL）基线；LLM Judge 与 DSPy RAG 上领先幅度最大（近 4–5 倍），Multi-Turn Chat(long) 上三者差距最小。
 
-**2) 核心内容**
+2) 原文以此论证：含两次 `gen` 的 pattern 中，朴素做法需对同一 `context` 重复支付输入 token 费用；而 SGLang 借助推测执行复用首次调用的 prefix 并继续生成，从而在跨任务场景下稳定获得高吞吐增益。
 
-**组件与对比对象（共4个系统）**
-| 系统 | 角色 | 颜色 |
-|---|---|---|
-| **SGLang** | 本文系统 | 橙色 |
-| **vLLM** | 高吞吐推理引擎基线 | 绿色 |
-| **Guidance** | 受控生成 DSL 基线 | 蓝色 |
-| **LMQL** | 查询语言基线 | 灰色 |
-
-**实验设置**
-- **模型**：Llama-7B（开源权重，float16 精度）
-- **归一化方式**：以 SGLang 为基准（SGLang 在所有 workload 上均为 1.0）
-- **Y 轴**：Normalized Throughput（0.0 ~ 1.0）
-
-**11 个测试 Workload**
-MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought、LLM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat (short)、Multi-Turn Chat (long)、DSPy RAG Pipeline
-
-**关键数字（视觉读数）**
-- **MMLU**：vLLM ≈ 0.15, Guidance ≈ 0.10（基线系统几乎"趴底"）
-- **Generative Agents**：vLLM ≈ 0.9, Guidance ≈ 0.7（差距较小但仍明显）
-- **Multi-Turn Chat (long)**：vLLM ≈ 0.97（最接近 SGLang）
-- **Tree of Thought / Skeleton of Thought / LLM Judge / HellaSwag / JSON Decoding**：除 vLLM 有部分产出外，Guidance 和 LMQL 几乎为 0
-- 跨所有负载，**SGLang 始终保持 1.0**（即最高吞吐）
-
-**配套硬件与基线配置（正文上下文）**
-- 硬件：AWS EC2 G5 实例，NVIDIA A10G（24GB）；7B 模型单卡 A10G，70B 模型用张量并行到多卡 A100 80GB
-- 基线版本：Guidance v0.1.8（llama.cpp 后端），vLLM v0.2.5，LMQL v0.7.3（HF Transformers 后端）
-- 指标：throughput（program instances/s）和 latency（平均延迟）
-
-**3) 一个关键技术要点**
-
-**SGLang 的"前端 DSL + 运行时协同设计"在结构化/多轮/Agent 工作负载上带来数量级提升**。**
-
-具体而言，传统推理引擎（vLLM）虽然裸推理吞吐高，但**只把每个 `gen()` 调用当成一次独立 API 调用**，对结构化输出（如 JSON、select、LLM-as-judge）只能串行等待；对 Agent 类工作负载则无状态复用能力。SGLang 通过：
-
-1. **RadixAttention**（基于前缀树的 KV cache 复用）——直接解释 Multi-Turn Chat 和 Agent 场景里反复出现的 system prompt / 上下文；
-2. **推测式执行（speculative execution）**——在第一个 `gen()` 还没结束时继续吃后续 token，省一次 API 往返与输入 token 计费；
-3. **结构化 primitive（`select`/`gen`+正则/regex constraint）**——避免 LMQL/Guidance 那种"先生成再校验再回滚"的浪费。
-
-正如图中所示，**负载越"程序化"（含多 gen 调用、带约束、带分支），SGLang 相对 vLLM/Guidance/LMQL 的领先越显著**——Tree-of-Thought、JSON Decoding、LLM Judge 上 vLLM 都掉到 0.2 以下，而 SGLang 保持 1.0；最终体现为正文所述的 **最高 6.4× 吞吐提升、3.7× 延迟下降**。
-
-**4) Caption 逐字转录**
-
-> **Figure 5: Normalized throughput on Llama-7B models. Higher is better.**
+3) 该图是论文核心实验证据，将运行时优化（推测执行、前缀共享/RadixAttention）与真实结构化 LM 程序效率挂钩，支撑"DSL 前端 + 高效执行后端"整套方法的有效性结论。
 
 ### Figure 6 (p.8) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig06.png]]
@@ -188,72 +113,13 @@ MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought�
 > Normalized latency on Llama-7B models. Lower is better. MMLU
 
 > [!tip] 技术解读（多模态）
-> **SGLang论文第8页深度解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 图类型**
+1）**核心对象与结构**：横轴为 6 个 Llama-7B 工作负载（LM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat 短/长、DSPy Pipeline RAG），纵轴为归一化延迟。橙色（SGLang）、蓝色（Guidance）、灰色（LMQL）、绿色（另一基线）四组柱状对比，前两项三项齐全，后四项 Guidance/LMQL 因不支持批处理与并行而被剔除。
 
-**结果对比图**（性能基准评测）——共两张柱状图，属于实验结果展示类，专注于延迟与吞吐的归一化对比。**
+2）**关键结论**：在 LM Judge 与 HellaSwag 上，LMQL 延迟达 SGLang 的约 2.5–3 倍；Multi-Turn Chat（短/长）与 DSPy Pipeline 上，绿色基线延迟也明显高于 SGLang。SGLang 在全部 6 项基准中延迟最低。
 
----
-
-**2) 核心内容**
-
-**Figure 6：Llama-7B 模型上的归一化延迟（Lower is Better）**
-
-| 组件 | 内容 |
-|------|------|
-| **对比系统** | SGLang（橙）、vLLM（绿）、Guidance（蓝）、LMQL（灰） |
-| **基准任务** | 11项：MMLU、ReAct Agents、Generate Agents、Tree of Thought、Skeleton of Thought、LLM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat (short/long)、DSPy RAG Pipeline |
-| **归一化基线** | LMQL 在大多数任务上作为 1.0 基准 |
-| **关键观察** | SGLang 在前 8 项任务上延迟显著低于三个基线（柱高极矮）；在后 3 项（JSON、Multi-Turn Chat、DSPy RAG）中 vLLM 与 SGLang 接近（GUIDANCE/LMQL 被排除） |
-
-**Figure 7：Mixtral-8x7B 模型上的归一化吞吐（Higher is Better）**
-
-| 组件 | 内容 |
-|------|------|
-| **对比系统** | 仅 SGLang（橙）vs vLLM（绿） |
-| **模型规模** | Mixtral-8x7B + 张量并行（TP） |
-| **关键观察** | SGLang 在大多数基准上吞吐显著高于 vLLM；HellaSwag、JSON Decoding、DSPy RAG 上 vLLM 表现极低（柱高接近 0） |
-
-**实验设置要点**
-
-- **双模型规模**：Llama-7B（Figure 6）与 Mixtral-8x7B（Figure 7），后者引入张量并行
-- **基准多样性**：覆盖分类（MMLU）、Agent（ReAct/Generate）、CoT（Tree/Skeleton-of-Thought）、结构化输出（JSON）、多轮对话、RAG 等典型 LLM 工作负载
-- **排除项**：Guidance 和 LMQL 在后五项基准被排除——因 LMQL 慢在 token 级处理和后端未优化，Guidance 缺乏批处理与并行支持
-
----
-
-**3) 关键技术要点**
-
-**RadixAttention + 缓存感知调度实现 50%–99% 缓存命中率，平均达最优命中率的 96%**
-
-这是 SGLang 最核心的创新。论文正文明确指出三大加速来源：
-
-1. **KV cache 复用**：通过 Radix Tree 将请求的 prompt 分解为 token 序列，按前缀自动复用 KV cache（如 MMLU 复用 5-shot 示例、HellaSwag 复用 few-shot 示例与公共问题前缀、Agent 任务复用模板和历史调用）
-2. **单程序内并行**：Tree-of-Thought、Skeleton-of-Thought 中的并行生成调用
-3. **约束解码加速**：JSON 解码使用压缩有限状态机一次解码多个 token
-
-> 文本中的关键数字：
-> - 多模态基准吞吐提升 **最高 6×**
-> - 生产环境（Chatbot Arena）：**单 worker 每秒处理 52.4 个请求**
-> - RadixAttention 缓存命中率：**LLaVA-NeXT-34B 74.1%，LLaVA-Nextt-34B 52.4%**
-> - Vicuna-33B 首 token 延迟平均降低 **1.7×**
-
----
-
-**4) 图上 caption 逐字转录**
-
-**Figure 6:**
-> Figure 6: Normalized latency on Llama-7B models. Lower is better.
-
-**Figure 7:**
-> Figure 7: Normalized throughput on Mixtral-8x7B models with tensor parallelism. Higher is better.
-
----
-
-**附加：图例标签（X 轴任务名）**
-
-> MMLU | ReAct Agents | Generate Agents | Tree of Thought | Skeleton of Thought | LLM Judge | HellaSwag | JSON Decoding | Multi-Turn Chat (short) | Multi-Turn Chat (long) | DSPy RAG Pipeline
+3）**论文作用**：该图作为性能收尾证据，配合 Figure 7（Mixtral-8x7B）证明 SGLang 的 RadixAttention 与前端优化在分类、Agent、CoT、结构化输出、多轮对话、RAG 等典型结构化 LLM 程序场景下均具备跨负载、跨模型规模的稳定加速优势。
 
 ### Figure 7 (p.8) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig07.png]]
@@ -262,72 +128,11 @@ MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought�
 > Normalized throughput on Mixtral-8x7B models with tensor parallelism. Higher is better. result from KV cache reuse, the exploitation of parallelism within a single program, and faster constrained decoding. Next, we explain the reasons for the speedup in each benchmark.
 
 > [!tip] 技术解读（多模态）
-> **SGLang论文第8页深度解读**
+> 【图文联合解读】该图展示 Mixtral-8x7B 启用张量并行后，SGLang 在 5 类基准（MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought）上的归一化吞吐：SGLang 均归一为 1.0；对手在 MMLU≈0.12、ReAct Agents≈0.10 落后最显著，Tree of Thought≈0.25 差距明显，Generative Agents 与 Skeleton of Thought≈0.72 差距最小。
 
-**1) 图类型**
+原文借此论证：SGLang 的前端优化与运行时协同在 MoE + 张量并行场景下仍稳定胜出，优势在含控制流、多轮交互的 Agent 与 CoT 负载上尤为突出。
 
-**结果对比图**（性能基准评测）——共两张柱状图，属于实验结果展示类，专注于延迟与吞吐的归一化对比。**
-
----
-
-**2) 核心内容**
-
-**Figure 6：Llama-7B 模型上的归一化延迟（Lower is Better）**
-
-| 组件 | 内容 |
-|------|------|
-| **对比系统** | SGLang（橙）、vLLM（绿）、Guidance（蓝）、LMQL（灰） |
-| **基准任务** | 11项：MMLU、ReAct Agents、Generate Agents、Tree of Thought、Skeleton of Thought、LLM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat (short/long)、DSPy RAG Pipeline |
-| **归一化基线** | LMQL 在大多数任务上作为 1.0 基准 |
-| **关键观察** | SGLang 在前 8 项任务上延迟显著低于三个基线（柱高极矮）；在后 3 项（JSON、Multi-Turn Chat、DSPy RAG）中 vLLM 与 SGLang 接近（GUIDANCE/LMQL 被排除） |
-
-**Figure 7：Mixtral-8x7B 模型上的归一化吞吐（Higher is Better）**
-
-| 组件 | 内容 |
-|------|------|
-| **对比系统** | 仅 SGLang（橙）vs vLLM（绿） |
-| **模型规模** | Mixtral-8x7B + 张量并行（TP） |
-| **关键观察** | SGLang 在大多数基准上吞吐显著高于 vLLM；HellaSwag、JSON Decoding、DSPy RAG 上 vLLM 表现极低（柱高接近 0） |
-
-**实验设置要点**
-
-- **双模型规模**：Llama-7B（Figure 6）与 Mixtral-8x7B（Figure 7），后者引入张量并行
-- **基准多样性**：覆盖分类（MMLU）、Agent（ReAct/Generate）、CoT（Tree/Skeleton-of-Thought）、结构化输出（JSON）、多轮对话、RAG 等典型 LLM 工作负载
-- **排除项**：Guidance 和 LMQL 在后五项基准被排除——因 LMQL 慢在 token 级处理和后端未优化，Guidance 缺乏批处理与并行支持
-
----
-
-**3) 关键技术要点**
-
-**RadixAttention + 缓存感知调度实现 50%–99% 缓存命中率，平均达最优命中率的 96%**
-
-这是 SGLang 最核心的创新。论文正文明确指出三大加速来源：
-
-1. **KV cache 复用**：通过 Radix Tree 将请求的 prompt 分解为 token 序列，按前缀自动复用 KV cache（如 MMLU 复用 5-shot 示例、HellaSwag 复用 few-shot 示例与公共问题前缀、Agent 任务复用模板和历史调用）
-2. **单程序内并行**：Tree-of-Thought、Skeleton-of-Thought 中的并行生成调用
-3. **约束解码加速**：JSON 解码使用压缩有限状态机一次解码多个 token
-
-> 文本中的关键数字：
-> - 多模态基准吞吐提升 **最高 6×**
-> - 生产环境（Chatbot Arena）：**单 worker 每秒处理 52.4 个请求**
-> - RadixAttention 缓存命中率：**LLaVA-NeXT-34B 74.1%，LLaVA-Nextt-34B 52.4%**
-> - Vicuna-33B 首 token 延迟平均降低 **1.7×**
-
----
-
-**4) 图上 caption 逐字转录**
-
-**Figure 6:**
-> Figure 6: Normalized latency on Llama-7B models. Lower is better.
-
-**Figure 7:**
-> Figure 7: Normalized throughput on Mixtral-8x7B models with tensor parallelism. Higher is better.
-
----
-
-**附加：图例标签（X 轴任务名）**
-
-> MMLU | ReAct Agents | Generate Agents | Tree of Thought | Skeleton of Thought | LLM Judge | HellaSwag | JSON Decoding | Multi-Turn Chat (short) | Multi-Turn Chat (long) | DSPy RAG Pipeline
+作用：补充 Figure 6（Llama-7B），证明吞吐优势可跨模型规模与并行策略复现，强化方法在大模型场景下的通用性结论。
 
 ### Figure 8 (p.9) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig08.png]]
@@ -336,58 +141,13 @@ MMLU、ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought�
 > (a)(b) Cache hit rate ablation study. (c) RadixAttention ablation study.
 
 > [!tip] 技术解读（多模态）
-> **SGLang论文第9页深度解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 图类型**
-**混合类型**：表格（Table 2，吞吐量对比）+ 三联子图（Figure 8，消融研究）。整体属于**消融实验 + 性能对比**页。**
+图8(c)为RadixAttention消融实验的柱状图，横轴为四个基准负载（LLM Judge、Tree of Thought、MMLU、Multi-Turn Chat短对话），纵轴为归一化性能（0–1），对比七种配置：无缓存、无树结构、FCFS调度、随机调度、无前端并行、无前端提示、全优化（Full Optimization，橙色）。
 
-**2) 核心内容**
+**关键结论**：全优化方案在四个负载上均接近1.0归一化值，显著优于任一单一组件关闭情形；其中"无缓存"在LLM Judge与MMLU上退化最严重（约0.15–0.40），"无前端并行/提示"在Tree of Thought上影响明显（约0.35），证实radix缓存、树状调度、前端并行与提示各自独立贡献性能。
 
-**Table 2：多模态LLaVA吞吐量对比**
-| Model | LLaVA-v1.5-7B (image) | LLaVA-NeXT-34B (video) |
-|-------|---------------------|------------------------|
-| Author's original implementation | 0.18 image/s | 0.02 frame/s |
-| **SGLang** | **1.15 image/s** | **0.10 frame/s** |
-
-→ 图像任务加速 **6.4×**，视频任务加速 **5×**
-
-**Figure 8：三联消融图**
-- **(a)** Cache Hit Rate vs Batch Size / Throughput（双Y轴折线）
-  - 横轴：Cache Hit Rate 0–100%
-  - 左轴（绿）：Batch Size 20→40+
-  - 右轴（橙）：Throughput 0.4k→1.2k tokens/s
-- **(b)** Cache Hit Rate vs Latency（双Y轴折线）
-  - 红：Total Latency（s）从~400降到~100
-  - 蓝：First Token Latency从~20降到~10
-- **(c)** RadixAttention 组件消融柱状图（归一化吞吐量）
-  - 4个基准：LLM Judge、Tree of Thought、MMLU、Multi-Turn Chat(short)
-  - 7种配置：No Cache / No Tree Structure / FCFS Schedule / Random Schedule / No Frontend Parallelism / No Frontend Hint / **Full Optimization**
-
-**3) 一个关键技术要点**
-
-**RadixAttention 的"树结构 + LRU + 调度感知"三件套缺一不可。** Figure 8(c) 显示，禁用任何一个组件（缓存、树结构、调度策略、前端并行、前端hint）吞吐量都显著低于Full Optimization——尤其"Full Optimization"柱在所有基准上都接近1.0归一化值，而"No Cache"几乎贴近0。这印证了**前端语言（编程接口hint）与运行时共同设计**的重要性。**
-
-附关键支撑数据：
-- RadixAttention开销极低：管理数据结构仅0.2s/74.3s（**<0.3%**），可默认开启
-- 压缩有限状态机使JSON解码吞吐量提升 **1.6×**，若不批量复用预处理反而会**降低2.4×**
-
-**4) Caption逐字转录**
-
-```
-Table 2: Throughput comparison on multi-modal LLaVA image and video models.
-
-Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study.
-```
-
-（注：原图caption将"ablation"误拼为"alation"）
-
----
-
-**附：6.3节消融结论摘要**
-- **Cache命中率↑** → batch size↑、throughput↑、latency↓
-- **RadixAttention各组件**：缓存、树结构、调度（cache-aware优于FCFS/Random）、前端并行、前端hint均为必需
-- **运行时开销**：线性且微小（<0.3%）
-- **压缩FSM**：批量复用是性能关键，per-request预处理会回退2.4×
+**论文作用**：该消融图支撑SGLang核心设计——RadixAttention缓存+前端DSL优化是端到端加速的必要组成部分，缺一不可，为整体性能优势提供分项归因证据。
 
 ### Figure 9 (p.14) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig09.png]]
@@ -396,53 +156,11 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 > KV cache sharing examples. Blue boxes represent shareable prompt parts, green boxes indicate non-shareable parts and yellow boxes mark non-shareable model outputs. Shareable elements include few-shot learning examples, questions in self-consistency [53], chat history in multi-turn chat, and search history in tree-of-thought [56]. A
 
 > [!tip] 技术解读（多模态）
-> **SGLang 论文页面深度解读**
+> 【图文联合解读】**图9图文联合解读**
 
-**1) 图类型**
+该图以四种典型 LLM 编程模式展示 KV cache 共享结构：(a) Few-shot——三个 Prompt 共享相同的 "Few-shot examples" 前缀；(b) Self-consistency——同一 Question 派生出三条独立 Answer；(c) Multi-turn chat——Chat History 随轮次累积延长，每轮仅追加新的 Q/A；(d) Tree-of-thought——沿分支路径共享逐层 Search History。蓝/绿/黄三色分别标注可共享 prompt、非共享输入、非共享输出。
 
-**架构/机制示意图（Mechanism Illustration）**：Figure 9 是**概念性/结构化的示意图**，用四种典型 LLM 编程模式（few-shot、self-consistency、multi-turn chat、tree-of-thought）展示 KV cache 的可共享结构。下文附录 A.1–A.3 包含**背景知识**（prefill/decoding/KV cache 定义）、**伪代码说明**和**定理证明**，整体属于论文方法论附录。**
-
----
-
-**2) 核心内容**
-
-**Figure 9 四个子图（颜色编码：蓝色=可共享 prompt 部分，绿色=不可共享部分，黄色=不可共享的模型输出）**
-
-| 子图 | 模式 | 可共享结构（蓝） | 不可共享结构 |
-|------|------|------------------|--------------|
-| (a) Few-shot learning | 多个独立 Prompt 各自生成 | Few-shot examples（跨 Prompt 完全相同） | Question、Answer（每个 Prompt 不同） |
-| (b) Self-consistency | 同一 Prompt 多次采样 | Question | Answer 1/2/3（多答案投票） |
-| (c) Multi-turn chat | 对话多轮追加 | 累积的 Chat History | 当前轮的 Q/A |
-| (d) Tree-of-thought | 树状推理分支 | 共享的 Search History 节点 | 各 Branch 状态 |
-
-**关键概念**
-- **KV Cache 定义**：自回归 Transformer 在 prefill 与 decoding 中产生的 key-value 对，仅依赖先前 token，因而**前缀相同则可复用**。
-- **四种 sharing pattern**：现有系统（vLLM 仅支持 basic prefix sharing）**无法全部自动处理**，RadixAttention 能在运行时自动统一处理。
-- **Theorem 3.1**（A.3）：当 cache size ≥ 最大请求长度时，**以 DFS（depth-first search）/ longest-shared-prefix-first 顺序遍历 radix tree，可获得最优 cache 命中率**。
-
----
-
-**3) 一个关键技术要点**
-
-> **RadixAttention 的核心机制**：将多请求的 prompt 视为一棵 radix tree，对共享前缀做 LRU 驱逐而非按请求驱逐，并以 DFS 顺序调度 batch，使得任意树形/分支/重复前缀结构都能在连续 batching 中复用 KV cache，从而在工程上实现"任意复杂度 prompt 程序"的自动 cache-aware 调度。Figure 9 直观地展示了它要覆盖的四类不规则 sharing pattern——正是 vLLM 等仅支持线性 prefix sharing 的系统无法处理的场景。
-
----
-
-**4) 图上 caption 逐字转录**
-
-> **Figure 9: KV cache sharing examples. Blue boxes represent shareable prompt parts, green boxes indicate non-shareable parts and yellow boxes mark non-shareable model outputs. Shareable elements include few-shot learning examples, questions in self-consistency [53], chat history in multi-turn chat, and search history in tree-of-thought [56].**
-
-子图标签逐字转录：
-- (a) Few-shot learning
-- (b) Self-consistency
-- (c) Multi-turn chat
-- (d) Tree-of-thought
-
-小框内文字逐字转录（按子图）：
-- (a) Prompt 1 / Prompt 2 / Prompt 3；Few-shot examples；Question 1/2/3；Answer 1/2/3
-- (b) Prompt → Question → {Answer 1, Answer 2, Answer 3}，分别对应 Generation 1/2/3
-- (c) Turn 1 (Q/A) … Turn 4 (Q/A)；Chat History（每轮累积）
-- (d) Question → Search History → Branch 1.1 / Branch 1.1.1 / Branch 1.1.1.1 / Branch 1.2 / Branch 1.2.1 / Branch 2 / Branch 2.1 / Branch 2.1.1 / Branch 2.2 / Branch 2.2.1
+论文借此论证：在结构化 LM 程序中**存在大量相同前缀**（few-shot 示例、对话历史、搜索路径），KV cache 复用空间显著。该图为 SGLang 核心机制 **RadixAttention（前缀共享调度）** 提供具体应用场景的动机支撑，是连接"LM 程序结构特性"与"系统级缓存优化"的关键概念桥梁。
 
 ### Figure 10 (p.17) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig10.png]]
@@ -451,52 +169,13 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 > Example of how regex is converted into FSM and how FSM guides the decoding process.
 
 > [!tip] 技术解读（多模态）
-> **SGLang论文 Figure 10 深度解读**
+> 【图文联合解读】**图文联合解读：**
 
-**1) 图类型**
-**架构/流程示意 + 案例演示图**。该图综合展示了**正则表达式 → FSM → 受约束解码**的完整工作流，并用两个Harry Potter信息填充实例演示FSM如何动态屏蔽非法token。**
+图上部分给出一个 JSON 结构化正则（含 `name:[\w\d\s]+`、`age:[0-9]+`、`house` 为 Gryffindor/Slytherin/Ravenclaw/Hufflepuff 四选一枚举）；下部分"Decoding Status"列出对"填 Harry Potter 信息"提示符的候选下一 token：仅小写 "age" ✓ 被接受，而 "Age" 因大小写不符被 ✗、"hou" 因当前路径无法延伸到合法 token 被 ✗；箭头 "Decode + FSM" 指向右侧 "Constrained Decoding" 输出。
 
-**2) 核心内容**
+**技术结论：** 原文借此论证——regex 经自动编译为 FSM 后，在每一步解码通过对 logit 施加掩码屏蔽与模式不符的 token，使生成结果严格匹配 JSON 字段名、字符集与枚举约束，无需后处理重解析。
 
-**组件构成（从左到右、自上而下）**
-
-**① Regular Expression（正则源）**：JSON Schema片段**
-```json
-"name": "[\w\d\s]+",
-"age": "[0-9]+",
-"house": "(Gryffindor|Slytherin|Ravenclaw|Hufflepuff)"
-```
-高亮部分是 `"age": "[0-9]+"`，对应右边的FSM子图。
-
-**② Finite State Machine（有限状态机）**：8个状态节点（0–7），其中：**
-- 状态0→1→2→3→4→5→6→7构成线性骨架，对应 `"age": "` 这段固定字符串
-- 状态6带**[0-9]自环**，匹配一个或多个数字字符
-- 边上的字符集标记是**token屏蔽的依据**
-
-**③ Decoding Status（解码状态）**：两轮解码快照**
-- **第1轮**：已生成 `{"name":"Harry",`，合法下一token为 `age ✓`；`Age ✗`（大小写敏感被拒）、`hou ✗`（无法闭合JSON结构）
-- **第2轮**：已生成 `{"name":"Harry","age":`，合法下一token为 `0 ✓`、`1 ✓`；`fir ✗`（数字上下文屏蔽）
-
-图例：`✓ allowed next token`，`✗ not allowed next token`。
-
-**3) 关键技术要点**
-
-**Logits Mask驱动的字符级约束解码**：FSM的每个状态维护一组**当前合法字符集**（accepting set）。解码时，SGLang将该集合与**token词表求交集**，生成logits mask——交集内的token logits保留，交集外token logits置为−∞。如此：**
-- ✅ **保证结构合法性**：JSON括号、引号、字段名逐字符对齐，永不偏离schema
-- ✅ **保证语义合法性**：`age`字段只能接数字字符，即使模型倾向于生成"Fifteen"也会被屏蔽
-- ✅ **实现零重写**：无需重采样或后处理修改，结构化输出一次到位
-
-**4) Caption逐字转录**
-
-> **Figure 10**: Example of how regex is converted into FSM and how FSM guides the decoding process.
-
----
-
-**补充：与下文B.1/B.2节的关联**
-
-正文紧接着讨论**Compressed FSM**（B.1）与**Retokenization**（B.2）：
-- **B.1**：将字符级FSM中"源节点出度唯一 + 边字符集单一"的边（singular transition edge）递归合并为一条compressed edge（文本拼接），例如 `"age": "` 这段8步线性路径可压缩为单边跳转，加速匹配。
-- **B.2**：当compressed边很长时引入**Jump Forward**机制——预读后续解码字符串，但因LLM的token化粒度与字符级FSM不一致，仍需retokenization对齐，从而在保证正确性的同时获得加速。
+**链路作用：** 该图位于"regex→FSM→约束解码"方法链路可视化末端，为后续 JSON/HTML/SQL 等结构化输出基准的正确性与吞吐实验提供直观原理支撑，强调 FSM 路径相对逐 token 语法校验的效率优势。
 
 ### Figure 11 (p.18) ⭐深度解读
 ![[assets/sglang-efficient-execution-of-structured-language-model-programs-p18.png]]
@@ -560,70 +239,11 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 > Normalized throughput on Llama-2-70B models with tensor parallelism. Higher is better. MMLU
 
 > [!tip] 技术解读（多模态）
-> **SGLang论文第19页深度解读**
+> 【图文联合解读】**图文联合解读：**
 
-**一、图类型判定**
+该图为 Llama-2-70B + TP 配置下 SGLang（橙色，归一化为 1.0）与另一基线系统（绿色，图例被裁切）于 5 种典型 LLM 程序上的吞吐对比。绿色条读数大致为：MMLU≈0.12、ReAct Agents≈0.10、Generative Agents≈0.60、Tree of Thought≈0.30、Skeleton-of-Thought≈0.80，呈现"简单 prompt 差距悬殊、复杂多调用场景差距收窄"的梯度。
 
-本页包含**两张结果对比图** + **两节技术正文**，均为性能基准与编译器设计内容的组合。
-
----
-
-**二、Figure 12: 吞吐量归一化对比（结果图）**
-
-**核心内容：**
-- **Y轴**：Throughput (Normalized)，范围0.0–1.0
-- **X轴**：11个基准测试任务，覆盖推理（MMLU、HellaSwag）、智能体（ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought、LLM Judge）、结构化输出（JSON Decoding）以及多轮对话（短/长Chat、DSPy RAG Pipeline）
-- **对比对象**：SGLang（橙色）vs vLLM（绿色）
-- **实验设置**：Llama-2-70B模型 + 张量并行（tensor parallelism）
-- **关键数字**：SGLang在所有基准上均显著优于vLLM，部分场景吞吐量倍数达到约3–6倍（vLLM柱体高度仅0.1–0.4左右）。ReAct Agents、MMLU、JSON Decoding、Multi-Turn Chat(long) 差距尤为悬殊。
-
----
-
-**三、Figure 13: 缓存命中率分析（结果图）**
-
-**核心内容：**
-- **Y轴**：Cache Hit Rate (%)
-- **对比**：Achieved cache hit rate with SGLang（橙色）vs Optimal cache hit rate（浅蓝）
-- **关键观察**：
-  - 在MMLU、ReAct Agents、Tree of Thought、Skeleton of Thought、HellaSwag、JSON Decoding、DSPy RAG Pipeline等任务上，SGLang的**实际命中率已接近理论最优值**（差距通常<5%）
-  - **短板任务**：Multi-Turn Chat(short)和Multi-Turn Chat(long)实际命中率明显低于最优（Multi-Turn Chat(short)约50% vs 最优约60%；Multi-Turn Chat(long)约55% vs 最优约75%），存在20%左右的优化空间
-  - **LLM Judge**任务几乎100%达成最优
-
----
-
-**四、一个关键技术要点：**RadixAttention前缀缓存的近似最优性**
-
-这两张图联合验证了SGLang的核心创新——**基于Radix Tree的自动前缀缓存机制**：
-1. Figure 12证明该机制带来的**端到端性能收益**：通过KV cache复用，吞吐量实现数倍提升
-2. Figure 13证明该机制的**效率上限**：在实际工作负载上命中率逼近理论最优，说明缓存调度算法（自动radix树匹配 + LRU驱逐）设计精良
-3. 多轮对话场景的命中率差距揭示了**未来优化方向**——需要处理长前缀拼接、上下文碎片化等真实场景问题
-
----
-
-**五、正文关键技术：D.1 中间表示(IR)与D.2 编译器优化**
-
-**D.1 Design and Implementation — IR图设计**
-- **IR本质**：将SGLang程序表示为**计算图**，节点为原始算子，边为依赖关系
-- **节点类型**：包括 `ConstantText`、`Argument`、`Gen`、`Select`、`Variable`、`Fork`、`GetForkItem`、`Join` 八种IR节点
-- **两类依赖**：
-  - **流内依赖**（intra-stream）：`+=` 操作必须等待流内所有前序操作完成
-  - **流间依赖**（inter-stream）：跨流取值的同步需求，`fork`操作会引入此类依赖
-- **构造方法**：**Tracing法**——用抽象参数运行程序动态构建图（受限于无数据依赖控制流的程序）
-- **执行方式**：图构建后由**图执行器**执行，**流执行器**按拓扑序向各数据流派发IR节点
-
-**D.2 Code Movement 优化案例**
-- **优化目标**：通过**节点重排序**延长共享前缀长度，从而提升prefix sharing效率
-- **激进优化性质**：不严格保持原始计算语义（aggressive optimization），属于非安全变换
-- **典型例子**：将 `"Here is a question + {question}. Please act as a math expert and solve..."` 重排为 `"Please act as a math expert and solve the given question. Here is a question + {question}."` ——使公共指令前缀更长
-- **创新点**：用GPT-4做**程序分析**（通过prompt + 若干SGLang IR示例），实现传统编译器技术难以自动完成的自然语言指令重排
-
----
-
-**六、Caption逐字转录**
-
-**Figure 12**: "Normalized throughput on Llama-2-70B models with tensor parallelism. Higher is better."**
-
-**Figure 13**: "Achieved cache hit rate and optimal cache hit rate on various benchmarks."**
+原文借此论证：在张量并行的大模型上，SGLang 的 RadixAttention 与 API 级批调度对含多轮/分支调用的结构化生成（Agents、ToT、SoT）带来 1.2×–10× 的吞吐加速，证实其前端语言模型程序与后端 KV 缓存协同设计的端到端效率优势，构成实验链路中"真实工作负载可扩展性"的关键证据。
 
 ### Figure 13 (p.19) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig13.png]]
@@ -632,70 +252,9 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 > Achieved cache hit rate and optimal cache hit rate on various benchmarks. opportunities for more compilation optimizations, as we can rewrite the graph and perform more static planning. D.1
 
 > [!tip] 技术解读（多模态）
-> **SGLang论文第19页深度解读**
+> 【图文联合解读】**图13联合解读**
 
-**一、图类型判定**
-
-本页包含**两张结果对比图** + **两节技术正文**，均为性能基准与编译器设计内容的组合。
-
----
-
-**二、Figure 12: 吞吐量归一化对比（结果图）**
-
-**核心内容：**
-- **Y轴**：Throughput (Normalized)，范围0.0–1.0
-- **X轴**：11个基准测试任务，覆盖推理（MMLU、HellaSwag）、智能体（ReAct Agents、Generative Agents、Tree of Thought、Skeleton of Thought、LLM Judge）、结构化输出（JSON Decoding）以及多轮对话（短/长Chat、DSPy RAG Pipeline）
-- **对比对象**：SGLang（橙色）vs vLLM（绿色）
-- **实验设置**：Llama-2-70B模型 + 张量并行（tensor parallelism）
-- **关键数字**：SGLang在所有基准上均显著优于vLLM，部分场景吞吐量倍数达到约3–6倍（vLLM柱体高度仅0.1–0.4左右）。ReAct Agents、MMLU、JSON Decoding、Multi-Turn Chat(long) 差距尤为悬殊。
-
----
-
-**三、Figure 13: 缓存命中率分析（结果图）**
-
-**核心内容：**
-- **Y轴**：Cache Hit Rate (%)
-- **对比**：Achieved cache hit rate with SGLang（橙色）vs Optimal cache hit rate（浅蓝）
-- **关键观察**：
-  - 在MMLU、ReAct Agents、Tree of Thought、Skeleton of Thought、HellaSwag、JSON Decoding、DSPy RAG Pipeline等任务上，SGLang的**实际命中率已接近理论最优值**（差距通常<5%）
-  - **短板任务**：Multi-Turn Chat(short)和Multi-Turn Chat(long)实际命中率明显低于最优（Multi-Turn Chat(short)约50% vs 最优约60%；Multi-Turn Chat(long)约55% vs 最优约75%），存在20%左右的优化空间
-  - **LLM Judge**任务几乎100%达成最优
-
----
-
-**四、一个关键技术要点：**RadixAttention前缀缓存的近似最优性**
-
-这两张图联合验证了SGLang的核心创新——**基于Radix Tree的自动前缀缓存机制**：
-1. Figure 12证明该机制带来的**端到端性能收益**：通过KV cache复用，吞吐量实现数倍提升
-2. Figure 13证明该机制的**效率上限**：在实际工作负载上命中率逼近理论最优，说明缓存调度算法（自动radix树匹配 + LRU驱逐）设计精良
-3. 多轮对话场景的命中率差距揭示了**未来优化方向**——需要处理长前缀拼接、上下文碎片化等真实场景问题
-
----
-
-**五、正文关键技术：D.1 中间表示(IR)与D.2 编译器优化**
-
-**D.1 Design and Implementation — IR图设计**
-- **IR本质**：将SGLang程序表示为**计算图**，节点为原始算子，边为依赖关系
-- **节点类型**：包括 `ConstantText`、`Argument`、`Gen`、`Select`、`Variable`、`Fork`、`GetForkItem`、`Join` 八种IR节点
-- **两类依赖**：
-  - **流内依赖**（intra-stream）：`+=` 操作必须等待流内所有前序操作完成
-  - **流间依赖**（inter-stream）：跨流取值的同步需求，`fork`操作会引入此类依赖
-- **构造方法**：**Tracing法**——用抽象参数运行程序动态构建图（受限于无数据依赖控制流的程序）
-- **执行方式**：图构建后由**图执行器**执行，**流执行器**按拓扑序向各数据流派发IR节点
-
-**D.2 Code Movement 优化案例**
-- **优化目标**：通过**节点重排序**延长共享前缀长度，从而提升prefix sharing效率
-- **激进优化性质**：不严格保持原始计算语义（aggressive optimization），属于非安全变换
-- **典型例子**：将 `"Here is a question + {question}. Please act as a math expert and solve..."` 重排为 `"Please act as a math expert and solve the given question. Here is a question + {question}."` ——使公共指令前缀更长
-- **创新点**：用GPT-4做**程序分析**（通过prompt + 若干SGLang IR示例），实现传统编译器技术难以自动完成的自然语言指令重排
-
----
-
-**六、Caption逐字转录**
-
-**Figure 12**: "Normalized throughput on Llama-2-70B models with tensor parallelism. Higher is better."**
-
-**Figure 13**: "Achieved cache hit rate and optimal cache hit rate on various benchmarks."**
+图13以并列条形图对比"SGLang"（橙）与"Optimal cache hit rate"（浅蓝）在6个基准上的命中率——LLM Judge、HellaSwag、JSON Decoding、Multi-Turn Chat (short/long)、DSPy RAG Pipeline。除Multi-Turn Chat两类外，SGLang柱高均接近甚至贴合Optimal柱；Multi-Turn Chat (short) 与 (long) 出现明显落差。论文借此论证：SGLang的缓存复用已接近理论最优，但多轮对话场景仍有提升空间，由此引出附录D.1中"重写计算图与更多静态规划"这一未来优化方向。
 
 ### Figure 14 (p.20) ⭐深度解读
 ![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-fig14.png]]
@@ -704,135 +263,28 @@ Figure 8: (a)(b) Cache hit rate ablation study. (c) RadixAttention alation study
 > An SGLang program and its corresponding dataflow graph.
 
 > [!tip] 技术解读（多模态）
-> **SGLang论文第20页深度解读**
+> 【图文联合解读】## Figure 14(b) 图文联合解读
 
-**1) 图类型**
+**1) 核心结构与数据：**
+图中展示一个计算图，按列分为三条 Stream（对应三次函数调用）。Stream 1 主链含 18 个节点（ConstantText×10、Argument×1、Gen×3、Variable×2）；Stream 2 与 Stream 3 各含 4 个节点。跨流边将 Stream 1 中 Gen("tip_1") 的输出分别送入 Stream 2、3 的 Variable("tip_1") 节点；Gen("tip_2") 输出则同时被 Stream 2 的 Variable("paragraph") 引用，呈现典型的 fan-out 数据依赖。
 
-**类型：架构/示例图 + 数据流图（混合型说明图）**
+**2) 关键技术结论：**
+通过把 SGLang DSL 程序编译成显式数据流图，可揭示 Stream 1 内 Gen("tip_1") 与 Gen("tip_2") 之间、乃至三条 Stream 之间的并行机会——LM 生成调用可被调度器批量/乱序执行，而非受源代码顺序约束。
 
-本图为**Figure 14**，由两个子图组成：
-- **(a) 代码示例**：展示SGLang程序源码（Python风格DSL），用以说明语言语法
-- **(b) 数据流图**：将代码翻译为runtime计算图，展示执行时的并行机会
+**3) 在论文中的作用：**
+该图作为 runtime scheduler 的**动机示例**，论证 SGLang 将命令式 LLM 程序提升为数据流图后，能够自动发现并利用生成调用间的并行性，从而支撑论文核心主张——结构化语言模型程序的高效执行。
 
-属于"**程序与数据流对照图**"，是论文用于向读者解释SGLang语义和执行模型的"教学型"插图。
+## 表格（裁剪图 + caption，可直接插入报告）
 
----
+### Table 2 (p.9) ⭐深度解读
+![[assets/crops/sglang-efficient-execution-of-structured-language-model-programs-tab02.png]]
+> [!quote] caption
+> Throughput comparison on multi-modal LLaVA image and video models.
 
-**2) 核心内容**
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】Table 2：SGLang使LLaVA-v1.5-7B图像吞吐从0.18→1.15 image/s（约6.4×），LLaVA-NeXT-34B视频从0.02→0.10 frame/s（5×）。子图(a)(b)显示缓存命中率上升带来batch size与吞吐增长、首token延迟与总延迟同步下降；子图(c)消融表明Full Optimization在LLM Judge、ToT、MMLU、Chat四项任务归一化吞吐均≈1，缺任一原语（无缓存、无树结构、无FCFS、无前端并行、无前端提示）均显著退化。
 
-**(a) SGLang程序结构**
-
-程序实现 **Skeleton-of-Thought（SoT）提示范式** 的并行化：
-
-```python
-@function
-def expand(s, tip):           # 将简短tip展开为详细段落
-    s += "Please expand the following tip into a detailed paragraph: " + tip + "\n"
-    s += gen("paragraph")
-
-@function
-def tip_suggestion(s, topic):
-    s += "Here are 2 concise tips for " + topic + ".\n"
-    # 1. 生成骨架（短tips）
-    s += "1." + gen("tip_1", stop=["\n",":","."]) + "\n"
-    s += "2." + gen("tip_2", stop=["\n",":","."]) + "\n"
-    # 2. 并行展开
-    detailed_tip1 = expand(tip=s["tip_1"])
-    detailed_tip2 = expand(tip=s["tip_2"])
-    # 3. 汇总
-    s += "Tip 1: " + detailed_tip1["paragraph"] + "\n"
-    s += "Tip 2: " + detailed_tip2["paragraph"] + "\n"
-    s += "In summary" + gen("summary")
-```
-
-**关键技术语法**：**
-- `@function` 装饰器：声明可复用子程序
-- `gen(name, stop=...)`：调用LLM生成，`stop`参数控制生成边界
-- `+=` 操作符：在共享state `s`上累积prompt
-- `s["var"]`：从state中读取变量值
-
-**(b) 数据流图**
-
-三条**Stream**（流）对应三次函数调用：
-
-| Stream | 角色 | 颜色 | 关键节点 |
-|--------|------|------|----------|
-| Stream 1 | tip_suggestion主函数 | 浅灰 | ConstantText, Argument(topic), Gen(tip_1/tip_2), Variable(paragraph), Gen(summary) |
-| Stream 2 | expand(tip_1) | 黄色 | ConstantText("Please expand..."), Variable(tip_1), Gen(paragraph) |
-| Stream 3 | expand(tip_2) | 蓝色 | ConstantText("Please expand..."), Variable(tip_1), Gen(paragraph) |
-
-**数据依赖关系**：**
-- Stream 1 的 `Gen("tip_1")` → Stream 1 的 `Variable("tip_1")` → 跨流边 → Stream 2 的 `Variable("tip_1")` → Stream 2 的 `Gen("paragraph")` → 跨流边 → Stream 1 的 `Variable("paragraph")`
-- Stream 3 与 Stream 2 **结构对称**，二者之间无依赖 → **可并行执行**
-
-**正文段落（评估结果）**
-
-| 维度 | 数值/描述 |
-|------|-----------|
-| 收集prompt模板数 | 20 |
-| 训练样本（few-shot） | 5 |
-| 测试样本 | 15 |
-| GPT-4成功重排序数 | 12 / 15 |
-| 平均shareable prefix长度提升 | **+60 tokens** |
-| 失败原因 | 过度激进地将所有常量前置，破坏语义 |
-| 用途 | 探索GPT-4用于编译器优化 |
-
----
-
-**3) 关键技术要点**
-
-**🔑 核心：基于图结构的提示重排序（Prefix Merging / Reordering）**
-
-SGLang允许用户以DSL表达LLM程序，runtime将其编译为**流式数据流图**。图中不同Stream的Gen节点**结构对称且互不依赖**，因此系统可将它们的前缀（包括常量prompt）合并成更长的**共享前缀（shareable prefix）**送入vLLM等引擎。
-
-**该图揭示的本质**：SoT模式的两次expand调用，其prompt模板完全一致，仅输入的`tip`变量不同——这构成了**KV cache共享的机会**。通过GPT-4对图节点重排序，能将更多常量与可前缀共享的内容组织在一起，从而**延长KV cache复用的prefix长度，降低prefill冗余计算**。**
-
-实验结果量化了此优化的有效性：**平均多共享60个token的prefix**，直接转化为吞吐量提升。
-
----
-
-**4) 图上Caption逐字转录**
-
-**Figure 14: An SGLang program and its corresponding dataflow graph.**
-
-**子图caption (a)**：**
-> The SGLang program for parallel tip suggestion with skeleton-of-thought prompting.
-
-**子图caption (b)**：**
-> A computational graph for the program in Fig. 14a. The three streams correspond to three function calls.
-
-**节点标签（按出现顺序转录）**：**
-
-*Stream 1*：
-- ConstantText ("Here are ...")
-- Argument (topic)
-- ConstantText ("\n")
-- ConstantText ("1.")
-- Gen ("tip_1")
-- ConstantText ("\n")
-- ConstantText ("2.")
-- Gen ("tip_2")
-- ConstantText ("\n")
-- ConstantText ("Tip 1:")
-- Variable ("paragraph")
-- ConstantText ("\n")
-- ConstantText ("Tip 2:")
-- Variable ("paragraph")
-- ConstantText ("\n")
-- ConstantText ("In summary")
-- Gen (name="summary")
-
-*Stream 2*（黄色）：
-- ConstantText ("Please expand ...")
-- Variable ("tip_1")
-- ConstantText ("\n")
-- Gen ("paragraph")
-
-*Stream 3*（蓝色）：
-- ConstantText ("Please expand ...")
-- Variable ("tip_1")
-- ConstantText ("\n")
-- Gen ("paragraph")
+论证：RadixAttention、前端并行与调度协同在多模态场景同样实现数量级加速，将SGLang效率优势从纯语言模型推广至多模态LM程序，强化论文"结构化LM程序普适高效"的核心结论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

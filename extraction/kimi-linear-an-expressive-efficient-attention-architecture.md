@@ -30,17 +30,19 @@ tags: []
 > (a) Performance vs. acceleration. With strict fair comparisons with 1.4T training tokens, on MMLU-Pro (4k context length, red stars), Kimi Linear leads performance (51.0) at similar speed. On RULER (128k context length, blue circles), it is Pareto-optimal, achieving top performance (84.3) and 3.98× acceleration. (b) Time per output token (TPOT) vs. decoding length. Kimi Linear (blue line) maintain
 
 > [!tip] 技术解读（多模态）
-> ## Figure 1 Description
+> 【图文联合解读】```thinking
+The image is Figure 1(b) from the Kimi Linear paper, showing TPOT (Time Per Output Token, ms) vs Decoding Length (4K to 1M tokens). Three curves: MLA (teal dashed, steep growth), GDN-H (orange, low growth), Kimi Linear (purple, low growth, overlapping with GDN-H). At 1M tokens: Kimi Linear ≈1.84ms vs MLA ≈11.48ms (6.3× speedup). Red arrows mark 4.8×/5.7×/6.3× speedups at 256K/512K/1M.
 
-**Panel (a) — Performance vs. Acceleration:** A scatter plot with decoding acceleration (1×–4×) on the x-axis and performance (45–60 / 50–90 dual scale) on the y-axis. Blue circles plot RULER-128k scores (Kimi Linear 84.3, MLA 81.3, GDN-H 80.5); red stars plot MMLU-Pro-4k scores (Kimi Linear 51.0, GDN-H 47.9, MLA 47.2). A dashed Pareto-frontier curve shows Kimi Linear dominates at long context.
+Need ≤220 Chinese chars covering: 1) quantified data/structure, 2) key technical conclusion from caption/text, 3) role in paper's overall argument chain.
+```
 
-**Panel (b) — TPOT vs. Decoding Length:** Line plot of time-per-output-token (ms) from 4K to 1M tokens. MLA (teal dashed) and GDN-H (orange dashed) curve steeply upward, while Kimi Linear (purple solid) stays nearly flat, with annotations of 4.8×, 5.7×, and 6.3× speedups over MLA at 512K, 1M, and beyond.
+**图文联合解读：**
 
-**Key takeaway:** Kimi Linear breaks the linear-attention performance ceiling—matching full-attention quality while delivering up to 6.3× decoding speedup at 1M tokens via chunkwise DPLR transition matrices.
+图(b)展示TPOT(ms)随解码长度(4K→1M)的变化曲线：MLA(青色虚线)急剧攀升，1M时达约11.48ms；Kimi Linear(紫色)与GDN-H(橙色)近乎重合且低增长，1M时Kimi仅1.84ms。红色箭头标注256K/512K/1M处相对MLA的加速比依次为4.8×/5.7×/6.3×。
 
-## Caption (verbatim)
+**原文论证结论：** Kimi Linear在长序列解码中维持低TPOT，与GDN-H持平并显著优于MLA，支持更大batch，从而实现端到端推理加速。
 
-Figure 1: (a) Performance vs. acceleration. With strict fair comparisons with 1.4T training tokens, on MMLU-Pro (4k context length, red stars), Kimi Linear leads performance (51.0) at similar speed. On RULER (128k context length, blue circles), it is Pareto-optimal, achieving top performance (84.3) and 3.98× acceleration. (b) Time per output token (TPOT) vs. decoding length. Kimi Linear (blue line) maintains a low TPOT, matching GDN-H and outperforming MLA at long sequences. This enables larger batches, yielding a 6.3× faster TPOT (1.84ms vs. 11.48ms) than MLA at 1M tokens.
+**论文作用：** 与(a)图"性能-加速比Pareto前沿"互补，构成"质量不减、速度更优"的双重证据链，是验证Kimi Linear架构实用价值(尤其长上下文场景)的核心实验支撑。
 
 ### Figure 2 (p.5) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig02.png]]
@@ -49,14 +51,9 @@ Figure 1: (a) Performance vs. acceleration. With strict fair comparisons with 1.
 > Execution time of kernels for vary- ing input lengths, with a uniform batch size of 1 and 16 heads.
 
 > [!tip] 技术解读（多模态）
-> **Main Figure (Figure 2) — Description:**
+> 【图文联合解读】图2展示了batch=1、16头条件下，KDA（ours）与DPLR两种注意力内核在输入长度2K–64K（对数刻度）下的执行时间（ms）对比。KDA（紫色实线）从2K约2ms平稳增长至64K约30ms；DPLR（青色虚线）在64K时陡升至约58ms，曲线明显更陡。两者差距随序列长度扩大而显著拉大。
 
-The figure is a line plot comparing kernel execution time (ms, y-axis, 0–64) against input length (x-axis, 2K→64K) for two attention implementations: **DPLR** (teal dashed line) and **KDA (ours)** (solid blue line). Both curves start near 0 ms at 2K. DPLR grows approximately exponentially, climbing steeply past ~48 ms by 64K. KDA remains nearly flat across 2K–32K (~0–8 ms) and only rises to ~30 ms at 64K, consistently sitting below DPLR. Conditions: batch size = 1, 16 heads.
-
-**Key Technical Takeaway:** KDA eliminates the second-level chunk matmuls of DPLR (Equation 9) by binding decay variables **a**, **b** into **k**, dropping four chunk matmuls to two and yielding ~2× kernel speedup, with the gap widening at long sequences (64K).
-
-**Caption (verbatim):**
-> Figure 2: Execution time of kernels for varying input lengths, with a uniform batch size of 1 and 16 heads.
+原文借此论证：KDA内核相对DPLR在长序列上具有更优的推理效率与更好的复杂度表现，是论文"expressive yet efficient"核心主张的关键效率证据，支撑Kimi Linear在长上下文场景下的实际部署可行性。
 
 ### Figure 3 (p.5) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig03.png]]
@@ -65,21 +62,13 @@ The figure is a line plot comparing kernel execution time (ms, y-axis, 0–64) a
 > Neural Parameterization
 
 > [!tip] 技术解读（多模态）
-> ## Description
+> 【图文联合解读】**图文联合解读：**
 
-The figure depicts a hybrid MoE–transformer with two block types (residual-wrapped):
-- **Top block (1×):** Norm → **MLA** (Multi-Latent Attention) → Norm → **MoE** FFN.
-- **Bottom block (N×):** Norm → **KDA** (Kimi Delta Attention) → Norm → **MoE** FFN.
+图3展示Kimi Linear架构：每个块由token-mixing层（Norm+注意力）后接MoE通道混合层（Norm+MoE）组成，**采用"N个KDA层间插1个MLA层"的混合模式（图中标注N×与1×，N=3）**。右上展开MoE细节：含Ns个Shared Expert与Nr个Routed Expert（Router门控按概率分布选择）；右下展开KDA：两条路径分别经Linear+Conv与σ门控融合后送入Kimi Delta Attention。
 
-**MoE expansion (top right):** parallel **Shared Experts** (always-on, indices 1…N_s) and **Routed Experts** (selected by a learned Router with top-k gating, indices 1…N_r). Shared outputs and gated routed outputs are summed at the top.
+**技术结论**：主体使用线性复杂度KDA保留细粒度信息，**周期性MLA层维持全局注意力锚点**；MoE的共享+路由专家设计兼顾通用知识与专项能力。
 
-**KDA expansion (bottom right):** input is projected through five parallel branches — two Linear+Conv (+L2-norm) paths and three delta-net-style paths with sigmoid gates — feeding a fused **Kimi Delta Attention** op, followed by Norm → gated Linear projection.
-
-**Key takeaway (≤120 words):** KDA is a linear-time attention using parallel value branches (conv + delta-rule paths) that fuse into a single kernel, replacing standard softmax attention for most layers while MLA handles a single global-context pass — paired with a shared+routed MoE FFN for capacity at fixed FLOPs.
-
-## Caption (verbatim)
-
-*No caption text is present in the provided image — the figure consists only of the architectural diagram with labels (1×, N×, MoE, Norm, MLA, KDA, Shared Expert, Routed Expert, Router, Kimi Delta Attention, Linear, Conv, L2, σ).*
+**论文作用**：作为方法总览图，与Table 3呼应——为"Kimi Linear同时超越纯MLA基线与GDN-H混合基线"的短上下文评估结果提供结构性依据，奠定"线性注意力+周期全注意力"的设计范式。
 
 ### Figure 4 (p.7) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig04.png]]
@@ -88,13 +77,9 @@ The figure depicts a hybrid MoE–transformer with two block types (residual-wra
 > Results on synthetic tasks: palindrome, multi query associative recall, and the state tracking.
 
 > [!tip] 技术解读（多模态）
-> **Figure description (≤120 words):**
+> 【图文联合解读】**图文联合解读：**
 
-Figure 4 is a 2×3 grid comparing three linear-attention models—**KDA** (solid blue, circles), **GDN** (dashed teal, stars), and **Mamba2** (dashed orange, triangles)—on three synthetic tasks: Palindrome, MQAR, and Stack. The **top row** plots peak Accuracy (%) versus sequence length (256–2048 tokens), revealing that KDA and GDN maintain near-perfect accuracy at short lengths while Mamba2 collapses to 0% beyond 512 tokens on Palindrome and Stack. The **bottom row** plots Accuracy versus training steps (0–20K) at fixed 1,024-token context, showing KDA converges fastest (≈5K steps) and Mamba2 fails entirely. **Key takeaway:** KDA is the only method that simultaneously achieves fast convergence and robustness to long context across all three copying/recall benchmarks, outperforming both GDN (slower convergence, accuracy drop at 2048) and Mamba2 (fails on state-tracking tasks).
-
-**Caption (verbatim):**
-
-Figure 4: Results on synthetic tasks: palindrome, multi query associative recall, and the state tracking.
+图4为2×3网格：上行绘制256–2048序列长度下的峰值准确率，下行绘制1K token下20K步训练收敛曲线，对比KDA/GDN/Mamba2在Palindrome、MQAR、Stack三任务表现。数据上，KDA与GDN在短序列均近100%，但KDA约5K步即收敛，GDN需15–20K步；Mamba2于Palindrome（≥512）、Stack（≥1024）即降至0%，完全失效。论文借此论证KDA兼具**快速收敛**与**长序列表达力**，是唯一在三项任务同时有效的方案，为下游真实语言基准评测提供合成任务层面的理论支撑。
 
 ### Figure 5 (p.9) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig05.png]]
@@ -103,21 +88,9 @@ Figure 4: Results on synthetic tasks: palindrome, multi query associative recall
 > The fitted scaling law curves for MLA and Kimi Linear. balanced positional bias across layers, which improves robustness and extrapolation at long ranges, leading to stronger long-context performance. Regarding long context performance, as shown in Table 5, Kimi Linear achieves the best average score across different long context benchmarks, which verifies the benefits we claim in the last section
 
 > [!tip] 技术解读（多模态）
-> **Figure 5 Description:**
+> 【图文联合解读】**图文联合解读：**
 
-The figure is a log-log scatter plot comparing two fitted scaling-law curves over five MoE model checkpoints (sized 653M–1.7B activated parameters, per Table 2). It plots **Loss (y-axis)** against **PFLOP/s-days** (compute, x-axis).
-
-**Components / data flow:**
-- **Blue dashed curve (MLA baseline):** 2.3092 × C^(−0.0536), with blue star markers at each model size.
-- **Red dashed curve (Kimi Linear):** 2.2879 × C^(−0.0527), with red star markers.
-- Both curves descend monotonically as compute increases; the red curve lies consistently below the blue.
-- A double-headed arrow annotated **"1.16×"** between the two curves in the mid-range (≈10 PFLOP/s-days) highlights the horizontal compute gap at equal loss.
-
-**Key takeaway (≤120 words):**
-At iso-loss, Kimi Linear reaches the same training loss using ~1.16× less compute than the MLA baseline — a measurable, architecture-level efficiency gain rather than a tuning artifact. Because the two curves stay roughly parallel (similar exponents −0.0527 vs −0.0536), the advantage holds across scales from 653M to 1.7B activated params and from 38.8B to 128B training tokens, suggesting the gain transfers to larger compute budgets.
-
-**Caption verbatim:**
-"Figure 5: The fitted scaling law curves for MLA and Kimi Linear."
+图中以双对数坐标对比 MLA（蓝，虚线，2.3092·C⁻⁰·⁰⁵³⁶）与 Kimi Linear（红，虚线，2.2879·C⁻⁰·⁰⁵²⁷）在不同算力 C（FLOP/s-days，约 10¹ 量级）下的损失曲线。两曲线斜率相近（衰减指数仅差 0.0009），表明两者随算力提升的收益节奏一致；但 Kimi Linear 曲线整体下移，等损失下算力节省约 **1.16×**。论文借此论证 Kimi Linear 在保持与 MLA 几乎相同 scaling 行为的同时，实现了显著的"常数级"效率优势，从而支撑其作为新注意力架构在长上下文场景中可扩展且更优的结论，是实验链路中验证方法有效性的关键定量证据。
 
 ### Figure 6 (p.12) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig06.png]]
@@ -126,20 +99,17 @@ At iso-loss, Kimi Linear reaches the same training loss using ~1.16× less compu
 > The training and test accuracy curves for Kimi Linear@1.4T and MLA@1.4T during Math RL training. Kimi Linear consistently outperforms the full attention baseline by a sizable margin during the whole RL process.
 
 > [!tip] 技术解读（多模态）
-> **Figure Description (≤120 words):**
+> 【图文联合解读】**图6核心对象与量化数据**
 
-The figure contains three line-plot panels comparing **MLA@1.4T** (dashed green) against **Kimi Linear@1.4T** (solid purple) during Math RL training:
+图6展示双面板折线图，追踪RL训练约20–110步过程中Kimi Linear@1.4T（紫实线）与MLA@1.4T（青虚线）在**(b) MATH 500 Test** 与 **(c) AIME 2025** 两个数学基准上的准确率。可读出关键数值：MATH 500上Kimi Linear收敛至约87–88%，MLA约78–80%，全程领先约6–8个百分点；AIME 2025上Kimi Linear达约22–23%，MLA约19%，领先约3–4个百分点。
 
-- **(a)** Training accuracy vs. training steps (y-axis: 20–65). Kimi Linear's accuracy curve rises more steeply and stays consistently above MLA from ~step 20 onward.
-- **(b)** Accuracy on the **MATH 500** test set (y-axis: 70–94). Kimi Linear tracks above MLA across the full trajectory with similar fluctuation patterns.
-- **(c)** Accuracy on **AIME 2025** (y-axis: 10–25). The largest relative gap appears here, with Kimi Linear reaching ~22% vs MLA's ~19%.
+**原文论证的关键结论**
 
-All curves share a comparable x-axis range (~0–110). Data flow: training-progress → per-checkpoint evaluation → plotted accuracy points.
+Kimi Linear的KDA+MLA混合架构在整个RL阶段始终显著优于纯全注意力基线，证明高效注意力不会损害数学推理能力。
 
-**Key takeaway:** Kimi Linear exhibits faster convergence and a widening accuracy gap over full-attention MLA throughout RL, indicating that linearized attention improves optimization dynamics for reasoning-intensive long sequences.
+**在论文链路中的作用**
 
-**Caption verbatim:**
-*Figure 6: The training and test accuracy curves for Kimi Linear@1.4T and MLA@1.4T during Math RL training. Kimi Linear consistently outperforms the full attention baseline by a sizable margin during the whole RL process.*
+前文已论证训练效率与长上下文优势，此图补全"RL后训练推理能力不退化"的关键实证闭环，为"线性注意力可替代全注意力"这一核心主张提供下游任务维度的支撑。
 
 ### Figure 7 (p.13) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-fig07.png]]
@@ -148,19 +118,13 @@ All curves share a comparable x-axis range (~0–110). Data flow: training-progr
 > (a) The prefilling time of MLA (full attention), hybrid GDN-H and our Kimi Linear. (b) The time per output token (TPOT) for MLA, GDN-H and Kimi Linear during decoding. (We use batch size = 1 here for tests.) performance curves are virtually indistinguishable, confirming that our method maintains high efficiency. The hybrid
 
 > [!tip] 技术解读（多模态）
-> **Description:**
+> 【图文联合解读】**图文联合解读：**
 
-The figure (Figure 7) presents two side-by-side line plots comparing latency performance across three attention architectures—MLA (full attention, dashed teal), hybrid GDN-H (orange), and Kimi Linear (purple)—as a function of sequence length (4K → 1M tokens, log-scale x-axis).
+图(b)为batch=1时TPOT随解码长度（4K→1M，对数刻度）变化曲线：MLA虚线随长度近似线性攀升至~18ms（1M处）；Kimi Linear（紫实线）与GDN-H（橙）几乎重合，1M处仅~8ms；图中标注在512K处提速1.8×、1M处提速2.2×。
 
-- **Subplot (a)** plots Prefilling Latency (s, y: 0–60+). MLA's curve rises steeply at long contexts (~65 s at 1M), while Kimi Linear and GDN-H remain near-flat (~22 s). Annotated speedups: **2.6×** (512K) and **2.9×** (1M).
-- **Subplot (b)** plots TPOT (ms, y: 5–15) during decoding. MLA reaches ~17 ms at 1M; Kimi Linear stays at ~8 ms. Annotated speedups: **1.8×** (512K) and **2.2×** (1M).
+**关键结论：** 长序列解码场景下，Kimi Linear较全注意力MLA取得1.8–2.2倍加速，且与GDN-H性能曲线几乎不可区分，说明其用线性注意力取代部分MLA层后，仍保持了类GDN的高效推理特性。
 
-**Data flow:** context length → measured wall-clock latency → plotted per architecture.
-
-**Key takeaway:** Kimi Linear matches MLA at short contexts (<16K) but scales far better, achieving 2.9× prefill and 2.2× decode speedups at 1M tokens with batch size 1.
-
-**Caption (verbatim):**
-"Figure 7: (a) The prefilling time of MLA (full attention), hybrid GDN-H and our Kimi Linear. (b) The time per output token (TPOT) for MLA, GDN-H and Kimi Linear during decoding. (We use batch size = 1 here for tests.)"
+**论文作用：** 与图(a)预填充时延互为补充，从"预填充+解码"两端共同证明Kimi Linear相对MLA的全链路效率优势，是论证该架构具备实际部署价值的关键效率证据。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -170,13 +134,7 @@ The figure (Figure 7) presents two side-by-side line plots comparing latency per
 > Ablation study on the hybrid ratio of KDA to MLA attention and other key components. We list the training and validation perplexities (lower is better) for comparison. The best-performing model, used in our final experiments, is highlighted in gray.
 
 > [!tip] 表格解读（多模态）
-> **Figure description (Table 1):**
-Table 1 is an ablation study comparing configurations of a hybrid KDA/MLA attention model. Two metrics are reported—training perplexity (PPL) and validation PPL, with arrows indicating "lower is better." The top block sweeps the **Hybrid ratio** (KDA:MLA) at {3:1, 0:1, 1:1, 7:1, 15:1}. The 3:1 ratio is highlighted in gray as the best (Training PPL = 9.23, Validation PPL = 5.65). A lower block ablations component choices: removing the output gate (9.25 / 5.67), using a Swish output gate (9.43 / 5.81), and removing the convolution layer (9.29 / 5.70). (98 words)
-
-**Key takeaway:** A 3:1 KDA-to-MLA hybrid ratio is optimal; replacing the dedicated output gate with Swish degrades validation PPL most (+0.16), while the convolution layer contributes marginally.
-
-**Caption (verbatim):**
-"Table 1: Ablation study on the hybrid ratio of KDA to MLA attention and other key components. We list the training and validation perplexities (lower is better) for comparison. The best-performing model, used in our final experiments, is highlighted in gray."
+> 【图文联合解读】表1比较KDA:MLA混合比，指标为训练/验证PPL（↓）：0:1为9.45/5.77，1:1为9.29/5.66，3:1为9.23/5.65，7:1为9.23/5.70，15:1为9.34/5.82。3:1验证PPL最低，训练PPL与7:1并列最低，故选为最终架构。该表承担消融决策，适量引入KDA、保留MLA可兼顾困惑度与长程效率；Figure 1进一步验证1.4T token下MMLU-Pro 51.0、RULER 84.3及1M token时1.84ms对11.48ms。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab02.png]]
@@ -184,26 +142,13 @@ Table 1 is an ablation study comparing configurations of a hybrid KDA/MLA attent
 > Model configurations and hyperparameters for scaling law experiments.
 
 > [!tip] 表格解读（多模态）
-> ## Main Figure Description
+> 【图文联合解读】**Table 2 图文联合解读：**
 
-The bottom panel is a **log–log scaling-law plot** of validation loss (y-axis, ≈2.00–2.25) against activated-parameter count C (x-axis, log scale around 10¹). Star markers denote empirical measurements for five MoE configurations from Table 2 (653M → 1.7B activated params), with two power-law fits overlaid: **MLA** (blue dashed, 2.3092·C⁻⁰·⁰⁵³⁶) and **Kimi Linear** (red dashed, 2.2879·C⁻⁰·⁰⁵²⁷). A double-arrow annotation labelled "**1.16×**" highlights the constant loss-equivalent parameter-efficiency gap, meaning Kimi Linear matches MLA's loss with ≈1.16× fewer activated parameters across scales.
+该表列出 5 个 MoE 模型用于缩放律实验的配置：激活参数量从 653M（16 层/16 头/h=1216）递增至 1.7B（24 层/24 头/h=1776），训练 token 数对应从 38.8B 增至 128.0B，batch size 与学习率随之按比例调整（lr 由 2.006×10⁻³ 降至 1.371×10⁻³），上下文长度统一为 4096。
 
-**Key takeaway:** Both attention variants exhibit nearly identical scaling exponents (~−0.053), indicating that the MoE architecture — not the attention kernel — governs loss-vs-compute behavior; switching to linear attention yields a flat, constant multiplicative compute savings at every scale tested.
+配套散点图显示 Kimi Linear 与 MLA 的 Loss-算力拟合曲线分别为 2.2879·C⁻⁰·⁰⁵²⁷ 与 2.3092·C⁻⁰·⁰⁵³⁶，同等算力下 Kimi Linear 实现约 **1.16× 训练效率提升**，且两种架构遵循相近幂律趋势。
 
-## Caption (verbatim)
-
-> **Table 2:** Model configurations and hyperparameters for scaling law experiments.
->
-> [Column headers: # Act. Params.† | Head | Layer | Hidden | Tokens | lr | batch size‡]
->
-> 653M | 16 | 16 | 1216 | 38.8B | 2.006 × 10⁻³ | 336
-> 878M | 18 | 18 | 1376 | 59.8B | 1.790 × 10⁻³ | 432
-> 1.1B | 20 | 20 | 1536 | 85.2B | 1.617 × 10⁻³ | 512
-> 1.4B | 22 | 22 | 1632 | 102.5B | 1.486 × 10⁻³ | 576
-> 1.7B | 24 | 24 | 1776 | 128.0B | 1.371 × 10⁻³ | 640
->
-> † Denotes the number of activated parameters in our MoE models, excluding embeddings.
-> ‡ All models were trained with a context length of 4,096.
+该表是论文"新注意力架构有效性"论证链的关键一环：在控制 MoE 路由、训练配比的前提下，沿 5 个规模点系统对比 MLA 基线，为后文更大规模实验中 Kimi Linear 取代 MLA 提供缩放律层面的可迁移证据。
 
 ### Table 3 (p.11) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab03.png]]
@@ -211,15 +156,13 @@ The bottom panel is a **log–log scaling-law plot** of validation loss (y-axis,
 > Performance comparison of Kimi Linear with the full-attention MLA baseline and the hybrid GDN baseline, all after the same pretraining recipe. Kimi Linear consistently outperforms both MLA and GDN-H on short-context pretrain evaluations. Best per-column results are bolded .
 
 > [!tip] 表格解读（多模态）
-> ## Description
+> 【图文联合解读】**Table 3 联合解读：**
 
-The image is a **performance comparison table** (Table 3), not a figure. It contrasts three model variants — **MLA** (full-attention baseline), **GDN-H** (hybrid GDN baseline), and **Kimi Linear** — all trained on **1.4T tokens** under the same recipe. Results are grouped into three capability buckets: *General* (HellaSwag, ARC-challenge, Winogrande, BBH, MMLU, MMLU-Pro, TriviaQA), *Math & Code* (GSM8K, MATH, EvalPlus, CRUXEval-I/O-cot), and *Chinese* (CEval, CMMLU). Best per-row scores are **bolded**.
+**1）核心结构与数据：** 该表在完全一致的预训练配方（1.4T tokens）下，对三类注意力架构——全注意力 MLA、混合 GDN-H、Kimi Linear——在 General / Math & Code / Chinese 三类共 14 项基准上进行横向对比。Kimi Linear 在 12 项上取得最佳（加粗），典型差距如 MMLU-Pro 51.0 vs 47.2（GDN-H）/47.2（MLA），BBH 72.9 vs 71.6/70.6；唯独 EvalPlus 上 GDN-H 以 63.1 领先（Kimi Linear 60.2），MATH 上与 MLA 并列 54.7。
 
-**Key takeaway:** Kimi Linear wins **12 of 14** short-context benchmarks, matching MLA only on MATH (54.7) and losing to GDN-H solely on EvalPlus (60.2 vs 63.1) — evidencing that linear attention is a competitive, often superior drop-in for full attention at matched compute. (85 words)
+**2）关键结论：** 在相同训练开销下，Kimi Linear 全面优于全注意力 MLA 与现有混合 GDN 基线，证明其线性核 + 有限注意力的混合设计在表达能力上并未折损，反而在短上下文预训练评估中具有一致优势。
 
-## Caption (verbatim)
-
-> **Table 3:** Performance comparison of Kimi Linear with the full-attention MLA baseline and the hybrid GDN baseline, all after the same pretraining recipe. Kimi Linear consistently outperforms both MLA and GDN-H on short-context pretrain evaluations. Best per-column results are **bolded**.
+**3）在论文中的位置：** 这是"质量—效率"实验链中的受控消融证据，配合后文长上下文评测，共同支撑"Kimi Linear 既高效又不牺牲表达力"的核心论断，是论文验证章节的主表之一。
 
 ### Table 4 (p.11) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab04.png]]
@@ -227,15 +170,13 @@ The image is a **performance comparison table** (Table 3), not a figure. It cont
 > Performance comparison of Kimi Linear with the full-attention MLA baseline and the hybrid GDN baseline, all using the same SFT recipe after pretraining. Kimi Linear consistently outperforms both MLA and GDN-H on short-context instruction-tuned benchmarks. Best per-column results are bolded .
 
 > [!tip] 表格解读（多模态）
-> **Description:**
+> 【图文联合解读】**Table 4 图文联合解读**
 
-This is **Table 4** (a benchmark comparison, not an architecture diagram). It tabulates post-SFT accuracy/numerical scores across three attention mechanisms — **MLA** (full attention baseline), **GDN-H** (hybrid Gated DeltaNet baseline), and **Kimi Linear** — all trained on the same 1.4T tokens with an identical SFT recipe. Results are split into two benchmark families: *General* (BBH, MMLU variants, GPQA-Diamond, LiveBench) and *Math & Code* (AIME 2025, MATH500, HMMT 2025, PolyMath-en, LiveCodeBench v6, EvalPlus). Best per-row values are bolded.
+该表在相同 1.4T tokens 预训练 + 同 SFT 配方下，对比 MLA（全注意力）、GDN-H（混合 GDN）与 Kimi Linear 三种架构在 12 项短上下文指令微调基准上的表现，分 *General*（BBH、MMLU 家族、GPQA-Diamond、LiveBench）与 *Math & Code*（AIME 2025、MATH500、HMMT 2025、PolyMath-en、LiveCodeBench v6、EvalPlus）两组。
 
-**Key takeaway:** Kimi Linear's linear-attention design *matches or beats* both full attention (MLA) and the hybrid GDN-H across the board — most decisively on math/code reasoning (AIME, HMMT, PolyMath, LiveCodeBench) — showing that a well-tuned linear kernel need not sacrifice instruction-tuned downstream quality versus quadratic attention. (~88 words)
+**核心数据**：Kimi Linear 在 10/12 项上取得最佳，如 BBH 69.4、MMLU 77.0、MMLU-Pro 67.4、GPQA-Diamond 62.1、AIME 2025 21.3、HMMT 2025 12.5、PolyMath-en 43.6、LiveCodeBench v6 26.0；仅 LiveBench（GDN-H 46.4）、MATH500（GDN-H 83.0）、EvalPlus（MLA 62.6）落后。
 
-**Caption (verbatim):**
-
-"Table 4: Performance comparison of Kimi Linear with the full-attention MLA baseline and the hybrid GDN baseline, all using the same SFT recipe after pretraining. Kimi Linear consistently outperforms both MLA and GDN-H on short-context instruction-tuned benchmarks. Best per-column results are **bolded**."
+**论文作用**：与 Figure 4 合成任务（验证 KDA 在 Palindrome/MQAR/Stack 上的快速收敛与长程能力）形成"机制→实测"闭环——前者证明 KDA 表达力，后者证明该优势在真实 SFT 评测中切实转化为 SOTA，支撑"Kimi Linear 兼具表达力与效率"的核心主张。
 
 ### Table 5 (p.12) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab05.png]]
@@ -243,15 +184,7 @@ This is **Table 4** (a benchmark comparison, not an architecture diagram). It ta
 > Comparisons of Kimi Linear with MLA, GDN-H, and Kimi Linear (RoPE) across long-context benchmarks. The last column reports the overall average ( ↑ ). All models is trained on 1.4T tokens. Best per-column results are bolded .
 
 > [!tip] 表格解读（多模态）
-> **Description of the main figure (Table 5 + companion line plots):**
-
-The table benchmarks four attention mechanisms—MLA, GDN-H, Kimi Linear (RoPE), and the full Kimi Linear—across eight long-context evaluations (RULER, MRCR, HELMET-ICL, LongBench V2, Frames, RepoQA, and Long Code Arena split into Lib/Commit), with all models matched at 1.4T training tokens. The three line plots below it track MLA versus Kimi Linear across scales, with Kimi Linear consistently trending above MLA.
-
-**Key technical takeaway (≤120 words):** Kimi Linear attains the highest overall average (54.5) versus MLA (52.2), GDN-H (51.2), and its RoPE ablation (51.8), claiming the best score on 5/8 benchmarks—particularly memory-retrieval tasks (RULER 84.3, MRCR 29.6, HELMET-ICL 90.0) and code retrieval (Lib 37.1). The scaling plots show Kimi Linear's advantage widening at larger compute, indicating that the linear-attention design—rather than the positional encoding—is the dominant driver of long-context gains, while maintaining strong performance on math/logic benchmarks where MLA and GDN-H lead.
-
-**Caption (verbatim):**
-
-Table 5: Comparisons of Kimi Linear with MLA, GDN-H, and Kimi Linear (RoPE) across long-context benchmarks. The last column reports the overall average (↑). All models is trained on 1.4T tokens. Best per-column results are **bolded**.
+> 【图文联合解读】Table 5 在 1.4T token 同训条件下，对比 Kimi Linear 与 MLA、GDN-H、Kimi Linear(RoPE) 四种架构在八项长上下文基准上的表现。Kimi Linear 以 RULER 84.3、MRCR 29.6、HELMET-ICL 90.0、RepoQA 68.5、Long Code Arena-Lib 37.1 及均值 54.5 共六项居首，仅 LongBench V2(35.0)、Frames(58.8)、Code Commit(32.7) 略逊于 MLA。原文据此论证：层间均衡的位置偏置带来更强长程鲁棒与外推，验证 Kimi Linear 在保持线性复杂度的同时实现甚至超越全注意力的长上下文质量，是连接架构设计与消融论证的关键实证。
 
 ### Table 6 (p.14) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab06.png]]
@@ -259,15 +192,13 @@ Table 5: Comparisons of Kimi Linear with MLA, GDN-H, and Kimi Linear (RoPE) acro
 > An overview of attention mechanisms in their mathematically equivalent recurrent ( o t ) and parallel ( O ) forms. We omitted the normalization term and β t to achieve a more concise representation. The function ϕ refers to the infinite-dimensional feature space corresponding to the exponential kern
 
 > [!tip] 表格解读（多模态）
-> **Description of the main figure (Table 6):**
+> 【图文联合解读】**Table 6 图文联合解读**
 
-The table presents Self-Attention (SA) in two mathematically equivalent forms side-by-side. In the **recurrent form**, the output at time step $t$ is computed as $\boldsymbol{o}_t = \sum_{j=1}^{t} \exp(\boldsymbol{q}_t^\top \boldsymbol{k}_j)\boldsymbol{v}_j$, summing over previous positions sequentially using query ($\boldsymbol{q}$), key ($\boldsymbol{k}$), and value ($\boldsymbol{v}$) vectors. In the **parallel form**, the same operation is vectorized as $\boldsymbol{O} = (\exp(\boldsymbol{Q}\boldsymbol{K}^\top) \odot \boldsymbol{M})\boldsymbol{V}$, where $\boldsymbol{M}$ serves as the causal mask restricting attention to past tokens, and $\odot$ denotes element-wise (Hadamard) multiplication. The framework leverages the exponential kernel trick $\phi(\boldsymbol{q})^\top\phi(\boldsymbol{k}) = \exp(\boldsymbol{q}^\top\boldsymbol{k})$ via an infinite-dimensional feature map $\phi$.
+Table 6 以双栏（循环形式 oₜ 与并行形式 O）并列展示 12 种注意力机制的数学表达：SA、SA+RoPE、LA、Mamba2、GLA、DeltaNet、FoX、DeltaFormer、PaTH-FoX、GDN、Comba、RWKV7，并以灰底高亮末行的 KDA（ours）。
 
-**Key takeaway:** Recurrent and parallel attention formulations are mathematically equivalent—the recurrent view enables O(1) inference memory via KV-caching, while the parallel form enables O(n²) but GPU-friendly training, with mask $\boldsymbol{M}$ preserving causality in both.
+**核心论证**：KDA 循环式为 Σⱼ qₜᵀ (Πₛ Diag(αₛ)(I−kₛkₛᵀ)) kⱼ vⱼ，并行式为 ((Q⊙Γ)(K/Γ)ᵀ⊙M)(I+(K⊙Γ)(K/Γ)ᵀ⊙M⁻¹)⁻¹V。红色标注揭示 KDA 将 GLA 的逐位置门控 Diag(αₛ) 与 DeltaNet 的 delta 更新规则 (I−kₛkₛᵀ) 统一于同一框架，兼顾表达力与递推效率。
 
-**Caption (verbatim):**
-
-Table 6: An overview of attention mechanisms in their mathematically equivalent recurrent ($\boldsymbol{o}_t$) and parallel ($\boldsymbol{O}$) forms. We omitted the normalization term and $\beta_t$ to achieve a more concise representation. The function $\phi$ refers to the infinite-dimensional feature space corresponding to the exponential kernel, i.e., $\phi(\boldsymbol{q})^\top\phi(\boldsymbol{k}) = \exp(\boldsymbol{q}^\top\boldsymbol{k})$.
+**论文作用**：该表为 KDA 给出严格数学定义并将其定位于线性注意力谱系中，作为概念坐标系，支撑后续 Kimi Linear 三段式（KDA+MLA 混合）架构设计，是方法论部分的"族谱图"。
 
 ### Table 7 (p.16) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab07.png]]
@@ -275,19 +206,13 @@ Table 6: An overview of attention mechanisms in their mathematically equivalent 
 > An overview of different attention mechanisms through the lens of state updating rules and their learning objective under the TTT framework [ 90 ]. We ignore all normalizer terms and activation/kernel functions for brevity.
 
 > [!tip] 表格解读（多模态）
-> ## Description of the Main Table
+> 【图文联合解读】**Table 7 图文联合解读**
 
-This **table** (not a figure) presents a unified comparison of five sequence-modeling mechanisms (LA, RetNet, Mamba2, GLA, HGRN2) recast through the **Test-Time Training (TTT)** lens. It is organized into three columns:
+1）**核心对象与结构**：该表以 TTT（Test-Time Training）框架为统一视角，纵向罗列 10 种注意力机制（LA、RetNet、Mamba2、GLA、HGRN2、Longhorn、Comba、RWKV7、GDN、KDA），横向分两列：左列为对状态 S 的损失目标 ℒ，右列推导出的状态更新规则 S� = Sₜ₋₁ − ∇ℒ。可清晰看出其递进关系——LA 为线性更新；RetNet/Mamba2 引入标量衰减 α；GLA/HGRN2 升级为对角衰减 Diag(αₜ)；Longhorn/Comba/RWKV7/GDN 进一步引入 βₜ、kₜkₜᵀ 修正；最后作者提出的 **KDA** 以 (I − βₜkₜkₜ�) Diag(αₜ) Sₜ₋₁ + βₜkₜvₜᵀ 形式，将对角遗忘与 Kronecker 类门控合二为一。
 
-- **Column 1 — Model name & reference** (the five attention variants).
-- **Column 2 — Objective ℒ**, expressed as a combination of a key–value inner-product term and a magnitude regularizer on the hidden state **S** (e.g., a Frobenius-norm penalty with scalar, scalar-per-step, or diagonal gating via √(1−α)).
-- **Column 3 — Update rule S_t = S_{t−1} − ∇_{S_{t−1}} ℒ**, showing each model's recurrent state transition closed-form.
+2）**论证的关键结论**：通过把十余种线性注意力统一到"目标→梯度→更新"三步式，作者表明 KDA 并非孤立设计，而是自然融合了 GDN 的 Kronecker 门控（βₜkₜkₜᵀ 项）与 GLA/HGRN2 的逐通道对角遗忘 Diag(α�)，在表达力上严格优于任一单家族方法。
 
-**Key technical takeaway:** Every modern linear/state-space attention variant is equivalent to **one gradient-descent step of a single TTT-style loss**, differing only in *how* the regularization term gates the previous state (none, scalar decay α, or diagonal vector 1−α_t). This recasts diverse architectures as special cases of an implicit optimization procedure, enabling end-to-end learning of the optimizer itself. (~98 words)
-
-## Caption (Verbatim Transcription)
-
-**Table 7:** An overview of different attention mechanisms through the lens of state updating rules and their learning objective under the TTT framework [90]. We ignore all normalizer terms and activation/kernel functions for brevity.
+3）**在论文中的作用**：该表承担理论锚点——承接 TTT 框架综述文献 [90]，为后续 KDA 在 Kimi Linear 架构中替代 MLA 提供形式化依据，并与实验（图 7 的延迟对比）形成"理论统一 + 工程高效"的双重支撑。
 
 ### Table 8 (p.28) ⭐深度解读
 ![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab08.png]]
@@ -295,26 +220,13 @@ This **table** (not a figure) presents a unified comparison of five sequence-mod
 > Performance of Kimi-Linear-Base and Moonlight-Base across diverse tasks.
 
 > [!tip] 表格解读（多模态）
-> The visible content shows **Section D of the Kimi Linear technical report**, not an architectural diagram. It presents text-based results rather than a figure with components/data flow. The section describes training Kimi Linear on a 5.7T token dataset with 3× sparsity, comparing it against Moonlight.
+> 【图文联合解读】**图联合解读（Table 8）**
 
-**Key technical takeaway:** Kimi Linear@5.7T achieves 94.8 on RULER at 1M context length, outperforming Moonlight (which couldn't be evaluated beyond its 8K limit, shown as "-") across nearly all benchmarks, validating it as a viable, more efficient alternative to full attention.
+**① 核心对象与数据：** 表8对比Kimi-Linear-Base与Moonlight-Base，两者同为MoE架构、3B激活参数、训练5.7T token；Kimi总参48B多于Moonlight的16B。在General/Math/Code/Chinese四类共16项基准上，Kimi-Linear全面胜出，如TriviaQA 75.2 vs 66.2、GPQA-Diamond 40.4 vs 35.2、MATH 58.5 vs 45.3、CRUXEval-I-cot 61.0 vs 45.9、C-Eval 83.3 vs 77.6等。
 
-**Caption (verbatim):**
-"Table 8: Performance of Kimi-Linear-Base and Moonlight-Base across diverse tasks."
+**② 关键结论：** 在激活参数与训练量相同的公平条件下，Kimi-Linear跨任务稳定优于Moonlight，证明其线性注意力架构兼顾效率与表达力，并未因引入线性化而损失下游能力。
 
-*Note:* The actual table data (benchmark scores, columns, rows) is not visible in the provided image snippet — only the caption and surrounding paragraph are shown. If you need a description of the table's contents, please share the image containing the table itself.
-
-### Table 9 (p.28) ⭐深度解读
-![[assets/crops/kimi-linear-an-expressive-efficient-attention-architecture-tab09.png]]
-> [!quote] caption
-> Performance of Kimi-Linear-Instruct and Moonlight-Instruct across diverse tasks.
-
-> [!tip] 表格解读（多模态）
-> **Description (≤120 words):**
-Table 8 is a benchmark comparison matrix contrasting two MoE language models—Kimi-Linear-Base and Moonlight-Base—across four evaluation domains: General (6 tasks), Math (4 tasks), Code (4 tasks), and Chinese (2 tasks). Columns report per-task scores with consistent few-shot settings (5-, 4-, 8-, 6-, 0-, 1-shot variants). Both models share 3B activated params, MoE architecture, and 5.7T training tokens, but Kimi-Linear-Base has 3× the total parameters (48B vs. 16B) and a redesigned attention mechanism with 3× sparsity. Kimi-Linear-Base dominates every row—e.g., MATH (58.5 vs 45.3), GSM8k (86.3 vs 77.2), CRUXEval-O (67.0 vs 46.6), and C-Eval (83.3 vs 77.6). **Key takeaway:** sparsity-driven linear attention matches or beats dense attention at substantially larger total capacity while keeping the activated compute budget constant.
-
-**Caption (verbatim):**
-Table 8: Performance of Kimi-Linear-Base and Moonlight-Base across diverse tasks.
+**③ 论文作用：** 作为核心定量证据，支撑"Kimi-Linear可替代标准注意力而不损性能"的整体论点，是论文方法有效性论证的关键一环。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

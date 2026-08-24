@@ -30,19 +30,16 @@ tags: []
 > (Left) Asynchronous RL brings substantial improvements: Through RL training, our agent, ASearcher-Web-QwQ, obtains +15.0, +22.4, and +15.6 improvements on GAIA, xBench, and
 
 > [!tip] 技术解读（多模态）
-> # Figure Description
+> 【图文联合解读】**图文联合解读（中文）**
 
-**Architecture/Components/Data Flow:**
-The figure depicts a comparative chart for what appears to be a method called **DEPA** (with a variant labeled **DEPA-R**), benchmarking it against several baseline models. The layout shows performance results along a categorical axis (multiple models/tasks listed vertically) against a metric scale (0–2 range). Legend entries distinguish **"Avg@4"** and per-stage breakdowns (**Stage 1** vs **Stage 2**) for two configurations, suggesting a two-stage pipeline evaluation. Data flow appears to compare token-level decoding metrics (e.g., EOS/NLL-related indicators) across competing approaches.
+**1）核心对象与结构/数据：**
+图分三栏。左栏为Avg@4准确率柱状图，在GAIA/xBench-DeepSearch/Frames三基准上，Before RL（43.7/28.7/58.9）→ASearcher-v1（52.8/42.1/70.9）→ASearcher-v2（58.7/51.1/74.5），v2相对RL前分别提升+15.0/+22.4/+15.6。中栏显示训练步0–450中每轨迹工具调用次数，阶段2（>200步）后MAX约从5增至100+，AVG从~2升至20+。右栏（log刻度）显示生成tokens从~10⁴升至~10⁵。
 
-**Key Technical Takeaway:**
-DEPA's two-stage variant achieves higher aggregate scores than single-stage baselines, indicating that separating the pipeline into Stage 1 + Stage 2 yields measurable gains in the Avg@4 metric.
+**2）原文论证的关键技术结论：**
+异步RL带来显著增益，验证训练有效性；随训练推进，模型自发学习更长程的搜索行为（工具调用与生成长度均上升），证明大尺度异步RL可"解锁"十回合以上的长时搜索能力。
 
-# Caption (Verbatim — as rendered; text is heavily overlapping/garbled in the source)
-
-> "Figure : ... DEPA vs ... 1,NLL 2, ... 1,EOS 2, ... 1, ... 2, ... Avg@4 Stage 1 Stage 2 Stage 1 Stage 2 ... (a) ... 2-output ... (b) ..."
-
-**Note:** The page (arXiv:2508.07976v4) has severely overlapping/illegible glyphs in this figure region, so a clean verbatim transcription is not possible from the rendered image alone — most labels appear stacked and unreadable.
+**3）在论文中的作用：**
+开篇Figure 1统领全文，主图三栏共同支撑"异步RL既提精度、又增长horizon"的两大核心论点，为后续方法与消融提供动机与可视化依据。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig02.png]]
@@ -51,15 +48,13 @@ DEPA's two-stage variant achieves higher aggregate scores than single-stage base
 > Comparison between ASearcher and Search-R1. (Left) Search-R1 is only equipped with search tools and lacks web browsing capability. (Right) ASearcher utilizes a simple agent design with two basic tools including search and browsing tools, without relying on any external LLM. ASearcher is a comprehensive agent capable of both reasoning and summarizing lengthy web contents. Notably, both reasoning an
 
 > [!tip] 技术解读（多模态）
-> **Figure Description (Architecture & Data Flow):**
+> 【图文联合解读】**图文联合解读：**
 
-The figure contrasts two agent architectures for search-augmented QA. **Search-R1 (left)** uses a single-loop pipeline: User Query → Trainable LLM Gen → Tool Calling → Search Query → External Search Engine → Top-K Entries, looping back over ≤10 turns to produce an Answer. **ASearcher (right)** extends this with a dual-tool design: the same LLM Gen / Tool Calling dispatch can invoke either the Search tool (→ Search Engine → Top-K Entries) **or** a Browser tool (→ Webpage ~100K chars → Summarize ~100 chars), allowing up to **128 turns** before yielding the Answer. The legend distinguishes trainable components (blue LLM Gen), external tools (pink), external info (green), and tool-calling logic (orange).
+图2对比Search-R1与ASearcher两种智能体架构。左侧Search-R1仅配备搜索工具，单轮最大≤10 turns，仅返回Top-K条目；右侧ASearcher集成搜索+浏览双工具，最大支持≤128 turns长程交互，且能将约100K长度的网页内容摘要压缩至约100长度。图例区分可训练组件（LLM Gen、Tool Calling）、外部工具与外部信息四类。
 
-**Key Technical Takeaway:** ASearcher's novelty lies in jointly optimizing **long-horizon reasoning and long-context summarization** through end-to-end RL on a single LLM — no external LLM is required, and the 128-turn budget enables multi-hop web evidence synthesis (Figure 2).
+原文借此论证关键结论：ASearcher以单一LLM即可同时完成推理与长网页总结，无需依赖外部LLM，突破Search-R1的10轮瓶颈。
 
-**Caption (Verbatim):**
-
-Figure 2: Comparison between ASearcher and Search-R1. (Left) Search-R1 is only equipped with search tools and lacks web browsing capability. (Right) ASearcher utilizes a simple agent design with two basic tools including search and browsing tools, without relying on any external LLM. ASearcher is a comprehensive agent capable of both reasoning and summarizing lengthy web contents. Notably, both reasoning and summarization abilities are optimized through end-to-end RL training.
+作用：作为方法核心框架图，为后续大规模异步RL训练及Table 2本地知识库实验提供架构基础。
 
 ### Figure 3 (p.4) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig03.png]]
@@ -68,19 +63,11 @@ Figure 2: Comparison between ASearcher and Search-R1. (Left) Search-R1 is only e
 > A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) can identify the corrects articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, ASearcher-Web-QwQ, exhibits key behaviors featuring
 
 > [!tip] 技术解读（多模态）
-> ## Description (≤120 words)
+> 【图文联合解读】**图文联合解读：**
 
-The figure compares three systems on a complex GAIA multi-hop query (answer: "Mice"). It is organized as a three-column case study:
+图3以GAIA复杂问答"Mice"为题，对比三列方法推理轨迹：Search-R1-32B 3次搜索即给出错误"Pigs"且无验证；Search-o1(QwQ)经多轮检索定位文献，但漏关键信息并误判为"Goats"；ASearcher-Web-QwQ通过四阶段——聚焦搜索定位Hafnia alvei→识别Wikipedia及相关2021临床文献→跨文档关联Olga Tapia小鼠研究→基于二次检索的*Grounded Verification*——得出正确答案"Mice"。
 
-1. **Search-R1-32B** (left): Fails — cannot decompose the query, hallucinates (claims alvei = Coprococcus), lacks verification, and ends with the wrong answer ("Pigs").
-2. **Search-o1 (QwQ)** (middle): Identifies the genus but misses key information, jumps to a wrong conclusion, and cannot verify it.
-3. **ASearcher-Web-QwQ** (right): Performs a structured pipeline — focused search → key-info extraction → uncertainty-aware source identification → cross-document inference (vet/animal filtering) → grounded verification — arriving at the correct answer "Mice."
-
-**Key takeaway:** End-to-end RL agents that explicitly incorporate *uncertainty-aware reasoning, precise noisy-content extraction, cross-document inference, and grounded verification* outperform tool-call baselines on complex multi-hop search tasks.
-
-## Caption (verbatim)
-
-**Figure 3:** A case study on a complex query from GAIA. **Search-R1-32B** is unable to break down the complex question and has severe hallucinations. **Search-o1 (QwQ)** can identify the correct articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, **ASearcher-Web-QwQ**, exhibits key behaviors featuring Search Intelligence: *uncertainty-aware reasoning* (list and examine candidate answers), *precise extraction* from noisy contents, *cross-document inference*, and *grounded verification*.
+该案例支撑论文核心结论：端到端异步RL赋予智能体**长程分解、不确定性感知与自我验证**能力，使其在超过10轮的复杂任务上优于无验证搜索式RL及已有Search-o1基线，是正文论证ASearcher长视野搜索优势的**关键定性证据**。
 
 ### Figure 4 (p.7) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig04.png]]
@@ -89,24 +76,11 @@ The figure compares three systems on a complex GAIA multi-hop query (answer: "Mi
 > Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, Injection and Fuzz. Through injection, the agent enriches the question by adding some external facts. Through Fuzz, the agent blurs certain information to increase uncertainty and difficulty. The related fact to the question are tracked during the synthesis process.
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 4 — Data Synthesis Agent)
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture & Components:**
-- **Synthetic QA & Facts** (left): seed QA pair + supporting facts feed an LLM agent.
-- **Two Actions** branching from the agent:
-  - **Extract Fact & Inject** (top): a Search Engine/Browser retrieves external facts and injects them into the question.
-  - **Select Info. & Fuzz** (bottom): specific values (e.g., "2014") are blurred into uncertain placeholders (e.g., "early 2010s").
-- **Quality Verification** (right): three sequential checks — (1) Basic Quality (solvability + clarity), (2) Difficulty Measurement (model must produce wrong answer among distractors), (3) Answer Uniqueness.
+图4展示数据合成Agent的三阶段闭环管线：①**左：种子输入**——以QA对（Q："Daniel Charbonell 2014签约旧金山巨人合同几年？" A：四年）及支撑事实为起点；②**中：双动作迭代修改**——**Injection**通过搜索引擎+浏览器抽取外事实（如"古巴外野手，曾效力San Jose Giants"）注入问题增加线索；**Fuzz**模糊关键信息（如将"2014"改为"early 2010s"）提高不确定性；③**右：质量验证三步**——基本可解性与清晰度检查、多答案生成测难度（仅"四年"✓）、答案唯一性校验；通过后回流更新QA与事实库。
 
-**Data Flow:** Seed QA → Agent → {Inject | Fuzz} → Modified Question + tracked supporting facts → 3-step Verification → loop until pass.
-
-**Key Technical Takeaway:** The agent's two complementary actions (Injection adds facts to broaden reasoning; Fuzz hides facts to increase difficulty) combined with the 3-step verifier create a self-curating loop that yields hard-but-solvable multi-hop QA pairs.
-
----
-
-## Verbatim Caption Transcription
-
-**Figure 4:** Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, *Injection* and *Fuzz*. Through *injection*, the agent enriches the question by adding some external facts. Through *Fuzz*, the agent blurs certain information to increase uncertainty and difficulty. The related fact to the question are tracked during the synthesis process. Each time the question is modified, a quality verification step is applied to ensure quality and difficulty of the synthetic questions.
+**论文作用**：此管线为大规模异步RL训练提供高质量、可解、唯一、具长程推理难度的事实型QA数据，是Agentic Search模型在GAIA/xBench等基准（表4）取得SOTA的数据基础。
 
 ### Figure 5 (p.7) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig05.png]]
@@ -115,24 +89,13 @@ The figure compares three systems on a complex GAIA multi-hop query (answer: "Mi
 > Statistics from our data synthesis process. (Left) The distribution of the number of supporting facts. (Middle) The distribution of the number of fuzz actions and injection actions. (Right) The accuracy distribution of QwQ-32B in answering the generated questions without using any tools. • The model finds a correct answer with only a few search turns (i.e., ≤1 turns).
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 4 — Data Synthesis Agent)
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture & Components:**
-- **Synthetic QA & Facts** (left): seed QA pair + supporting facts feed an LLM agent.
-- **Two Actions** branching from the agent:
-  - **Extract Fact & Inject** (top): a Search Engine/Browser retrieves external facts and injects them into the question.
-  - **Select Info. & Fuzz** (bottom): specific values (e.g., "2014") are blurred into uncertain placeholders (e.g., "early 2010s").
-- **Quality Verification** (right): three sequential checks — (1) Basic Quality (solvability + clarity), (2) Difficulty Measurement (model must produce wrong answer among distractors), (3) Answer Uniqueness.
+1) **核心数据**：左图支撑事实数主要分布在7–9之间（占比~0.18–0.19），呈长程检索特征；中图fuzz动作集中在5–6次（峰~0.33），injection动作更分散、向10–11次偏移，整体动作链跨度大；右图QwQ-32B无工具直接答题准确率呈双峰分布，约60%集中于0附近，约15%接近1。
 
-**Data Flow:** Seed QA → Agent → {Inject | Fuzz} → Modified Question + tracked supporting facts → 3-step Verification → loop until pass.
+2) **关键结论**：合成问题普遍依赖多条事实链与多轮检索动作，远超单跳查询；模型无工具时绝大多数无法作答，双峰说明问题要么完全无法直接推理、要么模型"碰巧"记住，真正考验搜索与多轮整合能力。
 
-**Key Technical Takeaway:** The agent's two complementary actions (Injection adds facts to broaden reasoning; Fuzz hides facts to increase difficulty) combined with the 3-step verifier create a self-curating loop that yields hard-but-solvable multi-hop QA pairs.
-
----
-
-## Verbatim Caption Transcription
-
-**Figure 4:** Data Synthesis Agent. Starting from a seed QA, the data synthesis agent iteratively modifies the question through two actions, *Injection* and *Fuzz*. Through *injection*, the agent enriches the question by adding some external facts. Through *Fuzz*, the agent blurs certain information to increase uncertainty and difficulty. The related fact to the question are tracked during the synthesis process. Each time the question is modified, a quality verification step is applied to ensure quality and difficulty of the synthetic questions.
+3) **论文作用**：作为数据合成管线的统计验证，为后续ASearcher的大规模异步RL训练提供难度合理、长度足够的长程搜索任务基线。
 
 ### Figure 6 (p.9) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig06.png]]
@@ -141,19 +104,13 @@ The figure compares three systems on a complex GAIA multi-hop query (answer: "Mi
 > (Left) Test scaling of ASearcher-Web-QwQ. Data points are obtained by enforcing different minimum turns.The accuracy is averaged over GAIA, xBench-DeepSearch, and Frames. (Middle)
 
 > [!tip] 技术解读（多模态）
-> **Figure description (architecture/components/data flow + key takeaway):**
+> 【图文联合解读】**图文联合解读：**
 
-Figure 6 is a three-panel empirical analysis of ASearcher-Web-QwQ supporting the section's claim that scaling RL trajectory length is hard.
+1. **核心对象与数据**：左图显示ASearcher-Web-QwQ测试时平均工具调用数（5→12）与平均准确率（≈52%→55%）呈单调上升关系；中图显示训练过程中每条轨迹的工具调用数：MAX从约5增长至峰值60–70，AVG稳定在3–7，MIN接近0–1；右图log尺度下生成tokens同步增长（MAX由≈5×10⁴升至≈2×10⁵，AVG由10⁴升至≈2×10⁴）。
 
-- **Left panel** – Accuracy (y-axis, ~52–55%) vs. enforced minimum tool-call turns (x-axis, 6–12). Accuracy rises monotonically with more tool calls, justifying long-horizon training.
-- **Middle panel** – #Tool calls per trajectory vs. training step (0–200), tracking MIN/MAX/AVG. The MAX curve climbs to ~70 while AVG stays near 10, revealing a widening gap between long and short rollouts.
-- **Right panel** – #Generated tokens per trajectory (log scale, 10³–10⁵) vs. training step. MAX trajectories reach ~10⁵ tokens while MIN stays ~10³, a ~100× spread.
+2. **关键技术结论**：测试时强制更多回合显著提升准确率，验证了长程搜索的scaling有效性；训练中模型自发涌现出远超常规的长轨迹行为，突破了"ten-turn"限制。
 
-**Key takeaway:** Long-horizon agentic RL suffers from extreme runtime variance — the longest trajectories consume ~100× more tokens than the shortest, making synchronous batched training inefficient and motivating the asynchronous design introduced later.
-
-**Caption (verbatim):**
-
-"Figure 6: (Left) Test scaling of ASearcher-Web-QwQ. Data points are obtained by enforcing different minimum turns. The accuracy is averaged over GAIA, xBench-DeepSearch, and Frames. (Middle) Number of tool calls versus training steps. During training time, long trajectories require much more tool calls than short ones. (Right) Number of generated tokens versus training steps. The number of output tokens exhibits significant variance, with long trajectories exceeding short ones by up to two orders of magnitude."
+3. **论文中的作用**：以训练动力学（工具调用与token长度自然增长）+ 测试时scaling实证共同支撑"大规模异步RL可解锁长程agentic搜索"这一核心论点，衔接方法设计与下游性能收益。
 
 ### Figure 7 (p.10) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig07.png]]
@@ -162,21 +119,9 @@ Figure 6 is a three-panel empirical analysis of ASearcher-Web-QwQ supporting the
 > One-Step-off RL v.s. Fully Asynchronous RL. In batch generation systems, a batch should wait for the longest trajectory, leading to significant GPU idle time. In contrast, fully asynchronous RL achieves faster training than batch generation RL by fully decoupling training and trajectory generation, achieving near-full resource utilization for trajectory generation. example for batch generation RL 
 
 > [!tip] 技术解读（多模态）
-> ## Figure 7 Description
+> 【图文联合解读】**图文联合解读：**
 
-The figure compares two RL training paradigms for agentic LLM systems:
-
-**One-Step-Off RL (top):** Trajectories (Traj 1–12) execute in parallel with alternating LLM Gen and Tool calls. While training for step N overlaps with step N+1 generation, the batch is blocked by the slowest trajectory (Traj 7), producing a visible "Idle Time" gap before Train Step N+1 begins.
-
-**Fully Async RL (bottom):** All trajectories run independently with no synchronization barrier. Training steps (N, N+1, N+2) launch as soon as any sufficient batch is ready — Traj 7 can span multiple training versions while other trajectories continuously feed new batches.
-
-**Key Takeaway:** Fully decoupling trajectory rollout from model updates eliminates GPU idle time caused by long-running trajectories, yielding near-full resource utilization and faster training than batch-generation alternatives.
-
-*(120 words)*
-
-## Caption (verbatim)
-
-**Figure 7:** One-Step-off RL v.s. Fully Asynchronous RL. In batch generation systems, a batch should wait for the longest trajectory, leading to significant GPU idle time. In contrast, fully asynchronous RL achieves faster training than batch generation RL by fully decoupling training and trajectory generation, achieving near-full resource utilization for trajectory generation.
+图示横向对比两种RL训练流水线。**One-Step-Off RL**：轨迹1–12并行生成，但批次须等待最长轨迹（如横跨多步的Traj 7）才能启动Train Step N，期间已完成的Traj 8–12被迫"Idle Time"；训练步内mini-batch顺序为(1,2,3,4)→(6,5,8,7)，存在乱序与浪费。**Fully Async RL**：轨迹持续异步产出，训练步N/N+1/N+2以更短周期无缝触发，分别消费(1,2,3,4)、(5,6,8,9)、(10,7,11,13)，GPU近满载。该图论证：完全解耦训练与轨迹生成可消除长尾阻塞、显著加速训练，是论文支撑大规模长周期智能体搜索RL训练的核心基础设施依据。
 
 ### Figure 8 (p.14) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig08.png]]
@@ -185,15 +130,13 @@ The figure compares two RL training paradigms for agentic LLM systems:
 > Comparison of the performance of QwQ-32B agent before and after RL Training. training pipeline trains the agent to learn complex search strategies to perform precise searches, extract key information, and resolve conflict information.
 
 > [!tip] 技术解读（多模态）
-> **Main figure description**
+> 【图文联合解读】**图文联合解读：**
 
-Figure 8 contains two grouped bar charts comparing three variants of the QwQ-32B agent across three benchmarks (GAIA, xBench-DeepSearch, Frames). The left panel plots Avg@4 Score (%) and the right panel plots Pass@4 Score (%). Each benchmark group contains three bars: "Before RL" (tan), "ASearcher-v1 (ours)" (coral), and "ASearcher-v2 (ours)" (purple).
+该图以双柱状图（左 Avg@4、右 Pass@4）在 GAIA、xBench-DeepSearch、Frames 三大基准上对比 QwQ-32B 基座 RL 训练前后的表现。**具体数据**：Avg@4 三基准分别由 43.7/28.7/58.9 提升至 58.7/51.1/74.5（ASearcher-v2）；Pass@4 由 62.1/51.0/77.1 提升至 74.7/75.0/85.5，且 v1→v2 仍持续单调上升。
 
-**Data flow**: Base model → RL training (v1 then v2) → evaluation on three deep-research test suites via two scoring protocols.
+**关键论证**：原文借此佐证所提出的异步大规模 RL 训练流程，使 agent 习得复杂检索、关键信息抽取与冲突信息消解能力——尤其 xBench-DeepSearch 增幅最显著（Avg@4 +22.4、Pass@4 +24.0），说明 RL 对长程深度搜索类任务增益最大。
 
-**Key takeaway (≤120 words):** RL training delivers monotonic gains on every benchmark under both metrics. ASearcher-v2 uniformly dominates v1 and the un-tuned baseline. The largest absolute improvement appears on xBench-DeepSearch, where Avg@4 nearly doubles (28.7 → 42.1 → 51.1) and Pass@4 climbs from 51.0 to 75.0. On Frames the gains are smaller (already a strong baseline), suggesting RL helps most where the base agent struggles most. The Pass@4 gaps being larger than Avg@4 gaps indicates RL also improves the agent's consistency/reliability, not just peak performance.
-
-**Caption (verbatim):** Figure 8: Comparison of the performance of QwQ-32B agent before and after RL Training.
+**论文作用**：作为核心主结果图，量化证明方法在多基准上对开源基座 QwQ-32B 的稳定提升，支撑整体异步 RL 训练范式有效性的实验结论。
 
 ### Figure 9 (p.15) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig09.png]]
@@ -202,24 +145,11 @@ Figure 8 contains two grouped bar charts comparing three variants of the QwQ-32B
 > Training Dynamics of ASearcher-Local-7B.
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description
+> 【图文联合解读】图9展示ASearcher-Local-7B在约300个训练步内三项均值指标的变化曲线：(a) **生成Tokens**从~1000于~50步骤降至~150低谷，后回升至~900；(b) **搜索次数**由~1于~80步后稳步攀升至~5.5；(c) **URL直访**由~0.4于~50步内归零并长期维持近0。
 
-**Architecture/Components:** Two tri-panel figures (Fig. 9: ASearcher-Local-7B; Fig. 10: ASearcher-Local-14B), each containing three side-by-side line plots sharing the x-axis (Training Step: 0–300+ for 7B, 0–225 for 14B). Y-axes track per-trajectory metrics: (a) # Generated Tokens (up to 1000/800), (b) # Search Queries (0–6), and (c) # URL Accesses (0–0.4 / 0–2.5). Red curves denote averages over a gray grid.
+**技术结论**：训练初期模型快速抑制冗余URL直访并精简生成；随后轨迹逐步延长、检索轮次自然增加，验证"长程多轮检索行为由RL自主涌现"而非依赖设计。
 
-**Data flow:** Training step progresses → measured agent behavior (token output length, search-tool usage, web retrieval) evolves, revealing the learning trajectory.
-
-**Key Takeaway:** Both models exhibit emergent scaling — generated tokens and search-query counts grow over training (U-shaped for tokens: initial dip, then rise), indicating RL autonomously induces longer, more tool-intensive reasoning chains rather than requiring hand-engineered trajectories.
-
-## Caption Verbatim
-
-**Figure 9:** Figure 9: Training Dynamics of ASearcher-Local-7B.
-
-**Figure 10:** Figure 10: Training Dynamics of ASearcher-Local-14B.
-
-Subplot labels (verbatim):
-- (a) Generated Tokens
-- (b) Search Queries
-- (c) URL Accesses
+**论文作用**：作为ASearcher异步RL方法在长视野agentic搜索中有效性的一手演化证据，支撑全文关于模型自学深度检索、突破十轮瓶颈的核心论点。
 
 ### Figure 10 (p.15) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig10.png]]
@@ -228,24 +158,14 @@ Subplot labels (verbatim):
 > Training Dynamics of ASearcher-Local-14B. 15
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description
+> 【图文联合解读】**Figure 10 联合解读**
 
-**Architecture/Components:** Two tri-panel figures (Fig. 9: ASearcher-Local-7B; Fig. 10: ASearcher-Local-14B), each containing three side-by-side line plots sharing the x-axis (Training Step: 0–300+ for 7B, 0–225 for 14B). Y-axes track per-trajectory metrics: (a) # Generated Tokens (up to 1000/800), (b) # Search Queries (0–6), and (c) # URL Accesses (0–0.4 / 0–2.5). Red curves denote averages over a gray grid.
+Figure 10 展示 ASearcher-Local-14B 在约 220 训练步内三个行为指标演变：
+- (a) 单轨迹生成 token：由 ~400 降至 ~200（step 25），step 60 跃至峰值 ~720，后续于 500–650 震荡；
+- (b) 单轨迹搜索次数：由 ~1.5 在 step 35 后跃升，峰值 ~5.8（step 60），稳定于 4–5；
+- (c) 单轨迹 URL 访问：长期近 0，step 130 后跃升至 ~1.8–2.0 并维持。
 
-**Data flow:** Training step progresses → measured agent behavior (token output length, search-tool usage, web retrieval) evolves, revealing the learning trajectory.
-
-**Key Takeaway:** Both models exhibit emergent scaling — generated tokens and search-query counts grow over training (U-shaped for tokens: initial dip, then rise), indicating RL autonomously induces longer, more tool-intensive reasoning chains rather than requiring hand-engineered trajectories.
-
-## Caption Verbatim
-
-**Figure 9:** Figure 9: Training Dynamics of ASearcher-Local-7B.
-
-**Figure 10:** Figure 10: Training Dynamics of ASearcher-Local-14B.
-
-Subplot labels (verbatim):
-- (a) Generated Tokens
-- (b) Search Queries
-- (c) URL Accesses
+三图共同证明：随异步 RL 推进，模型自发涌现更长推理链、更频繁的多轮搜索与网页访问，验证方法有效激励长程智能体搜索行为。该图在论文中作为训练动态的关键实证，支撑"异步大规模 RL 可解锁超十轮搜索"的核心论点。
 
 ### Figure 11 (p.16) ⭐深度解读
 ![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-fig11.png]]
@@ -254,31 +174,54 @@ Subplot labels (verbatim):
 > Left: Word count of reflective keywords during training time. Right: Word count of keywords indicating explicit reference of external information. sophisticated prompt-based agents powered by Large Reasoning Models through offline RL [19], SFT on simulated trajectories with real-world web data [32, 17], and constructing challenging QAs for RL training. [34].
 
 > [!tip] 技术解读（多模态）
-> **Figure 11 Description (≤120 words):**
+> 【图文联合解读】**图11联合解读**
 
-Figure 11 contains two side-by-side line plots tracking keyword frequency per training trajectory across ~420 training steps. The **left panel** plots six reflective keywords (search, alternatively, wait, check, confirm, however) — "search" dominates, climbing sharply after step ~250 to ~8k occurrences/trajectory, with "alternatively" as the secondary rising signal. The **right panel** plots five explicit reference keywords (doc, mention, source, earlier, previous) — "doc" rises most steeply post-step 250 to ~2.5k, followed by "previous." Both plots share axes (Training Step × Word Count/Traj) and exhibit a synchronized inflection near step 250, indicating emergent behaviors.
+**核心数据**：左图展示训练step 0–400内6个反思关键词（search/alternatively/wait/check/confirm/however）的每轨迹词频，"search"峰值约8k+、"alternatively"约7k；右图展示5个外部信息显式引用词（doc/mention/source/earlier/previous）频次，"doc"峰值约2.5k、"previous"约1.5k。两组曲线在step ≈250后均出现陡升拐点并持续上行。
 
-**Key takeaway:** Reflective and external-reference behaviors co-emerge around training step 250, with "search" and "doc" usage growing most aggressively — suggesting RL training progressively induces more deliberate, source-grounded reasoning patterns.
+**关键结论**：随着RL训练推进，智能体自发地、显著地增加了反思性措辞与显式回溯外部文档的频率，证明"自我校验＋信息溯源"这一核心agentic行为模式是奖励驱动的涌现结果，而非依赖prompt工程或SFT的先验注入。
 
-**Caption (verbatim):**
+**整体作用**：作为行为层面（behavioral）的诊断证据，支撑论文主张——大规模异步RL能自然解锁长视野智能体搜索能力，反思-引用循环是性能增益的关键机制。
 
-Figure 11: Left: Word count of reflective keywords during training time. Right: Word count of keywords indicating explicit reference of external information.
-
-### Figure 12 (p.20) ⭐深度解读
+### Figure 12 (p.20)
 ![[assets/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-p20.png]]
 > [!quote] caption
 > A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) can identify the corrects articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, ASearcher-Web-QwQ, exhibits key behaviors featuring
 
-> [!tip] 技术解读（多模态）
-> **Figure Description:**
+## 表格（裁剪图 + caption，可直接插入报告）
 
-The diagram presents a three-column case study comparing agents on a complex multi-hop query about a "C1 genus named for Copenhagen" alvei species. Each column traces a parallel pipeline: **Question** (Q) → **Search operations** (focused search, hallucination, mis-key info, comparative analysis, cross-doc inference) → **Retrieved documents** (D) → **Reasoning thoughts** (T) → **Final Answer** (A). Left: Search-R1-32B fails with hallucinations (❌ "Goats"). Middle: Search-o1 (QwQ) fails due to missing info and unverified conclusions (❌ "Goats"). Right: ASearcher-Web-QwQ succeeds (✅ "Mice") by combining precise extraction, cross-document inference, and confirmation.
+### Table 2 (p.12) ⭐深度解读
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab02.png]]
+> [!quote] caption
+> Results with Local Knowledge Base.
 
-**Key Takeaway:** End-to-end RL training instills Search Intelligence behaviors—uncertainty-aware reasoning, precise extraction from noisy content, cross-document inference, and rigorous confirmation—that baseline RAG/agentic methods systematically lack.
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 2 解读：**
 
-**Caption (verbatim):**
+**1) 核心对象与数据**：表对比 Qwen-2.5/R1-Searcher/Search-R1/ASearcher 在 4 个 Multi-Hop（2WikiMQA、HotpotQA、Bamboogle、Musique）+ 3 个 Single-Hop（NQ、TriviaQA、PopQA）共 7 个 QA 基准上的 F1/LasJ，以 7B 与 14B/32B 两档报告。ASearcher-Local-7B 平均 F1=58.0、LasJ=61.0，为 7B 之最；尤其 2WikiMQA F1=72.3，较 R1-Searcher-7B（64.0）高 8.3 分；并以 7B 规模接近 Search-R1-32B 的 58.7。
 
-Figure 12: A case study on a complex query from GAIA. Search-R1-32B is unable to break down the complex question and has severe hallucinations. Search-o1 (QwQ) can identify the corrects articles through extensive tool calls, but easily misses key information and fails to verify wrong conclusions. Our end-to-end RL agent, **ASearcher-Web-QwQ**, exhibits key behaviors featuring Search Intelligence: *uncertainty-aware reasoning* (list and examine candidate answers), *precise extraction from noisy contents, cross-document inference,* and *rigorous confirmation*.
+**2) 关键结论**：论证 ASearcher 即使仅用本地检索（无网页浏览）仍能完成长程多跳搜索，能力来源于其异步 RL 训练的多轮 Agent 设计，而非依赖 web 工具或外部 LLM。
+
+**3) 整体作用**：与 Figure 2 互补——前者证明网页 Agent 范式，后者隔离检索变量，证明方法本身（而非工具）带来增益，强化"长程 Agentic 搜索"的论文核心论点。
+
+### Table 4 (p.13) ⭐深度解读
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab04.png]]
+> [!quote] caption
+> Results on GAIA, xBench-DeepSearch, and Frames. The results are evaluated with LLM- as-Judge. For baselines, we run the corresponding official codes for 4 seeds and report Avg@4 and Pass@4.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】表4在GAIA、xBench-DeepSearch、Frames三基准上对比ASearcher与Search-R1、DeepResearch、Simple DS、Search-o1等的Avg@4/Pass@4，按7B与14B/32B分组。7B组ASearcher-Local-7B以59.0/62.9最优；14B组ASearcher-Web-14B以61.5/64.5居首，Avg@4反超32B Search-o1（55.8/64.9）；Web变体亦全面优于DeepResearch-7B。作为论文核心主实验，证明异步RL使中小模型在长程搜索任务上达到甚至超越32B级基线，且兼容local与web检索，是方法有效性的关键证据。
+
+### Table 5 (p.14) ⭐深度解读
+![[assets/crops/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl-tab05.png]]
+> [!quote] caption
+> Pass@1 results of ASearcher-Web-QwQ-v2 and baselines, evaluated on GAIA [ 24 ], xBench- DeepSearch [ 41 ], Frames [ 14 ], and HLE-500 [ 19 ]. † indicates results are obtained from official reports.
+
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**表格内容**：对比 ASearcher-Web-QwQ-v2 与商业深度研究 agent、通用 LLM 在 GAIA、xBench-DeepSearch、Frames、HLE-500 四基准上的 Pass@1，分三组排列。
+
+**关键结论**：基础版 58.7/51.1/74.5/21.5 弱于 OpenAI-o3 (70.5/66.7/84.0) 与 Claude-4-Sonnet (68.3/64.6/80.7)；加入 K=16 测试时搜索后跃升至 71.8/75.0/83.4/24.6，xBench 显著超越 Kimi-Researcher (69.0) 与 OpenAI DR (26.6)，GAIA 超过 Claude-4 (68.3) 与 OpenAI DR (67.0)。
+
+**论文作用**：作为最终基准证据，证明异步 RL 训练 + 测试时搜索的组合可使开源 32B 模型与顶级闭源/商业深度研究 agent 正面抗衡，验证长程智能体搜索方案整体有效性。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

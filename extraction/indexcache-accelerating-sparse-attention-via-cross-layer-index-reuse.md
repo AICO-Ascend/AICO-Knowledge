@@ -30,24 +30,14 @@ tags: [sparse-attention, kv-cache]
 > Benchmark comparison between GLM-5 and GLM-5 + IndexCache. IndexCache removes 50% of indexer computations while maintaining comparable performance across both long-context and reasoning tasks, delivering ∼1.2× end-to-end speedup.ai. 1[cs.CL] 12 Mar 2026
 
 > [!tip] 技术解读（多模态）
-> # Figure 1 — Benchmark Comparison Chart (not an architecture diagram)
+> 【图文联合解读】**图文联合解读：**
 
-**Description:** Figure 1 is a grouped bar chart, not a system architecture. It compares two configurations across 10 benchmarks split into two categories:
+该图为条形对比图，横轴列出5个基准（HLE、HLE w/ tools、SciCode、AIME25、IFBench），蓝/灰双柱对照 GLM-5 与 GLM-5+IndexCache：得分几乎持平（30.4/30.4、50.4/50.3、45.0/47.0、95.9/95.9、71.0/70.0），SciCode 略升，验证"性能无损"。
 
-- **Series:** GLM-5 (light bars) vs. GLM-5 + IndexCache (1/2) (dark bars), labeled with a "1.2× E2E Speedup" tag in the legend.
-- **Long-Context group:** MRCR v2 (71.1/72.3), Graph Walks (92.7/90.8), LongBench v2 (64.5/66.0), RULER (97.7/97.3), AA-LCR (66.2/67.2).
-- **General & Reasoning group:** HLE (30.4/30.4), HLE w/ tools (50.4/50.3), SciCode (45.0/47.0), AIME25 (95.9/95.9), IFBench (71.0/70.0).
-- **Data flow (conceptual):** baseline GLM-5 evaluation vs. GLM-5 with cross-layer index reuse → scores per benchmark → side-by-side visual comparison.
-
-**Key takeaway:** Cutting the indexer workload in half (1 Full layer per 2 layers) yields ~1.2× end-to-end speedup with negligible accuracy loss across both retrieval-style and reasoning-style tasks.
-
-# Caption (verbatim)
-
-> Figure 1: Benchmark comparison between GLM-5 and GLM-5 + IndexCache. IndexCache removes 50% of indexer computations while maintaining comparable performance across both long-context and reasoning tasks, delivering ∼ 1.2× end-to-end speedup.
+原文借此论证：IndexCache 跨层复用 indexer，省去 50% 索引计算，端到端仍可获约 1.2× 加速，是支撑"稀疏注意力高效化"主张的关键实验锚点，位于论文开篇以快速建立方法的可信度与价值印象。
 
 ### Figure 2 (p.3) ⭐深度解读
-![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig02.png]]
-*整页渲染: ![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p03.png]]*
+![[assets/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-p03.png]]
 > [!quote] caption
 > Side-by-side comparison of inference loops. (a) Standard DSA runs the lightning indexer at every layer. (b) IndexCache adds a single conditional branch (red lines): F layers compute and cache fresh indices; S layers reuse the cached indices. Note that Tcache is a temporary buffer holding only the current index tensor; it is overwritten at each F layer and requires no additional GPU memory beyond w
 
@@ -61,15 +51,9 @@ tags: [sparse-attention, kv-cache]
 > Relative speedup of IndexCache over the DSA baseline across three inference settings on the 30B model. DSA baseline is normalized to 100%.
 
 > [!tip] 技术解读（多模态）
-> ## Figure 3 Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components:** The figure consists of three side-by-side grouped bar charts sharing the same x-axis (Context Length: 10K, 60K, 120K, 200K) and y-axis (Relative Speedup %, baseline = 100%). Each chart compares three configurations: DSA baseline (gray dotted), IndexCache with 1/2 indexer retention (blue), and IndexCache with 1/4 indexer retention (red). Subplot (a) measures prefill time, (b) per-request decode throughput, and (c) full-batch decode throughput.
-
-**Key Technical Takeaway:** IndexCache at 1/4 indexer retention delivers a substantial 185% speedup in prefill at 200K tokens, with the benefit scaling monotonically with context length — confirming that eliminating redundant indexer computations is increasingly valuable as sequences grow.
-
-## Caption (verbatim)
-
-Figure 3: Relative speedup of IndexCache over the DSA baseline across three inference settings on the 30B model. DSA baseline is normalized to 100%.
+图3以30B模型为对象，柱状图对比DSA基线与IndexCache在两种索引粒度（1/2 indexer、1/4 indexer）下的相对加速比。(a) Prefill阶段加速随上下文长度递增：10K时1/2与1/4索引器分别为121%/127%，200K时提升至142%/**182%**；(b) Decode阶段同样呈正相关，10K为115%/124%，60K达119%/更高值。原文借此论证：IndexCache通过跨层索引复用，在更长上下文与更稀疏的索引器配置下收益放大，证明其方法在prefill/decode全流程均稳定超越DSA基线，是论文"稀疏注意力高效加速"主张的核心定量证据。
 
 ### Figure 4 (p.16) ⭐深度解读
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig04.png]]
@@ -78,15 +62,13 @@ Figure 3: Relative speedup of IndexCache over the DSA baseline across three infe
 > Pairwise top-k index overlap ratio between all layer pairs of the 30B DSA model.
 
 > [!tip] 技术解读（多模态）
-> **Main figure description:**
+> 【图文联合解读】**图文联合解读：**
 
-The figure is a 47×47 heatmap visualizing the pairwise top-k index overlap ratio (|T⁽ⁱ⁾ ∩ T⁽ʲ⁾|/k, with k=2048) between every pair of transformer layers in a 30B DSA (DeepSeek Sparse Attention) model. Both axes span Layer 0–46, and the viridis colormap encodes overlap from 0.0 (dark purple) to 1.0 (yellow). A bright diagonal band (overlap ≈ 0.7–1.0) shows that adjacent layers select nearly identical top-k token sets. Distinct yellow clusters (e.g., layers 3–5, 6–8, 17–30, 31–36) reveal functional blocks of internally consistent token selection. Red rectangles overlay the greedily-searched 1/4 IndexCache sharing blocks along the diagonal. Off-diagonal corners (early vs. late layers) appear notably darker (overlap ≤ 0.4).
+1) 该图为30B DSA模型46层两两之间的top-k索引重叠率热力图（0–1.0）。对角线为1.0（黄色，自重叠），层间总体呈青绿色（约0.4–0.6）；红色方框按贪心搜索的1/4 IndexCache模式将约每4层划为一组，框内对角邻域明显更亮（≈0.7–1.0），表明相邻层共享索引比例显著更高。
 
-**Key technical takeaway:** Cross-layer top-k index overlap is highly clustered into contiguous blocks, empirically justifying the IndexCache strategy of sharing indexer computations across groups of consecutive layers.
+2) 论文借此论证：跨层存在显著的索引冗余，且冗余随层距增大而衰减；1/4分块共享模式恰对应高重叠区，从而验证IndexCache"跨层复用top-k索引"的设计可行性。
 
-**Caption verbatim:**
-
-Figure 4: Pairwise top-k index overlap ratio between all layer pairs of the 30B DSA model. Shared blocks according to the greedily-searched 1/4 IndexCache pattern are marked.
+3) 该图为方法链路的经验基石——先证冗余、再设计缓存复用策略，最终支撑稀疏注意力加速与质量保持之间的平衡。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -96,20 +78,13 @@ Figure 4: Pairwise top-k index overlap ratio between all layer pairs of the 30B 
 > End-to-end inference performance of the 30B DSA model with IndexCache at two retention ratios. Prefill time : seconds (lower is better). Decode per request : tokens/s under single concurrency (higher is better). Decode full : total tokens/s (higher is better). Decode throughput is reported per GPU.
 
 > [!tip] 表格解读（多模态）
-> **Figure description:**
+> 【图文联合解读】**Table 1 图文联合解读：**
 
-This is **Table 1**, not an architectural diagram. It presents a performance comparison matrix of the 30B DSA model (baseline) versus DSA + IndexCache at two retention ratios (1/2 and 1/4) across four context lengths (10K, 60K, 120K, 200K tokens).
+Table 1 展示 30B DSA 模型在 10K–200K 四种上下文长度下，IndexCache 以 1/2、1/4 两种保留率对三项端到端指标的影响：Prefill 时间（s）、单请求 Decode 吞吐（tok/s）、满 KV Decode 吞吐（tok/s）。
 
-**Components / structure:**
-- Three metric blocks: *Prefill time* (s, ↓), *Decode throughput per request* (tok/s, ↑), *Decode throughput, full KV cache* (tok/s, ↑)
-- Rows: DSA, + IndexCache (1/2), + IndexCache (1/4)
-- Columns: 10K, 60K, 120K, 200K context lengths
+**核心数据结论：** 在 1/4 保留率下，200K Prefill 由 19.5s 降至 10.7s（↓约 45%），单请求 Decode 由 58 升至 86 tok/s（+约 48%），满 KV Decode 由 197 升至 297 tok/s（+约 51%）。保留率越低、序列越长，加速度越大，且 Prefill 与 Decode 同步增益，1/4 全面优于 1/2。
 
-**Key takeaway:** Adding IndexCache (1/4) consistently improves all metrics, with the largest gains in full-KV-cache decode throughput — e.g., 297 vs 197 tok/s at 200K (~51% speedup), while also reducing prefill time at long contexts (10.7 s vs 19.5 s at 200K), demonstrating strong scalability.
-
-**Caption (verbatim):**
-
-"Table 1: End-to-end inference performance of the 30B DSA model with IndexCache at two retention ratios. **Prefill time**: seconds (lower is better). **Decode per request**: tokens/s under single concurrency (higher is better). **Decode full**: total tokens/s (higher is better). Decode throughput is reported per GPU."
+**论文作用：** 作为端到端实测证据，验证跨层索引复用可大幅削减索引计算开销并稳定提速，是支撑论文核心论点"~1.2× 端到端加速且精度无损"的关键定量依据。
 
 ### Table 2 (p.8) ⭐深度解读
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab02.png]]
@@ -117,17 +92,30 @@ This is **Table 1**, not an architectural diagram. It presents a performance com
 > Training-free IndexCache at 1/2, 1/4, and 1/8 indexer retention. ‘Long’ and ‘G&R’ aggregate benchmark scores. We compare uniform interleaving against searched patterns.
 
 > [!tip] 表格解读（多模态）
-> ## Description of Figure 3
+> 【图文联合解读】**Table 2 图文联合解读**
 
-**Architecture/Components:** The figure consists of three side-by-side grouped bar charts, each representing a distinct inference setting on a 30B model. The x-axis in every panel shows context length discretized into four values: 10K, 60K, 120K, and 200K tokens. The y-axis reports Relative Speedup (%), with the DSA baseline (gray dotted bars) anchored at 100% via a horizontal dashed reference line. Two method variants are compared against this baseline at every context length: a blue striped bar (a competing/auxiliary indexing strategy) and a red striped bar (IndexCache). Numeric labels sit atop each bar for precise readout.
+Table 2 对比 6 种配置（Original DSA + 1/2、1/4、1/8 三档索引器保留率 × 均匀间隔 Unif. / 搜索模式 Search）在 2 项聚合分数（Long、G&R）与 9 项基准（MRCR、GW、LB2、RULER、LCR、AIME、GPQA、LCB、IFB）上的得分。关键数据：Long 均分由 Original 50.2，随均匀间隔降至 47.4 / 43.0 / 35.3，崩塌明显；改用 Search pattern 后回升至 50.3 / 49.9 / 46.1，且 1/4+Search 在 G&R（74.9 vs 74.6）与 MRCR（25.1 vs 24.5）反超原 DSA。
 
-**Data flow:** As context length increases left-to-right within each panel, both striped bars rise monotonically, but the red (IndexCache) bar grows faster than the blue one, widening the gap with the baseline.
+原文借此论证：均匀跨层复用难以承受保留率下降，**搜索非均匀 F/S 配比**可在训练-free 条件下以 1/2 乃至 1/4 的索引器算力恢复 DSA 质量。该表是 IndexCache "低开销保精度" 主张的核心实证，承接 Fig.2 的 F/S 层条件分支缓存架构，为后续训练版对比与端到端加速评估奠定基线。
 
-**Key technical takeaway:** IndexCache's speedup scales super-linearly with context length, climbing from ~123–127% at 10K to ~148–151% at 200K across settings, demonstrating that its sparse-indexing advantage compounds as KV cache pressure mounts.
+### Table 3 (p.9) ⭐深度解读
+![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab03.png]]
+> [!quote] caption
+> Training-aware IndexCache at 1/2 and 1/4 indexer retention with uniform inter- leaving. w/ searched pattern : the greedy-searched pattern replaces uniform interleaving. w/o cross-layer loss : each indexer is distilled only against its own layer.
 
-## Caption (verbatim)
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 3 图文联合解读**
 
-**Figure 3:** Relative speedup of IndexCache over the DSA baseline across three inference settings on the 30B model. DSA baseline is normalized to 100%.
+**1）核心内容与量化数据：**
+该表对比了 Original DSA 与 1/2、1/4 索引器保留率下多种 IndexCache 变体在 Long-Context（MRCR、GW、LB2、RULER、LCR）与 General & Reasoning（AIME、GPQA、LCB、IFB）共 9 个基准上的平均得分。1/2 Unif. IndexCache 在 Long 平均上以 **51.6**（DSA 为 51.0）实现反超，G&R 平均 **74.5** 持平 DSA 的 74.2；1/4 Unif. IndexCache 仍保持 50.6/74.1。
+
+**2）关键技术结论：**
+- **w/o cross-layer loss** 时 Long 平均骤降至 **49.8**（MRCR 从 23.8→24.6、LCR 从 49.8→44.0），证明跨层蒸馏损失是性能核心；
+- **w/ searched pattern** 在 RULER/AIME 局部更优（87.5/89.6）但 Long 整体降至 50.6，说明贪心搜索并不优于均匀交错；
+- 1/2 配置即可无损替代 DSA，1/4 仍维持可比性能，验证高压缩可行性。
+
+**3）整体方法链作用：**
+作为消融表，Table 3 量化验证 IndexCache 三大设计——跨层索引复用、均匀交错模式、训练感知蒸馏——各自贡献，并与 Figure 3 的速度提升互补，共同支撑"以极低开销无损加速 DSA"的结论。
 
 ### Table 4 (p.10) ⭐深度解读
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab04.png]]
@@ -135,15 +123,15 @@ This is **Table 1**, not an architectural diagram. It presents a performance com
 > Preliminary results on GLM-5 (744B) with training-free IndexCache.
 
 > [!tip] 表格解读（多模态）
-> **Description**
+> 【图文联合解读】**Table 4 联合解读：**
 
-The table benchmarks **training-free IndexCache** strategies on the 744B-parameter **GLM-5** model across six long-context evals (Long Avg, MRCR v2, GraphWalks, LongBench v2, RULER, AA-LCR). Components compared: (1) **Original DSA** baseline, (2) **1/2 Uniform IndexCache**, (3) +**Searched pattern**, (4) **1/4 Uniform IndexCache**, (5) +**Searched pattern**. The "data flow" is purely offline cache-pattern selection feeding live decoding. At 1/2 sparsity, uniform indexing nearly matches DSA (78.1 vs 78.4) and gains with searched pattern (78.7); at 1/4, uniform drops sharply to 72.7 while searched recovery restores 78.0 — and notably beats DSA on AA-LCR (67.6 vs 66.2).
+该表给出 GLM-5 (744B) 上无训练 IndexCache 的初步结果，对比 Original DSA 与 1/2、1/4 均匀及"搜索模式"在 Long Avg、MRCR v2、GraphWalks、LongBench v2、RULER、AA-LCR 六项指标上的表现。
 
-**Key takeaway:** Searched index patterns rescue aggressive training-free sparsity (1/4), recovering ≈5.3 pts over uniform selection to match or exceed the original DSA.
+关键数据：1/2 均匀 + 搜索模式 Long Avg 达 78.7，与原 DSA 的 78.4 基本持平；1/4 均匀单独使用降至 72.7，性能明显下滑，但 1/4 + 搜索模式回升至 78.0，几乎无损；AA-LCR 上 1/4 + 搜索模式甚至以 67.6 超过原 DSA 的 66.2。
 
-**Caption (verbatim):**
+技术结论：在激进稀疏比 (1/4) 下，仅均匀索引复用会损失精度，而结合层间 pattern 搜索仍可维持甚至超越原 DSA 性能，证实 IndexCache 跨层复用思路在大规模模型上的可扩展性。
 
-> Table 4: Preliminary results on GLM-5 (744B) with training-free IndexCache.
+论文作用：作为将方法从 30B 模型外推到 744B 的可行性证据，支撑训练-free 部署的实用价值主张。
 
 ### Table 5 (p.18) ⭐深度解读
 ![[assets/crops/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-tab05.png]]
@@ -151,20 +139,13 @@ The table benchmarks **training-free IndexCache** strategies on the 744B-paramet
 > Evaluation results of training-free similarity-based searched pattern.
 
 > [!tip] 表格解读（多模态）
-> **Figure Description (Table 5):**
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components:** A 4-column evaluation table (Avg, MRCR v2, GraphWalks, RULER benchmarks) comparing two attention/cache configurations against a baseline.
+**1) 核心对象与数据：** 表5对比三种配置在四个基准上的表现（Avg/MRCR v2/GraphWalks/RULER）：Original DSA 为 54.0/24.5/49.6/87.9；采用 1/2 Uniform IndexCache 后下降至 50.7/22.0/46.6/83.6；再叠加 "+Searched pattern"（基于相似度搜索的模式）后分别为 49.8/22.9/43.5/82.9。
 
-**Data Flow / Rows:**
-- **Original DSA**: 54.0 / 24.5 / 49.6 / 87.9 (best across all metrics)
-- **1/2 Unif. IndexCache** (highlighted gray): 50.7 / 22.0 / 46.6 / 83.6
-- **+Searched pattern** (with similarity-based searched attention pattern): 49.8 / 22.9 / 43.5 / 82.9
+**2) 关键结论：** 引入基于相似度的训练免搜索模式后，平均分仅从 50.7 微降至 49.8（−0.9），且 MRCR v2 反而回升（22.0→22.9），其余两项小幅下降。说明在压缩一半索引缓存的情形下，用相似性搜索得到的稀疏模式能以极小的精度代价（≈4 Avg 分 vs Original DSA）缓解均匀采样带来的性能损失。
 
-**Key Technical Takeaway:** The searched pattern fails to recover the performance lost from halving the IndexCache—the similarity-based pattern slightly *helps* on MRCR v2 (+0.9) but *hurts* on GraphWalks and most other metrics, leaving an average gap of ~4 points versus the original DSA.
-
-**Caption (verbatim):** "Table 5: Evaluation results of training-free *similarity-based* searched pattern."
-
-(Additional surrounding text: "being an F layer. The transition considers all possible previous F layers:")
+**3) 在论文中的作用：** 该表是"无需训练即可恢复稀疏注意力质量"的支撑实验，验证 IndexCache 的搜索模块作为即插即用模块的实用价值，强化了全文"跨层索引复用＋轻量搜索"的核心技术叙事。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

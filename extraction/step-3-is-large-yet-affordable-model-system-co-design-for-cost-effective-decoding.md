@@ -30,16 +30,9 @@ tags: []
 > The Pareto frontier of recent models regarding acti- vated parameters and decoding costs. The darker area is GQA models’ Pareto frontier. Note: Step-3 also has the highest attention effective rank [7], the same as DSv3 and doubling some other models like Qwen3 MoE 235B and Kimi K2. expensive per token (because of low MFU) compared with training and prefill. 2) For reasoning models, longer thinking
 
 > [!tip] 技术解读（多模态）
-> # Figure 1 Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components/Data Flow:**
-Figure 1 is a 2D scatter plot presenting a Pareto frontier analysis of recent LLMs. The **x-axis** shows theoretical decoding cost (USD) at 8K context (range: 0.05–0.10), while the **y-axis** shows activated parameters (range: ~10–50B). Each point represents a model — Step-3 (highlighted as a red star at ~0.055 USD, ~38B params), Pangu Pro, Qwen3 MoE, Llama 4 Maverick, Kimi K2, DSv3, Qwen3 32B, ERNIE4.5, and MM M1. A shaded gray region denotes the GQA-based Pareto frontier. Dashed lines connect competing models. Step-3 sits leftmost, indicating the lowest decoding cost at comparable activated-parameter scale.
-
-**Key Technical Takeaway (≤120 words):**
-Step-3 achieves the lowest theoretical decoding cost among recent LLMs at 8K context despite activating ~38B parameters (more than DeepSeek-V3 and Qwen3 MoE 235B). This cost advantage stems from hardware-aware model-system co-design: Multi-Matrix Factorization Attention (MFA) cuts KV-cache size and computation while preserving attention expressiveness, and Attention-FFN Disaggregation (AFD) decouples attention/FFN into specialized subsystems. The result is a new Pareto frontier — Step-3 also matches DSv3 in attention effective rank, doubling Qwen3 MoE 235B and Kimi K2.
-
-**Caption (verbatim):**
-Figure 1: The Pareto frontier of recent models regarding activated parameters and decoding costs. The darker area is GQA models' Pareto frontier. Note: Step-3 also has the highest attention effective rank [7], the same as DSv3 and doubling some other models like Qwen3 MoE 235B and Kimi K2.
+图1为二维散点图，横轴为8K上下文下的理论解码成本（0.05–0.10 USD），纵轴为激活参数量（0–50B）。Step-3以红星标于约(0.056 USD, 38B)，处于同激活参数规模下解码成本最低的位置；DSv3约(0.069, 37B)、Kimi K2约(0.066, 32B)均在其右上方，灰色阴影区域为GQA模型的Pareto前沿。原文借此论证：解码阶段因MFU低、推理模型thinking长，导致每token成本居高，Step-3通过系统协同设计打破了"高激活参数⇔高成本"的传统权衡，实现"大而省"。该图作为全文动机图，将"高激活参数×低解码成本"确立为Step-3的核心设计目标，为后续架构与推理系统共设计奠定论证基础。
 
 ### Figure 2 (p.6) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig02.png]]
@@ -48,15 +41,11 @@ Figure 1: The Pareto frontier of recent models regarding activated parameters an
 > With all the results shown, we make the following observations:
 
 > [!tip] 技术解读（多模态）
-> **Figure description**
+> 【图文联合解读】**图文联合解读：**
 
-The figure consists of two side-by-side grouped bar charts comparing *theoretical decoding cost* (y-axis) across five deployment hardware setups — H800, H20, A800, 910B, and AFD (x-axis) — for four models differentiated by color/hatch: DSv3 (blue, diagonal), Qwen3 MoE (green, diagonal), Qwen3 32B (red, horizontal), and Step-3 (cyan, solid). The left panel reports cost at 8K context, the right at 32K context; y-axis scales differ accordingly (≈0–0.20 vs ≈0–0.75). Each cluster contains four bars, one per model, allowing direct cross-model comparison per hardware.
+图2以双柱状图对比Step-3、DSv3、Qwen3 MoE、Qwen3 32B在H800、H20、A800、910B、AFD五种部署方案下的**每百万token理论解码成本**，分别对应8K（左）与32K（右）上下文。8K下Step-3成本约0.055–0.080，32K下AFD方案降至约0.13，**均显著低于Qwen3 32B（8K约0.083–0.197，32K约0.28–0.73）和DSv3**；AFD部署通过为Attention与FFN分别选用最优硬件，使各模型成本降至最低。
 
-**Key takeaway**
-Step-3 achieves the lowest decoding cost across every hardware setup at both context lengths, with AFD consistently being the most cost-efficient deployment — demonstrating favorable efficiency–performance trade-offs for MoE inference.
-
-**Caption (transcribed verbatim)**
-"number of activated parameters: DSv3 37B, Qwen3 MoE 22B, Qwen3 32B, MM M1 46B, ERNIE 4.5 47B, Pangu Pro MoE 16.5B and Step-3 38B."
+该图直接支撑论文核心论点——Step-3虽**激活参数最多（38B）**，但凭借模型-系统协同设计（AFD等），解码成本反而最低，验证了"大而经济"的设计主张，是论文方法链路中**实验验证**的关键证据。
 
 ### Figure 3 (p.6) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig03.png]]
@@ -65,19 +54,13 @@ Step-3 achieves the lowest decoding cost across every hardware setup at both con
 > Second, the time spent on each layer will be largely unbal- anced – when running with long context, the full GQA layers consume much more time than the linear attention layers. This may not be a problem for single-node inference deployment, 6
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description (≤120 words)
+> 【图文联合解读】**图3 图文联合解读**
 
-**Layout:** Two side-by-side line plots share the x-axis "Context length (K tokens)" with tick values 8, 32, 128.
+1. **核心对象与数据**：左图对比三种混合线性注意力模型在8K/32K/128K上下文下的KV cache大小（GB），Step-3从~0.3 GB线性增长至~4.1 GB，而Llama 4 M与MM M1在128K时分别达~7.2 GB与~6.0 GB。右图为H800上单token解码理论成本（USD），Step-3在128K时仅~0.70 USD，约为Llama 4 M（~1.13）的62%、MM M1（~1.02）的69%。
 
-**Left panel — KV cache size (GB):** Three curves (Llama 4 M blue dashed, MM M1 orange dashed, Step-3 green solid) rise roughly linearly. Step-3 consistently sits lowest (~0.4 → ~4.1 GB), MM M1 is mid (~1.0 → ~5.9 GB), and Llama 4 M is highest (~1.0 → ~7.1 GB).
+2. **关键结论**：Step-3凭借更激进的线性注意力层比例与更小的KV预算，在长上下文场景下KV占用与解码成本均显著低于MiniMax M1和Llama 4 Maverick，与Table 3（32K下每token算访开销）相互印证。
 
-**Right panel — Theoretical cost on H800 (USD):** Same three series, same ordering. Step-3 ranges ~$0.06–$0.70, MM M1 ~$0.18–$1.02, Llama 4 M ~$0.18–$1.10.
-
-**Key takeaway:** Step-3 cuts KV-cache memory by ~40–45% versus Llama 4 M at long contexts, translating directly to lower H800 inference cost with the gap widening as context grows.
-
-## Caption (verbatim)
-
-*No caption text is present in the supplied image — only panel-axis titles and legends are visible.*
+4. **论文作用**：作为"大而便宜"核心论点（affordable）的关键成本证据，量化支撑模型–系统协同设计在解码侧的经济性收益。
 
 ### Figure 4 (p.8) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig04.png]]
@@ -86,7 +69,13 @@ Step-3 achieves the lowest decoding cost across every hardware setup at both con
 > Step-3 and Pangu Pro MoE have very different trends of decoding cost and training cost.
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】Step-3 attention 设计对比(Fig.5)：Decode 计算 vs 内存访问(8K→32K ctx)，对比 DSv3 MLA / Qwen3-MoE GQA / Step-3 MFA，叠 H800/910B/A800/H20 roofline。DSv3 MLA 算术强度512=H800 compute-bound；Qwen3 GQA 强度32=H20 memory-bound；Step-3 MFA 强度128≈910B(175)/A800(156) ridge 点→计算仅 DSv3 1/4、访存仅 Qwen3 1/3，跨硬件都省。⭐直击 910B roofline，与昇腾相关。
+> 【图文联合解读】**图4解读**
+
+**① 核心对象与数据**：横轴为910B加速器上的三种场景，纵轴为单token成本（USD）。Pangu MoE（红色斜线）三场景依次为0.114 / 0.395 / 0.076 USD；Step-3（青色实心）依次为0.078 / 0.168 / 0.213 USD。
+
+**② 关键结论**：两条曲线趋势完全相反——Step-3在解码场景全面更便宜（8K省约32%，32K省约57%），但训练反而贵约2.8倍；序列越长，Step-3的解码成本优势越显著。说明Step-3把成本预算从训练侧前移到解码侧。
+
+**③ 论文作用**：以Pangu MoE为对照基线，定量验证Step-3"模型-系统协同设计"的核心理念——牺牲训练经济性以换取大规模MoE在长上下文解码时的可负担性，从而支撑全文"large yet affordable"的论证主线。
 
 ### Figure 5 (p.8) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig05.png]]
@@ -95,7 +84,14 @@ Step-3 achieves the lowest decoding cost across every hardware setup at both con
 > The compute and memory access of different atten- tion designs during decoding, including DSv3’s MLA, Qwen3
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】Step-3 attention 设计对比(Fig.5)：Decode 计算 vs 内存访问(8K→32K ctx)，对比 DSv3 MLA / Qwen3-MoE GQA / Step-3 MFA，叠 H800/910B/A800/H20 roofline。DSv3 MLA 算术强度512=H800 compute-bound；Qwen3 GQA 强度32=H20 memory-bound；Step-3 MFA 强度128≈910B(175)/A800(156) ridge 点→计算仅 DSv3 1/4、访存仅 Qwen3 1/3，跨硬件都省。⭐直击 910B roofline，与昇腾相关。
+> 【图文联合解读】**图5联合解读**
+
+图示三种注意力设计在8K→32K解码下的算术强度轨迹，并叠绘H800/910B/A800/H20四类硬件roofline：
+- **DSv3-MLA**：强度≈512（~1.1 GB / 590 GFLOPs），沿H800 ridge，**计算主导**；
+- **Qwen3-GQA**：强度≈32（~3.1 GB / 100 GFLOPs），贴近H20，**访存主导**；
+- **Step-3-MFA**（红星）：强度≈128（~1.0 GB / 130 GFLOPs），**精准落在910B(≈175)与A800(≈156) roofline的ridge交汇点**。
+
+论文以此量化论证"硬件-算法协同"的核心结论：MFA相较DSv3 MLA**计算量降至约1/4**，相较Qwen3 GQA**访存量降至约1/3**，且在910B/昇腾等国产硬件上同样命中sweet spot。该图是Step-3"低成本大模型"系统级设计主张的**关键定量证据**，支撑全文硬件无关可部署的论证。
 
 ### Figure 6 (p.11) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig06.png]]
@@ -104,23 +100,13 @@ Step-3 achieves the lowest decoding cost across every hardware setup at both con
 > Module disaggregation in AFD architecture. FFN can be deployed in TP-only, EP-only, or a hybrid TP+EP way, depending on hardware and model architecture. start to be concerned about other issues like expert imbalance, stability, etc.
 
 > [!tip] 技术解读（多模态）
-> ## Figure 6 Description
+> 【图文联合解读】**图文联合解读（Figure 6）**
 
-**Architecture & Components:**
-The diagram shows AFD's two physically separable instances separated by a dashed line:
+**1) 图示结构（量化）**：左路Attention模块（Norm→Attn→Norm+残差）本地计算；中路由Norm→Router→Expert Combine本地完成，右路由TP gather/EP scatter→Expert Compute→TP scatter/EP gather置于远端专家池。隐藏状态以fp8经中间虚线跨域传输，回传bf16；Router下发expert distribution，Expert Combine回传TopK score。
 
-- **Attention Instance** (left): A residual block with Norm → Attn → Norm, processing the hidden state and outputting to the next layer.
-- **FFN Instance** (right): A MoE pipeline of Norm → Router → Expert Compute → Expert Combine, with an auxiliary Topk-score branch feeding the combiner.
+**2) 关键技术结论**：FFN模块可依硬件与模型结构，自适应选择TP-only、EP-only或TP+EP混合并行部署，体现模块解耦的灵活性。
 
-**Data Flow:**
-Attention output flows rightward into FFN via **TP gather / EP scatter (fp8)**. The Router produces an expert distribution; experts compute, and results return leftward via **TP scatter / EP gather (bf16)** before a residual add (⊕) and forwarding back to the attention pipeline.
-
-**Key Takeaway:**
-AFD's flexibility allows FFN to be deployed as TP-only, EP-only, or hybrid TP+EP, letting system designers tune parallelism to hardware constraints and model topology independently from the attention servers.
-
-## Caption (verbatim)
-
-> Figure 6: Module disaggregation in AFD architecture. FFN can be deployed in TP-only, EP-only, or a hybrid TP+EP way, depending on hardware and model architecture.
+**3) 论文作用**：作为Step-3模型-系统协同设计中AFD（Attention/FFN Disaggregation）架构的核心示意图，奠定"注意力本地低延迟+专家远端弹性扩展"的设计思想，是后续讨论专家均衡、稳定性及整体成本-性能权衡的方法基础。
 
 ### Figure 7 (p.12) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig07.png]]
@@ -129,20 +115,16 @@ AFD's flexibility allows FFN to be deployed as TP-only, EP-only, or hybrid TP+EP
 > Communication topology and the multi-stages pipeline of the AFD architecture.
 
 > [!tip] 技术解读（多模态）
-> **1) 主要架构/组件/数据流描述**
+> 【图文联合解读】**图文联合解读：**
 
-图示展示了 **AFD（Attention-FFN 分离）架构** 的通信拓扑与多阶段流水线：
-- **Attention 实例**（下方）和 **FFN 实例**（上方）通过 **Direct RDMA** 直连，每侧各包含多块 GPU（G）。
-- 数据流沿时间轴分为 **Layer0 / Layer1** 两个阶段，三个样本 **D1, D2, D3** 依次经 Attn→A→F（fp8）送至 FFN，FFN 计算后经 **F→A（bf16）** 回传残差，再进入下一层 Attn。
-- 三条独立通道并行：**Attn** 计算、**A→F（fp8）前向广播**、**F→A（bf16）反向回传**，互不抢占带宽。
+**1) 核心对象与结构**
+左侧展示通信拓扑：8卡FFN实例与8卡Attention实例通过**Direct RDMA**实现1对1直连（GPU数量相等、无中间路由）。右侧为时间轴上的多阶段流水线：Layer0/Layer1各承载3个批次（D1–D3与D1'–D3'），FFN（顶行）与Attention（底行）交替执行；两者间存在两条非对称传输——FFN→Attention 采用 **bf16**（黄块1/2/3、1'/2'/3'），Attention→FFN 采用 **fp8**（棕色块）。
 
-**2) 关键技术要点**
+**2) 关键论证结论**
+图文共同证明AFD架构通过：(a) 解耦Attention/FFN并直连以消除PCIe/NCCL瓶颈；(b) **非对称精度传输**（前向高保真、反向压缩）平衡精度与带宽；(c) 批次×层级二维流水，使通信与计算深度重叠，掩盖访存延迟。
 
-**混合精度通信 + 多阶段流水线重叠**：Attention→FFN 方向采用 **FP8 量化**以节省带宽，FFN→Attention 方向保留 **BF16** 以保护残差精度；通过让 **A→F 与 F→A 两条独立路径并发**（不抢带宽），结合各阶段近似的计算耗时，使通信完全被计算掩盖，实现 **低延迟下的高吞吐** 流水（同一层可连续接收 D1', D2', D3'）。**
-
-**3) 图 caption 逐字转录**
-
-**Figure 7: Communication topology and the multi-stages pipeline of the AFD architecture.**
+**3) 在论文中的作用**
+该图是AFD系统设计的核心机制图，作为前文MoE解码算力–带宽失衡问题与后续系统级硬件协同（cost-effective decoding）论证之间的桥梁，奠定"模型–系统协同"立论基础。
 
 ### Figure 8 (p.13) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig08.png]]
@@ -151,19 +133,13 @@ AFD's flexibility allows FFN to be deployed as TP-only, EP-only, or hybrid TP+EP
 > StepMesh communication workflow tailored for AFD.
 
 > [!tip] 技术解读（多模态）
-> **Main Figure Description (Figure 8):**
+> 【图文联合解读】**图联合解读：**
 
-The figure depicts the StepMesh communication workflow tailored for AFD, showing two symmetric GPU sides (left/right) exchanging data. Each side contains:
-- A core computation block labeled "1"## with three sub-stages: Prev Layer (=#"–!!#-:!;), Current Layer (=#"/#%7!:), and Next Layer (3+*$!:)
-- A data transformation pipeline (¼'#$&(6 → ¼#$& → -+".'$(&)) feeding into the next layer
-- **Activation Tensors** (green) and **Token Tensors** (green) attached as named memory regions
-- A bottom tensor-allocation bus (234%!1,!) registered via unique tensor keys
+**核心对象与结构：** 图示StepMesh为AFD设计的双实例流水线。左侧Attention实例含CPU三线程（NetRecv Thread经RDMA PollCQ收张量、Main Thread执行Wait→Launch Attention→PushPull、NetSend Thread做Kernel Sync与RDMA PostSend）与GPU（Attention Kernel将Activation Tensors转为Token Tensors）；右侧FFN实例结构对称（GPU跑FFN Kernel反向产出Activation Tensors），两实例经底部RDMA NIC交叉互连。
 
-Arrows show: Prev Layer activations → slice into token tensors → register/slice → send via token tensors → receive on remote side → feed into Current Layer computation.
+**关键结论：** 通过Recv/Send/Main三线程并行，Main Thread Wait与Launch Kernel期间网络收发被Kernel Sync完全隐藏，实现通信-计算全重叠；Token与Activation张量在Attention↔FFN间直接RDMA交换，无中心调度。
 
-**Key Technical Takeaway:** StepMesh registers tensors by unique keys and enables direct in-place slicing from contiguous GPU memory, eliminating the concatenation/copying overhead required for distributed inference.
-
-**Caption (verbatim):** Figure 8: StepMesh communication workflow tailored for AFD.
+**论文作用：** 该图为AFD（Attention-FFN解耦）提供系统级实现证据，支撑论文"大模型廉价协同解码"的整体论点——异构低成本节点按Attention/FFN分工组网即可承担超大模型推理。
 
 ### Figure 9 (p.13) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig09.png]]
@@ -172,37 +148,20 @@ Arrows show: Prev Layer activations → slice into token tensors → register/sl
 > StepMesh framework for multiple accelerators. AF-
 
 > [!tip] 技术解读（多模态）
-> **Main Figure Description (Figure 8):**
+> 【图文联合解读】## Figure 9 图文联合解读
 
-The figure depicts the StepMesh communication workflow tailored for AFD, showing two symmetric GPU sides (left/right) exchanging data. Each side contains:
-- A core computation block labeled "1"## with three sub-stages: Prev Layer (=#"–!!#-:!;), Current Layer (=#"/#%7!:), and Next Layer (3+*$!:)
-- A data transformation pipeline (¼'#$&(6 → ¼#$& → -+".'$(&)) feeding into the next layer
-- **Activation Tensors** (green) and **Token Tensors** (green) attached as named memory regions
-- A bottom tensor-allocation bus (234%!1,!) registered via unique tensor keys
+**1) 核心结构（三层架构）：**
+- **顶层 API 层**：左侧 AFTensorWorker API 封装 `Wait`、`PushPull`（供 attention 实例）；右侧 AFTensorServer API 封装 `GetBatch`、`Respond`（供 FFN 实例）。
+- **中间核心层**：StepMesh Core，含 NetSend/NetRecv 线程，负责跨设备张量传输调度。
+- **底层后端层**：分两条路径——Network API（RDMATransport → RDMA NIC）与 Accelerator API（CPUBackend / GPUBackend / xPUBackend → CPU / GPU / xPU 设备）。
 
-Arrows show: Prev Layer activations → slice into token tensors → register/slice → send via token tensors → receive on remote side → feed into Current Layer computation.
+**2) 关键结论：**
+该图论证 StepMesh 将张量通信逻辑与底层硬件解耦，通过 Attention-FFN 解耦后两套对偶 API（PushPull 与 GetBatch/Respond）实现异构多加速器（CPU/GPU/xPU）间的 RDMA 高效协同。
 
-**Key Technical Takeaway:** StepMesh registers tensors by unique keys and enables direct in-place slicing from contiguous GPU memory, eliminating the concatenation/copying overhead required for distributed inference.
-
-**Caption (verbatim):** Figure 8: StepMesh communication workflow tailored for AFD.
+**3) 论文链路作用：**
+作为"模型–系统协同设计"中的**系统栈组件**，StepMesh 与 MFA 注意力、MoE 路由等算法级创新配套，支撑论文"大规模但低成本解码"的核心主张。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
-
-### Table 1 (p.3) ⭐深度解读
-![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab01.png]]
-> [!quote] caption
-> Model card for Step-3.
-
-> [!tip] 表格解读（多模态）
-> **Note:** The provided image contains only textual content (Section 3 of the paper) with a table caption — the actual contents of Table 1 (the model card itself) are not visible in the supplied image. I therefore cannot describe concrete architecture/components/data flow from the figure itself. Below is a faithful description drawn strictly from the surrounding visible text, followed by the verbatim caption.
-
-**Description (based on visible text, not figure content):**
-The page introduces Step-3 as one of the first production-quality LLM serving systems exploiting **Attention-FFN Disaggregation (AFD)** for high-throughput decoding under strict SLOs. The rationale: attention layers are smaller in parameters but memory-intensive due to the per-token KV-cache, whereas FFN layers (especially in MoE) carry the bulk of parameters but store no intermediate state. Existing monolithic serving systems ignore these asymmetries, causing suboptimal GPU utilization.
-
-**Key technical takeaway:** Disaggregating attention from FFN exploits each component's distinct hardware affinity — memory-bound attention vs. compute-bound FFN — enabling both components to operate under ideal conditions and achieve high MFU.
-
-**Verbatim caption transcription:**
-> Table 1: Model card for Step-3.
 
 ### Table 2 (p.5) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab02.png]]
@@ -210,23 +169,9 @@ The page introduces Step-3 as one of the first production-quality LLM serving sy
 > Theoretical computation and memory access per decoding token at 8K context length.
 
 > [!tip] 表格解读（多模态）
-> ## Description
+> 【图文联合解读】Table 2 量化对比9个模型在8K上下文下的每token解码开销：Step-3的KV/State访存仅2.56×10⁸ bytes，与DSv3/Kimi K2并列最低，约为Qwen3 32B（1.07×10⁹）的1/4；Attention FLOPs（不含Linear）为3.27×10¹⁰，远低于DSv3的1.47×10¹¹；Attention前后Linear为2.07×10¹⁰；FFN计算5.33×10¹⁰，介于ERNIE 4.5（7.61×10¹⁰）与Llama 4 M（2.42×10¹⁰）之间。
 
-The figure is **Table 2**, a quantitative comparison matrix that profiles the per-decoding-token cost breakdown across transformer architectures at an 8K context length. It is organized as a four-metric × multi-model grid:
-
-**Columns (cost dimensions):**
-1. **KV/State Memory Access** — bytes touched in cache (memory bandwidth bottleneck).
-2. **Attention FLOPs (w/o Linear)** — core QKᵀ·V dot-product compute.
-3. **Linear layers before/after Attention** — projection compute (Q, K, V, output).
-4. **FFN FLOPs** — feed-forward network compute.
-
-**Data flow / reading direction:** Each row is one candidate model, and each cell exposes where cycles and bytes are spent during *decode* (the memory-bound, single-token regime) — letting the reader trade off state size against attention compute, then both against FFN.
-
-**Key takeaway:** During decode, **FFN compute (~2 × d_model · d_ff per token, per layer) dwarfs both attention compute and KV-cache memory bandwidth**, so the FFN column is the dominant cost driver and the most fruitful target for optimizations.
-
-## Caption (verbatim)
-
-*Table 2: Theoretical computation and memory access per decoding token at 8K context length.*
+该表支撑论文"模型-系统协同设计"的核心主张：Step-3在大参数规模前提下，通过Attention架构与算子优化将KV访存及Attention算力压至最低档，为后续在自研芯片上的低成本部署实验提供理论算力/带宽依据，是论证"规模大但推理便宜"的关键定量证据。
 
 ### Table 3 (p.5) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab03.png]]
@@ -234,23 +179,9 @@ The figure is **Table 2**, a quantitative comparison matrix that profiles the pe
 > Theoretical computation and memory access per decoding token at 32K context length.
 
 > [!tip] 表格解读（多模态）
-> **Note:** The provided image contains only two columns of body text from a paper (Section 4.2 "Theoretical Decoding Cost") and a table caption — **no figure, diagram, or architecture illustration is present**. I cannot describe a figure that isn't in the image without fabricating content. Below I describe the textual content shown and transcribe the caption verbatim.
+> 【图文联合解读】**图文联合解读：**
 
----
-
-**Description of visible content:**
-
-The text presents a methodology section ("4.2 Theoretical Decoding Cost") of a paper analyzing LLM inference costs. It breaks model decoding cost into three components: (1) attention (with KV cache), (2) linear projections before/after attention, and (3) FFN/MoE. The authors assume compute-bound performance from sufficient batching, amortizing weight memory access into FLOPs. They flag exceptions: the q/k/v projections of MLA and MFA may be non-TP-friendly and not run in H800's compute-bound regime; for not-too-sparse MoE, FFN reaches high MFU. Cost formulas derive a per-token cost combining attention's KV-memory-bound term with FLOPs for projections and FFN:
-
-max(FLOP_Attn · U_FLOP, Byte_KV · U_byte) + FLOP_... + FLOP_FFN.
-
-**Key technical takeaway:** The total per-decoding-token cost decomposes into a memory-bound attention term (driven by KV-cache bytes) plus compute-bound linear/FFN terms (driven by FLOPs), enabling comparison of model architectures on different accelerators using unit costs U_FLOP and U_byte.
-
----
-
-**Caption transcribed verbatim:**
-
-"Table 3: Theoretical computation and memory access per decoding token at 32K context length."
+该表对比9个主流模型在32K上下文长度下每解码token的理论开销，涵盖KV/State访存、Attention（含/不含Linear）和FFN四列FLOPs。Step-3的KV/State访存仅1.02×10⁹ bytes，为表中最低；Attention计算1.31×10¹¹ FLOPs远低于DSv3（5.89×10¹¹）和Kimi K2（2.95×10¹¹）。论文借此论证：通过在多数层采用线性注意力、仅保留少量MLA层，Step-3在长上下文解码时显著降低显存带宽瓶颈与Attention计算量，是其"既大又经济"架构设计（混合线性/全注意力+MoE FFN）成本优势的关键定量证据，支撑后续推理部署与系统协同优化的论证。
 
 ### Table 4 (p.6) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab04.png]]
@@ -258,15 +189,13 @@ max(FLOP_Attn · U_FLOP, Byte_KV · U_byte) + FLOP_... + FLOP_FFN.
 > Comparison of accelerator specifications. *We do not have publicly available 910B pricing. We estimate its price proportionally based on its FLOPs and A800’s. As far as we know, there are multiple versions of 910B. We show the weakest and (presumably) most affordable one that we know.
 
 > [!tip] 表格解读（多模态）
-> **Description (Table 4 — not an architecture figure):**
+> 【图文联合解读】**Table 4 解读**
 
-This is a **specification comparison table** rather than a architecture/data-flow diagram. It benchmarks four AI accelerators (NVIDIA H800, H20, A800, and Huawei Ascend 910B) across five columns: unit price (likely USD thousands), two FLOPs throughput columns (different precisions), a memory-bandwidth column, and a derived cost-effectiveness/performance-per-dollar figure. The rows are ordered roughly by raw FLOPs, descending from H800 → 910B.
+**1) 核心数据**：对比4款加速卡的单价（USD/h）、BF16/FP16与FP8算力、显存带宽及roofline算力带宽比——H800（$2，9.89×10¹⁴/1.98×10¹⁵，3.35×10¹² B/s，比值591）、H20（$0.8，比值74）、A800（$0.75，比值156）、Ascend 910B（约$0.67，比值175，FP8缺失）。
 
-**Key technical takeaway:** The H800 dominates in raw compute (~2×10¹⁵ FLOPs) and bandwidth (3.35×10¹²), but the Ascend 910B delivers competitive FP16 throughput (~3×10¹⁴) at roughly one-third the H800's price, making it the most cost-efficient option (175) after the H20 — highlighting that peak FLOPS alone misrepresents accelerator value when bandwidth and price are factored in.
+**2) 关键结论**：H800算力带宽比高达591，属计算密集型且价格最贵；而H20、A800、910B比值仅74–175，显存带宽相对突出，是memory-bound形态。说明解码（访存密集）对廉价卡的"屋顶线比值"远比绝对算力重要，H800在解码场景存在巨大算力浪费与价格溢价。
 
-**Caption (verbatim):**
-
-> Table 4: Comparison of accelerator specifications. *We do not have publicly available 910B pricing. We estimate its price proportionally based on its FLOPs and A800's. As far as we know, there are multiple versions of 910B. We show the weakest and (presumably) most affordable one that we know.
+**3) 论文作用**：该表为Step-3"低算力带宽比友好"架构设计（如Attention-FFN解耦）提供硬件依据，证明模型可高效跑在H20/A800/910B等廉价卡上，从而支撑"大而便宜"的成本可控解码这一核心论断。
 
 ### Table 5 (p.6) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab05.png]]
@@ -274,20 +203,16 @@ This is a **specification comparison table** rather than a architecture/data-flo
 > The unit cost of different accelerators assuming full utilization for the whole month. For FLOP costs, we consider FP8 for H800 and H20, BF16/FP16 for A800 and 910B.
 
 > [!tip] 表格解读（多模态）
-> I don't see a figure in the provided content — only text from page 6 with the Table 5 caption and prose referencing Figure 2. I cannot describe the architecture/components/data flow of a figure that isn't visible.
+> 【图文联合解读】## Table 5 图文联合解读
 
-**Caption transcribed verbatim from the page:**
+**1) 核心数据**：四款加速器在满月利用率假设下的单位成本——
+- **每 FLOP 成本**：H800 最低(2.80e-19)，H20 最高(7.51e-19)，A800 (6.68e-19) 与 910B (6.65e-19) 几乎持平
+- **每字节访存成本**：H20 最低(5.56e-17)，H800 最高(1.66e-16)，A800 (1.04e-16) 与 910B (1.16e-16) 接近
+- **关键比率**：H800 计算/访存价比最低（ridge point≈512），H20 最高（≈32），A800/910B 居中（≈156/175）
 
-> **Table 5:** The unit cost of different accelerators assuming full utilization for the whole month. For FLOP costs, we consider FP8 for H800 and H20, BF16/FP16 for A800 and 910B.
+**2) 技术结论**：算力便宜≠访存便宜。Step-3 的 MFA 算术强度≈128，恰落在 A800/910B 的 ridge 点附近，因此**跨硬件都能平衡利用**——相比 DSv3 MLA（强度512，仅 H800 划算）省 3/4 计算量，相比 Qwen3 GQA（强度32，仅 H20 划算）省 2/3 访存量。
 
-**What the text tells us about Figure 2 (referenced, not shown):**
-
-The page discusses a cost model with two components — attention cost and FFN cost — combined to derive per-token decoding costs. "AFD" picks the cheapest hardware for each part independently (attention cheapest on one accelerator, FFN on another), and communication is ignored under a multi-batch pipeline assumption. Figure 2 plots decoding cost per 1M tokens for Qwen family (GQA), DSv3 (MLA), and Step-3 at varying context lengths.
-
-**Key technical takeaway from the surrounding text:**
-*Attention cost, not parameter count, drives decoding economics* — Qwen3 32B has fewer total *and* activated parameters than Step-3 or DSv3 yet posts the *highest* decoding cost in Figure 2; Step-3 is the cheapest at $0.055/1M tokens (8K) and $0.129 (32K), the gap widening at long context because MLA-style attention scales better than GQA.
-
-If you can share the actual Figure 2 image, I can describe its architecture/panels/data flow directly.
+**3) 论文作用**：本表是论文"Affordable"主张的成本模型基石——证明通过**模型与系统协同设计**（让 attention 的算术强度匹配硬件 ridge），而非堆砌 FLOPs，能在中国 910B 等国产硬件上实现与 H800 同阶的部署成本，支撑 Step-3 "大而省钱" 的核心叙事。
 
 ### Table 6 (p.7) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab06.png]]
@@ -295,15 +220,13 @@ If you can share the actual Figure 2 image, I can describe its architecture/pane
 > Theoretical decoding cost analysis for each model on each hardware, in USD. As a reminder, these models have different number of activated parameters: DSv3 37B, Qwen3 MoE 22B, Qwen3 32B, MM M1 46B, ERNIE 4.5 47B, Pangu Pro MoE 16.5B and Step-3 38B.
 
 > [!tip] 表格解读（多模态）
-> **Figure Description:**
+> 【图文联合解读】**Table 6 图文联合解读**
 
-The figure presents a dual-panel grouped bar chart comparing theoretical decoding costs (in USD) of four LLM models—DSv3 (blue), Qwen3 MoE (green), Qwen3 32B (red), and Step-3 (cyan, shown with hatched patterns)—deployed across five hardware setups: H800, H20, A800, 910B, and AFD. The left panel shows costs at an 8K context length (y-axis up to 0.200 USD), while the right panel shows costs at 32K context (y-axis up to ~0.75 USD). Cost ranges expand roughly 3–4× at 32K versus 8K, reflecting longer-sequence inference overhead.
+**1) 核心对象与结构**：Table 6 以双柱状图对比四个代表性模型（DSv3、Qwen3 MoE、Qwen3 32B、Step-3）在 5 种部署方案（H800、H20、A800、910B、AFD）下，8K 与 32K 上下文的单次理论解码成本（USD）。
 
-**Key Technical Takeaway:** Step-3 consistently achieves the lowest decoding cost across every hardware configuration and both context lengths, while Qwen3 32B is consistently the most expensive—highlighting that architectural efficiency matters more than raw parameter count for inference economics.
+**2) 关键结论**：Step-3 在所有硬件配置上均为最低（如 32K + AFD 仅 ≈ $0.13，对比 Qwen3 32B 同配置 ≈ $0.27，降幅近 50%）；AFD 方案整体优于传统 H800/A800/910B 单卡部署，原文借此论证 Step-3"小激活参数 MoE + MLA"协同搭配 AFD 模块解耦架构所换来的解码成本优势。
 
-**Caption (verbatim):**
-
-Table 6: Theoretical decoding cost analysis for each model on each hardware, in USD. As a reminder, these models have different number of activated parameters: DSv3 37B, Qwen3 MoE 22B, Qwen3 32B, MM M1 46B, ERNIE 4.5 47B, Pangu Pro MoE 16.5B and Step-3 38B.
+**3) 在论文中的作用**：该表是论文标题 "large yet affordable" 主张的核心量化支撑，串联"模型设计 → AFD 系统 → 解码经济性"完整论证链。
 
 ### Table 7 (p.10) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab07.png]]
@@ -311,15 +234,13 @@ Table 6: Theoretical decoding cost analysis for each model on each hardware, in 
 > Minimum MoE sparsity for different hardware plat- forms to achieve good MFU, where H = 7168, L = 61.
 
 > [!tip] 表格解读（多模态）
-> ## Description of the Main Figure
+> 【图文联合解读】**Table 7 图文联合解读**
 
-The main figure here is **Table 7**, which presents minimum MoE (Mixture-of-Experts) sparsity requirements across four accelerator platforms: **H800 (0.058), H20 (0.007), A800 (0.031), and 910B (0.034)**. It is the empirical output of the analytical framework derived earlier in the text — a bound on sparsity *S* ensuring that all-to-all expert routing/communication can be hidden behind the compute pipeline (≤ 11.1 ms latency budget). Inputs to the derivation are H = 7168 (hidden size), L = 61 layers, and per-NIC bandwidth (400 Gbps × 8 for H800/H20; 200 Gbps × 8 for A800/910B).
+**核心对象与数据**：表格给出在 H=7168、L=61 的 Step-3 MoE 配置下，四种加速器（H800、H20、A800、910B）实现良好 MFU 所需的最小专家激活稀疏度 S：H800=0.058、H20=0.007、A800=0.031、910B=0.034。
 
-**Key technical takeaway:** H20 needs ~6× more aggressive sparsity than H800 to saturate MFU, because its lower per-NIC bandwidth (400 Gbps effectively constrained) makes communication the bottleneck sooner; H800's higher minimum sparsity reflects its tighter bandwidth-to-compute ratio.
+**关键结论**：稀疏度阈值由公式 S ≥ (H·FLOPs·L)/(Net·Bandwidth·11.1ms) 推导，受算力（FLOPs）与网络带宽共同制约。尽管 H800/H20 带宽（400Gbps×8 NIC）高于 A800/910B（200Gbps×8 NIC），但 H800 算力更强、FLOPs 更高，反而需要更大稀疏度（5.8%）；而 H20 算力较弱，仅需 0.7% 即可隐藏通信。
 
-## Caption (verbatim)
-
-**Table 7:** Minimum MoE sparsity for different hardware platforms to achieve good MFU, where *H* = 7168, *L* = 61.
+**论文作用**：该表是"模型-系统协同设计"论证链的核心——证明最优 MoE 稀疏度必须匹配硬件特性，为 Step-3 针对自研硬件选择特定稀疏度（如 AFD 中专家调度）提供量化依据。
 
 ### Table 8 (p.14) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab08.png]]
@@ -327,12 +248,13 @@ The main figure here is **Table 7**, which presents minimum MoE (Mixture-of-Expe
 > Performance comparison with reported number of DSv3 under 20 tokens/s decoding SLA. TGS: Tokens/GPU/s.
 
 > [!tip] 表格解读（多模态）
-> **Description:** Table 8 (rather than an architectural figure) presents a performance comparison between Step-3 and DeepSeek-V3 (DSv3) under a 20 tokens/s decoding SLA, with deployment configurations parameterized by number of attention (A) and FFN (F) instances — e.g., "2A2F" (2 attention + 2 FFN instances, 32 GPUs total). The data flow shows: batch size 6144 → split into 3 micro-batches of 2,048 → fill a 3-stage pipeline. Key columns include context length (4K, 8K, 32K), peak TGS (Tokens/GPU/s), and the A:F ratio used per deployment (2A2F, 4A2F, 16A2F). Step-3 is shown achieving ~74% higher average TGS than DSv3 at 4K context on Hopper GPUs with FP8 GEMM/attention.
+> 【图文联合解读】**Table 8 图文联合解读**
 
-**Key takeaway (≤120 words):** Step-3 scales efficiently across context lengths by simply rebalancing attention vs. FFN instances in the pipeline (A:F ratio scales as √context for fixed total batch), keeping total batch, latency, MFU, and SLA intact while peak TGS drops predictably (e.g., 4,039 → 2,693 for 4A2F at 8K). On top of that, Multi-Token Prediction (MTP) is projected to add ~50% throughput on non-H20 accelerators by doubling attention efficiency while FFN compute (and its high MFU) is unaffected. Combined, Step-3's advantage over DSv3 widens with longer contexts and cheaper hardware than H800.
+**核心数据**：在 20 tokens/s 解码 SLA 约束下，对比 DSv3 与 Step-3 的 Tokens/GPU/s (TGS)。Step-3 (BF16, 4096 len) 以 40 卡 (3A2F) 达到 **3321 TGS**；升级为 FP8 attention 后仅需 32 卡 (2A2F) 即达 **4039 TGS**；即便长度翻倍至 8192，仍以 48 卡 (4A2F) 取得 **2643 TGS**。相比之下，DSv3-blog 与 DSv3-profile 分别需 144 卡/128 卡，仅获 1850/2324 TGS。
 
-**Caption transcribed verbatim:**
-> **Table 8: Performance comparison with reported number of DSv3 under 20 tokens/s decoding SLA. TGS: Tokens/GPU/s.**
+**关键结论**：Step-3 以更少 GPU、更低精度 (FP8) 取得显著更高的单卡吞吐，单位算力成本远优于 DSv3，证明"模型–系统协同设计"在大模型解码场景下的成本有效性。
+
+**论文作用**：作为核心成本论据，量化佐证文题"Large Yet Affordable"，支撑系统级 AFD 与 FP8 注意力优化的工程价值。
 
 ### Table 9 (p.14) ⭐深度解读
 ![[assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-tab09.png]]
@@ -340,26 +262,7 @@ The main figure here is **Table 7**, which presents minimum MoE (Mixture-of-Expe
 > Performance comparison of MFA/MLA/GQA. For MLA, we use FlashMLA which does not have official SM80 implementation, so its A800 number is not tested. We use FA3 (SM90) and FA2 (SM80) for MFA/GQA. Here the attention layer includes the linear projection before and after the core attention op. Each exper
 
 > [!tip] 表格解读（多模态）
-> ## Main Figure Description
-
-Table 9 is a **latency benchmark comparison** of three attention mechanism designs: **MFA** (Step-3), **MLA** (DSv3), and **GQA** (Qwen3-235B). The table reports per-attention-layer latency across multiple GPU tiers—H100 (SM90), A100/A800 (SM80), and H20—covering different context lengths and prefill/decode phases.
-
-**Columns (mechanisms):**
-- MFA-Step3 — FA3 (SM90) / FA2 (SM80), DP attention
-- MLA-DSv3 — FlashMLA (SM90 only; no SM80 kernel → A800 not tested), DP attention
-- GQA-Qwen3 — FA3 (SM90) / FA2 (SM80), TP attention
-
-**Rows (configs):** chip + context length combinations.
-
-**Reported setup:** attention layer wrapped around pre/post linear projections; 4 GPUs; total batch size 256; GEMM in FP8 (SM90) or INT8 (SM80); attention compute in BF16.
-
-## Key Technical Takeaway
-
-MFA-Step3 achieves the **lowest per-attention latency** across all hardware tiers, followed by MLA-DSv3 then GQA-Qwen3. The advantage **widens on lower-end accelerators (H20, A800)** and on **longer context lengths**, indicating that MFA's factored-attention design scales more gracefully under bandwidth-constrained, long-context inference—precisely the regime most relevant to AFD production serving.
-
-## Caption (verbatim)
-
-> Table 9: Performance comparison of MFA/MLA/GQA. For MLA, we use FlashMLA which does not have official SM80 implementation, so its A800 number is not tested. We use FA3 (SM90) and FA2 (SM80) for MFA/GQA. Here the attention layer includes the linear projection before and after the core attention op. Each experiment uses 4 GPUs and a total batch sze of 256. Both MFA and MLA use DP attention, while GQA uses TP attention. GEMM runs with *FP8* (SM90) or *INT8* (SM80) while attention runs with *BF16*.
+> 【图文联合解读】表9以4卡、batch 256比较8k/32k、H800/H20/A800注意力层延迟（μs，含前后投影）：MFA-Step3=281/438/531、791/1452/1484；MLA-DSv3=372/1252/—、1125/4817/—；GQA-Qwen3=382/812/791、1391/3042/3010。MFA三平台均最低，且8k→32k增幅最小，支撑模型—注意力—硬件协同的低成本解码；MLA因无SM80实现缺A800数据。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

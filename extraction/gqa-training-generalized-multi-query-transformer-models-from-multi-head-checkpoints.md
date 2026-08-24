@@ -30,14 +30,13 @@ tags: [training]
 > Overview of conversion from multi-head to multi-query attention. Key and value projection matri- ces from all heads are mean pooled into a single head.
 
 > [!tip] 技术解读（多模态）
-> **Description (architecture/data flow):**
-The figure illustrates the conversion of a multi-head attention (MHA) checkpoint into a multi-query attention (MQA) checkpoint. On the left, **H** independent key projection matrices (K₁, K₂, …, K_H) each map inputs of dimension d_h into d_model. These H parallel projections are aggregated through a vertical **"Mean Pool"** block (the figure caption also notes value projections undergo the same treatment), collapsing all per-head parameters into a single representative head. The pooled parameters then seed one unified **Key Projection K_MQ** block, which again outputs d_h — yielding a single shared key/value head that all query heads attend to.
+> 【图文联合解读】**图文联合解读：**
 
-**Key technical takeaway:**
-Mean-pooling the H per-head key/value projection matrices into one head is a parameter-free, compute-cheap conversion step that outperforms single-head picking or random reinitialization, enabling effective MQA uptraining from existing MHA checkpoints.
+图1展示了从多头注意力（MHA）到多查询注意力（MQA）的参数转换流程。左侧为H个独立的Key投影矩阵（K₁…K_H），每个维度为d_model×d_h；经中间"Mean Pool"操作后，合并为右侧单一的Key投影K_MQ（仍保持d_model×d_h）。
 
-**Caption (verbatim):**
-"Figure 1: Overview of conversion from multi-head to multi-query attention. Key and value projection matrices from all heads are mean pooled into a single head."
+**论证结论**：通过将所有头的K/V投影矩阵逐元素取均值，可将H份独立的K/V头压缩为1份共享参数，且输出维度不变。该操作无额外训练即可完成，实现了从MHA到MQA的参数无缝降维。
+
+**论文作用**：作为全文核心方法"训练式转换"的可视化基础，说明了GQA作为一种通用化形态——只需调整共享头数，即可平滑插值于MHA与MQA之间，是后续初始化策略与实验分析的理论前提。
 
 ### Figure 2 (p.2) ⭐深度解读
 ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig02.png]]
@@ -46,19 +45,7 @@ Mean-pooling the H per-head key/value projection matrices into one head is a par
 > Overview of grouped-query method. Multi-head attention has H query, key, and value heads. Multi-query attention shares single key and value heads across all query heads. Grouped-query attention instead shares single key and value heads for each group of query heads, interpolating between multi-head and multi-query attention. a small proportion α of its original training steps on the same pre-train
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
-
-The figure visually compares three transformer attention variants side-by-side, each rendered as stacked rows of rectangular blocks representing **Queries** (blue, bottom), **Keys** (pink/red, middle), and **Values** (yellow/orange, top):
-
-- **Multi-head (left):** Each query head has its own dedicated key and value head — H independent K/V projections.
-- **Grouped-query (center):** Query heads are partitioned into G groups; each group shares a single key head and value head, with dashed lines indicating the pooling/mapping from queries to shared K/V.
-- **Multi-query (right):** All H query heads share one single key and value head — the most aggressive sharing (the limiting case where G = 1).
-
-**Key takeaway:** Grouped-query attention is an interpolation point between MHA (high quality, high KV-cache cost) and MQA (low cost, lower quality), allowing a tunable quality/efficiency trade-off by choosing the number of groups G.
-
-## Caption (Verbatim)
-
-Figure 2: Overview of grouped-query method. Multi-head attention has H query, key, and value heads. Multi-query attention shares single key and value heads across all query heads. Grouped-query attention instead shares single key and value heads for each *group* of query heads, interpolating between multi-head and multi-query attention.
+> 【图文联合解读】图示三种注意力机制的Q/K/V头配置对比：左Multi-head（H=8）每查询头独立配独立K/V头（8个K、8个V）；右Multi-query仅1个K、1个V头被8个查询共享；中间加粗的Grouped-query将8个查询头分为4组，每2查询共享1个K/V头（共4个K/V）。原文借此论证：GQA是MHA与MQA之间的插值方案，在保留多头表征能力的同时显著降低K/V显存与解码计算开销。该图为论文核心方法奠定结构基础——将预训练MHA checkpoint只需少量额外步（比例α）即可转换/微调为GQA模型，从而兼顾质量与推理效率。
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig03.png]]
@@ -67,19 +54,11 @@ Figure 2: Overview of grouped-query method. Multi-head attention has H query, ke
 > Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality and faster speed than MHA-Large, and GQA achieves even better performance with similar speed gains and comparable quality to MHA-XXL. Average perfor- mance on all tasks as a function of average inference time per sample for T5-Large and T5-XXL with multi- head attention, and 5% uptrained T5-XXL with MQA and GQA-8 attenti
 
 > [!tip] 技术解读（多模态）
-> # Figure 3 Description
+> 【图文联合解读】**图3图文联合解读：**
 
-**Architecture/Components:** A 2D scatter plot comparing four T5 model variants on a speed-vs-quality axis. X-axis: "Time per sample (ms)" (0 to ~1.5); Y-axis: "Performance" (46 to ~47.2). Four data points are plotted — **MHA-Large** (pink, lower-left, ~0.37 ms / 46.0), **MQA-XXL** (orange, ~0.24 ms / 46.6), **GQA-XXL** (blue, ~0.28 ms / 47.1), and **MHA-XXL** (pink, upper-right, ~1.51 ms / 47.2).
+图3散点图展示四模型的速度-性能权衡：MHA-Large(≈0.4ms, 46.0)、MQA-XXL(≈0.3ms, 46.6)、GQA-XXL(≈0.3ms, 47.2)、MHA-XXL(≈1.5ms, 47.3)。GQA-XXL以MQA级推理速度取得接近MHA-XXL的质量，且比后者快约5倍，构成Pareto最优折中。
 
-**Data flow / narrative:** The plot visualizes a Pareto-style tradeoff between inference speed and task-averaged quality for summarization, translation, and QA benchmarks.
-
-**Key technical takeaway:** Even with only 5% extra pretraining, **MQA-XXL runs ~6× faster than MHA-XXL** with only ~0.6 points of quality loss, while **GQA-XXL closes nearly all of that gap** (≈47.1 vs 47.2) at comparable speed — making grouped-query attention a near-free quality upgrade over multi-query attention.
-
----
-
-**Caption verbatim:**
-
-"Figure 3: **Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality and faster speed than MHA-Large, and GQA achieves even better performance with similar speed gains and comparable quality to MHA-XXL.** Average performance on all tasks as a function of average inference time per sample for T5-Large and T5-XXL with multi-head attention, and 5% uptrained T5-XXL with MQA and GQA-8 attention."
+原文借此论证：经5%继续训练的MQA在速度-质量权衡上优于MHA-Large，GQA则同时逼近MHA-XXL的性能并保留显著的速度增益。该图是论文实验链路的核心可视化证据，验证"uptraining"方法将MHA检查点高效转化为GQA的可行性——在不牺牲质量的前提下大幅提升推理效率，支撑GQA作为实用注意力替代方案的核心论点。
 
 ### Figure 4 (p.4) ⭐深度解读
 ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig04.png]]
@@ -88,19 +67,13 @@ Figure 2: Overview of grouped-query method. Multi-head attention has H query, ke
 > Performance comparison of different check- point conversion methods for T5-Large uptrained to MQA with proportion α = 0.05. ‘Mean’ mean-pools key and value heads, ‘First’ selects the first head and ‘Random’ initializes heads from scratch. be useful. Both MQA and GQA gain from 5% uptraining with diminishing returns from 10%. 0
 
 > [!tip] 技术解读（多模态）
-> **Figure 6 (main figure) — Architecture/Components/Data Flow:**
+> 【图文联合解读】**图文联合解读：**
 
-- **Axes:** X = number of GQA groups {1, 4, 8, 16, 32, 64} (log scale); Y = inference time per sample (s, 0–~2.5).
-- **Series:** Three attention variants on GQA-XXL (input 2048, output 512):
-  - **MHA** (red dotted) — constant baseline ≈ 2.5 s (single head shared across all groups as reference ceiling).
-  - **MQA** (orange dotted) — constant baseline ≈ 0.5 s (1-group reference floor).
-  - **GQA** (blue solid with square markers) — tunable line sweeping from 1 → 64 groups.
-- **Data flow / shape:** Flat plateau from 1 to ~8 groups near the MQA floor (~0.5 s), gentle rise through 16–32 groups, then a steep ascent to ≈ 2.5 s at 64 groups, converging toward MHA.
+该图展示T5-Large以α=0.05上训练至MQA时，三种checkpoint转换方法的性能对比：Mean池化约55.6、First取首头约55.5、Random随机初始化约55.2。
 
-**Key technical takeaway (≤120 words):** GQA interpolates smoothly between MQA and MHA along the *time* dimension. Going from 1 → 8 groups adds only modest inference overhead, while moving toward 64 groups rapidly approaches MHA's latency. This makes GQA-8 the chosen Pareto-sweet spot: it retains most of MQA's KV-cache / memory-bandwidth savings without the steep slowdown of finer groupings. The curve demonstrates that grouping query heads is a *contiguous*, not discrete, knob over compute–quality trade-offs in attention.
+**技术结论**：Mean池化最优，Random最差但绝对差距仅约0.4，说明仅需5%上训练，从MHA checkpoint转换即可获得接近最优的MQA性能，验证转换策略而非从零训练的有效性。
 
-**Caption (verbatim):**
-"Figure 6: Time per sample for GQA-XXL as a function of the number of GQA groups with input length 2048 and output length 512. Going from 1 (MQA) to 8 groups adds modest inference overhead, with increasing cost to adding more groups."
+**论文作用**：为论文核心主张——MHA checkpoint可通过轻量键值头转换快速得到高性能MQA/GQA——提供方法选型依据，支撑后续uptraining实验链路设计与维度消融的合理性。
 
 ### Figure 5 (p.4) ⭐深度解读
 ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig05.png]]
@@ -109,19 +82,13 @@ Figure 2: Overview of grouped-query method. Multi-head attention has H query, ke
 > Performance as a function of uptraining pro- portion for T5 XXL models with MQA and GQA-8.
 
 > [!tip] 技术解读（多模态）
-> **Figure 6 (main figure) — Architecture/Components/Data Flow:**
+> 【图文联合解读】## 图文联合解读
 
-- **Axes:** X = number of GQA groups {1, 4, 8, 16, 32, 64} (log scale); Y = inference time per sample (s, 0–~2.5).
-- **Series:** Three attention variants on GQA-XXL (input 2048, output 512):
-  - **MHA** (red dotted) — constant baseline ≈ 2.5 s (single head shared across all groups as reference ceiling).
-  - **MQA** (orange dotted) — constant baseline ≈ 0.5 s (1-group reference floor).
-  - **GQA** (blue solid with square markers) — tunable line sweeping from 1 → 64 groups.
-- **Data flow / shape:** Flat plateau from 1 to ~8 groups near the MQA floor (~0.5 s), gentle rise through 16–32 groups, then a steep ascent to ≈ 2.5 s at 64 groups, converging toward MHA.
+**核心数据**：横轴为 uptraining 比例 α（0/5%/10%），纵轴为模型性能。MHA 基线（粉色虚线）恒定约 57.5；GQA-8（蓝方块）从 α=0 时约 56.7 升至 α=10% 时约 57.4；MQA（橙三角）从约 54.0 急升至 5% 时的约 57.0，随后趋于平缓。
 
-**Key technical takeaway (≤120 words):** GQA interpolates smoothly between MQA and MHA along the *time* dimension. Going from 1 → 8 groups adds only modest inference overhead, while moving toward 64 groups rapidly approaches MHA's latency. This makes GQA-8 the chosen Pareto-sweet spot: it retains most of MQA's KV-cache / memory-bandwidth savings without the steep slowdown of finer groupings. The curve demonstrates that grouping query heads is a *contiguous*, not discrete, knob over compute–quality trade-offs in attention.
+**关键结论**：α=0 时 MQA 落后 MHA 约 3.5 分，而 GQA-8 仅落后约 0.8 分，说明 GQA 在"无重训练"状态下就能很好地逼近 MHA 质量；仅需 5% uptraining，两者即获大幅提升且收益递减，证明极小额外成本即可恢复性能。
 
-**Caption (verbatim):**
-"Figure 6: Time per sample for GQA-XXL as a function of the number of GQA groups with input length 2048 and output length 512. Going from 1 (MQA) to 8 groups adds modest inference overhead, with increasing cost to adding more groups."
+**论文作用**：作为 uptraining 有效性的实证核心，支撑"用 GQA 替代 MHA 是推理效率与质量最优折中"的核心主张，使论文方案具备实际部署可行性。
 
 ### Figure 6 (p.4) ⭐深度解读
 ![[assets/crops/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints-fig06.png]]
@@ -130,19 +97,11 @@ Figure 2: Overview of grouped-query method. Multi-head attention has H query, ke
 > Time per sample for GQA-XXL as a function of the number of GQA groups with input length 2048 and output length 512. Going from 1 (MQA) to 8 groups adds modest inference overhead, with increasing cost to adding more groups. is especially helpful for long inputs (Pope et al., 2022; de Jong et al., 2022). Rabe (2023) indepen- dently developed GQA with public implementa- tion. Other works have explore
 
 > [!tip] 技术解读（多模态）
-> **Figure 6 (main figure) — Architecture/Components/Data Flow:**
+> 【图文联合解读】**图6图文联合解读：**
 
-- **Axes:** X = number of GQA groups {1, 4, 8, 16, 32, 64} (log scale); Y = inference time per sample (s, 0–~2.5).
-- **Series:** Three attention variants on GQA-XXL (input 2048, output 512):
-  - **MHA** (red dotted) — constant baseline ≈ 2.5 s (single head shared across all groups as reference ceiling).
-  - **MQA** (orange dotted) — constant baseline ≈ 0.5 s (1-group reference floor).
-  - **GQA** (blue solid with square markers) — tunable line sweeping from 1 → 64 groups.
-- **Data flow / shape:** Flat plateau from 1 to ~8 groups near the MQA floor (~0.5 s), gentle rise through 16–32 groups, then a steep ascent to ≈ 2.5 s at 64 groups, converging toward MHA.
+图6展示GQA-XXL在输入2048、输出512条件下，单样本推理时间（秒）随分组数1–64的变化，对照MHA（≈2.5s）、MQA（≈0.5s）两条基线。GQA在1–8组时与MQA几乎重合（≈0.5s），16组0.6s，32组0.8s，64组陡升至≈2.5s，逼近MHA。
 
-**Key technical takeaway (≤120 words):** GQA interpolates smoothly between MQA and MHA along the *time* dimension. Going from 1 → 8 groups adds only modest inference overhead, while moving toward 64 groups rapidly approaches MHA's latency. This makes GQA-8 the chosen Pareto-sweet spot: it retains most of MQA's KV-cache / memory-bandwidth savings without the steep slowdown of finer groupings. The curve demonstrates that grouping query heads is a *contiguous*, not discrete, knob over compute–quality trade-offs in attention.
-
-**Caption (verbatim):**
-"Figure 6: Time per sample for GQA-XXL as a function of the number of GQA groups with input length 2048 and output length 512. Going from 1 (MQA) to 8 groups adds modest inference overhead, with increasing cost to adding more groups."
+结论：分组≤8几乎无推理开销，≥32则效率优势消失，证实8组是兼顾表达力与速度的最佳折中。该图为论文核心方法——"由MHA检查点转换少量分组GQA"——提供推理成本实证，验证转换后模型在保留多头能力的同时获得近似MQA的推理速度。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -152,12 +111,13 @@ Figure 2: Overview of grouped-query method. Multi-head attention has H query, ke
 > Inference time and average dev set performance comparison of T5 Large and XXL models with multi-head attention, and 5% uptrained T5-XXL models with multi-query and grouped-query attention on summarization datasets CNN/Daily Mail, arXiv, PubMed, MediaSum, and MultiNews, translation dataset WMT, and q
 
 > [!tip] 表格解读（多模态）
-> **Figure 3 description:** A scatter plot (Performance vs. Time per sample in ms) with four data points comparing T5 attention variants. **MHA-Large** (pink) sits at ~0.4 ms / 45.95 performance. **MQA-XXL** (orange) sits at ~0.4 ms / 46.55 performance — same speed as MHA-Large but clearly higher quality. **MHA-XXL** (pink) is at ~1.55 ms / 47.18 performance — the slowest point. **GQA-XXL** (blue) is at ~0.4 ms / 47.18 performance — matching MHA-XXL's quality at a fraction of the inference time. Components: two attention families (Multi-Query / Grouped-Query) plotted against the Multi-Head Attention baseline at two model scales.
+> 【图文联合解读】注：图中可清晰辨认的是 **Figure 3 散点图**，Table 1 仅显示了标题文字而无表格数据，故按 Figure 3 解读。
 
-**Key technical takeaway:** Uptraining a T5-XXL model with only 5% of compute to use GQA preserves multi-head-attention-level quality (~47.18) while cutting per-sample inference time by roughly **4×** (from ~1.55 ms down to ~0.4 ms), demonstrating that the heavy KV cache cost of large MHA layers is largely unnecessary and can be removed with negligible accuracy loss.
+**1) 核心对象与数据**：横轴为推理时每样本耗时（ms），纵轴为多任务平均 Performance，对比四模型：MHA-XXL（≈1.5 ms, ≈47.2）质量最高但最慢；GQA-XXL（≈0.3 ms, ≈47.1）速度提升约 5× 而性能几乎无损；MQA-XXL（≈0.3 ms, ≈46.55）与 MHA-Large（≈0.3 ms, ≈45.95）均快但质量依次降低。
 
-**Caption verbatim:**
-"Figure 3: **Uptrained MQA yields a favorable tradeoff compared to MHA with higher quality and faster speed than MHA-Large, and GQA achieves even better performance with similar speed gains and comparable quality to MHA-XXL.** Average performance on all tasks as a function of average inference time per sample for T5-Large and T5-XXL with multi-head attention, and 5% uptrained T5-XXL with MQA and GQA-8 attention."
+**2) 关键结论**：仅经 5% uptraining 的 GQA-XXL 即达到与 MHA-XXL 几乎持平的性能，却获得接近 MQA 的推理速度，验证 GQA 是 MHA→MQA 转换中保留质量的最优折中。
+
+**3) 在论文中的作用**：作为实验链路的总览证据，支撑"多查询注意力可从多 head checkpoint 经均值池化与少量微调高效恢复甚至超越性能"的核心主张。
 
 ## 关键公式（启发式抽取，引用前请核对原文页码）
 

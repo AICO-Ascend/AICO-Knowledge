@@ -1,0 +1,434 @@
+{
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab04.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 4,
+  "page": 11,
+  "caption": "TABLE IV: The summary of existing KV Cache merging approaches.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab04.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab05.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 5,
+  "page": 13,
+  "caption": "TABLE V: The summary of existing mixed-precision quantization models.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab05.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab08.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 8,
+  "page": 19,
+  "caption": "TABLE VIII: The summary of Model-based Intra-layer approaches.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab08.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab09.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 9,
+  "page": 0,
+  "caption": "TABLE IX: The summary of Non-Transformer Architectures.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab09.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab11.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 11,
+  "page": 0,
+  "caption": "TABLE XI: Comparison of Scheduling Approaches for KV Cache Optimization.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab11.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab27.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 27,
+  "page": 0,
+  "caption": "The CLUEWSC (Chinese Language Understanding Evaluation Benchmark - Winograd Schema Challenge) is a specialized task within the CLUE benchmark suite designed to evaluate a model’s commonsense reasoning and contextual understanding capabilities in Chinese.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab27.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab31.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 31,
+  "page": 0,
+  "caption": "An example of C-SimpleQA. It measures a model’s ability to answer short, fact-seeking questions in Chinese with precise, verifiable correctness.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab31.png"
+ },
+ "assets/crops/kimi-vl-technical-report-tab02.png": {
+  "slug": "kimi-vl-technical-report",
+  "kind": "tab",
+  "num": 2,
+  "page": 5,
+  "caption": "Needle-in-a-Haystack (NIAH) test on text/video haystacks, where needles are uniformly distributed at various positions within the haystack. We report recall accuracy across different haystack lengths up to 131,072 tokens (128K).",
+  "path": "assets/crops/kimi-vl-technical-report-tab02.png"
+ },
+ "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab01.png": {
+  "slug": "kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference",
+  "kind": "tab",
+  "num": 1,
+  "page": 0,
+  "caption": "Comparison of KV Cache optimization techniques",
+  "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab01.png"
+ },
+ "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab02.png": {
+  "slug": "kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference",
+  "kind": "tab",
+  "num": 2,
+  "page": 0,
+  "caption": "Summary of KV Cache eviction techniques",
+  "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab02.png"
+ },
+ "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab03.png": {
+  "slug": "kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference",
+  "kind": "tab",
+  "num": 3,
+  "page": 0,
+  "caption": "Cache Compression Methods Comparison Table",
+  "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab03.png"
+ },
+ "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab04.png": {
+  "slug": "kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference",
+  "kind": "tab",
+  "num": 4,
+  "page": 0,
+  "caption": "Hybrid Memory Solutions Comparison Table",
+  "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab04.png"
+ },
+ "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab05.png": {
+  "slug": "kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference",
+  "kind": "tab",
+  "num": 5,
+  "page": 0,
+  "caption": "Attention Variants – Mechanisms, Complexities, and Features",
+  "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab05.png"
+ },
+ "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab06.png": {
+  "slug": "kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference",
+  "kind": "tab",
+  "num": 6,
+  "page": 18,
+  "caption": "Comparison of KV Cache Optimization Techniques",
+  "path": "assets/crops/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference-tab06.png"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig02.png": {
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "kind": "fig",
+  "num": 2,
+  "page": 8,
+  "caption": "Cross-Attention Optimization via Concept Replication. Left: The decoder’s cross-attention creates an irregular L×M mask due to variable token-to-concept mappings. Right: By replicating concepts via repeat_interleave to match token positions, we obtain a standard L×L causal mask, enabling optimized F",
+  "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig02.png"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig07.png": {
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "kind": "fig",
+  "num": 7,
+  "page": 0,
+  "caption": "Top: Average loss comparison between concept model (blue) and baseline model (orange) across relative positions within concepts. Bottom: Loss difference (Concept - Baseline), where green indicates improvement (lower loss) and red indicates degradation.",
+  "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig07.png"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig08.png": {
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "kind": "fig",
+  "num": 8,
+  "page": 0,
+  "caption": "Average compressed sequence length over training steps. Red: Learned Boundary Predictor. Purple: Rule-Based Predictor. The x-axis represents training steps, and the y-axis represents the average number of tokens post-compression.",
+  "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig08.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig01.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "fig",
+  "num": 1,
+  "page": 4,
+  "caption": "(a) AIME accuracy of DeepSeek-R1-Zero during training. AIME takes a mathematical problem as input and a number as output, illustrated in Table 32. Pass@1 and Cons@16 are described in Supplementary D.1. The baseline is the average score achieved by human participants in the AIME competition. (b) The ",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig01.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig02.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "fig",
+  "num": 2,
+  "page": 6,
+  "caption": "The multi-stage pipeline of DeepSeek-R1. A detailed background on DeepSeek-V3 Base and DeepSeek-V3 is provided in Supplementary A.1. The models DeepSeek-R1 Dev1, Dev2, and Dev3 represent intermediate checkpoints within this pipeline.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-fig02.png"
+ },
+ "assets/crops/hyper-connections-tab13.png": {
+  "slug": "hyper-connections",
+  "kind": "tab",
+  "num": 13,
+  "page": 0,
+  "caption": "OLMo’s default configuration was evaluated using multiple metrics. Perplexity (PPL) and loss were used for the V2 and V3 Validation Sets, while zero-shot testing was applied to the Downstream Benchmarks. However, the grey benchmarks were excluded from our analysis due to the instability of their per",
+  "path": "assets/crops/hyper-connections-tab13.png"
+ },
+ "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab03.png": {
+  "slug": "medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads",
+  "kind": "tab",
+  "num": 3,
+  "page": 0,
+  "caption": "Impact of Techniques on Speedup",
+  "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab03.png"
+ },
+ "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab05.png": {
+  "slug": "medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads",
+  "kind": "tab",
+  "num": 5,
+  "page": 0,
+  "caption": "Computational and space complexity of the main operators in different phases. The table is based on Table 2 in the report (Chen 2023).",
+  "path": "assets/crops/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-tab05.png"
+ },
+ "assets/crops/kimi-vl-technical-report-fig11.png": {
+  "slug": "kimi-vl-technical-report",
+  "kind": "fig",
+  "num": 11,
+  "page": 16,
+  "caption": "Video scene splitting. Kimi-VL processes a long-form video by segmenting it into coherent scenes and providing detailed start/end timestamps along with fine-grained natural language descriptions for each scene.‡‡footnotemark: ‡",
+  "path": "assets/crops/kimi-vl-technical-report-fig11.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab02.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 2,
+  "page": 5,
+  "caption": "An interesting “aha moment” of an intermediate version of DeepSeek-R1-Zero. The model learns to rethink using an anthropomorphic tone. This is also an aha moment for us, allowing us to witness the power and beauty of reinforcement learning.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab02.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab13.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 13,
+  "page": 57,
+  "caption": "Performance on latest math competitions. Participants with their USAMO index (AMC score+10×AIME score) surpassing 251.5 are qualified for USAMO.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab13.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab14.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 14,
+  "page": 60,
+  "caption": "Experimental results for each stage of DeepSeek-R1 on problems with varying difficulty levels in the LiveCodeBench dataset.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab14.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab19.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 19,
+  "page": 67,
+  "caption": "MMLU-Redux is a subset of 5,700 manually re-annotated questions across all 57 MMLU subjects. MMLU-Redux focuses on improving the quality, clarity, and robustness of the benchmark by reducing noise, ambiguities, and potential biases in the MMLU, while potentially adjusting the scope or difficulty of ",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab19.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab22.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 22,
+  "page": 70,
+  "caption": "DROP assesses a model’s ability to understand and extract relevant information from extended textual passages. Unlike simpler question-answering benchmarks that focus on factual recall, DROP requires models to process and interpret context-rich paragraphs.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab22.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab23.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 23,
+  "page": 71,
+  "caption": "Instruction-Following Evaluation (IFEval) is a benchmark designed to assess a model’s ability to comply with explicit, verifiable instructions embedded within prompts. It targets a core competency of large language models (LLMs): producing outputs that meet multiple, clearly defined constraints spec",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab23.png"
+ },
+ "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png": {
+  "slug": "kimi-k2-5-visual-agentic-intelligence",
+  "kind": "fig",
+  "num": 4,
+  "page": 6,
+  "caption": "In our parallel-agent reinforcement learning environment, the training accuracy increases smoothly as training progresses. At the same time, the level of parallelism during training also gradually increases.",
+  "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig04.png"
+ },
+ "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig05.png": {
+  "slug": "kimi-k2-5-visual-agentic-intelligence",
+  "kind": "fig",
+  "num": 5,
+  "page": 10,
+  "caption": "Comparison of model performance and token usage for Kimi K2 Thinking following token-efficient RL.",
+  "path": "assets/crops/kimi-k2-5-visual-agentic-intelligence-fig05.png"
+ },
+ "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig08.png": {
+  "slug": "step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding",
+  "kind": "fig",
+  "num": 8,
+  "page": 13,
+  "caption": "StepMesh communication workflow tailored for AFD.",
+  "path": "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig08.png"
+ },
+ "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig09.png": {
+  "slug": "step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding",
+  "kind": "fig",
+  "num": 9,
+  "page": 13,
+  "caption": "StepMesh framework for multiple accelerators. AFTensorWorker and AFTensorServer APIs are for attention and FFN instances respectively.",
+  "path": "assets/crops/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding-fig09.png"
+ },
+ "assets/crops/kimi-vl-technical-report-fig08.png": {
+  "slug": "kimi-vl-technical-report",
+  "kind": "fig",
+  "num": 8,
+  "page": 13,
+  "caption": "Kimi-VL demonstrates its capability to perform symbolic reasoning and geometric inference by solving a circle geometry problem step by step. The model analyzes given conditions, applies geometric theorems such as the inscribed angle theorem and properties of triangle angles, and accurately derives t",
+  "path": "assets/crops/kimi-vl-technical-report-fig08.png"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig04.png": {
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "kind": "fig",
+  "num": 4,
+  "page": 12,
+  "caption": "Full training trajectory fit. Comparison between predicted loss (Equation 22) and empirical loss across model sizes (274M–833M), compression factors R∈{2,4,8}, and training budgets. The joint fit achieves R2>0.98.",
+  "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-fig04.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab01.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 1,
+  "page": 3,
+  "caption": "Template for DeepSeek-R1-Zero. prompt will be replaced with the specific reasoning question during training.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab01.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab03.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 3,
+  "page": 8,
+  "caption": "Experimental results at each stage of DeepSeek-R1. Numbers in bold denote the performance is statistically significant (t−test with p<0.01).",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab03.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab16.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 16,
+  "page": 61,
+  "caption": "Comparison of distilled and RL Models on Reasoning-Related Benchmarks.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab16.png"
+ },
+ "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab29.png": {
+  "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning",
+  "kind": "tab",
+  "num": 29,
+  "page": 76,
+  "caption": "GPQA (Graduate-Level Google-Proof QA Benchmark) is a rigorous evaluation framework designed to measure an LLM’s ability to tackle complex, graduate-level multiple-choice problems in STEM domains—specifically biology, physics, and chemistry.",
+  "path": "assets/crops/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning-tab29.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab02.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 2,
+  "page": 8,
+  "caption": "TABLE II: Comparison of KV cache selection strategies.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab02.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab07.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 7,
+  "page": 18,
+  "caption": "TABLE VII: The summary of Model-based Attention Grouping and Sharing approaches.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab07.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab14.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 14,
+  "page": 30,
+  "caption": "TABLE XIV: Multi-modal Benchmark Tasks. Specifically, for task abbreviation, Conv: conversation task; Desc: description task; Reas: reasoning task; Perc: perception task; Pred: prediction task; SUMM: summary task.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab14.png"
+ },
+ "assets/crops/kimi-vl-technical-report-fig03.png": {
+  "slug": "kimi-vl-technical-report",
+  "kind": "fig",
+  "num": 3,
+  "page": 3,
+  "caption": "The model architecture of Kimi-VL and Kimi-VL-Thinking, consisting of a MoonViT that allows native-resolution images, an MLP projector, and a Mixture-of-Experts (MoE) language decoder.",
+  "path": "assets/crops/kimi-vl-technical-report-fig03.png"
+ },
+ "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig04.png": {
+  "slug": "mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving",
+  "kind": "fig",
+  "num": 4,
+  "page": 6,
+  "caption": "Workflow of inference instances. (∗) For prefill instances, the load and store operations of the KVCache layer are performed layer-by-layer and in parallel with the prefill computation to mitigate transmission overhead (see §5.2). (†) For decoding instances, asynchronous loading is performed concurr",
+  "path": "assets/crops/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving-fig04.png"
+ },
+ "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab06.png": {
+  "slug": "dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space",
+  "kind": "tab",
+  "num": 6,
+  "page": 7,
+  "caption": "Performance comparison (Batch=1, Heads=32, Interval=6)",
+  "path": "assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab06.png"
+ },
+ "assets/crops/kimi-k2-open-agentic-intelligence-fig03.png": {
+  "slug": "kimi-k2-open-agentic-intelligence",
+  "kind": "fig",
+  "num": 3,
+  "page": 5,
+  "caption": "Per-step training loss curve of Kimi K2, without smoothing or sub-sampling. It shows no spikes throughout the entire training process. Note that we omit the very beginning of training for clarity.",
+  "path": "assets/crops/kimi-k2-open-agentic-intelligence-fig03.png"
+ },
+ "assets/crops/kimi-k2-open-agentic-intelligence-tab05.png": {
+  "slug": "kimi-k2-open-agentic-intelligence",
+  "kind": "tab",
+  "num": 5,
+  "page": 19,
+  "caption": "Enabled Plugins and Strategies",
+  "path": "assets/crops/kimi-k2-open-agentic-intelligence-tab05.png"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab02.png": {
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "kind": "tab",
+  "num": 2,
+  "page": 15,
+  "caption": "Contrasting parallelism requirements of attention and MoE layers within a single Transformer block.",
+  "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab02.png"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab12.png": {
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "kind": "tab",
+  "num": 12,
+  "page": 70,
+  "caption": "Impact of parallelism strategies on memory and communication. d = parallelism degree. †Requires distributed optimizer (--use-distributed-optimizer).",
+  "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab12.png"
+ },
+ "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab19.png": {
+  "slug": "scalable-training-of-mixture-of-experts-models-with-megatron-core",
+  "kind": "tab",
+  "num": 19,
+  "page": 86,
+  "caption": "Notation and abbreviations used throughout this report.",
+  "path": "assets/crops/scalable-training-of-mixture-of-experts-models-with-megatron-core-tab19.png"
+ },
+ "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab02.png": {
+  "slug": "zero-memory-optimizations-toward-training-trillion-parameter-models",
+  "kind": "tab",
+  "num": 2,
+  "page": 13,
+  "caption": "Maximum model size through memory analysis (left) and the measured model size when running with ZeRO-OS (right). The measured model size with Po​s matches the theoretical maximum, demonstrating that our memory analysis provides realistic upper bounds on model sizes.",
+  "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab02.png"
+ },
+ "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab08.png": {
+  "slug": "zero-memory-optimizations-toward-training-trillion-parameter-models",
+  "kind": "tab",
+  "num": 8,
+  "page": 23,
+  "caption": "Model configurations for Figure 5 related to memory allocated with different ZeRO configurations.",
+  "path": "assets/crops/zero-memory-optimizations-toward-training-trillion-parameter-models-tab08.png"
+ },
+ "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab05.png": {
+  "slug": "conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models",
+  "kind": "tab",
+  "num": 5,
+  "page": 33,
+  "caption": "Detailed model architecture information and training hyper parameters.",
+  "path": "assets/crops/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models-tab05.png"
+ },
+ "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab06.png": {
+  "slug": "a-survey-on-large-language-model-acceleration-based-on-kv-cache-management",
+  "kind": "tab",
+  "num": 6,
+  "page": 14,
+  "caption": "TABLE VI: The summary of outlier redistribution models in Sec. IV-D3.",
+  "path": "assets/crops/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management-tab06.png"
+ }
+}

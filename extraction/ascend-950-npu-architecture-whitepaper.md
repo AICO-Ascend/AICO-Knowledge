@@ -30,64 +30,19 @@ tags: []
 > 昇腾950 芯片架构示意图
 
 > [!tip] 技术解读（多模态）
-> # Figure Description: Ascend 950 Chip Architecture (图3-1)
+> 【图文联合解读】**图文联合解读：**
 
-## Architecture / Components / Data Flow
+该图实为正文段落而非架构示意图，仅依据文字与上下文解读。所述昇腾950为多Die合封Chiplet：含2个AI Die、2个IO Die，950PR配8个、950DT配4个HBM片上内存模组，通过D2D Clink与Memory Interface互联，构成UMA整体。结合原文论证：①Chiplet封装实现内存统一访问与扩展性；②Cube Core数量32/28/36、Vector Core 64/56/72，算力梯度按精度逐级递减，MXFP4下Cube算力最高达1946 TFLOPS；③支撑LLM算子加速（FlashAttention单核提升1.5~2倍）与CCU通信-计算融合，软硬协同支撑Super Node从384卡扩展至8K卡，是大模型训练推理全流程加速的硬件基石。
 
-The schematic depicts a **multi-die chiplet** layout with a symmetric, two-AI-Die structure flanked by two IO Dies:
-
-- **Two central AI Dies** (mirror-symmetric), each containing:
-  - A large central **AI Core** tile
-  - Two **Linx816 CPU** cores (left & right flanks)
-  - **L2 Cache** rails (top & bottom)
-  - **DVPP** (Digital Video Pre-Processing) units on outer edges
-  - **D2D** (Die-to-Die) links on the inner edge facing the peer AI Die, plus **STARS** interconnect bridges between the two AI Dies
-  - **Memory Interface** controllers on top/bottom, each feeding external **Global Memory** (HBM)
-- **Two IO Dies** (leftmost & rightmost) hosting **PCIe5.0 CTRL**, **Security Core**, **UB CTRL**, additional D2D links, and **Hilink** I/O ports at the bottom
-- **Data flow**: Compute → AI Core ↔ Linx816 CPU/L2 Cache ↔ Memory Interface ↔ Global Memory; die-to-die traffic flows via D2D/STARS between AI Dies and IO Dies; external connectivity via PCIe5.0 and Hilink.
-
-## Key Technical Takeaway
-
-The Ascend 950 uses a **2 AI-Die + 2 IO-Die chiplet design** unified via high-speed **D2D links** into a single **UMA (Unified Memory Access)** domain — pairing in-package HBM with the new **CCU** and **Cube-Vector/MXFP8/MXFP4** compute paths to deliver ~**1.5–2× per-core LLM inference gains** over the prior generation while scaling super-nodes to 8K cards (128K-card clusters).
-
-## Verbatim Caption
-
-**图3-1 昇腾 950 芯片架构示意图**
-
-### Figure 401 (p.17) ⭐深度解读
+### Figure 401 (p.17)
 ![[assets/ascend-950-npu-architecture-whitepaper-p17.png]]
 > [!quote] caption
 > AI Core 架构及各层级SRAM 示意图
 
-> [!tip] 技术解读（多模态）
-> **Architecture Description:**
-
-The figure depicts a three-column AI Core architecture under a top-level **Bus Interface**:
-
-- **Middle column (control & compute hub):** Scalar 0 → **L1 buffer (512KB)** → split into **L0A (64KB) + L0B (64KB)** inputs → fed into the **Cube Core (16×16×16 FP16 matrix multiply)** → output written to **L0C (256KB)**.
-- **Left column:** Scalar 2 controls **Vector Core 1** (two 64×64 FP32 / 128×128 FP16 lanes) backed by **UB1 (256KB)** and a **Register File**.
-- **Right column:** Scalar 1 controls the mirror **Vector Core 0** with **UB0 (256KB)** and its own Register File.
-- **Data flow:** Bus Interface → L1 → L0A/L0B → Cube Core → L0C → back to UB0/UB1 or L1; Vector Cores stream data between Unified Buffers and Register Files in parallel.
-
-**Key takeaway (≈90 words):** The design decouples *matric-heavy* workloads (Cube Core with split input buffers L0A/L0B and accumulator L0C) from *vector/elementwise* workloads (dual Vector Cores with symmetric UBs). This separation enables concurrent execution — the Cube handles GEMM/FlashAttention while Vector Cores handle non-linear ops — sharing the L1 tier and bus to maximize throughput and memory reuse.
-
-**Caption (verbatim):** 图4-1 AI Core 架构及各层级 SRAM 示意图
-
-### Figure 402 (p.18) ⭐深度解读
+### Figure 402 (p.18)
 ![[assets/ascend-950-npu-architecture-whitepaper-p18.png]]
 > [!quote] caption
 > Cube Core 处理架构示意图
-
-> [!tip] 技术解读（多模态）
-> **Figure 4-2 (Cube Core Architecture):** A linear chain of multipliers (×) receives inputs x₀…x_{k-1} horizontally and y₀…y_{k-1} vertically (green arrows). Each multiplier's product feeds a shared Σ (accumulator), whose output feeds a 4×4 grid of PE_s (Processing Elements) — the cubic compute array.
-
-**Figure 4-3 (Supported Numerical Precisions):** Bit-layout diagrams show supported formats grouped by width: **32-bit** (FP32: 1/8/23, TF32: 1/8/10), **16-bit** (BF16: 1/8/7, FP16: 1/5/10), **8-bit** (HiFi8: dynamic, FP8-E5M2: 1/5/2, FP8-E4M3: 1/4/3), and **4-bit** (FP4: 1/2/1). Legend: SIGN (1 bit) / EXPONENT / MANTISSA.
-
-**Key takeaway:** The Cube Core pairs a systolic MAC pipeline with a configurable PE array and natively scales precision from FP32 down to FP4, letting users trade accuracy for throughput/bandwidth within the same hardware.
-
-**Captions verbatim:**
-- 图4-2 Cube Core 处理架构示意图
-- 图4-3 Cube Core 支持的数值精度示意
 
 ### Figure 403 (p.18) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig403.png]]
@@ -96,82 +51,23 @@ The figure depicts a three-column AI Core architecture under a top-level **Bus I
 > Cube Core 支持的数值精度示意
 
 > [!tip] 技术解读（多模态）
-> **Figure 4-2 (Cube Core Architecture):** A linear chain of multipliers (×) receives inputs x₀…x_{k-1} horizontally and y₀…y_{k-1} vertically (green arrows). Each multiplier's product feeds a shared Σ (accumulator), whose output feeds a 4×4 grid of PE_s (Processing Elements) — the cubic compute array.
+> 【图文联合解读】**注意：图与所给caption存在冲突**——题目称图为"数值精度示意"，但实际图像标题为「图4-2 Cube Core 处理架构示意图」。以下按图像真实内容解读：
 
-**Figure 4-3 (Supported Numerical Precisions):** Bit-layout diagrams show supported formats grouped by width: **32-bit** (FP32: 1/8/23, TF32: 1/8/10), **16-bit** (BF16: 1/8/7, FP16: 1/5/10), **8-bit** (HiFi8: dynamic, FP8-E5M2: 1/5/2, FP8-E4M3: 1/4/3), and **4-bit** (FP4: 1/2/1). Legend: SIGN (1 bit) / EXPONENT / MANTISSA.
+**1) 核心对象与结构**：图像展示Cube Core的脉动式PE阵列微架构。上半部示意k个输入流（x₀…x_{k-1} 与 y₀…y_{k-1}）沿正交方向注入一排PE单元；下半部展开为 4×4 PEs 网格，所有PE输出汇聚至 Σ 累加单元，完成矩阵乘累加（MAC）运算。
 
-**Key takeaway:** The Cube Core pairs a systolic MAC pipeline with a configurable PE array and natively scales precision from FP32 down to FP4, letting users trade accuracy for throughput/bandwidth within the same hardware.
+**2) 关键技术结论**：Cube Core 通过二维 PE 阵列实现大规模乘加并行，是 Ascend 950 张量算力的硬件载体；Σ 树形归约支持高吞吐、低延迟的矩阵乘法，是后续混合精度、稀疏加速等功能扩展的物理基础。
 
-**Captions verbatim:**
-- 图4-2 Cube Core 处理架构示意图
-- 图4-3 Cube Core 支持的数值精度示意
+**3) 论文整体作用**：作为第四章计算引擎微架构的图示锚点，为后续章节（算力峰值推算、精度支持、数据流优化等）提供结构化依据。
 
-### Figure 404 (p.19) ⭐深度解读
-![[assets/crops/ascend-950-npu-architecture-whitepaper-fig404.png]]
-*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p19.png]]*
+### Figure 404 (p.19)
+![[assets/ascend-950-npu-architecture-whitepaper-p19.png]]
 > [!quote] caption
 > HiF8 数值精度
 
-> [!tip] 技术解读（多模态）
-> **Figure Description:**
-
-The figure (图4-4 HiF8 数值精度) illustrates the bit-layout of the HiF8 floating-point format using two tables.
-
-**Components / Data Flow:**
-- **HiF8 Normal encoding:** Formula `X = (-1)^S * 2^E * 1.M`. An 8-bit word is partitioned as: 1 sign bit (S) + a variable-length exponent prefix (Dot: 0–4) + remaining exponent bits (E, with 1 hidden bit, shown in red) + mantissa bits (M). The Dot field doubles the exponent range per increment (E=0, ±1, ±[2,3], ±[4,7], ±[8,15]).
-- **HiF8 Denormal encoding:** Formula `X = (-1)^S * 2^(M−23) * 1.0`, extending the range down to E=[−22, −16] via a Subnormal design.
-- Legend: Dot = variable-length prefix (also flags Denormal); 阶码 = unbiased code, 1-bit hidden value not stored (red); SE = Sign of Exponent.
-
-**Key Technical Takeaway (≤120 words):**
-HiF8 uses a **variable-length exponent prefix** (Dot, 0–4) to signal how many exponent bits follow, creating a tapered precision layout suited to AI data distributions. Exponents use **unbiased code** with a hidden 1-bit (saving one bit per code) so that exponent ranges of different widths do not overlap, achieving redundancy-free encoding. Combined with a Subnormal-number design, the total exponent space is extended from [−15, 15] to **[−22, 15]** — 38 unique values — approaching FP16's 40 values while keeping an 8-bit width and eliminating the need for an 8-bit MX scaling factor used in MXFP8.
-
-**Caption (verbatim):**
-
-图4-4 HiF8 数值精度
-
-HiF8 Normal编码 : X = (-1)^S * 2^E * 1.M          阶码值
-
-Dot = 0    | S | 0 | 0 | 0 | 1 | 0 | M | M | M | E = 0
-Dot = 1    | S | 0 | 0 | 1 | SE | 1 | M | M | M | E = ±1
-Dot = 2    | S | 0 | 1 | SE | 1 | E | M | M | M | E = ±[2, 3]
-Dot = 3    | S | 1 | 0 | SE | 1 | E | E | M | M | E = ±[4, 7]
-Dot = 4    | S | 1 | 1 | SE | 1 | E | E | E | M | E = ±[8, 15]
-
-HiF8 Denormal编码 : X = (-1)^S * 2^(M - 23) * 1.0
-
-Dot = Denormal    | S | 0 | 0 | 0 | 0 | M | M | M |          E = [-22, -16]
-
-说明：
-• 点位域Dot：变长前缀码，编码阶码存储的位宽，和Denormal标志
-• 阶码：原码编码，含1-bit隐藏位不存储(红色数字表示)
-• SE: Sign of Exponent
-
-1. HiF8 利用变长前缀码编码的点位域 Dot，显式指示阶码存储的位宽和 Denormal 标志，实现符合 AI 数据分布特征的锥形精度格式。
-2. 同时阶码采用原码编码，并隐藏了 1 比特固定值不存储，确保了不同位宽的阶码表达范围不重复，进而实现无冗余编码。
-3. 最后通过特殊的浮点 Subnormal number 设计，将综合阶码范围从[-15, 15]提升到了[-22, 15]共 38 个阶码，接近 FP16 的 40 个综合阶码值表达。
-
-### Figure 405 (p.21) ⭐深度解读
-![[assets/crops/ascend-950-npu-architecture-whitepaper-fig405.png]]
-*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p21.png]]*
+### Figure 405 (p.21)
+![[assets/ascend-950-npu-architecture-whitepaper-p21.png]]
 > [!quote] caption
 > Vector Core 架构示意图
-
-> [!tip] 技术解读（多模态）
-> **Architecture Overview**
-
-The Vector Core diagram shows a unified core feeding two execution modes from shared infrastructure.
-
-**Left (Core Front-end):** Scalar Unit, Async Function Queues tagged with execution type (SIMD/SIMT/NULL), DMA Unit, Vector Unit (SIMD/SIMT), Vector Cache/Buffer, Bus Interface, and Global Memory.
-
-**Right-Top — SIMD Mode:** I Cache → Program Sequence → QoO Dispatch → Vector Cache/Uniform Buffer (N banks + Cache Controller + Coalescing Unit) → Vector Load/Store Unit → Vector Register File (Lanes 0…VL-1) → Vector Execution Unit.
-
-**Right-Bottom — SIMT Mode:** I Cache → Program Sequence → Warp Scheduler → In-order Dispatch → Shared Vector Cache/Uniform Buffer → SIMT Load/Store Unit → SIMT Register File (Lanes 0…warp_size-1) → Vector Execution Unit.
-
-Both modes reuse the **same Vector Cache/Buffer banks and Vector Execution Unit**, differing only in front-end scheduling (QoO vs. Warp) and register layout.
-
-**Key Technical Takeaway:** SIMD/SIMT heterogeneity is achieved by sharing the memory subsystem and execution backend while swapping the dispatch logic — allowing per-VF mode selection at compile/launch time for performance–portability trade-offs.
-
-**Caption (verbatim):** 图4-5 Vector Core 架构示意图
 
 ### Figure 406 (p.22) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig406.png]]
@@ -180,60 +76,27 @@ Both modes reuse the **same Vector Cache/Buffer banks and Vector Execution Unit*
 > AI Core Cube-Vector 融合示意图
 
 > [!tip] 技术解读（多模态）
-> **Description:**
-The diagram depicts an AI Core with Cube-Vector fusion architecture. Two **Vector Cores** (left: Vector Core 1 with UB1; right: Vector Core 0 with UB0) flank a central **Cube Core** block. The Cube Core sits between **L0A/L0B** buffers (above) and the **L0C** buffer (below), with an **L1** buffer on top. Bidirectional arrows show direct data pathways: UB1 � L0A and L0B ↔ UB0 enable Vector-to-Cube operand sharing, while L0C feeds results back to the Vector cores via UB0/UB1. **Bus Interfaces** on top and bottom handle external traffic. Each Vector Core has its own Register File.
+> 【图文联合解读】**说明**：所提供内容仅为论文正文文字段落，未呈现实际的 Cube-Vector 融合架构示意图，故仅依据 4.1.4 节文本进行解读。
 
-**Key takeaway:** Direct UB↔L0A/L0B/L0C coupling bypasses L2 traffic, enabling efficient Cube-Vector fusion (e.g., for FlashAttention) while supporting inline data-layout/precision conversions to boost end-to-end throughput and energy efficiency.
+---
 
-**Caption (verbatim):** 图4-6 AI Core Cube-Vector 融合示意图
+**图文联合解读**：
 
-### Figure 407 (p.23) ⭐深度解读
+1) **核心对象与结构**：图示应展示 AI Core 内 Cube 核（含 L1 Buffer）与 Vector 核（含 Unified Buffer）通过一条**直连 CV 数据传输通道**相连，绕过 L2 层进行核内数据交换，体现 SIMD 为主、SIMT 为辅的新异构融合编程架构。
+
+2) **关键技术结论**：Cube L1 Buffer 与 Vector Unified Buffer 间的直连通道免去了 L2 中转，显著**提高核内数据复用率**，减少 L2 层数据搬移开销，从而提升 CV 融合算子的执行效率。
+
+3) **论文整体作用**：作为硬件级证据，支撑新架构在端到端吞吐、时延与开发效率三者之间取得更优平衡这一核心论点，是"CV 融合"特性论证的关键图示。
+
+### Figure 407 (p.23)
 ![[assets/ascend-950-npu-architecture-whitepaper-p23.png]]
 > [!quote] caption
 > NDDMA 指令
 
-> [!tip] 技术解读（多模态）
-> # Figure Description: 图4-7 NDDMA 指令
-
-## Architecture / Components / Data Flow
-
-The figure illustrates a two-stage memory transformation:
-
-**Left – Global Memory (32-row array):** Data elements (1–24) are scattered sparsely across non-contiguous rows (e.g., row 0 holds {1,13}, row 2 holds {5,17}, row 4 holds {9,21}, row 11 holds {10,22}, row 21 holds {4}, row 31 holds {24}). Values are color-coded by original row group (teal, blue, orange, gray) and arranged in a column-wise stride pattern.
-
-**Center – NDDMA arrow:** A single hardware-level DMA operation.
-
-**Right – Unified Buffer:** The same values emerge densely packed in sequential order (1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19, 21, 22, 23, …), now contiguous and stride-free.
-
-## Key Technical Takeaway
-NDDMA fuses data movement **and** reordering/transposition in one instruction (up to 5 dimensions). Its internal cache exploits locality, collapsing many small element-wise reads into efficient 128-byte burst reads — drastically improving effective memory bandwidth and reducing programming complexity.
-
----
-
-## Caption (verbatim)
-**图4-7 NDDMA 指令**
-
-### Figure 408 (p.24) ⭐深度解读
+### Figure 408 (p.24)
 ![[assets/ascend-950-npu-architecture-whitepaper-p24.png]]
 > [!quote] caption
 > 昇腾950 新同步机制代码示例
-
-> [!tip] 技术解读（多模态）
-> **Figure 4-8 Description:**
-
-The figure presents a side-by-side comparison of two synchronization code patterns used in the Ascend 950 NPU pipeline, with an arrow indicating the evolution from the legacy mechanism to the new one.
-
-**Left block — 基于set_flag/wait_flag (flag-based synchronization):**
-A 100-iteration loop uses explicit flag-setting primitives to coordinate the MTE2 (memory transfer) and Vector units. Each iteration must: wait for the upstream Vector unit's flag, execute MTE2, set/clear its own flag, then wait for MTE2's flag before running Vector(), and finally emit the next producer flag.
-
-**Right block — 基于BufferID (BufferID-based synchronization):**
-The same 100-iteration pipeline is expressed through explicit buffer acquisition/release. Each iteration calls `get_buf`/`rel_buf` on MTE2 and Vector pipeline stages in lockstep — acquire MTE2 buffer, transfer, release; acquire Vector buffer, compute, release — replacing all flag operations with buffer-ownership semantics.
-
-**Key technical takeaway:**
-The new BufferID API replaces four flag operations per stage per iteration with two `get_buf`/`rel_buf` pairs, removing the `if i>0` boundary checks and the trailing `if i<99` tail condition. This eliminates edge-iteration corner cases, shortens instruction sequences, and exposes pipeline buffer occupancy to the runtime for improved scheduling and overlap.
-
-**Caption (verbatim):**
-图4-8 昇腾950新同步机制代码示例
 
 ### Figure 409 (p.25) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig409.png]]
@@ -242,48 +105,18 @@ The new BufferID API replaces four flag operations per stage per iteration with 
 > 昇腾950 内存层次示意图
 
 > [!tip] 技术解读（多模态）
-> ## Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components:**
-The diagram shows a **two-Die structure** (Die 0 and Die 1), each containing:
-- **AI Cores**: composed of AIC (with L1, L0A, L0B, L0C buffers) and AIV (with UB — Unified Buffer)
-- **AI CPUs**: each with CPU L1 and CPU L2 caches
+**核心对象与结构：** 该图展示昇腾 950（950PR/950DT）的内存三级层次——底层为高速片上 DRAM（缓存全局数据，两型号配置不同），中层为 L2 Cache（服务 AIC/AIV 的 AI 计算，与片上内存双向搬运），上层为 L3 Cache（服务 AI CPU 通用计算），三级间以高带宽低延迟链路连通。
 
-**Data Flow (bottom-up hierarchy):**
-L0A/L0B/L0C, L1, UB → **L2 Cache** (serves AIC/AIV) → **Directory (Cache Coherence)** → **Global Memory**
-CPU L1/L2 → **L3 Cache** (serves AI CPUs) → Directory → Global Memory
+**关键技术结论：** 原文以此论证，分层存储将 AI 加速器与 CPU 的数据访问局部化——L2 以"片上 DRAM↔AIC/AIV"双向通路承担高吞吐 AI 数据流，L3 服务 CPU 通用任务，分工明确，整体提升 Memory 子系统效率。
 
----
+**论文作用：** 该图作为硬件架构总览的关键图示，与执行单元、数据流等章节联动，为读者建立"存储-计算"协同的整体认知框架，是论文方法论证的视觉锚点。
 
-## Key Technical Takeaway (≤120 words)
-
-The Ascend 950 implements a **heterogeneous, multi-tier memory hierarchy** that decouples AI accelerator (AIC/AIV) from general-purpose CPU memory paths. AIC/AIV accesses flow through dedicated L2 Cache optimized for tensor/matrix operations, while AI CPUs use their own L3 Cache for scalar control logic — both unified by a **Directory-based cache coherence** layer above Global Memory. Local Memory buffers (L1, L0A/L0B/L0C, UB) inside each AI Core minimize high-bandwidth on-chip memory traffic. This split-path design with cache coherence enables **parallel AI compute and control without contention**, while keeping global data consistent across dies.
-
----
-
-## Caption (Verbatim)
-
-**图4-9 昇腾950内存层次示意图**
-
-### Figure 410 (p.27) ⭐深度解读
+### Figure 410 (p.27)
 ![[assets/ascend-950-npu-architecture-whitepaper-p27.png]]
 > [!quote] caption
 > Non-allocate（L2 hint）典型应用场景示意图
-
-> [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 4-11)
-
-**Architecture & Components:**
-- **STARS container** holds an array of **Task** slots, alongside sidecar features: **Notify Sync**, **Conds**, **Profiling**, and **Fusion**. A **Sched** bar sits beneath, dispatching tasks to two interconnect fabrics:
-  - **HSCB** → **AIV**, **AIC** (compute engines)
-  - **NoC** → **UB DMA**, **SDMA**, **CCU**, **CPU**, **DVPP** (data-movement & general engines)
-
-**Data Flow:** Tasks are queued in STARS → the scheduler (Sched) fans them out through HSCB/NoC to heterogeneous engines, with Notify Sync/Conds orchestrating dependencies and Profiling/Fusion collecting runtime telemetry.
-
-**Key Takeaway:** STARS2.0 centralizes whole-chip task and resource orchestration, unifying compute (AIC/AIV/CPU/DVPP) and DMA engines (SDMA/UB/CCU) under one scheduler to enable efficient software–hardware co-scheduling with top-down profiling.
-
-## Caption (verbatim)
-**图4-11 STARS2.0 架构示意图**
 
 ### Figure 411 (p.27) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig411.png]]
@@ -292,135 +125,40 @@ The Ascend 950 implements a **heterogeneous, multi-tier memory hierarchy** that 
 > STARS2.0 架构示意图
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 4-11)
+> 【图文联合解读】**图文联合解读**：
 
-**Architecture & Components:**
-- **STARS container** holds an array of **Task** slots, alongside sidecar features: **Notify Sync**, **Conds**, **Profiling**, and **Fusion**. A **Sched** bar sits beneath, dispatching tasks to two interconnect fabrics:
-  - **HSCB** → **AIV**, **AIC** (compute engines)
-  - **NoC** → **UB DMA**, **SDMA**, **CCU**, **CPU**, **DVPP** (data-movement & general engines)
+需说明：图片实际为**图4-10 "Non-allocate (L2 hint) 典型应用场景示意图"**，而非所提示的 Figure 4-11 STARS2.0 架构图。以下按图实内容解读：
 
-**Data Flow:** Tasks are queued in STARS → the scheduler (Sched) fans them out through HSCB/NoC to heterogeneous engines, with Notify Sync/Conds orchestrating dependencies and Profiling/Fusion collecting runtime telemetry.
+1. **核心对象与结构**：图中两个并行任务 Task0、Task1。其中 Task0 输出的 **data A** 沿 `non-allocate` 属性路径直接写入 Global Memory（绕过 L2 Cache）；而 Task0 与 Task1 共用的 **data B** 则经由 L2 Cache 中转复用，体现"绕过 vs. 复用"的差异化分配。
 
-**Key Takeaway:** STARS2.0 centralizes whole-chip task and resource orchestration, unifying compute (AIC/AIV/CPU/DVPP) and DMA engines (SDMA/UB/CCU) under one scheduler to enable efficient software–hardware co-scheduling with top-down profiling.
+2. **论证的技术结论**：佐证正文所述——异腾 950 针对 SDMA 提供 L2 Cache 驻留策略（CMO），涵盖 Prefetch、Writeback、Flush 三类操作，程序员可通过配置参数控制 CMO 触发时机与作用域，从而按需决定数据是否驻留 L2。
 
-## Caption (verbatim)
-**图4-11 STARS2.0 架构示意图**
+3. **链路作用**：该图位于 4.4 节"软硬协同高效调度：STARS2.0"之前，承担**承上启下**作用——以存储层级访存优化收束，随后转入 STARS2.0 硬件调度器在任务/资源/数据流层面的协同调度论述。
 
-### Figure 412 (p.31) ⭐深度解读
-![[assets/crops/ascend-950-npu-architecture-whitepaper-fig412.png]]
-*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p31.png]]*
+### Figure 412 (p.31)
+![[assets/ascend-950-npu-architecture-whitepaper-p31.png]]
 > [!quote] caption
 > URMA 异步访存通信的过程示意图
 
-> [!tip] 技术解读（多模态）
-> **Architecture/Data Flow:**
-The diagram illustrates URMA (Ultra-Remote Memory Access) asynchronous communication between two nodes. On the left (local) node: **Core** triggers a *Doorbell* signal to the **URMA** engine, which fetches data from local **Memory** via the local **UMMU** (Unified Memory Management Unit), then distributes it across multiple **Ports** to the remote node. On the right (remote) node: incoming **Ports** feed into the remote **UMMU**, which performs translation and writes data into remote **Memory**.
-
-**Key Takeaway:**
-UMMU sits in the critical path on both sides, providing VA→PA address translation and access permission control for cross-node memory access—ensuring secure, virtualized remote memory operations while enabling multi-port parallel data transfer.
-
-**Caption (verbatim):**
-图4-12 URMA 异步访存通信的过程示意图
-
-### Figure 413 (p.32) ⭐深度解读
-![[assets/crops/ascend-950-npu-architecture-whitepaper-fig413.png]]
-*整页渲染: ![[assets/ascend-950-npu-architecture-whitepaper-p32.png]]*
+### Figure 413 (p.32)
+![[assets/ascend-950-npu-architecture-whitepaper-p32.png]]
 > [!quote] caption
 > UB Memory 同步访存语义地址通信过程示意图
 
-> [!tip] 技术解读（多模态）
-> ## Figure Description
-
-**Architecture/Components:**
-The figure (图4-13) depicts two chips in a multi-chip system:
-
-- **Left chip (source):** Contains a `Core` → `UB Mem Decoder` → multiple `Port` modules, with local `Memory` below.
-- **Right chip (destination):** Contains multiple `Port` modules feeding into a `UMMU` (Unified Memory Management Unit), with local `Memory` below.
-
-**Data Flow (orange arrow):**
-1. Core issues an access → 
-2. UB Mem Decoder routes the operation to one of the outgoing Ports → 
-3. Operation crosses the chip-to-chip interconnect → 
-4. A Port on the destination chip receives it → 
-5. UMMU performs **address translation + permission checking** → 
-6. Direct access to the remote chip's Memory.
-
-**Key Technical Takeaway:**
-UB Memory relies on hardware-level **semantic address translation via UMMU** at the destination, enabling the source Core to directly access remote memory without software intervention. This supports synchronous Write/Read plus atomic operations (AtomicStore, AtomicLoad, AtomicSwap, AtomicCompareAndSwap), preserving memory consistency across chips while keeping coherence overhead low.
-
-## Caption (verbatim)
-
-**图4-13 UB Memory 同步访存语义地址通信过程示意图**
-
-### Figure 414 (p.33) ⭐深度解读
+### Figure 414 (p.33)
 ![[assets/ascend-950-npu-architecture-whitepaper-p33.png]]
 > [!quote] caption
 > CCU 架构示意图
 
-> [!tip] 技术解读（多模态）
-> ## Figure Description (Architecture / Components / Data Flow)
-
-The CCU (Collective Communication Unit) architecture is a three-tier hierarchical design. **Top tier — CCUM (Management):** The Mission Call Interface feeds the Mission Commander, which routes instructions through the Instruction Implementation Unit to either a Reduce Call Interface or a URMA Call Interface. **Middle tier — CCUA (Agents):** Multiple CCUA instances each integrate Memory Slices (storage) and a Reduce Unit (computation). **Bottom tier — I/O:** The URMA module bridges the URMA Call Interface to an array of Ports for remote transfers. Data flow splits at the dispatcher: Reduce tasks go down to CCUA compute units, while URMA tasks go through the URMA block to Ports. **Key takeaway:** Hardware-managed dispatch cleanly separates local reduction from remote RDMA-style data movement, with CCUA agents acting as unified compute+storage endpoints.
-
-## Caption (Verbatim)
-
-图4-14 CCU 架构示意图
-
-集合通信软件通过 CCU Management（CCUM）中的 Mission 任务的入口进行软件编程，硬件完成指令的解析和处理，并根据指令判断当前是执行 Reduce 计算还是 URMA 搬运。CCU Agent（CCUA）中集成了 MemorySlice 用作数据存储，集成了 Reduce Unit 用作数据计算。
-
-如果是 URMA 搬运则调用 URMA 执行数据搬移，可完成远端节点到本端节点 DRAM 或 MemorySlice 之间的灵活数据搬运。
-
-如果是 Reduce 则调用 CCUA 的计算单元进行计算。
-
-CCU 完成集合通信任务后通过 Mission 任务的编程接口上报任务完成状态。
-
-### Figure 415 (p.34) ⭐深度解读
+### Figure 415 (p.34)
 ![[assets/ascend-950-npu-architecture-whitepaper-p34.png]]
 > [!quote] caption
 > UB On Chip Switch 转发示意图
 
-> [!tip] 技术解读（多模态）
-> # Figure Description: UB On-Chip Switch Forwarding Diagram
-
-**Architecture / Components (top-to-bottom):**
-- **Network On Chip (NoC)** — purple block at top representing the on-chip interconnect fabric
-- **Routing Table** — green band in the middle, shared across all ports
-- **Ports** — 9 × x4 ports (blue blocks) at the bottom, each connected upward to both the routing table and the NoC
-
-**Data Flow:**
-Solid vertical lines carry traffic between ports and the routing table. Dashed arrows depict a forwarding path: a packet enters an ingress port → the routing table determines it is **not** destined for the local chip → it is forwarded through the NoC → it exits from a different egress port. The "…" between ports indicates the remaining (unshown) ports in the array.
-
----
-
-## Key Technical Takeaway (≤120 words)
-
-The UB on-chip switch performs **local forwarding entirely within the IO DIE**, without ever consuming compute DIE resources or DRAM bandwidth. Traffic arriving at any of the 9 × x4 ports is classified by a shared routing table; non-local traffic is switched across ports via the Network-on-Chip and emitted directly from the determined egress port. This effectively turns the IO DIE into an embedded Layer-2-style switch fabric, enabling mixed deployment of injection and pass-through traffic and giving operators flexible, low-cost topology options (e.g., leaf-spine, ring, or hybrid) for service chaining without burdening compute dies.
-
----
-
-## Verbatim Caption Transcription
-
-**图4-15 UB On Chip Switch 转发示意图**
-
-本芯片支持单 IO DIE 内 9 个 x4 Port 之间进行流量转发。从每个端口进入的流量在查询路由表后如判断该流量并非本芯片流量且判断得到转发的出端口，此时该流量会经过片上互联网络（Network on Chip，即 NoC）转发至出口端口送出。此转发流量不会进入计算 DIE，也不会占用 DRAM 带宽，在 IO DIE 上即完成数据转发。
-
-本芯片支持注入流量和转发流量的混合部署，提供更多样的组网和业务规划可能性。
-
-### Figure 416 (p.35) ⭐深度解读
+### Figure 416 (p.35)
 ![[assets/ascend-950-npu-architecture-whitepaper-p35.png]]
 > [!quote] caption
 > PCIe 5.0 架构示意图
-
-> [!tip] 技术解读（多模态）
-> **Architecture / Components / Data Flow**
-
-The figure shows the PCIe 5.0 subsystem inside the Ascend 950 SoC, bridged to the on-chip **System Bus** via a bidirectional link. The **PCIe Gen5x16** controller is structured as a stacked protocol stack: an **Application** layer (top, hosting embedded **MCTP** and **DMA** accelerators) sits above the standard **Transaction Layer**, **DataLink Layer**, and a 16-lane **Physical Layer**. A separate **Serdes** block sits beneath the controller and handles the physical signaling to the off-chip lanes.
-
-Data flows from the System Bus down through the four-layer PCIe stack, out the x16 Physical Layer into the Serdes, and across the link; inbound traffic follows the reverse path, with DMA/MCTP accelerating host-to-device transfers at the application layer.
-
-**Key Technical Takeaway:** Backward compatibility with Gen4/3/2/1, configurable link widths (x16/x8/x4/x2), dual EP/RC roles (statically selected), and integrated DMA + MCTP accelerators make this a flexible, host-agnostic Gen5 endpoint/root-complex block.
-
-**Caption (verbatim):** 图4-16 PCIe 5.0 架构示意图
 
 ### Figure 417 (p.36) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig417.png]]
@@ -429,21 +167,15 @@ Data flows from the System Bus down through the four-layer PCIe stack, out the x
 > 昇腾950 的一种超节点示意图
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 4-17)
+> 【图文联合解读】图像无法辨认，仅依据原文解读。
 
-**Architecture / Components:**
-- **Top tier (Spine):** A row of UB Switches (with "…" indicating scalability)
-- **Middle tier (Leaf):** Two switch groups, each serving a pod/rack
-- **Bottom tier (Compute):** Multiple Ascend 950 chips per group, fully meshed
-- Interconnects form a **two-level fat-tree / Clos-like topology** with full-mesh links between Ascend 950 chips within each group, fanning up through leaf switches to spine switches
+**图文联合解读：**
 
-**Data flow:** Ascend 950 ↔ (full mesh) ↔ Leaf Switch ↔ Spine Switch ↔ Leaf Switch (other pod) ↔ Ascend 950
+1. **核心对象**：图 417 的标题为"昇腾 950 的一种超节点示意图"，按 caption 应展示昇腾 950NPU 超节点（Super-Node）的拓扑结构，包括多颗 NPU 芯片经高带宽互连（如 HCCS/UB 或自研总线）组成的紧耦合域，可能涉及片间/机框级互联、共享内存或拓扑编排示意。但实际图片仅显示章节标题"4.7 超节点能力 / 4.7.1 异腾超节点"，并无具体拓扑图。
 
-**Key technical takeaway (≤120 words):**
-Ascend 950 chips leverage the **UB (Unified Bus) interconnect protocol** to compose a hierarchical super-node. By chaining UB Switches, the architecture scales to K-level super-nodes while enabling high-bandwidth, low-latency intra-super-node communication. The topology is flexible — supporting Full Mesh, Clos, or hybrid layouts — allowing the same silicon to be re-deployed across different cluster shapes. Crucially, UB is not just a chip-to-chip link but a hierarchical switching fabric: every Ascend 950 can reach any peer through at most two switch hops, making the super-node behave like a single logical compute domain.
+2. **关键技术结论**：原文将其置于 4.7 节，作为昇腾 950 区别于单芯片能力的关键论据——通过超节点互联扩展算力规模与通信带宽，支撑大模型训练/推理中的跨芯片并行与协同。
 
-**Verbatim caption:**
-> 图4-17 昇腾950的一种超节点示意图
+3. **论文作用**：承接前文单芯片微架构、Cache/HBM、计算单元等设计，论证昇腾 950 由"单 NPU"扩展到"超节点"的系统级扩展能力，是性能规模化叙事的关键支撑图。
 
 ### Figure 418 (p.36) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-fig418.png]]
@@ -452,76 +184,24 @@ Ascend 950 chips leverage the **UB (Unified Bus) interconnect protocol** to comp
 > 昇腾950 访问CPU 超大内存池示意图
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 4-17)
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture / Components:**
-- **Top tier (Spine):** A row of UB Switches (with "…" indicating scalability)
-- **Middle tier (Leaf):** Two switch groups, each serving a pod/rack
-- **Bottom tier (Compute):** Multiple Ascend 950 chips per group, fully meshed
-- Interconnects form a **two-level fat-tree / Clos-like topology** with full-mesh links between Ascend 950 chips within each group, fanning up through leaf switches to spine switches
+图示呈现昇腾950超节点的三层交换拓扑：底层多颗Ascend 950芯片以曲线互联呈Full Mesh；中层各集群内Switch汇聚芯片间通信；顶层Switch跨集群互联，构成Clos/混合组网。原文据此论证：基于UB（Unified Bus）互连协议配合UB Switch，可组建K级别规模的超节点，芯片间通过UB实现高效通信，并支持Full Mesh、Clos、灵活混合等多种拓扑。该图位于4.7.2节"超节点与超大内存池组网"开篇，确立横向扩展架构框架，为后续引入CPU超大内存池共享与池化组网方案铺垫技术前提。
 
-**Data flow:** Ascend 950 ↔ (full mesh) ↔ Leaf Switch ↔ Spine Switch ↔ Leaf Switch (other pod) ↔ Ascend 950
-
-**Key technical takeaway (≤120 words):**
-Ascend 950 chips leverage the **UB (Unified Bus) interconnect protocol** to compose a hierarchical super-node. By chaining UB Switches, the architecture scales to K-level super-nodes while enabling high-bandwidth, low-latency intra-super-node communication. The topology is flexible — supporting Full Mesh, Clos, or hybrid layouts — allowing the same silicon to be re-deployed across different cluster shapes. Crucially, UB is not just a chip-to-chip link but a hierarchical switching fabric: every Ascend 950 can reach any peer through at most two switch hops, making the super-node behave like a single logical compute domain.
-
-**Verbatim caption:**
-> 图4-17 昇腾950的一种超节点示意图
-
-### Figure 419 (p.37) ⭐深度解读
+### Figure 419 (p.37)
 ![[assets/ascend-950-npu-architecture-whitepaper-p37.png]]
 > [!quote] caption
 > 昇腾950 直接访问超大存储资源池示意图
 
-> [!tip] 技术解读（多模态）
-> **Architecture / Data Flow Description**
-
-The diagram illustrates a fat-tree-style topology with a central Switch (depicted as a stacked unit) fanning out to two Racks. The **left Rack** is a compute pod containing two stacked server groups, each pairing CPUs with **Ascend950** AI accelerator chips. The **right Rack** is a dedicated storage pod built from a 5×4 grid of Storage nodes. The Switch provides a single high-bandwidth interconnect plane that lets Ascend950 chips reach the entire storage pool directly.
-
-**Key Technical Takeaway:** Native UB (Unified Bus) ports on the Ascend950 enable direct, protocol-translation-free access to a shared storage pool, eliminating intermediate storage gateway overhead and delivering high bandwidth at lower cost.
-
----
-
-**Verbatim Caption / Surrounding Text**
-
-> **4.7.3 昇腾超节点与超大存储资源池组网**
->
-> 图4-19 昇腾950直接访问超大存储资源池示意图
->
-> 基于UB 互连可以构建超大存储资源池，昇腾 950 Rack/Pod 的计算芯片可以通过 UB 端口直接访问该超大存储资源池，不需要中间的存储协议转换开销，从而实现高带宽和低成本的存储资源访问。
-
-### Figure 420 (p.38) ⭐深度解读
+### Figure 420 (p.38)
 ![[assets/ascend-950-npu-architecture-whitepaper-p38.png]]
 > [!quote] caption
 > 昇腾超节点基于UB Switch 转换为以太网与以太世界互通示意图
 
-> [!tip] 技术解读（多模态）
-> **Architecture & Data Flow**
-The figure illustrates an Ascend super-node bridging the UB (Unified Bus) fabric with the external Ethernet world. Two external **Ethernet Switches** connect downward via ETH links in a cross-redundant topology to two **UB Switches** enclosed within the super-node boundary. Each UB Switch exposes both ETH (uplink) and UB (downlink) ports. Below, multiple **Ascend950** processors form a fully-meshed UB network — each chip links to both UB Switches and interconnects with every other Ascend950 over UB. Data flows upward: Ascend950 ↔ UB Switch � Ethernet Switch, with cross-links providing failover.
-
-**Key Technical Takeaway:** The UB Switch natively translates UB ↔ Ethernet, enabling seamless integration of an Ascend super-node into existing data-center Ethernet fabrics **without extra gateway hardware**, lowering cost and operational complexity.
-
-**Caption (verbatim):**
-图4-20 昇腾超节点基于UB Switch转换为以太网与以太世界互通示意图
-
-### Figure 421 (p.39) ⭐深度解读
+### Figure 421 (p.39)
 ![[assets/ascend-950-npu-architecture-whitepaper-p39.png]]
 > [!quote] caption
 > 昇腾芯片支持以太网与以太世界互通示意图
-
-> [!tip] 技术解读（多模态）
-> ## Description
-
-**Architecture / Data Flow:**
-- **Top tier:** Two external *Ethernet Switches* (industry-standard).
-- **Middle tier (server box):** Two internal *Ethernet Switches* with ETH ports, cross-connected to the top switches for redundancy.
-- **Bottom tier:** A row of *Ascend950* AI accelerator chips, each equipped with an ETH port and linked to both middle-layer switches (full mesh) via ETH.
-- **Inter-chip:** Ascend950 chips are tied together by a green **UB** (Unified Bus) ring/bus for chip-to-chip communication.
-
-**Key Takeaway:** Ascend 950 leverages **UBoE (UB-over-Ethernet)**, allowing it to plug directly into standard off-the-shelf Ethernet switches — eliminating proprietary fabric hardware and enabling seamless interop with the wider Ethernet ecosystem.
-
-## Caption (verbatim)
-**图4-21 昇腾芯片支持以太网与以太世界互通示意图**
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -531,28 +211,11 @@ The figure illustrates an Ascend super-node bridging the UB (Unified Bus) fabric
 > 关键术语
 
 > [!tip] 表格解读（多模态）
-> **Note:** The provided image is not a figure (architecture/components/data flow diagram) — it is a glossary table titled **表1-1 关键术语** (Table 1-1 Key Terms). There is no figure to describe for architecture or data flow. Below is the requested verbatim transcription of the caption and full table content.
+> 【图文联合解读】该表为表1-1"关键术语"，含11条术语分两列（术语/描述），具体为：AIC/AIV（AI Cube Core与Vector Core分离架构下的两类核心）、AI CPU（自研Linx816 ARM内核）、AI Die（昇腾950PR/950DT的计算Die）、CANN（异构计算架构软件栈）、CMO（SDMA实现的L2 Cache管理机制）、CTP（Unified Bus轻量级传输层）、Clos（多级无阻塞交换网络）、AIGC、Dice、Device等。
 
-**Caption / Title (verbatim):**
-**表1-1 关键术语**
+原文以此论证昇腾950的五大技术维度：①计算核心分离架构（AIC+AIV）、②自研CPU内核（Linx816）、③异构软件栈（CANN）、④片上存储与传输（SDMA/CMO、CTP）、⑤芯片与多级组网（AI Die、Clos）。
 
-**Column headers (verbatim):** 术语 | 描述
-
-**Content (verbatim):**
-
-| 术语 | 描述 |
-|---|---|
-| AIC | AI Cube Core。在 AI Core 分离架构下，一组 Cube Core 和 Vector Core 组合中的 Cube Core。 |
-| AIGC | Artificial Intelligence Generated Content，人工智能生成内容，指利用深度学习模型（如 GPT、Diffusion Models）自动生成文本、图像、音频、视频等内容的技术。 |
-| AIV | AI Vector Core。在 AI Core 分离架构下，一组 Cube Core 和 Vector Core 组合中的 Vector Core。 |
-| AI CPU | 芯片内的自研 ARM 架构 CPU 内核，在昇腾 950 芯片中指自研 Linx816 CPU Core。 |
-| AI Die | 昇腾 950PR 芯片和昇腾 950DT 芯片中的计算 Die。 |
-| CANN | Compute Architecture for Neural Networks，昇腾异构计算架构软件栈。 |
-| Clos | Clos 组网是一种基于多级交换的无阻塞网络架构，主要用于构建高性能、高扩展性的数据中心网络。其核心特点是通过多级互连和全连接拓扑实现任意节点间的无阻塞通信，同时支持水平扩展和成本优化。 |
-| CMO | Cache Maintenance Operations，通过 SDMA 实现的 L2 Cache 管理机制。 |
-| CTP | Compact Transport，Unified Bus 的轻量级传输层模式，借助下层协议共同提供可靠和拥塞控制的传输服务。 |
-| Device | Host-Device 架构的设备侧，本文指昇腾 950 系列 NPU 芯片。 |
-| Die | 芯片中具体的晶粒（Die）描述，一般一个芯片中集成一个或者多个 Die。 |
+该表是论文开篇的术语约定层，为后续架构细节、章节展开及读者理解提供统一语义基准，起到铺垫与锁定关键概念的作用。
 
 ### Table 301 (p.13) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-tab301.png]]
@@ -560,19 +223,11 @@ The figure illustrates an Ascend super-node bridging the UB (Unified Bus) fabric
 > 昇腾 950 系列芯片支持的主要规格
 
 > [!tip] 表格解读（多模态）
-> # Description of the Main Figure
+> 【图文联合解读】表3-1量化呈现昇腾950PR与950DT两款芯片AI子系统的核心规格：Cube Core数量32/28 vs 36/32/28，Vector Core 64/56 vs 72/64/56；Cube+Vector总算力在MXFP4下达1784/1561与2007/1784/1561 TFLOPS，HiF8/MXFP8/FP8与INT8分别为919/804与1034/919/804，BF16/FP16为486/425与547/486/425，TF32为243/212与273/243/212；Cube算力MXFP4为1730/1513与1946/1730/1513 TFLOPS。斜杠区分不同功耗档位。
 
-**Architecture/Components:** The table presents the **Ascend 950 series chip specifications**, organized as a comparison matrix between two variants — 昇腾950PR and 昇腾950DT. The AI Subsystem is the sole subsystem shown, broken down into core counts (Cube Core, Vector Core) and combined "Cube+Vector" compute performance across five precision tiers: MXFP4, HiF8/MXFP8/FP8, INT8, BF16/FP16, and TF32. A separate "Cube" row isolates matrix-only throughput at MXFP4 precision. Each cell lists multiple numeric values corresponding to sub-configurations of each chip variant.
+原文借此论证：①950DT规格全面领先950PR，核心数与算力更高；②覆盖MXFP4至TF32多精度，算力随位宽逐级递减；③Cube单元承担矩阵运算主体。
 
-**Data Flow:** Rows = spec items → Columns = chip variants (PR vs. DT) → Values = performance metrics across precision formats.
-
-**Key Technical Takeaway:** The 昇腾950DT achieves ~12% higher peak compute than 950PR at the top tier (2007 vs. 1784 TFLOPS MXFP4), with INT8 throughput closely matching MXFP8 performance — indicating a balanced heterogeneous-precision AI accelerator design optimized for both training and inference workloads. (120 words)
-
----
-
-## Verbatim Caption Transcription
-
-**表3-1 昇腾 950 系列芯片支持的主要规格**
+作用：作为白皮书的硬件算力基线表，为后续微架构、指令集及软件栈的设计分析提供量化参考。
 
 ### Table 401 (p.20) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-tab401.png]]
@@ -580,23 +235,13 @@ The figure illustrates an Ascend super-node bridging the UB (Unified Bus) fabric
 > HiF8 特殊值编码
 
 > [!tip] 表格解读（多模态）
-> ## Description
+> 【图文联合解读】**图文联合解读：**
 
-**Components/Structure:** The figure is a reference table (not an architecture diagram) listing four special floating-point values and their 8-bit HiF8 encodings across two columns: *特殊值* (Special Value) and *编码* (Encoding).
+1) **核心内容**：表4-1列出HiF8浮点格式对四类特殊值的8位编码——ZERO=00000000、NAN=10000000、+INF=01101111、-INF=11101111。颜色区分了符号位（红色高位）与数值位（绿色低位），清晰展示各特殊值在8比特空间中的排布。
 
-**Data Flow / Encoding Layout:** Each encoding is an 8-bit word with color-coded bit fields:
-- **ZERO** = `00000000` (all bits zero)
-- **NAN** = `10000000` (only the sign bit set)
-- **+INF** = `01101111`
-- **-INF** = `11101111` (+INF with sign bit flipped)
+2) **论证结论**：该表证明HiF8在仅8比特的紧凑表示下，仍完整保留了IEEE风格特殊值语义——零、正负无穷、NaN互不冲突且可被硬件/软件直接判别，体现了HiF8作为Ascend 950 NPU低精度张量计算核心数据类型的完备性。
 
-**Key Technical Takeaway:** HiF8 uses a non-IEEE-754 convention for NaN — it is signaled with the sign bit alone (`10000000`) rather than saturating the exponent and mantissa. Infinities share an identical exponent/mantissa pattern, distinguished solely by the sign bit, simplifying hardware comparison logic but requiring explicit handling for NaN propagation. (≈115 words)
-
----
-
-**Caption (verbatim):**
-
-表4-1 HiF8 特殊值编码
+3) **作用定位**：在论文整体方法链路中，HiF8特殊值编码表是"精度定义"章节的基础规范表，为后续矩阵引擎（Cube）、向量单元在低精度训练/推理中处理边界值（除零、上溢/下溢、异常标记）提供硬件判别依据，是连接"格式定义"与"微架构实现"的关键参考。
 
 ### Table 402 (p.25) ⭐深度解读
 ![[assets/crops/ascend-950-npu-architecture-whitepaper-tab402.png]]
@@ -604,14 +249,11 @@ The figure illustrates an Ascend super-node bridging the UB (Unified Bus) fabric
 > 昇腾 950 Memory 层次中主要 Memory 及其大小
 
 > [!tip] 表格解读（多模态）
-> **Architecture & Data Flow:**
-The schematic depicts Ascend 950's multi-die memory hierarchy. Each die (Die 0 / Die 1) contains AI Cores and AI CPUs:
+> 【图文联合解读】表4-2量化昇腾950的11级Memory容量：AI Core内L0A/B各64KB（输入/权）、L0C 256KB（累加）、L1与UB各512KB；CPU侧L1 64KB、L2 1MB、L3 4MB/Cluster；共享L2 Cache≤128MB；片上内存PR型≤128GB、DT型96/144GB。
 
-- **AI Core** = AIC (L1, L0A, L0B, L0C) + AIV (L1, Unified Buffer); connects upward to **L2 Cache**.
-- **AI CPU** = CPU L1 + CPU L2; connects upward to **L3 Cache**.
-- **L2 / L3 Cache** ↔ **Directory (Cache Coherence)** ↔ **Global Memory** (bidirectional).
+**关键结论**：L0A/B/C分离为Cube Core的乘累加数据流（x、y经Σ部分和）提供专用高速缓冲，配合UB与大容量片上内存，形成"近核高带宽—远端大容量"的存储层次，支撑矩阵复用，缓解访存对Cube算力的制约。
 
-**Key takeaway (≤120 words):** Ascend 950 splits the memory hierarchy into two purpose-built paths: **L2 Cache** specifically accelerates AIC/AIV AI compute via high-bandwidth, low-latency data staging with on-chip DRAM, while **L3 Cache** serves general-purpose AI CPU compute. Local buffers (L1/L0A/L0B/L0C/UB) supply per-tile operands, and a hardware Directory maintains cross-die coherence before reaching Global Memory — enabling heterogeneous AI CPU + accelerator workloads on a unified memory space.
+**作用**：为论文后续算力利用率推导、tiling切分策略与软件栈优化提供基础存储参数。
 
 ## 技术点深读（DEEP）
 

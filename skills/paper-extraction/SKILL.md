@@ -72,10 +72,12 @@ python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条
 ├── archive/                     # raw provenance (paper_source_moonlight.bib = 用户唯一要维护的文件，BibTeX 导出)
 ├── skills/paper-extraction/     # THIS skill + scripts
 │   ├── SKILL.md                 #   本文件
-│   ├── full_pipeline.py         #   ⭐ 全链路一条命令（sync→extract→crops→M3→formulas→push）
+│   ├── full_pipeline.py         #   ⭐ 全链路一条命令（sync→extract→crops→上下文增强M3→formulas→push）
 │   ├── sync_from_source.py      #   一键同步编排（入库+萃取，full_pipeline 的 step 1）
 │   ├── extract_phase1.py        #   深度萃取（文本+图+相关论文+MOC+manifest，merge 解读+公式+裁剪图）
 │   ├── extract_visuals.py       #   图/表/公式区域裁剪成单图（assets/crops/，报告可直接插入）
+│   ├── context_caption.py       #   ⭐ 上下文增强 M3 解读（crop+论文正文引用段落联合喂 M3，幂等跳过）
+│   ├── ar5iv_replace.py         #   坏字体/坏结构 PDF 修复：ar5iv/arxiv-HTML 原图替换+matplotlib 渲染表格
 │   ├── render_kb_graph.py       #   知识图谱+覆盖统计+流水线图（docs/images/，README 嵌入）
 │   ├── eprint_formulas.py       #   arxiv e-print LaTeX 公式抽取
 │   ├── chunk_download.py        #   分块续传下载（jobs 文件/命令行驱动）
@@ -99,7 +101,21 @@ python3 skills/paper-extraction/full_pipeline.py --push    # ⭐ 全链路一条
 
 > **持久化铁律**：`extract_phase1.py` 每次全量重生成所有 `<slug>.md` 与 `MOC.md`——任何手写进这两处正文的内容会被下次重跑抹掉。深读产出**必须落独立文件**：技术点/表格/跨论文关系 → `extraction/deep/<slug>.md`（extract 检测后嵌入 `![[deep/<slug>]]`）；MOC 谱系 → `extraction/moc_relations.md`（嵌入 `![[moc_relations]]`）；图解读 → `minimax_captions.json`（extract 直读）。详见 `DEEP_LEARNING_PROTOCOL.md`。
 
+## 裁剪与解读的质量铁律（2026-08-24 全量审计沉淀）
+
+- **图/表/公式理解必须结合论文正文**（用户核心诉求）：`context_caption.py` 把 crop 图 + visuals.json 的 caption + 正文中引用 "Figure N"/"Table N"/"图N-M" 的段落（≤2 段）一起喂 M3，产出以 `【图文联合解读】` 前缀写入 minimax_captions.json（前缀即幂等标记，重跑跳过）。full_pipeline step 4 已接入。
+- **乱码 PDF（源头字体子集化坏）走 ar5iv**：MuPDF/pdfium 都渲染乱码的论文（kv-management survey、deepseek-r1、dynamic-lcm 等），`ar5iv_replace.py <aid> fig|tab N...` 从 arxiv 原生 HTML（优先）/ar5iv（兜底）取原图（SVG→cairosvg、PNG 直下、`<object data>`、内联 SVG）或 matplotlib 渲染 `<table>`；产物登记 `extraction/ar5iv_crops.json`，extract_visuals 全量重裁时 overlay 保护不丢不覆盖。CJK 字体在仓外 `~/.config/aico/fonts/NotoSansSC.ttf`。
+- **裁剪几何关键规则**（extract_visuals.py，每条约都来自一次用户上报事故）：
+  - 栏位检测 `page_columns`：宽块判据（≥4 个 >0.72 页宽的块 ⇒ 单栏）优先于行级 cross-mid 比例（短行多的单栏页会稀释比例误判双栏）；
+  - 同编号多候选按块长升序占位（"Figure 3 shows..." 行内引用是长段落，真 caption 是独立短块；**禁止**用首词动词过滤——TMLR 风格真 caption 就是 "Table 19 summarizes..." 动词开头）；
+  - `seen_fig.add` 只能在裁剪成功之后（行内引用先于真 caption 出现，提前占位饿死真图）；
+  - 表格方向判定用紧贴块（caption 上下 25pt 内 sc≥1 的块在哪侧），堆叠表格 [tab8行][tab8 caption][tab9行][tab9 caption] 上方优先；
+  - 区域收集必须空间序截断（先按到 caption 距离排序再施闸），MuPDF 块序 = PDF 内容流序 ≠ 视觉序；
+  - `block_table_score` 用 multi-span 行比例 + 数字密度（散文 italic 词不再虚增分数）；纯文字表头行靠 zero_run≤2 容忍进入；`valid_table` 要求过半 sc≥1 才出图（宁可不裁也不产假表格图）；
+  - 公式截图：区域级英文词率 >45% 弃（整段散文卷不进公式图）；x 拉满种子栏（求和右半不被 60pt growth 窗截断）。
+
 ## 查询（任何工程）
+
 
 ```bash
 KB=/mnt/project/g00952465/AICO-knowledge/skills/paper-extraction/kb_query.py

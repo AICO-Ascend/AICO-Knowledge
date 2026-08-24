@@ -30,15 +30,11 @@ tags: []
 > 3.1
 
 > [!tip] 技术解读（多模态）
-> **Description**
+> 【图文联合解读】**图文联合解读：**
 
-The figure depicts a chunked-compression architecture for efficient transformer inference. **Panel (a)** shows the overall pipeline: input tokens are segmented and pooled into compressed chunks (C₁–C₄), fed through an Encoder whose KV outputs are consumed by a Decoder. **Panel (b)** details boundary detection, where consecutive tokens are merged into a chunk when their similarity metric exceeds a threshold τᵢ, with each token assigned to a chunk. **Panel (c)** illustrates decoder cross-attention, in which query tokens q₁–q₅ selectively attend to only the relevant compressed chunks (here, positions 1, 3, and 4) rather than the full token sequence. **Key takeaway:** boundary-aware pooling shrinks the effective sequence length, reducing KV-cache memory and attention FLOPs while preserving retrieval-relevant granularity for long-context inference.
+图(a)展示DLCM总览结构：输入token经编码器（蓝色圆角模块）后，通过Q查询机制映射至4个概念槽C₁–C₄（内含a、ba、bn等字符符号），再经后续"MH"模块继续处理。图(b)展示边界检测与池化：token序列(s、B、b、a、o、b、bn)按阈值K动态切分边界，池化为C₁–C₄四个概念。
 
-**Caption verbatim**
-
-(a) Overview Architecture
-(b) Boundary Detection & Pooling
-(c) Decoder Cross-Attention
+原文借此论证：DLCM以"概念"（concept）替代传统token作为推理粒度，通过边界检测自适应分块、Q查询检索形成潜变量序列，实现语义空间中的动态推理。该图作为全文方法基石，为Table 1预训练数据统计与下游对比实验提供架构锚点。
 
 ### Figure 9 (p.7) ⭐深度解读
 ![[assets/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-p07.png]]
@@ -75,71 +71,36 @@ The only in-line figure references are: *"Figure 2"* (ragged-boundary attention 
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
-### Table 1 (p.9) ⭐深度解读
-![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab01.png]]
-> [!quote] caption
-> Statistics of the pretraining data.
-
-> [!tip] 表格解读（多模态）
-> # Description of the Main Figure/Table
-
-**Note:** The image does not contain an architectural diagram but rather **Table 1**, which summarizes the composition of the pretraining data.
-
-**Structure (table layout):**
-- **Columns:** Data Source | Ratio | Tokens (B)
-- **Rows (4 data sources + Total):**
-  1. Nemotron-CC [15] (English Web) — 50% — 500 B tokens
-  2. MAP-CC [5] (Chinese Web) — 25% — 250 B tokens
-  3. OpenCoder-Pretrain [10] — 15% — 150 B tokens
-  4. MegaMath-Web [19] — 10% — 100 B tokens
-  5. **Total** — 100% — 1,000 B tokens
-- **Data flow implied:** Tokens from four heterogeneous sources are mixed by fixed sampling ratio to form a unified 1T-token pretraining corpus.
-
-**Key takeaway:** The corpus balances general multilingual web text (English+Chinese, 75%) with domain-specific code (15%) and math (10%) data, yielding a total of ~1T tokens.
-
----
-
-# Verbatim Caption
-
-**Table 1** Statistics of the pretraining data.
-
-| Data Source | Ratio | Tokens (B) |
-|---|---|---|
-| Nemotron-CC [15] (English Web) | 50% | 500 |
-| MAP-CC [5] (Chinese Web) | 25% | 250 |
-| OpenCoder-Pretrain [10] | 15% | 150 |
-| MegaMath-Web [19] | 10% | 100 |
-| Total | 100% | 1,000 |
-
 ### Table 2 (p.15) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab02.png]]
 > [!quote] caption
 > Performance Comparison: DLCM vs. Baseline. Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red .
 
 > [!tip] 表格解读（多模态）
-> **Note:** The image contains **Table 2** (a performance comparison), not an architecture/data-flow figure. I'll describe the table and provide a takeaway.
+> 【图文联合解读】**Table 2 图文联合解读**
 
----
+**1) 核心对象与数据：** 该表展示 DLCM 与 Baseline 在 12 项零样本基准任务上的准确率（%）对比，按 MMLU 类（8 项）、阅读理解（2 项）、中文（2 项）三类组织。DLCM 平均得分 43.92%，Baseline 41.23%，整体 +2.69%。MMLU 类中 OpenBookQA（+3.00）、ARC Easy（+2.61）、PIQA（+2.42）提升最大；阅读理解类两项均下降（BoolQ -1.47、RACE -0.72）；中文任务表现参差（C-Eval +1.71，CMMLU -0.24）。
 
-### Table Structure / Data Flow
+**2) 关键技术结论：** 论文据此论证"在自适应语义潜空间做推理"的 DLCM 在多数任务上系统性地优于标准 Transformer 基线，**尤其是常识/知识类推理任务获益最显著**，而涉及长文本精确比对（阅读理解）的任务略逊，揭示了潜空间聚合在长跨度检索上的局限。
 
-The table is a side-by-side benchmark comparison organized into **three stacked task groups**:
+**3) 在论文中的作用：** 作为主实验证据，承接第 3.6 节"ragged-boundary 注意力掩码"（Figure 2）所示结构设计与第 4 节方法论述，并以 Table 2 的整体平均增益 +2.69% 量化支撑"自适应语义潜空间推理"方案的有效性，与 Figure 9 的加速比共同构成"性能-效率"双线验证。
 
-1. **Commonsense / Reasoning (top block)** — 8 tasks (Commonsense QA, HellaSwag, Winogrande, OpenBookQA, PIQA, ARC Challenge, ARC Easy, MMLU)
-2. **Reading Comprehension / NLU (middle block)** — 2 tasks (BoolQ, RACE)
-3. **Multilingual / Chinese (bottom block)** — 2 tasks (C-Eval, CMMLU)
+### Table 3 (p.16) ⭐深度解读
+![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab03.png]]
+> [!quote] caption
+> Architecture Configuration Details. A unified view of the parameter settings for Baseline (LLaMA-1.3B) and DLCM (2.3B). Values are presented as Baseline / Ours .
 
-Each row carries four cells: **Task**, **DLCM (Ours) score**, **Baseline score**, **Diff.** (color-coded green = gain, red = regression). Bold marks the higher of each pair. A final **Average** row aggregates overall gain (+2.69, green).
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**Table 3 图文联合解读：**
 
-### Key Technical Takeaway
+该表以"Baseline / DLCM"并列形式，对比LLaMA-1.3B与DLCM-2.3B的架构配置，分四模块呈现：
 
-DLCM nets a +2.69 average zero-shot gain by winning on boundary-sensitive tasks (PIQA +2.42, OpenBookQA +3.00, C-Eval +1.71) but regresses on dense reading-style tasks (BoolQ −1.47, RACE −0.72), suggesting concept compression strengthens high-level semantic coherence at the cost of fine-grained token precision in mid-sequence regions.
+- **General**：DLCM参数量2.3B（≈1.8×基线），共享Vocab=128,815、Max Pos=8k、Swish激活；
+- **Dimension**：DLCM新增Main Hidden *dₚ*=3,072，自/交叉注意中间层均扩至6,144；
+- **Layer**：DLCM将32层重构为Encoder 10 + Backbone 16 + Decoder 6三段式；
+- **Attention**：DLCM保留24个Attn Heads但KV Heads减半至12，Backbone独立48 Heads / 24 KV Heads。
 
----
-
-### Caption (verbatim)
-
-**Table 2 Performance Comparison: DLCM vs. Baseline.** Zero-shot accuracy (%) categorized by task type. Improvements are shown in green and regressions in red.
+**技术结论**：DLCM并非简单堆叠参数，而是通过编码器-骨干-解码器分层与双维度隐藏设计，将推理从token级拓展至concept级潜在语义空间。**作用**：为后续性能/效率实验提供公平架构对照基线，验证"自适应语义空间潜在推理"设计而非单纯增大模型即可带来增益。
 
 ### Table 4 (p.17) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab04.png]]
@@ -147,15 +108,13 @@ DLCM nets a +2.69 average zero-shot gain by winning on boundary-sensitive tasks 
 > Ablation Study: Global Parser vs. Normal. Performance comparison on downstream tasks. Both models aim for a target compression ratio of R = 4 . The Global Parser achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.
 
 > [!tip] 表格解读（多模态）
-> **Description (Table 4 structure & key takeaway):**
+> 【图文联合解读】**表格解读：**
 
-Table 4 is an ablation comparison matrix benchmarking a **Global Parser** model against a **Normal** baseline across six downstream reasoning benchmarks (ARC Challenge, ARC Easy, Commonsense QA, HellaSwag, OpenBookQA, PIQA), all evaluated under Accuracy. Each row reports the model's score; the bottom rows aggregate an average improvement (+2.1%) and the realized compression ratio (3.92 vs. 3.15, target R=4). Bolded cells indicate the per-task winner. Global Parser wins 5/6 tasks, with only OpenBookQA favoring Normal.
+**1) 核心数据**：表4在目标压缩比 R=4 下，对比 Global Parser 与 Normal 两种解析策略在 6 项下游任务上的 Acc：ARC-C（0.3038 vs 0.2858）、ARC-E（0.6296 vs 0.6242）、CSQA（0.2457 vs 0.2228）、HellaSwag（0.3507 vs 0.3499）、OpenBookQA（0.3220 vs 0.3280）、PIQA（0.6806 vs 0.6785），平均提升 +2.1%；实际压缩比 3.92 vs 3.15。
 
-**Key takeaway:** A globally-aware parsing strategy delivers a tighter realized compression ratio (3.92 ≈ target 4) *and* a +2.1% mean accuracy gain, showing that ratio fidelity and downstream utility are not in tension.
+**2) 关键结论**：Global Parser 在多数任务上精度更优（5/6 胜），且实际压缩比 3.92 更逼近目标 R=4，证明全局解析策略既能稳定压缩、又能保留判别性语义。
 
-**Caption (verbatim):**
-
-> **Table 4 Ablation Study: Global Parser vs. Normal.** Performance comparison on downstream tasks. Both models aim for a target compression ratio of R =4. The **Global Parser** achieves a realized ratio much closer to the target while consistently improving accuracy on most tasks.
+**3) 论文作用**：作为消融实验，验证"全局解析"是该自适应语义空间方法的关键设计，对"动态概念建模"主线起到设计选择合理性的支撑作用。
 
 ### Table 5 (p.18) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab05.png]]
@@ -163,36 +122,23 @@ Table 4 is an ablation comparison matrix benchmarking a **Global Parser** model 
 > Average tokens per concept across content types and compression ratios. Values represent the actual granularity achieved for each target compression setting.
 
 > [!tip] 表格解读（多模态）
-> No figure is present in this image.
+> 【图文联合解读】Table 5 展示六类内容（Casual 中/英、Technical 中/英、Code、Math/Science）在 Target 8/4/2 三档压缩下的实际"每概念平均 token 数"：Target 8 跨度 6.09–10.58（Technical English 最高），Target 4 收窄至 3.27–4.41（Math/Science 最高 4.41），Target 2 趋近均匀的 1.76–2。
 
-The image shows only text content from page 18 of the paper:
-- **Table 5 caption** (top of page)
-- **Section 9: Conclusion** (the body text)
-- **Page number 18** (bottom)
+关键结论：实际粒度随压缩目标自适调整——低压缩对粗概念（≈10 token），高压缩对细且均匀颗粒（≈2 token），跨内容类型差异随压缩加深而收敛，证明动态语义空间具备按需细分化能力。
 
-There is no main architecture diagram, figure, or visualization rendered in this image — only the textual conclusion discussing Dynamic Large Concept Models (DLCM) and the table caption referencing token granularity across content types/compression ratios.
-
-If you intended to share a figure (e.g., the DLCM architecture diagram showing token → concept hierarchy, or a results plot), the image content did not transmit successfully, or the correct file was not attached. Could you re-upload the figure you'd like described? Once provided, I can:
-
-1. Describe its architecture/components/data flow plus one key technical takeaway (≤120 words)
-2. Transcribe the caption verbatim
+论文作用：作为结论处的核心实证，支撑"自适应潜在推理"主张，验证模型在不同语料/压缩设置下均能稳定控制概念粒度。
 
 ### Table 6 (p.7) ⭐深度解读
 ![[assets/crops/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space-tab06.png]]
 > [!quote] caption
-> provides detailed performance . To more intuitively analyze the performance trends, we have plotted the speedup ( T /T ) in Figure 9 .
+> Performance comparison (Batch=1, Heads=32, Interval=6)
 
 > [!tip] 表格解读（多模态）
-> **Description of Figure 2 (based on surrounding text, as the figure itself is not visible in the provided image):**
+> 【图文联合解读】Table 6 在 Batch=1、Heads=32、Interval=6 固定配置下对比 Flex 与 Flash Varlen 两种注意力实现。表中前两列（误标 Seq Length/Hidden Size）实为二者实际延迟（ms），"Flex (ms)" 列为加速比（1.26×–1.73×），后两列依次为扫描序列长度（2K/4K/8K/16K）与隐藏维度（1K/2K/4K）。
 
-The figure illustrates the **concept replication strategy** for efficient cross-attention. On the conceptual side, concepts c₁ and c₂ map to variable-length token groups (e.g., t_1 maps to c_1, while t_2, t_3 map to c₂), producing a "ragged" attention mask. The figure contrasts this with the replication strategy: each concept feature c_j is expanded along the token dimension (K' and V' via `expand(segment_lengths)`), aligning Key/Value length with Query length (L) so a standard L×L FlashAttention-Varlen kernel can replace an irregular L×M Flex Attention mask.
+核心发现：Flex 在全部 12 组配置中均快于 Flash Varlen；序列越长优势越显著（16K 时达 1.66×–1.73×），短序列（2K）下收窄至 1.44×–1.48×，整体呈稳定单调加速。
 
-**Key Technical Takeaway:** Concept replication converts variable-length concept-token mappings into a fixed self-attention shape, enabling hardware-optimal FlashAttention (VarLen) kernels instead of costly dynamic Flex Attention masks.
-
-**Caption (verbatim from the text):**
-> "As illustrated in Figure 2, when tokens **t**₋₁g belong to concept c₁, and tokens **t**₋₂, **t**₋₃g belong to c₂, the resulting attention mask effectively has a 'ragged' boundary."
-
-*Note: No standalone figure caption is shown in the provided image—only the in-text reference above. The figure itself is not rendered in the supplied content.*
+该表用以论证 Flex 注意力机制的可靠性，是论文"动态概念建模"高效潜在推理链路的工程基石；配合 Figure 9 的速度比趋势曲线，共同支撑"自适应语义空间下推理高效性"这一核心结论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

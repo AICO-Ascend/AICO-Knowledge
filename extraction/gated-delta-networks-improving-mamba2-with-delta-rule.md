@@ -30,7 +30,13 @@ tags: [architecture]
 > Visualization of the (hybrid) architecture and block design of Gated DeltaNet models.
 
 > [!tip] 技术解读（多模态）
-> 【MiniMax 解读】Gated DeltaNet 架构(Fig.1)：delta-rule 线性注意力 + 乘性门控(α,β)增联想召回；H1/H2 混合变体把 Gated DeltaNet 与 Mamba2(SSM) + Sliding-Window Attention 交错，融合选择性长程记忆+结构化递归+局部上下文。block 设计：q/k 路径=线性投影+shortconv+SiLU+L2norm，v=线性投影+shortconv+SiLU，α/β=线性投影，输出 gate=线性投影+SiLU。Wiki ppl 16.42、zero-shot 55.32，H2 混合 ppl 15.91 最优。线性注意力/SSM 架构核心图。
+> 【图文联合解读】**图文联合解读**
+
+1) 图分三块：左为Gated DeltaNet-H1架构（N×重复，每块含Gated DeltaNet+MLP→SWA+MLP共2子层）；中为H2混合架构（Mamba2+MLP→Gated DeltaNet+MLP→SWA+MLP共3子层）；右为Block设计，展示四条并行路径——q/k（Linear+Conv+SiLU+L2 norm）、v（Linear+Conv+SiLU）、α/β（Linear+SiLU）汇入Gated Delta Rule→Norm→Linear输出。
+
+2) 论证结论：delta-rule线性注意力配合乘性门控α、β可显著增强联想召回；H1/H2通过交错DeltaNet、Mamba2(SSM)、SWA，实现选择性长程记忆+结构化递归+局部上下文三者的优势融合。
+
+3) 在论文中地位：作为架构总图定义模型骨架，为后续WikiText ppl 16.42、zero-shot ppl 55.32及H2最优ppl 15.91等核心实验结果提供结构支撑。
 
 ### Figure 2 (p.8) ⭐深度解读
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-fig02.png]]
@@ -39,22 +45,13 @@ tags: [architecture]
 > Length extrapolation on six long benchmarks.
 
 > [!tip] 技术解读（多模态）
-> ## Figure 2 Description
+> 【图文联合解读】**图2图文联合解读**
 
-**Layout:** A 2×3 grid of line plots evaluating perplexity (y-axis) as a function of sequence length (x-axis: 4k → 20k tokens) across six long-context benchmarks: GovReport, QMSum, NarrativeQA, Qasper, CodeParrot, and PG19.
+该图以3×2网格展示6个长文本基准(GovReport、Qasper等)上、序列长度从4k扩展至20k时的性能曲线，纵轴为各任务指标。图例含四条线：Mamba1(橙)、DeltaNet(蓝)、GatedDeltaNet及另一变体(绿/棕)。
 
-**Components (legend):** Seven models compared:
-- Pure RNNs: Mamba1, DeltaNet, Mamba2
-- Hybrid: Samba (RNN + attention)
-- Proposed: GatedDeltaNet, GatedDeltaNet-H1, GatedDeltaNet-H2 (hybrid gated variants)
+**关键观察**：在所有基准上，**Mamba1退化最严重**——如GovReport从~9.1降至~6.0，Qasper从~20降至~13；**DeltaNet(蓝)居中**，16k后也明显下滑；而**GatedDeltaNet系列(绿/棕)**曲线始终位于最下方簇，在20k处仍保持稳定。
 
-**Data flow:** Perplexity values are computed for each model at progressively increasing context lengths, producing U-shaped curves that dip near training length and rise at extrapolation.
-
-**Key technical takeaway:** Gated DeltaNet (and its hybrid H1/H2 variants) consistently achieves the lowest perplexity across all six benchmarks and degrades least at 20K, indicating that adding a gating mechanism to the delta update rule improves both extrapolation stability and memory management in linear-recurrent models.
-
-## Caption (verbatim)
-
-**Figure 2:** Length extrapolation on six long benchmarks.
+**论证作用**：该实验用以证明——**门控(gating)与Delta规则的组合显著改善了Mamba2/DeltaNet基线的长度外推能力**，是验证"Gated DeltaNet"核心设计(在Delta规则上引入遗忘门)有效性的关键证据，呼应论文标题"improving Mamba2 with delta rule"的主旨。
 
 ### Figure 3 (p.9) ⭐深度解读
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-fig03.png]]
@@ -63,14 +60,11 @@ tags: [architecture]
 > Training throughput comparison of 1.3B models on a single H100 GPU. standalone mixers: Samba outperforms Mamba, while Gated DeltaNet-H1 and -H2 outperform
 
 > [!tip] 技术解读（多模态）
-> **Figure 3 Description (Architecture/Components/Data Flow):**
-Figure 3 is a line plot comparing training throughput (Y-axis: Thousands of Tokens Per Second, ~25–60 K/s) across varying sequence length × batch size configurations (X-axis: 2K×16, 4K×8, 8K×4, 16K×2) for 1.3B-parameter models on a single H100 GPU. Eight model variants are plotted: Transformer++, DeltaNet, Gated DeltaNet, Mamba1, Mamba2, Samba, and the proposed Gated DeltaNet-H1 and -H2 hybrid/standalone mixers. Transformer++ shows a steep degradation (~55 → ~27 K/s) as sequence length grows, while linear-attention and gated-RNN baselines remain flat (~38–50 K/s).
+> 【图文联合解读】图3为折线图，横轴为序列长度×批大小组合（2K×16→16K×2），纵轴为训练吞吐（K tokens/s，~25–60）。展示8个1.3B模型在单卡H100上的表现：Transformer++（蓝线）随序列增长由~55急降至~27 K/s；而DeltaNet、Mamba1/2、Gated DeltaNet、Samba等线性注意力/Gated RNN基线保持平稳（~38–50 K/s）。
 
-**Key Technical Takeaway:**
-Gated DeltaNet-H1 and -H2 deliver the highest stable throughput (~50–54 K/s) across all sequence lengths, overcoming DeltaNet's poor short-sequence performance while preserving linear scaling.
+原文借此论证两点：(1) 独立混合器中Samba优于Mamba；(2) 所提Gated DeltaNet-H1与-H2吞吐超越Samba，证明Delta Rule+门控机制兼具高质量与高效率。
 
-**Caption (verbatim):**
-"Figure 3: Training throughput comparison of 1.3B models on a single H100 GPU."
+该图作用：与下游语言建模/下游任务质量指标形成互补，从算力成本维度佐证所提架构"质量–效率"双重优势，闭环论证其工程实用性。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -80,21 +74,23 @@ Gated DeltaNet-H1 and -H2 deliver the highest stable throughput (~50–54 K/s) a
 > Comparison of different linear RNN models and their corresponding online learning objectives using the framework from Liu et al. ( 2024 ). For convenience, we simplify Longhorn’s vector-valued β to scalar β .
 
 > [!tip] 表格解读（多模态）
-> # Description
+> 【图文联合解读】**Table 1 图文联合解读**
 
-Although labeled "Table 1," this is a tabular comparison figure presenting five linear RNN models (LA, Mamba2, Longhorn, DeltaNet, Gated DeltaNet) along two axes: (i) their **online learning objective** (a Frobenius-norm loss penalizing deviation of a state matrix **S**_t from its previous value, with various inner-product/regression-like terms), and (ii) the corresponding **online state update** rule (a recurrence combining a decay factor on the prior state with a rank-1 outer-product update driven by the input **v**_t**k**_t^T). The table unifies these methods under a shared framework, showing how each differs only in scalar gating/decay coefficients (α_t, β_t) and an adaptive ε_t correction. **Key takeaway:** modern linear RNNs are unified as variants of an online ridge-regression/least-squares problem on a state matrix, with state updates decomposable into a multiplicative decay plus a rank-1 associative write — implying their expressivity is largely governed by how **α** and **β** scale memory and forgetting.
+该表用Liu(2024)在线学习框架，统一对比LA、Mamba2、Longhorn、DeltaNet与本文Gated DeltaNet五者的目标函数及状态更新规则。Gated DeltaNet目标为‖**S**_t−α_t**S**_{t-1}‖²_F−2⟨**S**_t**k**_t, β_t(**v**_t−α_t**S**_{t-1}**k**_t)⟩，对应更新为α_t(**I**−β_t**k**_t**k**_t^T)**S**_{t-1}+β_t**v**_t**k**_t^T。作者据此论证：Gated DeltaNet同时融合Mamba2的乘性遗忘门α_t与DeltaNet的delta-rule增量门β_t，是两者的自然统一体。在论文整体链路上，该表为Fig.1架构设计及H1/H2混合变体实验奠定"选择性遗忘+联想召回"的双重理论动机。
 
-# Caption (verbatim)
+### Table 2 (p.5) ⭐深度解读
+![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab02.png]]
+> [!quote] caption
+> Zero-shot performance comparison on S-NIAH benchmark suite for 1.3B models (see § 4 for setups)
 
-**Table 1:** Comparison of different linear RNN models and their corresponding online learning objectives using the framework from **Liu et al. (2024)**. For convenience, we simplify Longhorn's vector-valued β to scalar β.
+> [!tip] 表格解读（多模态）
+> 【图文联合解读】**表2核心**：1.3B模型在S-NIAH三任务（pass-key、数字、UUID检索）零样本对比，序列长1K–8K。
 
-| Method | Online Learning Objective | Online Update |
-|---|---|---|
-| LA | ‖**S**_t − **S**_{t−1}‖²_F − 2⟨**S**_t **k**_t, **v**_t⟩ | **S**_t = **S**_{t−1} + **v**_t **k**_t^T |
-| Mamba2 | ‖**S**_t − α_t **S**_{t−1}‖²_F − 2⟨**S**_t **k**_t, **v**_t⟩ | **S**_t = α_t **S**_{t−1} + **v**_t **k**_t^T |
-| Longhorn | ‖**S**_t − **S**_{t−1}‖²_F − β_t ‖**S**_t **k**_t − **v**_t‖² | **S**_t = **S**_{t−1}(**I** − ε_t **k**_t **k**_t^T) + ε_t **v**_t **k**_t^T, ε_t = β_t / (1 + β_t **k**_t^T **k**_t) |
-| DeltaNet | ‖**S**_t − **S**_{t−1}‖²_F − 2⟨**S**_t **k**_t, β_t (**v**_t − **S**_{t−1}**k**_t)⟩ | **S**_t = **S**_{t−1}(**I** − β_t **k**_t **k**_t^T) + β_t **v**_t **k**_t^T |
-| Gated DeltaNet | ‖**S**_t − α_t **S**_{t−1}‖²_F − 2⟨**S**_t **k**_t, β_t (**v**_t − α_t **S**_{t−1}**k**_t)⟩ | **S**_t = **S**_{t−1} (α_t(**I** − β_t **k**_t **k**_t^T)) + β_t **v**_t **k**_t^T |
+**关键数据**：Gated DeltaNet在S-NIAH-1 8K达91.8（SOTA），Mamba2骤降至30.4；S-NIAH-2 4K为92.2，远超Mamba2的56.2；S-NIAH-3 4K为27.6 vs Mamba2的4.6，三项均最优。
+
+**论证结论**：原文借表说明Mamba2采用负内积损失，长序列关联召回衰减严重；而delta rule优化在线回归‖S_t k_t − v_t‖²，可视为隐式SGD更新，故Gated DeltaNet在上下文关联回忆上显著优于Mamba2。
+
+**论文作用**：作为消融对比的核心证据，支撑"门控+delta rule优于Mamba2"的核心方法论主张。
 
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab03.png]]
@@ -102,16 +98,13 @@ Although labeled "Table 1," this is a tabular comparison figure presenting five 
 > Performance comparison on language modeling and zero-shot common-sense reasoning.
 
 > [!tip] 表格解读（多模态）
-> ## Caption (verbatim)
-**Table 3:** Performance comparison on language modeling and zero-shot common-sense reasoning.
+> 【图文联合解读】**图文联合解读：**
 
-## Description of the Main Figure (Table 3)
+**1) 核心数据：** Table 3 对比 10 个模型在 WikiText/LAMBADA 困惑度与 7 项零样本推理（PIQA、HellaSwag、WinoGrande、ARC-e/c、SIQA、BoolQ）上的表现。混合组中 Gated DeltaNet-H1 综合均值 56.40 最高，H2 次之 56.18；纯循环组内 Gated DeltaNet 以 55.32 居首，超过 Mamba2(54.89)、DeltaNet(52.14)、Mamba(53.12)；其 Wiki.ppl 16.42、LMB.ppl 12.17 均为该组最低。
 
-**Structure / Components:** Table 3 is a comparative results matrix. Its visible column header row shows **Models** on the left, followed by seven zero-shot common-sense reasoning benchmarks — **SWDE, SQD, FDA, TQA, NQ, Drop, Avg** — separated by a horizontal rule. (The table is cropped, so the numeric values and language-modeling perplexity column are not shown.)
+**2) 关键结论：** 门控机制叠加 delta 更新规则相对 DeltaNet/Mamba2 实现全指标提升，验证方法有效性；H1/H2 混合架构同时超越 Transformer++(52.25) 与 Samba(54.00)，确立其作为新一代基础架构的竞争力。
 
-**Data flow:** Each row corresponds to a model (Transformer baselines, Mamba, Samba, and the proposed hybrid architecture), and each cell carries that model's score on the respective benchmark, with the rightmost **Avg** column aggregating zero-shot accuracy.
-
-**Key Technical Takeaway (≤120 words):** All evaluated models are trained under matched conditions — Llama2 tokenizer (32K vocab), 0.5M-token batch size, and 4K-token training context — with **Samba and the hybrid models using a 2K sliding window**, ensuring that performance gains on benchmarks (SWDE, SQuAD, FDA, TQA, NQ, DROP) reflect architectural design rather than training-recipe differences. The takeaway: the table isolates the **hybrid (Samba) architecture's advantage** in zero-shot common-sense reasoning against pure-attention and pure-SSM baselines.
+**3) 论文作用：** 与 Figure 3 的吞吐量曲线互补，形成"质量–效率"双维度论证，支撑 Gated DeltaNet 的核心主张。
 
 ### Table 4 (p.7) ⭐深度解读
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab04.png]]
@@ -119,27 +112,7 @@ Although labeled "Table 1," this is a tabular comparison figure presenting five 
 > Accuracy on recall-world retrieval tasks with input truncated to 2K tokens. SQD: SQUADE. TQA: Trivial QA.
 
 > [!tip] 表格解读（多模态）
-> I'm unable to complete this task as described because the content you've provided does not contain a figure. What you've shared is only:
-
-1. A **table caption** (not a figure caption)
-2. A page number "7"
-
-**What was actually provided:**
-
-> **Table 4:** Accuracy on recall-world retrieval tasks with input truncated to 2K tokens. SQD: SQUADE. TQA: Trivial QA.
-
-**No image, architecture diagram, component schematic, or data flow visualization is included in the message.** I can see the caption text, but there is no underlying figure whose components, architecture, or data flow I could describe.
-
-**Verbatim transcription of the caption text provided:**
-
-> "Table 4: Accuracy on recall-world retrieval tasks with input truncated to 2K tokens. SQD: SQUADE. TQA: Trivial QA."
-
-**To help you, I could instead:**
-- Describe what an *architecture diagram* in an NLP retrieval paper (matching this table's topic) typically depicts
-- Analyze or paraphrase the caption itself (single sentence, ~20 words, already at <120 words)
-- Wait for you to re-upload the figure image or describe it
-
-Would you like me to proceed with one of these alternatives?
+> 【图文联合解读】表4展示2K长度检索任务（SWDE/SQD/FDA/TQA/NQ/Drop/Avg）上各模型准确率。纯循环模型中Gated DeltaNet平均30.6，优于Mamba2（29.8）、DeltaNet（26.2），SWDE提升至25.4；混合模型中Gated DeltaNet-H2平均40.1，超越Transformer++（37.0）与Samba（37.3），SWDE/SQD/TQA分别达38.2/40.4/63.3。该表作为关键实验证据，验证门控+Delta规则结合显著增强模型的检索/记忆能力，是论文"改进Mamba2"主张的核心实证支撑。
 
 ### Table 5 (p.9) ⭐深度解读
 ![[assets/crops/gated-delta-networks-improving-mamba2-with-delta-rule-tab05.png]]
@@ -147,24 +120,9 @@ Would you like me to proceed with one of these alternatives?
 > Accuracy on 14 tasks from LongBench ( Bai et al. , 2023 ): Narrative QA, QasperQA, MultiField QA, HotpotQA, 2WikiMulti QA, Musique, GovReport, QMSum, MultiNews, TRec, Trivia QA, SamSum, LCC, and RepoBench-P by order.
 
 > [!tip] 表格解读（多模态）
-> **Figure description:**
+> 【图文联合解读】**Table 5 图文联合解读**
 
-The line chart plots inference throughput (Kt/s, y-axis: 35–60) against a varying input parameter (likely sequence length or batch/context size, x-axis), comparing several model families.
-
-**Components / data flow:**
-- **Blue line (Transformer-L...):** Starts highest at ~55 Kt/s but collapses steeply downward, crossing all other curves and falling off-chart past 30 Kt/s.
-- **Light & dark green lines:** Hold steady around 49–53 Kt/s across the full range.
-- **Red line:** Flat near 48 Kt/s.
-- **Olive line:** Hovers around 45–46 Kt/s.
-- **Dark gray line:** Drops modestly from ~45 to ~43 Kt/s.
-- **Orange & pink (DeltaNet) lines:** Remain flat near 38 Kt/s, exhibiting zero degradation.
-
-**Key technical takeaway (≤120 words):**
-Transformer inference throughput degrades sharply as context length grows — the blue Transformer line plummets from ~55 to under 30 Kt/s, while every DeltaNet/linear-attention variant (orange, pink, gray) stays essentially flat. This is the core efficiency argument: quadratic attention's O(n²) cost makes long-context serving bandwidth-bound, whereas recurrent or linear-attention models maintain constant per-token cost, giving them a decisive and growing advantage at long contexts where the Transformer curve collapses.
-
-**Caption (verbatim):**
-
-Table 5: Accuracy on 14 tasks from LongBench (Bai et al., 2023): Narrative QA, QasperQA, MultiField QA, HotpotQA, 2WikiMulti QA, Musique, GovReport, QMSum, MultiNews, TRec, Trivia QA, SamSum, LCC, and RepoBench-P by order.
+该表对比了Gated DeltaNet及混合变体（H1/H2）与8个基线（RetNet、HGRN2、Mamba、DeltaNet、Mamba2、Transformer++、Samba等）在LongBench 14个长上下文任务上的精度。在纯循环模型组，Gated DeltaNet平均分达16.6，明显高于Mamba2(13.5)与DeltaNet(13.6)；在混合模型组，H2版本以18.4的平均分大幅超越Samba(15.9)与Transformer++(11.0)，并在MultiNews(40.5)、SamSum(27.9)、MultiField QA(27.1)等任务上取得全表最高分。该表作为长文本评估的核心证据，验证了"门控机制+Delta规则"对Mamba2长上下文理解能力的实质性提升，并证明将门控Delta模块嵌入混合架构可进一步放大优势，支撑论文的核心方法论主张。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

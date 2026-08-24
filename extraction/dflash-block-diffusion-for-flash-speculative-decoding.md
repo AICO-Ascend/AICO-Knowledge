@@ -30,11 +30,9 @@ tags: [speculative]
 > Speedup comparison between DFlash, EAGLE-3 against Autoregressive Decoding on Qwen3-8B (Yang et al., 2025) with the
 
 > [!tip] 技术解读（多模态）
-> **Description (73 words):**
-The figure is a grouped bar chart comparing speculative decoding speedup across seven benchmarks (GSM8K, Math500, AIME25, HumanEval, MBPP, LiveCodeBench, MT-Bench) on Qwen3-8B. Baseline (gray) is normalized to 1.00×, EAGLE-3 (green) achieves 1.81×–2.23×, while DFlash (blue) ranges from 2.75× (MT-Bench) to 6.08× (Math500). **Key takeaway:** DFlash delivers 2.5×–3× higher speedup than EAGLE-3 across most benchmarks, peaking at 6.08× on Math500, demonstrating that block-diffusion drafting substantially outperforms autoregressive speculative decoding on reasoning-heavy tasks.
+> 【图文联合解读】**图文联合解读**
 
-**Caption (verbatim):**
-Figure 1. Speedup comparison between DFlash, EAGLE-3 against Autoregressive Decoding on Qwen3-8B (Yang et al., 2025) with the Transformers backend. Overall, DFlash achieves more than 2.5x higher speedup than EAGLE-3.
+图1以分组柱状图形式展示DFlash、EAGLE-3相对自回归基线（均归一为1.00）在Qwen3-8B+Transformers后端、7个基准上的加速比：GSM8K（5.15 vs 2.23）、Math500（6.08 vs 2.05）、AIME25（5.62 vs 2.05）、HumanEval（5.14 vs 2.17）、MBPP（4.65 vs 1.93）、LiveCodeBench（5.51 vs 1.81）、MT-Bench（2.75 vs 1.90）。DFlash在所有任务上均显著领先，平均超EAGLE-3约2.5倍以上，最高比值出现在LiveCodeBench（约3.0×），最低也在MT-Bench（约1.45×）。原文借此直接论证"块扩散式投机解码"在精度无损前提下，可大幅超越主流自回归投机方法（EAGLE-3），作为开篇核心实验，奠定全文方法优势与实用价值。
 
 ### Figure 2 (p.4) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig02.png]]
@@ -43,22 +41,13 @@ Figure 1. Speedup comparison between DFlash, EAGLE-3 against Autoregressive Deco
 > DFlash Inference Design. Hidden context features extracted from the target model are fused and injected into each draft layer’s
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture:** The diagram depicts a **diffusion-based speculative decoding** pipeline. The prompt "Diffusion is good" enters the **Target Model** (top), producing *Fused Target Context Features* (blue) and a *Target Decode Token* (orange). Simultaneously, `<mask>` tokens are converted via **Target Embedding** into *Mask Tokens* (green). These streams are concatenated and processed sequentially through stacked **Draft Layers** (Layer 1, Layer 2, ...), each containing a **KV Cache**, **Bidirectional Attention**, and **MLP**. The final output passes through a **Target LM Head** to generate tokens *for speculative decoding*.
+图2展示DFlash推理流程的三个阶段：(1) 左侧目标模型编码上下文（含`-./&01`等前缀token），提取**隐藏上下文特征**（顶部阴影方块）并向中间虚线框注入；(2) 中间虚线框为草稿模型，融合目标特征后以**块扩散**方式并行生成约**278个token候选**（如"45%5/0$*5…"），左下虚线框示意已确认/待确认/待生成三类token状态；(3) 右侧目标模型一次性并行验证候选块，部分token被拒绝（"!!!"），其余被接受并继续生成下一块。
 
-**Key Takeaway:** Draft tokens leverage bidirectional attention over fused target context and prior decoded tokens (via KV cache), enabling parallel/non-autoregressive speculation rather than sequential left-to-right generation — accelerating inference while conditioning on full context.
+**论证结论**：目标模型的隐藏特征可直接作为草稿模型各层的条件输入，无需从头预测；块级扩散+并行验证使每步解码一次前向即可生成数百token。
 
-(112 words)
-
-## Verbatim Text Transcription
-
-> "Diffusion is good" → Target Model → (column of tokens)
-> Target Embedding → for `<mask> <mask> <mask>`
-> KV Cache | Draft Layer 1 | Bidirectional Attention | MLP
-> Draft Layer 2 → …
-> Target LM Head → for speculative decoding `<eos>`
-> Legend: ▢ Fused Target Context Feature | ▢ Target Decode Token | ▢ Mask Token
+**论文作用**：作为方法核心示意图，配合Table 2的**speedup/acceptance**数据，直观证明DFlash相较传统自回归推测解码的加速机理与收益来源。
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig03.png]]
@@ -67,15 +56,13 @@ Figure 1. Speedup comparison between DFlash, EAGLE-3 against Autoregressive Deco
 > Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.
 
 > [!tip] 技术解读（多模态）
-> **Figure Description:**
+> 【图文联合解读】**图文联合解读：**
 
-Figure 3 is a grouped bar chart comparing draft-token generation latency across four configurations: 1-layer EAGLE-3 (gray) versus DFlash with 1 (blue), 3 (orange), and 5 (green) layers. The x-axis shows the number of draft tokens (4, 8, 16), and the y-axis shows latency in milliseconds.
+**1）核心对象与数据：** 分组柱状图，横轴为 draft token 数（4/8/16），纵轴为生成延迟（ms）。EAGLE-3（1层）随 token 数线性增长：约 6.5→12→26 ms；而 DFlash 三种配置几乎平坦——DFlash(1) 始终 ≈2 ms，DFlash(3) 约 3.5–4 ms，DFlash(5) 约 5–6 ms。在 16 token 处，EAGLE-3 比最快 DFlash(1) 慢约 13 倍。
 
-**Key Technical Takeaway:**
-EAGLE-3's latency grows steeply and roughly linearly with the number of draft tokens (~6→11→25 ms), reflecting its autoregressive per-token drafting cost. In contrast, DFlash latency stays nearly flat (~2–6 ms) across all budgets because it generates all draft tokens in parallel within a single forward pass—decoupling cost from speculation length.
+**2）关键结论：** DFlash 因采用 Block Diffusion 并行生成全部 draft token，延迟与草稿长度几乎解耦；而 EAGLE-3 因自回归逐 token 生成，成本随长度线性放大。这验证了 DFlash 作为 draft model 在效率上对自回归方案的数量级优势。
 
-**Caption (verbatim):**
-Figure 3. Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.
+**3）在论文中的作用：** 该图是论文核心卖点之一的实验支撑——证明 DFlash 不仅在生成质量/接受率上可竞争，更以"恒定低延迟"显著降低 speculative decoding 的单步开销，为其在在线推理/树形解码场景中的实用性提供量化证据。
 
 ### Figure 4 (p.5) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig04.png]]
@@ -84,21 +71,13 @@ Figure 3. Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.
 > DFlash training attention. The target model provides context features (blue) that condition the draft model. The input consists of clean prompt tokens p and clean response tokens r.
 
 > [!tip] 技术解读（多模态）
-> ## Description
+> 【图文联合解读】**图4 联合解读**
 
-**Architecture/components:** Two side-by-side token grids depict a context-extension scheme. The left panel "From Target Model" shows a triangular causal mask: blue *Target Context Features* fill positions p1–p4 and r1–r2, expanding rightward down each row, with white *Invisible Tokens* elsewhere. The right panel "Mask Blocks" shows a wider grid where each response token (r1, r2, r3) is followed by three `<m>` mask tokens. Yellow *Clean Tokens* anchor each block, green *Mask Tokens* populate the `<m>` positions, and the rest remain invisible.
+图分两栏。左栏"From Target Model"为6列（p1–p4, r1, r2）因果三角掩码，目标模型对prompt与干净response自回归编码，输出蓝色上下文特征；右栏"Mask Blocks"为12列×12行的块注意力矩阵，按r1/m/m/m、r2/m/m/m、r3/m/m/m划分为3块，每块4行中仅允许同块clean token（橙）及前块mask token（绿）相互可见，白色为不可见token。
 
-**Data flow:** Target context features (left) are aligned with corresponding clean-token-plus-mask-block sequences (right), so each response token is replicated as a "clean + masked" block to enrich supervision.
+**核心结论**：draft模型以左侧蓝色目标特征为cross-attention条件，在每个clean response token之后并行预测3个mask token，从而形成"块扩散"式训练目标；条件注入被严格限定在clean token位置，避免未来信息泄露。
 
-**Key takeaway (≤120 words):** The technique augments the target model's causal context by replicating each response token into a clean-anchor block followed by learned mask tokens. This expands the visible receptive field without breaking autoregressive causality, providing denser self-supervised signals across positions that would otherwise be invisible under strict causal masking — improving representation quality in masked-prediction-style training while maintaining compatibility with the target model's generation structure.
-
-## Caption (verbatim transcription)
-
-> **From Target Model** &nbsp;&nbsp;&nbsp;&nbsp; **Mask Blocks**
-> 
-> p1 &nbsp; p2 &nbsp; p3 &nbsp; p4 &nbsp; r1 &nbsp; r2 &nbsp;&nbsp;&nbsp; … &nbsp;&nbsp;&nbsp; r1 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\> &nbsp; r2 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\> &nbsp; r3 &nbsp; \<m\> &nbsp; \<m\> &nbsp; \<m\>
-> 
-> Legend: ▢ Target Context Feature &nbsp;|&nbsp; ▢ Mask Token &nbsp;|&nbsp; ▢ Clean Token &nbsp;|&nbsp; ▢ Invisible Token
+**论文作用**：该图即DFlash核心训练范式的示意图，是后文Table 4中Qwen3-27B取得较长接受长度与加速比的方法论基础。
 
 ### Figure 5 (p.13) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-fig05.png]]
@@ -107,46 +86,13 @@ Figure 3. Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.
 > The loss decay makes training converge faster and better. A.5.2. RANDOM SAMPLING OF MASKED BLOCKS
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图5图文联合解读：**
 
-**Type:** Line chart — *Acceptance Length vs. Training Epoch*
+图示Math500数据集上Acceptance Length随训练epoch（1–9）的演化，对比有/无loss decay两条曲线。蓝色（有loss decay）epoch 1即达~4.4，epoch 2快速跃升至~5.4；橙色（无）epoch 1仅~4.2，需至epoch 4方追至~6.0。两者在epoch 6–7同步收敛至峰值~6.45（蓝色略高），epoch 9趋于一致~6.35。
 
-**Axes:**
-- **X-axis:** Epoch (1 → 9)
-- **Y-axis:** Acceptance Length on Math500 (≈4.3 → 6.5)
-
-**Series (two curves):**
-| Curve | Color | Behavior |
-|---|---|---|
-| With loss decay | Blue | Starts ≈4.45, climbs steeply to ≈6.4 by epoch 7, plateaus |
-| Without loss decay | Orange | Starts ≈4.25, rises more slowly, catches up by epoch 7–8 |
-
-**Key Technical Takeaway:** Both variants converge to similar final acceptance lengths (~6.35) by epoch 7, but the **exponentially decaying token weights (loss decay) yield substantially faster early-training convergence** — the blue curve leads by ~0.2–0.3 acceptance-length points during epochs 2–4 before the two merge. This validates emphasizing early-token accuracy in the draft-model objective.
-
----
-
-**Caption (verbatim):**
-> Figure 5. The loss decay makes training converge faster and better.
+原文据此论证：**loss decay策略使dFlash训练"收敛更快、效果更好"**——尤其在前3个epoch显著拉开差距。在论文整体链路中，该消融实验作为附录A.5.2随机掩码采样方案的支撑，验证了损失衰减对投机解码头快速稳定收敛、高接受率（最终~6.35）的必要性，是模型实现高效推测的关键训练技巧之一。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
-
-### Table 1 (p.6) ⭐深度解读
-![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab01.png]]
-> [!quote] caption
-> Decoding speedup over baseline and average acceptance length ( τ ) on Qwen3 models with thinking mode disabled and a
-
-> [!tip] 表格解读（多模态）
-> ## Main Figure Description
-
-**Architecture/Components:** Table 1 is a benchmark comparison matrix structured as Model × Method versus three evaluation domains (Math, Code, Chat). Each cell reports a **decoding speedup ratio over a baseline**, with a **parenthesized secondary metric** indicating the structural hyperparameter — **draft tree size** for EAGLE-3 and **diffusion block size** for DFlash. Rows cover Qwen3 model variants (thinking-mode disabled, capped at 2048 tokens), enabling controlled isolation of the speculative-decoding algorithm from model-scale effects.
-
-**Data flow (read order):** Model identifier → speculative method → per-domain speedup → brackets yielding the algorithm's structural knob.
-
-**Key technical takeaway:** DFlash and EAGLE-3 expose a **single tunable parameter** (block size vs. draft tree size) that trades draft compute against acceptance rate, and the table reveals that across Math/Code/Chat, the optimal block/tree size differs by task — suggesting no universally "best" draft granularity, motivating per-domain tuning of the speculative-decoding block/tree configuration.
-
-## Caption (verbatim)
-
-> **Table 1.** Decoding speedup over baseline and average acceptance length ( ) on Qwen3 models with thinking mode disabled and a maximum of 2048 generated tokens. Parenthesized values indicate the draft tree size for EAGLE-3 and the diffusion block size for DFlash.
 
 ### Table 2 (p.7) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab02.png]]
@@ -154,21 +100,13 @@ Figure 3. Draft cost of 1, 3, 5-layer DFlash and 1-layer EAGLE-3.
 > Decoding speedup over baseline and average acceptance
 
 > [!tip] 表格解读（多模态）
-> # Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-**Components/Data Flow:**
-The table ("Table 2") presents a benchmark evaluation comparing two Qwen3 reasoning model variants (**Q3-4B** and **Q3-8B**) across three math/science datasets: **GPQA**, **MATH-500**, and **AIME25**. Each model is evaluated at two sampling temperatures (**T=0** for greedy and **T=1** for sampling). Two paired metrics are reported per cell — a **Speedup** factor over baseline decoding and the corresponding **average acceptance length** (the number of tokens generated per verification step, characteristic of speculative decoding).
+表2在"思考模式"下，对Q3-4B/8B两个模型、温度0与1，在GPQA、MATH-500、AIME25三个推理基准上各报告两组配对数据——加速比与平均接受长度。结果显示加速比稳定在3.64×–4.64×之间，接受长度4.55–5.82个token/步；温度0显著优于温度1（确定性更易预测），8B与4B表现接近，MATH-500整体最优。
 
-**Key Technical Takeaway:**
-Across all benchmarks and both models, **temperature 0 (greedy decoding) consistently yields higher speedups (4.17–5.82×) and longer acceptance lengths than temperature 1** (3.64–5.06×), indicating that the speculative decoder's acceptance rate is more stable under deterministic generation. The **Q3-8B shows slightly larger absolute speedups than Q3-4B** at temp=0, suggesting larger drafts benefit more from this acceleration scheme.
+该表用以论证DFlash在链式思考推理场景下仍能获得约4倍解码加速，且接受长度足够长，证明块扩散式投机解码对推理模型具有普适的高效性。
 
----
-
-## Verbatim Caption Transcription
-
-> **Table 2.** Decoding speedup over baseline and average acceptance length ( ) with thinking mode enabled.
-
-*(Note: the parentheses in the caption appear empty in the source — likely a missing symbol denoting the units/context of acceptance length.)*
+在论文链路中，它承接Figure 2的推理架构设计，以量化实验闭环回答"该方案在强推理负载下是否真正实用"这一核心问题，构成方法可行性的关键验证。
 
 ### Table 3 (p.7) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab03.png]]
@@ -176,37 +114,11 @@ Across all benchmarks and both models, **temperature 0 (greedy decoding) consist
 > Throughput (tok/s), speedup over baseline, and average
 
 > [!tip] 表格解读（多模态）
-> **Description (Table 3):**
+> 【图文联合解读】**核心内容**：Table 3 在 SGLang（FA4 后端）上对比 Baseline 与 DFlash，涵盖 Qwen3-4B/8B/Coder-30B-A3B 三个模型、4–6 个任务、并发档位 1/4/8/16/32，逐行给出吞吐量（tok/s）、相对加速比与平均接受长度。
 
-This is a performance benchmark table (not a diagram) evaluating **DFlash** speculative-decoding throughput on SGLang with the FA4 backend. The table is organized as a 2D grid:
+**关键结论**：所有配置下 DFlash 加速 2.2×–5.1×；低并发加速最大（如 Qwen3-8B Math500 c=1：1175 vs 230，5.1×），随并发上升收敛至 2.3–3.1×；平均接受长度 6.42–8.09。
 
-- **Columns:** Task, Method, Concurrency levels (1, 4, 8, 16, 32), and an Avg. column.
-- **Rows:** Grouped by target model (Qwen3-4B, Qwen3-8B), then by task (Math500, HumanEval), each comparing Baseline vs. DFlash (showing throughput in tok/s plus a speedup ratio).
-- **Data flow:** Concurrent requests → Baseline/DFlash kernel → measured tok/s and acceptance length.
-
-**Key takeaway:** DFlash yields up to 4.8× speedup at concurrency=1, scaling to 2.2–4.8× even at high concurrency, while maintaining average acceptance lengths of ~6–8 tokens.
-
-**Caption (verbatim):**
-"Table 3. Throughput (tok/s), speedup over baseline, and average acceptance length on SGLang (FA4 backend)."
-
-### Table 4 (p.8) ⭐深度解读
-![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab04.png]]
-> [!quote] caption
-> Acceptance length of the base Qwen3.5-27B DFlash
-
-> [!tip] 表格解读（多模态）
-> **Description of the Main Figure (Table 4):**
-
-The figure is a data table comparing **acceptance lengths** of two drafter configurations for speculative decoding: the *base* Qwen3.5-27B DFlash drafter versus the same drafter *fine-tuned for long context* (labeled "Long"). It is evaluated on the **LongBench** benchmark, broken down by dataset (hotpotqa, qasper, gov-report, with additional columns implied) and stratified by input **context length** (rows beginning to appear at the bottom). Acceptance length is a standard metric in speculative decoding — higher values indicate the drafter's tokens are more often accepted by the target model, yielding greater decoding speedup.
-
-The data flow conceptually is: long context → DFlash drafter (Base or Long-tuned) → proposed tokens → target LLM verification → measured acceptance length per context-length bucket.
-
-**Key technical takeaway (≤120 words):**
-Fine-tuning the DFlash drafter on long-context data materially boosts its acceptance length compared to the base version, especially as context length grows. Since acceptance length directly translates to wall-clock speedup in speculative decoding, long-context drafter adaptation is a critical and lightweight lever for serving LLMs efficiently on long-document workloads — rather than retraining the full target model.
-
-**Caption (verbatim transcription):**
-
-*Table 4. Acceptance length of the base Qwen3.5-27B DFlash drafter (Base) and the drafter fine-tuned for long context (Long) across various context lengths on LongBench.*
+**论文作用**：与 Fig.3（draft 成本）互补，构成"draft 廉价 → 端到端服务吞吐显著提升"的完整证据链，支撑 DFlash 作为实用投机解码方案的论断。
 
 ### Table 5 (p.8) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab05.png]]
@@ -214,30 +126,21 @@ Fine-tuning the DFlash drafter on long-context data materially boosts its accept
 > Speedup over baseline and average acceptance length
 
 > [!tip] 表格解读（多模态）
-> **Description (Table 5):**
+> 【图文联合解读】图中并非所引 Figure 5，而是比较 Base/Long drafter 在 LongBench 的 hotpotqa、qasper、gov_report 上、1K–32K 上下文的任务得分。1K 时 Long 略优；16K 时分别由 3.61→6.05、3.57→6.00、2.67→3.81；32K 仅 gov_report 可测，得分 2.09→3.56。结果支持长上下文微调可提升 drafter 的长程建模，为推测解码加速奠基。表题称“加速比/平均接受长度”，却与可见数据不符，且无法核验 loss decay 消融。
 
-This table presents speedup ratios over autoregressive baseline TPS for LLaMA-3.1-8B-Instruct under speculative decoding. Rows compare the Baseline, EAGLE-3 (10/60 draft tokens), and DFlash (block size 10) across three benchmarks (GSM8K, HumanEval, Alpaca). Columns slice results by serving concurrency (1, 4, 8, 16, 32) plus an average acceptance-length column. Cell values are speedup multipliers; DFlash rows are bolded. Data flows from raw TPS → speedup ratios → aggregated averages.
-
-**Key takeaway:** DFlash beats EAGLE-3 at every concurrency on all three tasks (e.g., 2.4× vs. 1.6× at concurrency 1 on GSM8K; 2.8× vs. 2.0× on HumanEval), while also achieving higher average acceptance length (3.73–4.91 tokens) than EAGLE-3 variants, indicating block-parallel drafting is more efficient than tree-based token drafting.
-
-**Caption (verbatim):**
-Table 5. Speedup over baseline and average acceptance length for LLaMA-3.1-8B-Instruct on SGLang (Flashinfer backend, single B200 GPU). Baseline reports absolute throughput (TPS; tokens/s). EAGLE-3 uses 7 draft steps with top-k=2 and either 10 or 60 draft tokens. DFlash uses block size 10.
-
-### Table 8 (p.8) ⭐深度解读
-![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab08.png]]
+### Table 7 (p.8) ⭐深度解读
+![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab07.png]]
 > [!quote] caption
-> Ablation study of training–inference block size (BS)
+> More hidden features from target model increases the
 
 > [!tip] 表格解读（多模态）
-> **Description (Table 8):**
+> 【图文联合解读】**表7图文联合解读**
 
-Table 8 is an ablation matrix comparing **training vs. inference block-size (BS)** combinations for draft models in speculative decoding. Rows enumerate four Train/Test BS pairings (b16/b16, b16/b8, b8/b16, b8/b8); columns report speedup metrics across three benchmarks (Math500, HumanEval, MT-Bench), with two figures per benchmark (e.g., 4.64x / 6.33x). Data flow: each row supplies matched/mismatched block-size configurations that are evaluated end-to-end on a single B200 GPU under fixed draft capacity (8 layers, 5 target hidden features).
+表7对比dFlash草稿模型采用3-H与5-H两种目标隐藏特征数配置（统一3草稿层、block size=16）在三基准的加速比：Math500（4.49/5.38→4.69/5.64）、HumanEval（3.80/4.47→3.90/4.61）、MT-Bench（2.32/3.07→2.38/3.18），5-H均稳定小幅领先。
 
-**Key takeaway (≤120 words):** Block-size consistency between training and inference is more important than absolute size. The matched b16/b16 configuration yields the strongest speedups (4.64x on Math500, 3.96x HumanEval, 2.23x MT-Bench), while mismatched pairings—particularly **train=b8, test=b16** (3.78x / 3.24x / 2.09x)—degrade performance relative to both matched settings. Training at a **larger** block size (b16) is more robust to inference downsizing than the reverse, indicating draft models generalize better when trained with longer context windows than shorter ones.
+原文据此论证：抽取更多目标层隐藏特征能提供更丰富语义与未来token信息，提升草稿质量、接受长度及端到端加速；但离线训练时缓存目标隐藏态的存储开销随特征数线性增长，构成"速度—训练成本"权衡。
 
-**Caption transcribed verbatim:**
-
-> Table 8. Ablation study of training–inference block size (BS) mismatch. All draft models use 8 layers and 5 target hidden features.
+该表在实验链路中作为关键设计超参（隐藏特征数量）的消融证据，支撑最终方案选型。
 
 ### Table 9 (p.9) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab09.png]]
@@ -245,13 +148,13 @@ Table 8 is an ablation matrix comparing **training vs. inference block-size (BS)
 > Ablation of target-feature conditioning for Qwen3-4B with 5-layer draft models and draft block size 8. Each task column reports τ / speedup.
 
 > [!tip] 表格解读（多模态）
-> **Description of the main figure (Table 9).**
+> 【图文联合解读】表9对Qwen3-4B+5层draft（块大小8），在三任务（GSM8K/HumanEval/MT-Bench）上比较Input与KV两种目标特征注入方式（每格报告τ/加速比）。
 
-Table 9 is a quantitative ablation table, not an architecture diagram. It cross-tabulates four components: rows are draft-model variants grouped under two drafting paradigms — **Autoregressive drafting** (EAGLE-3-5L vs DFlash-AR) and **Block-diffusion drafting** (DFlash × 2); each variant is tagged with one of two **Injection** mechanisms (Input fusion vs KV injection). Columns are three downstream benchmarks — GSM8K, HumanEval, MT-Bench — each reporting a paired `<acceptance length> / <speedup>` score against a Qwen3-4B target using 5-layer drafts with block size 8. The "data flow" is therefore a 2×2 (paradigm × injection) comparison swept across tasks, with bolded cells marking best-in-paradigm winners. **Key takeaway:** KV injection strictly dominates input fusion in both paradigms, boosting DFlash-AR acceptance length to 3.4–4.8 (vs EAGLE-3-5L's 3.1–4.3) and pushing block-diffusion DFlash speedup from 2.0–2.9× to 2.2–3.3× on GSM8K, confirming that target-side feature conditioning via KV is the superior signal.
+**数据**：KV注入全面优于Input注入。在DFlash内，KV将τ从3.5/3.5/2.6提至4.2/4.0/3.0，加速比从2.9/2.9/2.0提至**3.3/3.2/2.2**；DFlash-AR(KV)也稳定胜出EAGLE-3-5L(Input)，如MT-Bench 3.4/1.5 vs 3.1/1.4。
 
-**Caption (verbatim):**
+**结论**：用目标模型KV缓存（而非输入embedding）做条件注入是DFlash的核心设计。值得注意的是，DFlash(KV)块扩散版的τ虽略低于自回归DFlash-AR(KV)，但加速比反更高（2.2 vs 1.5），体现块并行解码的优势。
 
-> Table 9. Ablation of target-feature conditioning for Qwen3-4B with 5-layer draft models and draft block size 8. Each task column reports ⟨ / speedup.
+**作用**：作为消融实验，证实"块扩散+深度特征条件化"两个设计选择的有效性，支撑全文方法主张。
 
 ### Table 10 (p.12) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab10.png]]
@@ -259,20 +162,11 @@ Table 9 is a quantitative ablation table, not an architecture diagram. It cross-
 > A 5-layer block diffusion draft model without target
 
 > [!tip] 表格解读（多模态）
-> **Description — KV Injection Architecture (Section A.3)**
+> 【图文联合解读】**Table 10 联合解读**
 
-DFlash's drafter is conditioned on target-model features via a lightweight KV-injection mechanism rather than full feature injection.
+该表展示的是 **5 层 block diffusion draft model 去除 target context features 后的消融结果**，在 GSM8K、Math500、AIME24、AIME25 四个数学基准上，以 Temp=0/1 报告 (接受长度/加速比)。Temp=0 时数据为 2.83/3.38、3.73/4.61、3.43/4.12、3.35/4.07；Temp=1 时为 2.76/3.29、3.31/4.12、2.66/3.23、2.65/3.24，相较主表完整 dFlash 模型显著下降。
 
-*Components:*
-- **Concatenation stage:** hidden states from selected target layers are concatenated once and projected through a shared matrix $W_c \in \mathbb{R}^{H_t \times H_d}$ into the draft hidden space.
-- **Per-layer cross-attention:** at draft layer $i$, draft tokens form queries ($Q_i = W_i^Q H_d$), while keys and values draw from *both* target features and draft tokens ($K_i = W_i^K [H_t; H_d]$, $V_i = W_i^V [H_t; H_d]$).
-- **Data flow:** target hidden states → concat → $W_c$ projection → injected as extra KV entries at every draft layer; no other pathway is altered.
-
-*Key takeaway:* target features are inserted as KV entries only — they bypass the Q projection, output projection, self-attention update, and FFN. The **only** added parameters are the shared $W_c$, keeping memory overhead small while still letting the drafter attend to rich target representations.
-
-**Caption verbatim (Table 10):**
-
-"Table 10. A 5-layer block diffusion draft model without target context features. The draft model achieves only modest acceptance length and speedup."
+原文借此论证：dFlash 之所以获得高接受长度与显著加速，**关键在于 target 模型的 hidden context 作为 draft 输入**；一旦移除该特征，draft 模型性能急剧退化，验证了**双向跨模型上下文注入是该方法的核心设计**，而非单纯依赖 block diffusion 自身结构。该表作为消融实验支撑，与 Table 8/9 共同证明各组件不可替代。
 
 ### Table 11 (p.12) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab11.png]]
@@ -280,15 +174,13 @@ DFlash's drafter is conditioned on target-model features via a lightweight KV-in
 > Results across more models on SGLang. Each cell
 
 > [!tip] 表格解读（多模态）
-> I'm unable to provide an architecture/components/data flow description because **no main figure appears on this page.** The visible content is text-only from Appendix A of the paper "DFlash: Block Diffusion for Flash Speculative Decoding," specifically sections A.1 (Training Implementation), A.2 (Diffusion Drafter without Target Feature), and A.4 (Results on More Models and vLLM). There are no diagrams, schematics, or architecture illustrations present.
+> 【图文联合解读】**Table 11 联合解读**
 
-The only caption-like text visible is the start of a table caption at the bottom of the page:
+**核心对象与数据**：表 11 在 SGLang 推理框架下，对 7 个模型（Qwen3.5-4B/9B/35B-A3B/27B、Qwen3-Coder-Next、GPT-OSS-20B/120B）比较 MTP 与 DFlash，每格报告 acceptance length / speedup，跨 Math500、HumanEval、MT-Bench 三基准。
 
-> "Table 11. Results across more models on SGLang. Each cell..."
+**关键技术结论**：DFlash 在所有可比模型上同时超越 MTP 的接受长度与加速比——例如 Qwen3.5-4B 在 Math500 上从 6.5/1.5× 提升到 7.1/3.0×，加速比翻倍；Qwen3.5-9B 在 HumanEval 达到 7.9/3.4×；Qwen3.5-27B 取得全表最高的 9.1/3.9×；同时在稠密、MoE、异构（GPT-OSS）架构上均有效，证实方法的**架构无关可迁移性**。
 
-This caption is truncated/incomplete — it cuts off mid-sentence at the page boundary, so I cannot transcribe it verbatim in full.
-
-If you intended to share a different page containing the main architecture figure (typically Figure 1 in such papers, showing the block diffusion drafter interacting with the target LLM in the speculative decoding loop), please re-upload that image and I'll provide the requested description and verbatim caption transcription.
+**在论文中的作用**：作为补充实验，扩展主表结论，强化"DFlash 通用且显著优于 MTP"的核心主张，支撑论文方法有效性的普适论证。
 
 ### Table 12 (p.12) ⭐深度解读
 ![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab12.png]]
@@ -296,32 +188,13 @@ If you intended to share a different page containing the main architecture figur
 > vLLM results for Qwen3.5-9B. Each cell reports DFlash
 
 > [!tip] 表格解读（多模态）
-> **Note:** The provided page contains no figure with architecture/components/data flow—only tables (10, 11, 12) and text. Below I describe the most prominent content (Table 11) and its caption.
+> 【图文联合解读】**Table 12 图文联合解读**
 
-**Main Content (Table 11) — Components/Data Shown:**
-Table 11 compares DFlash against native MTP across target models on SGLang (one B200, concurrency 8). Rows list models (Qwen3.5-4B/9B/35B-A3B/27B, Qwen3-Coder-Next, GPT-OSS-20B/120B); columns compare per-model MTP vs. DFlash on three benchmarks (Math500, HumanEval, MT-Bench), with each cell formatted as **acceptance length / speedup**. DFlash consistently outperforms MTP where both exist and scales to larger Qwen3.5, Qwen3-Coder, and GPT-OSS targets (e.g., Qwen3.5-9B: 7.3/3.5 vs 6.7/1.7 on Math500).
+1) **核心对象与结构**：表展示 Qwen3.5-9B 模型在 vLLM 推理框架下，DFlash 在 4 个并发等级（1、8、16、32）和 3 个基准（Math500、HumanEval、MT-Bench）上的吞吐量（tok/s）及相对于自回归（AR）解码的加速比（括号内）。数据示例：C=1 时 HumanEval 达 969 tok/s（4.6×）；C=32 时 HumanEval 达 10258 tok/s（2.1×）；MT-Bench 在 C=1/32 下为 627/6787 tok/s（3.0×→1.3×）。
 
-**Key Takeaway:**
-DFlash delivers monotonic speedups (1.3×–3.9× over autoregressive) across 4B–120B models and three eval suites, with the largest gains where MTP is absent or weaker—confirming the block-diffusion drafter generalizes beyond its training regime.
+2) **关键技术结论**：① DFlash 在所有并发与基准上均显著优于 AR 解码（最低 1.3×，最高 4.6×）；② 加速比随并发提升而下降，因 AR 解码在高并发下已受内存带宽瓶颈缓解，DFlash 优势被摊薄；③ HumanEval 加速比始终最高，MT-Bench 最低，反映代码生成任务确定性更强、DFlash 草稿接受率更高。
 
-**Caption (verbatim):**
-"Table 11. Results across more models on SGLang. Each cell reports acceptance length / speedup."
-
-### Table 13 (p.13) ⭐深度解读
-![[assets/crops/dflash-block-diffusion-for-flash-speculative-decoding-tab13.png]]
-> [!quote] caption
-> Randomly sample anchor tokens to construct masked
-
-> [!tip] 表格解读（多模态）
-> **Description (main figure/table):**
-
-Table 13 presents an ablation comparing draft model training strategies, most likely plotting **acceptance length** (or **speedup ratio**) against variations in how anchor tokens are sampled when forming 16-token masked blocks. The architecture context is a speculative-decoding pipeline: the draft model is a shallow 3-layer transformer that consumes **5 hidden features** tapped from intermediate layers of the target (verifier) LLM; during training, source sequences are segmented into fixed-size blocks whose starting positions are sampled in different ways. Data flow is straightforward — training corpus (100K examples, §5.5) → masked-block construction → draft model → speculative generation against the frozen target.
-
-**Key technical takeaway:** Randomly sampling anchor tokens to build masked training blocks acts as an effective **data-augmentation** mechanism, producing a more robust draft model that achieves a **longer mean acceptance length and higher inference speedup** than deterministic/non-augmented schemes, without changing model capacity.
-
-**Caption (transcribed verbatim):**
-
-"Table 13. Randomly sample anchor tokens to construct masked blocks during training effectively augments the training data and leads to higher acceptance length and better speedup. Both draft models use three layers and extract five hidden features from the target model. The block size is 16. We use the 100K data introduced in Section 5.5 to train both models."
+3) **论文作用**：此表补足 vLLM 实际部署视角，证明 DFlash 不仅在自研框架有效，在主流工业推理引擎中同样带来稳定吞吐增益，强化"即插即用、广泛适用"的实验结论。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 

@@ -30,17 +30,13 @@ tags: [training, architecture]
 > Trend of sizes of state-of-the-art Natural Language Pro- cessing (NLP) models with time. The number of floating-point op- erations to train these models is increasing at an exponential rate.
 
 > [!tip] 技术解读（多模态）
-> **Figure Description**
+> 【图文联合解读】**图文联合解读：**
 
-Figure 1 is a semi-log scatter plot showing the growth of state-of-the-art NLP model sizes over time. The **x-axis** spans 2018–2021 (Year), and the **y-axis** is "Number of parameters (in billions)" on a logarithmic scale from 10⁻² to 10³. Six labeled data points trace an upward trajectory: ELMo (94M, 2018), BERT-L (340M, 2018–2019), GPT-2 (1.5B, 2019), Megatron-LM (8.3B, 2019–2020), Turing-NLG (17.2B, 2020), and GPT-3 (175B, 2020). A red dotted reference line approximates the exponential trend. There is no data-flow or architectural pipeline—this figure is purely an empirical trend visualization motivating the paper's parallel-training contributions.
+1) **核心对象与数据**：半对数散点图，横轴为2018–2021年份，纵轴为参数量（10⁻²至10³亿，对数轴）。六个标注点：ELMo (94M, 2018)→BERT-L (340M)→GPT-2 (1.5B)→Megatron-LM (8.3B)→Turing-NLG (17.2B)→GPT-3 (175B, 2020)，红色虚线拟合呈指数增长。
 
-**Key Technical Takeaway (≈55 words)**
+2) **论证结论**：约2年内参数量增长近3个数量级，训练所需FLOPs随之指数飙升，单卡/单节点已无法承载。
 
-State-of-the-art NLP model parameter counts have grown roughly three orders of magnitude in just two years (ELMo 94M → GPT-3 175B), following a near-exponential curve on a log scale. This explosive scaling—coupled with the cited ~288-year single-V100 training time for GPT-3—directly motivates the paper's combined tensor + pipeline + data parallelism approach for multi-GPU clusters.
-
-**Caption (verbatim):**
-
-Figure 1: Trend of sizes of state-of-the-art Natural Language Processing (NLP) models with time. The number of floating-point operations to train these models is increasing at an exponential rate.
+3) **论文作用**：作为开篇动机图，引出Megatron-LM的核心贡献——张量并行+流水并行，在GPU集群上高效训练千亿级模型，与图中趋势形成"问题—方案"呼应。
 
 ### Figure 2 (p.3) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig02.png]]
@@ -49,23 +45,13 @@ Figure 1: Trend of sizes of state-of-the-art Natural Language Processing (NLP) m
 > Combination of tensor and pipeline model parallelism (MP) used in this work for transformer-based models.
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-**Figure 4** illustrates two pipeline-parallel training schedules across 4 devices over time:
+1）**核心对象与结构**：图示展示了 Transformer 层在 PTD 并行下的二维切分。绿色实线框"Pipeline MP partition #1"代表一个流水阶段，内部串联多个结构相同的 Transformer 层（每层含 Self-Attention 与 MLP 子模块）；蓝色虚线框"Tensor MP partition #1/#2"将同一层内 Q/K/V 矩阵乘法与 MLP 切分到 2 个 GPU 上，层间仅在边界处通过 all-reduce 通信。
 
-**Architecture/Components:**
-- **Top diagram (Default 1F1B):** Devices process microbatches (1–8) in a one-forward-one-backward pattern, followed by a second batch (9–12). A vertical "pipeline flush" line marks the weight-update boundary; gray cells = idle/bubble time.
-- **Bottom diagram (Interleaved 1F1B):** Each device is assigned multiple model chunks (here, 2). Dark colors = first chunk, light colors = second chunk. Each chunk runs its own mini 1F1B cycle, reducing the idle bubble.
+2）**关键技术结论**：该图直观论证了 Megatron 的核心方案——张量并行（层内）与流水线并行（层间）正交组合，使单层权重与激活显存被 N_t 个 GPU 平摊，同时流水阶段又可跨 N_p 个 GPU 扩展层数，从而在保持高利用率的前提下支撑超大规模模型（论文 Table 2 即在此架构上将 GPT 模型扩至 530B 参数）。
 
-**Data flow:** Time progresses left→right; rows are device ranks; the pipeline flush partitions training into weight-update boundaries.
-
-## Key Technical Takeaway
-
-Interleaved scheduling reduces the pipeline bubble by assigning multiple model chunks per device, so each device alternates between chunks during idle gaps — increasing utilization without changing per-device memory footprint. (53 words)
-
-## Caption (Verbatim)
-
-**Figure 4:** Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleaved timeline).
+3）**论文作用**：此图是全文方法学的"总览图"，后文 Table 2 等实验均以此 PTD 并行布局为基线，证明其相对 ZeRO-3 的吞吐与可扩展性优势。
 
 ### Figure 3 (p.3) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig03.png]]
@@ -74,23 +60,13 @@ Interleaved scheduling reduces the pipeline bubble by assigning multiple model c
 > GPipe pipeline schedule with forward passes (blue) for all microbatches (represented by numbers) followed by backward passes (green). The gray area represents the pipeline bubble. For simplicity, we assume that the backward pass takes twice as long as the forward pass. The efficiency of the pipeline schedule does not depend on this factor. Each batch in this example consists of 8 microbatches, and
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description
+> 【图文联合解读】**图文联合解读：**
 
-**Figure 4** illustrates two pipeline-parallel training schedules across 4 devices over time:
+**1) 核心对象与结构：** 图示GPipe在4个Device上的流水线调度，1个batch切分为8个microbatch（编号1–8）。蓝色方块为前向pass，绿色为反向pass（时长为前向的2倍），灰色区域为pipeline bubble。Device 1率先启动前向，各设备依次错开1个microbatch时间，全部前向完成后才依次启动反向，呈现典型"先全部F、再全部B"的同步模式。
 
-**Architecture/Components:**
-- **Top diagram (Default 1F1B):** Devices process microbatches (1–8) in a one-forward-one-backward pattern, followed by a second batch (9–12). A vertical "pipeline flush" line marks the weight-update boundary; gray cells = idle/bubble time.
-- **Bottom diagram (Interleaved 1F1B):** Each device is assigned multiple model chunks (here, 2). Dark colors = first chunk, light colors = second chunk. Each chunk runs its own mini 1F1B cycle, reducing the idle bubble.
+**2) 关键结论：** 纯流水线并行存在显著气泡（warm-up与cool-down阶段设备空闲），其占比与microbatch数N和设备数M相关（效率≈N/(N+M−1)），是GPipe方案的核心效率瓶颈。
 
-**Data flow:** Time progresses left→right; rows are device ranks; the pipeline flush partitions training into weight-update boundaries.
-
-## Key Technical Takeaway
-
-Interleaved scheduling reduces the pipeline bubble by assigning multiple model chunks per device, so each device alternates between chunks during idle gaps — increasing utilization without changing per-device memory footprint. (53 words)
-
-## Caption (Verbatim)
-
-**Figure 4:** Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleaved timeline).
+**3) 论文作用：** 作为Megatron-LM提出PTD-P（张量+流水线+数据三维并行）方法的动机基线，论证单维流水线并行不足以高效训练超大模型，需结合张量并行进一步压缩气泡、提升GPU集群利用率。
 
 ### Figure 4 (p.3) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig04.png]]
@@ -99,23 +75,7 @@ Interleaved scheduling reduces the pipeline bubble by assigning multiple model c
 > Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleav
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description
-
-**Figure 4** illustrates two pipeline-parallel training schedules across 4 devices over time:
-
-**Architecture/Components:**
-- **Top diagram (Default 1F1B):** Devices process microbatches (1–8) in a one-forward-one-backward pattern, followed by a second batch (9–12). A vertical "pipeline flush" line marks the weight-update boundary; gray cells = idle/bubble time.
-- **Bottom diagram (Interleaved 1F1B):** Each device is assigned multiple model chunks (here, 2). Dark colors = first chunk, light colors = second chunk. Each chunk runs its own mini 1F1B cycle, reducing the idle bubble.
-
-**Data flow:** Time progresses left→right; rows are device ranks; the pipeline flush partitions training into weight-update boundaries.
-
-## Key Technical Takeaway
-
-Interleaved scheduling reduces the pipeline bubble by assigning multiple model chunks per device, so each device alternates between chunks during idle gaps — increasing utilization without changing per-device memory footprint. (53 words)
-
-## Caption (Verbatim)
-
-**Figure 4:** Default and interleaved 1F1B pipeline schedules. The top figure shows the default non-interleaved 1F1B schedule. The bottom figure shows the interleaved 1F1B schedule, where each device is assigned multiple chunks (in this case, 2). Dark colors show the first chunk and light colors show the second chunk. The size of the pipeline bubble is smaller (the pipeline flush happens sooner in the interleaved timeline).
+> 【图文联合解读】图中展示4个设备（Device 1–4）上两种1F1B流水线调度对比：上图默认调度按顺序处理微批次1–7，灰色气泡（warm-up阶段）约占前半时段；下图交错调度将每设备再分配1个模型分片（深绿为第1分片、浅绿为第2分片），微批次扩展至1–8，灰色气泡明显缩小，flush更早完成。原文借此论证：交错式1F1B通过把多个Transformer分片分配到同一GPU，让前向/反向计算在时序上更紧密交叠，可在几乎不增加显存开销的前提下显著压缩气泡、提升端到端吞吐。该图是Megatron-LM提出的Interleaved 1F1B核心优化的示意，作为流水线并行的关键贡献，直接支撑后续千卡级GPU集群训练LLM的大规模实验验证。
 
 ### Figure 5 (p.5) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig05.png]]
@@ -124,25 +84,15 @@ Interleaved scheduling reduces the pipeline bubble by assigning multiple model c
 > Blocks of transformer model partitioned with tensor model parallelism (figures borrowed from Megatron [40]). 𝑓and 𝑔 are conjugate. 𝑓is the identity operator in the forward pass and all- reduce in the backward pass, while 𝑔is the reverse. relevant for the pipeline bubble size. We qualitatively describe how communication time behaves and present cost models for amount of communication; however, we d
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 5)
+> 【图文联合解读】**图文联合解读：**
 
-The figure shows how transformer blocks are partitioned for tensor model parallelism across two devices.
+1) **核心结构**：图分(a) MLP和(b) Self-Attention两个子图，展示Transformer块沿2个GPU的张量切分方式。MLP中`f`将`X`拆为`[Y₁B₁, Y₂B₂]`并行计算，`g`做all-reduce恢复`Z`；Self-Attention中`Q/K/V`沿注意力头维度切分为`[Q₁,Q₂]/[K₁,K₂]/[V₁,V₂]`，各GPU独立完成`Softmax→Dropout`后由`g`合并输出。
 
-**(a) MLP:** Input X is split by operator *f* into two replicas; each row passes through its own weight column (XA₁, XA₂), then GeLU → Y₁, Y₂. The outputs are multiplied by rows of B = [B₁; B₂] (Y₁B₁, Y₂B₂), merged via operator *g*, passed through Dropout, and concatenated to Z = Dropout(YB).
+2) **关键结论**：`f`与`g`为共轭算子——前向`f`恒等、`g`通信，反向时角色互换，证明层内张量并行只需一次all-reduce即可同步，无需逐层参数传递。
 
-**(b) Self-Attention:** The same partitioning scheme splits the Q, K, V heads across devices (Q = [Q₁,Q₂], K = [K₁,K₂], V = [V₁,V₂]). Each device independently performs scaled-dot-product attention and dropout, then recombines via *g* before dropout to yield Z.
+3) **论文作用**：与流水线并行（层间）正交，构成Megatron-LM"层内张量并行+层间流水线并行"双维度并行的可视化基础，用于推导通信量代价模型并降低pipeline bubble占比。
 
-**Key takeaway:** *f* and *g* are conjugate operators—*f* is identity in the forward pass / all-reduce in the backward pass, while *g* does the reverse. This duality lets both MLP and attention layers be distributed without altering the mathematical result.
-
-*(Figure 6, for context, shows that pipeline bubble fraction rises sharply with data-parallel size d, especially when b′ is small.)*
-
----
-
-## Caption (verbatim)
-
-**Figure 5:** Blocks of transformer model partitioned with tensor model parallelism (figures borrowed from Megatron [40]). *f* and *g* are conjugate. *f* is the identity operator in the forward pass and all-reduce in the backward pass, while *g* is the reverse.
-
-*(Sub-labels within the figure: "(a) MLP." and "(b) Self-Attention.")*
+(约218字)
 
 ### Figure 6 (p.5) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig06.png]]
@@ -151,25 +101,7 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 > Fraction of time spent idling due to pipeline flush (pipeline bubble size) versus data-parallel size (𝑑), for different numbers of GPUs (𝑛) and ratio of batch size to microbatch size (𝑏′ = 𝐵/𝑏).
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 5)
-
-The figure shows how transformer blocks are partitioned for tensor model parallelism across two devices.
-
-**(a) MLP:** Input X is split by operator *f* into two replicas; each row passes through its own weight column (XA₁, XA₂), then GeLU → Y₁, Y₂. The outputs are multiplied by rows of B = [B₁; B₂] (Y₁B₁, Y₂B₂), merged via operator *g*, passed through Dropout, and concatenated to Z = Dropout(YB).
-
-**(b) Self-Attention:** The same partitioning scheme splits the Q, K, V heads across devices (Q = [Q₁,Q₂], K = [K₁,K₂], V = [V₁,V₂]). Each device independently performs scaled-dot-product attention and dropout, then recombines via *g* before dropout to yield Z.
-
-**Key takeaway:** *f* and *g* are conjugate operators—*f* is identity in the forward pass / all-reduce in the backward pass, while *g* does the reverse. This duality lets both MLP and attention layers be distributed without altering the mathematical result.
-
-*(Figure 6, for context, shows that pipeline bubble fraction rises sharply with data-parallel size d, especially when b′ is small.)*
-
----
-
-## Caption (verbatim)
-
-**Figure 5:** Blocks of transformer model partitioned with tensor model parallelism (figures borrowed from Megatron [40]). *f* and *g* are conjugate. *f* is the identity operator in the forward pass and all-reduce in the backward pass, while *g* is the reverse.
-
-*(Sub-labels within the figure: "(a) MLP." and "(b) Self-Attention.")*
+> 【图文联合解读】图以对数刻度数据并行规模d（1→64）为横轴、气泡占比（0–1.0）为纵轴，呈现n=32/128、b′=B/b∈{32,128,512}四组曲线。关键数据：①n=32,b′=32时，d=1处气泡≈0.97、d=32降至0；②n=128,b′=512全程仅约0.12–0.25；③n=128,b′=128即便d=64气泡仍≈0.50。结论：b′（每阶段microbatch数）是气泡主导因素——b′越大气泡越低；固定b′时n↑（即流水线深度↑）气泡随之上升。论文借此量化"流水线空泡与并行配置的关系"，为数据并行度与微批规模的选择提供实验依据，支撑整体并行策略与调度优化的论证。
 
 ### Figure 7 (p.6) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig07.png]]
@@ -178,20 +110,13 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 > Per-GPU throughput versus microbatch size for a GPT model with a billion parameters (128 attention heads, hidden size of 4096, 4 transformer layers).
 
 > [!tip] 技术解读（多模态）
-> **Figure 7 Description**
+> 【图文联合解读】**图7联合解读：**
 
-**Components:** A 2D line plot with a single curve (blue, circular markers) tracking per-GPU throughput as a function of microbatch size.
+1) **核心数据**：1B参数GPT模型（128头/h=4096/4层）的单卡吞吐量随microbatch变化曲线。尺寸1→16时，每GPU吞吐量由约68 TFLOP/s单调升至约91 TFLOP/s，但增益递减明显（1→2增约9，8→16仅增约2），呈对数饱和趋势。
 
-**Axes:**
-- Y-axis: "Achieved teraFLOP/s per GPU" (linear scale, 0–100)
-- X-axis: "Microbatch size" (categorical: 1, 2, 4, 8, 16)
+2) **关键结论**：增大microbatch可摊薄kernel launch等固定开销、提升GPU利用率；存在明显"甜点区"（约8–16），过小则算力浪费，过大收益饱和。
 
-**Data flow / trend:** Throughput rises monotonically with microbatch size — starting near ~70 TFLOPs/s at size 1, climbing to ~85 at size 2, and asymptotically approaching ~90 TFLOPs/s at sizes 8–16, indicating diminishing returns at higher microbatch values.
-
-**Key takeaway:** Larger microbatch sizes (≥4) unlock substantially higher per-GPU utilization (≈1.3× gain) on a billion-parameter GPT model, since smaller microbatches leave the GPU under-utilized during compute-bound transformer operations.
-
-**Caption (verbatim):**
-*Figure 7: Per-GPU throughput versus microbatch size for a GPT model with a billion parameters (128 attention heads, hidden size of 4096, 4 transformer layers).*
+3) **作用定位**：作为单卡baseline，验证microbatch对计算效率的影响，为后续张量并行与流水线并行的batch配置提供经验依据，是模型并行前确认最优工作负载的关键前置实验。
 
 ### Figure 8 (p.6) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig08.png]]
@@ -200,20 +125,13 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 > Behavior of normalized estimated throughput (time com- puted as 𝑡= (𝑏′/𝑏+ 𝑝−1) ·  𝑡𝑓(𝑏) + 𝑡𝑏(𝑏)) with respect to the mi- crobatch size 𝑏for the same GPT model from Figure 7.
 
 > [!tip] 技术解读（多模态）
-> **Figure 7 Description**
+> 【图文联合解读】**Figure 8 图文联合解读**
 
-**Components:** A 2D line plot with a single curve (blue, circular markers) tracking per-GPU throughput as a function of microbatch size.
+1) **核心内容**：展示同一GPT模型在总batch size=128（蓝圆）与512（橙菱）下，归一化吞吐随microbatch size *b*∈{1,2,4,8,16} 的曲线。蓝线在 *b*=2–4 达峰≈1.10，*b*=16 骤降至≈0.75；橙线在 *b*=4 达峰≈1.22，*b*=16 仍保持≈1.11，整体更平稳且始终高于蓝线。
 
-**Axes:**
-- Y-axis: "Achieved teraFLOP/s per GPU" (linear scale, 0–100)
-- X-axis: "Microbatch size" (categorical: 1, 2, 4, 8, 16)
+2) **关键技术结论**：microbatch 存在最优值——*b* 太小则 GPU kernel 效率低（*t_f*/*t_b* 大），*b* 太大则流水线 bubble 成本（*p*−1 项）激增；更大的总 batch（如512）能更稳定地承受较大 microbatch。
 
-**Data flow / trend:** Throughput rises monotonically with microbatch size — starting near ~70 TFLOPs/s at size 1, climbing to ~85 at size 2, and asymptotically approaching ~90 TFLOPs/s at sizes 8–16, indicating diminishing returns at higher microbatch values.
-
-**Key takeaway:** Larger microbatch sizes (≥4) unlock substantially higher per-GPU utilization (≈1.3× gain) on a billion-parameter GPT model, since smaller microbatches leave the GPU under-utilized during compute-bound transformer operations.
-
-**Caption (verbatim):**
-*Figure 7: Per-GPU throughput versus microbatch size for a GPT model with a billion parameters (128 attention heads, hidden size of 4096, 4 transformer layers).*
+3) **论文中的作用**：与 Fig.7（*t_f*/*t_b* 标度）配套，将"单步时间"与"流水线 bubble"两类代价合成吞吐公式，量化 microbatch 调优权衡，是 Megatron-LM 分布式训练配置准则的核心实验支撑。
 
 ### Figure 9 (p.7) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig09.png]]
@@ -222,19 +140,13 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 > Scatter/gather communication optimization. Light blue blocks are layers in the first pipeline stage, and dark blue blocks are layers in the second pipeline stage. Without the scatter/gather optimization, the same tensor is sent redundantly over inter-node
 
 > [!tip] 技术解读（多模态）
-> ## Figure 9 Description
+> 【图文联合解读】**图9解读：**
 
-**Architecture/Components:** Two paired GPU groups (numbered 1–2 and 3–4) are connected intra-node via NVLink (green) and inter-node via InfiniBand (red bars). Light-blue blocks represent the first pipeline stage; dark-blue blocks represent the second.
+**1）核心对象与结构：** 图以4块GPU（编号1–4）分属两个节点的流水线阶段（浅蓝块GPUs 1、2为阶段一，深蓝块GPUs 3、4为阶段二）为对象。(a) 中节点内NVLink用于层间通信，跨节点InfiniBand需传输完整红色张量块；(b) 中发送端按头维度将张量切分为若干小块（浅红色）经InfiniBand分发，接收端通过all-gather重新拼合为完整张量（深红色）。
 
-**Data Flow:**
-- **(a) Without optimization:** The full tensor is sent redundantly across all InfiniBand links between every GPU pair of consecutive stages — 8× the necessary traffic (matches the tensor-model-parallel size of 8).
-- **(b) With optimization:** Each rank splits its output into equal chunks and **scatters** only one chunk per InfiniBand link (e.g., rank 1 → rank 3, rank 2 → rank 4). On the receiver, an **all-gather** over the fast NVLink re-materializes the full tensor.
+**2）关键技术结论：** scatter/gather优化把InfiniBand链路传输的张量从完整粒度降为分片粒度，等效降低了跨节点带宽占用，同时保持计算结果等价。
 
-**Key Technical Takeaway:** Scatter/gather reduces inter-node InfiniBand volume per stage pair by a factor of *t* (tensor-parallel size), cutting communication to bsh/t per stage pair — making communication-intensive schedules (e.g., interleaved pipeline parallelism) feasible.
-
-## Caption (verbatim)
-
-**Figure 9:** Scatter/gather communication optimization. Light blue blocks are layers in the first pipeline stage, and dark blue blocks are layers in the second pipeline stage. Without the scatter/gather optimization, the same tensor is sent redundantly over inter-node InfiniBand links. Instead, at the sender, we can scatter the tensor into smaller chunks, reducing the sizes of tensors sent over InfiniBand links. The final tensor can then be rematerialized at the receiver using a gather operation.
+**3）在论文中的作用：** 该图是Megatron-LM张量并行–流水线并行跨节点通信优化的核心论据，支撑其在大规模GPU集群上保持高扩展效率的整体方法链。
 
 ### Figure 10 (p.8) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig10.png]]
@@ -243,17 +155,9 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 > Throughput per GPU of PTD-P and ZeRO-3 for two differ- ent GPT models (the 175B GPT-3 model is shown with dotted lines, and the 530B model is shown with solid lines). Global batch sizes are fixed and ZeRO-3 is used without any model parallelism.
 
 > [!tip] 技术解读（多模态）
-> ## Main Figure Description (Figure 10)
+> 【图文联合解读】**图文联合解读：**
 
-**Architecture/Components:** A 2-axis line chart comparing per-GPU throughput (y-axis: Achieved teraFLOP/s per GPU, 0–200) against GPU count (x-axis: ~768 to ~1920). Four series are plotted: **ZeRO-3, 175B** (blue dashed/circles), **ZeRO-3, 530B** (blue solid/diamonds), **PTD-P, 175B** (orange dashed/triangles), and **PTD-P, 530B** (orange solid/squares).
-
-**Data Flow:** As GPUs scale up, PTD-P lines remain nearly flat (~140–160 teraFLOP/s), while ZeRO-3 lines degrade sharply (down to ~40–50 teraFLOP/s). PTD-P dominates at all GPU counts, with the gap widening at scale.
-
-**Key Takeaway:** PTD-P scales more gracefully than ZeRO-3 (without tensor parallelism) due to reduced cross-node communication—outperforming ZeRO-3 by ~70% on both model sizes at higher GPU counts under fixed global batch size.
-
-## Caption (verbatim)
-
-**Figure 10:** Throughput per GPU of PTD-P and ZeRO-3 for two different GPT models (the 175B GPT-3 model is shown with dotted lines, and the 530B model is shown with solid lines). Global batch sizes are fixed and ZeRO-3 is used without any model parallelism.
+图示四组配置下每GPU吞吐量（TFLOP/s）随GPU数（768→1920+）的变化。橙色PTD-P两条曲线稳定在140–170 TFLOP/s区间，几乎不随规模衰减；蓝色ZeRO-3则从约145急剧下滑至45–50，175B模型降幅最显著（仅剩约1/3）。论文借此论证：纯数据并行方案（ZeRO-3）在GPU增多后通信开销主导，性能严重退化；而PTD-P结合张量、流水线与数据并行的混合策略保持近线性高效扩展，支撑了Megatron-LM方法体系的核心结论——大规模模型训练必须采用混合并行而非单纯数据并行，以获得可扩展的吞吐。
 
 ### Figure 11 (p.9) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig11.png]]
@@ -262,18 +166,13 @@ The figure shows how transformer blocks are partitioned for tensor model paralle
 > Throughput per GPU of pipeline parallelism using two different batch sizes in a weak-scaling experiment setup (model size increases with the pipeline-parallel size). 12 24 36 48 60
 
 > [!tip] 技术解读（多模态）
-> **Figure 11 — Description (≤120 words):**
+> 【图文联合解读】**图11 联合解读**
 
-The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200) against pipeline-parallel size (x-axis: 1, 2, 4, 8) for a weak-scaling experiment where model size grows proportionally to the pipeline degree. Two series are shown: **Batch size = 8** (blue circles) and **Batch size = 128** (orange diamonds).
+1) **核心数据**：横轴为流水线并行度 P∈{1,2,4,8}，纵轴为单 GPU 吞吐量(TFLOPS/s)。batch=8(蓝)由 P=1 的 ~165 降至 P=8 的 ~88，跌幅近 47%；batch=128(橙)则从 ~178 仅缓降至 ~163(约 8%)，基本水平。
 
-- The **large-batch (128)** curve stays roughly flat near ~170–175 TF/s/GPU across all pipeline depths.
-- The **small-batch (8)** curve drops steeply from ~165 → ~85 TF/s/GPU as the pipeline grows.
+2) **关键结论**：弱扩展(模型随 P 增大)下，pipeline bubble 开销在小 batch 时无法被摊薄，导致每 GPU 吞吐显著下降；而 batch 足够大时，bubble 被掩盖，pipeline parallel 接近线性扩展。
 
-**Key takeaway:** Larger batch sizes amortize the pipeline bubble overhead, preserving throughput as pipeline-parallel size increases; small batches suffer dramatically because the bubble fraction (b−1)/m grows with pipeline depth.
-
-**Caption (verbatim):**
-
-> Figure 11: Throughput per GPU of pipeline parallelism using two different batch sizes in a weak-scaling experiment setup (model size increases with the pipeline-parallel size).
+3) **在论文中的作用**：该图支撑"pipeline parallelism 需配合足够大的 micro-batch 才能高效"的核心论点，与文中 1F1B 调度分析互为印证，是论证大规模训练组合策略(tensor+pipeline+data)可行性的关键实验证据。
 
 ### Figure 12 (p.9) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig12.png]]
@@ -282,18 +181,13 @@ The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200
 > Throughput per GPU of interleaved and non-interleaved schedules for a GPT model (175 billion parameters) on 96 GPUs. and a microbatch size of 1. As we increase the number of pipeline stages, we also increase the size of the model by proportionally increasing the number of layers in the model, e.g., with a pipeline- parallel size of 1, we use a model with 3 transformer layers and 15 billion paramet
 
 > [!tip] 技术解读（多模态）
-> **Figure 11 — Description (≤120 words):**
+> 【图文联合解读】**图文联合解读：**
 
-The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200) against pipeline-parallel size (x-axis: 1, 2, 4, 8) for a weak-scaling experiment where model size grows proportionally to the pipeline degree. Two series are shown: **Batch size = 8** (blue circles) and **Batch size = 128** (orange diamonds).
+该图横轴为 batch size（12–60），纵轴为每 GPU 实现的 teraFLOP/s，蓝色圆点为非交错（non-interleaved）调度，橙色菱形为交错（interleaved）调度，对比 175B 参数 GPT 模型在 96 GPU 上的吞吐。可读关键数据：BS=12 时非交错约 82、交替约 119（差距最大 ~37 TFLOP/s）；BS=24 时约 109 vs 134；BS=36 时约 122 vs 141；BS=48 时约 130 vs 143；BS=60 时约 135 vs 146，随 batch 增大差距收窄并趋于饱和。
 
-- The **large-batch (128)** curve stays roughly flat near ~170–175 TF/s/GPU across all pipeline depths.
-- The **small-batch (8)** curve drops steeply from ~165 → ~85 TF/s/GPU as the pipeline grows.
+**技术结论：** 交错调度在各 batch 下均显著优于非交错，且在小 batch 时收益更突出，证明通过将模型层切分为更细的子阶段（虚拟阶段）并交替执行，能有效缓解流水线气泡。
 
-**Key takeaway:** Larger batch sizes amortize the pipeline bubble overhead, preserving throughput as pipeline-parallel size increases; small batches suffer dramatically because the bubble fraction (b−1)/m grows with pipeline depth.
-
-**Caption (verbatim):**
-
-> Figure 11: Throughput per GPU of pipeline parallelism using two different batch sizes in a weak-scaling experiment setup (model size increases with the pipeline-parallel size).
+**论文作用：** 该图为本文核心创新——Interleaved 1F1B 流水线并行调度——提供了 175B 大规模模型上的端到端性能证据，是支撑该调度方案有效性的关键实验图。
 
 ### Figure 13 (p.9) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig13.png]]
@@ -302,18 +196,13 @@ The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200
 > Throughput per GPU of various parallel configurations that combine pipeline and tensor model parallelism using a GPT model with 162.2 billion parameters and 64 A100 GPUs.
 
 > [!tip] 技术解读（多模态）
-> **Figure 11 — Description (≤120 words):**
+> 【图文联合解读】**图文联合解读：**
 
-The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200) against pipeline-parallel size (x-axis: 1, 2, 4, 8) for a weak-scaling experiment where model size grows proportionally to the pipeline degree. Two series are shown: **Batch size = 8** (blue circles) and **Batch size = 128** (orange diamonds).
+图13展示64块A100训练162.2B参数GPT模型时，五种(流水线并行度, 张量并行度)=(2,32)/(4,16)/(8,8)/(16,4)/(32,2)配置下的单GPU吞吐量(TFLOPS/s)。两条曲线分别对应batch=32(蓝)与128(橙)：batch=128全程高于batch=32，前者在(8,8)处峰值约165 TFLOPS/s，后者峰约142；在高流水线配置(16,4)与(32,2)处大小batch落差最大(差~50–60 TFLOPS/s)，而小batch在(8,8)两侧迅速衰减。
 
-- The **large-batch (128)** curve stays roughly flat near ~170–175 TF/s/GPU across all pipeline depths.
-- The **small-batch (8)** curve drops steeply from ~165 → ~85 TF/s/GPU as the pipeline grows.
+**论证结论**：两种并行的配比显著影响吞吐，二者不可极端化；大batch可有效掩盖流水线空泡(bubble)，使高流水线配置仍保持高性能。
 
-**Key takeaway:** Larger batch sizes amortize the pipeline bubble overhead, preserving throughput as pipeline-parallel size increases; small batches suffer dramatically because the bubble fraction (b−1)/m grows with pipeline depth.
-
-**Caption (verbatim):**
-
-> Figure 11: Throughput per GPU of pipeline parallelism using two different batch sizes in a weak-scaling experiment setup (model size increases with the pipeline-parallel size).
+**论文作用**：作为Figure 12(纯张量并行)的对照，本图直接验证了Megatron-LM"流水线并行+张量并行"联合方案的核心主张——通过合理拆分即可高效训练百亿级以上模型，构成其方法学闭环的关键实验证据。
 
 ### Figure 14 (p.10) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig14.png]]
@@ -322,25 +211,9 @@ The figure is a line chart plotting achieved teraFLOP/s per GPU (y-axis, 0–200
 > Throughput per GPU of various parallel configurations that combine data and pipeline model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, mi- crobatch size of 1, and 64 A100 GPUs. (2, 32) (4, 16) (8, 8) (16, 4) (32, 2) (Tensor-parallel size, Data-parallel size) 0 50 100 150 200
 
 > [!tip] 技术解读（多模态）
-> **Figure Description**
+> 【图文联合解读】**图文联合解读：**
 
-The page contains three line charts measuring **Achieved teraFLOP/s per GPU** for GPT model training on 64 A100 GPUs:
-
-- **Figure 14** — Throughput vs. (Pipeline-parallel, Data-parallel) sizes for a 5.9B-param GPT at batch=32 and 512, microbatch=1. Both curves slope downward as pipeline size grows (32 → 90–40 teraFLOP/s), while data parallelism alone sustains higher throughput.
-
-- **Figure 15** — Same metric vs. (Tensor-parallel, Data-parallel) sizes. All three batch sizes (32, 128, 512) drop sharply (125 → ~25 teraFLOP/s) as tensor-parallel size increases from 2 to 32, since all-to-all communication dominates.
-
-- **Figure 16** — Throughput vs. microbatch size for a (t,p)=(8,8) config on a 91B-param GPT. Curves are nearly flat (~155 teraFLOP/s for batch=512; ~155→120 for batch=128) across microbatch = 1–8.
-
-**Key Technical Takeaway (≤120 words):** Tensor parallelism is most efficient *within* a node (DGX A100, 8 GPUs) because it avoids expensive all-to-all communication across nodes, while pipeline parallelism uses cheap point-to-point links that scale across nodes. Optimal configuration matches tensor-parallel size to GPUs/node (8) and uses pipeline parallelism across nodes to scale further. Increasing pipeline-parallel size enlarges the pipeline bubble and hurts throughput; increasing tensor-parallel size inflates all-to-all cost; and microbatch size must be tuned (best ≈2 for the 91B model) to balance bubble size against GPU kernel arithmetic intensity. Data parallelism alone cannot scale beyond ~1500 GPUs due to memory and optimizer-state limits.
-
-**Caption (verbatim):**
-
-*Figure 14: Throughput per GPU of various parallel configurations that combine data and pipeline model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, microbatch size of 1, and 64 A100 GPUs.*
-
-*Figure 15: Throughput per GPU of various parallel configurations that combine data and tensor model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, microbatch size of 1, and 64 A100 GPUs.*
-
-*Figure 16: Throughput per GPU of a (t, p) = (8, 8) parallel configuration for different microbatch sizes on a GPT model with 91 billion parameters, for two different batch sizes using 64 A100 GPUs.*
+图示5.9B参数GPT在64块A100上不同(流水线并行度,数据并行度)配置的单GPU吞吐量：批大小=32时，从(2,32)的约62 TFLOP/s单调降至(32,2)的约42 TFLOP/s；批大小=512时，从约148降至约90 TFLOP/s。两条曲线随流水线深度增加均呈下降趋势，原文借此论证：**在该模型规模与GPU数量下，数据并行效率高于管道并行**，pure-data-parallel配置最划算，而增大pipeline会因气泡(bubble)开销显著降低每GPU吞吐。该图为论文并行策略选择（Figure 13/14共同构成扩展性实验）提供了量化依据，是支撑"Megatron在并行配置空间仍具高效率"这一整体结论的关键数据点。
 
 ### Figure 15 (p.10) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig15.png]]
@@ -349,25 +222,16 @@ The page contains three line charts measuring **Achieved teraFLOP/s per GPU** fo
 > Throughput per GPU of various parallel configurations that combine data and tensor model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, microbatch size of 1, and 64 A100 GPUs. 1 2 4 8
 
 > [!tip] 技术解读（多模态）
-> **Figure Description**
+> 【图文联合解读】**图文联合解读：**
 
-The page contains three line charts measuring **Achieved teraFLOP/s per GPU** for GPT model training on 64 A100 GPUs:
+**1) 核心对象与数据**
+该图横轴为五种(TP, DP)组合：(2,32)、(4,16)、(8,8)、(16,4)、(32,2)，纵轴为单 GPU 吞吐量 (tFLOP/s，0–200)。三条曲线对应 BS=32(蓝)、128(橙)、512(绿)。起点：BS=512 约 128、BS=128 约 103、BS=32 约 58；随TP增大均持续下滑，至 (32,2) 时三者收敛至约 22–25 tFLOP/s。
 
-- **Figure 14** — Throughput vs. (Pipeline-parallel, Data-parallel) sizes for a 5.9B-param GPT at batch=32 and 512, microbatch=1. Both curves slope downward as pipeline size grows (32 → 90–40 teraFLOP/s), while data parallelism alone sustains higher throughput.
+**2) 关键技术结论**
+原文用以论证：随 TP 规模由 2 增至 32，三批大小曲线均从 ~125 骤降至 ~25 tFLOP/s，根源是 all-to-all 通信开销主导——一味放大张量并行反成性能瓶颈。
 
-- **Figure 15** — Same metric vs. (Tensor-parallel, Data-parallel) sizes. All three batch sizes (32, 128, 512) drop sharply (125 → ~25 teraFLOP/s) as tensor-parallel size increases from 2 to 32, since all-to-all communication dominates.
-
-- **Figure 16** — Throughput vs. microbatch size for a (t,p)=(8,8) config on a 91B-param GPT. Curves are nearly flat (~155 teraFLOP/s for batch=512; ~155→120 for batch=128) across microbatch = 1–8.
-
-**Key Technical Takeaway (≤120 words):** Tensor parallelism is most efficient *within* a node (DGX A100, 8 GPUs) because it avoids expensive all-to-all communication across nodes, while pipeline parallelism uses cheap point-to-point links that scale across nodes. Optimal configuration matches tensor-parallel size to GPUs/node (8) and uses pipeline parallelism across nodes to scale further. Increasing pipeline-parallel size enlarges the pipeline bubble and hurts throughput; increasing tensor-parallel size inflates all-to-all cost; and microbatch size must be tuned (best ≈2 for the 91B model) to balance bubble size against GPU kernel arithmetic intensity. Data parallelism alone cannot scale beyond ~1500 GPUs due to memory and optimizer-state limits.
-
-**Caption (verbatim):**
-
-*Figure 14: Throughput per GPU of various parallel configurations that combine data and pipeline model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, microbatch size of 1, and 64 A100 GPUs.*
-
-*Figure 15: Throughput per GPU of various parallel configurations that combine data and tensor model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, microbatch size of 1, and 64 A100 GPUs.*
-
-*Figure 16: Throughput per GPU of a (t, p) = (8, 8) parallel configuration for different microbatch sizes on a GPT model with 91 billion parameters, for two different batch sizes using 64 A100 GPUs.*
+**3) 在论文链路中的作用**
+作为"组合并行配置敏感性"实验的关键证据，支撑"TP 不应盲目放大、需与 DP 协同配置"的并行策略准则，与 Figure 14/16 共同构成 Megatron-LM 并行规模选择的方法学依据。
 
 ### Figure 16 (p.10) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig16.png]]
@@ -376,25 +240,13 @@ The page contains three line charts measuring **Achieved teraFLOP/s per GPU** fo
 > Throughput per GPU of a (𝑡, 𝑝) = (8, 8) parallel configura- tion for different microbatch sizes on a GPT model with 91 billion parameters, for two different batch sizes using 64 A100 GPUs. importance of using both tensor and pipeline model parallelism in conjunction to train a 161-billion-parameter GPT model (32 trans- former layers to support pipeline-parallel size of 32, 128 attention heads, hid
 
 > [!tip] 技术解读（多模态）
-> **Figure Description**
+> 【图文联合解读】**图文联合解读：**
 
-The page contains three line charts measuring **Achieved teraFLOP/s per GPU** for GPT model training on 64 A100 GPUs:
+图16展示在 **(t,p)=(8,8)** 并行、**64卡 A100** 训练 **91B 参数 GPT** 时，单卡吞吐（纵轴 teraFLOP/s，0–200）随 microbatch（横轴 1/2/4/8，对数刻度）的变化，含 batch=128 与 batch=512 两条曲线。**橙色（512）**：约 163→172→160→155，全程近乎平坦，峰值 ≈172 TF/s；**蓝色（128）**：约 155→158→140→120，microbatch ≥4 后明显下滑。
 
-- **Figure 14** — Throughput vs. (Pipeline-parallel, Data-parallel) sizes for a 5.9B-param GPT at batch=32 and 512, microbatch=1. Both curves slope downward as pipeline size grows (32 → 90–40 teraFLOP/s), while data parallelism alone sustains higher throughput.
+**关键结论**：batch=512 时对 microbatch 大小极不敏感（强鲁棒），逼近算力峰值；batch=128 较大 microbatch 会因整批 microbatch 数少、流水线气泡占比相对增大而损失吞吐。
 
-- **Figure 15** — Same metric vs. (Tensor-parallel, Data-parallel) sizes. All three batch sizes (32, 128, 512) drop sharply (125 → ~25 teraFLOP/s) as tensor-parallel size increases from 2 to 32, since all-to-all communication dominates.
-
-- **Figure 16** — Throughput vs. microbatch size for a (t,p)=(8,8) config on a 91B-param GPT. Curves are nearly flat (~155 teraFLOP/s for batch=512; ~155→120 for batch=128) across microbatch = 1–8.
-
-**Key Technical Takeaway (≤120 words):** Tensor parallelism is most efficient *within* a node (DGX A100, 8 GPUs) because it avoids expensive all-to-all communication across nodes, while pipeline parallelism uses cheap point-to-point links that scale across nodes. Optimal configuration matches tensor-parallel size to GPUs/node (8) and uses pipeline parallelism across nodes to scale further. Increasing pipeline-parallel size enlarges the pipeline bubble and hurts throughput; increasing tensor-parallel size inflates all-to-all cost; and microbatch size must be tuned (best ≈2 for the 91B model) to balance bubble size against GPU kernel arithmetic intensity. Data parallelism alone cannot scale beyond ~1500 GPUs due to memory and optimizer-state limits.
-
-**Caption (verbatim):**
-
-*Figure 14: Throughput per GPU of various parallel configurations that combine data and pipeline model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, microbatch size of 1, and 64 A100 GPUs.*
-
-*Figure 15: Throughput per GPU of various parallel configurations that combine data and tensor model parallelism using a GPT model with 5.9 billion parameters, three different batch sizes, microbatch size of 1, and 64 A100 GPUs.*
-
-*Figure 16: Throughput per GPU of a (t, p) = (8, 8) parallel configuration for different microbatch sizes on a GPT model with 91 billion parameters, for two different batch sizes using 64 A100 GPUs.*
+**在论文中的作用**：作为扩展性实验的一环，量化验证"张量并行 + 流水线并行"组合在千亿参数规模、用较小 microbatch 仍可保近峰效率，为 Megatron-LM 在大规模训练上的方法论高效性提供直接实证支撑。
 
 ### Figure 17 (p.11) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig17.png]]
@@ -403,23 +255,13 @@ The page contains three line charts measuring **Achieved teraFLOP/s per GPU** fo
 > Throughput (in sequences per second) with and without activation recomputation for a GPT model with 145 billion param- eters using 128 A100 GPUs ((𝑡, 𝑝) = (8, 16)). 12 24 36 48 60
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description (≤120 words)
+> 【图文联合解读】**图17联合解读**
 
-Two line-chart performance comparisons from the Megatron-LM paper:
+该图刻画145B参数GPT模型在128块A100上的吞吐量（sequences/秒）随batch size（1–256，对数刻度）的变化，对比启用与停用activation recomputation（蓝圆 vs 橙菱）。橙色"W/o act. recomp"曲线仅至batch=8即达约4 seq/s，因显存耗尽（OOM）终止；蓝色曲线则持续爬升至batch=256时约7.8 seq/s。值得注意的是在batch≤8区间，无recomp略高（~4 vs ~3），恰好暴露了重计算的算力开销。
 
-**Figure 17 — Activation Recomputation (top):** Plots throughput (sequences/sec, y-axis) vs. batch size (1–256, log scale) for a 145B-param GPT model on 128 A100 GPUs. Two curves: *Act. recomputation* (blue) and *W/o act. recomp* (orange). Without recomputation, throughput peaks early (~3.75 at batch 8) then plateaus. With recomputation, it climbs steadily to ~8 at batch 256.
+原文据此论证：以算力换显存的重计算可将可用batch从8扩展到256，使吞吐量近似翻倍，是百亿级模型训练的必备技术。
 
-**Figure 18 — Scatter/Gather Optimization (bottom):** Plots achieved teraFLOP/s/GPU vs. batch size (12–60) for a 175B-param GPT-3 model on 96 A100s. *Scatter/gather optimization* (orange) consistently outperforms *Unoptimized* (blue), reaching ~150 vs. ~130 teraFLOP/s/GPU at batch 60.
-
-**Key takeaway:** Optimizations trade a small-batch penalty for large-batch scalability — recomputation trades ~33% throughput at small batches for ~2× gain at batch 256 by shrinking the pipeline bubble; scatter/gather yields a consistent ~11–15% speedup across batch sizes.
-
----
-
-## Captions (verbatim)
-
-**Figure 17:** Throughput (in sequences per second) with and without activation recomputation for a GPT model with 145 billion parameters using 128 A100 GPUs ((*t*, *p*) = (8, 16)).
-
-**Figure 18:** Throughput per GPU with and without the scatter/gather optimization for a GPT model with 175 billion parameters using 96 A100 GPUs and the interleaved schedule.
+其作用在论文整体方法链中，呼应"张量并行+流水并行+混合精度+重计算"的可扩展训练体系，为大规模模型训练落地提供关键memory-saving抓手。
 
 ### Figure 18 (p.11) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig18.png]]
@@ -428,23 +270,13 @@ Two line-chart performance comparisons from the Megatron-LM paper:
 > Throughput per GPU with and without the scatter/gather optimization for a GPT model with 175 billion parameters using 96 A100 GPUs and the interleaved schedule.
 
 > [!tip] 技术解读（多模态）
-> ## Figure Description (≤120 words)
+> 【图文联合解读】**图文联合解读：**
 
-Two line-chart performance comparisons from the Megatron-LM paper:
+1）图表为折线对比图，横轴为批大小（12/24/36/48/60），纵轴为每GPU达成算力（50–150 teraFLOP/s），含两条曲线：未优化（蓝圈）在各批大小下达约107/120/127/130/131 TFLOPS，散射-收集优化（橙菱）达约119/134/142/144/147 TFLOPS。
 
-**Figure 17 — Activation Recomputation (top):** Plots throughput (sequences/sec, y-axis) vs. batch size (1–256, log scale) for a 145B-param GPT model on 128 A100 GPUs. Two curves: *Act. recomputation* (blue) and *W/o act. recomp* (orange). Without recomputation, throughput peaks early (~3.75 at batch 8) then plateaus. With recomputation, it climbs steadily to ~8 at batch 256.
+2）原文借此论证：在96张A100上训练175B参数GPT-3并采用交错调度时，散射-收集通信优化在所有批大小下均稳定优于未优化基线，批大小60时差距约16 TFLOPS（147 vs 131），验证了该优化对张量并行流水线通信瓶颈的缓解效果。
 
-**Figure 18 — Scatter/Gather Optimization (bottom):** Plots achieved teraFLOP/s/GPU vs. batch size (12–60) for a 175B-param GPT-3 model on 96 A100s. *Scatter/gather optimization* (orange) consistently outperforms *Unoptimized* (blue), reaching ~150 vs. ~130 teraFLOP/s/GPU at batch 60.
-
-**Key takeaway:** Optimizations trade a small-batch penalty for large-batch scalability — recomputation trades ~33% throughput at small batches for ~2× gain at batch 256 by shrinking the pipeline bubble; scatter/gather yields a consistent ~11–15% speedup across batch sizes.
-
----
-
-## Captions (verbatim)
-
-**Figure 17:** Throughput (in sequences per second) with and without activation recomputation for a GPT model with 145 billion parameters using 128 A100 GPUs ((*t*, *p*) = (8, 16)).
-
-**Figure 18:** Throughput per GPU with and without the scatter/gather optimization for a GPT model with 175 billion parameters using 96 A100 GPUs and the interleaved schedule.
+3）该图属于消融/优化效果验证实验，为Megatron-LM在大规模集群上实现高效训练的工程方案提供量化支撑，是证明所提通信优化必要性与有效性的关键实证。
 
 ## 表格（裁剪图 + caption，可直接插入报告）
 
@@ -454,19 +286,7 @@ Two line-chart performance comparisons from the Megatron-LM paper:
 > Weak-scaling throughput for GPT models ranging from 1 billion to 1 trillion parameters.
 
 > [!tip] 表格解读（多模态）
-> ## Figure Description
-
-**Components & Data Flow:** The line chart plots **achieved teraFLOP/s per GPU** (y-axis, 50–200) against **number of GPUs** (x-axis, weak-scaling regime) for several GPT model sizes. Four series compare two partitioning strategies: **ZeRO-3** (blue: 175B dashed-circles, 530B solid-diamonds) and a parallel/PDS-style scheme (orange: solid squares and dashed triangles). Each line traces throughput as GPUs are added alongside parameter count growth from 1B → 1T.
-
-**Key Takeaway:** ZeRO-3 throughput **degrades sharply with scale** (175B drops from ~145 → ~50 TFLOP/s/GPU), while the parallel strategy sustains **~150–170 TFLOP/s/GPU** across the same range — i.e., roughly **3× higher efficiency** at large model sizes, demonstrating better compute utilization under weak scaling.
-
-*(104 words)*
-
----
-
-## Caption (verbatim)
-
-> **Table 1:** Weak-scaling throughput for GPT models ranging from 1 billion to 1 trillion parameters.
+> 【图文联合解读】该表呈现9组GPT模型（3.6B→1008B参数）的弱扩展吞吐：层数32→160、隐藏维3072→25600、张量并行恒为8、流水并行1→64、GPU数64→3072；单卡TFLOPs从138升至163（峰值利用率43%→52%），聚合吞吐8.8→502 TFLOPs。原文借此证明：TP+PP组合在跨三个数量级（3.6B→1008B）规模下仍保持近线性弱扩展，1T模型仍维持52%峰值利用率，无明显效率退化。该表是论文"trillion级训练可行"主张的核心量化证据，与Figure 1所示参数指数增长形成闭环——前者揭示需求趋势，后者给出Megatron-LM（张量并行+流水线并行）足以承载该趋势的并行扩展可行性，构成方法链路中"性能验证→规模外推"的关键一环。
 
 ### Table 2 (p.9) ⭐深度解读
 ![[assets/crops/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-tab02.png]]
@@ -474,21 +294,13 @@ Two line-chart performance comparisons from the Megatron-LM paper:
 > Comparison of PTD Parallelism to ZeRO-3 (without model paralllelism). The 530-billion-parameter GPT model did not fit on 560 GPUs when using a microbatch size of 4 with ZeRO-3, so we increased the number of GPUs used to 640 and global batch size to 2560 to provide a throughput estimate (relevant row
 
 > [!tip] 表格解读（多模态）
-> ## Figure Description
+> 【图文联合解读】**图文联合解读（Table 2）**
 
-The figure (Table 2) presents two side-by-side line plots benchmarking **PTD Parallelism vs. ZeRO-3** (without model parallelism) on a 530B-parameter GPT model, measuring **Achieved teraFLOP/s per GPU**.
+1）**结构与核心数据**：表对比 ZeRO-3 与 PTD 两种方案在 174.6B 和 529.6B 参数 GPT 模型上的表现，列出 GPU 数（384–2240）、microbatch（1/2/4）、每 GPU TFLOPS 及训练 300B tokens 天数。PTD 在 174.6B/1536 GPU 下达 141 TFLOPS、仅需 23 天；529.6B/2240 GPU 下 159 TFLOPS、42 天。ZeRO-3 随 GPU 扩展吞吐骤降（174.6B 由 144→88→44），530B 在 560 GPU+mbs=4 下放不下，只能改用 640 GPU 与 batch=2560* 才得 138 TFLOPS/169 天。
 
-**Components:**
-- **Y-axis (both plots):** Achieved throughput in teraFLOP/s per GPU (range 0–200).
-- **Left plot:** X-axis sweeps values 1, 2, 4, 8 (likely data-parallel degree); compares **Batch size 8** (blue) vs. **Batch size 128** (orange).
-- **Right plot:** X-axis shows DP×MP-style tuples (2,32), (4,16), (8,8), (16,4), (32,2); compares **Batch size 32** (blue) vs. **Batch size 128** (orange).
-- Each series uses markers (circles/diamonds) connected by lines.
+2）**关键技术结论**：PTD 每 GPU 吞吐显著高于 ZeRO-3（如 529.6B 同规模 171 vs 138 TFLOPS），且随 GPU 数增多几乎不衰减，训练时长大幅缩短（1120 GPU 下 80 vs 137 天），证明张量+流水线+数据并行的组合在大模型上效率与可扩展性均优于纯数据并行方案。
 
-**Key technical takeaway:** PTD Parallelism (orange) sustains ~150–175 teraFLOP/s/GPU across all configurations, while ZeRO-3 (blue) degrades sharply as the data-parallel dimension grows — dropping below 100 teraFLOP/s/GPU at degree 8 — demonstrating PTD's superior scalability at large batch sizes.
-
-## Caption (verbatim)
-
-> **Table 2:** Comparison of PTD Parallelism to ZeRO-3 (without model parallelism). The 530-billion-parameter GPT model did not fit on 560 GPUs when using a microbatch size of 4 with ZeRO-3, so we increased the number of GPUs used to 640 and global batch size to 2560 to provide a throughput estimate (relevant row marked in table with a *).
+3）**论文作用**：作为方法验证核心证据，支撑"PTD 优于 ZeRO-3"的核心主张，体现 Megatron-LM 在千亿至万亿参数规模训练中的实用价值。
 
 ## 关键公式（LaTeX 源，可直接粘贴 Obsidian/报告）
 
