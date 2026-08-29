@@ -56,6 +56,11 @@ KB_FIGS = {
     'kb-gdn-t4':   CROPS / 'gated-delta-networks-improving-mamba2-with-delta-rule-tab04.png',
     'kb-k2-2':     CROPS / 'kimi-k2-open-agentic-intelligence-fig02.png',
     'kb-megatron4': CROPS / 'efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm-fig04.png',
+    'kb-klinear3': CROPS / 'kimi-linear-an-expressive-efficient-attention-architecture-fig03.png',
+    'kb-gdn-1':   CROPS / 'gated-delta-networks-improving-mamba2-with-delta-rule-fig01.png',
+    'kb-eagle3-2': CROPS / 'eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test-fig02.png',
+    'kb-medusa-1': CROPS / 'medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads-fig01.png',
+    'kb-pagedattn-2': CROPS / 'efficient-memory-management-for-large-language-model-serving-with-pagedattention-fig02.png',
 }
 U = {}
 for name in GLM_FIGS:
@@ -411,18 +416,19 @@ add('ch2-kda', sec('ch2-kda', (
         '口径：glm5.3-flash uniinfer 实现 · conv [slots, 3, 3072] fp32 (TP8) · ssm [slots, 8, 128, 128] fp32',
         img_pct=50)
     + codebox(
-'''@dataclass
+'''# attention/backend.py:33（官方 preview/glm-5.3-flash 核验）
 class LayerCache:
-    key:   torch.Tensor | None = None   # DSA: [3227, 128, 1, 512]
-    value: torch.Tensor | None = None   # DSA: [3227, 128, 1, 0] (rope=0)
-    index: torch.Tensor | None = None   # DSA: kPool [3227, 128, 1, 257]
-    conv:  torch.Tensor | None = None   # KDA: [slots, 3, 3072] fp32 (TP8)
-    ssm:   torch.Tensor | None = None   # KDA: [slots, 8, 128, 128] fp32
+    key:   torch.Tensor | None        # 全注意力 [3227, 128, 1, 512]
+    value: torch.Tensor | None        # [3227, 128, 1, 0] (rope=0 零宽)
+    index: torch.Tensor | None = None  # MLA 稀疏索引 kPool [., 257]
+    conv:  torch.Tensor | None = None  # KDA 线性层 [slots, 3, 3072] fp32
+    ssm:   torch.Tensor | None = None  # KDA 线性层 [slots, 8, 128, 128] fp32
+    index_scale: torch.Tensor | None = None  # DSA 索引缩放（官方新增槽）
 
-# capture 前 snapshot / capture 后 restore
-_snapshot_linear_state(conv_state, ssm_state); graph.replay()
-_restore_linear_state(conv_state, ssm_state)''',
-        title='LayerCache · 五槽设计（真实代码），KDA 两槽 + DSA 三槽', fs=11.5))))
+# capture 前 snapshot / capture 后 restore（decode_acl_graph.py:977/1023）
+_snapshot_linear_state(entry); graph.replay()
+_restore_linear_state(entry, snapshot)''',
+        title='LayerCache · 官方六槽（preview/glm-5.3-flash 核验），KDA conv/ssm + DSA key/value/index(+scale)', fs=11.5))))
 
 # ═══════════════════════════════════════════════════════════
 # 10. ch2-kda-state (对比表)
@@ -711,36 +717,36 @@ add('ch4-graph', sec('ch4-graph', (
 # 23. ch4-kda-code
 # ═══════════════════════════════════════════════════════════
 add('ch4-kda-code', sec('ch4-kda-code', (
-    eyebrow('4.3 · KDA 优化 · fla_npu 接入') + h2('delta-rule 主体换成 fla_npu 融合算子', 34)
-    + lead('prefill 走 chunk_kda_fwd（5 段融合管线 KdaGateCumsum→Prepare→PostWu→GatedDeltaRuleFwdH→Finalize）；'
-           'decode 走 recurrent_kda 单 token 递推。<b>状态原位递推：每层省 2 次全量状态 HBM 往返 × 34 层。</b>')
+    eyebrow('4.3 · KDA 优化 · 融合算子接入') + h2('delta-rule 主体：chunk_kda / fused_recurrent_kda 官方接口', 32)
+    + lead('prefill 走 <b>chunk_kda</b>（chunked delta-rule，chunk_size=64 多 token 并行）；'
+           'decode 走 <b>fused_recurrent_kda</b>（单 token 递推）。'
+           '<b>状态原位递推：initial_state 从 framework ssm 槽取、output_final_state=True 回写 — 每层省 2 次全量状态 HBM 往返 × 34 层。</b>')
     + codebox(
-'''# prefill：chunk_kda_fwd 契约（BSND + 调用方 fp32 l2norm）
-q_in = _l2norm(query.float(), dim=-1, eps=1e-6).to(torch.bfloat16)
-k_in = _l2norm(key.float(),   dim=-1, eps=1e-6).to(torch.bfloat16)
-result = chunk_kda_fwd(
-    q_in, k_in, v_in, g, b, scale,
-    chunk_size=64, layout="BSND",
+'''# 官方接口（preview/glm-5.3-flash 核验）— 与 transformers 同签名
+# prefill：chunk_kda — chunked delta-rule（multi-token prefill path）
+result = chunk_kda(
+    query, key, value, g, beta,
+    chunk_size=64,                  # chunk 内并行 / chunk 间串行
     initial_state=ssm_state,        # 从 framework ssm 槽取
-    output_final_state=True,        # 返回终态，回写 ssm 槽
-    cu_seqlens=cu_seqlens,
-    use_gate_in_kernel=False,       # g 已由调用方算好
-    state_v_first=True,
+    output_final_state=True,        # 终态回写 ssm 槽
+    use_qk_l2norm_in_kernel=True,   # FLA 风格 L2 归一化
 )
 
-# decode：recurrent_kda 契约（TND + 状态原位）
-core_attn_out, final_state = recurrent_kda(
-    q_tnd, k_tnd, v_tnd, g_tnd, b_tnd,
-    initial_state=ssm_state, cu_seqlens=cu_seqlens,
-    layout="TND", scale=scale,
-    output_final_state=True, inplace_final_state=True,
+# decode：fused_recurrent_kda — 单 token 递推（decode path）
+core_attn_out, final_state = fused_recurrent_kda(
+    query, key, value, g, beta,
+    initial_state=ssm_state,
+    output_final_state=True,
     use_qk_l2norm_in_kernel=True,
-    state_v_first=True,
-)''',
-        title='真实调用契约 · prefill chunked / decode recurrent 双路径', fs=12)
+)
+
+# 官方设计要点：接口与 transformers chunk_kda/fused_recurrent_kda
+# 签名一致（use_kernel_func_from_hub_with_fallback 装饰）——
+# NPU 小核可在接口后替换而不动层代码，"No fla_npu dependency"''',
+        title='官方接口（preview/glm-5.3-flash 核验）· prefill chunked / decode recurrent 双路径', fs=12)
     + '<div style="display:flex; gap:14px; margin-top:12px;">'
     + pillar('省什么', RED, 'HBM 往返', '每层省 2 次全量状态读写 × 34 层 — fp32 状态 4.3MiB/序列，搬运是大头。')
-    + pillar('契约坑', BLUE, 'layout 不一致', 'prefill=BSND / decode=TND；l2norm 一个在外一个在内 — 接错就静默错。')
+    + pillar('设计要点', BLUE, '接口稳定', '与 transformers 同签名，NPU 小核接口后替换、层代码零改动 — 官方分支已摆脱 fla_npu 直依赖（早期直挂阶段成为历史）。')
     + pillar('收益', GREEN, '237.8 → 155.7ms', '单级 1.53×（累计 6.2×）。')
     + '</div>')))
 
@@ -797,7 +803,8 @@ add('ch4-kpool', sec('ch4-kpool', (
 add('ch4-mtp', sec('ch4-mtp', (
     eyebrow('4.6 · MTP 投机解码 · 工程难度最高') + h2('KDA 状态 lazy-commit · 接受率 ≈80% · 39.7ms 最后一跳', 32)
     + lead('per-(layer, slot) 暂存原始 qkv/gate/β → 跨层批量前进 + lead-trim。'
-           'spec-verify 入 aclgraph + V3 融合算子（persistent combined [base|draft] state pool）。')
+           'spec-verify 入 aclgraph + V3 融合算子（persistent combined [base|draft] state pool）。'
+           '官方 MTP 镜像 DeepSeek-V3.2 python MTP 方案（deepseek_v32_mtp.py），draft 计算在 python、调度在 C++（MTPWorkerImpl）。')
     + '<div style="display:flex; gap:22px; align-items:flex-start;">'
     + '<div style="flex:0 0 47%;">'
     + f'<img src="{U["fig14-mtp"]}" style="width:100%; border-radius:8px; border:1px solid {LIGHT};" />'
@@ -812,8 +819,9 @@ add('ch4-mtp', sec('ch4-mtp', (
          ['回滚', 'per-(layer, slot) 暂存原始 qkv/gate/β，跨层批量前进 + lead-trim'],
          ['verify 开销', 'spec-verify 入 aclgraph，V3 融合算子'],
          ['状态池', 'persistent combined [base|draft] state pool'],
+         ['draft 层结构', 'checkpoint 追加层（无 mHC 的 DSA MoE 层）· eh_proj 融合 [enorm(embed)‖hnorm(hidden)]（官方核验）'],
          ['收益', '一次替换换一次权重后从 76.3ms 正常化到 39.7ms']],
-        fs=12.5, col_w=[1.2, 2.4])
+        fs=12, col_w=[1.2, 2.4])
     + laybox('普通解码像「写一个字想一次」；MTP 是「先猜 2 个字，让大模型一次验收」— '
              '猜对 80%，等于每步白赚一个 token。难在 KDA 的笔记本不能乱写：猜的时候先写草稿，验收通过才誊正。')
     + '</div></div>'
@@ -936,6 +944,41 @@ add('深读-kb', sec('深读-kb', (
              '★ Narayanan et al., 2021 · arXiv:2104.04473 · Fig.4 · 方法同源'),
         ])
     + foot('★ 同源代理声明：glm5.3-flash 为闭源模型，架构原图不可公开获取 — 以上用同族论文原图作方法层证据，工程数据（时延/精度）全部为 uniinfer 实测。'))))
+
+# ═══════════════════════════════════════════════════════════
+# 31b. 深读2 · 更多 KB 论文原图 (2×3)
+# ═══════════════════════════════════════════════════════════
+def deep2_card(u, t, c, r):
+    return (f'<div style="background:{BG}; border:1px solid {LIGHT}; border-radius:10px; padding:12px 14px;">'
+            f'<img src="{u}" style="width:100%; height:200px; object-fit:cover; object-position:top; border-radius:6px; border:1px solid {LIGHT}; margin-bottom:8px;" />'
+            f'<div style="font-size:14px; font-weight:700; color:{INK}; margin-bottom:4px;">{t}</div>'
+            f'<div style="font-size:12px; color:#444; line-height:1.6;">{c}</div>'
+            f'<div style="font-size:10.5px; color:#9a9aa0; margin-top:6px; border-top:1px dashed {LIGHT}; padding-top:5px;">{r}</div></div>')
+
+add('深读2-kb', sec('深读2-kb', (
+    eyebrow('深读 · KB 论文原图（续）') + h2('架构族谱 · 6 篇同源 SOTA 原图', 34)
+    + lead('glm5.3-flash 的每个设计都能在这 6 篇公开论文里找到「原型」— 混合排布 / delta-rule / 投机解码 / KV 管理 / MLA，一图一出处。')
+    + '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:8px;">'
+    + deep2_card(U['kb-klinear3'], 'Kimi Linear 架构总图 · 混合排布原型',
+        '每块 = token-mixing 后接 MoE 通道混合，<b>N 个 KDA 层间插 1 个 MLA 层（N=3）</b> — 与 glm5.3-flash「每 4 层 3 KDA + 1 DSA」的混合排布直接同构：线性层保效率，周期性全注意力层维持全局锚点。',
+        '★ Yang et al., 2025 · arXiv:2510.26692 · Fig.3 · 直接同构')
+    + deep2_card(U['kb-gdn-1'], 'Gated DeltaNet 架构 · KDA 前身',
+        'Block 内四条并行路径：q/k（Linear+Conv+SiLU+L2norm）、v、α/β 门控汇入 <b>Gated Delta Rule</b>；H1/H2 混合架构交错 DeltaNet / Mamba2 / SWA — delta-rule + 乘性门控增强联想召回。',
+        '★ Yang et al., 2024 · arXiv:2412.06464 · Fig.1 · 方法前身')
+    + deep2_card(U['kb-dsv3-2'], 'DeepSeek-V3 架构 · MLA 低秩压缩',
+        'Transformer Block×L + DeepSeekMoE（Router 选 Top-K 路由专家 + 共享专家）+ <b>MLA：KV 联合低秩压缩成潜向量，推理只缓存潜向量与 kᴿ/vᶜ</b> — glm5.3-flash DSA 层复用的底座结构。',
+        '★ DeepSeek-AI, 2024 · arXiv:2412.19437 · Fig.2 · 直接同源')
+    + deep2_card(U['kb-eagle3-2'], 'EAGLE-3 · 投机解码加速比',
+        '7 种方法 × 4 个目标模型的推理加速比：EAGLE-3 在 Vicuna-13B 达 <b>5.6×</b>，LLaMA-3.1-8B / 3.3-70B / R1-LLaMA-8B 分别 4.4× / 4.1× / 5.0× — 投机解码族的天花板参照系（glm5.3-flash MTP 为 2 token verify 的轻量路线）。',
+        '★ Li et al., 2025 · arXiv (EAGLE-3) · Fig.2 · 族谱对照')
+    + deep2_card(U['kb-medusa-1'], 'Medusa · 多解码头 + tree 验证',
+        '末层 hidden 上并行挂 3 个 Medusa Head 预测第 2-4 位 token 的 Top-k，与 LM Head 交叉组合成候选，<b>tree-attention 并行验证、接受最长公共前缀</b> — MTP/draft 路线的另一经典形态。',
+        '★ Cai et al., 2024 · arXiv:2401.10774 · Fig.1 · 族谱对照')
+    + deep2_card(U['kb-pagedattn-2'], 'vLLM PagedAttention · KV 利用率',
+        'KV cache 利用率堆叠对比：Orca(Max) 仅 <b>20.4%</b> 用于 token states（57.3% 内部碎片），vLLM 分页后达 <b>96.3%</b> — KV cache 管理的问题动机；KDA 定长状态（4.3MiB/序列）从另一极端消解了这个问题。',
+        '★ Kwon et al., 2023 · arXiv:2309.06180 · Fig.2 · 问题动机')
+    + '</div>'
+    + foot('★ 以上 6 图全部来自 AICO-Knowledge 知识库原图（685 图库），caption 经 MiniMax-M3 图文联合解读核验；「族谱对照」表示同方法族不同实现，「直接同源/同构」表示 glm5.3-flash 直接采用该结构。'))))
 
 # ═══════════════════════════════════════════════════════════
 # 32. 术语速查
@@ -1083,7 +1126,7 @@ ZOOM = {
     'ch2-swiglu': 1.16, 'ch5-summary': 1.26, 'ch4-mtp': 1.10, 'ch1-概念': 1.22,
     'ch2-kda': 1.12, 'ch2-kda-state': 1.14, 'ch1-对比表': 1.12, '深读-kb': 1.18,
     '术语速查': 1.24, 'ch2-kpool': 1.10, 'ch2-dsa': 1.08, 'ch2-mhc': 1.06,
-    'ch4-ladder-tab': 1.16, 'ch5-kpi': 1.12, 'TLDR': 1.10, '参考文献': 1.06,
+    'ch4-ladder-tab': 1.16, 'ch5-kpi': 1.12, 'TLDR': 1.10,
 }
 for _lbl, _z in ZOOM.items():
     _pat = f'<section data-label="{_lbl}"'
