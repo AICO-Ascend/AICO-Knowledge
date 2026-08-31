@@ -12,3 +12,14 @@ v10 = v9 + 用户 4 点优化:
 交付物: /mnt/project/g00952465/AI_Base_k3/glm53-flash-report/glm53-deck-v10.{html 为 glm53-flash-deck.html, pdf, pptx}
 工具修复(已沉淀进 AICO-PPT skills): check_fill2 uid 正则 / export_deck fixed logo 克隆注入 /
 verify_captions containment 度量 + marker「同源证据 ·」/ deck-content-gate 闸门 5 M3 审核 + FM8-FM10
+
+## v10.1 (2026-08-31) — 用户第二轮 5 页布局 + 去刻意化
+- P11 ch2-dsa: DSV3 Fig.2 整图(竖版)被 max-height 压扁 → 从原图裁 MLA 子模块(横版 1.76:1)，大图可读
+- P12 ch2-mhc / P26 ch4-mtp: 窄栏内横式图条 → kbstrip 竖式(图上 100% 栏宽 + 文下)
+- P31 深读-kb: 卡片横排(图 47%) → 竖排(图 100% 卡宽, contain 215px)
+- P32 深读2-kb: object-fit:cover(裁切) → contain(完整)
+- 正文去刻意化: 「同源证据·展开解读」→「方法出处·展开解读」；删「一图一出处」「M3 图文联合解读」尾巴；
+  「同源代理/直接同源」→「方法同族/直接采用」；深读 foot 保留闭源声明(实质性)
+- M3 复审又抓 1 真: arXiv:2512.24880 = 2025-12, 「Xie et al., 2026」→ 2025 (3 处)
+- 工具: export_deck scrollIntoViewIfNeeded 超时 → evaluateHandle + scrollIntoView({block:'center'}) + try/catch (技能仓同步)
+- verify_captions marker 同步为「方法出处 ·」; K2 caption 补源措辞过闸门 (0.177→0.228)

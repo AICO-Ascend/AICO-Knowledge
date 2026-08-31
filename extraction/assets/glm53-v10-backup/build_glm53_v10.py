@@ -50,6 +50,7 @@ KB_FIGS = {
     'kb-klinear6': CROPS / 'kimi-linear-an-expressive-efficient-attention-architecture-fig06.png',
     'kb-k3-3':     CROPS / 'kimi-k3-open-frontier-intelligence-fig03.png',
     'kb-dsv3-2':   CROPS / 'deepseek-v3-technical-report-fig02.png',
+    'kb-dsv3-2-mla': CROPS / 'deepseek-v3-technical-report-fig02-mla.png',
     'kb-dsv3-3':   CROPS / 'deepseek-v3-technical-report-fig03.png',
     'kb-idx1':     CROPS / 'indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse-fig01.png',
     'kb-gdn-t4':   CROPS / 'gated-delta-networks-improving-mamba2-with-delta-rule-tab04.png',
@@ -154,15 +155,25 @@ def figcap(img_uid, cap_html, cite_html, img_pct=55, cap_title='图说了什么'
             f'border-top:1px dashed {LIGHT}; padding-top:8px;">{cite_html}</div>'
             f'</div></div>')
 
-def kbstrip(img_uid, cap_html, cite_html, img_w=None):
-    """KB 同源证据块: 大图(46%) + 展开解读 + 出处 (v10: 原 210-340px 小条用户嫌太小)"""
+def kbstrip(img_uid, cap_html, cite_html, vertical=False, max_h=300):
+    """论文原图块: 全宽=图左46%+文右(横式); 窄栏内=图上文下(竖式, 图吃满栏宽)"""
+    if vertical:
+        return (f'<div style="margin-top:14px; padding:14px 16px; background:{BG}; '
+                f'border:1px solid {LIGHT}; border-radius:12px;">'
+                f'<img src="{img_uid}" style="width:100%; height:auto; max-height:{max_h}px; '
+                f'object-fit:contain; border-radius:8px; border:1px solid {LIGHT}; background:#fff;" />'
+                f'<div style="font-family:\'JetBrains Mono\',\'Noto Sans SC\',monospace; font-size:12px; '
+                f'color:{RED}; letter-spacing:.12em; margin:10px 0 6px;">方法出处 · 展开解读</div>'
+                f'<div style="font-size:14px; color:#333; line-height:1.7;">{cap_html}</div>'
+                f'<div style="font-size:11.5px; color:#9a9aa0; margin-top:8px; border-top:1px dashed {LIGHT}; '
+                f'padding-top:7px;">{cite_html}</div></div>')
     return (f'<div style="display:flex; gap:18px; margin-top:14px; padding:14px 18px; '
             f'background:{BG}; border:1px solid {LIGHT}; border-radius:12px; align-items:flex-start;">'
-            f'<img src="{img_uid}" style="flex:0 0 46%; width:46%; height:auto; max-height:330px; '
+            f'<img src="{img_uid}" style="flex:0 0 46%; width:46%; height:auto; max-height:360px; '
             f'object-fit:contain; border-radius:8px; border:1px solid {LIGHT}; background:#fff;" />'
             f'<div style="flex:1; min-width:0;">'
             f'<div style="font-family:\'JetBrains Mono\',\'Noto Sans SC\',monospace; font-size:12px; '
-            f'color:{RED}; letter-spacing:.12em; margin-bottom:7px;">同源证据 · 展开解读</div>'
+            f'color:{RED}; letter-spacing:.12em; margin-bottom:7px;">方法出处 · 展开解读</div>'
             f'<div style="font-size:14.5px; color:#333; line-height:1.75;">{cap_html}</div>'
             f'<div style="font-size:11.5px; color:#9a9aa0; margin-top:8px; border-top:1px dashed {LIGHT}; '
             f'padding-top:7px;">{cite_html}</div>'
@@ -403,7 +414,7 @@ out = S · q           # ④ 查询：取状态作为输出''',
         'Kimi Linear 的 g 无下界（灰线，z→−∞ 时趋于 −∞），K3 改用 g_min·Sigmoid 使衰减在 −5 处饱和（红线）；'
         '<b>图(b)</b> chunkwise 计算 — 衰减有下界后，所有因果对角块统一为 Tensor Core 稠密 GEMM，'
         '消除「位置对 vs 稠密」混合模式。与本页直接相关：<b>遗忘门 exp(g) 的有界性决定了长上下文下的数值稳定性与硬件友好度</b>。',
-        '★ Moonshot AI, 2026 · Kimi K3 · Fig.3, p.5 · <b>同源代理</b> · glm5.3-flash KDA 与 Kimi KDA 同族 · M3 图文联合解读')
+        '★ Moonshot AI, 2026 · Kimi K3 · Fig.3, p.5 · 方法同族（KDA 家族）')
     + laybox('S 就是那块「滚动笔记本」：每天（每 token）先忘掉一点（×exp(g)），'
              '再把「今天比昨天多了什么」（δ）写进去。笔记本页数固定 — 这就是「定长状态」。')
     + '</div></div>'
@@ -452,7 +463,7 @@ add('ch2-kda-state', sec('ch2-kda-state', (
         '混合架构 GDN-H2 以平均 <b>40.1</b> 全面超过 Transformer++（37.0）与 Samba（37.3）。'
         '含义：把无限增长的 KV cache 换成左图这种定长状态，召回能力不但保住，'
         '混合少量注意力层后还能反超全注意力基线 — glm5.3-flash「34 KDA + 11 DSA」正是这一结论的产品化。',
-        '★ Yang et al., 2024 · arXiv:2412.06464 · Table 4 · <b>同源代理</b> · KDA 状态管理方法族 · M3 图文联合解读')
+        '★ Yang et al., 2024 · arXiv:2412.06464 · Table 4 · 方法同族（KDA 前身）')
     + '</div>'
     + '<div style="flex:1; min-width:0;">'
     + dtable(['', '标准 KV cache', 'KDA conv/ssm 状态'],
@@ -495,13 +506,12 @@ indexer cache [3227, 128, 1, 257]  # kPool 打包缓存
 "qk_rope_head_dim": 0, "v_head_dim": 256, "qk_nope_head_dim": 256''',
         title='cache 布局 + config.json 真实值', fs=11.5)
     + '</div></div>'
-    + kbstrip(U['kb-dsv3-2'],
-        'DeepSeek-V3 Fig.2 是 glm5.3-flash DSA 层复用的底座结构：<b>右下 MLA 模块</b> — '
-        'hₜ 经潜向量低秩压缩生成 {qᶜ,qᴿ} 与 {kᶜ,kᴿ}，<b>推理阶段仅缓存潜向量与 kᴿ、vᶜ</b>；'
-        '<b>右上 DeepSeekMoE</b> — Router 选 Top-K 路由专家 + 共享专家加权求和。'
-        '本页左侧主图就是这套 MLA absorbed 形态在 glm5.3-flash 上的落地：'
+    + kbstrip(U['kb-dsv3-2-mla'],
+        'DeepSeek-V3 的 MLA 模块（Fig.2 局部）：hₜ 经潜向量低秩压缩生成 {qᶜ,qᴿ} 与 {kᶜ,kᴿ}，'
+        '<b>推理阶段仅缓存潜向量与 kᴿ、vᶜ</b>（图中阴影 = Cached During Inference）。'
+        '本页左侧主图就是这套 absorbed 形态在 glm5.3-flash 上的落地：'
         'cache 只存 512 维 latent，value 槽因 rope=0 零宽不占显存。',
-        '★ DeepSeek-AI, 2024 · arXiv:2412.19437 · Fig.2, p.5 · <b>直接同源</b> · DSA 复用 DSV3.2 MLA · M3 图文联合解读'))))
+        '★ DeepSeek-AI, 2024 · arXiv:2412.19437 · Fig.2（MLA 局部）, p.5 · 方法同族'))))
 
 # ═══════════════════════════════════════════════════════════
 # 12. ch2-mhc
@@ -518,7 +528,8 @@ add('ch2-mhc', sec('ch2-mhc', (
         '<b>(b)</b> HC — 引入 Res/Pre/Post 三个可学习映射作用于多流隐层；'
         '<b>(c)</b> mHC — 对三映射施加流形投影约束。论文结论：投影约束使残差路径趋近恒等、'
         'Pre/Post 近似正交，从而稳定收敛 — glm5.3-flash 的 4 流 + Sinkhorn 20 轮正是 (c) 的工程实现。',
-        '★ Xie et al., 2026 · arXiv:2512.24880 · Fig.1 · <b>直接同源</b> · glm5.3-flash mHC 实现依据 · M3 图文联合解读')
+        '★ Xie et al., 2025 · arXiv:2512.24880 · Fig.1 · 直接采用',
+        vertical=True, max_h=285)
     + '</div>'
     + '<div style="flex:1; min-width:0;">'
     + dtable(['组件', '真实形态'],
@@ -591,11 +602,11 @@ add('ch2-swiglu', sec('ch2-swiglu', (
              'gate 最高 10、up 在 ±10 之间，再算错也跳不远。')
     + '</div></div>'
     + kbstrip(U['kb-k2-2'],
-        'Kimi K2 Fig.2 用训练曲线证明数值发散是真实故障模式：<b>左图</b>（Vanilla+Muon）'
-        'attention logits 在 16k 步内单调飙到 <b>1200+</b> 无收敛迹象；<b>右图</b> MuonClip 按头裁剪 '
-        'W_q 权重封顶 τ=100 后，logits 触发裁剪并回落到 30–40 稳定区间。'
+        'Kimi K2 Fig.2 用训练曲线证明数值发散是真实故障模式：<b>左图</b>（Vanilla + Muon 优化器）'
+        'attention logits 在 16k 步内单调上升至 <b>1200+</b> 无收敛迹象（数值不稳定甚至训练发散）；'
+        '<b>右图</b> MuonClip 按头裁剪 W_q 权重封顶 τ=100 后，logits 触发裁剪并回落到 30–40 稳定区间。'
         'glm5.3-flash 的 swiglu_limit=10.0 与 QK-Clip 是同一类「硬上界」思想 — 在激活侧而非权重侧封顶。',
-        '★ Moonshot AI, 2025 · arXiv:2507.20534 · Fig.2, p.4 · <b>同源代理</b> · clamp 必要性证据 · M3 图文联合解读'))))
+        '★ Moonshot AI, 2025 · arXiv:2507.20534 · Fig.2, p.4 · 方法同族（硬上界思想）'))))
 
 # ═══════════════════════════════════════════════════════════
 # 15. 章扉 03
@@ -846,7 +857,8 @@ add('ch4-mtp', sec('ch4-mtp', (
         'Linear Projection + Transformer Block + 共享 Output Head。训练时 ℒ = ℒ_Main + λ·Σℒᵢ '
         '提供密集监督，推理时当 draft 头做投机解码 — glm5.3-flash 的 draft 层'
         '（checkpoint 追加层 + eh_proj 融合）正是此结构的单模块版。',
-        '★ DeepSeek-AI, 2024 · arXiv:2412.19437 · Fig.3, p.10 · <b>直接同源</b> · M3 图文联合解读')
+        '★ DeepSeek-AI, 2024 · arXiv:2412.19437 · Fig.3, p.10 · 直接采用',
+        vertical=True, max_h=268)
     + '</div>'
     + '<div style="flex:1; min-width:0;">'
     + dtable(['难点', '解法'],
@@ -855,11 +867,14 @@ add('ch4-mtp', sec('ch4-mtp', (
          ['验证内核', '定制化 spec-verify 内核：不依赖通用注意力计算，内部模拟 KDA 状态逐步更新（官方实录）'],
          ['verify 开销', 'spec-verify 入 aclgraph，V3 融合算子'],
          ['状态池', 'persistent combined [base|draft] state pool'],
-         ['draft 层结构', 'checkpoint 追加层（无 mHC 的 DSA MoE 层）· eh_proj 融合 [enorm(embed)‖hnorm(hidden)]（官方核验）'],
+         ['draft 层结构', 'checkpoint 追加层（无 mHC 的 DSA MoE）· eh_proj 融合 [enorm(embed)‖hnorm(hidden)]（官方核验）'],
          ['收益', '单级 ~15%（46.9→39.7ms）· 一次替换换一次权重后从 76.3ms 正常化到 39.7ms']],
         fs=12, col_w=[1.2, 2.4])
     + laybox('普通解码像「写一个字想一次」；MTP 是「先猜 2 个字，让大模型一次验收」— '
              '猜对 80%，等于每步白赚一个 token。难在 KDA 的笔记本不能乱写：猜的时候先写草稿，验收通过才誊正。')
+    + '<div style="font-size:13.5px; color:#444; line-height:1.7; margin-top:12px; padding:12px 16px; background:#fdf6f5; border-left:3px solid ' + RED + '; border-radius:6px;">'
+    '<b>开启顺序（官方交付实录）</b>：① 先完成 MTP 权重适配 → ② 再开启投机解码 → ③ 验证接受率（≈80% 为正常）。'
+    '跳过 ① 直接开启：接受率 = 0、TPOT 反而劣化 — 曾实测一次替换权重后从 76.3ms 正常化到 39.7ms。</div>'
     + '</div></div>'
     + foot('★ 接受率 ≈80% · verify 每步出 ~2 token · TPOT 46.9 → 39.7ms（累计 24.1×）— 进入该规模访存下限区间。'))))
 
@@ -958,47 +973,45 @@ add('ch5-summary', sec('ch5-summary', (
 # 31. 深读·KB 同源证据 (2×2)
 # ═══════════════════════════════════════════════════════════
 add('深读-kb', sec('深读-kb', (
-    eyebrow('深读 · KB 同源论文原图') + h2('4 篇同源 SOTA · 方法层证据链', 34)
-    + lead('glm5.3-flash 的每项结构创新都有公开论文支撑 — 以下 4 张原图 + M3 图文联合解读，全部来自 AICO-Knowledge 知识库。')
-    + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:12px;">'
+    eyebrow('深读 · 同源论文原图') + h2('4 篇同源 SOTA · 方法层证据链', 34)
+    + lead('glm5.3-flash 的每项结构创新都有公开论文支撑 — 以下 4 篇的原图与关键数据构成方法层证据链。')
+    + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px;">'
     + ''.join(
-        f'<div style="background:{BG}; border:1px solid {LIGHT}; border-radius:10px; padding:18px 20px;">'
-        f'<div style="display:flex; gap:14px; align-items:flex-start;">'
-        f'<img src="{u}" style="flex:0 0 47%; width:47%; border-radius:6px; border:1px solid {LIGHT};" />'
-        f'<div style="flex:1; min-width:0;">'
-        f'<div style="font-size:14.5px; font-weight:700; color:{INK}; margin-bottom:5px;">{t}</div>'
-        f'<div style="font-size:13px; color:#444; line-height:1.65;">{c}</div>'
-        f'<div style="font-size:11.5px; color:#9a9aa0; margin-top:7px; border-top:1px dashed {LIGHT}; padding-top:6px;">{r}</div>'
-        f'</div></div></div>'
+        f'<div style="background:{BG}; border:1px solid {LIGHT}; border-radius:10px; padding:12px 16px;">'
+        f'<img src="{u}" style="width:100%; height:215px; object-fit:contain; background:#fff; border-radius:6px; border:1px solid {LIGHT};" />'
+        f'<div style="font-size:14.5px; font-weight:700; color:{INK}; margin:8px 0 4px;">{t}</div>'
+        f'<div style="font-size:12.5px; color:#444; line-height:1.6;">{c}</div>'
+        f'<div style="font-size:11px; color:#9a9aa0; margin-top:6px; border-top:1px dashed {LIGHT}; padding-top:5px;">{r}</div>'
+        f'</div>'
         for u, t, c, r in [
             (U['kb-idx1'], 'IndexCache · DSA 稀疏索引加速',
              'GLM-5 + IndexCache 在 10 个 long-context 基准：平均 1.2× E2E speedup 且 HLE/SciCode/MRCR 不掉点 — 稀疏索引「不是丢精度换速度」。glm5.3-flash 的 DSA+kPool 与此同族。',
-             '★ Liu et al., 2026 · arXiv:2608.02288 · Fig.1 · 同源代理'),
+             '★ Liu et al., 2026 · arXiv:2608.02288 · Fig.1 · 方法同族'),
             (U['kb-klinear6'], 'Kimi Linear · KDA 全程领先 MLA',
              'Math RL 训练：Kimi Linear@1.4T 在训练集 / MATH500 / AIME2025 三条曲线全程压过 MLA@1.4T（~58-60 vs ~52；~86 vs ~84；~22 vs ~19）— 线性注意力可替代全注意力的实验证据链。',
-             '★ Yang et al., 2025 · arXiv:2510.26692 · Fig.6 · 同源代理'),
+             '★ Yang et al., 2025 · arXiv:2510.26692 · Fig.6 · 方法同族'),
             (U['kb-hc2'], 'mHC · 训练稳定性对比',
              'HC 相对 mHC 的损失差 15k 步后反弹（~0.005），HC 梯度范数在 0.10–0.18 剧烈震荡，mHC 从 0.25 单调降到 ~0.05 — 流形约束解决 HC 训练不稳定的直接证据。',
-             '★ Xie et al., 2026 · arXiv:2512.24880 · Fig.2 · 直接同源'),
+             '★ Xie et al., 2025 · arXiv:2512.24880 · Fig.2 · 直接采用'),
             (U['kb-megatron4'], 'Megatron-LM · 1F1B 流水线',
              '经典 1F1B pipeline schedule：多卡接力跑 forward/backward，气泡区是「工人等料」的空闲 — glm5.3-flash 训练侧管线与图模式 capture 共享同一类调度思想。',
-             '★ Narayanan et al., 2021 · arXiv:2104.04473 · Fig.4 · 方法同源'),
+             '★ Narayanan et al., 2021 · arXiv:2104.04473 · Fig.4 · 方法同族'),
         ])
-    + foot('★ 同源代理声明：glm5.3-flash 为闭源模型，架构原图不可公开获取 — 以上用同族论文原图作方法层证据，工程数据（时延/精度）全部为 uniinfer 实测。'))))
+    + foot('★ glm5.3-flash 为闭源模型，架构原图不可公开获取 — 本页以同族论文原图作方法层佐证；工程数据（时延 / 精度）全部为 uniinfer 实测。'))))
 
 # ═══════════════════════════════════════════════════════════
 # 31b. 深读2 · 更多 KB 论文原图 (2×3)
 # ═══════════════════════════════════════════════════════════
 def deep2_card(u, t, c, r):
     return (f'<div style="background:{BG}; border:1px solid {LIGHT}; border-radius:10px; padding:12px 14px;">'
-            f'<img src="{u}" style="width:100%; height:200px; object-fit:cover; object-position:top; border-radius:6px; border:1px solid {LIGHT}; margin-bottom:8px;" />'
+            f'<img src="{u}" style="width:100%; height:210px; object-fit:contain; background:#fff; border-radius:6px; border:1px solid {LIGHT}; margin-bottom:8px;" />'
             f'<div style="font-size:14px; font-weight:700; color:{INK}; margin-bottom:4px;">{t}</div>'
             f'<div style="font-size:12px; color:#444; line-height:1.6;">{c}</div>'
             f'<div style="font-size:10.5px; color:#9a9aa0; margin-top:6px; border-top:1px dashed {LIGHT}; padding-top:5px;">{r}</div></div>')
 
 add('深读2-kb', sec('深读2-kb', (
-    eyebrow('深读 · KB 论文原图（续）') + h2('架构族谱 · 6 篇同源 SOTA 原图', 34)
-    + lead('glm5.3-flash 的每个设计都能在这 6 篇公开论文里找到「原型」— 混合排布 / delta-rule / 投机解码 / KV 管理 / MLA，一图一出处。')
+    eyebrow('深读 · 同源论文原图（续）') + h2('架构族谱 · 6 篇同源 SOTA 原图', 34)
+    + lead('glm5.3-flash 的每个设计都能在这 6 篇公开论文里找到原型：混合排布 / delta-rule / 投机解码 / KV 管理 / MLA。')
     + '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:8px;">'
     + deep2_card(U['kb-klinear3'], 'Kimi Linear 架构总图 · 混合排布原型',
         '每块 = token-mixing 后接 MoE 通道混合，<b>N 个 KDA 层间插 1 个 MLA 层（N=3）</b> — 与 glm5.3-flash「每 4 层 3 KDA + 1 DSA」的混合排布直接同构：线性层保效率，周期性全注意力层维持全局锚点。',
@@ -1008,7 +1021,7 @@ add('深读2-kb', sec('深读2-kb', (
         '★ Yang et al., 2024 · arXiv:2412.06464 · Fig.1 · 方法前身')
     + deep2_card(U['kb-dsv3-2'], 'DeepSeek-V3 架构 · MLA 低秩压缩',
         'Transformer Block×L + DeepSeekMoE（Router 选 Top-K 路由专家 + 共享专家）+ <b>MLA：KV 联合低秩压缩成潜向量，推理只缓存潜向量与 kᴿ/vᶜ</b> — glm5.3-flash DSA 层复用的底座结构。',
-        '★ DeepSeek-AI, 2024 · arXiv:2412.19437 · Fig.2 · 直接同源')
+        '★ DeepSeek-AI, 2024 · arXiv:2412.19437 · Fig.2 · 直接采用')
     + deep2_card(U['kb-eagle3-2'], 'EAGLE-3 · 投机解码加速比',
         '7 种方法 × 4 个目标模型的推理加速比：EAGLE-3 在 Vicuna-13B 达 <b>5.6×</b>，LLaMA-3.1-8B / 3.3-70B / R1-LLaMA-8B 分别 4.4× / 4.1× / 5.0× — 投机解码族的天花板参照系（glm5.3-flash MTP 为 2 token verify 的轻量路线）。',
         '★ Li et al., 2025 · arXiv (EAGLE-3) · Fig.2 · 族谱对照')
@@ -1019,7 +1032,7 @@ add('深读2-kb', sec('深读2-kb', (
         'KV cache 利用率堆叠对比：Orca(Max) 仅 <b>20.4%</b> 用于 token states（57.3% 内部碎片），vLLM 分页后达 <b>96.3%</b> — KV cache 管理的问题动机；KDA 定长状态（4.3MiB/序列）从另一极端消解了这个问题。',
         '★ Kwon et al., 2023 · arXiv:2309.06180 · Fig.2 · 问题动机')
     + '</div>'
-    + foot('★ 以上 6 图全部来自 AICO-Knowledge 知识库原图（685 图库），caption 经 MiniMax-M3 图文联合解读核验；「族谱对照」表示同方法族不同实现，「直接同源/同构」表示 glm5.3-flash 直接采用该结构。'))))
+    + foot('★ glm5.3-flash 为闭源模型，架构图以同族公开论文原图佐证：「直接采用 / 直接同构」= glm5.3-flash 采用该结构，「族谱对照 / 方法同族」= 同方法族不同实现。'))))
 
 # ═══════════════════════════════════════════════════════════
 # 32. 术语速查
@@ -1054,9 +1067,9 @@ add('术语速查', sec('术语速查', (
             ('lazy-commit', 'draft 不写状态，接受才落盘', '#8a6a2b'),
             ('TPOT', 'Time Per Output Token · 每 token 时延', GREY),
             ('TTFT', 'Time To First Token · 首 token 时延', GREY),
-            ('同源代理', '闭源模型借同族公开论文作方法证据', GREY),
+            ('方法同族', '闭源模型借同族公开论文作方法证据', GREY),
         ])
-    + foot('★ 完整定义见各章正文；标注「同源代理」处表示 glm5.3-flash 闭源、借用公开同族论文证据。'))))
+    + foot('★ 完整定义见各章正文；标注「方法同族」处表示 glm5.3-flash 闭源、借用公开同族论文证据。'))))
 
 # ═══════════════════════════════════════════════════════════
 # 33. 参考文献
@@ -1079,19 +1092,19 @@ add('参考文献', sec('参考文献', (
                 (1, 'Kimi Linear: An Expressive, Efficient Attention Architecture', 'arXiv:2510.26692', 'Yang et al., 2025',
                  'KDA 架构 · lower-bounded decay · RL 全程压过 MLA — ch1/ch2-kda 方法源'),
                 (2, 'Kimi K3: Open Frontier Intelligence', 'Kimi K3 report', 'Moonshot AI, 2026',
-                 'chunkwise KDA 对角块统一为稠密 GEMM · 衰减下界 — ch2-kda 同源证据'),
+                 'chunkwise KDA 对角块统一为稠密 GEMM · 衰减下界 — ch2-kda 方法源'),
                 (3, 'Gated Delta Networks: Improving Mamba2 with Delta Rule', 'arXiv:2412.06464', 'Yang et al., 2024',
                  'delta-rule 递推的 KDA 前身 · 状态管理对比 — ch2-kda-state 方法源'),
             ]),
             ('B · 稀疏注意力 / 索引', RED, [
                 (4, 'IndexCache: Accelerating Sparse Attention via Cross-Layer Index Reuse', 'arXiv:2608.02288', 'Liu et al., 2026',
-                 'lightning indexer 跨层复用 · 1.2× E2E — ch1/kPool 同源证据'),
+                 'lightning indexer 跨层复用 · 1.2× E2E — ch1/kPool 方法源'),
                 (5, 'DeepSeek-V3 Technical Report', 'arXiv:2412.19437', 'DeepSeek-AI, 2024',
-                 'MLA 架构 (Fig.2) · MTP 架构 (Fig.3) · DualPipe 调度 (Fig.5) — ch2-dsa / ch4-mtp 直接同源'),
+                 'MLA 架构 (Fig.2) · MTP 架构 (Fig.3) · DualPipe 调度 (Fig.5) — ch2-dsa / ch4-mtp 直接采用'),
             ]),
             ('C · 多流残差', GREEN, [
-                (6, 'HC: Manifold-Constrained Hyper Connections', 'arXiv:2512.24880', 'Xie et al., 2026',
-                 'mHC 结构 + Sinkhorn 投影 + 训练稳定性证据 — ch2-mhc 直接同源'),
+                (6, 'HC: Manifold-Constrained Hyper Connections', 'arXiv:2512.24880', 'Xie et al., 2025',
+                 'mHC 结构 + Sinkhorn 投影 + 训练稳定性证据 — ch2-mhc 直接采用'),
                 (7, 'Hyper-Connections', 'arXiv (ByteDance)', 'Zhu et al., 2024',
                  'HC 无约束前身 · mHC 的改进对象 — ch2-mhc 背景'),
             ]),
@@ -1166,11 +1179,11 @@ ZOOM = {
     'TLDR': 1.34, '目录': 1.35, 'ch1-对比表': 1.16, 'ch1-attn': 1.14, 'ch1-概念': 1.45,
     '章扉02': 1.30, '章扉03': 1.30, '章扉04': 1.30, '章扉05': 1.30,
     'ch2-kda-formula': 1.45, 'ch2-kda': 1.20, 'ch2-kda-state': 1.10,
-    'ch2-dsa': 1.08, 'ch2-mhc': 1.20, 'ch2-kpool': 1.16, 'ch2-swiglu': 1.42,    'ch3-pipeline': 1.10, 'ch3-rot': 1.45, 'ch3-rot-code': 1.45,
+    'ch2-dsa': 1.08, 'ch2-kpool': 1.16, 'ch2-swiglu': 1.42,    'ch3-pipeline': 1.10, 'ch3-rot': 1.45, 'ch3-rot-code': 1.45,
     'ch4-ladder': 1.06, 'ch4-ladder-tab': 1.40, 'ch4-graph': 1.35,
-    'ch4-kda-code': 1.24, 'ch4-mhc-code': 1.45, 'ch4-kpool': 1.31, 'ch4-mtp': 1.14,
+    'ch4-kda-code': 1.24, 'ch4-mhc-code': 1.45, 'ch4-kpool': 1.31,
     'ch5-script': 1.32, 'ch5-kpi': 1.40, 'ch5-summary': 1.45,
-    '深读-kb': 1.45, '深读2-kb': 1.08, '术语速查': 1.45,
+    '深读-kb': 1.03, '深读2-kb': 1.08, '术语速查': 1.45,
 }
 for _lbl, _z in ZOOM.items():
     _pat = f'<section data-label="{_lbl}"'
