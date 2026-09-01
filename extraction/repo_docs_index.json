@@ -1,0 +1,2856 @@
+{
+ "docs": [
+  {
+   "slug": "mindspeed",
+   "path": ".devcontainer/README.md",
+   "type": "readme",
+   "title": "MindSpeed Dev Container 使用说明",
+   "outline": [
+    "MindSpeed Dev Container 使用说明",
+    "前置条件",
+    "环境规格",
+    "两种工作空间模式",
+    "模式 A：直接打开 MindSpeed 仓库（推荐）",
+    "模式 B：打开包含 MindSpeed 的父目录",
+    "快速开始",
+    "1. 连接 NPU 服务器（本地场景）",
+    "2. 打开工作目录",
+    "3. 启动容器",
+    "4. 验证环境",
+    "NPU 可用性",
+    "→ True",
+    "MindSpeed 已安装（editable 模式）",
+    "→ Editable project location: /workspace          （模式 A）",
+    "→ Editable project location: /workspace/MindSpeed（模式 B）",
+    "pre-commit hooks 已就绪",
+    "日常开发",
+    "修改 Python 代码",
+    "编辑代码",
+    "运行测试",
+    "运行指定测试",
+    "修改 C++ 扩展代码",
+    "提交代码",
+    "pre-commit hooks 自动运行：",
+    "ruff-check → ruff-format → pylint → clang-format → codespell → bandit → gitleaks",
+    "完整编译验证",
+    "重建容器",
+    "与生产镜像的区别",
+    "常见问题",
+    "Q: 容器启动后 `npu-smi` 报 command not found？",
+    "如果不存在，确认宿主机上 npu-smi 路径为 /usr/local/bin/npu-smi",
+    "Q: op_builder 编译报找不到 CANN 头文件？",
+    "确认环境变量",
+    "→ /usr/local/Ascend/ascend-toolkit/latest",
+    "Q: pre-commit 的 gitleaks 报 \"No such file or directory\"？",
+    "若不存在，手动创建：",
+    "Q: `torch_npu.npu.is_available()` 返回 False？",
+    "Q: 如何切换基础镜像版本（如 910b → a3，Ubuntu → openEuler）？",
+    "切换到 a3 + openEuler"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 7763
+  },
+  {
+   "slug": "mindspeed",
+   "path": ".gitcode/PULL_REQUEST_TEMPLATE.md",
+   "type": "doc",
+   "title": "PULL_REQUEST_TEMPLATE",
+   "outline": [
+    "What this PR does / why we need it?",
+    "Does this PR introduce any user-facing change?",
+    "How was this patch tested?"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 704
+  },
+  {
+   "slug": "mindspeed",
+   "path": "CONTRIBUTING.md",
+   "type": "doc",
+   "title": "开发者贡献指南",
+   "outline": [
+    "开发者贡献指南",
+    "一、贡献流程",
+    "1.1 特性提案与评审",
+    "1.2 开发流程",
+    "二、代码开发规范",
+    "2.1 特性注册",
+    "2.2 Patch 使能规则",
+    "2.3 代码设计原则",
+    "2.4 代码质量要求",
+    "2.5 兼容性处理",
+    "三、测试用例规范",
+    "3.1 用例位置",
+    "3.2 测试要求",
+    "3.3 分布式测试用例",
+    "四、文档编写规范",
+    "4.1 文档位置",
+    "4.2 文档内容要求",
+    "4.3 文档格式",
+    "五、代码提交与PR规范",
+    "5.1 PR 标题与描述",
+    "5.2 CI 门禁",
+    "5.3 分支管理",
+    "5.4 代码检查",
+    "5.5 开源合规",
+    "5.6 提交策略",
+    "六、社区行为准则",
+    "6.1 贡献者约定",
+    "6.2 问题反馈",
+    "七、联系我们"
+   ],
+   "figures": [],
+   "internal_links": [
+    "docs/zh/user-guide/feature_development.md"
+   ],
+   "bytes": 5831
+  },
+  {
+   "slug": "mindspeed",
+   "path": "README.md",
+   "type": "readme",
+   "title": "<p align=\"center\"> <img src=\"docs/LOGO.png\" height=\"172px\" width=\"598px\"> </p>",
+   "outline": [
+    "<p align=\"center\"> <img src=\"docs/LOGO.png\" height=\"172px\" width=\"598px\"> </p>",
+    "简介",
+    "代码仓目录结构",
+    "最新消息",
+    "社区会议",
+    "版本说明",
+    "安装",
+    "使用源码安装",
+    "快速上手",
+    "概述",
+    "操作方法",
+    "加速特性分级说明",
+    "特性介绍",
+    "自定义算子",
+    "分支维护策略",
+    "常见问题",
+    "技术文章",
+    "安全声明",
+    "贡献指南",
+    "免责声明",
+    "致MindSpeed使用者",
+    "致数据所有者",
+    "License声明",
+    "致谢"
+   ],
+   "figures": [],
+   "internal_links": [
+    "./docs/zh/introduction.md",
+    "./docs/zh/dir_structure.md",
+    "./docs/zh/release_notes_core.md#版本配套说明",
+    "./docs/zh/user-guide/install_guide.md",
+    "./docs/zh/user-guide/quickstart.md",
+    "./docs/zh/features/feature_list.md",
+    "./docs/zh/SECURITYNOTE.md#公开接口声明",
+    "./docs/zh/ops/ops_list.md",
+    "./docs/zh/FAQ.md",
+    "./docs/zh/SECURITYNOTE.md",
+    "./CONTRIBUTING.md",
+    "./LICENSE",
+    "./docs/LICENSE"
+   ],
+   "bytes": 14363
+  },
+  {
+   "slug": "mindspeed",
+   "path": "ci/OVERVIEW.md",
+   "type": "overview",
+   "title": "MindSpeed CI Docker Overview",
+   "outline": [
+    "MindSpeed CI Docker Overview",
+    "Quick Reference",
+    "Key Fields in the Image Tag",
+    "Dockerfile Archive Path",
+    "Included Components",
+    "Build Options",
+    "Quick Start",
+    "Key Implementation Details",
+    "verl ↔ vLLM API Compatibility",
+    "triton-ascend Version",
+    "mbridge",
+    "transformers Version Pinning",
+    "flash_attn Namespace Patches",
+    "Compatibility Notes",
+    "License"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 7607
+  },
+  {
+   "slug": "mindspeed",
+   "path": "ci/OVERVIEW.zh.md",
+   "type": "overview",
+   "title": "MindSpeed CI Docker 镜像概述",
+   "outline": [
+    "MindSpeed CI Docker 镜像概述",
+    "快速参考",
+    "镜像 Tag 关键字段描述",
+    "Dockerfile 归档路径",
+    "包含的组件",
+    "构建参数",
+    "快速开始",
+    "关键实现细节",
+    "verl 与 vLLM API 兼容性",
+    "triton-ascend 版本",
+    "mbridge",
+    "transformers 版本锁定",
+    "flash_attn 命名空间补丁",
+    "兼容性说明",
+    "许可证"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 7530
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docker/OVERVIEW.md",
+   "type": "overview",
+   "title": "MindSpeed Core Docker Image Overview",
+   "outline": [
+    "MindSpeed Core Docker Image Overview",
+    "Quick Reference",
+    "Key Field Description of Image Tags",
+    "Latest CANN 9.1.0",
+    "Build Parameters",
+    "Quick Start",
+    "Compatibility Notes",
+    "License",
+    "Disclaimer"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 7374
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docker/OVERVIEW.zh.md",
+   "type": "overview",
+   "title": "MindSpeed Core Docker 镜像概述",
+   "outline": [
+    "MindSpeed Core Docker 镜像概述",
+    "快速参考",
+    "镜像 Tag 关键字段描述",
+    "最新版本 CANN 9.1.0",
+    "构建参数",
+    "快速开始",
+    "兼容性说明",
+    "许可证",
+    "免责声明"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 6977
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docker/support_tags.md",
+   "type": "doc",
+   "title": "Support tags",
+   "outline": [
+    "Support tags",
+    "CANN 9.1.0",
+    "CANN 9.0.0-beta.2"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1746
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/FAQ.md",
+   "type": "faq",
+   "title": "MindSpeed FAQ",
+   "outline": [
+    "MindSpeed FAQ",
+    "Data helpers overflow bug",
+    "问题现象",
+    "问题根因",
+    "解决方案",
+    "Torch extensions卡住",
+    "问题现象",
+    "问题根因",
+    "解决方案",
+    "Megatron-LM 0.7.0版本长稳测试出现GradNorm为NaN",
+    "问题现象",
+    "问题根因",
+    "解决方案"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 8392
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/SECURITYNOTE.md",
+   "type": "doc",
+   "title": "MindSpeed 安全声明",
+   "outline": [
+    "MindSpeed 安全声明",
+    "系统安全加固",
+    "运行用户建议",
+    "文件权限控制",
+    "表1 文件（夹）各场景权限管控推荐最大值",
+    "数据安全声明",
+    "运行安全声明",
+    "公网地址声明",
+    "公开接口声明",
+    "判断函数是否为公开接口",
+    "通信安全加固",
+    "通信矩阵",
+    "特殊场景",
+    "漏洞响应"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 21581
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/_menu.md",
+   "type": "doc",
+   "title": "MindSpeed Core",
+   "outline": [
+    "MindSpeed Core"
+   ],
+   "figures": [],
+   "internal_links": [
+    "introduction.md",
+    "./user-guide/install_guide.md",
+    "./features/feature_list.md",
+    "./features/data-parallel.md",
+    "./features/tensor-parallel.md",
+    "./features/pipeline-parallel.md",
+    "./features/virtual-pipeline-parallel.md",
+    "./features/distributed-optimizer.md",
+    "./features/sequence-parallel.md",
+    "./features/async-ddp.md",
+    "./features/async-ddp-param-gather.md",
+    "./features/recomputation.md",
+    "./features/dist_ckpt.md",
+    "./features/custom_fsdp.md",
+    "./features/transformer_engine.md",
+    "./features/multi-head-latent-attention.md",
+    "./features/ulysses-context-parallel.md",
+    "./features/ring-attention-context-parallel.md",
+    "./features/double-ring.md",
+    "./features/hybrid-context-parallel.md"
+   ],
+   "bytes": 3993
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/_menu_quick_start.md",
+   "type": "doc",
+   "title": "快速入门",
+   "outline": [
+    "快速入门"
+   ],
+   "figures": [],
+   "internal_links": [
+    "./user-guide/quickstart.md"
+   ],
+   "bytes": 644
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/_menu_releasenotes.md",
+   "type": "changelog",
+   "title": "版本说明",
+   "outline": [
+    "版本说明"
+   ],
+   "figures": [],
+   "internal_links": [
+    "release_notes_core.md"
+   ],
+   "bytes": 256
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/dir_structure.md",
+   "type": "overview",
+   "title": "MindSpeed 项目目录结构",
+   "outline": [
+    "MindSpeed 项目目录结构"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 16325
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/Automatic_Parallelism.md",
+   "type": "feature",
+   "title": "Automatic Parallelism",
+   "outline": [
+    "Automatic Parallelism",
+    "背景与挑战",
+    "解决方案",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/auto_parallel_1.png",
+    "../figures/auto_parallel_2.png"
+   ],
+   "internal_links": [],
+   "bytes": 5460
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/LayerZeRO.md",
+   "type": "feature",
+   "title": "分层ZeRO",
+   "outline": [
+    "分层ZeRO",
+    "背景与挑战",
+    "解决方案",
+    "解决思路",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4018
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/activation-function-recompute.md",
+   "type": "feature",
+   "title": "激活函数重计算",
+   "outline": [
+    "激活函数重计算",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/activation_function_a.png",
+    "../figures/activation_function_b.png"
+   ],
+   "internal_links": [],
+   "bytes": 5638
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/aiqos.md",
+   "type": "feature",
+   "title": "AI QoS差异化调度特性说明",
+   "outline": [
+    "AI QoS差异化调度特性说明",
+    "技术背景",
+    "方案介绍",
+    "使用方法",
+    "自动模式",
+    "手动模式",
+    "关于DCMI接口的使用说明",
+    "DCMI接口使用原理介绍",
+    "so编译方法",
+    "so使用实例",
+    "使用场景与版本配套"
+   ],
+   "figures": [
+    "../figures/aiqos1.png",
+    "../figures/aiqos2.png",
+    "../figures/aiqos3.png"
+   ],
+   "internal_links": [],
+   "bytes": 10168
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/alibi.md",
+   "type": "feature",
+   "title": "Alibi 位置编码",
+   "outline": [
+    "Alibi 位置编码",
+    "背景与挑战",
+    "解决方案",
+    "解决思路",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1829
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/async-ddp-param-gather.md",
+   "type": "feature",
+   "title": "Megatron权重更新通信隐藏",
+   "outline": [
+    "Megatron权重更新通信隐藏",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4350
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/async-ddp.md",
+   "type": "feature",
+   "title": "Megatron异步DDP",
+   "outline": [
+    "Megatron异步DDP",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [
+    "./data-parallel.md"
+   ],
+   "bytes": 1860
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/async-log-allreduce.md",
+   "type": "feature",
+   "title": "异步日志全归约 (Async Log Allreduce)",
+   "outline": [
+    "异步日志全归约 (Async Log Allreduce)",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4364
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/auto_settings.md",
+   "type": "feature",
+   "title": "开箱优化-大模型并行策略自动搜索 Auto settings 特性说明",
+   "outline": [
+    "开箱优化-大模型并行策略自动搜索 Auto settings 特性说明",
+    "问题背景",
+    "解决方案",
+    "白盒搜索",
+    "黑盒搜索",
+    "混合搜索",
+    "使用方法",
+    "环境变量"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 6115
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/automated-pipeline.md",
+   "type": "feature",
+   "title": "PP自动并行算法",
+   "outline": [
+    "PP自动并行算法",
+    "背景与挑战",
+    "解决方案",
+    "内存优化模块",
+    "性能优化模块",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4110
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/balanced_moe.md",
+   "type": "feature",
+   "title": "专家并行动态负载均衡（数参互寻）",
+   "outline": [
+    "专家并行动态负载均衡（数参互寻）",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 8846
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/communication-over-computation.md",
+   "type": "feature",
+   "title": "计算通信并行 CoC (Communication Over Computation)",
+   "outline": [
+    "计算通信并行 CoC (Communication Over Computation)",
+    "背景与挑战",
+    "解决方案",
+    "解决思路",
+    "使用场景",
+    "使用方法",
+    "1. 使用通过Python脚本使能的计算通信并行特性",
+    "2. 使用通过融合算子使能的计算通信并行特性",
+    "CFG自定义方法",
+    "COC融合算子使用效果",
+    "注意事项"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5222
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/compress-tensor.md",
+   "type": "feature",
+   "title": "compress-activation",
+   "outline": [
+    "compress-activation",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果",
+    "使用约束"
+   ],
+   "figures": [
+    "../figures/compress_dense.png",
+    "../figures/compress_activation_coloured.png"
+   ],
+   "internal_links": [],
+   "bytes": 3014
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/context_parallelism_kv_cache.md",
+   "type": "feature",
+   "title": "Context Parallelism特性中的KV缓存优化",
+   "outline": [
+    "Context Parallelism特性中的KV缓存优化",
+    "背景与挑战",
+    "解决方案",
+    "解决思路",
+    "使用场景",
+    "使用方法",
+    "使用效果",
+    "注意事项"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 7857
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/conv3d_sequence_paralle.md",
+   "type": "feature",
+   "title": "conv3d 序列并行",
+   "outline": [
+    "conv3d 序列并行",
+    "背景与挑战",
+    "解决思路",
+    "使用场景",
+    "使用方法",
+    "使用影响",
+    "注意事项"
+   ],
+   "figures": [
+    "../figures/conv3d_sequence_parallel.png"
+   ],
+   "internal_links": [],
+   "bytes": 2951
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/custom_fsdp.md",
+   "type": "feature",
+   "title": "Megatron 全分片数据并行（Fully Sharded Data Parallel, FSDP）",
+   "outline": [
+    "Megatron 全分片数据并行（Fully Sharded Data Parallel, FSDP）",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../../../tests_extend/system_tests/feature_tests/custom_fsdp.sh"
+   ],
+   "bytes": 1608
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/data-parallel.md",
+   "type": "feature",
+   "title": "Megatron数据并行",
+   "outline": [
+    "Megatron数据并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2719
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/dist_ckpt.md",
+   "type": "feature",
+   "title": "Megatron 分布式权重",
+   "outline": [
+    "Megatron 分布式权重",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2272
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/distributed-optimizer.md",
+   "type": "feature",
+   "title": "Megatron分布式优化器",
+   "outline": [
+    "Megatron分布式优化器",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1604
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/double-ring.md",
+   "type": "feature",
+   "title": "Double Ring Attention长序列并行",
+   "outline": [
+    "Double Ring Attention长序列并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [
+    "ring-attention-context-parallel.md"
+   ],
+   "bytes": 3558
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/dualpipev.md",
+   "type": "feature",
+   "title": "DualPipeV",
+   "outline": [
+    "DualPipeV",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/dualpipev.png",
+    "../figures/dualpipev_dw_detach.png",
+    "../figures/dualpipev_profiling.png"
+   ],
+   "internal_links": [
+    "megatron_moe/megatron-moe-fb-overlap.md"
+   ],
+   "bytes": 4356
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/eod-reset.md",
+   "type": "feature",
+   "title": "支持EOD Reset训练场景",
+   "outline": [
+    "支持EOD Reset训练场景",
+    "背景与挑战",
+    "解决方案",
+    "使用方法"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1636
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/feature_list.md",
+   "type": "feature",
+   "title": "特性总览",
+   "outline": [
+    "特性总览"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5862
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/flash-attention.md",
+   "type": "feature",
+   "title": "Flash Attention",
+   "outline": [
+    "Flash Attention",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2411
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/fsdp2.md",
+   "type": "feature",
+   "title": "FSDP2",
+   "outline": [
+    "FSDP2",
+    "背景与挑战",
+    "解决方案",
+    "使用方法",
+    "注意不能打开分布式优化器",
+    "使用效果",
+    "注意事项"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4780
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/fused_ema_adamw_optimizer.md",
+   "type": "feature",
+   "title": "fused_ema_adamw 优化器",
+   "outline": [
+    "fused_ema_adamw 优化器",
+    "背景与挑战",
+    "解决思路",
+    "使用场景",
+    "使用方法",
+    "使用影响",
+    "注意事项"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2078
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/fusion-attn-v2.md",
+   "type": "feature",
+   "title": "fusion_attention_v2",
+   "outline": [
+    "fusion_attention_v2",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [
+    "./alibi.md",
+    "../ops/fusion_attention.md",
+    "./alibi.md"
+   ],
+   "bytes": 529
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/generate-mask.md",
+   "type": "feature",
+   "title": "MindSpeed Mask归一实现阐述",
+   "outline": [
+    "MindSpeed Mask归一实现阐述",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2695
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/hccl-group-buffer-set.md",
+   "type": "feature",
+   "title": "Hccl Group Buffer Set",
+   "outline": [
+    "Hccl Group Buffer Set",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2461
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/hccl-replace-gloo.md",
+   "type": "feature",
+   "title": "Gloo存档落盘优化",
+   "outline": [
+    "Gloo存档落盘优化",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2111
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/hybrid-context-parallel.md",
+   "type": "feature",
+   "title": "混合长序列并行",
+   "outline": [
+    "混合长序列并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3236
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/kvallgather-context-parallel.md",
+   "type": "feature",
+   "title": "KVAllGather长序列并行",
+   "outline": [
+    "KVAllGather长序列并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果",
+    "注意事项"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2891
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/low-precision-optimizer.md",
+   "type": "feature",
+   "title": "低精度优化器",
+   "outline": [
+    "低精度优化器",
+    "问题分析",
+    "解决方案",
+    "使用方法",
+    "使用效果",
+    "使用限制"
+   ],
+   "figures": [
+    "../figures/adam_optimizer.png",
+    "../figures/low_precision_optimizer.png",
+    "../figures/low_precision_optimizer_workflow.png"
+   ],
+   "internal_links": [],
+   "bytes": 1684
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/mc2.md",
+   "type": "feature",
+   "title": "Ascend MC2",
+   "outline": [
+    "Ascend MC2",
+    "使用前提",
+    "背景与挑战",
+    "解决方案",
+    "解决思路",
+    "使用场景",
+    "说明",
+    "举例1:冻结所有参数",
+    "举例2:除了output_layer，冻结所有ColumnParallelLinear和RowParallelLinear",
+    "使用方法",
+    "使用效果",
+    "注意事项"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../../../mindspeed/core/tensor_parallel/ascend_turbo/mc2_linears_seq_parallel.py"
+   ],
+   "bytes": 2675
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/megatron_moe/megatron-moe-allgather-dispatcher.md",
+   "type": "feature",
+   "title": "Allgather Dispatcher 分支优化",
+   "outline": [
+    "Allgather Dispatcher 分支优化",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1819
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/megatron_moe/megatron-moe-allgather-overlap-comm.md",
+   "type": "feature",
+   "title": "Megatron MoE Allgather Dispatcher分支通信隐藏优化",
+   "outline": [
+    "Megatron MoE Allgather Dispatcher分支通信隐藏优化",
+    "背景与挑战",
+    "解决方案",
+    "使用方法",
+    "使用场景"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1044
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/megatron_moe/megatron-moe-alltoall-dispatcher.md",
+   "type": "feature",
+   "title": "Alltoall Dispatcher 分支优化",
+   "outline": [
+    "Alltoall Dispatcher 分支优化",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1545
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/megatron_moe/megatron-moe-alltoall-overlap-comm.md",
+   "type": "feature",
+   "title": "Megatron MoE alltoall dispatcher分支通信隐藏优化",
+   "outline": [
+    "Megatron MoE alltoall dispatcher分支通信隐藏优化",
+    "背景与挑战",
+    "解决方案",
+    "使用方法",
+    "适用场景"
+   ],
+   "figures": [],
+   "internal_links": [
+    "megatron-moe-zero-memory.md"
+   ],
+   "bytes": 1786
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md",
+   "type": "feature",
+   "title": "MoE跨microbatch间AllToAll通信掩盖",
+   "outline": [
+    "MoE跨microbatch间AllToAll通信掩盖",
+    "背景与挑战",
+    "解决方案",
+    "使用方法"
+   ],
+   "figures": [
+    "../../figures/fb_overlap.png",
+    "../../figures/fb_overlap_npu.png",
+    "../../figures/fb_overlap_profile.png",
+    "../../figures/vpp_overlap.png"
+   ],
+   "internal_links": [
+    "../dualpipev.md"
+   ],
+   "bytes": 6175
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/megatron_moe/megatron-moe-gmm.md",
+   "type": "feature",
+   "title": "Megatron MoE Grouped GEMM (GMM)",
+   "outline": [
+    "Megatron MoE Grouped GEMM (GMM)",
+    "背景与挑战",
+    "解决方案",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3699
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/megatron_moe/megatron-moe-tp-extend-ep.md",
+   "type": "feature",
+   "title": "Megatron MoE TP拓展EP",
+   "outline": [
+    "Megatron MoE TP拓展EP",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1203
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/megatron_moe/megatron-moe-zero-memory.md",
+   "type": "feature",
+   "title": "Megatron MoE alltoall dispatcher分支内存优化",
+   "outline": [
+    "Megatron MoE alltoall dispatcher分支内存优化",
+    "背景与挑战",
+    "解决方案",
+    "使用方法",
+    "适用场景"
+   ],
+   "figures": [],
+   "internal_links": [
+    "megatron-moe-fb-overlap.md"
+   ],
+   "bytes": 1891
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/moe-token-permute-and-unpermute.md",
+   "type": "feature",
+   "title": "MoE Token Permute and Unpermute 融合优化",
+   "outline": [
+    "MoE Token Permute and Unpermute 融合优化",
+    "背景与挑战",
+    "解决方法",
+    "使用方法",
+    "使用限制",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2331
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/moe_expert_load_balance_placeemnt.md",
+   "type": "feature",
+   "title": "MoE负载均衡-专家迁移",
+   "outline": [
+    "MoE负载均衡-专家迁移",
+    "背景与挑战",
+    "解决方案",
+    "使用说明",
+    "1. 配置参数",
+    "2. 功能支持与限制"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4987
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/multi-head-latent-attention.md",
+   "type": "feature",
+   "title": "Multi-head Latent Attention多头潜注意力机制",
+   "outline": [
+    "Multi-head Latent Attention多头潜注意力机制",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/multi-head-latent-attention.png"
+   ],
+   "internal_links": [],
+   "bytes": 2490
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/multi_parameter_pipeline.md",
+   "type": "feature",
+   "title": "PP支持多参数传递",
+   "outline": [
+    "PP支持多参数传递",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "PP >= 2",
+    "PP >= 2, num-layers-per-virtual-pipeline-stage不为None",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2707
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/multi_parameter_pipeline_and_variable_seq_lengths.md",
+   "type": "feature",
+   "title": "PP支持多参数传递和动态形状",
+   "outline": [
+    "PP支持多参数传递和动态形状",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "PP >= 2",
+    "PP >= 2, num-layers-per-virtual-pipeline-stage不为None",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2665
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/muon-optimizer.md",
+   "type": "feature",
+   "title": "Muon 优化器",
+   "outline": [
+    "Muon 优化器",
+    "背景与挑战",
+    "解决方案",
+    "实现原理",
+    "TP 兼容适配",
+    "ZeRO 兼容适配",
+    "使用场景",
+    "使用方法",
+    "使用效果",
+    "注意事项"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 11385
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/mxfp8/Zero_Redundancy_Weight.md",
+   "type": "feature",
+   "title": "MindSpeed FP8 零冗余权重 (Zero-Redundancy Weight) 架构设计",
+   "outline": [
+    "MindSpeed FP8 零冗余权重 (Zero-Redundancy Weight) 架构设计",
+    "1. 背景",
+    "为什么会有权重显存冗余？",
+    "2. 初步想法与最终实现的关系",
+    "3. 最终架构，一句话版",
+    "4. 总体生命周期结构图",
+    "5. 真实显存收益数据",
+    "5.1 Qwen3-32B 模型测试 （2 层验证）",
+    "5.2 Qwen3-32B 模型分布式测试（4 卡 TP=4, 6 层）",
+    "5.3 Qwen3-30B 模型测试（2 卡 EP=2, 2 层）"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5140
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/noop-layers.md",
+   "type": "feature",
+   "title": "Ascend自定义空操作层",
+   "outline": [
+    "Ascend自定义空操作层",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3389
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/norm-recompute.md",
+   "type": "feature",
+   "title": "Norm重计算",
+   "outline": [
+    "Norm重计算",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1660
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/npu_datadump.md",
+   "type": "feature",
+   "title": "Ascend MindStudio Training Tools 精度对照",
+   "outline": [
+    "Ascend MindStudio Training Tools 精度对照",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1701
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/npu_deterministic.md",
+   "type": "feature",
+   "title": "Ascend 确定性计算",
+   "outline": [
+    "Ascend 确定性计算",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 817
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/npu_matmul_add.md",
+   "type": "feature",
+   "title": "matmul_add融合优化",
+   "outline": [
+    "matmul_add融合优化",
+    "背景与挑战",
+    "解决方法",
+    "使用场景",
+    "使用方法",
+    "说明",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../ops/npu_matmul_add.md",
+    "../user-guide/install_guide.md"
+   ],
+   "bytes": 1425
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/ops_flops_cal.md",
+   "type": "feature",
+   "title": "TFLOPS计算",
+   "outline": [
+    "TFLOPS计算",
+    "背景与挑战",
+    "解决方案",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1496
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/pipeline-model-parallel-layout.md",
+   "type": "feature",
+   "title": "Megatron 自定义流水线布局",
+   "outline": [
+    "Megatron 自定义流水线布局",
+    "背景与挑战",
+    "解决方案",
+    "Layout 字符串格式",
+    "使用场景",
+    "使用方法",
+    "与 MoE FB overlap 配合使用",
+    "使用约束",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5866
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/pipeline-parallel.md",
+   "type": "feature",
+   "title": "Megatron流水线并行",
+   "outline": [
+    "Megatron流水线并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/pipedream1F1B.png"
+   ],
+   "internal_links": [],
+   "bytes": 2423
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/preprocess-eod-data.md",
+   "type": "feature",
+   "title": "pack模式预训练数据集处理",
+   "outline": [
+    "pack模式预训练数据集处理",
+    "背景与挑战",
+    "解决方案",
+    "数据集下载",
+    "数据集处理",
+    "请按照您的真实环境 source set_env.sh 环境变量",
+    "使用场景",
+    "注意事项"
+   ],
+   "figures": [
+    "../figures/append-eod.png"
+   ],
+   "internal_links": [],
+   "bytes": 4809
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/qad.md",
+   "type": "feature",
+   "title": "QAD 量化感知蒸馏",
+   "outline": [
+    "QAD 量化感知蒸馏",
+    "背景",
+    "核心组件",
+    "使用限制",
+    "使用方法",
+    "参数说明"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2694
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/qat_quant.md",
+   "type": "feature",
+   "title": "QAT量化",
+   "outline": [
+    "QAT量化",
+    "背景与挑战",
+    "解决方案",
+    "使用方法",
+    "注意",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1304
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/recomputation.md",
+   "type": "feature",
+   "title": "Megatron 重计算",
+   "outline": [
+    "Megatron 重计算",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2935
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/recompute_independent_pipelining.md",
+   "type": "feature",
+   "title": "重计算流水线独立调度",
+   "outline": [
+    "重计算流水线独立调度",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3025
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/reset-bucket-group-order.md",
+   "type": "feature",
+   "title": "bucket重排算法",
+   "outline": [
+    "bucket重排算法",
+    "背景与挑战",
+    "解决方案",
+    "在开启overlap-param-gather的条件下，打开 `--reset-bucket-group-order`参数",
+    "使用场景",
+    "使用方法"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1714
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/reuse-fp32-param.md",
+   "type": "feature",
+   "title": "参数副本复用",
+   "outline": [
+    "参数副本复用",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2408
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/ring-attention-context-parallel.md",
+   "type": "feature",
+   "title": "Ring Attention长序列并行",
+   "outline": [
+    "Ring Attention长序列并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [
+    "<https://arxiv.org/pdf/2310.01889>"
+   ],
+   "bytes": 4993
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/rms_norm.md",
+   "type": "feature",
+   "title": "rms_norm融合优化",
+   "outline": [
+    "rms_norm融合优化",
+    "背景与挑战",
+    "解决方法",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../ops/rms_norm.md"
+   ],
+   "bytes": 1096
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/rotary-embedding.md",
+   "type": "feature",
+   "title": "Rotary Position Embedding 融合优化",
+   "outline": [
+    "Rotary Position Embedding 融合优化",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1466
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/sequence-parallel.md",
+   "type": "feature",
+   "title": "Megatron序列并行",
+   "outline": [
+    "Megatron序列并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2064
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/shared-experts.md",
+   "type": "feature",
+   "title": "共享专家特性",
+   "outline": [
+    "共享专家特性",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/shared-experts.png"
+   ],
+   "internal_links": [],
+   "bytes": 1831
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/smart_swap.md",
+   "type": "feature",
+   "title": "SmartSwap",
+   "outline": [
+    "SmartSwap",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果",
+    "注意事项",
+    "举例: mindspeed/op_builder/gmm_builder.py",
+    "举例: pretrain_xxx.sh"
+   ],
+   "figures": [
+    "../figures/smart_swap_flowchart.png"
+   ],
+   "internal_links": [],
+   "bytes": 5308
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/swap-optimizer.md",
+   "type": "feature",
+   "title": "Swap Optimizer",
+   "outline": [
+    "Swap Optimizer",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法"
+   ],
+   "figures": [
+    "../figures/swap-optimizer.png"
+   ],
+   "internal_links": [],
+   "bytes": 2501
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/swap_attention.md",
+   "type": "feature",
+   "title": "swap-attention",
+   "outline": [
+    "swap-attention",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/swap_attention.png",
+    "../figures/swap_attention1.png",
+    "../figures/swap_attention2.png"
+   ],
+   "internal_links": [],
+   "bytes": 2301
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/swiglu.md",
+   "type": "feature",
+   "title": "SwiGLU融合优化",
+   "outline": [
+    "SwiGLU融合优化",
+    "背景与挑战",
+    "解决方法",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../ops/swiglu.md"
+   ],
+   "bytes": 1175
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/te-comparison-online.md",
+   "type": "feature",
+   "title": "低精度在线比对",
+   "outline": [
+    "低精度在线比对",
+    "问题分析",
+    "解决方法",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1215
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/tensor-parallel-2d.md",
+   "type": "feature",
+   "title": "高维张量并行",
+   "outline": [
+    "高维张量并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/tensor-parallel-2d.png"
+   ],
+   "internal_links": [],
+   "bytes": 5909
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/tensor-parallel.md",
+   "type": "feature",
+   "title": "Megatron张量并行",
+   "outline": [
+    "Megatron张量并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3051
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/transformer_engine.md",
+   "type": "feature",
+   "title": "Megatron Transformer-engine",
+   "outline": [
+    "Megatron Transformer-engine",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法"
+   ],
+   "figures": [
+    "../figures/fp8.png"
+   ],
+   "internal_links": [
+    "mxfp8/Zero_Redundancy_Weight.md"
+   ],
+   "bytes": 5757
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/ulysses-context-parallel.md",
+   "type": "feature",
+   "title": "Ulysses长序列并行",
+   "outline": [
+    "Ulysses长序列并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3795
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/unaligned-pipeline.md",
+   "type": "feature",
+   "title": "非对齐PP和VPP切分",
+   "outline": [
+    "非对齐PP和VPP切分",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "开启非对齐PP/VPP",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3396
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/unaligned-ring-context-parallel.md",
+   "type": "feature",
+   "title": "非对齐Ring长序列并行",
+   "outline": [
+    "非对齐Ring长序列并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "示例代码",
+    "使用效果",
+    "注意事项"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3080
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/unaligned-ulysses-context-parallel.md",
+   "type": "feature",
+   "title": "非对齐Ulysses长序列并行",
+   "outline": [
+    "非对齐Ulysses长序列并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "示例代码",
+    "自定义 GatherSizeCalculator",
+    "根据实际情况，使用预定义DynamicGatherSizeCalculator()或自定义CustomGatherSizeCalculator()",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4472
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/unaligned_linear.md",
+   "type": "feature",
+   "title": "unaligned linear 非对齐线性层",
+   "outline": [
+    "unaligned linear 非对齐线性层",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "开启非对齐线性层",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2815
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/variable_seq_lengths.md",
+   "type": "feature",
+   "title": "PP支持动态形状",
+   "outline": [
+    "PP支持动态形状",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "开启流水线并行, PP >= 2",
+    "开启PP支持动态形状",
+    "使用效果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3016
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/verl-ckpt-acceleration.md",
+   "type": "feature",
+   "title": "Verl+Megatron后端后训练加载和保存ckpt时间优化",
+   "outline": [
+    "Verl+Megatron后端后训练加载和保存ckpt时间优化",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/verl-ckpt-acceleration.png"
+   ],
+   "internal_links": [],
+   "bytes": 860
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/virtual-optimizer.md",
+   "type": "feature",
+   "title": "virtual-optimizer",
+   "outline": [
+    "virtual-optimizer",
+    "背景与挑战",
+    "解决方案",
+    "before",
+    "after",
+    "使用方法"
+   ],
+   "figures": [
+    "../figures/virtual-optimizer.png"
+   ],
+   "internal_links": [],
+   "bytes": 4667
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/features/virtual-pipeline-parallel.md",
+   "type": "feature",
+   "title": "Megatron虚拟流水线并行",
+   "outline": [
+    "Megatron虚拟流水线并行",
+    "背景与挑战",
+    "解决方案",
+    "使用场景",
+    "使用方法",
+    "使用效果"
+   ],
+   "figures": [
+    "../figures/virtual-pipeline.PNG"
+   ],
+   "internal_links": [
+    "./pipeline-parallel.md"
+   ],
+   "bytes": 2772
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/introduction.md",
+   "type": "overview",
+   "title": "简介",
+   "outline": [
+    "简介",
+    "概述",
+    "MindSpeed Core架构",
+    "功能特性"
+   ],
+   "figures": [
+    "./figures/01_architecture_mindspeed_core.png"
+   ],
+   "internal_links": [],
+   "bytes": 1678
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/mindspore/install_guide.md",
+   "type": "doc",
+   "title": "软件安装",
+   "outline": [
+    "软件安装",
+    "硬件配套和支持的操作系统",
+    "安装前准备",
+    "安装驱动固件",
+    "安装CANN",
+    "安装MindSpeed",
+    "安装MindSpore框架",
+    "安装MindSpeed-Core-MS",
+    "一键安装",
+    "手动安装",
+    "卸载MindSpeed"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../release_notes_core.md#相关产品版本配套说明",
+    "../SECURITYNOTE.md"
+   ],
+   "bytes": 6506
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/mindspore/readme.md",
+   "type": "readme",
+   "title": "MindSpeed MindSpore介绍",
+   "outline": [
+    "MindSpeed MindSpore介绍",
+    "安装",
+    "安装依赖",
+    "获取 [MindSpeed-Core-MS](https://gitcode.com/Ascend/MindSpeed-Core-MS/) 代码仓",
+    "获取并适配相应版本的 MindSpeed、Megatron-LM 和 MSAdapter",
+    "快速上手",
+    "自定义优化级别",
+    "MindSpeed 中采集Profile数据"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 7850
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/README.md",
+   "type": "readme",
+   "title": "如何运行算子",
+   "outline": [
+    "如何运行算子",
+    "前置安装",
+    "编译和安装",
+    "1. 设置环境变量",
+    "默认路径，请按需修改。",
+    "默认路径，请按需修改。",
+    "2. 包含头文件",
+    "3. 安装脚本"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 586
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/ffn.md",
+   "type": "doc",
+   "title": "ffn对外接口（只支持前向）",
+   "outline": [
+    "ffn对外接口（只支持前向）",
+    "非量化场景",
+    "全量化场景",
+    "伪量化场景",
+    "约束与限制",
+    "npu_ffn 接口的调用方式"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 15848
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/fusion_attention.md",
+   "type": "doc",
+   "title": "fusion attention 对外接口",
+   "outline": [
+    "fusion attention 对外接口",
+    "注意当前若要使用v2版本接口，需要开启`--use-fusion-attn-v2`特性",
+    "前向接口",
+    "反向接口",
+    "输入限制",
+    "flash_attention_v2 类的调用方式"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 10449
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/gmm.md",
+   "type": "doc",
+   "title": "gmm对外接口",
+   "outline": [
+    "gmm对外接口",
+    "前向接口",
+    "反向接口",
+    "gmm 类的调用方式",
+    "正向接口案例",
+    "反向接口案例",
+    "weight转置案例",
+    "正向接口案例",
+    "反向接口案例",
+    "weight转置案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5791
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/lcal_coc.md",
+   "type": "doc",
+   "title": "LCAL_COC对外接口",
+   "outline": [
+    "LCAL_COC对外接口",
+    "注意事项",
+    "matmul_all_reduce接口",
+    "接口功能",
+    "接口输入输出",
+    "使用案例",
+    "all_gather_matmul接口",
+    "接口功能",
+    "接口输入输出",
+    "使用案例",
+    "ALL_GATHER_MATMUL_V2接口",
+    "接口功能",
+    "接口输入输出",
+    "使用案例",
+    "MATMUL_REDUCE_SCATTER接口",
+    "接口功能",
+    "接口输入输出",
+    "使用方法",
+    "PURE_MATMUL接口",
+    "接口功能",
+    "接口输入输出",
+    "使用方法"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 15266
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_all_to_all_all_gather_bmm.md",
+   "type": "doc",
+   "title": "npu_alltoall_allgather_bmm对外接口",
+   "outline": [
+    "npu_alltoall_allgather_bmm对外接口",
+    "输入输出及属性说明",
+    "输入shape限制",
+    "npu_alltoall_allgather_bmm 的调用示例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 8971
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_apply_fused_adamw_v2.md",
+   "type": "doc",
+   "title": "npu_apply_fused_adamw_v2 对外接口",
+   "outline": [
+    "npu_apply_fused_adamw_v2 对外接口",
+    "接口原型",
+    "接口内部计算逻辑示例如下",
+    "输入",
+    "输出",
+    "调用示例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 14594
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_apply_fused_ema_adamw.md",
+   "type": "doc",
+   "title": "npu_apply_fused_ema_adamw 对外接口",
+   "outline": [
+    "npu_apply_fused_ema_adamw 对外接口",
+    "接口原型",
+    "接口内部计算逻辑示例如下",
+    "输入",
+    "输出",
+    "调用示例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5068
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_bmm_reduce_scatter_all_to_all.md",
+   "type": "doc",
+   "title": "npu_bmm_reducescatter_alltoall对外接口",
+   "outline": [
+    "npu_bmm_reducescatter_alltoall对外接口",
+    "输入输出及属性说明",
+    "输入限制",
+    "npu_bmm_reducescatter_alltoall 类的调用示例(待验证)"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 8096
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_dropout_add_layer_norm.md",
+   "type": "doc",
+   "title": "npu_dropout_add_layer_norm 对外接口",
+   "outline": [
+    "npu_dropout_add_layer_norm 对外接口",
+    "计算逻辑",
+    "norm_result = LayerNorm(Dropout(x0 x rowscale x layerscale) + residual)",
+    "计算逻辑",
+    "norm_result = RmsNorm(Dropout(x0 * rowscale * layerscale) + residual)",
+    "案例一：npu_dropout_add_layer_norm 接口的调用方式",
+    "正向接口案例",
+    "案例二：npu_dropout_add_layer_norm 接口的调用方式",
+    "正向接口案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5322
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_grouped_mat_mul_all_reduce.md",
+   "type": "doc",
+   "title": "npu_grouped_mat_mul_all_reduce对外接口",
+   "outline": [
+    "npu_grouped_mat_mul_all_reduce对外接口",
+    "前向接口",
+    "反向接口",
+    "输入限制",
+    "npu_grouped_mat_mul_all_reduce 类的调用方式"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 6673
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_groupmatmul_add.md",
+   "type": "doc",
+   "title": "npu_groupmatmul_add_fp32对外接口(只支持前向)",
+   "outline": [
+    "npu_groupmatmul_add_fp32对外接口(只支持前向)",
+    "案例",
+    "Copyright (c) 2024, Huawei Technologies Co., Ltd.  All rights reserved.",
+    "分开算子计算结果"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1353
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_matmul_add.md",
+   "type": "doc",
+   "title": "npu_matmul_add_fp32对外接口(只支持前向)",
+   "outline": [
+    "npu_matmul_add_fp32对外接口(只支持前向)",
+    "案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 734
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_mm_all_reduce_add_rms_norm.md",
+   "type": "doc",
+   "title": "npu_mm_all_reduce_add_rms_norm对外接口",
+   "outline": [
+    "npu_mm_all_reduce_add_rms_norm对外接口",
+    "非量化场景",
+    "全量化场景",
+    "伪量化场景",
+    "输入限制",
+    "npu_mm_all_reduce_add_rms_norm 接口的调用方式"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 7845
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_mm_all_reduce_add_rms_norm_.md",
+   "type": "doc",
+   "title": "npu_mm_all_reduce_add_rms_norm_对外接口",
+   "outline": [
+    "npu_mm_all_reduce_add_rms_norm_对外接口",
+    "非量化场景",
+    "全量化场景",
+    "伪量化场景",
+    "输入限制",
+    "npu_mm_all_reduce_add_rms_norm 接口的调用方式"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 7926
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_ring_attention_update.md",
+   "type": "doc",
+   "title": "npu_ring_attention_update对外接口",
+   "outline": [
+    "npu_ring_attention_update对外接口",
+    "前向接口",
+    "案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3455
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/npu_rotary_position_embedding.md",
+   "type": "doc",
+   "title": "npu_rotary_position_embedding对外接口",
+   "outline": [
+    "npu_rotary_position_embedding对外接口",
+    "mode = 0",
+    "mode = 1",
+    "前向接口",
+    "反向接口",
+    "输入约束",
+    "案例",
+    "正向接口案例",
+    "反向接口案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3700
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/ops_list.md",
+   "type": "doc",
+   "title": "自定义算子",
+   "outline": [
+    "自定义算子"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 22457
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/quant_gmm.md",
+   "type": "doc",
+   "title": "quant_gmm对外接口",
+   "outline": [
+    "quant_gmm对外接口",
+    "前向接口",
+    "gmm 类的调用方式",
+    "weight转置案例",
+    "weight转置案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5385
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/rms_norm.md",
+   "type": "doc",
+   "title": "rms_norm对外接口",
+   "outline": [
+    "rms_norm对外接口",
+    "前向接口",
+    "反向接口",
+    "案例",
+    "正向接口案例",
+    "反向接口案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1153
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/swiglu.md",
+   "type": "doc",
+   "title": "swiglu对外接口",
+   "outline": [
+    "swiglu对外接口",
+    "前向接口",
+    "反向接口",
+    "案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1101
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/ops/weight_quant_gmm.md",
+   "type": "doc",
+   "title": "weight_quant_gmm对外接口",
+   "outline": [
+    "weight_quant_gmm对外接口",
+    "前向接口",
+    "gmm 类的调用方式",
+    "weight转置案例",
+    "weight转置案例"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4979
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/overview.md",
+   "type": "overview",
+   "title": "MindSpeed是什么",
+   "outline": [
+    "MindSpeed是什么",
+    "总体架构",
+    "关键功能特性",
+    "更多介绍"
+   ],
+   "figures": [
+    "./figures/01_architecture_mindspeed.png"
+   ],
+   "internal_links": [],
+   "bytes": 4807
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/release_notes_core.md",
+   "type": "changelog",
+   "title": "版本说明",
+   "outline": [
+    "版本说明",
+    "版本配套说明",
+    "产品版本信息",
+    "相关产品版本配套说明",
+    "版本兼容性说明",
+    "版本使用注意事项",
+    "更新说明",
+    "新增特性",
+    "删除特性",
+    "接口变更说明",
+    "已解决问题",
+    "遗留问题",
+    "升级影响",
+    "升级过程中对现行系统的影响",
+    "升级后对现行系统的影响",
+    "配套文档",
+    "病毒扫描及漏洞修补列表",
+    "病毒扫描结果",
+    "漏洞修补列表"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../zh/user-guide/quickstart.md",
+    "../zh/user-guide/install_guide.md"
+   ],
+   "bytes": 5571
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/replace_ascend_path_guide.md",
+   "type": "doc",
+   "title": "MindSpeed Ascend HDK 路径批量替换指南",
+   "outline": [
+    "MindSpeed Ascend HDK 路径批量替换指南",
+    "背景",
+    "前置条件",
+    "受影响的文件范围",
+    "使用步骤",
+    "执行后验证",
+    "完整脚本参数说明"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5946
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/security_statement.md",
+   "type": "doc",
+   "title": "安全声明",
+   "outline": [
+    "安全声明"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1031
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/API.md",
+   "type": "api",
+   "title": "API参考",
+   "outline": [
+    "API参考",
+    "MindSpeedFeature基类",
+    "MindSpeedPatchesManager类"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5852
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/feature_development.md",
+   "type": "guide",
+   "title": "MindSpeed Core特性开发指南",
+   "outline": [
+    "MindSpeed Core特性开发指南",
+    "概述",
+    "开发流程",
+    "开发实践指南",
+    "开发实践建议",
+    "创建新特性的Checklist",
+    "常见问题",
+    "API参考"
+   ],
+   "figures": [],
+   "internal_links": [
+    "./API.md"
+   ],
+   "bytes": 4861
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/install_guide.md",
+   "type": "guide",
+   "title": "MindSpeed安装指导",
+   "outline": [
+    "MindSpeed安装指导",
+    "硬件配套和支持的操作系统",
+    "安装前准备",
+    "安装MindSpeed",
+    "方式一：镜像安装",
+    "方式二：源码安装",
+    "卸载MindSpeed"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../release_notes_core.md#相关产品版本配套说明",
+    "../SECURITYNOTE.md",
+    "../../../docker/OVERVIEW.zh.md"
+   ],
+   "bytes": 7184
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/megatron_performance_optimization.md",
+   "type": "guide",
+   "title": "基于Megatron并行策略的性能优化",
+   "outline": [
+    "基于Megatron并行策略的性能优化",
+    "概述",
+    "性能诊断方法论",
+    "性能指标定义",
+    "调优流程",
+    "性能数据采集",
+    "启用profiling采集",
+    "性能分析流程",
+    "瓶颈类型判断",
+    "序列并行优化方案",
+    "Ascend Ulysses长序列并行",
+    "Ascend Ring Attention长序列并行",
+    "Ascend Double Ring Attention长序列并行",
+    "Ascend 混合长序列并行",
+    "性能调优实践",
+    "算法选择指南",
+    "常见优化策略",
+    "最佳实践建议"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../features/ring-attention-context-parallel.md"
+   ],
+   "bytes": 17274
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/model-migration.md",
+   "type": "guide",
+   "title": "模型迁移指南",
+   "outline": [
+    "模型迁移指南",
+    "概述",
+    "什么是模型迁移",
+    "为什么进行模型迁移",
+    "如何进行模型迁移",
+    "模型迁移总体流程",
+    "模型选取",
+    "模型迁移",
+    "模型训练",
+    "环境变量配置",
+    "数据集准备",
+    "执行训练",
+    "模型保存与加载",
+    "Change for multinode config",
+    "分布式节点参数",
+    "GPT模型参数",
+    "数据集配置"
+   ],
+   "figures": [
+    "../figures/model-migration-procedure.png",
+    "../figures/iter_result.png",
+    "../figures/iter_result.png",
+    "../figures/model-load.png",
+    "../figures/iter_result.png"
+   ],
+   "internal_links": [
+    "../user-guide/install_guide.md"
+   ],
+   "bytes": 18494
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/performance_optimization.md",
+   "type": "guide",
+   "title": "性能调优指导",
+   "outline": [
+    "性能调优指导",
+    "Megatron-LM性能优化"
+   ],
+   "figures": [],
+   "internal_links": [
+    "./megatron_performance_optimization.md"
+   ],
+   "bytes": 1498
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/profile.md",
+   "type": "guide",
+   "title": "MindSpeed 中采集Profile数据",
+   "outline": [
+    "MindSpeed 中采集Profile数据"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2120
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/quickstart.md",
+   "type": "guide",
+   "title": "快速入门",
+   "outline": [
+    "快速入门",
+    "环境准备",
+    "数据准备",
+    "启动预训练"
+   ],
+   "figures": [],
+   "internal_links": [
+    "install_guide.md"
+   ],
+   "bytes": 7166
+  },
+  {
+   "slug": "mindspeed",
+   "path": "docs/zh/user-guide/verl.md",
+   "type": "guide",
+   "title": "Verl 使用 MindSpeed 训练后端",
+   "outline": [
+    "Verl 使用 MindSpeed 训练后端",
+    "环境准备",
+    "1. MindSpeed 安装",
+    "2. Verl 安装",
+    "使能 MindSpeed 后端",
+    "特性支持列表"
+   ],
+   "figures": [],
+   "internal_links": [
+    "install_guide.md"
+   ],
+   "bytes": 3598
+  },
+  {
+   "slug": "mindspeed",
+   "path": "mindspeed/auto_settings/profile/README.md",
+   "type": "readme",
+   "title": "profiling_configs.json规则",
+   "outline": [
+    "profiling_configs.json规则"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 751
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/README.md",
+   "type": "readme",
+   "title": "Tests Usage",
+   "outline": [
+    "Tests Usage",
+    "Marking Slow Unit Tests"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 1715
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/system_tests/core_model/README.md",
+   "type": "readme",
+   "title": "core_model 系统用例代码覆盖运行说明",
+   "outline": [
+    "core_model 系统用例代码覆盖运行说明",
+    "环境搭建",
+    "代码覆盖统计执行",
+    "1. 准备数据集并配置",
+    "2.配置测试数据集和tokenizer",
+    "3. 安装代码覆盖统计工具及使用",
+    "4. 执行用例，生成代码覆盖统计文件",
+    "5. 生成代码覆盖统计报告",
+    "用例补充",
+    "方式一：用例配置文件中直接添加",
+    "方式二：新实例化用例模板"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 5384
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/system_tests/deepseek/README.md",
+   "type": "readme",
+   "title": "DeepSeek-V3",
+   "outline": [
+    "DeepSeek-V3",
+    "训练",
+    "脚本"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 3939
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/system_tests/feature_precision_guarding/README.md",
+   "type": "readme",
+   "title": "特性精度看护(Feature Precision Guarding)系统用例执行和添加说明",
+   "outline": [
+    "特性精度看护(Feature Precision Guarding)系统用例执行和添加说明",
+    "特性的精度看护用例执行",
+    "0.环境搭建",
+    "1.准备tokenizer和数据集",
+    "下载数据",
+    "处理数据",
+    "2.准备初始参数",
+    "3.配置指定参数",
+    "4.配置基线参数和特性参数",
+    "特性的精度看护用例添加",
+    "方式一： 用例配置文件中直接添加",
+    "方式二： 新实例化用例文件"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4349
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/system_tests/llama3/README.md",
+   "type": "readme",
+   "title": "Llama3-8B",
+   "outline": [
+    "Llama3-8B",
+    "训练",
+    "脚本",
+    "性能"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 4039
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/system_tests/llava/readme.md",
+   "type": "readme",
+   "title": "背景",
+   "outline": [
+    "背景",
+    "操作步骤"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 506
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/system_tests/mixtral/README.md",
+   "type": "readme",
+   "title": "模型训练系统测试",
+   "outline": [
+    "模型训练系统测试",
+    "Mixtral-8x7B训练测试",
+    "硬件要求",
+    "准备工作",
+    "模型训练",
+    "下载数据",
+    "处理数据",
+    "拷贝mixtral训练所用脚本到Megatron-LM目录下",
+    "按照如下内容修改pretrain_mixtral.sh测试脚本文件",
+    "设置 ascend-toolkit 路径",
+    "根据实际情况配置词表、数据集、模型参数保存路径",
+    "根据分布式集群实际情况配置分布式参数",
+    "根据实际需要设置训练并行策略",
+    "ptdbg_ascend 参见 https://gitcode.com/Ascend/tools/blob/master/ptdbg_ascend/README.md"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 2942
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/system_tests/verl/README.md",
+   "type": "readme",
+   "title": "Qwen3-30B-A3B",
+   "outline": [
+    "Qwen3-30B-A3B",
+    "概述",
+    "硬件环境",
+    "软件环境",
+    "模型训练",
+    "1. 准备数据",
+    "权重转换脚本位于verl代码仓中",
+    "2. 配置训练脚本",
+    "3. 启动训练",
+    "确保在verl目录下执行训练脚本",
+    "后台执行该训练脚本，并将日志保存"
+   ],
+   "figures": [],
+   "internal_links": [
+    "../../../docs/zh/features/rotary-embedding.md"
+   ],
+   "bytes": 3398
+  },
+  {
+   "slug": "mindspeed",
+   "path": "tests_extend/system_tests/yaml_args_example/README.md",
+   "type": "readme",
+   "title": "yaml-cfg使用指导",
+   "outline": [
+    "yaml-cfg使用指导"
+   ],
+   "figures": [],
+   "internal_links": [],
+   "bytes": 733
+  }
+ ]
+}

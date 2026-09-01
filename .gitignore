@@ -5,3 +5,4 @@ __pycache__/
 extraction/bulk_caption.log
 extraction/bulk_caption_failures.txt
 extraction/deep_reread_queue.json
+repos_src/

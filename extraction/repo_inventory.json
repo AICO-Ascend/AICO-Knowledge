@@ -1,0 +1,42 @@
+{
+ "updated": "phase1",
+ "repos": [
+  {
+   "slug": "mindspeed",
+   "url": "https://gitcode.com/Ascend/MindSpeed.git",
+   "ref": "master",
+   "note": "昇腾 MoE/并行训练加速库 (验证仓)",
+   "head": "4fb7dc00614aa195e0f3a0fa4336f72110fa1555",
+   "commit_date": "2026-08-31T19:57:36+08:00",
+   "latest_tag": "v26.1.0_core_r0.12.1",
+   "version_candidates": {
+    "git_tag": "v26.1.0_core_r0.12.1"
+   },
+   "tree_files": 1516,
+   "checked_out_files": 412,
+   "docs_total": 151,
+   "docs_md": 149,
+   "figures_total": 78,
+   "languages": {
+    "Python": 1126,
+    "Markdown": 149,
+    "Shell": 82,
+    "C++": 34,
+    "C/C++ hdr": 14,
+    "YAML": 9,
+    "C": 1
+   },
+   "top_dirs": [
+    ".devcontainer",
+    ".gitcode",
+    "ci",
+    "docker",
+    "docs",
+    "mindspeed",
+    "pre-commit",
+    "tests_extend",
+    "tools"
+   ]
+  }
+ ]
+}

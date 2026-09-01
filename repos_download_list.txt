@@ -1,0 +1,3 @@
+# 代码仓萃取清单 — 每行: slug | git_url | ref(可选) | 备注
+# 镜像 papers_download_list.txt; 以 # 开头的行为注释
+mindspeed | https://gitcode.com/Ascend/MindSpeed.git | master | 昇腾 MoE/并行训练加速库 (验证仓)
