@@ -72,7 +72,8 @@ def harvest(slug):
     src_root = SRC / slug
     out_root = DOCS_OUT / slug
     docs = sorted(src_root.rglob('*.md'))
-    docs = [d for d in docs if '.git' not in d.parts]
+    # 稀疏克隆里可能有断链 symlink (目标不在 sparse 范围) — 跳过
+    docs = [d for d in docs if '.git' not in d.parts and d.is_file() and not d.is_symlink()]
     entries = []
     fig_count = 0
     for d in docs:

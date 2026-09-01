@@ -1,3 +1,144 @@
 # 代码仓萃取清单 — 每行: slug | git_url | ref(可选) | 备注
 # 镜像 papers_download_list.txt; 以 # 开头的行为注释
-mindspeed | https://gitcode.com/Ascend/MindSpeed.git | master | 昇腾 MoE/并行训练加速库 (验证仓)
+
+# ═══ gitcode.com/Ascend 组织 (105 仓, 2026-09-01 枚举) ═══
+solution-agent | https://gitcode.com/Ascend/solution-agent.git |  | solution-agent 仓库是昇腾（Ascend）社区用于辅助开发者快速开发和部署行业场景解决方案的平台，提供方案参考设计、环境快速部署、性能优化等能力，
+monarch_npu | https://gitcode.com/Ascend/monarch_npu.git |  | The official repository of Ascend for PyTorch ecological activities.
+torchao_npu | https://gitcode.com/Ascend/torchao_npu.git |  | Ascend Extension for PyTorchAO
+taco | https://gitcode.com/Ascend/taco.git |  | Torch Ascend Custom Operators
+torchcomms_npu | https://gitcode.com/Ascend/torchcomms_npu.git |  | The official repository of Ascend for PyTorch ecological activities.
+pytorch-ecosystem | https://gitcode.com/Ascend/pytorch-ecosystem.git |  | The official repository of Ascend for PyTorch ecological activities.
+mindspeed-agent | https://gitcode.com/Ascend/MindSpeed-Agent.git |  | 提供MindSpeed系列套件开发agent
+flashgen | https://gitcode.com/Ascend/FlashGen.git |  | MindIE FlashGen 是一个面向多模态生成的以训助推(Training-aware Acceleration)加速套件。通过深度融合步数蒸馏、量化感知
+ops-rec | https://gitcode.com/Ascend/ops-rec.git |  | 基于昇腾平台，面向推荐系统的高性能融合算子仓库
+msboost | https://gitcode.com/Ascend/msboost.git |  | 针对AI推理训练场景构建极致性能加速工具。
+libdevice | https://gitcode.com/Ascend/libdevice.git |  | libdevice
+ecodevhub | https://gitcode.com/Ascend/EcoDevHub.git |  | EcoDevHub 仓库是昇腾（Ascend）社区用于支持生态发展的仓库，通过这个仓库统一回收生态技术创新项目、外部案例、竞赛成果、社区任务等。
+atk | https://gitcode.com/Ascend/ATK.git |  | NA
+torchtitanturbo | https://gitcode.com/Ascend/TorchTitanTurbo.git |  | 提供亲和昇腾NPU的Torch实验性加速特性
+fsdpturbo | https://gitcode.com/Ascend/FSDPTurbo.git |  | 提供NPU亲和的FSDP增强特性
+model-agent | https://gitcode.com/Ascend/model-agent.git |  | 昇腾模型 Agent，大模型落地全流程一键通！查适配、做调优、快部署、稳上线，文档一键生成，一站式搞定无压力！
+mindspeed-bridge | https://gitcode.com/Ascend/MindSpeed-Bridge.git |  | 提供昇腾适配的更多Bridge模型代码
+mindspeed-ops | https://gitcode.com/Ascend/MindSpeed-Ops.git |  | 提供昇腾优化的训练业务自定义算子实现
+msagent | https://gitcode.com/Ascend/msagent.git |  | MindStudio智能体，提供性能和精度等自动分析功能
+megatronadaptor | https://gitcode.com/Ascend/MegatronAdaptor.git |  | 提供Megatron-LM在昇腾上的基础适配
+transformerenginenpu | https://gitcode.com/Ascend/TransformerEngineNPU.git |  | 提供适配昇腾的TransformerEngine加速库
+faiss | https://gitcode.com/Ascend/faiss.git |  | fork开源faiss，提供向量检索NPU加速能力。
+text-embeddings-inference | https://gitcode.com/Ascend/text-embeddings-inference.git |  | fork开源text-embeddings-inference，提供昇腾NPU加速能力。
+triton-distributed-ascend | https://gitcode.com/Ascend/Triton-distributed-ascend.git |  | Triton-distributed-ascend 项目文档：https://triton-distributed-ascend.pages.dev
+mscommreport | https://gitcode.com/Ascend/mscommreport.git |  | 提供HCCL中断类问题自动分析能力，帮助开发及维护人员提升HCCL问题分析效率
+release-management | https://gitcode.com/Ascend/release-management.git |  | 版本发布管理仓库，统一版本的管控规范，明确版本发布的全流程。
+ascendc-kernelgen-data | https://gitcode.com/Ascend/ascendc-kernelgen-data.git |  | 提供用于昇腾 AscendC 算子代码生成的训练数据集，数据集涵盖多种算子类型，旨在支持算子代码自动生成模型的训练与评估。
+slime-ascend | https://gitcode.com/Ascend/slime-ascend.git |  | 
+agent-skills | https://gitcode.com/Ascend/agent-skills.git |  | agent-skills 仓库是昇腾（Ascend）社区用于AI辅助研发的核心管理仓库，专注于AI Agent技能的开发和管理，促进AI Agent技能的协同开
+perf-reference-ascend | https://gitcode.com/Ascend/perf-reference-ascend.git |  | 昇腾基础性能测试参考设计。提供perftest、xpu-perf等社区基础性能测试项目在昇腾NPU上适配参考。
+mindcluster-ascendnpuburn | https://gitcode.com/Ascend/MindCluster-AscendNPUBurn.git |  | 面向昇腾芯片/链路硬件，提供故障压测算子、模型用例
+fbgemm-ascend | https://gitcode.com/Ascend/fbgemm-ascend.git |  | 基于昇腾平台，重点关注推荐系统的高性能PyTorch NPU算子库
+mindie-motor | https://gitcode.com/Ascend/MindIE-Motor.git |  | 昇腾自研推理集群管理框架
+ray-ascend | https://gitcode.com/Ascend/ray-ascend.git |  | Ascend-native hardware plugin for ray
+docs | https://gitcode.com/Ascend/docs.git |  | docs仓库用于介绍昇腾（Ascend）社区通用性文档
+hierarchicalkv-ascend | https://gitcode.com/Ascend/HierarchicalKV-ascend.git |  | 基于昇腾平台，面向推荐系统的高性能key-value存储加速库
+transferqueue | https://gitcode.com/Ascend/TransferQueue.git |  | 异步高性能流式数据引擎
+mstx | https://gitcode.com/Ascend/mstx.git |  | NA
+msopcom | https://gitcode.com/Ascend/msopcom.git |  | NA
+mskpp | https://gitcode.com/Ascend/mskpp.git |  | NA
+mssanitizer | https://gitcode.com/Ascend/mssanitizer.git |  | NA
+msdebug | https://gitcode.com/Ascend/msdebug.git |  | NA
+msopgen | https://gitcode.com/Ascend/msopgen.git |  | NA
+msot | https://gitcode.com/Ascend/msot.git |  | NA
+msoptuner | https://gitcode.com/Ascend/msoptuner.git |  | NA
+mskl | https://gitcode.com/Ascend/mskl.git |  | NA
+msopprof | https://gitcode.com/Ascend/msopprof.git |  | NA
+mockcpp | https://gitcode.com/Ascend/mockcpp.git |  | mockcpp是一个轻量级的C++单元测试框架。此fork用于支持MindStudio等项目。
+omsdk | https://gitcode.com/Ascend/OMSDK.git |  | 使能构建边云协同平台、管理边缘AI业务，提供安全、可信、完整的轻量化端边云框架
+mef | https://gitcode.com/Ascend/MEF.git |  | 使能构建边云协同平台、管理边缘AI业务，提供安全、可信、完整的轻量化端边云框架
+mindie-llm | https://gitcode.com/Ascend/MindIE-LLM.git |  | 昇腾自研大模型推理引擎
+mindie-motor-cpp | https://gitcode.com/Ascend/MindIE-Motor-CPP.git |  | 昇腾自研推理集群管理框架
+multimodalsdk | https://gitcode.com/Ascend/MultimodalSDK.git |  | MultimodalSDK
+mindie-turbo | https://gitcode.com/Ascend/MindIE-Turbo.git |  | 昇腾大语言模型推理引擎加速库
+msprof | https://gitcode.com/Ascend/msprof.git |  | MindStudio Profiler（msProf，模型调优工具）提供了AI任务运行性能数据、昇腾AI处理器系统数据等性能数据的采集和解析功能，这些功能侧重不
+mspti | https://gitcode.com/Ascend/mspti.git |  | msPTI工具（MindStudio Profiling Tools Interface）是MindStudio针对Ascend设备提出的一套Profiling
+triton-ascend-kernels | https://gitcode.com/Ascend/triton-ascend-kernels.git |  | triton-ascend-kernels
+msinsight | https://gitcode.com/Ascend/msinsight.git |  | 针对大模型训练&&推理场景，提供可视化调优能力，辅助用户更快定位模型性能问题
+msmemscope | https://gitcode.com/Ascend/msmemscope.git |  | MindStudio-MemScope（msmemscope）是MindStudio推出的整网内存调试调优工具，提供内存数据采集、辅助分析、自动诊断等能力。
+llvm-project | https://gitcode.com/Ascend/llvm-project.git |  | llvm-project是一个模块化、可复用的编译器及工具链技术的集合。此fork用于添加昇腾上编译器的功能，支持AscendNPU IR等项目。
+torch-mlir | https://gitcode.com/Ascend/torch-mlir.git |  | torch-mlir 旨在为 MLIR 生态系统提供来自 PyTorch 生态系统的支持。此fork用于添加昇腾上编译器的功能，支持AscendNPU IR等
+mindie-sd | https://gitcode.com/Ascend/MindIE-SD.git |  | 昇腾亲和的多模态加速系列套件，现已支持vLLM Omni，Diffusers+CacheDit，lightx2v等框架。
+msserviceprofiler | https://gitcode.com/Ascend/msserviceprofiler.git |  | MindStudio-Service-Profiler（msserviceprofiler）是MindStudio推理服务化性能数据采集工具，采集关键过程的开始
+msmodelslim | https://gitcode.com/Ascend/msmodelslim.git |  | MindStudio-ModelSlim（msModelSlim）是MindStudio全流程工具链推出的模型量化压缩工具。
+msmodeling | https://gitcode.com/Ascend/msmodeling.git |  | MindStudio-Modeling（msmodeling）是MindStudio建模寻优工具，评估模型及服务化等场景下的理论性能，并在此基础上寻找性能较优的
+msmonitor | https://gitcode.com/Ascend/msmonitor.git |  | MindStudio-Monitor（msmonitor）是MindStudio全流程工具链推出的一站式在线监控工具，提供用户在集群场景性能监控定位端到端能力。
+msprof-analyze | https://gitcode.com/Ascend/msprof-analyze.git |  | MindStudio-Profiler-Analyze（msprof-analyze）是MindStudio全流程工具链推出的性能分析工具，基于采集的性能数据进
+modelzoo-pytorch | https://gitcode.com/Ascend/ModelZoo-PyTorch.git |  | 
+modelzoo | https://gitcode.com/Ascend/modelzoo.git |  | Ascend ModelZoo
+modelzoo-gpl | https://gitcode.com/Ascend/modelzoo-GPL.git |  | 
+ci-infra | https://gitcode.com/Ascend/ci-infra.git |  | ci-infra仓库用于介绍昇腾（Ascend）社区各项目持续集成（Continuous Integration）和持续发布（Continuous Delive
+mindinferenceservice | https://gitcode.com/Ascend/MindInferenceService.git |  | MindInferenceService
+ragsdk | https://gitcode.com/Ascend/RAGSDK.git |  | RAG SDK是昇腾面向大语言模型的知识增强开发套件，为解决大模型知识更新缓慢以及垂直领域知识回答弱的问题，面向大模型知识库提供垂域调优、生成增强、知识管理等特
+visionsdk | https://gitcode.com/Ascend/VisionSDK.git |  | 面向图片和视频视觉分析的SDK，提供了基本的视频、图像智能分析能力及编程框架
+agentsdk | https://gitcode.com/Ascend/AgentSDK.git |  | AgentSDK
+indexsdk | https://gitcode.com/Ascend/IndexSDK.git |  | 基于华为昇腾平台Index SDK实现了一个高效的向量特征检索引擎，用户可以在此引擎上实现面向应用场景的检索系统
+torchair | https://gitcode.com/Ascend/torchair.git |  | TorchAir 支持用户基于PyTorch框架和torch_npu插件在昇腾NPU上使用图模式进行推理。
+msprobe | https://gitcode.com/Ascend/msprobe.git |  | 针对昇腾提供的全场景精度工具链，帮助用户快速提高模型精度定位效率。
+memfabric_hybrid | https://gitcode.com/Ascend/memfabric_hybrid.git |  | 内存池化基础软件, 基于超节点总线、服务器网络实现DRAM与显存混合池化，提供极简的内存访问接口和高性能的内存直接访问能力，支撑多种场景下的数据共享与传输
+memcache | https://gitcode.com/Ascend/memcache.git |  | MemCache是针对AI推理场景设计的高性能分布式KVCache缓存，针对昇腾超节点、服务器的实现了精细化性能调优，提供较好的High Availabilit
+triton-ascend | https://gitcode.com/Ascend/triton-ascend.git |  | Triton Ascend 已经迁移到https://github.com/triton-lang/triton-ascend
+mindspeed-llm | https://gitcode.com/Ascend/MindSpeed-LLM.git |  | 昇腾LLM分布式训练框架
+mindspeed-core-ms | https://gitcode.com/Ascend/MindSpeed-Core-MS.git |  | MindSpore动态图大模型加速库
+ascendnpu-ir | https://gitcode.com/Ascend/AscendNPU-IR.git |  | AscendNPU-IR是基于MLIR（Multi-Level Intermediate Representation）构建的，面向昇腾亲和算子编译时使用的中间
+mindspeed | https://gitcode.com/Ascend/MindSpeed.git |  | 昇腾大模型加速库
+apex | https://gitcode.com/Ascend/apex.git |  | Ascend apex adapter
+drivingsdk | https://gitcode.com/Ascend/DrivingSDK.git |  | 华为昇腾-自动驾驶加速库
+mindspeed-mm | https://gitcode.com/Ascend/MindSpeed-MM.git |  | 华为昇腾面向大规模分布式训练的多模态大模型套件，支撑多模态生成、多模态理解。
+tensorpipe | https://gitcode.com/Ascend/Tensorpipe.git |  | 
+pytorch | https://gitcode.com/Ascend/pytorch.git |  | 作为 Ascend for PyTorch 社区的核心组件，TorchNPU 是昇腾专为 PyTorch 打造的深度学习适配插件，使 PyTorch 框架能够直
+mindspeed-rl | https://gitcode.com/Ascend/MindSpeed-RL.git |  | 昇腾强化学习加速库
+msit | https://gitcode.com/Ascend/msit.git |  | 统一推理工具链入口，提供客户一体化开发工具，支持一站式调试调优。
+mstt | https://gitcode.com/Ascend/mstt.git |  | 针对训练&大模型场景，提供端到端命令行&可视化调试调优工具，帮助用户快速提高模型开发效率。
+vision | https://gitcode.com/Ascend/vision.git |  | 本项目开发了Torchvision Adapter插件，用于昇腾适配Torchvision框架。 目前该适配框架增加了对Torchvision所提供的常用算子的
+op-plugin | https://gitcode.com/Ascend/op-plugin.git |  | OpPlugin of Ascend for PyTorch
+ascend-docker-image | https://gitcode.com/Ascend/ascend-docker-image.git |  | 提供Ascend相关的Dockerfile示例，展示如何创建docker镜像。
+ascend-deployer | https://gitcode.com/Ascend/ascend-deployer.git |  | 昇腾软件安装部署参考设计，提供系统组件、python第三方依赖自动下载以及一键式安装的功能，并支持驱动、固件、CANN软件包以及MindCluster的安装。
+mindcluster-deploy | https://gitcode.com/Ascend/mindcluster-deploy.git |  | 配合MindCluster基础组件使用的样例库，稳定版本请使用Tag中的代码
+recsdk | https://gitcode.com/Ascend/RecSDK.git |  | 华为昇腾-MindX 推荐SDK
+mindsdk-referenceapps | https://gitcode.com/Ascend/mindsdk-referenceapps.git |  | MindSDK Reference Apps
+mind-cluster | https://gitcode.com/Ascend/mind-cluster.git |  | MindCluster 组件代码仓
+community | https://gitcode.com/Ascend/community.git |  | community 仓库是昇腾（Ascend）社区的核心管理仓库，用于实现组织级权限的统一管理。通过层级化的目录结构和配置文件，实现对项目、SIG组、代码仓库及
+infrastructure | https://gitcode.com/Ascend/infrastructure.git |  | 
+ascend-agreements | https://gitcode.com/Ascend/ascend-agreements.git |  | Ascend 迁移协议签署
+
+# ═══ gitcode.com/xLLM-AI 组织 (30 仓) ═══
+gperftools | https://gitcode.com/xLLM-AI/gperftools.git |  | 
+parallel-hashmap | https://gitcode.com/xLLM-AI/parallel-hashmap.git |  | 
+parakv | https://gitcode.com/xLLM-AI/ParaKV.git |  | ParaKV is a high-performance KV storage engine designed for LLM KVCache and reco
+tilelang-ascend | https://gitcode.com/xLLM-AI/tilelang-ascend.git |  | 
+composable_kernel | https://gitcode.com/xLLM-AI/composable_kernel.git |  | 
+tvm | https://gitcode.com/xLLM-AI/tvm.git |  | 
+memfabric_hybrid-xllmai | https://gitcode.com/xLLM-AI/memfabric_hybrid.git |  | Fork from git@gitcode.com:Ascend/memfabric_hybrid.git.
+xllm_atb_layers | https://gitcode.com/xLLM-AI/xllm_atb_layers.git |  | 
+xxhash | https://gitcode.com/xLLM-AI/xxHash.git |  | Extremely fast non-cryptographic hash algorithm
+torch_npu_ops | https://gitcode.com/xLLM-AI/torch_npu_ops.git |  | torch_npu_ops is an ops library built with torch_npu for npu.
+ascend-transformer-boost | https://gitcode.com/xLLM-AI/ascend-transformer-boost.git |  | Ascend Transformer Boost Acceleration Library (hereinafter referred to as ATB Ac
+pytorch-xllmai | https://gitcode.com/xLLM-AI/pytorch.git |  | Tensors and Dynamic neural networks in Python with strong GPU acceleration.
+libbacktrace | https://gitcode.com/xLLM-AI/libbacktrace.git |  | A C library that may be linked into a C/C++ program to produce symbolic backtrac
+catlass | https://gitcode.com/xLLM-AI/catlass.git |  | CATLASS (CANN Templates for Linear Algebra Subroutines) is a code library focuse
+dlpack | https://gitcode.com/xLLM-AI/dlpack.git |  | DLPack is an open in-memory tensor structure for sharing tensors among framework
+tvm-ffi | https://gitcode.com/xLLM-AI/tvm-ffi.git |  | Apache TVM FFI is an open ABI and FFI for machine learning systems. It is a mini
+mooncake | https://gitcode.com/xLLM-AI/Mooncake.git |  | Mooncake is the serving platform for Kimi, a leading LLM service provided by Moo
+cutlass | https://gitcode.com/xLLM-AI/cutlass.git |  | CUTLASS is a collection of abstractions for implementing high-performance matrix
+flashinfer | https://gitcode.com/xLLM-AI/flashinfer.git |  | FlashInfer is a library and kernel generator for Large Language Models that prov
+xllm-service | https://gitcode.com/xLLM-AI/xllm-service.git |  | xLLM-service is a service-layer framework developed based on the xLLM inference 
+spdlog | https://gitcode.com/xLLM-AI/spdlog.git |  | Fast C++ logging library.
+xllm_ops | https://gitcode.com/xLLM-AI/xllm_ops.git |  | xLLM ops is a scalable, high-performance operator library specifically designed 
+smhasher | https://gitcode.com/xLLM-AI/smhasher.git |  | Hash function quality and speed tests.
+sentencepiece | https://gitcode.com/xLLM-AI/sentencepiece.git |  | SentencePiece is an unsupervised text tokenizer and detokenizer mainly for Neura
+minja | https://gitcode.com/xLLM-AI/minja.git |  | Minja is a minimalistic reimplementation of the Jinja templating engine to integ
+hccl_transfer | https://gitcode.com/xLLM-AI/hccl_transfer.git |  | hccl transfer is designed to transfer kvcache in disag pd.
+etcd-cpp-apiv3 | https://gitcode.com/xLLM-AI/etcd-cpp-apiv3.git |  | The etcd-cpp-apiv3 is a C++ library for etcd's v3 client APIs, i.e., ETCDCTL_API
+cpprestsdk | https://gitcode.com/xLLM-AI/cpprestsdk.git |  | The C++ REST SDK is a Microsoft project for cloud-based client-server communicat
+brpc | https://gitcode.com/xLLM-AI/brpc.git |  | brpc is an Industrial-grade RPC framework using C++ Language, which is often use
+xllm | https://gitcode.com/xLLM-AI/xllm.git |  | A high-performance inference engine for LLMs, optimized for diverse AI accelerat
+
+# ═══ 指定镜像仓 ═══
+vllm | https://gitcode.com/GitHub_Trending/vl/vllm.git |  | vLLM 上游镜像 (GitHub_Trending)
+vllm-ascend | https://gitcode.com/gh_mirrors/vl/vllm-ascend.git |  | vllm-ascend 镜像 (gh_mirrors)

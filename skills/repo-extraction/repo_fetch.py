@@ -143,6 +143,8 @@ def inventory_one(slug, url, ref, note):
         docs_total=len(docs), docs_md=len(md_docs), figures_total=len(figures),
         languages=dict(sorted(lang_hist.items(), key=lambda kv: -kv[1])),
         top_dirs=top_dirs,
+        # 版本关联: snapshots 追加式历史 (重拉时旧快照入列, 支撑仓更新后的知识关联/diff)
+        snapshots=[],
     )
     print(f'   files={len(tree)} md={len(md_docs)} figs={len(figures)} tag={tag} '
           f'ver={inv["version_candidates"]}')
@@ -162,12 +164,31 @@ def main():
     inv_all = {}
     if INVENTORY.exists():
         inv_all = {r['slug']: r for r in json.loads(INVENTORY.read_text(encoding='utf-8'))['repos']}
-    for r in repos:
-        inv = inventory_one(**r)
-        inv_all[r['slug']] = inv
-    out = dict(updated='phase1', repos=sorted(inv_all.values(), key=lambda x: x['slug']))
-    INVENTORY.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding='utf-8')
-    print(f'✓ inventory: {INVENTORY} ({len(inv_all)} repos)')
+    done_n, err_n = 0, 0
+    for i, r in enumerate(repos, 1):
+        try:
+            prev = inv_all.get(r['slug'])
+            inv = inventory_one(**r)
+            # 版本关联: 旧快照(不同 head/tag)入历史, 保留知识血缘
+            if prev and prev.get('head') and prev['head'] != inv['head']:
+                inv['snapshots'] = (prev.get('snapshots') or []) + [
+                    dict(head=prev['head'], commit_date=prev.get('commit_date'),
+                         ref=prev.get('ref'), latest_tag=prev.get('latest_tag'))]
+            elif prev and prev.get('snapshots'):
+                inv['snapshots'] = prev['snapshots']
+            inv_all[r['slug']] = inv
+            done_n += 1
+        except Exception as e:
+            err_n += 1
+            inv_all[r['slug']] = dict(slug=r['slug'], url=r['url'], ref=r['ref'],
+                                      note=r['note'], status='error',
+                                      error=str(e)[:300])
+            print(f'   ✗ {r["slug"]}: {str(e)[:200]}')
+        # 每仓落盘一次 (批量长跑防中断丢失)
+        out = dict(updated='phase1', repos=sorted(inv_all.values(), key=lambda x: x['slug']))
+        INVENTORY.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding='utf-8')
+        print(f'   [{i}/{len(repos)}] done={done_n} err={err_n}')
+    print(f'✓ inventory: {INVENTORY} ({len(inv_all)} repos, err={err_n})')
 
 
 if __name__ == '__main__':

@@ -2,10 +2,1696 @@
  "updated": "phase1",
  "repos": [
   {
+   "slug": "agent-skills",
+   "url": "https://gitcode.com/Ascend/agent-skills.git",
+   "ref": "master",
+   "note": "agent-skills 仓库是昇腾（Ascend）社区用于AI辅助研发的核心管理仓库，专注于AI Agent技能的开发和管理，促进AI Agent技能的协同开",
+   "head": "ca6a0970ad34b345247ff75bb4345c91756d859b",
+   "commit_date": "2026-08-17T16:37:26+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 2210,
+   "checked_out_files": 1499,
+   "docs_total": 1472,
+   "docs_md": 1459,
+   "figures_total": 16,
+   "languages": {
+    "Markdown": 1459,
+    "Python": 423,
+    "Shell": 93,
+    "YAML": 65,
+    "C++": 22,
+    "C/C++ hdr": 4
+   },
+   "top_dirs": [
+    "\"community",
+    "\"docs",
+    "\"official",
+    ".claude-plugin",
+    ".gitcode",
+    "community",
+    "docs",
+    "official",
+    "tests"
+   ]
+  },
+  {
+   "slug": "agentsdk",
+   "url": "https://gitcode.com/Ascend/AgentSDK.git",
+   "ref": "master",
+   "note": "AgentSDK",
+   "head": "34154620db8d4cd6e96a7668f9dc2e418a66a8aa",
+   "commit_date": "2026-09-01T21:19:20+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 909,
+   "checked_out_files": 160,
+   "docs_total": 87,
+   "docs_md": 82,
+   "figures_total": 1,
+   "languages": {
+    "Python": 574,
+    "Markdown": 82,
+    "TypeScript": 73,
+    "Shell": 54,
+    "YAML": 38,
+    "JavaScript": 7
+   },
+   "top_dirs": [
+    "\"docs",
+    "\"openclaw",
+    ".devcontainer",
+    ".gitcode",
+    "aura",
+    "docker",
+    "docs",
+    "openclaw",
+    "pre-commit",
+    "presmoke",
+    "script"
+   ]
+  },
+  {
+   "slug": "apex",
+   "url": "https://gitcode.com/Ascend/apex.git",
+   "ref": "master",
+   "note": "Ascend apex adapter",
+   "head": "7e8f0da076a0ceabc3aaf2c69007e6ca420f5785",
+   "commit_date": "2026-07-20T11:07:42+08:00",
+   "latest_tag": "v5.0.rc3",
+   "version_candidates": {
+    "git_tag": "v5.0.rc3"
+   },
+   "tree_files": 63,
+   "checked_out_files": 14,
+   "docs_total": 24,
+   "docs_md": 12,
+   "figures_total": 0,
+   "languages": {
+    "Python": 28,
+    "Markdown": 12,
+    "Shell": 4,
+    "C++": 1
+   },
+   "top_dirs": [
+    ".gitee",
+    "docs",
+    "patch",
+    "scripts",
+    "src",
+    "tests"
+   ]
+  },
+  {
+   "slug": "ascend-agreements",
+   "url": "https://gitcode.com/Ascend/ascend-agreements.git",
+   "ref": "main",
+   "note": "Ascend 迁移协议签署",
+   "head": "5509e1f70b1461fa30028e40c8c3956abf361556",
+   "commit_date": "2025-06-07T16:58:09+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 3,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "YAML": 2,
+    "Markdown": 1
+   },
+   "top_dirs": [
+    ".gitcode"
+   ]
+  },
+  {
+   "slug": "ascend-deployer",
+   "url": "https://gitcode.com/Ascend/ascend-deployer.git",
+   "ref": "dev",
+   "note": "昇腾软件安装部署参考设计，提供系统组件、python第三方依赖自动下载以及一键式安装的功能，并支持驱动、固件、CANN软件包以及MindCluster的安装。",
+   "head": "c4fcda81aa88850fa65da6d06afbcc99681ba222",
+   "commit_date": "2026-09-01T14:37:56+08:00",
+   "latest_tag": "open_claw_v1.0",
+   "version_candidates": {
+    "git_tag": "open_claw_v1.0",
+    "setup.py": "0.0.3"
+   },
+   "tree_files": 714,
+   "checked_out_files": 120,
+   "docs_total": 84,
+   "docs_md": 48,
+   "figures_total": 26,
+   "languages": {
+    "Python": 219,
+    "YAML": 147,
+    "Markdown": 48,
+    "Shell": 10
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitee",
+    "ascend_deployer",
+    "assets",
+    "docs",
+    "parse_excel",
+    "pre-commit",
+    "test"
+   ]
+  },
+  {
+   "slug": "ascend-docker-image",
+   "url": "https://gitcode.com/Ascend/ascend-docker-image.git",
+   "ref": "dev",
+   "note": "提供Ascend相关的Dockerfile示例，展示如何创建docker镜像。",
+   "head": "ed677542e1686c830ecee149ed184742ff480f6c",
+   "commit_date": "2026-07-14T11:43:19+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 79,
+   "checked_out_files": 5,
+   "docs_total": 4,
+   "docs_md": 4,
+   "figures_total": 0,
+   "languages": {
+    "Shell": 17,
+    "YAML": 5,
+    "Markdown": 4,
+    "Python": 1
+   },
+   "top_dirs": [
+    "ascend-npu-driver-installer",
+    "ascend-toolkit",
+    "ascendbase-infer",
+    "ascendbase-toolkit",
+    "dl-common",
+    "docker-build",
+    "hccl-test",
+    "mis",
+    "pre-commit"
+   ]
+  },
+  {
+   "slug": "ascend-transformer-boost",
+   "url": "https://gitcode.com/xLLM-AI/ascend-transformer-boost.git",
+   "ref": "master",
+   "note": "Ascend Transformer Boost Acceleration Library (hereinafter referred to as ATB Ac",
+   "head": "5bbf44ef5374e861000321ab97fbf9d4c1d305d8",
+   "commit_date": "2026-05-25T15:49:36+08:00",
+   "latest_tag": "v9.0.0",
+   "version_candidates": {
+    "git_tag": "v9.0.0",
+    "pyproject.toml": "0.0.1"
+   },
+   "tree_files": 3100,
+   "checked_out_files": 176,
+   "docs_total": 162,
+   "docs_md": 43,
+   "figures_total": 45,
+   "languages": {
+    "C++": 955,
+    "C/C++ hdr": 775,
+    "Python": 589,
+    "Markdown": 43,
+    "Shell": 35,
+    "YAML": 8
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    "ci",
+    "docs",
+    "example",
+    "include",
+    "ops_configs",
+    "ops_customize",
+    "pre-commit",
+    "scripts",
+    "src",
+    "tests",
+    "torch_atb"
+   ]
+  },
+  {
+   "slug": "ascendc-kernelgen-data",
+   "url": "https://gitcode.com/Ascend/ascendc-kernelgen-data.git",
+   "ref": "master",
+   "note": "提供用于昇腾 AscendC 算子代码生成的训练数据集，数据集涵盖多种算子类型，旨在支持算子代码自动生成模型的训练与评估。",
+   "head": "aec559794fe162dca70a17f3fa833988a675be41",
+   "commit_date": "2026-09-01T19:57:55+08:00",
+   "latest_tag": "v1.0.0",
+   "version_candidates": {
+    "git_tag": "v1.0.0"
+   },
+   "tree_files": 7922,
+   "checked_out_files": 29,
+   "docs_total": 14,
+   "docs_md": 14,
+   "figures_total": 0,
+   "languages": {
+    "Python": 79,
+    "Markdown": 14,
+    "Shell": 2
+   },
+   "top_dirs": [
+    "dataset",
+    "npu-kernelbench"
+   ]
+  },
+  {
+   "slug": "ascendnpu-ir",
+   "url": "https://gitcode.com/Ascend/AscendNPU-IR.git",
+   "ref": "master",
+   "note": "AscendNPU-IR是基于MLIR（Multi-Level Intermediate Representation）构建的，面向昇腾亲和算子编译时使用的中间",
+   "head": "610d18b667fca83e8864a99c53d6e74dcc24ebd6",
+   "commit_date": "2026-09-01T22:12:51+08:00",
+   "latest_tag": "v1.2.0-post",
+   "version_candidates": {
+    "git_tag": "v1.2.0-post"
+   },
+   "tree_files": 3778,
+   "checked_out_files": 159,
+   "docs_total": 487,
+   "docs_md": 102,
+   "figures_total": 35,
+   "languages": {
+    "C++": 992,
+    "C/C++ hdr": 576,
+    "Markdown": 102,
+    "Python": 22,
+    "YAML": 8,
+    "C": 4,
+    "Shell": 3,
+    "JavaScript": 1
+   },
+   "top_dirs": [
+    ".gitcode",
+    ".github",
+    "bishengir",
+    "build-tools",
+    "docker",
+    "docs",
+    "third-party"
+   ]
+  },
+  {
+   "slug": "atk",
+   "url": "https://gitcode.com/Ascend/ATK.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "bac1aa7b77687f4dc9876abb489515f2cbcd9dca",
+   "commit_date": "2026-08-21T09:34:44+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 410,
+   "checked_out_files": 49,
+   "docs_total": 10,
+   "docs_md": 9,
+   "figures_total": 0,
+   "languages": {
+    "Python": 315,
+    "YAML": 20,
+    "Markdown": 9,
+    "Shell": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    "atk",
+    "skill"
+   ]
+  },
+  {
+   "slug": "brpc",
+   "url": "https://gitcode.com/xLLM-AI/brpc.git",
+   "ref": "main",
+   "note": "brpc is an Industrial-grade RPC framework using C++ Language, which is often use",
+   "head": "a1fb14861f9e54417fc1c1e2c34948157349a521",
+   "commit_date": "2025-03-11T06:22:07+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1566,
+   "checked_out_files": 266,
+   "docs_total": 156,
+   "docs_md": 118,
+   "figures_total": 148,
+   "languages": {
+    "C++": 580,
+    "C/C++ hdr": 513,
+    "Markdown": 118,
+    "Shell": 8,
+    "Python": 3,
+    "C": 2
+   },
+   "top_dirs": [
+    "bazel",
+    "cmake",
+    "community",
+    "docs",
+    "example",
+    "homebrew-formula",
+    "package",
+    "src",
+    "test",
+    "tools"
+   ]
+  },
+  {
+   "slug": "catlass",
+   "url": "https://gitcode.com/xLLM-AI/catlass.git",
+   "ref": "master",
+   "note": "CATLASS (CANN Templates for Linear Algebra Subroutines) is a code library focuse",
+   "head": "c02a6e8d9055d79601bee66e9dbfab24fffc41ee",
+   "commit_date": "2026-04-14T17:24:46+08:00",
+   "latest_tag": "v1.1.0",
+   "version_candidates": {
+    "git_tag": "v1.1.0"
+   },
+   "tree_files": 407,
+   "checked_out_files": 62,
+   "docs_total": 96,
+   "docs_md": 53,
+   "figures_total": 7,
+   "languages": {
+    "C++": 63,
+    "Markdown": 53,
+    "C/C++ hdr": 30,
+    "Python": 21,
+    "YAML": 4,
+    "Shell": 3
+   },
+   "top_dirs": [
+    ".gitcode",
+    "cmake",
+    "docs",
+    "examples",
+    "include",
+    "scripts",
+    "tests",
+    "tools"
+   ]
+  },
+  {
+   "slug": "ci-infra",
+   "url": "https://gitcode.com/Ascend/ci-infra.git",
+   "ref": "master",
+   "note": "ci-infra仓库用于介绍昇腾（Ascend）社区各项目持续集成（Continuous Integration）和持续发布（Continuous Delive",
+   "head": "b47df00e9d0395f3ffa02cdb340eb7551e14efec",
+   "commit_date": "2026-04-23T11:52:39+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 6,
+   "checked_out_files": 4,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 3,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    "docs"
+   ]
+  },
+  {
+   "slug": "community",
+   "url": "https://gitcode.com/Ascend/community.git",
+   "ref": "master",
+   "note": "community 仓库是昇腾（Ascend）社区的核心管理仓库，用于实现组织级权限的统一管理。通过层级化的目录结构和配置文件，实现对项目、SIG组、代码仓库及",
+   "head": "965b82b1f5cd1314c733f682722c098417b4c782",
+   "commit_date": "2026-09-01T21:51:14+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 247,
+   "checked_out_files": 54,
+   "docs_total": 46,
+   "docs_md": 46,
+   "figures_total": 17,
+   "languages": {
+    "YAML": 180,
+    "Markdown": 46,
+    "Python": 1
+   },
+   "top_dirs": [
+    ".gitcode",
+    ".vscode",
+    "AscendForPyTorch",
+    "AscendNPU-IR",
+    "MindCluster",
+    "MindIE",
+    "MindSDK",
+    "MindSpeed",
+    "MindStudio",
+    "TSC",
+    "common",
+    "docs",
+    "figures"
+   ]
+  },
+  {
+   "slug": "composable_kernel",
+   "url": "https://gitcode.com/xLLM-AI/composable_kernel.git",
+   "ref": "develop",
+   "note": "",
+   "head": "f9c2b8544af5476d82cc3c33bee269d0db4010e8",
+   "commit_date": "2026-08-31T15:31:46+00:00",
+   "latest_tag": "v0.1-cpu",
+   "version_candidates": {
+    "git_tag": "v0.1-cpu"
+   },
+   "tree_files": 7404,
+   "checked_out_files": 317,
+   "docs_total": 690,
+   "docs_md": 181,
+   "figures_total": 74,
+   "languages": {
+    "C++": 3459,
+    "Python": 372,
+    "Markdown": 181,
+    "Shell": 87,
+    "C/C++ hdr": 42,
+    "YAML": 7,
+    "JavaScript": 1
+   },
+   "top_dirs": [
+    ".github",
+    "client_example",
+    "cmake",
+    "codegen",
+    "dispatcher",
+    "docs",
+    "example",
+    "experimental",
+    "groovy",
+    "include",
+    "library",
+    "profiler",
+    "python",
+    "rocm_ck",
+    "script",
+    "test",
+    "test_data",
+    "tile_engine",
+    "tutorial"
+   ]
+  },
+  {
+   "slug": "cpprestsdk",
+   "url": "https://gitcode.com/xLLM-AI/cpprestsdk.git",
+   "ref": "main",
+   "note": "The C++ REST SDK is a Microsoft project for cloud-based client-server communicat",
+   "head": "f6235b61536be76052444d5a2c6ca5c2b222be57",
+   "commit_date": "2025-08-14T10:32:29+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "cutlass",
+   "url": "https://gitcode.com/xLLM-AI/cutlass.git",
+   "ref": "main",
+   "note": "CUTLASS is a collection of abstractions for implementing high-performance matrix",
+   "head": "dc45f979ae336a235da1676b311f35efeb30149a",
+   "commit_date": "2026-08-28T16:54:06+08:00",
+   "latest_tag": "v4.8.0dev",
+   "version_candidates": {
+    "git_tag": "v4.8.0dev",
+    "pyproject.toml": "4.2.0.0"
+   },
+   "tree_files": 7895,
+   "checked_out_files": 3819,
+   "docs_total": 417,
+   "docs_md": 86,
+   "figures_total": 123,
+   "languages": {
+    "CUDA": 1092,
+    "Python": 810,
+    "C/C++ hdr": 751,
+    "JavaScript": 173,
+    "C++": 94,
+    "Markdown": 86,
+    "YAML": 9,
+    "Shell": 7
+   },
+   "top_dirs": [
+    ".github",
+    "cmake",
+    "cutlass_compiler",
+    "docs",
+    "examples",
+    "include",
+    "media",
+    "operators",
+    "python",
+    "test",
+    "tools"
+   ]
+  },
+  {
+   "slug": "dlpack",
+   "url": "https://gitcode.com/xLLM-AI/dlpack.git",
+   "ref": "main",
+   "note": "DLPack is an open in-memory tensor structure for sharing tensors among framework",
+   "head": "94485e23519bc30e22a18397a9c8ff1ea6b2b81e",
+   "commit_date": "2026-08-12T08:58:47+09:00",
+   "latest_tag": "v1.3",
+   "version_candidates": {
+    "git_tag": "v1.3"
+   },
+   "tree_files": 37,
+   "checked_out_files": 17,
+   "docs_total": 10,
+   "docs_md": 4,
+   "figures_total": 1,
+   "languages": {
+    "Python": 7,
+    "Markdown": 4,
+    "YAML": 3,
+    "C/C++ hdr": 2,
+    "Shell": 2,
+    "C": 1,
+    "C++": 1
+   },
+   "top_dirs": [
+    ".github",
+    "apps",
+    "cmake",
+    "contrib",
+    "docs",
+    "include",
+    "tests"
+   ]
+  },
+  {
+   "slug": "docs",
+   "url": "https://gitcode.com/Ascend/docs.git",
+   "ref": "master",
+   "note": "docs仓库用于介绍昇腾（Ascend）社区通用性文档",
+   "head": "261782d18c545fa7737e7769d10d6d2bdf27fc6e",
+   "commit_date": "2026-09-01T17:26:42+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 2757,
+   "checked_out_files": 571,
+   "docs_total": 571,
+   "docs_md": 571,
+   "figures_total": 2144,
+   "languages": {
+    "Markdown": 571
+   },
+   "top_dirs": [
+    "\"FrameworkPTAdapter",
+    "\"common",
+    ".doctools",
+    "AscendNPU-IR",
+    "FrameworkPTAdapter",
+    "MindCluster",
+    "MindEdge",
+    "MindIE",
+    "MindSeriesSDK",
+    "MindSpeed",
+    "MindStudio",
+    "common",
+    "docs",
+    "other"
+   ]
+  },
+  {
+   "slug": "drivingsdk",
+   "url": "https://gitcode.com/Ascend/DrivingSDK.git",
+   "ref": "master",
+   "note": "华为昇腾-自动驾驶加速库",
+   "head": "03ecf2046a6dda3142111c9c5e87aed8b8e2d5dc",
+   "commit_date": "2026-09-01T17:10:37+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 1368,
+   "checked_out_files": 194,
+   "docs_total": 207,
+   "docs_md": 168,
+   "figures_total": 11,
+   "languages": {
+    "C++": 309,
+    "Python": 271,
+    "Shell": 244,
+    "Markdown": 168,
+    "C/C++ hdr": 153,
+    "YAML": 3
+   },
+   "top_dirs": [
+    ".agent",
+    ".devcontainer",
+    ".gitcode",
+    "ci",
+    "cmake",
+    "docker",
+    "docs",
+    "include",
+    "kernels",
+    "model_examples",
+    "mx_driving",
+    "onnx_plugin",
+    "pre-commit",
+    "scripts",
+    "tests"
+   ]
+  },
+  {
+   "slug": "ecodevhub",
+   "url": "https://gitcode.com/Ascend/EcoDevHub.git",
+   "ref": "master",
+   "note": "EcoDevHub 仓库是昇腾（Ascend）社区用于支持生态发展的仓库，通过这个仓库统一回收生态技术创新项目、外部案例、竞赛成果、社区任务等。",
+   "head": "c95b059b3fa330febbea858a9cb08eb952825bd6",
+   "commit_date": "2026-08-04T19:27:56+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 15,
+   "checked_out_files": 3,
+   "docs_total": 3,
+   "docs_md": 3,
+   "figures_total": 5,
+   "languages": {
+    "Markdown": 3
+   },
+   "top_dirs": [
+    "01_tasks",
+    "02_competitions",
+    "03_activities",
+    "04_quenching"
+   ]
+  },
+  {
+   "slug": "etcd-cpp-apiv3",
+   "url": "https://gitcode.com/xLLM-AI/etcd-cpp-apiv3.git",
+   "ref": "main",
+   "note": "The etcd-cpp-apiv3 is a C++ library for etcd's v3 client APIs, i.e., ETCDCTL_API",
+   "head": "e93a0738b79b06cae57fddc32c1687d2f02a266b",
+   "commit_date": "2025-08-14T10:36:39+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "faiss",
+   "url": "https://gitcode.com/Ascend/faiss.git",
+   "ref": "main",
+   "note": "fork开源faiss，提供向量检索NPU加速能力。",
+   "head": "93a20568666b145c4c8e129e7e8d7abfbc3b193c",
+   "commit_date": "2026-09-01T16:26:57+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1217,
+   "checked_out_files": 48,
+   "docs_total": 94,
+   "docs_md": 40,
+   "figures_total": 1,
+   "languages": {
+    "C++": 336,
+    "C/C++ hdr": 319,
+    "Python": 225,
+    "CUDA": 74,
+    "Shell": 46,
+    "Markdown": 40,
+    "YAML": 6,
+    "C": 2
+   },
+   "top_dirs": [
+    "\"faiss",
+    ".devcontainer",
+    ".gitcode",
+    "benchs",
+    "c_api",
+    "ci",
+    "cmake",
+    "conda",
+    "contrib",
+    "demos",
+    "faiss",
+    "misc",
+    "perf_tests",
+    "pre-commit",
+    "tests",
+    "tutorial"
+   ]
+  },
+  {
+   "slug": "fbgemm-ascend",
+   "url": "https://gitcode.com/Ascend/fbgemm-ascend.git",
+   "ref": "v1.5.0",
+   "note": "基于昇腾平台，重点关注推荐系统的高性能PyTorch NPU算子库",
+   "head": "9c2d7d2b85b921fe9fe23dcd642c2ba01c04044d",
+   "commit_date": "2026-09-01T09:30:59+08:00",
+   "latest_tag": "v26.1.0-1.5.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0-1.5.0",
+    "setup.py": "1.5.0"
+   },
+   "tree_files": 925,
+   "checked_out_files": 97,
+   "docs_total": 102,
+   "docs_md": 90,
+   "figures_total": 2,
+   "languages": {
+    "C/C++ hdr": 247,
+    "C++": 230,
+    "Python": 156,
+    "Markdown": 90,
+    "Shell": 90,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    "\"src",
+    ".gitcode",
+    "bench",
+    "cmake",
+    "codegen",
+    "docs",
+    "fbgemm_ascend",
+    "include",
+    "pre-commit",
+    "presmoke",
+    "src",
+    "test"
+   ]
+  },
+  {
+   "slug": "flashgen",
+   "url": "https://gitcode.com/Ascend/FlashGen.git",
+   "ref": "master",
+   "note": "MindIE FlashGen 是一个面向多模态生成的以训助推(Training-aware Acceleration)加速套件。通过深度融合步数蒸馏、量化感知",
+   "head": "09ac59d8d22fd9fa229667180c19a748ea3227f7",
+   "commit_date": "2026-07-25T13:44:47+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 41,
+   "checked_out_files": 22,
+   "docs_total": 12,
+   "docs_md": 10,
+   "figures_total": 1,
+   "languages": {
+    "Python": 20,
+    "Markdown": 10,
+    "YAML": 2
+   },
+   "top_dirs": [
+    "docs",
+    "flashgen",
+    "licenses",
+    "pre-commit",
+    "scripts",
+    "tests"
+   ]
+  },
+  {
+   "slug": "flashinfer",
+   "url": "https://gitcode.com/xLLM-AI/flashinfer.git",
+   "ref": "main",
+   "note": "FlashInfer is a library and kernel generator for Large Language Models that prov",
+   "head": "faf7c6aecebcfa9b6dd7bff13c358b434a7d7ce9",
+   "commit_date": "2026-08-31T23:37:47+08:00",
+   "latest_tag": "v0.6.18rc10",
+   "version_candidates": {
+    "git_tag": "v0.6.18rc10"
+   },
+   "tree_files": 3208,
+   "checked_out_files": 258,
+   "docs_total": 94,
+   "docs_md": 39,
+   "figures_total": 2,
+   "languages": {
+    "Python": 1588,
+    "CUDA": 618,
+    "C/C++ hdr": 225,
+    "C++": 53,
+    "Shell": 48,
+    "Markdown": 39,
+    "YAML": 22
+   },
+   "top_dirs": [
+    ".claude",
+    ".devcontainer",
+    ".github",
+    "3rdparty",
+    "3rdparty_patches",
+    "benchmarks",
+    "ci",
+    "csrc",
+    "docker",
+    "docs",
+    "examples",
+    "flashinfer",
+    "flashinfer-cubin",
+    "flashinfer-jit-cache",
+    "include",
+    "licenses",
+    "profiler",
+    "scripts",
+    "tests",
+    "tools"
+   ]
+  },
+  {
+   "slug": "fsdpturbo",
+   "url": "https://gitcode.com/Ascend/FSDPTurbo.git",
+   "ref": "main",
+   "note": "提供NPU亲和的FSDP增强特性",
+   "head": "dbe0109368cab5c9c7efb4dabdee44dc56a0382e",
+   "commit_date": "2026-09-01T20:41:06+08:00",
+   "latest_tag": null,
+   "version_candidates": {
+    "pyproject.toml": "0.1.0",
+    "setup.py": "0.1.0"
+   },
+   "tree_files": 208,
+   "checked_out_files": 35,
+   "docs_total": 8,
+   "docs_md": 8,
+   "figures_total": 0,
+   "languages": {
+    "Python": 168,
+    "Shell": 13,
+    "Markdown": 8,
+    "YAML": 6
+   },
+   "top_dirs": [
+    ".agent",
+    ".gitcode",
+    "ci",
+    "examples",
+    "fsdp_turbo",
+    "pre-commit",
+    "tests"
+   ]
+  },
+  {
+   "slug": "gperftools",
+   "url": "https://gitcode.com/xLLM-AI/gperftools.git",
+   "ref": "master",
+   "note": "",
+   "head": "3efd46dd74837439f5fd144b23d20284549f11ca",
+   "commit_date": "2026-07-25T12:16:01-04:00",
+   "latest_tag": "perftools-1.6",
+   "version_candidates": {
+    "git_tag": "perftools-1.6"
+   },
+   "tree_files": 613,
+   "checked_out_files": 50,
+   "docs_total": 37,
+   "docs_md": 28,
+   "figures_total": 9,
+   "languages": {
+    "C++": 202,
+    "C/C++ hdr": 152,
+    "C": 34,
+    "Python": 32,
+    "Markdown": 28,
+    "YAML": 7,
+    "Shell": 7
+   },
+   "top_dirs": [
+    ".github",
+    "benchmark",
+    "cmake",
+    "docs",
+    "generic-config",
+    "m4",
+    "src",
+    "vendor",
+    "vsprojects"
+   ]
+  },
+  {
+   "slug": "hccl_transfer",
+   "url": "https://gitcode.com/xLLM-AI/hccl_transfer.git",
+   "ref": "main",
+   "note": "hccl transfer is designed to transfer kvcache in disag pd.",
+   "head": "72f06c9a008aedf745aa78df6a3e604bb7712983",
+   "commit_date": "2025-08-14T10:42:40+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "hierarchicalkv-ascend",
+   "url": "https://gitcode.com/Ascend/HierarchicalKV-ascend.git",
+   "ref": "develop",
+   "note": "基于昇腾平台，面向推荐系统的高性能key-value存储加速库",
+   "head": "98bbf3ff9eebb50d9219ff0979caba89d08395bb",
+   "commit_date": "2026-08-25T19:12:44+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 127,
+   "checked_out_files": 8,
+   "docs_total": 10,
+   "docs_md": 7,
+   "figures_total": 0,
+   "languages": {
+    "C++": 51,
+    "C/C++ hdr": 51,
+    "Markdown": 7,
+    "YAML": 2,
+    "Shell": 1,
+    "Python": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    "3rdparty",
+    "benchmark",
+    "docs",
+    "include",
+    "pre-commit",
+    "script",
+    "tests"
+   ]
+  },
+  {
+   "slug": "indexsdk",
+   "url": "https://gitcode.com/Ascend/IndexSDK.git",
+   "ref": "master",
+   "note": "基于华为昇腾平台Index SDK实现了一个高效的向量特征检索引擎，用户可以在此引擎上实现面向应用场景的检索系统",
+   "head": "04026b7dec05440fa256a4bf570fc2c0785306cd",
+   "commit_date": "2026-09-01T10:48:57+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 2101,
+   "checked_out_files": 99,
+   "docs_total": 177,
+   "docs_md": 87,
+   "figures_total": 9,
+   "languages": {
+    "C++": 753,
+    "C/C++ hdr": 705,
+    "Python": 145,
+    "Markdown": 87,
+    "Shell": 65,
+    "YAML": 11
+   },
+   "top_dirs": [
+    "\"docs",
+    "\"examples",
+    ".devcontainer",
+    ".gitcode",
+    "build",
+    "docker",
+    "docs",
+    "examples",
+    "feature_retrieval",
+    "ivfsp_impl",
+    "ivfsp_utils",
+    "pre-commit",
+    "vsa_hpp",
+    "vstar_great_impl"
+   ]
+  },
+  {
+   "slug": "infrastructure",
+   "url": "https://gitcode.com/Ascend/infrastructure.git",
+   "ref": "master",
+   "note": "",
+   "head": "137e622d31f03293e426eb312f6e6a245ee162a8",
+   "commit_date": "2026-08-31T16:09:42+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 96,
+   "checked_out_files": 83,
+   "docs_total": 8,
+   "docs_md": 8,
+   "figures_total": 69,
+   "languages": {
+    "Markdown": 8,
+    "YAML": 4,
+    "Python": 3
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    ".infra",
+    "config",
+    "data",
+    "docs"
+   ]
+  },
+  {
+   "slug": "libbacktrace",
+   "url": "https://gitcode.com/xLLM-AI/libbacktrace.git",
+   "ref": "master",
+   "note": "A C library that may be linked into a C/C++ program to produce symbolic backtrac",
+   "head": "6f8310e238fc3ce68f42f391cbe93fd156bb2c23",
+   "commit_date": "2026-07-06T12:42:21-07:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 71,
+   "checked_out_files": 2,
+   "docs_total": 2,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "C": 34,
+    "C/C++ hdr": 4,
+    "Shell": 2,
+    "Markdown": 1
+   },
+   "top_dirs": [
+    "config"
+   ]
+  },
+  {
+   "slug": "libdevice",
+   "url": "https://gitcode.com/Ascend/libdevice.git",
+   "ref": "master",
+   "note": "libdevice",
+   "head": "3ed2b0b81288b281299879aa628aa596107ba065",
+   "commit_date": "2026-08-31T17:05:20+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 773,
+   "checked_out_files": 16,
+   "docs_total": 18,
+   "docs_md": 14,
+   "figures_total": 0,
+   "languages": {
+    "C++": 313,
+    "Python": 251,
+    "Markdown": 14,
+    "YAML": 3,
+    "C/C++ hdr": 3,
+    "Shell": 2,
+    "CUDA": 2
+   },
+   "top_dirs": [
+    ".agents",
+    ".claude",
+    ".cloudbuild",
+    ".codex",
+    ".opencode",
+    ".qwen",
+    "docs",
+    "include",
+    "lib",
+    "test",
+    "third_party"
+   ]
+  },
+  {
+   "slug": "llvm-project",
+   "url": "https://gitcode.com/Ascend/llvm-project.git",
+   "ref": null,
+   "note": "llvm-project是一个模块化、可复用的编译器及工具链技术的集合。此fork用于添加昇腾上编译器的功能，支持AscendNPU IR等项目。",
+   "status": "empty",
+   "error": "远端无任何 ref — 空仓 (占位未推送), ls-remote 返回空 (2026-09-01 实测)"
+  },
+  {
+   "slug": "mef",
+   "url": "https://gitcode.com/Ascend/MEF.git",
+   "ref": "master",
+   "note": "使能构建边云协同平台、管理边缘AI业务，提供安全、可信、完整的轻量化端边云框架",
+   "head": "fcc542afa1d1f41f5d3156b472d4d74e33eed6c7",
+   "commit_date": "2026-08-29T16:11:33+08:00",
+   "latest_tag": "v26.0.0",
+   "version_candidates": {
+    "git_tag": "v26.0.0"
+   },
+   "tree_files": 1288,
+   "checked_out_files": 55,
+   "docs_total": 44,
+   "docs_md": 41,
+   "figures_total": 25,
+   "languages": {
+    "Go": 1007,
+    "Shell": 53,
+    "Markdown": 41,
+    "YAML": 6,
+    "Python": 2,
+    "C/C++ hdr": 2,
+    "C": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    "build",
+    "docs",
+    "pre-commit",
+    "src"
+   ]
+  },
+  {
+   "slug": "megatronadaptor",
+   "url": "https://gitcode.com/Ascend/MegatronAdaptor.git",
+   "ref": "main",
+   "note": "提供Megatron-LM在昇腾上的基础适配",
+   "head": "56313f5862d0ab054e944123de8c6f3a6fac5b0e",
+   "commit_date": "2026-08-28T10:55:28+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 122,
+   "checked_out_files": 28,
+   "docs_total": 12,
+   "docs_md": 11,
+   "figures_total": 0,
+   "languages": {
+    "Python": 70,
+    "Shell": 29,
+    "Markdown": 11,
+    "YAML": 1
+   },
+   "top_dirs": [
+    ".agent",
+    ".gitcode",
+    "ci",
+    "docs",
+    "megatron_adaptor",
+    "pre-commit",
+    "test"
+   ]
+  },
+  {
+   "slug": "memcache",
+   "url": "https://gitcode.com/Ascend/memcache.git",
+   "ref": "master",
+   "note": "MemCache是针对AI推理场景设计的高性能分布式KVCache缓存，针对昇腾超节点、服务器的实现了精细化性能调优，提供较好的High Availabilit",
+   "head": "a4db3920dab5b676cb1464008552c987dc5a8c21",
+   "commit_date": "2026-07-31T11:04:51+08:00",
+   "latest_tag": "v1.2.0",
+   "version_candidates": {
+    "git_tag": "v1.2.0"
+   },
+   "tree_files": 354,
+   "checked_out_files": 33,
+   "docs_total": 55,
+   "docs_md": 25,
+   "figures_total": 6,
+   "languages": {
+    "C++": 112,
+    "C/C++ hdr": 100,
+    "Python": 32,
+    "Markdown": 25,
+    "Shell": 16,
+    "YAML": 6
+   },
+   "top_dirs": [
+    ".agents",
+    ".devcontainer",
+    ".gitcode",
+    "3rdparty",
+    "cmake",
+    "config",
+    "docs",
+    "example",
+    "pre-commit",
+    "script",
+    "src",
+    "test"
+   ]
+  },
+  {
+   "slug": "memfabric_hybrid",
+   "url": "https://gitcode.com/Ascend/memfabric_hybrid.git",
+   "ref": "master",
+   "note": "内存池化基础软件, 基于超节点总线、服务器网络实现DRAM与显存混合池化，提供极简的内存访问接口和高性能的内存直接访问能力，支撑多种场景下的数据共享与传输",
+   "head": "f36b39dce48eebe2b75141147b9c653c2c40fe21",
+   "commit_date": "2026-07-31T10:19:01+08:00",
+   "latest_tag": "zbal.v1.1.0",
+   "version_candidates": {
+    "git_tag": "zbal.v1.1.0"
+   },
+   "tree_files": 1019,
+   "checked_out_files": 104,
+   "docs_total": 125,
+   "docs_md": 89,
+   "figures_total": 12,
+   "languages": {
+    "C/C++ hdr": 354,
+    "C++": 319,
+    "Python": 103,
+    "Markdown": 89,
+    "Shell": 42,
+    "YAML": 1,
+    "Go": 1
+   },
+   "top_dirs": [
+    ".agents",
+    ".claude",
+    ".devcontainer",
+    ".gitcode",
+    "app",
+    "bazel",
+    "benchmark",
+    "cmake",
+    "docs",
+    "examples",
+    "patches",
+    "pre-commit",
+    "script",
+    "src",
+    "test"
+   ]
+  },
+  {
+   "slug": "memfabric_hybrid-xllmai",
+   "url": "https://gitcode.com/xLLM-AI/memfabric_hybrid.git",
+   "ref": "master",
+   "note": "Fork from git@gitcode.com:Ascend/memfabric_hybrid.git.",
+   "head": "f36b39dce48eebe2b75141147b9c653c2c40fe21",
+   "commit_date": "2026-07-31T10:19:01+08:00",
+   "latest_tag": "zbal.v1.1.0",
+   "version_candidates": {
+    "git_tag": "zbal.v1.1.0"
+   },
+   "tree_files": 1019,
+   "checked_out_files": 104,
+   "docs_total": 125,
+   "docs_md": 89,
+   "figures_total": 12,
+   "languages": {
+    "C/C++ hdr": 354,
+    "C++": 319,
+    "Python": 103,
+    "Markdown": 89,
+    "Shell": 42,
+    "YAML": 1,
+    "Go": 1
+   },
+   "top_dirs": [
+    ".agents",
+    ".claude",
+    ".devcontainer",
+    ".gitcode",
+    "app",
+    "bazel",
+    "benchmark",
+    "cmake",
+    "docs",
+    "examples",
+    "patches",
+    "pre-commit",
+    "script",
+    "src",
+    "test"
+   ]
+  },
+  {
+   "slug": "mind-cluster",
+   "url": "https://gitcode.com/Ascend/mind-cluster.git",
+   "ref": "master",
+   "note": "MindCluster 组件代码仓",
+   "head": "288d86c04fb609290f28d088c3c2a9a3cb755cec",
+   "commit_date": "2026-09-01T22:31:59+08:00",
+   "latest_tag": "v26.2.0.beta.1",
+   "version_candidates": {
+    "git_tag": "v26.2.0.beta.1"
+   },
+   "tree_files": 5245,
+   "checked_out_files": 1075,
+   "docs_total": 777,
+   "docs_md": 664,
+   "figures_total": 255,
+   "languages": {
+    "Go": 1608,
+    "Markdown": 664,
+    "Python": 660,
+    "C/C++ hdr": 139,
+    "C++": 129,
+    "YAML": 109,
+    "Shell": 81,
+    "C": 8
+   },
+   "top_dirs": [
+    "\"component",
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".gitee",
+    "build",
+    "component",
+    "docker",
+    "docs",
+    "helm-deploy-tool",
+    "pre-commit",
+    "tests"
+   ]
+  },
+  {
+   "slug": "mindcluster-ascendnpuburn",
+   "url": "https://gitcode.com/Ascend/MindCluster-AscendNPUBurn.git",
+   "ref": "master",
+   "note": "面向昇腾芯片/链路硬件，提供故障压测算子、模型用例",
+   "head": "b9435520554709cbd4fbf46c31d8f9f7c51a72ab",
+   "commit_date": "2026-08-26T16:45:52+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 134,
+   "checked_out_files": 42,
+   "docs_total": 31,
+   "docs_md": 31,
+   "figures_total": 1,
+   "languages": {
+    "Python": 80,
+    "Markdown": 31,
+    "C++": 4,
+    "Shell": 4,
+    "YAML": 1,
+    "C/C++ hdr": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    "ascend_npu_burn",
+    "build",
+    "docs",
+    "pre-commit",
+    "test"
+   ]
+  },
+  {
+   "slug": "mindcluster-deploy",
+   "url": "https://gitcode.com/Ascend/mindcluster-deploy.git",
+   "ref": "master",
+   "note": "配合MindCluster基础组件使用的样例库，稳定版本请使用Tag中的代码",
+   "head": "f85dee33018ccbaa45fc3d086cfccc5a38a1b6b6",
+   "commit_date": "2026-07-24T17:53:04+08:00",
+   "latest_tag": "20250117-V6.0.0",
+   "version_candidates": {
+    "git_tag": "20250117-V6.0.0"
+   },
+   "tree_files": 294,
+   "checked_out_files": 16,
+   "docs_total": 20,
+   "docs_md": 15,
+   "figures_total": 0,
+   "languages": {
+    "YAML": 128,
+    "Shell": 80,
+    "Python": 42,
+    "Markdown": 15,
+    "Go": 3
+   },
+   "top_dirs": [
+    ".gitee",
+    "appliance",
+    "ascend-fd-tk",
+    "infer-operator-deploy-tool",
+    "infer-operator-metrics-adaptor",
+    "k8s-deploy-tool",
+    "mindie",
+    "multilevel-label-tool",
+    "npu_collector",
+    "pre-commit",
+    "samples",
+    "super_pod_diag"
+   ]
+  },
+  {
+   "slug": "mindie-llm",
+   "url": "https://gitcode.com/Ascend/MindIE-LLM.git",
+   "ref": "master",
+   "note": "昇腾自研大模型推理引擎",
+   "head": "9446ed407f817b2bd937ca1e4e63907b2f2eea7f",
+   "commit_date": "2026-07-21T09:50:31+08:00",
+   "latest_tag": "3.1.0",
+   "version_candidates": {
+    "git_tag": "3.1.0"
+   },
+   "tree_files": 3517,
+   "checked_out_files": 501,
+   "docs_total": 359,
+   "docs_md": 201,
+   "figures_total": 74,
+   "languages": {
+    "Python": 1550,
+    "C++": 608,
+    "C/C++ hdr": 589,
+    "Markdown": 201,
+    "Shell": 112,
+    "YAML": 37,
+    "JavaScript": 1
+   },
+   "top_dirs": [
+    ".devcontainer",
+    ".gitcode",
+    "cmake",
+    "docker",
+    "docs",
+    "examples",
+    "log",
+    "mindie_llm",
+    "pre-commit",
+    "proto",
+    "requirements",
+    "scripts",
+    "src",
+    "tests",
+    "third_party_entry",
+    "tools"
+   ]
+  },
+  {
+   "slug": "mindie-motor",
+   "url": "https://gitcode.com/Ascend/MindIE-Motor.git",
+   "ref": "master",
+   "note": "昇腾自研推理集群管理框架",
+   "head": "46c4b33fd48a96a30feb396cf4bfd3eadb9363c9",
+   "commit_date": "2026-09-01T21:04:52+08:00",
+   "latest_tag": "3.1.0",
+   "version_candidates": {
+    "git_tag": "3.1.0"
+   },
+   "tree_files": 1046,
+   "checked_out_files": 317,
+   "docs_total": 145,
+   "docs_md": 137,
+   "figures_total": 64,
+   "languages": {
+    "Python": 542,
+    "Markdown": 137,
+    "Shell": 67,
+    "YAML": 57,
+    "Rust": 21,
+    "C++": 5,
+    "JavaScript": 1
+   },
+   "top_dirs": [
+    ".agents",
+    ".devcontainer",
+    ".gitcode",
+    "docker",
+    "docs",
+    "examples",
+    "motor",
+    "pre-commit",
+    "requirements",
+    "scripts",
+    "tests"
+   ]
+  },
+  {
+   "slug": "mindie-motor-cpp",
+   "url": "https://gitcode.com/Ascend/MindIE-Motor-CPP.git",
+   "ref": "master",
+   "note": "昇腾自研推理集群管理框架",
+   "head": "2b073f2146a82a8c2844322d895c186fe35185c3",
+   "commit_date": "2026-07-29T16:50:42+08:00",
+   "latest_tag": "3.1.0",
+   "version_candidates": {
+    "git_tag": "3.1.0"
+   },
+   "tree_files": 742,
+   "checked_out_files": 117,
+   "docs_total": 59,
+   "docs_md": 37,
+   "figures_total": 52,
+   "languages": {
+    "C++": 234,
+    "C/C++ hdr": 149,
+    "Python": 101,
+    "Shell": 48,
+    "Markdown": 37,
+    "YAML": 19,
+    "JavaScript": 1
+   },
+   "top_dirs": [
+    ".gitcode",
+    "build",
+    "ci",
+    "docs",
+    "mindie_motor",
+    "requirements",
+    "tests",
+    "third_party"
+   ]
+  },
+  {
+   "slug": "mindie-sd",
+   "url": "https://gitcode.com/Ascend/MindIE-SD.git",
+   "ref": "dev",
+   "note": "昇腾亲和的多模态加速系列套件，现已支持vLLM Omni，Diffusers+CacheDit，lightx2v等框架。",
+   "head": "c2b8f9b31d183bde569801de29197472620db500",
+   "commit_date": "2026-09-01T22:35:39+08:00",
+   "latest_tag": "v2.3.0rc1",
+   "version_candidates": {
+    "git_tag": "v2.3.0rc1"
+   },
+   "tree_files": 1250,
+   "checked_out_files": 217,
+   "docs_total": 152,
+   "docs_md": 127,
+   "figures_total": 39,
+   "languages": {
+    "C/C++ hdr": 439,
+    "Python": 287,
+    "Markdown": 127,
+    "C++": 116,
+    "Shell": 17,
+    "YAML": 5
+   },
+   "top_dirs": [
+    ".agents",
+    ".claude",
+    ".devcontainer",
+    ".gitcode",
+    "benchmarks",
+    "build",
+    "csrc",
+    "docker",
+    "docs",
+    "examples",
+    "mindiesd",
+    "pre-commit",
+    "tests"
+   ]
+  },
+  {
+   "slug": "mindie-turbo",
+   "url": "https://gitcode.com/Ascend/MindIE-Turbo.git",
+   "ref": "master",
+   "note": "昇腾大语言模型推理引擎加速库",
+   "head": "fba896e0177ecbf76ba726ccb0747fe380aca84f",
+   "commit_date": "2026-02-04T09:31:56+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 31,
+   "checked_out_files": 10,
+   "docs_total": 4,
+   "docs_md": 3,
+   "figures_total": 0,
+   "languages": {
+    "Python": 22,
+    "Markdown": 3,
+    "Shell": 2
+   },
+   "top_dirs": [
+    "build",
+    "mindie_turbo",
+    "tests"
+   ]
+  },
+  {
+   "slug": "mindinferenceservice",
+   "url": "https://gitcode.com/Ascend/MindInferenceService.git",
+   "ref": "master",
+   "note": "MindInferenceService",
+   "head": "a94194638ba012068b1efe01b03a9fe4e8b60d03",
+   "commit_date": "2026-03-30T09:39:15+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 63,
+   "checked_out_files": 22,
+   "docs_total": 13,
+   "docs_md": 13,
+   "figures_total": 0,
+   "languages": {
+    "Python": 35,
+    "Markdown": 13,
+    "Shell": 7,
+    "YAML": 3
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    "configs",
+    "docs",
+    "mis",
+    "script",
+    "test"
+   ]
+  },
+  {
+   "slug": "mindsdk-referenceapps",
+   "url": "https://gitcode.com/Ascend/mindsdk-referenceapps.git",
+   "ref": "master",
+   "note": "MindSDK Reference Apps",
+   "head": "2367d0af019b9e394a9f9e421b1632478f10d502",
+   "commit_date": "2026-08-25T11:21:09+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 565,
+   "checked_out_files": 154,
+   "docs_total": 177,
+   "docs_md": 134,
+   "figures_total": 6,
+   "languages": {
+    "Python": 160,
+    "Markdown": 134,
+    "C++": 57,
+    "Shell": 23,
+    "C/C++ hdr": 21,
+    "JavaScript": 3,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"AgentSDK",
+    "\"IndexSDK",
+    "\"VisionSDK",
+    ".gitcode",
+    ".gitee",
+    ".idea",
+    "AgentSDK",
+    "IndexSDK",
+    "RAGSDK",
+    "TrustAiSDK",
+    "VisionSDK",
+    "pre-commit"
+   ]
+  },
+  {
    "slug": "mindspeed",
    "url": "https://gitcode.com/Ascend/MindSpeed.git",
    "ref": "master",
-   "note": "昇腾 MoE/并行训练加速库 (验证仓)",
+   "note": "昇腾大模型加速库",
    "head": "4fb7dc00614aa195e0f3a0fa4336f72110fa1555",
    "commit_date": "2026-08-31T19:57:36+08:00",
    "latest_tag": "v26.1.0_core_r0.12.1",
@@ -36,6 +1722,2997 @@
     "pre-commit",
     "tests_extend",
     "tools"
+   ]
+  },
+  {
+   "slug": "mindspeed-agent",
+   "url": "https://gitcode.com/Ascend/MindSpeed-Agent.git",
+   "ref": "master",
+   "note": "提供MindSpeed系列套件开发agent",
+   "head": "6277395de549113d17ee5e2acf4e5ebb3a4129d7",
+   "commit_date": "2026-09-01T16:26:43+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 291,
+   "checked_out_files": 142,
+   "docs_total": 137,
+   "docs_md": 137,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 137,
+    "Python": 100,
+    "YAML": 15,
+    "Shell": 5,
+    "JavaScript": 5
+   },
+   "top_dirs": [
+    ".claude-plugin",
+    ".codex-plugin",
+    ".dsh-plugin",
+    "docs",
+    "plugins",
+    "skills",
+    "tools"
+   ]
+  },
+  {
+   "slug": "mindspeed-bridge",
+   "url": "https://gitcode.com/Ascend/MindSpeed-Bridge.git",
+   "ref": "master",
+   "note": "提供昇腾适配的更多Bridge模型代码",
+   "head": "37ce110e565cb0eca33881db89051bd7881664a5",
+   "commit_date": "2026-09-01T21:09:18+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 166,
+   "checked_out_files": 47,
+   "docs_total": 21,
+   "docs_md": 20,
+   "figures_total": 1,
+   "languages": {
+    "Python": 102,
+    "Shell": 21,
+    "Markdown": 20,
+    "YAML": 1
+   },
+   "top_dirs": [
+    ".gitcode",
+    "3rdparty",
+    "ci",
+    "docker",
+    "docs",
+    "mindspeed_bridge",
+    "pre-commit",
+    "tests",
+    "tools"
+   ]
+  },
+  {
+   "slug": "mindspeed-core-ms",
+   "url": "https://gitcode.com/Ascend/MindSpeed-Core-MS.git",
+   "ref": "master",
+   "note": "MindSpore动态图大模型加速库",
+   "head": "b09e5b3b730b4b85d788dbeccb8a606c7e1cb030",
+   "commit_date": "2026-08-06T15:51:03+08:00",
+   "latest_tag": "v1.1.0",
+   "version_candidates": {
+    "git_tag": "v1.1.0",
+    "setup.py": "0.0.1"
+   },
+   "tree_files": 104,
+   "checked_out_files": 33,
+   "docs_total": 27,
+   "docs_md": 15,
+   "figures_total": 12,
+   "languages": {
+    "Shell": 25,
+    "Python": 16,
+    "Markdown": 15,
+    "YAML": 1
+   },
+   "top_dirs": [
+    ".gitee",
+    ".jenkins",
+    "docs",
+    "examples",
+    "src",
+    "tests",
+    "tools"
+   ]
+  },
+  {
+   "slug": "mindspeed-llm",
+   "url": "https://gitcode.com/Ascend/MindSpeed-LLM.git",
+   "ref": "master",
+   "note": "昇腾LLM分布式训练框架",
+   "head": "06d9051868798fcab9420a764d256e0b8b1b269f",
+   "commit_date": "2026-09-01T21:37:21+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 2156,
+   "checked_out_files": 541,
+   "docs_total": 199,
+   "docs_md": 198,
+   "figures_total": 140,
+   "languages": {
+    "Python": 1007,
+    "Shell": 624,
+    "Markdown": 198,
+    "YAML": 38,
+    "C++": 2
+   },
+   "top_dirs": [
+    ".devcontainer",
+    ".gitcode",
+    "3rdparty",
+    "ci",
+    "configs",
+    "docker",
+    "docs",
+    "examples",
+    "mindspeed_llm",
+    "pre-commit",
+    "tests"
+   ]
+  },
+  {
+   "slug": "mindspeed-mm",
+   "url": "https://gitcode.com/Ascend/MindSpeed-MM.git",
+   "ref": "master",
+   "note": "华为昇腾面向大规模分布式训练的多模态大模型套件，支撑多模态生成、多模态理解。",
+   "head": "ffb855ed62e435cc105c8395c058020f3d82aff4",
+   "commit_date": "2026-09-01T20:12:57+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0",
+    "pyproject.toml": "0.1"
+   },
+   "tree_files": 1498,
+   "checked_out_files": 213,
+   "docs_total": 181,
+   "docs_md": 135,
+   "figures_total": 67,
+   "languages": {
+    "Python": 851,
+    "Shell": 160,
+    "Markdown": 135,
+    "YAML": 71
+   },
+   "top_dirs": [
+    "\"UserGuide",
+    ".agents",
+    ".devcontainer",
+    ".gitcode",
+    "UserGuide",
+    "bridge",
+    "checkpoint",
+    "ci",
+    "docker",
+    "docs",
+    "examples",
+    "mindspeed_mm",
+    "pre-commit",
+    "scripts",
+    "sources",
+    "tests",
+    "verl_plugin"
+   ]
+  },
+  {
+   "slug": "mindspeed-ops",
+   "url": "https://gitcode.com/Ascend/MindSpeed-Ops.git",
+   "ref": "master",
+   "note": "提供昇腾优化的训练业务自定义算子实现",
+   "head": "523d8cb6a6f95c521d882ba8a466d4cb8e354fcf",
+   "commit_date": "2026-09-01T19:48:01+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 440,
+   "checked_out_files": 76,
+   "docs_total": 57,
+   "docs_md": 44,
+   "figures_total": 1,
+   "languages": {
+    "Python": 203,
+    "C/C++ hdr": 69,
+    "Markdown": 44,
+    "YAML": 30,
+    "C++": 18,
+    "Shell": 14
+   },
+   "top_dirs": [
+    ".gitcode",
+    "ci",
+    "cmake",
+    "docker",
+    "docs",
+    "mindspeed_ops",
+    "pre-commit",
+    "tests",
+    "tools"
+   ]
+  },
+  {
+   "slug": "mindspeed-rl",
+   "url": "https://gitcode.com/Ascend/MindSpeed-RL.git",
+   "ref": "master",
+   "note": "昇腾强化学习加速库",
+   "head": "198321688cec142d4a23dbbeb9eb5fb9882dc502",
+   "commit_date": "2026-08-12T11:20:19+08:00",
+   "latest_tag": "v2.3.0",
+   "version_candidates": {
+    "git_tag": "v2.3.0",
+    "setup.py": "2.1.0"
+   },
+   "tree_files": 443,
+   "checked_out_files": 147,
+   "docs_total": 57,
+   "docs_md": 54,
+   "figures_total": 58,
+   "languages": {
+    "Python": 195,
+    "Markdown": 55,
+    "Shell": 55,
+    "YAML": 37
+   },
+   "top_dirs": [
+    ".gitcode",
+    "ci",
+    "cli",
+    "configs",
+    "docs",
+    "examples",
+    "mindspeed_rl",
+    "tests",
+    "verl_npu"
+   ]
+  },
+  {
+   "slug": "minja",
+   "url": "https://gitcode.com/xLLM-AI/minja.git",
+   "ref": "main",
+   "note": "Minja is a minimalistic reimplementation of the Jinja templating engine to integ",
+   "head": "1e65bd7254aa974d4bc01f9819acec0a0f7bb2d3",
+   "commit_date": "2026-06-15T19:08:57+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 13,
+   "checked_out_files": 1,
+   "docs_total": 3,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "C++": 5,
+    "Markdown": 1
+   },
+   "top_dirs": [
+    "include",
+    "tests"
+   ]
+  },
+  {
+   "slug": "mockcpp",
+   "url": "https://gitcode.com/Ascend/mockcpp.git",
+   "ref": "master",
+   "note": "mockcpp是一个轻量级的C++单元测试框架。此fork用于支持MindStudio等项目。",
+   "head": "7b7eb8b8a7837813d91ee1ae9354f352605fc270",
+   "commit_date": "2022-11-08T15:15:41+08:00",
+   "latest_tag": "v2.7",
+   "version_candidates": {
+    "git_tag": "v2.7"
+   },
+   "tree_files": 1231,
+   "checked_out_files": 24,
+   "docs_total": 47,
+   "docs_md": 19,
+   "figures_total": 1,
+   "languages": {
+    "C/C++ hdr": 713,
+    "C++": 340,
+    "Python": 71,
+    "Markdown": 19,
+    "Shell": 7,
+    "C": 4
+   },
+   "top_dirs": [
+    "\"tests",
+    "3rdparty",
+    "docs",
+    "include",
+    "src",
+    "tests",
+    "tools"
+   ]
+  },
+  {
+   "slug": "model-agent",
+   "url": "https://gitcode.com/Ascend/model-agent.git",
+   "ref": "master",
+   "note": "昇腾模型 Agent，大模型落地全流程一键通！查适配、做调优、快部署、稳上线，文档一键生成，一站式搞定无压力！",
+   "head": "fa7071c247afaef5bb6155490eed7b89e0b089e0",
+   "commit_date": "2026-09-01T17:17:17+08:00",
+   "latest_tag": "v1.0.0",
+   "version_candidates": {
+    "git_tag": "v1.0.0",
+    "pyproject.toml": "0.2.0"
+   },
+   "tree_files": 3633,
+   "checked_out_files": 2474,
+   "docs_total": 2460,
+   "docs_md": 2431,
+   "figures_total": 61,
+   "languages": {
+    "Markdown": 2431,
+    "Python": 629,
+    "Shell": 119,
+    "YAML": 14,
+    "C++": 12,
+    "C/C++ hdr": 5
+   },
+   "top_dirs": [
+    "\"skills",
+    ".claude-plugin",
+    ".github",
+    "Release_notes",
+    "agents",
+    "app",
+    "ascend-skills-eval",
+    "commands",
+    "docker",
+    "docs",
+    "engine",
+    "industry-agent",
+    "mcp_servers",
+    "scripts",
+    "server",
+    "skills",
+    "tests"
+   ]
+  },
+  {
+   "slug": "modelzoo",
+   "url": "https://gitcode.com/Ascend/modelzoo.git",
+   "ref": "master",
+   "note": "Ascend ModelZoo",
+   "head": "5eab9a4921c7f12edb555079836429a8f285cd1f",
+   "commit_date": "2026-02-12T14:04:55+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 12,
+   "checked_out_files": 6,
+   "docs_total": 4,
+   "docs_md": 4,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 4
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "modelzoo-gpl",
+   "url": "https://gitcode.com/Ascend/modelzoo-GPL.git",
+   "ref": "master",
+   "note": "",
+   "head": "d6ba7c8ac817a2600fe687f66de9e1bd2edf941b",
+   "commit_date": "2026-07-31T16:03:53+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1720,
+   "checked_out_files": 508,
+   "docs_total": 485,
+   "docs_md": 419,
+   "figures_total": 31,
+   "languages": {
+    "Python": 563,
+    "Markdown": 419,
+    "YAML": 325,
+    "Shell": 175,
+    "C++": 7,
+    "Rust": 6,
+    "C/C++ hdr": 3,
+    "JavaScript": 2
+   },
+   "top_dirs": [
+    "\"built-in",
+    "built-in",
+    "contrib"
+   ]
+  },
+  {
+   "slug": "modelzoo-pytorch",
+   "url": "https://gitcode.com/Ascend/ModelZoo-PyTorch.git",
+   "ref": "master",
+   "note": "",
+   "head": "41e03ac10911d651dcf7a53360bf40b359a5812d",
+   "commit_date": "2026-08-28T17:06:50+08:00",
+   "latest_tag": null,
+   "version_candidates": {
+    "PyTorch/contrib/cv/detection/SOLOv1/mmdet/version.py": "1.0.0"
+   },
+   "tree_files": 94967,
+   "checked_out_files": 13045,
+   "docs_total": 10450,
+   "docs_md": 7209,
+   "figures_total": 252,
+   "languages": {
+    "Python": 56827,
+    "Shell": 9450,
+    "Markdown": 7212,
+    "YAML": 6747,
+    "C++": 1004,
+    "C/C++ hdr": 592,
+    "CUDA": 431,
+    "C": 23,
+    "JavaScript": 16,
+    "Java": 7
+   },
+   "top_dirs": [
+    "\"ACL_PyTorch",
+    "\"PyTorch",
+    ".gitee",
+    "ACL_PyTorch",
+    "MindIE",
+    "PyTorch"
+   ]
+  },
+  {
+   "slug": "monarch_npu",
+   "url": "https://gitcode.com/Ascend/monarch_npu.git",
+   "ref": "master",
+   "note": "The official repository of Ascend for PyTorch ecological activities.",
+   "head": "b40be852cc301655862de3f28c1abd68936306ac",
+   "commit_date": "2026-09-01T10:51:25+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "mooncake",
+   "url": "https://gitcode.com/xLLM-AI/Mooncake.git",
+   "ref": "main",
+   "note": "Mooncake is the serving platform for Kimi, a leading LLM service provided by Moo",
+   "head": "1adcb2fb399661e69df0bc4c342c3f4a7028b8e8",
+   "commit_date": "2026-04-01T21:05:20+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 474,
+   "checked_out_files": 95,
+   "docs_total": 99,
+   "docs_md": 64,
+   "figures_total": 40,
+   "languages": {
+    "C++": 112,
+    "C/C++ hdr": 97,
+    "Markdown": 64,
+    "Python": 42,
+    "Shell": 14,
+    "YAML": 13,
+    "Go": 9,
+    "Rust": 4,
+    "JavaScript": 1,
+    "CUDA": 1
+   },
+   "top_dirs": [
+    ".ci",
+    ".devcontainer",
+    ".github",
+    "FAST25-release",
+    "benchmarks",
+    "doc",
+    "docs",
+    "extern",
+    "image",
+    "mooncake-common",
+    "mooncake-ep",
+    "mooncake-integration",
+    "mooncake-p2p-store",
+    "mooncake-rl",
+    "mooncake-store",
+    "mooncake-transfer-engine",
+    "mooncake-wheel",
+    "scripts"
+   ]
+  },
+  {
+   "slug": "msagent",
+   "url": "https://gitcode.com/Ascend/msagent.git",
+   "ref": "master",
+   "note": "MindStudio智能体，提供性能和精度等自动分析功能",
+   "head": "773b9986a97a97fae206b73325fd5b212c274a4b",
+   "commit_date": "2026-09-01T20:48:03+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+    "pyproject.toml": "26.1.0-alpha.2"
+   },
+   "tree_files": 763,
+   "checked_out_files": 366,
+   "docs_total": 281,
+   "docs_md": 278,
+   "figures_total": 48,
+   "languages": {
+    "Python": 332,
+    "Markdown": 278,
+    "YAML": 51,
+    "Shell": 16,
+    "JavaScript": 1
+   },
+   "top_dirs": [
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "docs",
+    "pre-commit",
+    "resources",
+    "scripts",
+    "skills",
+    "src",
+    "tests"
+   ]
+  },
+  {
+   "slug": "msboost",
+   "url": "https://gitcode.com/Ascend/msboost.git",
+   "ref": "master",
+   "note": "针对AI推理训练场景构建极致性能加速工具。",
+   "head": "35f7255351adb559eab0006411a8c8df71327983",
+   "commit_date": "2026-09-01T21:26:30+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 199,
+   "checked_out_files": 17,
+   "docs_total": 15,
+   "docs_md": 5,
+   "figures_total": 0,
+   "languages": {
+    "Python": 84,
+    "Shell": 43,
+    "C++": 23,
+    "C/C++ hdr": 15,
+    "Markdown": 5,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "KAOT",
+    "affinity-sched",
+    "docs",
+    "oec-ascend",
+    "pre-commit",
+    "scripts"
+   ]
+  },
+  {
+   "slug": "mscommreport",
+   "url": "https://gitcode.com/Ascend/mscommreport.git",
+   "ref": "master",
+   "note": "提供HCCL中断类问题自动分析能力，帮助开发及维护人员提升HCCL问题分析效率",
+   "head": "ad97f91db9ad38f26a22c9f9e5e25bd1f0234c24",
+   "commit_date": "2026-08-10T19:04:25+08:00",
+   "latest_tag": "tag_MindStudio_26.1.0.B100_002",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_26.1.0.B100_002",
+    "setup.py": "1.0.0"
+   },
+   "tree_files": 893,
+   "checked_out_files": 39,
+   "docs_total": 2,
+   "docs_md": 2,
+   "figures_total": 11,
+   "languages": {
+    "Python": 172,
+    "YAML": 4,
+    "Markdown": 2,
+    "Shell": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    "\"test_data",
+    "config",
+    "docs",
+    "log_analyzer",
+    "pre-commit",
+    "scripts",
+    "tests"
+   ]
+  },
+  {
+   "slug": "msdebug",
+   "url": "https://gitcode.com/Ascend/msdebug.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "d1494b2ebb27952f714cc1e46302b3e41759fdc5",
+   "commit_date": "2026-09-01T17:34:23+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 146758,
+   "checked_out_files": 380,
+   "docs_total": 6041,
+   "docs_md": 284,
+   "figures_total": 217,
+   "languages": {
+    "C++": 32286,
+    "C/C++ hdr": 13237,
+    "C": 11598,
+    "Python": 2446,
+    "YAML": 1176,
+    "Markdown": 284,
+    "CUDA": 258,
+    "Shell": 130,
+    "JavaScript": 25,
+    "TypeScript": 15,
+    "Rust": 4
+   },
+   "top_dirs": [
+    "\"docs",
+    ".ci",
+    ".devcontainer",
+    ".gitcode",
+    ".github",
+    ".vscode",
+    "bolt",
+    "clang",
+    "clang-tools-extra",
+    "cmake",
+    "compiler-rt",
+    "cross-project-tests",
+    "docs",
+    "example",
+    "flang",
+    "libc",
+    "libclc",
+    "libcxx",
+    "libcxxabi",
+    "libunwind",
+    "lld",
+    "lldb",
+    "llvm",
+    "llvm-libgcc",
+    "mlir",
+    "msdebug-mi",
+    "offload",
+    "openmp",
+    "package",
+    "polly",
+    "pre-commit",
+    "pstl",
+    "runtimes",
+    "third-party",
+    "utils"
+   ]
+  },
+  {
+   "slug": "msinsight",
+   "url": "https://gitcode.com/Ascend/msinsight.git",
+   "ref": "master",
+   "note": "针对大模型训练&&推理场景，提供可视化调优能力，辅助用户更快定位模型性能问题",
+   "head": "7a2219172d392a3ec74b50c9ad9a8638fd8ef104",
+   "commit_date": "2026-09-01T20:04:30+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 4071,
+   "checked_out_files": 1161,
+   "docs_total": 97,
+   "docs_md": 80,
+   "figures_total": 1394,
+   "languages": {
+    "C++": 651,
+    "C/C++ hdr": 570,
+    "TypeScript": 472,
+    "Python": 115,
+    "Markdown": 80,
+    "JavaScript": 37,
+    "Rust": 10,
+    "Shell": 6,
+    "YAML": 4
+   },
+   "top_dirs": [
+    ".gitcode",
+    "assets",
+    "build",
+    "docker",
+    "docs",
+    "e2e",
+    "modules",
+    "platform",
+    "plugins",
+    "pre-commit",
+    "scripts",
+    "server",
+    "streamer",
+    "test"
+   ]
+  },
+  {
+   "slug": "msit",
+   "url": "https://gitcode.com/Ascend/msit.git",
+   "ref": "master",
+   "note": "统一推理工具链入口，提供客户一体化开发工具，支持一站式调试调优。",
+   "head": "cc7ddd8fe9fa39ad128d14c32c9b35973b04585f",
+   "commit_date": "2026-08-19T14:19:57+08:00",
+   "latest_tag": "test",
+   "version_candidates": {
+    "git_tag": "test"
+   },
+   "tree_files": 430,
+   "checked_out_files": 119,
+   "docs_total": 67,
+   "docs_md": 54,
+   "figures_total": 21,
+   "languages": {
+    "Python": 276,
+    "Markdown": 54,
+    "YAML": 21,
+    "Shell": 5
+   },
+   "top_dirs": [
+    "\"docs",
+    "\"msit",
+    ".gitee",
+    "docs",
+    "msit",
+    "msprechecker",
+    "pre-commit",
+    "test"
+   ]
+  },
+  {
+   "slug": "mskl",
+   "url": "https://gitcode.com/Ascend/mskl.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "f9fbf4d21273a4f1fa2793b902872fa7da47d86b",
+   "commit_date": "2026-08-20T10:00:54+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 91,
+   "checked_out_files": 39,
+   "docs_total": 30,
+   "docs_md": 29,
+   "figures_total": 1,
+   "languages": {
+    "Python": 39,
+    "Markdown": 29,
+    "Shell": 4,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "docs",
+    "mskl",
+    "pre-commit",
+    "test"
+   ]
+  },
+  {
+   "slug": "mskpp",
+   "url": "https://gitcode.com/Ascend/mskpp.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "64c5f1bf5276fe3826bc0c38361eaeb1f4ed56ac",
+   "commit_date": "2026-08-20T10:00:59+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 240,
+   "checked_out_files": 70,
+   "docs_total": 42,
+   "docs_md": 30,
+   "figures_total": 28,
+   "languages": {
+    "Python": 110,
+    "Markdown": 30,
+    "C++": 19,
+    "C/C++ hdr": 11,
+    "Shell": 5,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "csrc",
+    "docs",
+    "example",
+    "mskpp",
+    "pre-commit",
+    "test",
+    "thirdparty"
+   ]
+  },
+  {
+   "slug": "msmemscope",
+   "url": "https://gitcode.com/Ascend/msmemscope.git",
+   "ref": "master",
+   "note": "MindStudio-MemScope（msmemscope）是MindStudio推出的整网内存调试调优工具，提供内存数据采集、辅助分析、自动诊断等能力。",
+   "head": "719900f14b9617fe697cb0eeac3c4069fb93f46a",
+   "commit_date": "2026-09-01T20:14:21+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 436,
+   "checked_out_files": 104,
+   "docs_total": 72,
+   "docs_md": 46,
+   "figures_total": 47,
+   "languages": {
+    "C++": 107,
+    "Python": 79,
+    "C/C++ hdr": 75,
+    "Markdown": 46,
+    "Shell": 26,
+    "JavaScript": 4,
+    "YAML": 2
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "build",
+    "csrc",
+    "docs",
+    "example",
+    "opensource",
+    "output",
+    "platform",
+    "pre-commit",
+    "python",
+    "test"
+   ]
+  },
+  {
+   "slug": "msmodeling",
+   "url": "https://gitcode.com/Ascend/msmodeling.git",
+   "ref": "master",
+   "note": "MindStudio-Modeling（msmodeling）是MindStudio建模寻优工具，评估模型及服务化等场景下的理论性能，并在此基础上寻找性能较优的",
+   "head": "ea8c34c0a32707c39431cebe7392b67d536d54bd",
+   "commit_date": "2026-09-01T22:48:04+08:00",
+   "latest_tag": "tag_MindStudio_develop_20260316",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_develop_20260316",
+    "pyproject.toml": "0.2.0"
+   },
+   "tree_files": 1680,
+   "checked_out_files": 309,
+   "docs_total": 227,
+   "docs_md": 224,
+   "figures_total": 0,
+   "languages": {
+    "Python": 924,
+    "Markdown": 224,
+    "YAML": 44,
+    "Shell": 27,
+    "TypeScript": 27,
+    "JavaScript": 1
+   },
+   "top_dirs": [
+    ".agents",
+    ".devcontainer",
+    ".gitcode",
+    ".loop",
+    ".msmodeling_ui",
+    ".vscode",
+    "cli",
+    "contrib",
+    "docs",
+    "optix",
+    "pre-commit",
+    "scripts",
+    "serving_cast",
+    "spec",
+    "tensor_cast",
+    "tests",
+    "tools",
+    "web_ui"
+   ]
+  },
+  {
+   "slug": "msmodelslim",
+   "url": "https://gitcode.com/Ascend/msmodelslim.git",
+   "ref": "master",
+   "note": "MindStudio-ModelSlim（msModelSlim）是MindStudio全流程工具链推出的模型量化压缩工具。",
+   "head": "54d44aee1fbe731d62758980d7d027ae5cf177e7",
+   "commit_date": "2026-09-01T21:02:47+08:00",
+   "latest_tag": "tag_mindstudio_26.0.0.alpha02",
+   "version_candidates": {
+    "git_tag": "tag_mindstudio_26.0.0.alpha02"
+   },
+   "tree_files": 3349,
+   "checked_out_files": 930,
+   "docs_total": 625,
+   "docs_md": 537,
+   "figures_total": 41,
+   "languages": {
+    "Python": 1802,
+    "Markdown": 537,
+    "YAML": 233,
+    "Shell": 102,
+    "C++": 4,
+    "C/C++ hdr": 3
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    "ascend_utils",
+    "config",
+    "docs",
+    "example",
+    "lab_calib",
+    "lab_practice",
+    "modelslim",
+    "msmodelslim",
+    "pre-commit",
+    "precision_tool",
+    "security",
+    "skills",
+    "test"
+   ]
+  },
+  {
+   "slug": "msmonitor",
+   "url": "https://gitcode.com/Ascend/msmonitor.git",
+   "ref": "master",
+   "note": "MindStudio-Monitor（msmonitor）是MindStudio全流程工具链推出的一站式在线监控工具，提供用户在集群场景性能监控定位端到端能力。",
+   "head": "f4d126a985b0004d1cb05ae3e84d079dd310c9dd",
+   "commit_date": "2026-08-31T20:44:50+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 245,
+   "checked_out_files": 73,
+   "docs_total": 43,
+   "docs_md": 35,
+   "figures_total": 34,
+   "languages": {
+    "C/C++ hdr": 49,
+    "C++": 38,
+    "Markdown": 35,
+    "Shell": 17,
+    "Python": 17,
+    "Rust": 11,
+    "C": 3,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "docs",
+    "dynolog_npu",
+    "plugin",
+    "pre-commit",
+    "scripts",
+    "test",
+    "third_party"
+   ]
+  },
+  {
+   "slug": "msopcom",
+   "url": "https://gitcode.com/Ascend/msopcom.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "336af3dd33bdd433460ae049acf4dc04efd3d3da",
+   "commit_date": "2026-09-01T20:59:37+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 514,
+   "checked_out_files": 21,
+   "docs_total": 51,
+   "docs_md": 18,
+   "figures_total": 1,
+   "languages": {
+    "C++": 322,
+    "C/C++ hdr": 108,
+    "Markdown": 18,
+    "Shell": 6,
+    "Python": 2,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "cmake",
+    "csrc",
+    "docs",
+    "example",
+    "pre-commit",
+    "test",
+    "thirdparty"
+   ]
+  },
+  {
+   "slug": "msopgen",
+   "url": "https://gitcode.com/Ascend/msopgen.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "29a817a850b2fdea04c961599be8a1364eeebf26",
+   "commit_date": "2026-09-01T17:33:26+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 496,
+   "checked_out_files": 72,
+   "docs_total": 76,
+   "docs_md": 39,
+   "figures_total": 13,
+   "languages": {
+    "Python": 158,
+    "C++": 50,
+    "Markdown": 39,
+    "Shell": 33,
+    "C/C++ hdr": 24,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "docs",
+    "example",
+    "msopgen",
+    "pre-commit",
+    "test",
+    "thirdparty",
+    "tools"
+   ]
+  },
+  {
+   "slug": "msopprof",
+   "url": "https://gitcode.com/Ascend/msopprof.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "f2677893a35e4ecc1484cd58e808390a9c28aca8",
+   "commit_date": "2026-09-01T17:33:08+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 703,
+   "checked_out_files": 178,
+   "docs_total": 100,
+   "docs_md": 48,
+   "figures_total": 145,
+   "languages": {
+    "C++": 167,
+    "C/C++ hdr": 159,
+    "Markdown": 48,
+    "Python": 15,
+    "Shell": 14,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "cmake",
+    "csrc",
+    "docs",
+    "example",
+    "package",
+    "pre-commit",
+    "test",
+    "thirdparty"
+   ]
+  },
+  {
+   "slug": "msoptuner",
+   "url": "https://gitcode.com/Ascend/msoptuner.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "3d7096b55d8beece1ce44d2daf0a69eb8ad4195a",
+   "commit_date": "2026-09-01T20:51:23+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 85,
+   "checked_out_files": 19,
+   "docs_total": 21,
+   "docs_md": 15,
+   "figures_total": 2,
+   "languages": {
+    "C/C++ hdr": 16,
+    "Markdown": 15,
+    "C++": 13,
+    "Python": 10,
+    "Shell": 5,
+    "YAML": 1
+   },
+   "top_dirs": [
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "docs",
+    "example",
+    "library",
+    "pre-commit",
+    "test",
+    "tuner"
+   ]
+  },
+  {
+   "slug": "msot",
+   "url": "https://gitcode.com/Ascend/msot.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "e5915a438a76f35cedd6a45fac625f15cd5ead1b",
+   "commit_date": "2026-08-20T20:18:26+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 122,
+   "checked_out_files": 43,
+   "docs_total": 36,
+   "docs_md": 32,
+   "figures_total": 7,
+   "languages": {
+    "Markdown": 32,
+    "Shell": 9,
+    "Python": 6,
+    "C++": 4,
+    "C/C++ hdr": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    "cmake",
+    "docs",
+    "example",
+    "package",
+    "test",
+    "thirdparty"
+   ]
+  },
+  {
+   "slug": "msprobe",
+   "url": "https://gitcode.com/Ascend/msprobe.git",
+   "ref": "master",
+   "note": "针对昇腾提供的全场景精度工具链，帮助用户快速提高模型精度定位效率。",
+   "head": "d04fc56d6138259041bb4cdfc77c674bd6824784",
+   "commit_date": "2026-09-01T21:03:43+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+    "pyproject.toml": "26.0.0"
+   },
+   "tree_files": 1535,
+   "checked_out_files": 471,
+   "docs_total": 147,
+   "docs_md": 132,
+   "figures_total": 228,
+   "languages": {
+    "Python": 844,
+    "Markdown": 132,
+    "YAML": 37,
+    "TypeScript": 35,
+    "Shell": 14,
+    "C/C++ hdr": 12,
+    "C++": 11,
+    "JavaScript": 9
+   },
+   "top_dirs": [
+    "\"docs",
+    "ccsrc",
+    "cmake",
+    "docs",
+    "examples",
+    "output",
+    "plugins",
+    "pre-commit",
+    "python",
+    "scripts",
+    "test"
+   ]
+  },
+  {
+   "slug": "msprof",
+   "url": "https://gitcode.com/Ascend/msprof.git",
+   "ref": "master",
+   "note": "MindStudio Profiler（msProf，模型调优工具）提供了AI任务运行性能数据、昇腾AI处理器系统数据等性能数据的采集和解析功能，这些功能侧重不",
+   "head": "d786c993bbd3b0a12ac92ebced0a2eeaf2c96945",
+   "commit_date": "2026-09-01T19:20:37+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 2585,
+   "checked_out_files": 548,
+   "docs_total": 80,
+   "docs_md": 50,
+   "figures_total": 229,
+   "languages": {
+    "Python": 1375,
+    "C++": 416,
+    "C/C++ hdr": 327,
+    "Shell": 59,
+    "Markdown": 50,
+    "YAML": 7
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "analysis",
+    "build",
+    "cmake",
+    "docs",
+    "misc",
+    "pre-commit",
+    "samples",
+    "scripts",
+    "test"
+   ]
+  },
+  {
+   "slug": "msprof-analyze",
+   "url": "https://gitcode.com/Ascend/msprof-analyze.git",
+   "ref": "master",
+   "note": "MindStudio-Profiler-Analyze（msprof-analyze）是MindStudio全流程工具链推出的性能分析工具，基于采集的性能数据进",
+   "head": "dece9c1699b47d6cfbe66cd1cedbcd1e0f49ac23",
+   "commit_date": "2026-08-31T20:15:50+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 983,
+   "checked_out_files": 343,
+   "docs_total": 64,
+   "docs_md": 59,
+   "figures_total": 121,
+   "languages": {
+    "Python": 696,
+    "Markdown": 59,
+    "YAML": 33,
+    "Shell": 3,
+    "C++": 1,
+    "C/C++ hdr": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "config",
+    "docs",
+    "misc",
+    "msprof_analyze",
+    "pre-commit",
+    "requirements",
+    "test"
+   ]
+  },
+  {
+   "slug": "mspti",
+   "url": "https://gitcode.com/Ascend/mspti.git",
+   "ref": "master",
+   "note": "msPTI工具（MindStudio Profiling Tools Interface）是MindStudio针对Ascend设备提出的一套Profiling",
+   "head": "8367552fa83e25de5ac1f74d86c0f9f44aedc57a",
+   "commit_date": "2026-09-01T21:15:11+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 451,
+   "checked_out_files": 197,
+   "docs_total": 213,
+   "docs_md": 186,
+   "figures_total": 6,
+   "languages": {
+    "Markdown": 186,
+    "C++": 93,
+    "C/C++ hdr": 63,
+    "Shell": 28,
+    "Python": 25,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "csrc",
+    "docs",
+    "mspti",
+    "pre-commit",
+    "samples",
+    "scripts",
+    "test"
+   ]
+  },
+  {
+   "slug": "mssanitizer",
+   "url": "https://gitcode.com/Ascend/mssanitizer.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "35c4233ffe1497dac36a92e8262120c403f6ce80",
+   "commit_date": "2026-09-01T17:34:03+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 577,
+   "checked_out_files": 49,
+   "docs_total": 75,
+   "docs_md": 43,
+   "figures_total": 4,
+   "languages": {
+    "C++": 324,
+    "C/C++ hdr": 114,
+    "Markdown": 43,
+    "Shell": 12,
+    "Python": 3,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "bin",
+    "cmake",
+    "csrc",
+    "docs",
+    "example",
+    "package",
+    "pre-commit",
+    "test",
+    "thirdparty"
+   ]
+  },
+  {
+   "slug": "msserviceprofiler",
+   "url": "https://gitcode.com/Ascend/msserviceprofiler.git",
+   "ref": "master",
+   "note": "MindStudio-Service-Profiler（msserviceprofiler）是MindStudio推理服务化性能数据采集工具，采集关键过程的开始",
+   "head": "7bb530379d5b11c5dcfe83229178df504e94d091",
+   "commit_date": "2026-08-31T10:34:09+08:00",
+   "latest_tag": "tag_beta",
+   "version_candidates": {
+    "git_tag": "tag_beta",
+    "pyproject.toml": "26.0.0"
+   },
+   "tree_files": 905,
+   "checked_out_files": 304,
+   "docs_total": 189,
+   "docs_md": 182,
+   "figures_total": 62,
+   "languages": {
+    "Python": 523,
+    "Markdown": 182,
+    "C/C++ hdr": 31,
+    "C++": 29,
+    "YAML": 18,
+    "Shell": 12
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "3rdparty",
+    "cpp",
+    "docs",
+    "ms_service_metric",
+    "ms_service_profiler",
+    "ms_serviceparam_optimizer",
+    "msservice_advisor",
+    "pre-commit",
+    "scripts",
+    "test"
+   ]
+  },
+  {
+   "slug": "mstt",
+   "url": "https://gitcode.com/Ascend/mstt.git",
+   "ref": "master",
+   "note": "针对训练&大模型场景，提供端到端命令行&可视化调试调优工具，帮助用户快速提高模型开发效率。",
+   "head": "351d9b1a0e3da49aa3059eaf4b93f67a104b9d85",
+   "commit_date": "2026-08-19T11:19:56+08:00",
+   "latest_tag": "v8.1.0",
+   "version_candidates": {
+    "git_tag": "v8.1.0"
+   },
+   "tree_files": 247,
+   "checked_out_files": 103,
+   "docs_total": 28,
+   "docs_md": 27,
+   "figures_total": 45,
+   "languages": {
+    "Python": 109,
+    "Markdown": 27,
+    "Shell": 14,
+    "YAML": 2
+   },
+   "top_dirs": [
+    "\"msfmktransplt",
+    ".gitee",
+    "docs",
+    "msfmktransplt",
+    "plugins",
+    "pre-commit",
+    "profiler",
+    "scripts"
+   ]
+  },
+  {
+   "slug": "mstx",
+   "url": "https://gitcode.com/Ascend/mstx.git",
+   "ref": "master",
+   "note": "NA",
+   "head": "8d45231e7052afef60681e42f1bb4c83811773f5",
+   "commit_date": "2026-09-01T17:32:33+08:00",
+   "latest_tag": "tag_MindStudio_O1_26.1.0.B123_001",
+   "version_candidates": {
+    "git_tag": "tag_MindStudio_O1_26.1.0.B123_001"
+   },
+   "tree_files": 96,
+   "checked_out_files": 52,
+   "docs_total": 52,
+   "docs_md": 48,
+   "figures_total": 1,
+   "languages": {
+    "Markdown": 48,
+    "C/C++ hdr": 8,
+    "C++": 7,
+    "Python": 5,
+    "Shell": 2,
+    "YAML": 1,
+    "C": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    ".vscode",
+    "c",
+    "cmake",
+    "docs",
+    "example",
+    "pre-commit",
+    "python",
+    "test",
+    "thirdparty"
+   ]
+  },
+  {
+   "slug": "multimodalsdk",
+   "url": "https://gitcode.com/Ascend/MultimodalSDK.git",
+   "ref": "master",
+   "note": "MultimodalSDK",
+   "head": "6f4124e85b2a4587134ba2d6b4f9d546eec92de7",
+   "commit_date": "2026-09-01T14:16:22+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 507,
+   "checked_out_files": 90,
+   "docs_total": 86,
+   "docs_md": 45,
+   "figures_total": 25,
+   "languages": {
+    "Python": 131,
+    "C++": 96,
+    "C/C++ hdr": 79,
+    "Markdown": 45,
+    "Shell": 29,
+    "YAML": 6
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    "AccSDK",
+    "MultimodalSDK",
+    "build_script",
+    "docker",
+    "docs",
+    "examples",
+    "pre-commit",
+    "test"
+   ]
+  },
+  {
+   "slug": "omsdk",
+   "url": "https://gitcode.com/Ascend/OMSDK.git",
+   "ref": "master",
+   "note": "使能构建边云协同平台、管理边缘AI业务，提供安全、可信、完整的轻量化端边云框架",
+   "head": "3b7d915d6aeec7e5af7d9a27ede04618c5f7f9ef",
+   "commit_date": "2026-08-31T15:20:00+08:00",
+   "latest_tag": "v26.0.0",
+   "version_candidates": {
+    "git_tag": "v26.0.0"
+   },
+   "tree_files": 1321,
+   "checked_out_files": 168,
+   "docs_total": 48,
+   "docs_md": 26,
+   "figures_total": 117,
+   "languages": {
+    "Python": 630,
+    "JavaScript": 98,
+    "Shell": 57,
+    "Markdown": 26,
+    "C/C++ hdr": 26,
+    "C": 22,
+    "C++": 5,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".gitcode",
+    "build",
+    "docs",
+    "pre-commit",
+    "src"
+   ]
+  },
+  {
+   "slug": "op-plugin",
+   "url": "https://gitcode.com/Ascend/op-plugin.git",
+   "ref": "master",
+   "note": "OpPlugin of Ascend for PyTorch",
+   "head": "e12ef4f960b3e0e6c0c82e17290a7981746de091",
+   "commit_date": "2026-08-31T21:03:25+08:00",
+   "latest_tag": "v5.0.rc3",
+   "version_candidates": {
+    "git_tag": "v5.0.rc3"
+   },
+   "tree_files": 2699,
+   "checked_out_files": 394,
+   "docs_total": 264,
+   "docs_md": 263,
+   "figures_total": 110,
+   "languages": {
+    "Python": 1080,
+    "C++": 953,
+    "Markdown": 263,
+    "C/C++ hdr": 48,
+    "YAML": 32,
+    "Shell": 14
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    "ci",
+    "codegen",
+    "docker",
+    "docs",
+    "examples",
+    "op_plugin",
+    "pre-commit",
+    "test",
+    "torchnpugen"
+   ]
+  },
+  {
+   "slug": "ops-rec",
+   "url": "https://gitcode.com/Ascend/ops-rec.git",
+   "ref": "master",
+   "note": "基于昇腾平台，面向推荐系统的高性能融合算子仓库",
+   "head": "e885a19bdbd7b2f884e9aa4efe1bac7991d9e23d",
+   "commit_date": "2026-08-31T19:35:51+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 412,
+   "checked_out_files": 62,
+   "docs_total": 90,
+   "docs_md": 50,
+   "figures_total": 1,
+   "languages": {
+    "C/C++ hdr": 97,
+    "C++": 85,
+    "Python": 72,
+    "Markdown": 50,
+    "Shell": 4,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"ascendc",
+    ".gitcode",
+    "ascendc",
+    "cmake",
+    "docs",
+    "examples",
+    "experimental",
+    "ops_rec",
+    "pre-commit",
+    "scripts",
+    "tests",
+    "third_party",
+    "triton"
+   ]
+  },
+  {
+   "slug": "parakv",
+   "url": "https://gitcode.com/xLLM-AI/ParaKV.git",
+   "ref": "main",
+   "note": "ParaKV is a high-performance KV storage engine designed for LLM KVCache and reco",
+   "head": "b119736dffd644cf3a86c14e4a37f05a43e09dc7",
+   "commit_date": "2026-07-14T17:05:50+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 105,
+   "checked_out_files": 21,
+   "docs_total": 28,
+   "docs_md": 13,
+   "figures_total": 6,
+   "languages": {
+    "C/C++ hdr": 22,
+    "C++": 17,
+    "Markdown": 13,
+    "Python": 10,
+    "Shell": 3,
+    "YAML": 1
+   },
+   "top_dirs": [
+    ".agents",
+    "cmake",
+    "docker",
+    "docs",
+    "parakv",
+    "tests",
+    "third_party"
+   ]
+  },
+  {
+   "slug": "parallel-hashmap",
+   "url": "https://gitcode.com/xLLM-AI/parallel-hashmap.git",
+   "ref": "master",
+   "note": "",
+   "head": "01c838b76a4f21024e478ef020c3386b9b4ba4d2",
+   "commit_date": "2026-04-08T12:28:28+07:00",
+   "latest_tag": "v2.0.0",
+   "version_candidates": {
+    "git_tag": "v2.0.0"
+   },
+   "tree_files": 209,
+   "checked_out_files": 5,
+   "docs_total": 7,
+   "docs_md": 4,
+   "figures_total": 46,
+   "languages": {
+    "C++": 44,
+    "JavaScript": 30,
+    "C/C++ hdr": 26,
+    "YAML": 4,
+    "Markdown": 4,
+    "Python": 4
+   },
+   "top_dirs": [
+    ".github",
+    "benchmark",
+    "cmake",
+    "css",
+    "doc",
+    "examples",
+    "html",
+    "parallel_hashmap",
+    "tests"
+   ]
+  },
+  {
+   "slug": "perf-reference-ascend",
+   "url": "https://gitcode.com/Ascend/perf-reference-ascend.git",
+   "ref": "master",
+   "note": "昇腾基础性能测试参考设计。提供perftest、xpu-perf等社区基础性能测试项目在昇腾NPU上适配参考。",
+   "head": "ed5792c88f43827de02e41b37537b49566208235",
+   "commit_date": "2026-09-01T22:24:13+08:00",
+   "latest_tag": "v1.3.0_260605",
+   "version_candidates": {
+    "git_tag": "v1.3.0_260605"
+   },
+   "tree_files": 175,
+   "checked_out_files": 8,
+   "docs_total": 11,
+   "docs_md": 6,
+   "figures_total": 1,
+   "languages": {
+    "C/C++ hdr": 40,
+    "C": 36,
+    "Python": 23,
+    "Shell": 12,
+    "Markdown": 6,
+    "C++": 4,
+    "YAML": 1,
+    "CUDA": 1
+   },
+   "top_dirs": [
+    ".gitcode",
+    "docs",
+    "nda-offline-operator",
+    "pre-commit",
+    "rdma-perftest"
+   ]
+  },
+  {
+   "slug": "pytorch",
+   "url": "https://gitcode.com/Ascend/pytorch.git",
+   "ref": "master",
+   "note": "作为 Ascend for PyTorch 社区的核心组件，TorchNPU 是昇腾专为 PyTorch 打造的深度学习适配插件，使 PyTorch 框架能够直",
+   "head": "4798e98d21104cd222c5ce45d88d3bb66e990523",
+   "commit_date": "2026-09-01T16:55:41+08:00",
+   "latest_tag": "v26.2.0-beta.1-pytorch2.13.0",
+   "version_candidates": {
+    "git_tag": "v26.2.0-beta.1-pytorch2.13.0"
+   },
+   "tree_files": 2776,
+   "checked_out_files": 725,
+   "docs_total": 602,
+   "docs_md": 552,
+   "figures_total": 103,
+   "languages": {
+    "Python": 1477,
+    "Markdown": 552,
+    "C/C++ hdr": 244,
+    "C++": 236,
+    "Shell": 24,
+    "YAML": 10
+   },
+   "top_dirs": [
+    "\"docs",
+    ".ci",
+    ".devcontainer",
+    ".gitcode",
+    ".github",
+    "benchmarks",
+    "ci",
+    "cmake",
+    "docker",
+    "docs",
+    "examples",
+    "figures",
+    "test",
+    "third_party",
+    "tools",
+    "torch_npu",
+    "torchnpugen"
+   ]
+  },
+  {
+   "slug": "pytorch-ecosystem",
+   "url": "https://gitcode.com/Ascend/pytorch-ecosystem.git",
+   "ref": "master",
+   "note": "The official repository of Ascend for PyTorch ecological activities.",
+   "head": "4e3ef1d6dcaaab6ebc77ca04d89d09417f11a78f",
+   "commit_date": "2026-08-26T16:31:01+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 86,
+   "checked_out_files": 31,
+   "docs_total": 31,
+   "docs_md": 31,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 31,
+    "Python": 29,
+    "YAML": 1,
+    "Shell": 1
+   },
+   "top_dirs": [
+    "\"01_tasks",
+    "01_tasks",
+    "02_activities"
+   ]
+  },
+  {
+   "slug": "pytorch-xllmai",
+   "url": "https://gitcode.com/xLLM-AI/pytorch.git",
+   "ref": "master",
+   "note": "Tensors and Dynamic neural networks in Python with strong GPU acceleration.",
+   "head": "391f8f6b17be482fbe07f6e063c4f5ac64cf5047",
+   "commit_date": "2026-04-28T20:52:03+08:00",
+   "latest_tag": "v26.0.0-beta.1-pytorch2.10.0",
+   "version_candidates": {
+    "git_tag": "v26.0.0-beta.1-pytorch2.10.0"
+   },
+   "tree_files": 1682,
+   "checked_out_files": 89,
+   "docs_total": 51,
+   "docs_md": 17,
+   "figures_total": 25,
+   "languages": {
+    "Python": 1090,
+    "C/C++ hdr": 230,
+    "C++": 212,
+    "Markdown": 17,
+    "YAML": 8,
+    "Shell": 8
+   },
+   "top_dirs": [
+    ".ci",
+    ".gitcode",
+    ".github",
+    "Docker",
+    "ci",
+    "cmake",
+    "docs",
+    "examples",
+    "figures",
+    "test",
+    "third_party",
+    "tools",
+    "torch_npu",
+    "torchnpugen"
+   ]
+  },
+  {
+   "slug": "ragsdk",
+   "url": "https://gitcode.com/Ascend/RAGSDK.git",
+   "ref": "master",
+   "note": "RAG SDK是昇腾面向大语言模型的知识增强开发套件，为解决大模型知识更新缓慢以及垂直领域知识回答弱的问题，面向大模型知识库提供垂域调优、生成增强、知识管理等特",
+   "head": "994422e2a0adaeab952c024dd0371e3645442530",
+   "commit_date": "2026-08-29T10:37:08+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0",
+    "setup.py": "26.0.0"
+   },
+   "tree_files": 509,
+   "checked_out_files": 175,
+   "docs_total": 85,
+   "docs_md": 80,
+   "figures_total": 46,
+   "languages": {
+    "Python": 301,
+    "Markdown": 80,
+    "Shell": 9,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    "build",
+    "docker",
+    "docs",
+    "example",
+    "mx_rag",
+    "output",
+    "pre-commit",
+    "script",
+    "tests"
+   ]
+  },
+  {
+   "slug": "ray-ascend",
+   "url": "https://gitcode.com/Ascend/ray-ascend.git",
+   "ref": "master",
+   "note": "Ascend-native hardware plugin for ray",
+   "head": "49eebadfd499ba8329765c0ce0b1ca4d25f4206a",
+   "commit_date": "2026-06-08T19:44:11+08:00",
+   "latest_tag": "v0.1.1",
+   "version_candidates": {
+    "git_tag": "v0.1.1",
+    "ray_ascend/_version.py": "0.1.0+dev"
+   },
+   "tree_files": 54,
+   "checked_out_files": 32,
+   "docs_total": 21,
+   "docs_md": 19,
+   "figures_total": 3,
+   "languages": {
+    "Markdown": 19,
+    "Python": 18,
+    "YAML": 8
+   },
+   "top_dirs": [
+    ".github",
+    "ci",
+    "docs",
+    "ray_ascend",
+    "tests"
+   ]
+  },
+  {
+   "slug": "recsdk",
+   "url": "https://gitcode.com/Ascend/RecSDK.git",
+   "ref": "develop",
+   "note": "华为昇腾-MindX 推荐SDK",
+   "head": "346b3d1e47fbd53797713f9370d8d1430242c734",
+   "commit_date": "2026-09-01T21:52:30+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 2171,
+   "checked_out_files": 444,
+   "docs_total": 371,
+   "docs_md": 266,
+   "figures_total": 107,
+   "languages": {
+    "Python": 519,
+    "C/C++ hdr": 444,
+    "C++": 348,
+    "Markdown": 267,
+    "Shell": 190,
+    "YAML": 1
+   },
+   "top_dirs": [
+    "\"cust_op",
+    "\"docs",
+    ".devcontainer",
+    ".gitcode",
+    "build",
+    "cust_op",
+    "docker",
+    "docs",
+    "pre-commit",
+    "third_party",
+    "training"
+   ]
+  },
+  {
+   "slug": "release-management",
+   "url": "https://gitcode.com/Ascend/release-management.git",
+   "ref": "master",
+   "note": "版本发布管理仓库，统一版本的管控规范，明确版本发布的全流程。",
+   "head": "c60a0c9efa97f2c0ece6040e96c4317b7d9a08a5",
+   "commit_date": "2026-08-20T10:58:09+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 18,
+   "checked_out_files": 15,
+   "docs_total": 15,
+   "docs_md": 15,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 15
+   },
+   "top_dirs": [
+    "\"MindStudio",
+    "\"Mindspeed",
+    ".vscode",
+    "MindIE",
+    "MindStudio"
+   ]
+  },
+  {
+   "slug": "sentencepiece",
+   "url": "https://gitcode.com/xLLM-AI/sentencepiece.git",
+   "ref": "main",
+   "note": "SentencePiece is an unsupervised text tokenizer and detokenizer mainly for Neura",
+   "head": "92bfa65275467c57f85594103702e8c3c3e9c1da",
+   "commit_date": "2025-08-14T10:55:20+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "slime-ascend",
+   "url": "https://gitcode.com/Ascend/slime-ascend.git",
+   "ref": "main",
+   "note": "",
+   "head": "9210075e451c06a5766341df0dfd604d5a4eed84",
+   "commit_date": "2026-08-27T15:41:00+08:00",
+   "latest_tag": null,
+   "version_candidates": {
+    "setup.py": "0.3.0"
+   },
+   "tree_files": 613,
+   "checked_out_files": 147,
+   "docs_total": 109,
+   "docs_md": 101,
+   "figures_total": 10,
+   "languages": {
+    "Python": 281,
+    "Shell": 103,
+    "Markdown": 101,
+    "YAML": 13,
+    "C/C++ hdr": 1,
+    "JavaScript": 1,
+    "CUDA": 1
+   },
+   "top_dirs": [
+    ".agents",
+    ".claude",
+    ".github",
+    "docker",
+    "docs",
+    "examples",
+    "imgs",
+    "pre-commit",
+    "scripts",
+    "slime",
+    "slime_plugins",
+    "tests",
+    "tools"
+   ]
+  },
+  {
+   "slug": "smhasher",
+   "url": "https://gitcode.com/xLLM-AI/smhasher.git",
+   "ref": "main",
+   "note": "Hash function quality and speed tests.",
+   "head": "651b433f9bd3a0633a422a13722f2d3f22113eea",
+   "commit_date": "2025-08-14T10:59:30+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "solution-agent",
+   "url": "https://gitcode.com/Ascend/solution-agent.git",
+   "ref": "master",
+   "note": "solution-agent 仓库是昇腾（Ascend）社区用于辅助开发者快速开发和部署行业场景解决方案的平台，提供方案参考设计、环境快速部署、性能优化等能力，",
+   "head": "d2899357e41c4a623682dfb3c6f13cb147b881b3",
+   "commit_date": "2026-09-01T15:51:09+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "spdlog",
+   "url": "https://gitcode.com/xLLM-AI/spdlog.git",
+   "ref": "main",
+   "note": "Fast C++ logging library.",
+   "head": "53f543dec7e541e0a77ae59c4c5e4d0639ff860c",
+   "commit_date": "2025-08-14T11:12:12+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "taco",
+   "url": "https://gitcode.com/Ascend/taco.git",
+   "ref": "master",
+   "note": "Torch Ascend Custom Operators",
+   "head": "4fbea5f4ebb45f530d6d03ead6134379e4b8d4ab",
+   "commit_date": "2026-08-13T20:51:04+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "tensorpipe",
+   "url": "https://gitcode.com/Ascend/Tensorpipe.git",
+   "ref": "master",
+   "note": "",
+   "head": "29233737f695c3cfca9fee94ca11fd8f8e0ea08b",
+   "commit_date": "2026-08-29T16:04:21+08:00",
+   "latest_tag": null,
+   "version_candidates": {
+    "setup.py": "0.0.0"
+   },
+   "tree_files": 311,
+   "checked_out_files": 10,
+   "docs_total": 16,
+   "docs_md": 8,
+   "figures_total": 0,
+   "languages": {
+    "C/C++ hdr": 162,
+    "C++": 110,
+    "Markdown": 8,
+    "Shell": 4,
+    "Python": 2
+   },
+   "top_dirs": [
+    ".gitee",
+    "ci",
+    "cmake",
+    "docs",
+    "tensorpipe",
+    "third_party"
+   ]
+  },
+  {
+   "slug": "text-embeddings-inference",
+   "url": "https://gitcode.com/Ascend/text-embeddings-inference.git",
+   "ref": "main",
+   "note": "fork开源text-embeddings-inference，提供昇腾NPU加速能力。",
+   "head": "b3846f72822292352b83a06b41b09ba2947e67ab",
+   "commit_date": "2026-07-21T11:48:13+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 301,
+   "checked_out_files": 34,
+   "docs_total": 28,
+   "docs_md": 25,
+   "figures_total": 5,
+   "languages": {
+    "Rust": 94,
+    "Python": 29,
+    "Markdown": 25,
+    "Shell": 4,
+    "JavaScript": 3,
+    "YAML": 2
+   },
+   "top_dirs": [
+    ".cargo",
+    ".gitcode",
+    "assets",
+    "backends",
+    "build",
+    "core",
+    "docker",
+    "docs",
+    "integration_tests",
+    "load_tests",
+    "pre-commit",
+    "proto",
+    "router",
+    "tests"
+   ]
+  },
+  {
+   "slug": "tilelang-ascend",
+   "url": "https://gitcode.com/xLLM-AI/tilelang-ascend.git",
+   "ref": "ascendc_pto",
+   "note": "",
+   "head": "231fe7bd683d95f7509430e739afc12da75db2b6",
+   "commit_date": "2026-08-31T15:30:40+08:00",
+   "latest_tag": "v0.1.1.030-pre-release",
+   "version_candidates": {
+    "git_tag": "v0.1.1.030-pre-release",
+    "setup.py": "16.04"
+   },
+   "tree_files": 872,
+   "checked_out_files": 253,
+   "docs_total": 183,
+   "docs_md": 170,
+   "figures_total": 50,
+   "languages": {
+    "Python": 426,
+    "Markdown": 170,
+    "C++": 79,
+    "C/C++ hdr": 58,
+    "Shell": 26,
+    "YAML": 8
+   },
+   "top_dirs": [
+    ".agents",
+    ".github",
+    ".opencode",
+    "3rdparty",
+    "benchmark",
+    "ci",
+    "cmake",
+    "docs",
+    "examples",
+    "examples_experiment",
+    "images",
+    "maint",
+    "scripts",
+    "src",
+    "testing",
+    "tilelang"
+   ]
+  },
+  {
+   "slug": "torch-mlir",
+   "url": "https://gitcode.com/Ascend/torch-mlir.git",
+   "ref": null,
+   "note": "torch-mlir 旨在为 MLIR 生态系统提供来自 PyTorch 生态系统的支持。此fork用于添加昇腾上编译器的功能，支持AscendNPU IR等",
+   "status": "empty",
+   "error": "远端无任何 ref — 空仓 (占位未推送), ls-remote 返回空 (2026-09-01 实测)"
+  },
+  {
+   "slug": "torch_npu_ops",
+   "url": "https://gitcode.com/xLLM-AI/torch_npu_ops.git",
+   "ref": "main",
+   "note": "torch_npu_ops is an ops library built with torch_npu for npu.",
+   "head": "ecdb3e7453902287126c0c286a0c69c1cb1693d2",
+   "commit_date": "2026-08-11T16:03:43+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 76,
+   "checked_out_files": 2,
+   "docs_total": 4,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "C++": 31,
+    "Python": 23,
+    "C/C++ hdr": 13,
+    "YAML": 1,
+    "Markdown": 1,
+    "Shell": 1
+   },
+   "top_dirs": [
+    "ascendc_npu",
+    "custom_functions_npu",
+    "npu_python_extension",
+    "ops_npu",
+    "triton_npu"
+   ]
+  },
+  {
+   "slug": "torchair",
+   "url": "https://gitcode.com/Ascend/torchair.git",
+   "ref": "master",
+   "note": "TorchAir 支持用户基于PyTorch框架和torch_npu插件在昇腾NPU上使用图模式进行推理。",
+   "head": "12396e9f34a6be8360aac29892a96c206a718043",
+   "commit_date": "2026-09-01T20:47:53+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1875,
+   "checked_out_files": 253,
+   "docs_total": 178,
+   "docs_md": 164,
+   "figures_total": 57,
+   "languages": {
+    "Python": 1263,
+    "C/C++ hdr": 285,
+    "Markdown": 164,
+    "C++": 35,
+    "YAML": 9,
+    "Shell": 6,
+    "TypeScript": 1
+   },
+   "top_dirs": [
+    "\"feature",
+    ".claude",
+    ".devcontainer",
+    ".gitcode",
+    ".opencode",
+    "cmake",
+    "codegen",
+    "docker",
+    "docs",
+    "examples",
+    "experimental",
+    "npugraph_ex",
+    "pre-commit",
+    "proto",
+    "python",
+    "tests",
+    "third_party",
+    "tools",
+    "torchair"
+   ]
+  },
+  {
+   "slug": "torchao_npu",
+   "url": "https://gitcode.com/Ascend/torchao_npu.git",
+   "ref": "master",
+   "note": "Ascend Extension for PyTorchAO",
+   "head": "69b59feb13d794924d64e7f9f2827a258552dfa3",
+   "commit_date": "2026-08-31T20:36:11+08:00",
+   "latest_tag": null,
+   "version_candidates": {
+    "pyproject.toml": "0.18.0"
+   },
+   "tree_files": 34,
+   "checked_out_files": 8,
+   "docs_total": 4,
+   "docs_md": 4,
+   "figures_total": 0,
+   "languages": {
+    "Python": 27,
+    "Markdown": 4,
+    "Shell": 1
+   },
+   "top_dirs": [
+    "ci",
+    "docs",
+    "examples",
+    "test",
+    "torchao_npu"
+   ]
+  },
+  {
+   "slug": "torchcomms_npu",
+   "url": "https://gitcode.com/Ascend/torchcomms_npu.git",
+   "ref": "master",
+   "note": "The official repository of Ascend for PyTorch ecological activities.",
+   "head": "4717143f36a375a544a1323fb18c829720f03f12",
+   "commit_date": "2026-08-10T10:24:11+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1,
+   "checked_out_files": 1,
+   "docs_total": 1,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "Markdown": 1
+   },
+   "top_dirs": []
+  },
+  {
+   "slug": "torchtitanturbo",
+   "url": "https://gitcode.com/Ascend/TorchTitanTurbo.git",
+   "ref": "main",
+   "note": "提供亲和昇腾NPU的Torch实验性加速特性",
+   "head": "f2f155b8be3a37ddd78222952e453fe4dd3becf1",
+   "commit_date": "2026-05-29T17:17:41+08:00",
+   "latest_tag": null,
+   "version_candidates": {
+    "pyproject.toml": "0.1.0"
+   },
+   "tree_files": 47,
+   "checked_out_files": 18,
+   "docs_total": 3,
+   "docs_md": 3,
+   "figures_total": 0,
+   "languages": {
+    "Python": 39,
+    "Shell": 4,
+    "Markdown": 3
+   },
+   "top_dirs": [
+    "examples",
+    "tests",
+    "torchtitanturbo"
+   ]
+  },
+  {
+   "slug": "transferqueue",
+   "url": "https://gitcode.com/Ascend/TransferQueue.git",
+   "ref": "main",
+   "note": "异步高性能流式数据引擎",
+   "head": "5cb184efd99addd4b40ff25a700aa260ed2e9eed",
+   "commit_date": "2026-08-25T16:36:17+08:00",
+   "latest_tag": "v0.1.10",
+   "version_candidates": {
+    "git_tag": "v0.1.10"
+   },
+   "tree_files": 111,
+   "checked_out_files": 22,
+   "docs_total": 12,
+   "docs_md": 11,
+   "figures_total": 0,
+   "languages": {
+    "Python": 81,
+    "Markdown": 11,
+    "YAML": 11,
+    "Shell": 1
+   },
+   "top_dirs": [
+    ".agent",
+    ".claude",
+    ".codex",
+    ".github",
+    "docs",
+    "recipe",
+    "scripts",
+    "tests",
+    "transfer_queue",
+    "tutorial"
+   ]
+  },
+  {
+   "slug": "transformerenginenpu",
+   "url": "https://gitcode.com/Ascend/TransformerEngineNPU.git",
+   "ref": "main",
+   "note": "提供适配昇腾的TransformerEngine加速库",
+   "head": "ea9e806316cc972d20818362a6e783e2be653e68",
+   "commit_date": "2026-09-01T19:24:16+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 230,
+   "checked_out_files": 31,
+   "docs_total": 10,
+   "docs_md": 8,
+   "figures_total": 0,
+   "languages": {
+    "Python": 197,
+    "Markdown": 8,
+    "YAML": 6,
+    "Shell": 4
+   },
+   "top_dirs": [
+    ".agent",
+    ".gitcode",
+    "build_tools",
+    "ci",
+    "pre-commit",
+    "tests",
+    "transformer_engine"
+   ]
+  },
+  {
+   "slug": "triton-ascend",
+   "url": "https://gitcode.com/Ascend/triton-ascend.git",
+   "ref": "main",
+   "note": "Triton Ascend 已经迁移到https://github.com/triton-lang/triton-ascend",
+   "head": "865691e2e9b656bc58008170207b4108d92e8dd1",
+   "commit_date": "2026-05-18T19:33:42+08:00",
+   "latest_tag": "v3.2.1",
+   "version_candidates": {
+    "git_tag": "v3.2.1"
+   },
+   "tree_files": 2381,
+   "checked_out_files": 312,
+   "docs_total": 441,
+   "docs_md": 233,
+   "figures_total": 27,
+   "languages": {
+    "Python": 778,
+    "C++": 385,
+    "C/C++ hdr": 341,
+    "Markdown": 233,
+    "YAML": 17,
+    "C": 4,
+    "Shell": 4
+   },
+   "top_dirs": [
+    ".github",
+    "bin",
+    "cmake",
+    "docker",
+    "docs",
+    "include",
+    "lib",
+    "python",
+    "scripts",
+    "test",
+    "third_party",
+    "unittest",
+    "utils"
+   ]
+  },
+  {
+   "slug": "triton-ascend-kernels",
+   "url": "https://gitcode.com/Ascend/triton-ascend-kernels.git",
+   "ref": "master",
+   "note": "triton-ascend-kernels",
+   "head": "f7d13ba7c7b6b4590b1d3910f93a2fd66fa6e9a3",
+   "commit_date": "2026-08-29T17:20:17+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 179,
+   "checked_out_files": 52,
+   "docs_total": 10,
+   "docs_md": 10,
+   "figures_total": 0,
+   "languages": {
+    "Python": 158,
+    "Markdown": 10,
+    "YAML": 6,
+    "Shell": 1
+   },
+   "top_dirs": [
+    ".gitcode",
+    "benchmark",
+    "docs",
+    "src",
+    "tests"
+   ]
+  },
+  {
+   "slug": "triton-distributed-ascend",
+   "url": "https://gitcode.com/Ascend/Triton-distributed-ascend.git",
+   "ref": "master",
+   "note": "Triton-distributed-ascend 项目文档：https://triton-distributed-ascend.pages.dev",
+   "head": "4ee6ba7e0a1cc0090018423a9450c6da57b37a4e",
+   "commit_date": "2026-09-01T20:53:55+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 795,
+   "checked_out_files": 189,
+   "docs_total": 165,
+   "docs_md": 56,
+   "figures_total": 26,
+   "languages": {
+    "Python": 494,
+    "Markdown": 56,
+    "C++": 29,
+    "Shell": 20,
+    "C/C++ hdr": 11,
+    "CUDA": 6,
+    "YAML": 3,
+    "JavaScript": 1,
+    "C": 1
+   },
+   "top_dirs": [
+    ".github",
+    "3rdparty",
+    "asset",
+    "csrc",
+    "docs",
+    "docs_ascend",
+    "include",
+    "lib",
+    "perf_unified",
+    "python",
+    "scripts",
+    "shmem",
+    "tutorials",
+    "unittest"
+   ]
+  },
+  {
+   "slug": "tvm",
+   "url": "https://gitcode.com/xLLM-AI/tvm.git",
+   "ref": "tilelang_main",
+   "note": "",
+   "head": "907a88c8791ccf33b9874821bc875e7abf624367",
+   "commit_date": "2026-08-29T00:22:27+08:00",
+   "latest_tag": null,
+   "version_candidates": {
+    "pyproject.toml": "0.25.dev0"
+   },
+   "tree_files": 3006,
+   "checked_out_files": 276,
+   "docs_total": 142,
+   "docs_md": 31,
+   "figures_total": 5,
+   "languages": {
+    "Python": 1405,
+    "C++": 676,
+    "C/C++ hdr": 455,
+    "Shell": 62,
+    "Java": 42,
+    "Markdown": 31,
+    "YAML": 19,
+    "TypeScript": 14,
+    "CUDA": 13,
+    "JavaScript": 11
+   },
+   "top_dirs": [
+    ".github",
+    "3rdparty",
+    "apps",
+    "ci",
+    "cmake",
+    "docker",
+    "docs",
+    "include",
+    "jvm",
+    "licenses",
+    "python",
+    "src",
+    "tests",
+    "web"
+   ]
+  },
+  {
+   "slug": "tvm-ffi",
+   "url": "https://gitcode.com/xLLM-AI/tvm-ffi.git",
+   "ref": "main",
+   "note": "Apache TVM FFI is an open ABI and FFI for machine learning systems. It is a mini",
+   "head": "3523725eb7b04e1c617063bd0ce77037cbf48599",
+   "commit_date": "2026-08-29T19:45:58-04:00",
+   "latest_tag": "v0.1.13-post3",
+   "version_candidates": {
+    "git_tag": "v0.1.13-post3"
+   },
+   "tree_files": 526,
+   "checked_out_files": 64,
+   "docs_total": 63,
+   "docs_md": 21,
+   "figures_total": 0,
+   "languages": {
+    "Python": 135,
+    "C++": 98,
+    "C/C++ hdr": 74,
+    "Rust": 57,
+    "Markdown": 21,
+    "C": 18,
+    "YAML": 13,
+    "Shell": 7,
+    "CUDA": 7
+   },
+   "top_dirs": [
+    ".agents",
+    ".claude",
+    ".github",
+    "3rdparty",
+    "addons",
+    "cmake",
+    "docs",
+    "examples",
+    "include",
+    "licenses",
+    "python",
+    "rust",
+    "src",
+    "tests"
+   ]
+  },
+  {
+   "slug": "vision",
+   "url": "https://gitcode.com/Ascend/vision.git",
+   "ref": "master",
+   "note": "本项目开发了Torchvision Adapter插件，用于昇腾适配Torchvision框架。 目前该适配框架增加了对Torchvision所提供的常用算子的",
+   "head": "33a028d9503482f9d5d1b90e4b895f5351aea699",
+   "commit_date": "2026-08-21T17:29:40+08:00",
+   "latest_tag": "v0.21.0-7.1.0",
+   "version_candidates": {
+    "git_tag": "v0.21.0-7.1.0"
+   },
+   "tree_files": 218,
+   "checked_out_files": 25,
+   "docs_total": 15,
+   "docs_md": 13,
+   "figures_total": 17,
+   "languages": {
+    "Python": 85,
+    "C++": 53,
+    "C/C++ hdr": 19,
+    "Markdown": 13,
+    "YAML": 1,
+    "Shell": 1
+   },
+   "top_dirs": [
+    "\"docs",
+    "ci",
+    "docs",
+    "pre-commit",
+    "test",
+    "third_party",
+    "torchvision_npu"
+   ]
+  },
+  {
+   "slug": "visionsdk",
+   "url": "https://gitcode.com/Ascend/VisionSDK.git",
+   "ref": "master",
+   "note": "面向图片和视频视觉分析的SDK，提供了基本的视频、图像智能分析能力及编程框架",
+   "head": "484df03bfe8cfbe56ba3a29e493cb4366b8ffd12",
+   "commit_date": "2026-08-29T10:19:04+08:00",
+   "latest_tag": "v26.1.0",
+   "version_candidates": {
+    "git_tag": "v26.1.0"
+   },
+   "tree_files": 2583,
+   "checked_out_files": 272,
+   "docs_total": 547,
+   "docs_md": 122,
+   "figures_total": 263,
+   "languages": {
+    "C++": 490,
+    "C/C++ hdr": 374,
+    "Markdown": 122,
+    "Python": 73,
+    "Shell": 64,
+    "YAML": 2
+   },
+   "top_dirs": [
+    "\"docs",
+    "\"reference",
+    ".devcontainer",
+    ".gitcode",
+    "docker",
+    "docs",
+    "mxBase",
+    "mxPlugins",
+    "mxStream",
+    "mxTools",
+    "opensource",
+    "pre-commit",
+    "reference",
+    "test"
+   ]
+  },
+  {
+   "slug": "vllm",
+   "url": "https://gitcode.com/GitHub_Trending/vl/vllm.git",
+   "ref": "main",
+   "note": "vLLM 上游镜像 (GitHub_Trending)",
+   "head": "ec32f669bb557e85d3f05a814d4e4a68f7e3b634",
+   "commit_date": "2026-09-01T05:55:27+00:00",
+   "latest_tag": "v0.28.1rc0",
+   "version_candidates": {
+    "git_tag": "v0.28.1rc0"
+   },
+   "tree_files": 6813,
+   "checked_out_files": 888,
+   "docs_total": 404,
+   "docs_md": 293,
+   "figures_total": 98,
+   "languages": {
+    "Python": 4401,
+    "YAML": 321,
+    "Rust": 312,
+    "Markdown": 293,
+    "Shell": 139,
+    "CUDA": 97,
+    "C++": 43,
+    "C/C++ hdr": 41,
+    "JavaScript": 7
+   },
+   "top_dirs": [
+    ".agents",
+    ".buildkite",
+    ".claude",
+    ".gemini",
+    ".github",
+    "benchmarks",
+    "cmake",
+    "csrc",
+    "docker",
+    "docs",
+    "examples",
+    "requirements",
+    "rust",
+    "scripts",
+    "tests",
+    "tools",
+    "vllm"
+   ]
+  },
+  {
+   "slug": "vllm-ascend",
+   "url": "https://gitcode.com/gh_mirrors/vl/vllm-ascend.git",
+   "ref": "main",
+   "note": "vllm-ascend 镜像 (gh_mirrors)",
+   "head": "f69831343a1850a363f4892b1f5d5cfe8e4a051d",
+   "commit_date": "2026-09-01T20:59:37+08:00",
+   "latest_tag": "v0.25.1rc1",
+   "version_candidates": {
+    "git_tag": "v0.25.1rc1"
+   },
+   "tree_files": 3646,
+   "checked_out_files": 680,
+   "docs_total": 401,
+   "docs_md": 261,
+   "figures_total": 39,
+   "languages": {
+    "Python": 1294,
+    "C/C++ hdr": 791,
+    "C++": 333,
+    "YAML": 262,
+    "Markdown": 261,
+    "Shell": 55,
+    "JavaScript": 2
+   },
+   "top_dirs": [
+    ".agents",
+    ".claude",
+    ".gemini",
+    ".github",
+    "benchmarks",
+    "cmake",
+    "csrc",
+    "docs",
+    "examples",
+    "tests",
+    "tools",
+    "vllm_ascend"
+   ]
+  },
+  {
+   "slug": "xllm",
+   "url": "https://gitcode.com/xLLM-AI/xllm.git",
+   "ref": "main",
+   "note": "A high-performance inference engine for LLMs, optimized for diverse AI accelerat",
+   "head": "9d471fd9e0f2df7100dc7b82970bd43dd162ab3a",
+   "commit_date": "2026-08-31T21:54:57+08:00",
+   "latest_tag": "v0.10.1",
+   "version_candidates": {
+    "git_tag": "v0.10.1"
+   },
+   "tree_files": 2425,
+   "checked_out_files": 250,
+   "docs_total": 284,
+   "docs_md": 170,
+   "figures_total": 39,
+   "languages": {
+    "C++": 893,
+    "C/C++ hdr": 841,
+    "Python": 184,
+    "Markdown": 170,
+    "CUDA": 37,
+    "YAML": 12,
+    "Shell": 11,
+    "TypeScript": 2,
+    "Rust": 2
+   },
+   "top_dirs": [
+    ".agents",
+    ".claude",
+    ".gemini",
+    ".github",
+    "assets",
+    "cibuild",
+    "cmake",
+    "docker",
+    "docs",
+    "examples",
+    "scripts",
+    "tests",
+    "third_party",
+    "tools",
+    "xllm"
+   ]
+  },
+  {
+   "slug": "xllm-service",
+   "url": "https://gitcode.com/xLLM-AI/xllm-service.git",
+   "ref": "main",
+   "note": "xLLM-service is a service-layer framework developed based on the xLLM inference",
+   "head": "73d5e0043e120a08feccfe5d17a13caa829d256e",
+   "commit_date": "2026-08-18T16:13:30+08:00",
+   "latest_tag": "v0.9.0",
+   "version_candidates": {
+    "git_tag": "v0.9.0"
+   },
+   "tree_files": 206,
+   "checked_out_files": 18,
+   "docs_total": 38,
+   "docs_md": 12,
+   "figures_total": 4,
+   "languages": {
+    "C++": 59,
+    "C/C++ hdr": 53,
+    "Markdown": 12,
+    "Python": 9,
+    "Shell": 7,
+    "YAML": 3,
+    "Rust": 1
+   },
+   "top_dirs": [
+    ".gemini",
+    ".github",
+    "cmake",
+    "docs",
+    "tests",
+    "third_party",
+    "vllm_sidecar",
+    "xllm_service"
+   ]
+  },
+  {
+   "slug": "xllm_atb_layers",
+   "url": "https://gitcode.com/xLLM-AI/xllm_atb_layers.git",
+   "ref": "main",
+   "note": "",
+   "head": "f93ca51c28c97f3ad255cd150ff317c49dc54616",
+   "commit_date": "2026-08-26T18:31:01+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 389,
+   "checked_out_files": 2,
+   "docs_total": 10,
+   "docs_md": 1,
+   "figures_total": 0,
+   "languages": {
+    "C/C++ hdr": 193,
+    "C++": 183,
+    "Markdown": 1
+   },
+   "top_dirs": [
+    "core",
+    "models",
+    "operations",
+    "pytorch"
+   ]
+  },
+  {
+   "slug": "xllm_ops",
+   "url": "https://gitcode.com/xLLM-AI/xllm_ops.git",
+   "ref": "main",
+   "note": "xLLM ops is a scalable, high-performance operator library specifically designed",
+   "head": "4ef9d6a1a78103f01fcf0ebf057454718f8cd7c4",
+   "commit_date": "2026-09-01T16:07:35+08:00",
+   "latest_tag": null,
+   "version_candidates": {},
+   "tree_files": 1420,
+   "checked_out_files": 36,
+   "docs_total": 162,
+   "docs_md": 28,
+   "figures_total": 3,
+   "languages": {
+    "C/C++ hdr": 630,
+    "C++": 335,
+    "Python": 121,
+    "Shell": 33,
+    "Markdown": 28,
+    "YAML": 3
+   },
+   "top_dirs": [
+    "atb_customize",
+    "cmake",
+    "common",
+    "docs",
+    "scripts",
+    "test",
+    "third_party",
+    "utils",
+    "xllm_ops"
+   ]
+  },
+  {
+   "slug": "xxhash",
+   "url": "https://gitcode.com/xLLM-AI/xxHash.git",
+   "ref": "dev",
+   "note": "Extremely fast non-cryptographic hash algorithm",
+   "head": "1d7b2a9d21bf9a740ead540aa93f4bc4caf11ae0",
+   "commit_date": "2026-01-26T09:11:30-08:00",
+   "latest_tag": "v0.8.3",
+   "version_candidates": {
+    "git_tag": "v0.8.3"
+   },
+   "tree_files": 91,
+   "checked_out_files": 13,
+   "docs_total": 11,
+   "docs_md": 10,
+   "figures_total": 0,
+   "languages": {
+    "C": 24,
+    "C/C++ hdr": 19,
+    "Markdown": 10,
+    "YAML": 5,
+    "Shell": 4,
+    "C++": 1
+   },
+   "top_dirs": [
+    ".github",
+    "build",
+    "cli",
+    "doc",
+    "fuzz",
+    "tests"
    ]
   }
  ]

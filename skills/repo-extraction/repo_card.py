@@ -14,6 +14,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 SRC = REPO / 'repos_src'
+CARDS = REPO / 'extraction' / 'repo_cards'
 INVENTORY = REPO / 'extraction' / 'repo_inventory.json'
 DOCS_INDEX = REPO / 'extraction' / 'repo_docs_index.json'
 DEEP = REPO / 'extraction' / 'deep'
@@ -81,8 +82,12 @@ def main():
     mod_lines = '\n'.join(f'| `{d}` | {n if n is not None else "文件"} |' for d, n in module_map(slug))
     log_lines = '\n'.join(f'  - {h}' for h in changelog_head(docs)) or '  - (无 changelog)'
 
+    # 双层写入 (extract_phase1 overwrite 教训): 骨架机械层可无限重生成;
+    # deep/ 卡片只在不存在时播种, 已有人工/LLM 分析层绝不覆盖
+    CARDS.mkdir(exist_ok=True)
     DEEP.mkdir(exist_ok=True)
-    out = DEEP / f'repo-{slug}.md'
+    skel = CARDS / f'{slug}.md'
+    out = skel
     out.write_text(f"""# 代码仓卡片 · {slug}
 
 > 骨架由 repo_card.py 机械生成 (全部事实来自 inventory/docs_index);
@@ -133,6 +138,13 @@ def main():
 - 清单: extraction/repo_inventory.json · extraction/repo_docs_index.json
 """, encoding='utf-8')
     print(f'✓ skeleton: {out}')
+    deep_out = DEEP / f'repo-{slug}.md'
+    if not deep_out.exists():
+        import shutil
+        shutil.copyfile(skel, deep_out)
+        print(f'✓ seeded: {deep_out}')
+    else:
+        print(f'· deep card exists, not overwritten: {deep_out}')
 
 
 if __name__ == '__main__':

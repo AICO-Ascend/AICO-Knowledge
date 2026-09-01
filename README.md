@@ -1,6 +1,9 @@
 # AICO-Knowledge
 
-> 69 篇 LLM 系统/推理/训练论文的**生产级深度萃取知识库**——每张图、每个表、每条公式都可被工程直接取用：裁剪单图 + MiniMax-M3 多模态解读 + arXiv LaTeX 权威公式 + 6 段一体化深读 + **图/表/公式/文本跨元素关联分析**。Obsidian 图谱化 + RAG 友好 + Wiki 簿记层。
+> **论文 × 代码仓双域**生产级深度萃取知识库：
+> **69 篇** LLM 系统/推理/训练论文（每张图/表/公式可被工程直接取用：裁剪单图 + MiniMax-M3 多模态解读 + arXiv LaTeX 权威公式 + 一体化深读 + 跨元素关联）
+> **+ 134 个代码仓**（Ascend 组织全量 + xLLM-AI 全量 + vllm/vllm-ascend：**21,954 篇文档**收割分类 + 版本血缘追踪 + 仓卡片）。
+> Obsidian 图谱化 + RAG 友好 + Wiki 簿记层。
 
 ![pipeline](docs/images/kb_pipeline.png)
 
@@ -10,9 +13,9 @@
 
 | 层 | 本库落地 | 谁写 |
 |---|---|---|
-| **Raw sources**（不可变事实源） | `papers/` PDF + `archive/paper_source_moonlight.bib` | 用户策展 |
-| **Wiki**（LLM 全权维护） | `extraction/`（MD/deep/MOC/moc_relations/captions/formulas）+ `wiki/concepts/` 概念页 + `extraction/index.md` 内容目录 + `extraction/log.md` 编年日志 | LLM |
-| **Schema**（规范） | `skills/paper-extraction/SKILL.md` + `DEEP_LEARNING_PROTOCOL.md` + 各脚本 docstring | 人与 LLM 共演进 |
+| **Raw sources**（不可变事实源） | `papers/` PDF + `archive/paper_source_moonlight.bib` + `repos_src/` 稀疏克隆（blob:none，可重拉） | 用户策展 |
+| **Wiki**（LLM 全权维护） | `extraction/`（论文: MD/deep/MOC/captions/formulas · 代码仓: repo_inventory/repo_docs/repo_docs_index/repo_cards/deep/repo-*）+ `wiki/concepts/` 概念页 + `extraction/index.md` 内容目录 + `extraction/log.md` 编年日志 | LLM |
+| **Schema**（规范） | `skills/paper-extraction/SKILL.md` + `skills/repo-extraction/SKILL.md` + `DEEP_LEARNING_PROTOCOL.md` + 各脚本 docstring | 人与 LLM 共演进 |
 
 **三个操作（持续复利）**：
 
@@ -21,6 +24,20 @@
 3. **Lint** — 全量机审（M3 逐张判决 → 二阶白名单 → 规则重裁 → 复核闭环）；夜间深读 cron 顺带做
 
 ## 为什么这个知识库不一样
+
+普通知识仓 = 一堆 PDF + 摘要，或一堆 git clone。本库对**论文和代码仓两个域**都做了全要素深度加工，
+且两域知识互相锚定（glm5.3-flash 适配：论文 KDA/DSA 方法源 ↔ xllm 仓官方实现 ↔ MindSpeed 仓特性文档三方互证）。
+
+### 代码仓域（2026-09 新增 · repo-extraction）
+
+| 能力 | 做法 | 效果 |
+|---|---|---|
+| **大仓低成本归档** | `--filter=blob:none` + no-cone sparse-checkout：全 tree 免费（git ls-tree），blob 只拉文档与元数据 | 1516 文件的 MindSpeed 只下载 39MB；134 仓全量仅 1.9GB |
+| **文档全量收割分类** | 路径启发式九类（feature/api/guide/changelog/readme/design/faq/overview/doc），大纲/图片/内部链接全登记 | 21,954 篇文档索引化；特性文档互链可直接生成特性关系图 |
+| **版本血缘追踪** | inventory 每仓记录 tag/HEAD/版本候选 + **snapshots 追加式历史**（重拉自动保留旧快照） | 仓更新后可做版本间知识 diff 与关联（卡片标注版本线：如 xllm v0.10.1 · GLM-5.3-Flash day-0 时间线） |
+| **机械层/分析层双层写入** | `repo_cards/` 骨架无限重生成，`deep/repo-*` 卡片只播种不覆盖 | LLM 深读内容永不丢失（extract_phase1 overwrite 教训的制度化） |
+
+### 论文域（paper-extraction）
 
 普通论文仓 = 一堆 PDF + 摘要。本库对每篇论文做了**全要素深度加工**，四条铁律保证质量：
 
@@ -49,6 +66,21 @@
 ```
 
 幂等：无新增时 ~1-2 分钟完成。新增论文 = 一次 `full_pipeline.py --push` 即可。
+
+## 代码仓流水线（repo-extraction，3 阶段）
+
+输入 = `repos_download_list.txt`（slug | git_url | ref | 备注，镜像论文清单）：
+
+```bash
+python3 skills/repo-extraction/repo_fetch.py          # ① 稀疏拉取+清单 → repo_inventory.json
+python3 skills/repo-extraction/repo_extract_docs.py   # ② 文档收割分类 → repo_docs/ + repo_docs_index.json
+python3 skills/repo-extraction/repo_card.py <slug>    # ③ 卡片骨架(机械层) → repo_cards/ + deep/repo-<slug>.md 播种
+# ③b LLM 分析层: 定位/架构/关键特性深读(图走 M3 文档上下文联合解读) — 只写 deep/ 卡片, 骨架重跑不覆盖
+```
+
+当前规模（2026-09-02）：**134 仓入库**（Ascend 组织 104 + xLLM-AI 30 全量 + vllm/vllm-ascend 镜像；
+llvm-project / torch-mlir 为空仓占位已标记），**21,954 篇文档**、497 篇特性文档、版本血缘 snapshots 全量在册。
+已填分析层的卡片：mindspeed（含 fb-overlap 特性 3 图 M3 解读）· xllm · vllm · vllm-ascend。
 
 ## 萃取深度一图看懂
 

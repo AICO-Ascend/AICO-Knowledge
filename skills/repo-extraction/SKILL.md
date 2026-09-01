@@ -56,10 +56,20 @@ python3 skills/repo-extraction/repo_card.py <slug>
 | 产物 | 位置 | 说明 |
 |---|---|---|
 | 稀疏克隆 | `repos_src/<slug>/`（gitignore，可重拉） | blob:none + sparse，大仓只拉文档 |
-| 仓清单 | `extraction/repo_inventory.json` | 版本候选/git 元数据/语言/结构 |
+| 仓清单 | `extraction/repo_inventory.json` | 版本候选/git 元数据/语言/结构 + **snapshots 版本血缘**（重拉自动保留旧快照，支撑仓更新后的知识 diff/关联） |
 | 文档库 | `extraction/repo_docs/<slug>/` | 收割的 markdown + figures/ |
 | 文档索引 | `extraction/repo_docs_index.json` | 分类/大纲/图片/内部链接 |
-| 仓卡片 | `extraction/deep/repo-<slug>.md` | 定位/架构/特性地图/版本演进/关键特性深读 |
+| 卡片骨架 | `extraction/repo_cards/<slug>.md` | 机械层，**可无限重生成** |
+| 仓卡片 | `extraction/deep/repo-<slug>.md` | 分析层（LLM 深读），**只播种不覆盖**（extract_phase1 overwrite 教训制度化） |
+
+## 规模基线（2026-09-02 · 批量入库）
+
+- 输入：`repos_download_list.txt` 136 仓（Ascend 组织 API 枚举 104 + xLLM-AI 30 + vllm/vllm-ascend 镜像）
+- phase 1：134 ok / 2 empty（llvm-project · torch-mlir = 远端无 ref 的空仓占位，inventory 标 status=empty）；
+  断链 symlink 防护（memfabric_hybrid CLAUDE.md 事故）
+- phase 2：**21,954 篇文档**（readme 5785 / doc 11488 / api 2779 / guide 696 / feature 497 / overview 296 / design 180 / changelog 126 / faq 107）
+- phase 3：134 骨架全量（repo_cards/）；分析层已填：mindspeed · xllm · vllm · vllm-ascend
+- 空仓识别法：`git ls-remote --symref <url> HEAD` 返回空 = 远端无 ref
 
 ## 验证基线（2026-09-01 · MindSpeed）
 
