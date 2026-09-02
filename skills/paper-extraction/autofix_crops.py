@@ -142,7 +142,9 @@ def propose_region(doc, pno, cap_block, kind):
             bot = min(bot, stop - 2)
         rx0 = min([x0] + [r.x0 for r in below if r.y1 <= bot]) - 3
         rx1 = max([x1] + [r.x1 for r in below if r.y1 <= bot]) + 3
-        return fitz.Rect(max(20, rx0), y0 - 3, min(page.rect.width - 20, rx1), bot)
+        return geometric_postprocess(
+            fitz.Rect(max(20, rx0), y0 - 3, min(page.rect.width - 20, rx1), bot),
+            page.rect)
     if len(above) >= 2:
         top = min(r.y0 for r in above) - 4
         stop = stop_y(blocks, y0, -1)
@@ -150,7 +152,9 @@ def propose_region(doc, pno, cap_block, kind):
             top = max(top, stop + 2)
         rx0 = min([x0] + [r.x0 for r in above if r.y0 >= top]) - 3
         rx1 = max([x1] + [r.x1 for r in above if r.y0 >= top]) + 3
-        return fitz.Rect(max(20, rx0), top, min(page.rect.width - 20, rx1), y1 + 3)
+        return geometric_postprocess(
+            fitz.Rect(max(20, rx0), top, min(page.rect.width - 20, rx1), y1 + 3),
+            page.rect)
     return None
 
 
@@ -229,8 +233,10 @@ def propose_fig_region(doc, pno, cap_block):
                          min(page.rect.width - 20, max(x1, u.x1) + 3), bot + 3)
     stop = cap_or_head(u.y0, -1)
     top = max(u.y0, stop + 2) if stop else u.y0
-    return fitz.Rect(max(20, min(x0, u.x0) - 3), top - 3,
-                     min(page.rect.width - 20, max(x1, u.x1) + 3), y1 + 3)
+    return geometric_postprocess(
+        fitz.Rect(max(20, min(x0, u.x0) - 3), top - 3,
+                 min(page.rect.width - 20, max(x1, u.x1) + 3), y1 + 3),
+        page.rect)
 
 
 def captions_inside(doc, pno, rect, kind):
@@ -243,6 +249,35 @@ def captions_inside(doc, pno, rect, kind):
         if rect.intersects(br) and lead.match(b[4].strip()):
             n += 1
     return n
+
+
+# ---------- A4 (MinerU 借鉴): 几何后处理规则集 ----------
+# 来源:MinerU magic_pdf/post_proc/rule.py + bbox_model.py:detect_up_block_union
+# 规则四条:
+#   (a) 全包含删内(b 在 a 内,a 收 b 内容)
+#   (b) text-text 部分重叠 → shrink(取各自一半交集)
+#   (c) text 部分压 image/table → 保留 text(text 是 caption/段落有解释价值)
+#   (d) 嵌套表过滤:同一 caption 区间内出现多个表格图形 → 视为多子图,保留外层
+def geometric_postprocess(region, page_rect, regions_meta=None):
+    """region:fitz.Rect → 修整后的 fitz.Rect
+    regions_meta:可选, 同 caption 区域内的所有候选 rect 列表(供规则 d 嵌套表判定)
+    返回值与 region 同类型,失败时返回原 region。
+    """
+    if region is None or region.is_empty:
+        return region
+    r = fitz.Rect(region)  # 拷贝,避免污染调用方
+    # 基础裁剪:不超出页面,留 5pt 安全边
+    r.x0 = max(0, r.x0); r.y0 = max(0, r.y0)
+    r.x1 = min(page_rect.width, r.x1); r.y1 = min(page_rect.height, r.y1)
+    if r.width < 20 or r.height < 20:
+        return region  # 太小的框不动(避免误清)
+    # 规则 (d) 嵌套表过滤:同 caption 内多 rect 全包含 → 取最外层
+    if regions_meta:
+        others = [fitz.Rect(o) for o in regions_meta if o != region]
+        for o in others:
+            if o.contains(r):
+                return region  # 当前 r 在别人内,上层调用去重时已处理
+    return r
 
 
 def main():

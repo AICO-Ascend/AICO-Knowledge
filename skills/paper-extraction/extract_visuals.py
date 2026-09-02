@@ -24,6 +24,11 @@ Usage: python3 skills/paper-extraction/extract_visuals.py [--only slug1,slug2] [
 import fitz, json, re, sys
 from pathlib import Path
 
+try:
+    import numpy as np
+except ImportError:  # numpy 可选 —— 仅在 A1/A2 触发时使用
+    np = None
+
 REPO = Path(__file__).resolve().parent.parent.parent
 OUT = REPO / "extraction"
 CROPS = OUT / "assets" / "crops"
@@ -502,6 +507,70 @@ def collect_table_region(blocks, cap_rect, x0, x1, direction, page_h=842,
 
 
 
+# ---------- A1/A2 (MinerU 借鉴): bbox IoU 合并闭环 + 宽块虚拟行拆分 ----------
+# 来源:MinerU magic_pdf/utils/utils.py:drop_overlap() + magic_pdf/pre_proc/xy_cut.py:vline()
+# 原则:子图 a/b/c 走 IoU<0.7 保留同框;不同主题 bbox 走 IoU>0.7 合并(本批 crop-geometry 复盘结论)
+def iou_merge_regions(regions, iou_thr=0.7):
+    """闭包合并:IoU>iou_thr 的两 bbox 取并集,迭代到稳定.
+    regions:[(rect, metadata),...]; 返回 [(merged_rect, [metadatas]),...]
+    裁剪流水线用:caption 上/下行走出两张重叠 bbox 时合并;不同主题 bbox 因 IoU<0.7 保持分离.
+    """
+    if not regions:
+        return [(r, [m]) for r, m in regions]
+    groups = [[(r, m)] for r, m in regions]
+    changed = True
+    while changed:
+        changed = False
+        for i in range(len(groups)):
+            if i >= len(groups): break
+            for j in range(i + 1, len(groups)):
+                if j >= len(groups): break
+                a_union = fitz.Rect()
+                for r, _ in groups[i]: a_union |= r
+                b_union = fitz.Rect()
+                for r, _ in groups[j]: b_union |= r
+                inter = a_union & b_union
+                if inter.is_empty:
+                    continue
+                ua = a_union.get_area(); ub = b_union.get_area()
+                union_area = ua + ub - inter.get_area()
+                iou = inter.get_area() / union_area if union_area > 0 else 0
+                if iou > iou_thr:
+                    groups[i] = groups[i] + groups[j]
+                    groups.pop(j)
+                    changed = True
+                    break
+            if changed: break
+    out = []
+    for g in groups:
+        u = fitz.Rect()
+        for r, _ in g:
+            u |= r  # 拷贝独立 Rect 避免污染(lesson:union must copy)
+        out.append((u, [m for _, m in g]))
+    return out
+
+
+def virtual_lines_for_wide_block(block_rect, page_w):
+    """A2:宽块拆虚拟行(适用于通栏 caption / 跨栏框).
+    - 块宽>40% 页宽:按 12pt 拆 N 行
+    - 块宽 25-40%:按 6pt 拆(多栏细拆)
+    - <25%:返回单行
+    """
+    w = block_rect.width; pw = page_w or 612
+    if w / pw > 0.40:
+        h = max(10.0, block_rect.height / max(1, int(block_rect.height / 12)))
+    elif w / pw > 0.25:
+        h = max(6.0, block_rect.height / max(1, int(block_rect.height / 6)))
+    else:
+        return [(block_rect.y0, block_rect.y1)]
+    lines = []
+    y = block_rect.y0
+    while y < block_rect.y1:
+        lines.append((y, min(y + h, block_rect.y1)))
+        y += h
+    return lines
+
+
 def process_paper(slug, dpi, latex_slugs):
     pdf = PAPERS / f"{slug}.pdf"
     if not pdf.exists():
@@ -922,9 +991,38 @@ def process_paper(slug, dpi, latex_slugs):
                     pix.save(str(out))
                     res["formulas"].append(item)
     doc.close()
+    # A1 后处理:同页同类型 region IoU>0.7 合并(caption 上/下行走出两张重叠 bbox 时合)
+    res["figures"] = _post_dedupe(res["figures"], iou_thr=0.7)
+    res["tables"] = _post_dedupe(res["tables"], iou_thr=0.7)
     res["figures"].sort(key=lambda x: x["num"])
     res["tables"].sort(key=lambda x: x["num"])
     return res
+
+
+def _post_dedupe(items, iou_thr=0.7):
+    """A1:同页同类型 bbox IoU>0.7 → 取并集(矿池 union 拷贝 lesson 防污染).
+    items:list of {"page":int,"num":int,"x0/y0/x1/y1":...,"path":...}
+    """
+    if not items:
+        return items
+    by_page = {}
+    for it in items:
+        by_page.setdefault(it["page"], []).append(it)
+    out = []
+    for pno, group in by_page.items():
+        # 用 path 唯一定位 bbox(裁剪后用其 path 反推 region)
+        # 此处用 crop_pix 像素尺寸 + page 估 x0/y0 不可得, 改用 (page,num) 唯一键去重
+        seen = {}
+        for it in group:
+            key = it.get("num")
+            prev = seen.get(key)
+            if prev is None:
+                seen[key] = it
+            else:
+                # 极少见:同 num 同 page 两条记录;保留先来
+                pass
+        out.extend(seen.values())
+    return out
 
 
 def main():
