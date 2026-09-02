@@ -1,0 +1,64 @@
+{
+ "pages": [
+  {
+   "slug": "vllm-cli-serve",
+   "url": "https://docs.vllm.ai/en/latest/cli/serve/",
+   "note": "vLLM serve CLI 参数完整参考",
+   "status": "ok",
+   "route": "direct-html",
+   "title": "vllm serve",
+   "chars": 95556,
+   "tables": 0,
+   "fetched_at": "2026-09-02 17:37",
+   "deep_note": "extraction/web_deep_docs/vllm-cli-serve.md"
+  },
+  {
+   "slug": "vllm-ascend-quickstart",
+   "url": "https://docs.vllm.ai/projects/vllm-ascend-cn/zh-cn/latest/quick_start.html",
+   "note": "vllm-ascend 中文快速上手",
+   "status": "ok",
+   "route": "direct-html",
+   "title": "Quick Start",
+   "chars": 25861,
+   "tables": 6,
+   "fetched_at": "2026-09-02 17:37",
+   "deep_note": "extraction/web_deep_docs/vllm-ascend-quickstart.md"
+  },
+  {
+   "slug": "ascend-pytorch-envvars",
+   "url": "https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/env_variable_list.md",
+   "note": "PyTorch 2600 环境变量参考 (.md 直出)",
+   "status": "ok",
+   "route": "hiascend-source",
+   "title": "环境变量列表",
+   "chars": 9034,
+   "tables": 40,
+   "fetched_at": "2026-09-02 17:37",
+   "deep_note": "extraction/web_deep_docs/ascend-pytorch-envvars.md"
+  },
+  {
+   "slug": "ascend-cann-commercial-envvars",
+   "url": "https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html",
+   "note": "CANN 商用版 900 环境变量参考",
+   "status": "ok",
+   "route": "hiascend-source",
+   "title": "环境变量列表",
+   "chars": 20896,
+   "tables": 132,
+   "fetched_at": "2026-09-02 17:37",
+   "deep_note": "extraction/web_deep_docs/ascend-cann-commercial-envvars.md"
+  },
+  {
+   "slug": "ascend-cann-community-envvars",
+   "url": "https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910beta1/maintenref/envvar/envref_07_0001.html",
+   "note": "CANN 社区版 910beta1 环境变量参考",
+   "status": "ok",
+   "route": "hiascend-source",
+   "title": "环境变量列表",
+   "chars": 22029,
+   "tables": 132,
+   "fetched_at": "2026-09-02 17:37",
+   "deep_note": "extraction/web_deep_docs/ascend-cann-community-envvars.md"
+  }
+ ]
+}

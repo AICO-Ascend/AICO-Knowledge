@@ -1,0 +1,12 @@
+# 网页知识源下载清单 (web-extraction 输入)
+# 格式: slug | url | 备注
+# 首批试跑 2026-09-02: vLLM 官方文档 2 页 + 昇腾 hiascend 文档中心 3 页
+
+# ── vLLM 官方文档 (服务端渲染 HTML, 直抓) ──
+vllm-cli-serve | https://docs.vllm.ai/en/latest/cli/serve/ | vLLM serve CLI 参数完整参考
+vllm-ascend-quickstart | https://docs.vllm.ai/projects/vllm-ascend-cn/zh-cn/latest/quick_start.html | vllm-ascend 中文快速上手
+
+# ── 昇腾 hiascend 文档中心 (Nuxt SPA → doc_center/source/ 原始内容路由) ──
+ascend-pytorch-envvars | https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/env_variable_list.md | PyTorch 2600 环境变量参考 (.md 直出)
+ascend-cann-commercial-envvars | https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html | CANN 商用版 900 环境变量参考
+ascend-cann-community-envvars | https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910beta1/maintenref/envvar/envref_07_0001.html | CANN 社区版 910beta1 环境变量参考

@@ -1,0 +1,46 @@
+# 环境变量列表
+
+本手册描述开发者在Ascend Extension for PyTorch训练和在线推理过程中可使用的环境变量。基于CANN构建AI应用和业务过程中使用的环境变量请参考《[CANN 环境变量参考](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html)》。
+
+**表 1**  环境变量列表
+
+|环境变量类型|环境变量名称|简介|
+|--|--|--|
+|算子执行|[INF_NAN_MODE_ENABLE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/INF_NAN_MODE_ENABLE.md)|通过此环境变量可控制AI处理器对输入数据为Inf/NaN的处理能力，即控制AI处理器使用饱和模式还是INF_NAN模式。|
+|算子执行|[INF_NAN_MODE_FORCE_DISABLE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/INF_NAN_MODE_FORCE_DISABLE.md)|Atlas A2 训练系列产品/Atlas A3 训练系列产品，通过此环境变量可强制关闭INF_NAN模式。|
+|算子执行|[COMBINED_ENABLE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/COMBINED_ENABLE.md)|通过此环境变量可设置combined标志。|
+|算子执行|[ASCEND_LAUNCH_BLOCKING](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/ASCEND_LAUNCH_BLOCKING.md)|通过此环境变量可控制算子执行时是否启动同步模式。|
+|算子执行|[TASK_QUEUE_ENABLE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TASK_QUEUE_ENABLE.md)|通过此环境变量可配置task_queue算子下发队列是否开启和优化等级。|
+|算子执行|[PER_STREAM_QUEUE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/PER_STREAM_QUEUE.md)|通过此环境变量可配置是否开启一个stream一个task_queue算子下发队列。|
+|算子执行|[TORCH_NPU_USE_COMPATIBLE_IMPL](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCH_NPU_USE_COMPATIBLE_IMPL.md)|该环境变量用于控制API的实现是否与PyTorch原生社区完全对齐。|
+|算子编译|[ACL_OP_COMPILER_CACHE_DIR](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/ACL_OP_COMPILER_CACHE_DIR.md)|通过此环境变量可配置算子编译磁盘缓存的目录。|
+|算子编译|[ACL_OP_COMPILER_CACHE_MODE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/ACL_OP_COMPILER_CACHE_MODE.md)|通过此环境变量可配置算子编译磁盘缓存模式。|
+|内存管理|[PYTORCH_NPU_ALLOC_CONF](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/PYTORCH_NPU_ALLOC_CONF.md)|通过此环境变量可控制缓存分配器行为。配置此环境变量会改变内存占用量，可能造成性能波动。|
+|内存管理|[PYTORCH_NO_NPU_MEMORY_CACHING](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/PYTORCH_NO_NPU_MEMORY_CACHING.md)|通过此环境变量可配置是否关闭内存复用机制。|
+|内存管理|[OOM_SNAPSHOT_ENABLE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/OOM_SNAPSHOT_ENABLE.md)|通过此环境变量可配置在内存不足报错时是否保存内存数据，以供分析内存不足原因。|
+|内存管理|[OOM_SNAPSHOT_PATH](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/OOM_SNAPSHOT_PATH.md)|通过此环境变量可配置在内存不足报错时内存数据的保存路径。|
+|内存管理|[MULTI_STREAM_MEMORY_REUSE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/MULTI_STREAM_MEMORY_REUSE.md)|通过此环境变量可配置多流内存复用是否开启。|
+|内存管理|[TORCH_NPUGRAPH_GC](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCH_NPUGRAPH_GC.md)|通过此环境变量可控制图捕获模式（NPUGraph Capture）过程中是否主动触发Python GC（Garbage Collection）。|
+|集合通信|[HCCL_ASYNC_ERROR_HANDLING](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/HCCL_ASYNC_ERROR_HANDLING.md)|当使用HCCL作为通信后端时，通过此环境变量可控制是否开启异步错误处理。|
+|集合通信|[HCCL_DESYNC_DEBUG](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/HCCL_DESYNC_DEBUG.md)|当使用HCCL作为通信后端时，通过此环境变量可控制是否进行通信超时分析。|
+|集合通信|[HCCL_EVENT_TIMEOUT](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/HCCL_EVENT_TIMEOUT.md)|当使用HCCL作为通信后端时，通过此环境变量可设置等待Event完成的超时时间。|
+|集合通信|[P2P_HCCL_BUFFSIZE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/P2P_HCCL_BUFFSIZE.md)|通过此环境变量可配置是否开启点对点通信（`torch.distributed.isend`、`torch.distributed.irecv`和`torch.distributed.batch_isend_irecv`），并使用独立通信域功能。|
+|集合通信|[RANK_TABLE_FILE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/RANK_TABLE_FILE.md)|通过此环境变量可配置是否通过RANK_TABLE_FILE进行集合通信域建链。|
+|集合通信|[(beta) TORCH_HCCL_ZERO_COPY](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/（beta）TORCH_HCCL_ZERO_COPY.md)|训练或在线推理场景下，可通过此环境变量开启集合通信片内零拷贝功能，减少通信算子在通信过程中片内拷贝次数，提升集合通信效率，降低通信耗时。同时在计算通信并行场景下，降低通信过程中对显存带宽的抢占。|
+|告警信息打印|[TORCH_NPU_DISABLED_WARNING](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCH_NPU_DISABLED_WARNING.md)|通过此环境变量可配置是否打印Ascend Extension for PyTorch的告警信息。|
+|告警信息打印|[TORCH_NPU_COMPACT_ERROR_OUTPUT](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCH_NPU_COMPACT_ERROR_OUTPUT.md)|通过此环境变量可精简打印错误信息，开启后会将CANN内部调用栈、Ascend Extension for PyTorch错误码等自定义报错信息转移到plog中，仅保留有效的错误说明，提高异常信息的可读性。|
+|告警信息打印|[TORCH_NPU_LOGS](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCH_NPU_LOGS.md)|此环境变量用于配置Ascend Extension for PyTorch新增模块的日志打印功能，为开发者在Debugging场景下提供精准的调试定位能力。|
+|告警信息打印|[TORCH_NPU_LOGS_FILTER](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCH_NPU_LOGS_FILTER.md)|此环境变量用于过滤Ascend Extension for PyTorch日志输出内容，通过黑白名单机制筛选需要显示的日志信息，帮助开发者在大量日志中快速定位关键信息。|
+|同步超时|[ACL_DEVICE_SYNC_TIMEOUT](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/ACL_DEVICE_SYNC_TIMEOUT.md)|通过此环境变量可配置设备同步的超时时间。|
+|特征值检测|[NPU_ASD_ENABLE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/NPU_ASD_ENABLE.md)|Ascend Extension for PyTorch 7.0.0及之前版本，通过此环境变量可控制是否开启Ascend Extension for PyTorch的特征值检测功能。|
+|特征值检测|[NPU_ASD_UPPER_THRESH](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/NPU_ASD_UPPER_THRESH.md)|Ascend Extension for PyTorch 7.0.0及之前版本，通过此环境变量可配置特征值检测功能的绝对阈值。|
+|特征值检测|[NPU_ASD_SIGMA_THRESH](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/NPU_ASD_SIGMA_THRESH.md)|Ascend Extension for PyTorch 7.0.0及之前版本，通过此环境变量可配置特征值检测功能的相对阈值。|
+|特征值检测|[NPU_ASD_CONFIG](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/NPU_ASD_CONFIG.md)|Ascend Extension for PyTorch 7.1.0及之后版本，通过此环境变量可控制是否开启Ascend Extension for PyTorch的特征值检测功能。|
+|性能优化|[CPU_AFFINITY_CONF](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/CPU_AFFINITY_CONF.md)|Ascend Extension for PyTorch可以通过设置环境变量CPU_AFFINITY_CONF来开启粗/细粒度绑核。该配置能够避免线程间抢占，提高缓存命中，避免跨NUMA（非统一内存访问架构）节点的内存访问，减少任务调度开销，优化任务执行效率。|
+|性能优化|[PROF_CONFIG_PATH](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/PROF_CONFIG_PATH.md)|在PyTorch训练场景中，通过此环境变量可指定Ascend PyTorch Profiler接口的dynamic_profile采集功能的profiler_config.json配置文件路径。|
+|性能优化|[KINETO_USE_DAEMON](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/KINETO_USE_DAEMON.md)|PyTorch训练场景用于设置是否通过msMonitor nputrace方式开启dynamic_profile采集功能。|
+|设备管理|[STREAMS_PER_DEVICE](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/STREAMS_PER_DEVICE.md)|通过此环境变量可配置stream pool的最大流数。|
+|设备管理|[TORCH_NPU_DEVICE_CAPABILITY](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCH_NPU_DEVICE_CAPABILITY.md)|通过此环境变量可配置`torch_npu.npu.get_device_capability()`的返回值。|
+|设备管理|[TORCH_TRANSFER_TO_NPU](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCH_TRANSFER_TO_NPU.md)|通过此环境变量可配置是否自动启用transfer_to_npu功能，将PyTorch的CUDA相关API自动替换为NPU对应API。|
+|图模式|[TORCHINDUCTOR_NPU_BACKEND](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/TORCHINDUCTOR_NPU_BACKEND.md)|通过该环境变量可配置图模式下的优化模式，支持Triton、MLIR、DVM等优化模式。|
+|图模式|[（beta）INDUCTOR_ASCEND_CHECK_ACCURACY](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/INDUCTOR_ASCEND_CHECK_ACCURACY.md)|INDUCTOR_ASCEND_CHECK_ACCURACY是Ascend Extension for PyTorch提供的精度校验工具，仅在torch.compile图编译后端为"Inductor"且模式为"Triton"时自动检测融合算子的数值精度。|

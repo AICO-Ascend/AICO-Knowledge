@@ -1,8 +1,9 @@
 # AICO-Knowledge
 
-> **论文 × 代码仓双域**生产级深度萃取知识库：
+> **论文 × 代码仓 × 网页三域**生产级深度萃取知识库：
 > **69 篇** LLM 系统/推理/训练论文（每张图/表/公式可被工程直接取用：裁剪单图 + MiniMax-M3 多模态解读 + arXiv LaTeX 权威公式 + 一体化深读 + 跨元素关联）
-> **+ 134 个代码仓**（Ascend 组织全量 + xLLM-AI 全量 + vllm/vllm-ascend：**21,954 篇文档**收割分类 + 版本血缘追踪 + 仓卡片）。
+> **+ 134 个代码仓**（Ascend 组织全量 + xLLM-AI 全量 + vllm/vllm-ascend：**21,954 篇文档**收割分类 + 版本血缘追踪 + 仓卡片）
+> **+ 官方文档网页**（docs.vllm.ai / hiascend 文档中心：SPA 抓取路由 + 表格逐字还原深读）。
 > Obsidian 图谱化 + RAG 友好 + Wiki 簿记层。
 
 ![pipeline](docs/images/kb_pipeline.png)
@@ -14,8 +15,8 @@
 | 层 | 本库落地 | 谁写 |
 |---|---|---|
 | **Raw sources**（不可变事实源） | `papers/` PDF + `archive/paper_source_moonlight.bib` + `repos_src/` 稀疏克隆（blob:none，可重拉） | 用户策展 |
-| **Wiki**（LLM 全权维护） | `extraction/`（论文: MD/deep/MOC/captions/formulas · 代码仓: repo_inventory/repo_docs/repo_docs_index/repo_cards/deep/repo-*）+ `wiki/concepts/` 概念页 + `extraction/index.md` 内容目录 + `extraction/log.md` 编年日志 | LLM |
-| **Schema**（规范） | `skills/paper-extraction/SKILL.md` + `skills/repo-extraction/SKILL.md` + `DEEP_LEARNING_PROTOCOL.md` + 各脚本 docstring | 人与 LLM 共演进 |
+| **Wiki**（LLM 全权维护） | `extraction/`（论文: MD/deep/MOC/captions/formulas · 代码仓: repo_inventory/repo_docs/repo_cards/deep/repo-* · 网页: web_docs/web_deep_docs/web_moc）+ `wiki/concepts/` 概念页 + `extraction/index.md` 内容目录 + `extraction/log.md` 编年日志 | LLM |
+| **Schema**（规范） | `skills/paper-extraction/SKILL.md` + `skills/repo-extraction/SKILL.md` + `skills/web-extraction/SKILL.md` + `DEEP_LEARNING_PROTOCOL.md` + 各脚本 docstring | 人与 LLM 共演进 |
 
 **三个操作（持续复利）**：
 
@@ -25,8 +26,8 @@
 
 ## 为什么这个知识库不一样
 
-普通知识仓 = 一堆 PDF + 摘要，或一堆 git clone。本库对**论文和代码仓两个域**都做了全要素深度加工，
-且两域知识互相锚定（glm5.3-flash 适配：论文 KDA/DSA 方法源 ↔ xllm 仓官方实现 ↔ MindSpeed 仓特性文档三方互证）。
+普通知识仓 = 一堆 PDF + 摘要，或一堆 git clone。本库对**论文、代码仓、网页三个域**都做了全要素深度加工，
+且三域知识互相锚定（glm5.3-flash 适配：论文 KDA/DSA 方法源 ↔ xllm 仓官方实现 ↔ MindSpeed 仓特性文档 ↔ vLLM serve CLI 参数手册四方互证）。
 
 ### 代码仓域（2026-09 新增 · repo-extraction）
 
@@ -88,6 +89,28 @@ llvm-project / torch-mlir 为空仓占位已标记），**21,954 篇文档**、4
 带图文档**正文作上下文喂 M3 vision**，**881 张**文档图完成图文联合解读（`repo_m3_captions.json`）。
 产物：`extraction/repo_deep_docs/<slug>/`（1,722 篇笔记 · 85 仓）+ `extraction/repo_deep_index.json` 索引
 + 仓卡片尾部深读链接块（机械层标记内重生成）。
+
+### 网页域（2026-09 新增 · web-extraction）
+
+| 能力 | 做法 | 效果 |
+|---|---|---|
+| **SPA 也能抓** | 三级降级路由：`.md` 直出 → 服务端渲染 HTML 内容探测 → hiascend Nuxt SPA 改写 `doc_center/source/` 原始内容路由 | 5/5 试跑全通，受限网络下无需 headless 浏览器 |
+| **规范化零噪音** | 表格 pipe 还原 + 剥 mkdocs 锚点/自定义标签 + 相对链接绝对化 | 站内互链可点 = 深读【关联】节有真出处 |
+| **表格逐字还原深读** | 与代码仓同规格 M3 七节深读，参考手册类长文不截断（95k 字符全量进 prompt） | 132 表行 CANN 环境变量表、312 项 vLLM CLI 参数逐字入册 |
+| **版本线在 URL 里** | `canncommercial/900`、`Pytorch/2600`、`latest` 机械提取为版本线索进深读上下文 | 与仓域 snapshots 同理：官方文档改版后重抓即得版本 diff |
+
+## 网页流水线（web-extraction，2 阶段）
+
+输入 = `webs_download_list.txt`（slug | url | 备注，镜像论文/代码仓清单）：
+
+```bash
+python3 skills/web-extraction/web_fetch.py        # ① 抓取+规范化 → web_docs/ + web_index.json
+python3 skills/web-extraction/web_deep_read.py    # ② M3 七节深读 → web_deep_docs/ (表格逐字还原)
+```
+
+当前规模（2026-09-02 首批试跑）：**5 页**（vLLM CLI 手册 · vllm-ascend 中文快速上手 ·
+Ascend PyTorch 2600 环境变量 · CANN 商用 900 / 社区 910beta1 环境变量索引）。
+版本对照发现：CANN 两版环境变量清单内容一致（diff 仅锚点 ID），知识可跨版复用 —— 见 `extraction/web_moc.md`。
 
 ## 萃取深度一图看懂
 
@@ -176,7 +199,11 @@ AICO-knowledge/
 │   ├── visuals.json                 #   裁剪图 manifest（fig/tab/eq）
 │   ├── ar5iv_crops.json             #   坏字体/坏结构 PDF 的 ar5iv 替换+手工区域保护清单
 │   ├── minimax_captions.json        #   多模态解读（1600+ 条）
-│   └── crop_audit.json              #   Lint gate 审计结果（机审判决 + 复核状态）
+│   ├── crop_audit.json              #   Lint gate 审计结果（机审判决 + 复核状态）
+│   ├── web_docs/<slug>.md           #   网页域: 规范化原文（表格还原+链接绝对化）
+│   ├── web_deep_docs/<slug>.md      #   网页域: M3 七节深读（表格逐字还原）
+│   ├── web_index.json               #   网页域: 注册表（路由/版本线/深读登记）
+│   └── web_moc.md                   #   网页域: 知识地图（版本对照+跨域关联）
 └── docs/images/                     # 知识图谱/覆盖统计/流水线图（README 嵌入）
 ```
 
@@ -198,10 +225,12 @@ speculative decoding（10 篇成簇：EAGLE 全家族/Medusa/SpecExtend/LongSpec
 
 - `skills/paper-extraction/SKILL.md` — 操作手册（全链路 + agent 收尾 + 决策树 + 踩坑 + Wiki 三层架构）
 - `skills/paper-extraction/DEEP_LEARNING_PROTOCOL.md` — 夜间深度学习规范
+- `skills/repo-extraction/SKILL.md` — 代码仓归档手册（稀疏拉取/文档收割/版本血缘/深读层）
+- `skills/web-extraction/SKILL.md` — 网页归档手册（三级抓取路由/hiascend SPA 经验/表格逐字深读）
 - `extraction/README.md` — 知识库使用说明 + 外部工程接入指南
 - `EXPERIENCE.md` — 建库全过程踩坑与解法复盘
 - `docs/fixed-crops-2026-08-25.md` — 本轮 Lint gate 修复的裁剪清单
 
 ---
 
-**现状（2026-08-25）**：69 唯一论文 ｜ 685 裁剪图 + 429 裁剪表 + 4 公式截图 ｜ 479 LaTeX 公式（58 篇） ｜ 727 ⭐ M3 深度解读（图/表/公式逐张） ｜ 1600+ 图文联合解读（crop+正文段落联合喂 M3） ｜ 69 篇 6 段深读 + 69 篇「方法链」跨元素章节 ｜ 19 页概念页 + index.md/log.md 簿记层（Karpathy LLM Wiki 落地） ｜ 96 张坏字体/坏结构论文裁剪由 ar5iv 原图/手工区域保护 ｜ PDF 0 截断 ｜ Lint gate 全量机审闭环（95.5% 一遍过） ｜ 四铁律全绿。
+**现状（2026-09-02）**：69 唯一论文 ｜ 685 裁剪图 + 429 裁剪表 + 4 公式截图 ｜ 479 LaTeX 公式（58 篇） ｜ 727 ⭐ M3 深度解读（图/表/公式逐张） ｜ 1600+ 图文联合解读（crop+正文段落联合喂 M3） ｜ 69 篇 6 段深读 + 69 篇「方法链」跨元素章节 ｜ 19 页概念页 + index.md/log.md 簿记层（Karpathy LLM Wiki 落地） ｜ 96 张坏字体/坏结构论文裁剪由 ar5iv 原图/手工区域保护 ｜ PDF 0 截断 ｜ Lint gate 全量机审闭环（95.5% 一遍过） ｜ 四铁律全绿 ｜ **代码仓域**：134 仓 · 21,954 篇文档 · 1,719 篇 M3 七节深读 + 881 张图文联合解读 · 版本血缘 snapshots ｜ **网页域**：首批 5 页全通（vLLM CLI 手册 / vllm-ascend 快速上手 / 昇腾环境变量 ×3）。
