@@ -91,3 +91,71 @@ design 文档地图（docs/design/，29 篇，质量为推理框架文档标杆�
 
 - 文档收割: extraction/repo_docs/vllm/ (293 篇)
 - 清单: extraction/repo_inventory.json · extraction/repo_docs_index.json
+
+<!-- DEEP_NOTES:BEGIN -->
+
+### 深读笔记索引（机械层 · 82 篇）
+
+- [Architecture Overview](../repo_deep_docs/vllm/docs/design/arch_overview.md) `design`
+- [Attention Backend Feature Support](../repo_deep_docs/vllm/docs/design/attention_backends.md) `design`
+- [CUDA Graphs](../repo_deep_docs/vllm/docs/design/cuda_graphs.md) `design`
+- [Vision Encoder (ViT) CUDA Graphs](../repo_deep_docs/vllm/docs/design/cuda_graphs_multimodal.md) `design`
+- [CustomOp](../repo_deep_docs/vllm/docs/design/custom_op.md) `design`
+- [Dual Batch Overlap](../repo_deep_docs/vllm/docs/design/dbo.md) `design`
+- [How to debug the vLLM-torch.compile integration](../repo_deep_docs/vllm/docs/design/debug_vllm_compile.md) `design`
+- [Endpoint Plugins](../repo_deep_docs/vllm/docs/design/endpoint_plugins.md) `design`
+- [Fused MoE Modular Kernel](../repo_deep_docs/vllm/docs/design/fused_moe_modular_kernel.md) `design`
+- [Fusion torch.compile passes](../repo_deep_docs/vllm/docs/design/fusions.md) `design`
+- [Integration with Hugging Face](../repo_deep_docs/vllm/docs/design/huggingface_integration.md) `design`
+- [Hybrid KV Cache Manager](../repo_deep_docs/vllm/docs/design/hybrid_kv_cache_manager.md) `design`
+- [IO Processor Plugins](../repo_deep_docs/vllm/docs/design/io_processor_plugins.md) `design`
+- [Logits Processors](../repo_deep_docs/vllm/docs/design/logits_processors.md) `design`
+- [LoRA Resolver Plugins](../repo_deep_docs/vllm/docs/design/lora_resolver_plugins.md) `design`
+- [Metrics](../repo_deep_docs/vllm/docs/design/metrics.md) `design`
+- [Multi-Modal Data Processing](../repo_deep_docs/vllm/docs/design/mm_processing.md) `design`
+- [Model Runner V2 Design Document](../repo_deep_docs/vllm/docs/design/model_runner_v2.md) `design`
+- [Fused MoE Kernel Features](../repo_deep_docs/vllm/docs/design/moe_kernel_features.md) `design`
+- [Python Multiprocessing](../repo_deep_docs/vllm/docs/design/multiprocessing.md) `design`
+- [NIXL KV Cache Lease Renewal](../repo_deep_docs/vllm/docs/design/nixl_kv_cache_lease.md) `design`
+- [NIXL push-mode KV transfer](../repo_deep_docs/vllm/docs/design/nixl_kv_push_connector.md) `design`
+- [Optimization Levels](../repo_deep_docs/vllm/docs/design/optimization_levels.md) `design`
+- [Paged Attention](../repo_deep_docs/vllm/docs/design/paged_attention.md) `design`
+- [Plugin System](../repo_deep_docs/vllm/docs/design/plugin_system.md) `design`
+- [Automatic Prefix Caching](../repo_deep_docs/vllm/docs/design/prefix_caching.md) `design`
+- [`torch.compile` integration](../repo_deep_docs/vllm/docs/design/torch_compile.md) `design`
+- [torch.compile with Multimodal Encoders](../repo_deep_docs/vllm/docs/design/torch_compile_multimodal.md) `design`
+- [vLLM IR: Functional Intermediate Representation](../repo_deep_docs/vllm/docs/design/vllm_ir.md) `design`
+- [Automatic Prefix Caching](../repo_deep_docs/vllm/docs/features/automatic_prefix_caching.md) `feature`
+- [Batch Invariance](../repo_deep_docs/vllm/docs/features/batch_invariance.md) `feature`
+- [Context Extension](../repo_deep_docs/vllm/docs/features/context_extension.md) `feature`
+- [Custom Arguments](../repo_deep_docs/vllm/docs/features/custom_arguments.md) `feature`
+- [Custom Logits Processors](../repo_deep_docs/vllm/docs/features/custom_logitsprocs.md) `feature`
+- [Disaggregated Encoder](../repo_deep_docs/vllm/docs/features/disagg_encoder.md) `feature`
+- [Disaggregated Prefilling (experimental)](../repo_deep_docs/vllm/docs/features/disagg_prefill.md) `feature`
+- [IndexCache](../repo_deep_docs/vllm/docs/features/index_cache.md) `feature`
+- [Interleaved Thinking](../repo_deep_docs/vllm/docs/features/interleaved_thinking.md) `feature`
+- [KV Offloading Usage Guide](../repo_deep_docs/vllm/docs/features/kv_offloading_usage.md) `feature`
+- [LoRA Adapters](../repo_deep_docs/vllm/docs/features/lora.md) `feature`
+- [MooncakeConnector Usage Guide](../repo_deep_docs/vllm/docs/features/mooncake_connector_usage.md) `feature`
+- [MooncakeStoreConnector Usage Guide](../repo_deep_docs/vllm/docs/features/mooncake_store_connector_usage.md) `feature`
+- [MoRIIOConnector Usage Guide](../repo_deep_docs/vllm/docs/features/moriio_connector_usage.md) `feature`
+- [Multimodal Inputs](../repo_deep_docs/vllm/docs/features/multimodal_inputs.md) `feature`
+- [NixlConnector Compatibility Matrix](../repo_deep_docs/vllm/docs/features/nixl_connector_compatibility.md) `feature`
+- [NixlConnector Usage Guide](../repo_deep_docs/vllm/docs/features/nixl_connector_usage.md) `feature`
+- [Per-Request Metrics](../repo_deep_docs/vllm/docs/features/per_request_metrics.md) `feature`
+- [Prompt Embedding Inputs](../repo_deep_docs/vllm/docs/features/prompt_embeds.md) `feature`
+- [AutoAWQ](../repo_deep_docs/vllm/docs/features/quantization/auto_awq.md) `feature`
+- [b12x Linear and MoE Backends](../repo_deep_docs/vllm/docs/features/quantization/b12x.md) `feature`
+- [BitsAndBytes](../repo_deep_docs/vllm/docs/features/quantization/bnb.md) `feature`
+- [FP8 ViT Encoder Attention](../repo_deep_docs/vllm/docs/features/quantization/fp8_vit_attn.md) `feature`
+- [GGUF](../repo_deep_docs/vllm/docs/features/quantization/gguf.md) `feature`
+- [GPTQModel](../repo_deep_docs/vllm/docs/features/quantization/gptqmodel.md) `feature`
+- [Intel Quantization Support](../repo_deep_docs/vllm/docs/features/quantization/inc.md) `feature`
+- [FP8 W8A8](../repo_deep_docs/vllm/docs/features/quantization/llm_compressor/fp8.md) `feature`
+- [INT4 W4A16](../repo_deep_docs/vllm/docs/features/quantization/llm_compressor/int4.md) `feature`
+- [INT8 W4A8](../repo_deep_docs/vllm/docs/features/quantization/llm_compressor/int8_w4a8.md) `feature`
+- [INT8 W8A8](../repo_deep_docs/vllm/docs/features/quantization/llm_compressor/int8_w8a8.md) `feature`
+- [NVIDIA Model Optimizer](../repo_deep_docs/vllm/docs/features/quantization/modelopt.md) `feature`
+- …
+
+<!-- DEEP_NOTES:END -->

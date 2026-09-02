@@ -28,6 +28,8 @@ INVENTORY = REPO / 'extraction' / 'repo_inventory.json'
 SPARSE_PATTERNS = [
     '/README*', '/CHANGELOG*', '/HISTORY*', '/LICENSE*', '/NOTICE*',
     '/docs', '/doc', '/documentation', '/guide', '/guides',
+    '/figures', '/figure', '/images', '/image', '/img', '/assets', '/pics',
+    '/.github', '/static', '/_static',
     '/setup.py', '/setup.cfg', '/pyproject.toml', '/requirements*.txt',
     '/Pipfile', '/package.json', '/Cargo.toml', '/go.mod',
     '/**/*.md',

@@ -71,6 +71,19 @@ python3 skills/repo-extraction/repo_card.py <slug>
 - phase 3：134 骨架全量（repo_cards/）；分析层已填：mindspeed · xllm · vllm · vllm-ascend
 - 空仓识别法：`git ls-remote --symref <url> HEAD` 返回空 = 远端无 ref
 
+## 深读层（2026-09-02 · phase 3b/3c 全量）
+
+- `repo_deep_read.py`：**1,719 篇**高价值文档（feature/design/overview/guide/changelog）M3 七节深读
+  （定位/技术要点/机制数据/**表格逐字还原解读**/**公式逐字保留解读**/关联/使用方法），
+  产物 `extraction/repo_deep_docs/<slug>/`（检索 `extraction/repo_deep_index.json`，85 仓有笔记）
+- 图文关联：带图文档正文作上下文喂 M3 vision → `repo_m3_captions.json` **881 张**（1116 引用图）
+- 图获取三级降级：sparse 图片目录（/figures /images /assets /.github）→ harvest 时 `git show` 惰性补 blob
+  （media/images 类自定义布局）→ web 外链 curl 惰性下载
+- prompt 版本标记（ver=v2）：prompt 升级后旧笔记自动重生成，幂等断点续跑
+- **已知尾巴（如实）**：本地 104 张未解读（SVG 网关不支持 / 网关偶发 500 / %20 边角），
+  web 122 张不可达（raw.gitcode.com user-images 返回 0 字节，疑似需鉴权）
+- `repo_deep_index.py`：卡片尾部追加深读笔记链接块（BEGIN/END 标记内机械重生成，不碰手写分析层）
+
 ## 验证基线（2026-09-01 · MindSpeed）
 
 - 稀疏拉取：1516 文件 tree，只下载 39MB（文档+元数据）

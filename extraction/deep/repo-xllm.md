@@ -97,3 +97,48 @@ optimized for Chinese AI accelerators，企业级部署降本增效；京东 JD 
 
 - 文档收割: extraction/repo_docs/xllm/ (168 篇)
 - 清单: extraction/repo_inventory.json · extraction/repo_docs_index.json
+
+<!-- DEEP_NOTES:BEGIN -->
+
+### 深读笔记索引（机械层 · 38 篇）
+
+- [cpp_framework_python_model_architecture](../repo_deep_docs/xllm/docs/src/content/docs/en/design/cpp_framework_python_model_architecture.md) `design`
+- [generative_recommendation_design](../repo_deep_docs/xllm/docs/src/content/docs/en/design/generative_recommendation_design.md) `design`
+- [graph_mode_design](../repo_deep_docs/xllm/docs/src/content/docs/en/design/graph_mode_design.md) `design`
+- [async_schedule](../repo_deep_docs/xllm/docs/src/content/docs/en/features/async_schedule.md) `feature`
+- [chunked_scheduler](../repo_deep_docs/xllm/docs/src/content/docs/en/features/chunked_scheduler.md) `feature`
+- [disagg_pd](../repo_deep_docs/xllm/docs/src/content/docs/en/features/disagg_pd.md) `feature`
+- [eplb](../repo_deep_docs/xllm/docs/src/content/docs/en/features/eplb.md) `feature`
+- [flashcomm](../repo_deep_docs/xllm/docs/src/content/docs/en/features/flashcomm.md) `feature`
+- [global_kvcache](../repo_deep_docs/xllm/docs/src/content/docs/en/features/global_kvcache.md) `feature`
+- [graph_mode](../repo_deep_docs/xllm/docs/src/content/docs/en/features/graph_mode.md) `feature`
+- [moe_params](../repo_deep_docs/xllm/docs/src/content/docs/en/features/moe_params.md) `feature`
+- [... same other configurations](../repo_deep_docs/xllm/docs/src/content/docs/en/features/mtp.md) `feature`
+- [multi_streams](../repo_deep_docs/xllm/docs/src/content/docs/en/features/multi_streams.md) `feature`
+- [multimodal](../repo_deep_docs/xllm/docs/src/content/docs/en/features/multimodal.md) `feature`
+- [prefix_cache](../repo_deep_docs/xllm/docs/src/content/docs/en/features/prefix_cache.md) `feature`
+- [xllm_service_overview](../repo_deep_docs/xllm/docs/src/content/docs/en/features/xllm_service_overview.md) `feature`
+- [zero_evict_scheduler](../repo_deep_docs/xllm/docs/src/content/docs/en/features/zero_evict_scheduler.md) `feature`
+- [A2 x86](../repo_deep_docs/xllm/docs/src/content/docs/en/getting_started/quick_start.md) `guide`
+- [overview](../repo_deep_docs/xllm/docs/src/content/docs/en/hardware/overview.md) `overview`
+- [cpp_framework_python_model_architecture](../repo_deep_docs/xllm/docs/src/content/docs/zh/design/cpp_framework_python_model_architecture.md) `design`
+- [generative_recommendation_design](../repo_deep_docs/xllm/docs/src/content/docs/zh/design/generative_recommendation_design.md) `design`
+- [graph_mode_design](../repo_deep_docs/xllm/docs/src/content/docs/zh/design/graph_mode_design.md) `design`
+- [async_schedule](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/async_schedule.md) `feature`
+- [chunked_scheduler](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/chunked_scheduler.md) `feature`
+- [disagg_pd](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/disagg_pd.md) `feature`
+- [eplb](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/eplb.md) `feature`
+- [flashcomm](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/flashcomm.md) `feature`
+- [global_kvcache](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/global_kvcache.md) `feature`
+- [graph_mode](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/graph_mode.md) `feature`
+- [moe_params](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/moe_params.md) `feature`
+- [... 其他配置相同](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/mtp.md) `feature`
+- [multi_streams](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/multi_streams.md) `feature`
+- [multimodal](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/multimodal.md) `feature`
+- [prefix_cache](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/prefix_cache.md) `feature`
+- [xllm_service_overview](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/xllm_service_overview.md) `feature`
+- [zero_evict_scheduler](../repo_deep_docs/xllm/docs/src/content/docs/zh/features/zero_evict_scheduler.md) `feature`
+- [A2 x86](../repo_deep_docs/xllm/docs/src/content/docs/zh/getting_started/quick_start.md) `guide`
+- [overview](../repo_deep_docs/xllm/docs/src/content/docs/zh/hardware/overview.md) `overview`
+
+<!-- DEEP_NOTES:END -->

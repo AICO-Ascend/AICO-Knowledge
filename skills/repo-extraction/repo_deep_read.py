@@ -67,9 +67,19 @@ def read_doc_text(slug, path, limit=9000):
 
 
 def fig_path(slug, fig_src):
-    """figures 收割后统一在 <slug>/figures/<basename>"""
-    p = DOCS_ROOT / slug / 'figures' / Path(fig_src).name
-    return p if p.exists() else None
+    """figures 收割后统一在 <slug>/figures/<basename>; http(s) 外链图惰性下载后同路径"""
+    cleaned = fig_src.strip().strip('<>').split()[0].strip('"').strip("'").split('?')[0]
+    p = DOCS_ROOT / slug / 'figures' / Path(cleaned).name
+    if p.exists():
+        return p
+    if fig_src.startswith(('http://', 'https://')):
+        import subprocess as sp
+        p.parent.mkdir(parents=True, exist_ok=True)
+        r = sp.run(['curl', '-sL', '--max-time', '60', '-o', str(p), fig_src],
+                   capture_output=True)
+        if r.returncode == 0 and p.exists() and p.stat().st_size > 1000:
+            return p
+    return None
 
 
 def save_caption(key, caption):
@@ -159,9 +169,73 @@ def m3_call_text(prompt):
     return content
 
 
+FIG_SECTION_RE = None
+
+
+def _backfill_one(entry):
+    caps = load_captions()
+    made = 0
+    slug, path = entry['slug'], entry['path']
+    figs = entry.get('figures', [])
+    if not figs:
+        return 0
+    text = read_doc_text(slug, path) or ''
+    ctx = text[:1500].replace('\n', ' ')
+    for fig in figs:
+        key = f'{slug}#{path}#{Path(fig.strip().strip("<>").split()[0].strip(chr(34)).strip(chr(39)).split("?")[0]).name}'
+        if key in caps:
+            continue
+        fp = fig_path(slug, fig)
+        if not fp:
+            continue
+        try:
+            cap = m3.caption(str(fp), FIG_PROMPT.format(
+                slug=slug, title=entry['title'], ctx=ctx), max_tokens=8000)
+            save_caption(key, cap)
+            made += 1
+            time.sleep(0.3)
+        except Exception as e:
+            print(f'  fig err {key}: {str(e)[:80]}', flush=True)
+    return made
+
+
+def backfill_captions(sel, workers=5):
+    """补齐所有缺失图解读 (含 web 外链图, 并发), 并重写已存在笔记的『图文联合解读』段。"""
+    import re as _re
+    with_fig = [e for e in sel if e.get('figures')]
+    made = 0
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for i, m in enumerate(ex.map(_backfill_one, with_fig), 1):
+            made += m
+            if i % 20 == 0 or i == len(with_fig):
+                print(f'[backfill {i}/{len(with_fig)}] made={made}', flush=True)
+    caps = load_captions()
+    for entry in with_fig:
+        slug, path = entry['slug'], entry['path']
+        figs = entry.get('figures', [])
+        # 重写笔记图段 (保证段与 captions store 一致)
+        out = OUT_ROOT / slug / path
+        if out.exists():
+            note = out.read_text(encoding='utf-8')
+            fig_section = []
+            for fig in figs:
+                key = f'{slug}#{path}#{Path(fig.split("?")[0]).name}'
+                if key in caps:
+                    fig_section.append(f'- `{Path(fig.split("?")[0]).name}`: {caps[key]}')
+            if fig_section:
+                new_sec = '\n\n## 图文联合解读\n\n' + '\n'.join(fig_section) + '\n'
+                if '## 图文联合解读' in note:
+                    note = _re.sub(r'\n\n## 图文联合解读\n\n.*', lambda _m: new_sec, note, flags=_re.S)
+                else:
+                    note = note.rstrip() + new_sec
+                out.write_text(note, encoding='utf-8')
+    print(f'✓ backfill: {made} new captions')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--only', default=None)
+    ap.add_argument('--backfill-captions', action='store_true')
     ap.add_argument('--types', default='feature,design,overview,guide,changelog')
     ap.add_argument('--limit', type=int, default=0)
     ap.add_argument('--workers', type=int, default=5)
@@ -187,6 +261,9 @@ def main():
     if inv_p.exists():
         for r in json.loads(inv_p.read_text(encoding='utf-8'))['repos']:
             note_map[r['slug']] = r.get('note', '')
+    if args.backfill_captions:
+        backfill_captions(sel, workers=args.workers)
+        return
     print(f'深读目标: {len(sel)} 篇 (types={sorted(types)})')
     stat = {'ok': 0, 'skip': 0, 'thin': 0, 'err': 0}
     with ThreadPoolExecutor(max_workers=args.workers) as ex:

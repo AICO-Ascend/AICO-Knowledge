@@ -82,6 +82,13 @@ python3 skills/repo-extraction/repo_card.py <slug>    # ③ 卡片骨架(机械�
 llvm-project / torch-mlir 为空仓占位已标记），**21,954 篇文档**、497 篇特性文档、版本血缘 snapshots 全量在册。
 已填分析层的卡片：mindspeed（含 fb-overlap 特性 3 图 M3 解读）· xllm · vllm · vllm-ascend。
 
+**文档深读层（论文级规格，2026-09-02 全量完成）**：
+**1,719 篇**高价值文档（feature/design/overview/guide/changelog 五类）逐篇 M3 七节深读 ——
+定位 / 技术要点 / 机制与真实数据 / **表格逐字还原+逐行解读** / **公式逐字保留+符号解释** / 关联 / 使用方法；
+带图文档**正文作上下文喂 M3 vision**，**881 张**文档图完成图文联合解读（`repo_m3_captions.json`）。
+产物：`extraction/repo_deep_docs/<slug>/`（1,722 篇笔记 · 85 仓）+ `extraction/repo_deep_index.json` 索引
++ 仓卡片尾部深读链接块（机械层标记内重生成）。
+
 ## 萃取深度一图看懂
 
 ![coverage](docs/images/kb_coverage_stats.png)

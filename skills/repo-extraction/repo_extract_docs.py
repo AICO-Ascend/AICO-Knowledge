@@ -62,7 +62,14 @@ def parse_doc(text):
             title = heading
         if level <= 3:
             outline.append(heading)
-    figures = [(alt, src.strip()) for alt, src in IMG_RE.findall(text)]
+    def _clean_src(u):
+        # ![alt](src "title") / ![alt](<src with spaces>) / %20 编码 → 纯 src
+        from urllib.parse import unquote
+        u = u.strip().strip('<>')
+        u = unquote(u)
+        u = u.split()[0] if ' ' in u else u
+        return u.strip('"').strip("'")
+    figures = [(alt, _clean_src(src)) for alt, src in IMG_RE.findall(text)]
     links = [(t, u.strip()) for t, u in LINK_RE.findall(text)
              if not u.strip().startswith(('http://', 'https://', '#', 'mailto:'))]
     return title, outline[:40], figures, links
@@ -88,6 +95,20 @@ def harvest(slug):
             if fsrc.startswith(('http://', 'https://', 'data:')):
                 continue
             cand = (d.parent / fsrc).resolve()
+            if not (cand.exists() and cand.is_file()):
+                # 稀疏 checkout 未覆盖的目录 (如 media/images) — blob:none 按需 git show 补取
+                try:
+                    rel_repo = cand.relative_to(src_root).as_posix()
+                    chk = subprocess.run(['git', 'cat-file', '-e', f'HEAD:{rel_repo}'],
+                                         cwd=src_root, capture_output=True, timeout=120)
+                    if chk.returncode == 0:
+                        blob = subprocess.run(['git', 'show', f'HEAD:{rel_repo}'],
+                                              cwd=src_root, capture_output=True, timeout=300)
+                        if blob.returncode == 0 and len(blob.stdout) > 500:
+                            cand.parent.mkdir(parents=True, exist_ok=True)
+                            cand.write_bytes(blob.stdout)
+                except Exception:
+                    pass
             if cand.exists() and cand.is_file():
                 fig_dst = out_root / 'figures' / cand.name
                 fig_dst.parent.mkdir(parents=True, exist_ok=True)

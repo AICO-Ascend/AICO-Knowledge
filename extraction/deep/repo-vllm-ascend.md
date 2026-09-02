@@ -104,3 +104,71 @@ xLLM/uniinfer 路径是其替代（精度对齐 + SOTA 性能）。
 
 - 文档收割: extraction/repo_docs/vllm-ascend/ (261 篇)
 - 清单: extraction/repo_inventory.json · extraction/repo_docs_index.json
+
+<!-- DEEP_NOTES:BEGIN -->
+
+### 深读笔记索引（机械层 · 72 篇）
+
+- [ChunkKdaFwd 设计](../repo_deep_docs/vllm-ascend/csrc/attention/chunk_kda_fwd/docs/design.md) `design`
+- [SparseAttentionScore Operator Design](../repo_deep_docs/vllm-ascend/csrc/attention/sparse_attention_score/docs/sparse_attention_score_design.md) `design`
+- [Getting Started](../repo_deep_docs/vllm-ascend/docs/source/getting_started/overview.md) `overview`
+- [atlas-200i-pro.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/ascend_image/atlas-200i-pro.inc.md) `guide`
+- [atlas-300i-duo.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/ascend_image/atlas-300i-duo.inc.md) `guide`
+- [atlas-950dt.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/ascend_image/atlas-950dt.inc.md) `guide`
+- [atlas-a2.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/ascend_image/atlas-a2.inc.md) `guide`
+- [atlas-a3.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/ascend_image/atlas-a3.inc.md) `guide`
+- [image_download_mirror.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/ascend_image/image_download_mirror.inc.md) `guide`
+- [verify_container.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/ascend_image/verify_container.inc.md) `guide`
+- [qwen3-0.6b-310p.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/offline/qwen3-0.6b-310p.inc.md) `guide`
+- [qwen3-0.6b.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/offline/qwen3-0.6b.inc.md) `guide`
+- [qwen3-0.6b-310p.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/online/qwen3-0.6b-310p.inc.md) `guide`
+- [qwen3-0.6b.inc](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start/online/qwen3-0.6b.inc.md) `guide`
+- [Quick Start](../repo_deep_docs/vllm-ascend/docs/source/getting_started/quick_start.md) `guide`
+- [Dynamic Chunked Pipeline Parallel (DeepSeek-V3.1)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/features/dynamic_chunked_pipeline_parallel.md) `feature`
+- [PD-Colocated with Mooncake Multi-Instance](../repo_deep_docs/vllm-ascend/docs/source/tutorials/features/pd_colocated_mooncake_multi_instance.md) `feature`
+- [Prefill-Decode Disaggregation (DeepSeek)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/features/pd_disaggregation_mooncake_multi_node.md) `feature`
+- [Prefill-Decode Disaggregation (Qwen2.5-VL)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/features/pd_disaggregation_mooncake_single_node.md) `feature`
+- [Ray Distributed (Qwen3-235B-A22B)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/features/ray.md) `feature`
+- [Suffix Speculative Decoding](../repo_deep_docs/vllm-ascend/docs/source/tutorials/features/suffix_speculative_decoding.md) `feature`
+- [Cohere Transcribe](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Cohere-Transcribe.md) `guide`
+- [DeepSeek-R1](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/DeepSeek-R1.md) `guide`
+- [DeepSeek-V3 & 3.1](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/DeepSeek-V3.1.md) `guide`
+- [DeepSeek-V3.2](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/DeepSeek-V3.2.md) `guide`
+- [DeepSeek-V4-Flash](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/DeepSeek-V4-Flash.md) `guide`
+- [DeepSeek-V4-Pro](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/DeepSeek-V4-Pro.md) `guide`
+- [DeepSeek-OCR-2](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/DeepSeekOCR2.md) `guide`
+- [Dots3 Note](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Dots3-Note.md) `guide`
+- [GLM-4.5/4.6/4.7](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/GLM4.x.md) `guide`
+- [GLM-5.2](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/GLM5.2.md) `guide`
+- [GLM-5.3 (Experimental)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/GLM5.3.md) `guide`
+- [GLM-5 & GLM-5.1](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/GLM5.md) `guide`
+- [Gemma4](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Gemma4.md) `guide`
+- [Hunyuan-A13B-Instruct](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Hunyuan-A13B-Instruct.md) `guide`
+- [Hy3-preview](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Hy3-preview.md) `guide`
+- [Hy4-preview (Experimental)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Hy4-preview.md) `guide`
+- [InternVL3.5(38B/241B-A28B)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/InternVL3.5.md) `guide`
+- [Kimi-K2-Thinking](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Kimi-K2-Thinking.md) `guide`
+- [Kimi-K2.5](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Kimi-K2.5.md) `guide`
+- [Kimi-K2.6](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Kimi-K2.6.md) `guide`
+- [Kimi-K3](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Kimi-K3.md) `guide`
+- [LLaVA-OneVision-Qwen2-0.5B-OV](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/LLaVA-OneVision-Qwen2-0.5B-OV.md) `guide`
+- [MiniMax-M2](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/MiniMax-M2.md) `guide`
+- [MiniMax-M3](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/MiniMax-M3.md) `guide`
+- [Minitron-8B-Base](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Minitron-8B-Base.md) `guide`
+- [Mixtral-8x7B-Instruct-v0.1](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Mixtral-8x7B-Instruct-v0.1.md) `guide`
+- [PaddleOCR-VL](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/PaddleOCR-VL.md) `guide`
+- [Qwen-VL-Dense(Qwen3-VL-8B/32B)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen-VL-Dense.md) `guide`
+- [Qwen2.5-Math-RM-72B](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen2.5-Math-RM-72B.md) `guide`
+- [Qwen3-235B-A22B](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-235B-A22B.md) `guide`
+- [Qwen3-30B-A3B](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-30B-A3B.md) `guide`
+- [Qwen3-ASR-1.7B](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-ASR-1.7B.md) `guide`
+- [Qwen3-Coder-30B-A3B](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-Coder-30B-A3B.md) `guide`
+- [Qwen3-Dense (Qwen3-0.6B/1.7B/4B/8B/14B/32B)](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-Dense.md) `guide`
+- [Qwen3-Embedding](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-Embedding.md) `guide`
+- [Qwen3-Next](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-Next.md) `guide`
+- [Qwen3-Omni-30B-A3B-Thinking](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-Omni-30B-A3B-Thinking.md) `guide`
+- [Qwen3-Reranker](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-Reranker.md) `guide`
+- [Qwen3-VL-235B-A22B-Instruct](../repo_deep_docs/vllm-ascend/docs/source/tutorials/models/Qwen3-VL-235B-A22B-Instruct.md) `guide`
+- …
+
+<!-- DEEP_NOTES:END -->
