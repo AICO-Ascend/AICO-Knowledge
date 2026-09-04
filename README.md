@@ -6,10 +6,22 @@
 > **+ 官方文档网页**（docs.vllm.ai / hiascend 文档中心：SPA 抓取路由 + 表格逐字还原深读）。
 > Obsidian 图谱化 + RAG 友好 + Wiki 簿记层。
 
-> 📚 **面向人类学习者的双入口**：[知识书架 SHELF.md](bookshelf/SHELF.md)（技术栈六层主线：Agent→模型/算法→训推框架→算子→系统软件→硬件集群；条目挂深读资产 + **原始出处列**直链 arXiv 原文/仓内原始文件）
-> ｜ [AscendInfra 昇腾专区](bookshelf/ascend_infra.html)（独立可视化 HTML 体系：自绘 AI Core 架构图/算子全景/概念卡/知识对照表，数据全部来自本库深读资产）
+## 🎯 面向人类学习者的三个入口
 
-![pipeline](docs/images/kb_pipeline.png)
+| 入口 | 视角 | 里面有什么 |
+|---|---|---|
+| 📚 **[知识书架](bookshelf/SHELF.md)** | 学习路径 | 技术栈六层主线（Agent→模型/算法→训推框架→算子→系统软件→硬件集群）；知识源直链 arXiv 原文/仓内原始文档，摘要列回本仓萃取总结；模型卡片 + 在线小工具（MFU/显存计算器） |
+| ♨️ **[AscendInfra 昇腾专区](bookshelf/ascend_infra.html)** | 开发者全栈 | 独立可视化页面：自绘 AI Core 架构图（910B/950 实测数值）、CANN 分层、算子全景、AscendC 概念卡、知识对照表——数据全部来自本库深读资产 |
+| 🟩 **[NvidiaInfra 货架](bookshelf/nvidia_infra.md)** | GPU 生态 | BasicCUDA 实操收录（CUDA/NCCL/PyTorch 显存，配可编译代码）+ 本库 GPU 栈系统论文深读 |
+
+## 三条知识流水线（三域 ingest）
+
+![pipeline](docs/images/kb_pipeline_3domain.svg)
+
+> 图中每个节点都可跳转对应代码——直接打开 [SVG 原图](docs/images/kb_pipeline_3domain.svg)（或 Obsidian 内嵌）可点击；位图渲染时点这里：
+> **① 论文域** [sync](skills/paper-extraction/sync_from_source.py) → [萃取](skills/paper-extraction/extract_phase1.py) → [裁剪](skills/paper-extraction/extract_visuals.py) → [M3 图文解读](skills/paper-extraction/context_caption.py) → [公式](skills/paper-extraction/eprint_formulas.py) → [Lint gate](skills/paper-extraction/audit_crops.py) → [簿记](skills/paper-extraction/wiki_index.py) → [full_pipeline 总控](skills/paper-extraction/full_pipeline.py)
+> **② 代码仓域** [输入清单](repos_download_list.txt) → [稀疏拉取+版本血缘](skills/repo-extraction/repo_fetch.py) → [文档收割分类](skills/repo-extraction/repo_extract_docs.py) → [仓卡片](skills/repo-extraction/repo_card.py) → [M3 七节深读](skills/repo-extraction/repo_deep_read.py) → [索引组织](skills/repo-extraction/repo_deep_index.py)
+> **③ 网页域** [输入清单](webs_download_list.txt) → [三级抓取路由](skills/web-extraction/web_fetch.py) → [M3 深读](skills/web-extraction/web_deep_read.py) → [注册表](extraction/web_index.json)
 
 ## 知识库架构（Karpathy LLM Wiki 三层落地）
 
@@ -130,9 +142,10 @@ Ascend PyTorch 2600 环境变量 · CANN 商用 900 / 社区 910beta1 环境变�
 
 ## 知识图谱（主题聚类 + 跨论文谱系）
 
-![topic graph](docs/images/kb_topic_graph.png)
+![topic graph growth](docs/images/kb_topic_graph_growth.gif)
 
-> 节点=论文，颜色=主主题，边=共享主题。Obsidian 打开本仓 → `extraction/MOC.md` 可视化交互式图谱；跨论文演进谱系见 `extraction/moc_relations.md`。
+> 动图：按 arXiv 发表月份回放知识图谱的生长过程（新进节点红圈高亮，末帧停留）——新知识进来，图谱如何改变一目了然。
+> 静态版：[kb_topic_graph.png](docs/images/kb_topic_graph.png)。节点=论文，颜色=主主题，边=共享主题。Obsidian 打开本仓 → `extraction/MOC.md` 可视化交互式图谱；跨论文演进谱系见 `extraction/moc_relations.md`。
 
 ## 快速取用（生产级工作流）
 

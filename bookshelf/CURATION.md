@@ -440,6 +440,9 @@ sections:
         ascend: 昇腾推理编排
       - ref: repocard:mindie-sd
         ascend: 昇腾多模态推理
+      - ref: repocard:msmodelslim
+        note: 模型压缩工具链（量化专题归并入此）
+        ascend: 昇腾模型压缩
 
   # ────── L4 算子 ──────
   - id: operators
@@ -560,100 +563,67 @@ sections:
       - ref: concept:npu-ascend
         note: 概念页：昇腾 NPU 跨论文综合
 
-# ═══════════ 横向专题（跨层学习路径） ═══════════
-topics:
-  - id: topic-spec
-    layer: L2
-    title: 专题·投机解码全链路
-    category: 专题
-    intro: 从算法（L2）到部署参数（L3）到昇腾支持状态的一条龙。
-    items:
-      - ref: paper:eagle-speculative-sampling-requires-rethinking-feature-uncertainty
-        note: 算法原点
-      - ref: paper:eagle-3-scaling-up-inference-acceleration-of-large-language-models-via
-        note: 训练时扩展
-      - ref: web:vllm-cli-serve
-        note: 部署参数（--speculative-* 族）
-      - ref: repocard:vllm-ascend
-        note: 昇腾侧支持状态
-        ascend: EAGLE3 实验性支持
-  - id: topic-kvcache
-    layer: L3
-    title: 专题·KV Cache 全景
-    category: 专题
-    intro: 显存管理算法（L2）→ 框架机制（L3）→ 昇腾内存环境变量（L5）。
-    items:
-      - ref: paper:efficient-memory-management-for-large-language-model-serving-with-page
-        note: PagedAttention 原点
-      - ref: paper:mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving
-        note: KV 中心架构
-      - ref: paper:cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowl
-        note: RAG 复用
-      - ref: web:ascend-pytorch-envvars
-        note: 昇腾内存管理变量（PYTORCH_NPU_ALLOC_CONF 等）
-        ascend: 官方手册
-  - id: topic-comm-overlap
-    layer: L3
-    title: 专题·通信掩盖与并行
-    category: 专题
-    intro: 同一个思想的三个层次：论文算法（DualPipe）→ 框架特性（fb-overlap）→ 图编译（cc_parallel）。
-    items:
-      - ref: paper:deepseek-v3-technical-report
-        note: DualPipe 双向流水（论文 §3.2）
-      - ref: reponote:mindspeed:docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md
-        note: MoE 前反向掩盖（昇腾实现）
-        ascend: MindSpeed 原生
-      - ref: reponote:torchair:docs/zh/ascend_ir/features/advanced/cc_parallel.md
-        note: 图编译层计算通信并行
-        ascend: torchair 原生
-  - id: topic-quant
-    layer: L2
-    title: 专题·量化
-    category: 专题
-    intro: 训练侧 FP8（论文）→ 推理侧 Attention 量化（MindIE）→ 压缩工具（msmodelslim）。
-    items:
-      - ref: paper:deepseek-v3-technical-report
-        note: FP8 混合精度训练
-      - ref: reponote:mindie-llm:docs/zh/user_guide/feature/attention_quantization.md
-        ascend: MindIE 原生特性
-      - ref: repocard:msmodelslim
-        ascend: 昇腾模型压缩工具
-
 # ═══════════ 模型卡片 ═══════════
 model_cards:
   - name: DeepSeek V3
-    keywords: MLA+MoE+FP8+DualPipe
+    keywords: MLA · MoE · MTP
     links:
+      - {label: 总体模型结构, ref: model:deepseek_v3.md}
       - {label: 论文深读, ref: paper:deepseek-v3-technical-report}
       - {label: MLA 裁剪图, ref: crop:deepseek-v3-technical-report-fig02-mla.png}
+  - name: DeepSeek V3.2
+    keywords: MLA · DSA · MoE
+    links:
+      - {label: 总体模型结构, ref: model:deepseek_v3_2.md}
   - name: DeepSeek V4
-    keywords: MLA+DSA · 百万上下文
+    keywords: MLA · DSA
     links:
-      - {label: 论文深读, ref: paper:deepseek-v4-towards-highly-efficient-million-token-context-intelligenc}
+      - {label: 总体模型结构, empty: true}
+      - {label: 论文深读, ref: paper:deepseek-v4-towards-highly-efficient-million-token-context-intelligence}
   - name: DeepSeek R1
-    keywords: GRPO+RL 推理
+    keywords: MLA · MoE
     links:
+      - {label: 总体模型结构, empty: true}
       - {label: 论文深读, ref: paper:deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning}
-  - name: Kimi K2 / K2.5 / K3
-    keywords: MLA+MoE → 视觉 Agentic → KDA+Gated MLA
+  - name: Kimi K2 / K2.5
+    keywords: MLA · MoE / +MoonViT
     links:
-      - {label: K2 深读, ref: paper:kimi-k2-open-agentic-intelligence}
-      - {label: K2.5 深读, ref: paper:kimi-k2-5-visual-agentic-intelligence}
-      - {label: K3 深读, ref: paper:kimi-k3-open-frontier-intelligence}
+      - {label: K2 结构, ref: model:kimi_k_2.md}
+      - {label: K2.5 结构, ref: model:kimi_k_2_5.md}
+  - name: Kimi K3
+    keywords: KDA · Gated MLA · AttnRes · Stable LatentMoE
+    links:
+      - {label: 总体模型结构, ref: model:kimi_k_3.md}
+      - {label: 论文深读, ref: paper:kimi-k3-open-frontier-intelligence}
   - name: Kimi Linear
-    keywords: KDA 线性注意力
+    keywords: KDA
     links:
+      - {label: 总体模型结构, empty: true}
       - {label: 论文深读, ref: paper:kimi-linear-an-expressive-efficient-attention-architecture}
-      - {label: 昇腾算子佐证, ref: reponote:vllm-ascend:csrc/attention/chunk_kda_fwd/docs/design.md}
-  - name: Qwen2.5-VL / Qwen3-VL
-    keywords: Dense+ViT → DeepStack+交错 MRoPE
+  - name: Qwen3-VL
+    keywords: MoE · DeepStack · Interleaved-MRoPE
     links:
-      - {label: 2.5-VL 深读, ref: paper:qwen2-5-vl-technical-report}
-      - {label: 3-VL 深读, ref: paper:qwen3-vl-technical-report}
+      - {label: 总体模型结构, ref: model:qwen3_vl.md}
+      - {label: 论文深读, ref: paper:qwen3-vl-technical-report}
+  - name: Qwen2.5-VL
+    keywords: ViT · Window Attention
+    links:
+      - {label: 总体模型结构, empty: true}
+      - {label: 论文深读, ref: paper:qwen2-5-vl-technical-report}
   - name: GLM 5.3-Flash
-    keywords: KDA+DSA（昇腾 day-0 适配）
+    keywords: KDA · DSA · MoE
     links:
-      - {label: xllm 仓卡片, ref: repocard:xllm}
+      - {label: 总体模型结构, empty: true}
+      - {label: xllm day-0 适配, ref: repocard:xllm}
+
+# ═══════════ 辅助工具 ═══════════
+tools:
+  - {name: MFU 计算器（本库自建）, ref: tool:mfu_calculator.html, category: 训练估算, note: 6ND 公式在线算 MFU/训练时长, 浏览器直接打开}
+  - {name: 推理显存 & KV Cache 计算器（本库自建）, ref: tool:kv_memory_calculator.html, category: 推理估算, note: 权重+KV cache+激活显存估算, 支持 MLA/GQA/MHA 对比}
+  - {name: LLM MFU 计算器（CalvinXKY）, ref: ext:CalvinXKY MFU:https://calvinxky.github.io/mfu_calculation/, category: 训练估算, note: 社区版 MFU 在线工具}
+  - {name: DeepSeek-V3 MFU 计算工具（CalvinXKY）, ref: ext:DSV3 MFU:https://calvinxky.github.io/mfu_calculation/deepseek3mfu.html, category: 训练估算, note: DSV3 专用算式}
+  - {name: PyTorch 显存可视化（BasicCUDA）, ref: ext:BasicCUDA:https://github.com/CalvinXKY/BasicCUDA/tree/master/pytorch/torch_mem_snapshot, category: 显存分析, note: torch_mem_snapshot 数据采集与分析}
+  - {name: vLLM 显存 Snapshot（InfraTech）, ref: ext:InfraTech:https://github.com/CalvinXKY/InfraTech/blob/master/llm_infer/vllm_mem_snapshot.ipynb, category: 显存分析, note: vLLM 显存管理详解配套 notebook}
 ```
 
 ## AscendInfra 专区（独立体系）

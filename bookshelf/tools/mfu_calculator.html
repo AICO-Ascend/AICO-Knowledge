@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MFU 计算器 | AICO-Knowledge 工具</title>
+<style>
+  body { font-family: "PingFang SC","Noto Sans SC",system-ui,sans-serif; background:#f7f8fa; color:#1d2129;
+         max-width: 880px; margin: 0 auto; padding: 32px 20px; line-height: 1.6; }
+  h1 { font-size: 24px; } h1 small { font-size: 13px; color:#86909c; font-weight:400; }
+  .card { background:#fff; border:1px solid #e5e6eb; border-radius:12px; padding:20px 22px; margin:16px 0; }
+  label { font-size:13.5px; color:#4e5969; display:block; margin:10px 0 3px; }
+  input, select { padding:7px 10px; border:1px solid #c9cdd4; border-radius:7px; font-size:14px; width:200px; }
+  .row { display:flex; flex-wrap:wrap; gap:20px; }
+  .out { font-family:Consolas,monospace; font-size:15px; background:#0f1f3d; color:#a3f7bf;
+         border-radius:10px; padding:16px 18px; white-space:pre-wrap; }
+  .formula { background:#f2f3f5; border-radius:8px; padding:10px 14px; font-family:Consolas,monospace;
+             font-size:13.5px; margin-top:8px; }
+  a { color:#C7000B; } .hint { font-size:12.5px; color:#86909c; }
+</style>
+</head>
+<body>
+<h1>MFU 计算器 <small>AICO-Knowledge · <a href="../SHELF.md">← 知识书架</a></small></h1>
+
+<div class="card">
+  <div class="row">
+    <div><label>模型参数量 N（B，十亿）</label><input id="N" type="number" value="671" step="1"></div>
+    <div><label>训练 tokens D（T，万亿）</label><input id="D" type="number" value="14.8" step="0.1"></div>
+    <div><label>激活参数比例（MoE，%）</label><input id="act" type="number" value="5.5" step="0.1"></div>
+  </div>
+  <div class="row">
+    <div><label>硬件</label>
+      <select id="hw">
+        <option value="989">H800 SXM（989 TFLOPS BF16）</option>
+        <option value="1979">H200（1979 TFLOPS BF16 稀疏/989 稠密）</option>
+        <option value="312">A800（312 TFLOPS BF16）</option>
+        <option value="376">Ascend 910B（≈376 TFLOPS BF16）</option>
+        <option value="custom">自定义…</option>
+      </select></div>
+    <div><label>峰值算力（TFLOPS，自定义时填）</label><input id="peak" type="number" value="989"></div>
+    <div><label>GPU/NPU 卡数</label><input id="gpu" type="number" value="2048"></div>
+  </div>
+  <div class="row">
+    <div><label>模式</label>
+      <select id="mode">
+        <option value="mfu">已知训练时长 → 算 MFU</option>
+        <option value="time">已知目标 MFU → 算训练时长</option>
+      </select></div>
+    <div><label>训练时长（天）</label><input id="days" type="number" value="55" step="0.5"></div>
+    <div><label>目标 MFU（%）</label><input id="mfu" type="number" value="40" step="1"></div>
+  </div>
+  <div class="formula">理论 FLOPs ≈ 6 × N_active × D &nbsp;·&nbsp; MFU = 理论 FLOPs / (峰值算力 × 卡数 × 时长)</div>
+</div>
+
+<div class="card"><div class="out" id="out"></div></div>
+<p class="hint">说明：6ND 为稠密模型的标准近似（前向 2ND + 反向 4ND）；MoE 按激活参数计（不含专家并行额外通信开销）。
+重计算/流水线空泡等已隐含在实际 MFU 中。预设：DeepSeek-V3 = 671B 总参 / 37B 激活（5.5%）/ 14.8T tokens。</p>
+
+<script>
+const $ = id => document.getElementById(id);
+function calc() {
+  const N = parseFloat($('N').value) * 1e9 * (parseFloat($('act').value) / 100);
+  const D = parseFloat($('D').value) * 1e12;
+  const peak = parseFloat($('peak').value) * 1e12;
+  const gpu = parseFloat($('gpu').value);
+  const flops = 6 * N * D;
+  let txt = `有效激活参数 N_active = ${(N/1e9).toFixed(1)} B\n理论训练 FLOPs = 6·N·D = ${flops.toExponential(3)}\n`;
+  if ($('mode').value === 'mfu') {
+    const t = parseFloat($('days').value) * 86400;
+    const mfu = flops / (peak * gpu * t) * 100;
+    txt += `\n训练时长 = ${$('days').value} 天 · ${gpu} 卡 × ${$('peak').value} TFLOPS\n→ MFU = ${mfu.toFixed(1)}%\n→ 每卡有效吞吐 = ${(flops/t/gpu/1e12).toFixed(1)} TFLOPS`;
+    $('out').textContent = txt;
+  } else {
+    const mfu = parseFloat($('mfu').value) / 100;
+    const t = flops / (peak * gpu * mfu);
+    txt += `\n目标 MFU = ${$('mfu').value}% · ${gpu} 卡 × ${$('peak').value} TFLOPS\n→ 训练时长 = ${(t/86400).toFixed(1)} 天（${(t/3600).toFixed(0)} 小时）\n→ GPU 时 = ${(t*gpu/3600/1e6).toFixed(2)} M GPU-hours`;
+    $('out').textContent = txt;
+  }
+}
+$('hw').onchange = () => { if ($('hw').value !== 'custom') $('peak').value = $('hw').value; calc(); };
+document.querySelectorAll('input,select').forEach(e => e.addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>

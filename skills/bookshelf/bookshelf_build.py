@@ -163,6 +163,16 @@ class Resolver:
             if not self._exists(link):
                 self.errors.append(f'死链: {link}')
             return rest, link, ''
+        if kind == 'model':
+            link = f'models/{rest}'
+            if not self._exists(link):
+                self.errors.append(f'死链: {link}')
+            return rest, link, ''
+        if kind == 'tool':
+            link = f'tools/{rest}'
+            if not self._exists(link):
+                self.errors.append(f'死链: {link}')
+            return rest, link, ''
         if kind == 'ext':
             label, _, url = rest.partition(':')
             if not url.startswith(('http://', 'https://')):
@@ -203,15 +213,18 @@ def render_section(sec, layers, resolver):
     lines = [f'### {sec["title"]}（{sec["layer"]} {layers[sec["layer"]]}）', '']
     if sec.get('intro'):
         lines += [sec['intro'].strip(), '']
-    lines += ['| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |',
+    lines += ['| 📚 知识源 | 📖 知识分类 | 🔧 层次 | 📜 摘要 | 📄 其他 |',
               '|---|---|---|---|---|']
     for item in sec.get('items', []):
         title, link, auto_note = resolver.resolve(item['ref'])
         category = item.get('category') or sec.get('category') or sec['title']
-        remarks = render_remarks(item, auto_note, resolver)
+        # 知识源列: 标题链原始出处 (arXiv/仓原始文件/原网页); 无原始出处者链内部页
         orig = resolver.original(item['ref'])
-        orig_md = f'[{orig[0]}]({orig[1]})' if orig else '—'
-        lines.append(f'| [{title}]({link}) | {category} | {sec["layer"]} | {remarks} | {orig_md} |')
+        source_md = f'[{title}]({orig[1]})' if orig else f'[{title}]({link})'
+        # 摘要列: 本仓萃取总结 (深读/卡片/概念页); 无独立萃取产物者 —
+        digest_md = '—' if item['ref'].startswith(('ext:', 'crop:')) else f'[萃取总结]({link})'
+        remarks = render_remarks(item, auto_note, resolver)
+        lines.append(f'| {source_md} | {category} | {sec["layer"]} | {digest_md} | {remarks} |')
     lines.append('')
     return '\n'.join(lines)
 
@@ -223,7 +236,7 @@ def build_shelf(cur, reg, resolver):
     L.append(cur['shelf_intro'].strip())
     L.append('')
     L.append('> 技术栈主线：' + ' → '.join(f'**{k} {layers[k]}**' for k in LAYER_ORDER)
-             + '。任一层可横跳 [AscendInfra 昇腾专区](ascend_infra.html)（独立可视化体系）。')
+             + '。配套入口：[♨️ AscendInfra 昇腾专区](ascend_infra.html)（独立可视化体系）· [🟩 NvidiaInfra 货架](nvidia_infra.md)（GPU 生态）。')
     L.append('')
     L.append('## 目录')
     L.append('')
@@ -231,8 +244,7 @@ def build_shelf(cur, reg, resolver):
         secs = [s for s in cur['sections'] if s['layer'] == k]
         if secs:
             L.append(f'- **{k} {layers[k]}**：' + ' · '.join(f'[{s["title"]}](#{s["id"]})' for s in secs))
-    L.append(f'- **横向专题**：' + ' · '.join(f'[{s["title"]}](#{s["id"]})' for s in cur.get('topics', [])))
-    L.append('- **[主流模型卡片](#模型卡片)**')
+    L.append('- **[主流模型卡片](#模型卡片)** · **[辅助工具](#辅助工具)**')
     L.append('')
     for k in LAYER_ORDER:
         secs = [s for s in cur['sections'] if s['layer'] == k]
@@ -244,20 +256,27 @@ def build_shelf(cur, reg, resolver):
         for sec in secs:
             L.append(f'<a id="{sec["id"]}"></a>')
             L.append(render_section(sec, layers, resolver))
-    if cur.get('topics'):
-        L += ['## 横向专题（跨层学习路径）', '']
-        for sec in cur['topics']:
-            L.append(f'<a id="{sec["id"]}"></a>')
-            L.append(render_section(sec, layers, resolver))
     if cur.get('model_cards'):
         L += ['<a id="模型卡片"></a>', '## 主流模型卡片', '',
-              '| 模型 | 架构关键词 | 入口 |', '|---|---|---|']
+              '> 架构关键词只列**模型结构组件**；链接列指向总体模型结构解析页（本库 `bookshelf/models/` 收纳，缺失的标注待生成）。', '',
+              '| 模型 | 架构关键词 | 链接 |', '|---|---|---|']
         for c in cur['model_cards']:
             links = []
             for a in c.get('links', []):
+                if a.get('empty'):
+                    links.append(f'{a.get("label", "结构解析")}（待生成）')
+                    continue
                 title, link, _ = resolver.resolve(a['ref'])
                 links.append(f'[{a.get("label", title)}]({link})')
             L.append(f'| {c["name"]} | {c["keywords"]} | {" · ".join(links)} |')
+        L.append('')
+    if cur.get('tools'):
+        L += ['<a id="辅助工具"></a>', '## 🛠️ 辅助工具', '',
+              '> 常用计算/可视化小工具：本库自建的在线可用页面（`bookshelf/tools/`，浏览器直接打开）+ 社区优质工具收录。', '',
+              '| 🛠️ 工具 | 📖 知识分类 | 📜 说明 |', '|---|---|---|']
+        for t in cur['tools']:
+            title, link, _ = resolver.resolve(t['ref'])
+            L.append(f'| [{t["name"]}]({link}) | {t.get("category", "工具")} | {t.get("note", "")} |')
         L.append('')
     return '\n'.join(L)
 
