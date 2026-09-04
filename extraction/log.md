@@ -17,3 +17,5 @@
 ## [2026-09-04] bookshelf v5 | 书架表格重构(知识源列直链原始出处/摘要列链萃取总结/其他列归拢) + 横向专题解散归并分层 + 模型卡片改造(结构组件关键词/InfraTech 式总体模型结构页 6 篇收纳 bookshelf/models/带出处头, 缺失 5 模型空链待生成) + 辅助工具区(自建 MFU 计算器 + 显存&KV cache 计算器在线 HTML + 社区工具收录) + NvidiaInfra 第三入口(货架式, BasicCUDA 收录+GPU 栈论文) + README 三入口卡片化 + 三流水线 SVG(节点可点跳代码, README 降级链接表) + 图谱生长动图 GIF(13 帧按 arXiv 月份回放, render_graph_growth.py)
 
 ## [2026-09-05] bookshelf v6 | README 美化(三入口名简化/PNG流水线图(英文标签,本机无CJK字体)/流水线描述分行/删上线日期/二级标题emoji统一/动图width=720提速220ms) + 全仓去除人名字样(模型页出处改 InfraTech 项目名, GitHub 人名 URL 全移除) + 模型结构图 11 张全部本地化(尺寸+JPEG magic 双验) + 5 缺失模型卡用 model-arch 技能生成(DeepSeek-V4-Flash/R1/Kimi-Linear/Qwen2.5-VL/GLM-5.3-Flash: HF config 实时解析→HTML+PNG+README, GLM 复合 config text_config 下钻/V4 全 MoE 补丁/R1 bf16 存储参数估算纠偏 ≈671B) + 摘要列文字改 link + 950 白皮书无 arXiv 原始出处回退内部链修复
+
+## [2026-09-05] bookshelf v6.1 | 工具名去自建区分 + 图谱动图加密(概念页 hub 菱形节点 19 页按 tag 机械映射挂边, 69→88 节点) + README 增量更新节改三类源清单直链表(论文 bib/repos/webs 点击直达) + 删除主题覆盖章节

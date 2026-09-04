@@ -233,17 +233,21 @@ AICO-knowledge/
 
 ## 🔄 增量更新（一条命令）
 
-唯一人工动作 = 更新源文件（`archive/paper_source_moonlight.bib` 或 `.md`），然后：
+唯一人工动作 = 更新三类来源清单（点击直达，编辑后各跑对应流水线）：
+
+| 知识域 | 人工输入入口 | 格式 | 更新后执行 |
+|---|---|---|---|
+| 论文 | [archive/paper_source_moonlight.bib](archive/paper_source_moonlight.bib) | BibTeX | `full_pipeline.py --push` |
+| 代码仓 | [repos_download_list.txt](repos_download_list.txt) | slug \| git_url \| ref \| 备注 | repo-extraction 三阶段 |
+| 网页 | [webs_download_list.txt](webs_download_list.txt) | slug \| url \| 备注 | web_fetch + web_deep_read |
+
+论文域一键完成（代码仓/网页两域命令见上表）：
 
 ```bash
 python3 skills/paper-extraction/full_pipeline.py --push
 ```
 
 自动：源表 diff → arXiv 解析 → 分块下载+体检 → 萃取 → **图/表/公式裁剪** → **上下文增强 M3 批量解读新增** → LaTeX 公式 → 深读队列 → **Lint gate（机审→白名单→规则重裁闭环）** → Wiki 簿记 → token-safe push。幂等，无新增 ~1-2 分钟。
-
-## 🏷️ 主题覆盖
-
-speculative decoding（10 篇成簇：EAGLE 全家族/Medusa/SpecExtend/LongSpec…）｜kv-cache（Mooncake/CacheBlend/Prefill-as-a-Service…）｜training（Megatron/MegaScale/ZeRO/Muon…）｜moe（Scalable-MoE/OmniMoE…）｜rl（DeepSeek-R1/GRPO/DAPO/AREAL/HybridFlow/CUDA-Agent…）｜multimodal（Qwen3-VL/Kimi-VL…）｜disaggregated-serving（Sarathi/NanoFlow/SGLang…）｜long-context / sparse-attention / architecture / topic-modeling / relational-table
 
 ## 📖 文档
 

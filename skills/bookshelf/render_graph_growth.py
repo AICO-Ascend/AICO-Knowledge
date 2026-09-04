@@ -26,18 +26,45 @@ OUT_GIF = IMG / 'kb_topic_graph_growth.gif'
 
 N_BATCHES = 12
 
+CONCEPT_SLUGS = {p.stem for p in (Path(__file__).resolve().parents[2] / 'wiki' / 'concepts').glob('*.md')}
+
 
 def pub_month(p):
     m = re.search(r'arxiv\.org/abs/(\d{2})(\d{2})\.', p.get('arxiv', ''))
     return f'20{m.group(1)}-{m.group(2)}' if m else '9999-99'
 
 
+# 概念页 hub: 论文 tag → wiki/concepts 页 (别名归并)
+TAG2CONCEPT = {
+    'speculative': 'speculative-decoding', 'kv-cache': 'kv-cache', 'rl': 'rl',
+    'training': 'training', 'moe': 'moe', 'multimodal': 'multimodal',
+    'disaggregated-serving': 'disaggregated-serving', 'architecture': 'architecture',
+    'long-context': 'long-context', 'sparse-attention': 'sparsity-axes',
+}
+
+
 def main():
     papers, *_ = load()
     G, tag_of = topic_graph(papers)
+    # 概念 hub 节点: 边 = 论文 tag 命中概念页主题 (机械映射, 零臆造)
+    concept_papers = defaultdict(list)
+    for p in papers:
+        for t in p.get('tags', []):
+            c = TAG2CONCEPT.get(t, t)
+            if c in CONCEPT_SLUGS:
+                concept_papers[c].append(p['slug'])
+    for c, slugs in concept_papers.items():
+        hub = f'◇ {c}'
+        G.add_node(hub, label=c, tag='__concept__', ntags=1)
+        for s_ in slugs:
+            G.add_edge(hub, s_, w=1)
     pos = nx.spring_layout(G, k=2.6, iterations=120, seed=42)
 
     months = {p['slug']: pub_month(p) for p in papers}
+    CONCEPT_SLUGS_LOCAL = set(concept_papers)
+    # 概念节点随其最早论文的月份出现
+    for c, slugs in concept_papers.items():
+        months[f'◇ {c}'] = min(months.get(s, '9999-99') for s in slugs)
     ordered = sorted(G.nodes(), key=lambda s: months.get(s, '9999-99'))
     batches = [ordered[i::N_BATCHES] for i in range(N_BATCHES)]  # 轮转分批, 每帧都有多点
     # 按时间序切等份更符合"生长"语义:
@@ -46,7 +73,7 @@ def main():
 
     frames_dir = IMG / '_growth_frames'
     frames_dir.mkdir(exist_ok=True)
-    tags = sorted({d['tag'] for _, d in G.nodes(data=True)})
+    tags = sorted({d['tag'] for _, d in G.nodes(data=True) if d['tag'] != '__concept__'})
     seen = set()
     labeled = set()
     paths = []
@@ -60,6 +87,19 @@ def main():
         widths = [G[u][v]['w'] * 0.5 for u, v in sub_edges]
         nx.draw_networkx_edges(G, pos, edgelist=sub_edges, ax=ax, width=widths,
                                alpha=0.25, edge_color='#888888')
+        # 概念 hub 节点 (菱形)
+        hubs = [n for n in seen if G.nodes[n]['tag'] == '__concept__']
+        if hubs:
+            new_h = [n for n in hubs if n in batch]
+            old_h = [n for n in hubs if n not in batch]
+            if old_h:
+                nx.draw_networkx_nodes(G, pos, nodelist=old_h, ax=ax, node_color='#1d2129',
+                                       node_shape='D', node_size=420, alpha=0.6,
+                                       edgecolors='white', linewidths=1.2)
+            if new_h:
+                nx.draw_networkx_nodes(G, pos, nodelist=new_h, ax=ax, node_color='#C7000B',
+                                       node_shape='D', node_size=620, alpha=0.95,
+                                       edgecolors='#7a1512', linewidths=2.0)
         for t in tags:
             ns = [n for n in seen if G.nodes[n]['tag'] == t]
             if not ns:
@@ -82,9 +122,10 @@ def main():
                 labeled.add(t)
         nx.draw_networkx_labels(G, pos, {n: G.nodes[n]['label'] for n in seen},
                                 font_size=6.5, ax=ax, font_family='DejaVu Sans')
-        newest_month = months.get(batch[-1], '') if batch else '现在'
-        ax.set_title(f'AICO-Knowledge Topic Graph Growth · {len(seen)}/{G.number_of_nodes()} papers'
-                     f' (+{len(batch)} new · latest {newest_month})', fontsize=13, pad=12)
+        newest_month = months.get(batch[-1], '') if batch else 'now'
+        ax.set_title(f'AICO-Knowledge Topic Graph Growth · {len(seen)}/{G.number_of_nodes()} nodes'
+                     f' (+{len(batch)} new · latest {newest_month}) — circles: papers · diamonds: concept hubs',
+                     fontsize=13, pad=12)
         ax.axis('off')
         plt.tight_layout()
         fp = frames_dir / f'f{bi:02d}.png'

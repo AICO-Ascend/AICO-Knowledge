@@ -313,7 +313,7 @@ Mooncake（KV 中心 PD 分离）→ NanoFlow（设备内流水）。部署参�
 
 | 🛠️ 工具 | 📖 知识分类 | 📜 说明 |
 |---|---|---|
-| [MFU 计算器（本库自建）](tools/mfu_calculator.html) | 训练估算 | 6ND 公式在线算 MFU/训练时长 |
-| [推理显存 & KV Cache 计算器（本库自建）](tools/kv_memory_calculator.html) | 推理估算 | 权重+KV cache 显存估算 |
+| [MFU 计算器](tools/mfu_calculator.html) | 训练估算 | 6ND 公式在线算 MFU/训练时长 |
+| [推理显存 & KV Cache 计算器](tools/kv_memory_calculator.html) | 推理估算 | 权重+KV cache 显存估算 |
 | [LLM 大模型显存计算公式与优化](https://zhuanlan.zhihu.com/p/687226668) | 推理估算 | 显存构成公式化拆解（社区文章） |
 | [LLM 预训练模型 MFU 计算方法](https://zhuanlan.zhihu.com/p/20401860293) | 训练估算 | MFU 方法论（社区文章） |

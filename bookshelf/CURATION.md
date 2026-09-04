@@ -619,8 +619,8 @@ model_cards:
 
 # ═══════════ 辅助工具 ═══════════
 tools:
-  - {name: MFU 计算器（本库自建）, ref: tool:mfu_calculator.html, category: 训练估算, note: 6ND 公式在线算 MFU/训练时长, 浏览器直接打开}
-  - {name: 推理显存 & KV Cache 计算器（本库自建）, ref: tool:kv_memory_calculator.html, category: 推理估算, note: 权重+KV cache 显存估算, 支持 MHA/GQA/MLA 对照}
+  - {name: MFU 计算器, ref: tool:mfu_calculator.html, category: 训练估算, note: 6ND 公式在线算 MFU/训练时长, 浏览器直接打开}
+  - {name: 推理显存 & KV Cache 计算器, ref: tool:kv_memory_calculator.html, category: 推理估算, note: 权重+KV cache 显存估算, 支持 MHA/GQA/MLA 对照}
   - {name: LLM 大模型显存计算公式与优化, ref: ext:显存计算文章:https://zhuanlan.zhihu.com/p/687226668, category: 推理估算, note: 显存构成公式化拆解（社区文章）}
   - {name: LLM 预训练模型 MFU 计算方法, ref: ext:MFU 文章:https://zhuanlan.zhihu.com/p/20401860293, category: 训练估算, note: MFU 方法论（社区文章）}
 ```
