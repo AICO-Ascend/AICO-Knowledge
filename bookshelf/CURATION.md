@@ -1,6 +1,6 @@
 # CURATION.md — 知识书架策展定义（人工维护的唯一文件）
 
-> `bookshelf_build.py` 读取本文件内嵌的 ```yaml 块生成 `SHELF.md` / `ascend_infra.md`。
+> `bookshelf_build.py` 读取本文件内嵌的 ```yaml 块生成 `SHELF.md`（ascend_infra 为独立手工 HTML 体系，见文末）。
 > **只改这里，不改产物**；改完跑 `python3 skills/bookshelf/bookshelf_build.py`（死链 lint 不过关会非零退出）。
 >
 > 条目引用协议：`paper:<slug>` 论文深读 · `papermd:<slug>` 结构化解构 · `reponote:<slug>:<path>` 仓文档深读 ·
@@ -24,7 +24,7 @@ shelf_intro: |
   组织轴是一条技术栈主线：**一个 Agent 需求往下钻**——选什么模型（L2）→ 怎么训怎么推（L3）→
   落在哪些算子上（L4）→ 跑在什么系统软件栈上（L5）→ 钉在什么硬件与集群拓扑上（L6）。
   与 InfraTech 的差异：他们链知乎文章，我们链 69 篇论文 6 段深读 + 134 仓 1,719 篇文档七节深读 +
-  官方手册网页深读；与 AscendV 官方可视化平台共生互链（见昇腾专区）。
+  官方手册网页深读；与 AscendV 官方可视化平台共生互链（见 AscendInfra 昇腾专区）。
 
 layer_intros:
   L1: |
@@ -39,7 +39,7 @@ layer_intros:
     昇腾侧看 MindSpeed（训练）/ MindIE · vllm-ascend（推理）——本库 497 篇特性文档七节深读全部在册。
   L4: |
     算子是性能的最后一公里。GPU 侧 CUDA/Triton/CUTLASS；昇腾侧 AscendC/Triton-Ascend/CATLASS——
-    交互式算子演示与精度/性能方法论见 [AscendInfra 专区](ascend_infra.md)的 AscendV 引用地图。
+    交互式算子图解与精度/性能方法论见 [AscendInfra 专区](ascend_infra.html)。
   L5: |
     系统软件层：驱动/运行时/编译器/通信库。昇腾侧 CANN + HCCL 的环境变量手册已逐字入库
     （商用 900 与社区 910beta1 两版内容一致——本库独家版本对照结论）。
@@ -656,169 +656,8 @@ model_cards:
       - {label: xllm 仓卡片, ref: repocard:xllm}
 ```
 
-## AscendInfra 专区策展定义
+## AscendInfra 专区（独立体系）
 
-```yaml
-ascend_infra:
-  intro: |
-    **AscendInfra** 是昇腾全栈知识专区：与主书架同一条技术栈主线，但自下而上（L6→L1）从开发者视角展开——
-    先看清硬件，再理解系统软件，再掌握算子开发，最后打通训推框架与模型算法。
-    与官方 AscendV 可视化平台**共生互链**：交互动画/案例库去 AscendV（引用地图见文末），
-    论文机制深读/版本血缘/环境变量手册留在这里。
-  sections:
-    - id: ai-hardware
-      layer: L6
-      title: 芯片与超节点
-      category: 硬件
-      items:
-        - ref: paper:ascend-950-npu-architecture-whitepaper
-          heat: 3
-          note: 昇腾 950 白皮书深读（独家资产）
-        - ref: paper:huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod
-          heat: 3
-          note: CloudMatrix384 超节点（独家资产）
-        - ref: reponote:agent-skills:community/Op/ascendc-operator-design/references/hardware-architecture.md
-          heat: 2
-          note: 910B/A2/A3 AI Core 抽象架构（L1 512KB/L0 64KB/UB 192KB/三流并行）
-        - ref: web:vllm-ascend-quickstart
-          note: Atlas A2/A3/950DT/300I DUO 支持矩阵
-        - ref: concept:npu-ascend
-    - id: ai-system-software
-      layer: L5
-      title: CANN / HCCL / 图编译
-      category: 系统软件
-      items:
-        - ref: web:ascend-cann-commercial-envvars
-          heat: 3
-          note: 商用 900 环境变量索引（132 表行逐字还原）
-        - ref: web:ascend-cann-community-envvars
-          note: 社区 910beta1——与商用版内容一致（独家对照结论）
-        - ref: web:ascend-pytorch-envvars
-          note: PyTorch NPU 2600 环境变量（22 变量）
-        - ref: web:ascend-cann-hccl-guide
-          note: HCCL 通信域创建指南（root 节点方式）
-        - ref: repocard:torchair
-          note: 图编译栈
-        - ref: repocard:hccl_transfer
-    - id: ai-operators
-      layer: L4
-      title: 算子开发（AscendC / Triton-Ascend / CATLASS）
-      category: 算子
-      items:
-        - ref: repocard:triton-ascend
-          heat: 2
-          note: GPU 迁移最低门槛
-        - ref: reponote:triton-ascend:docs/zh/migration_guide/architecture_difference.md
-          note: 昇腾与 GPU 开发差异（迁移必读）
-        - ref: repocard:catlass
-          note: Cube 算子模板库（v1.1.0）
-        - ref: repocard:torch_npu_ops
-        - ref: repocard:xllm_ops
-        - ref: paper:parallel-scan-on-ascend-ai-accelerators
-          note: 昇腾并行 scan 研究论文
-        - ref: reponote:vllm-ascend:csrc/attention/chunk_kda_fwd/docs/design.md
-          note: KDA 算子设计实证
-    - id: ai-frameworks
-      layer: L3
-      title: 训推框架（MindSpeed / MindIE / vllm-ascend）
-      category: 框架
-      items:
-        - ref: repocard:mindspeed
-          heat: 3
-          note: 训练加速库（26.1.0_core_r0.12.1 · 配套 Megatron-Core 0.12.1）
-        - ref: reponote:mindspeed:docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md
-          note: fb-overlap 通信掩盖（3 图 M3 解读）
-        - ref: repocard:mindspeed-rl
-        - ref: repocard:mindspeed-mm
-        - ref: repocard:megatronadaptor
-          note: Megatron-Core 适配层
-        - ref: repocard:vllm-ascend
-          heat: 3
-          note: 开源推理后端（v0.25.1rc1）
-        - ref: reponote:vllm-ascend:docs/source/tutorials/features/pd_disaggregation_mooncake_multi_node.md
-          note: PD 分离实战
-        - ref: repocard:mindie-llm
-          heat: 2
-          note: 商用推理引擎
-        - ref: reponote:mindie-llm:docs/zh/developer_guide/architecture_design/architecture_overview.md
-        - ref: web:vllm-ascend-quickstart
-          note: 容器化快速上手
-    - id: ai-models
-      layer: L2
-      title: 模型算法的昇腾落地
-      category: 模型
-      items:
-        - ref: paper:kimi-linear-an-expressive-efficient-attention-architecture
-          note: KDA → ChunkKdaFwd 算子（论文↔仓互证）
-        - ref: paper:deepseek-v3-technical-report
-          note: MLA+MoE 的昇腾适配标杆
-        - ref: paper:gated-delta-networks-improving-mamba2-with-delta-rule
-          note: GDN——chunkwise 算子需求源头
-        - ref: reponote:mindie-llm:docs/zh/user_guide/feature/attention_quantization.md
-          note: Attention 量化落地
-    - id: ai-agent
-      layer: L1
-      title: 昇腾 Agentic / RL
-      category: Agent
-      items:
-        - ref: repocard:mindspeed-rl
-          note: 昇腾 RL 训练栈
-        - ref: reponote:mindspeed-rl:docs/zh/features/EPLB.md
-          note: EPLB 负载均衡
-        - ref: paper:cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-gen
-          note: Agentic 算子生成（GPU 前沿 → 昇腾方法论借鉴）
-  cross_table:
-    - concept: double buffer（搬运/计算并行）
-      external: AscendV 知识可视化（概念动画）
-      ours: reponote:mindspeed:docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md
-      impl: repocard:mindspeed
-    - concept: 通信掩盖流水
-      external: AscendV 算子运行图（MTE/Cube 流水动画）
-      ours: paper:deepseek-v3-technical-report
-      impl: repocard:mindspeed
-    - concept: 线性注意力算子（KDA/GDN）
-      external: AscendV Attention 算子全景图
-      ours: paper:kimi-linear-an-expressive-efficient-attention-architecture
-      impl: reponote:vllm-ascend:csrc/attention/chunk_kda_fwd/docs/design.md
-    - concept: tiling 切分
-      external: AscendV 知识可视化（tiling 概念）
-      ours: web:ascend-cann-commercial-envvars
-      impl: repocard:catlass
-    - concept: 集合通信 HCCL
-      external: AscendV 知识可视化（HCCL/LCCL）
-      ours: web:ascend-cann-commercial-envvars
-      impl: repocard:hccl_transfer
-    - concept: Cube/Vector 双单元
-      external: AscendV 硬件可视化（910B/910_95 架构动画 + FCodeQ Q1 同步代码）
-      ours: reponote:agent-skills:community/Op/ascendc-operator-design/references/hardware-architecture.md
-      impl: repocard:catlass
-    - concept: 超节点组网
-      external: AscendV 硬件可视化（A5 代际）
-      ours: paper:huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod
-      impl: web:ascend-cann-commercial-envvars
-  reference_map:
-    - {platform: AscendV, module: 硬件可视化, url: 'https://ascendv.openx.huawei.com/', desc: 910_95/910B/310P 三代 AI Core 架构图 + 算子单步执行动画, when: 需要交互式理解 Cube/Vec/MTE 流水时}
-    - {platform: AscendV, module: 算子可视化, url: 'https://ascendv.openx.huawei.com/', desc: Matmul/量化/Attention/MoE/多模态算子全景图 + 运行图, when: 选算子、看算子边界时}
-    - {platform: AscendV, module: AscendC API 可视化, url: 'https://ascendv.openx.huawei.com/', desc: API 按类组织（搬运/单目/双目/排序/精度转换）+ 数据通路标注, when: 写 AscendC 算子查 API 时}
-    - {platform: AscendV, module: 知识可视化, url: 'https://ascendv.openx.huawei.com/', desc: double buffer/tiling/TPipe/TQue/GlobalTensor/内存格式概念体系, when: 建立 AscendC 概念框架时}
-    - {platform: AscendV, module: 精度使能, url: 'https://ascendv.openx.huawei.com/', desc: "12步搞定算子精度问题 + 精度案例库", when: 算子精度调优卡壳时}
-    - {platform: AscendV, module: 性能使能, url: 'https://ascendv.openx.huawei.com/', desc: "12步搞定算子性能优化 + Vec/MTE2/MTE3/Cube API 性能数据", when: 算子性能调优时}
-    - {platform: AscendV, module: FCodeQ, url: 'https://ascendv.openx.huawei.com/', desc: 算子开发 FAQ + AI 问答, when: 具体开发问题速查}
-    - {platform: AscendV, module: 模型可视化, url: 'https://ascendv.openx.huawei.com/', desc: DeepSeek-R1/Qwen3/Pangu 模型卡片, when: 快速了解模型定位（机制深读回本库）}
-  gap_list:
-    - ~~达芬奇架构手册~~（2026-09-04 关闭：agent-skills 仓 hardware-architecture 深读覆盖抽象架构层）
-    - ~~HCCL 使用指南~~（2026-09-04 关闭：hcclug 通信域创建页已入库深读）
-    - MindIE vs vllm-ascend 选型对照（官方无此页，需自建或补抓第三方分析）
-    - HCCL vs NCCL 接口语义对照（待找权威来源）
-    - CANN 软件栈分层总览（驱动/runtime/编译器关系图）→ webs_download_list.txt
-  repo_landscape:
-    - {name: MindSpeed 训练家族, match: ['mindspeed', 'mindspeed-.*', 'megatronadaptor', 'transformerenginenpu']}
-    - {name: MindIE 推理家族, match: ['mindie-.*']}
-    - {name: 推理引擎与后端, match: ['vllm', 'vllm-ascend', 'xllm', 'xllm_ops', 'xllm-.*', 'xllm_atb_layers', 'text-embeddings-inference', 'mindinferenceservice']}
-    - {name: 算子与编译, match: ['triton-ascend', 'triton-ascend-kernels', 'triton-distributed-ascend', 'catlass', 'torch_npu_ops', 'torchair', 'op-plugin', 'apex', 'tilelang-ascend', 'ascend-transformer-boost', 'fbgemm-ascend', 'hierarchicalkv-ascend', 'torchao_npu', 'torchcomms_npu', 'monarch_npu', 'ascendnpu-ir', 'tvm', 'tvm-ffi', 'llvm-project', 'torch-mlir', 'ascendc-kernelgen-data', 'ops-rec']}
-    - {name: 通信与存储, match: ['hccl.*', 'memfabric.*', 'memcache', 'parakv', 'mooncake', 'tensorpipe', 'transferqueue', 'brpc']}
-    - {name: 集群管理与部署, match: ['mind-cluster', 'mindcluster-.*', 'ascend-deployer', 'ascend-docker-image', 'fsdpturbo', 'ray-ascend', 'slime-ascend', 'torchtitanturbo']}
-    - {name: 调优与工具链 (msIT/mstt 族), match: ['msit', 'mstt', 'msprof.*', 'msdebug', 'msprobe', 'mstx', 'mspti', 'msmemscope', 'msmonitor', 'mscommreport', 'msop.*', 'msinsight', 'msboost', 'mskl', 'mskpp', 'msmodeling', 'msmodelslim', 'msserviceprofiler', 'mssanitizer', 'msot', 'msagent', 'mef', 'perf-reference-ascend', 'atk']}
-    - {name: 模型套件与行业 SDK, match: ['modelzoo.*', 'recsdk', 'visionsdk', 'ragsdk', 'multimodalsdk', 'mindsdk-referenceapps', 'indexsdk', 'omsdk', 'drivingsdk', 'model-agent', 'vision', 'pytorch', 'pytorch-ecosystem', 'pytorch-xllmai', 'docs', 'community', 'agent-skills', 'agentsdk', 'solution-agent', 'ecodevhub', 'ascend-agreements', 'release-management', 'infrastructure', 'ci-infra']}
-    - {name: 三方依赖镜像, match: ['cutlass', 'composable_kernel', 'faiss', 'sentencepiece', 'flashinfer', 'flashgen', 'spdlog', 'etcd-cpp-apiv3', 'cpprestsdk', 'gperftools', 'libbacktrace', 'libdevice', 'minja', 'mockcpp', 'parallel-hashmap', 'smhasher', 'taco', 'xxhash', 'dlpack']}
-```
+AscendInfra 昇腾专区**不是书架逻辑的延伸**，是独立的可视化 HTML 体系：
+`bookshelf/ascend_infra.html`（手工维护的单文件页面，自绘 SVG 架构图/算子全景/概念卡，
+数据全部来自本库深读资产）。本文件不再携带其策展 yaml。

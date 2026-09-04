@@ -6,8 +6,8 @@
 > **+ 官方文档网页**（docs.vllm.ai / hiascend 文档中心：SPA 抓取路由 + 表格逐字还原深读）。
 > Obsidian 图谱化 + RAG 友好 + Wiki 簿记层。
 
-> 📚 **面向人类学习者的双入口**：[知识书架 SHELF.md](bookshelf/SHELF.md)（技术栈六层主线：Agent→模型/算法→训推框架→算子→系统软件→硬件集群，142 条目全挂自有深读资产）
-> ｜ [AscendInfra 昇腾专区](bookshelf/ascend_infra.md)（昇腾全栈 L6→L1 展开 + 知识对照表 + 134 仓全景 + AscendV 可视化平台引用地图）
+> 📚 **面向人类学习者的双入口**：[知识书架 SHELF.md](bookshelf/SHELF.md)（技术栈六层主线：Agent→模型/算法→训推框架→算子→系统软件→硬件集群；条目挂深读资产 + **原始出处列**直链 arXiv 原文/仓内原始文件）
+> ｜ [AscendInfra 昇腾专区](bookshelf/ascend_infra.html)（独立可视化 HTML 体系：自绘 AI Core 架构图/算子全景/概念卡/知识对照表，数据全部来自本库深读资产）
 
 ![pipeline](docs/images/kb_pipeline.png)
 

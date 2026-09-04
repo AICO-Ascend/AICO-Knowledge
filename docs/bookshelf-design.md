@@ -1,4 +1,12 @@
-# AICO-Knowledge 知识书架设计 v3（昇腾亲和 · 双入口）
+# AICO-Knowledge 知识书架设计（昇腾亲和 · 双入口）
+
+> **v4 定稿（2026-09-04，用户拍板）**：
+> ① **两个入口是两个体系**——SHELF.md 走注册表生成逻辑；AscendInfra 不复用书架逻辑，
+>    是独立手工维护的可视化 HTML 页面（bookshelf/ascend_infra.html，自绘 SVG/概念卡/对照表）；
+> ② AscendInfra 参考昇腾官方算子可视化平台的形态，但**不出现其名字与链接**；
+> ③ SHELF.md 新增「原始出处」列——深读链接之外直链 arXiv 原文 / gitcode 仓内原始文件 / 原始网页。
+> 以下为 v3 设计稿存档（生成逻辑部分仍有效，ascend_infra 的 markdown 生成方案已废止）。
+
 
 > 状态：设计稿 v3（2026-09-04），未动工。
 > v3 变更（用户拍板）：

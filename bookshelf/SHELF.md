@@ -6,9 +6,9 @@
 组织轴是一条技术栈主线：**一个 Agent 需求往下钻**——选什么模型（L2）→ 怎么训怎么推（L3）→
 落在哪些算子上（L4）→ 跑在什么系统软件栈上（L5）→ 钉在什么硬件与集群拓扑上（L6）。
 与 InfraTech 的差异：他们链知乎文章，我们链 69 篇论文 6 段深读 + 134 仓 1,719 篇文档七节深读 +
-官方手册网页深读；与 AscendV 官方可视化平台共生互链（见昇腾专区）。
+官方手册网页深读；与 AscendV 官方可视化平台共生互链（见 AscendInfra 昇腾专区）。
 
-> 技术栈主线：**L1 Agent** → **L2 模型/算法** → **L3 训推框架** → **L4 算子** → **L5 系统软件** → **L6 硬件/集群**。任一层可横跳 [AscendInfra 昇腾专区](ascend_infra.md) 对应层。
+> 技术栈主线：**L1 Agent** → **L2 模型/算法** → **L3 训推框架** → **L4 算子** → **L5 系统软件** → **L6 硬件/集群**。任一层可横跳 [AscendInfra 昇腾专区](ascend_infra.html)（独立可视化体系）。
 
 ## 目录
 
@@ -32,27 +32,27 @@ Agent 层的核心问题是**长周期自主性与训练信号**：怎么让模�
 推荐路径：先 DeepSeek-R1 建立 GRPO 直觉 → HybridFlow 看训推框架设计 →
 AREAL 看异步 rollout 规模化 → CUDA-Agent 看 Agentic RL 的极致工程化。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning](../extraction/deep/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning.md) | RL | L1 | 🔥🔥🔥 · ⚡⚡ · GRPO 实战原点；纯 RL 激发推理 · 2025-01 |
-| [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models](../extraction/deep/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.md) | RL | L1 | 🔥🔥 · ⚡⚡⚡ · GRPO 算法出处 · 2024-02 |
-| [HybridFlow: A Flexible and Efficient RLHF Framework](../extraction/deep/hybridflow-a-flexible-and-efficient-rlhf-framework.md) | RL | L1 | 🔥🔥 · ⚡⚡⚡ · 训推框架解耦设计 · 2024-09 |
-| [AREAL: A Large-Scale Asynchronous Reinforcement Learning System for Language Reasoning](../extraction/deep/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning.md) | RL | L1 | 🔥🔥 · ⚡⚡⚡ · 异步 rollout 规模化 · 2025-05 · **昇腾**: 异步训推架构对 MindSpeed-RL 直接有参考价值 |
-| [Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning](../extraction/deep/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning.md) | RL | L1 | 🔥🔥 · ⚡⚡ · 工具调用 RL（检索） · 2025-03 |
-| [CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA Kernel Generation](../extraction/deep/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.md) | RL | L1 | 🔥🔥🔥 · ⚡⚡⚡ · Agentic RL 生成 CUDA kernel——算子自动化的前沿 · 2026-02 · **昇腾**: 方法论可平移到 AscendC 算子生成 |
-| [Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning](../extraction/deep/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning.md) | RL | L1 | ⚡⚡⚡ · 2026-07 |
-| [GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING](../extraction/deep/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.md) | RL | L1 | ⚡⚡ · 非梯度替代路线（反思式 prompt 进化） · 2025-07 |
-| [High-Dimensional Continuous Control Using Generalized Advantage Estimation](../extraction/deep/high-dimensional-continuous-control-using-generalized-advantage-estimation.md) | RL | L1 | ⚡⚡ · GAE 原始论文（RL 基础） · 2015-06 |
-| [EPLB 背景介绍](../extraction/repo_deep_docs/mindspeed-rl/docs/zh/features/EPLB.md) | RL | L1 | 昇腾侧 MoE 负载均衡（RL 场景） · `mindspeed-rl` · **昇腾**: MindSpeed-RL 原生 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning](../extraction/deep/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning.md) | RL | L1 | 🔥🔥🔥 · ⚡⚡ · GRPO 实战原点；纯 RL 激发推理 · 2025-01 | [arXiv 原文](https://arxiv.org/abs/2501.12948) |
+| [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models](../extraction/deep/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.md) | RL | L1 | 🔥🔥 · ⚡⚡⚡ · GRPO 算法出处 · 2024-02 | [arXiv 原文](https://arxiv.org/abs/2402.03300) |
+| [HybridFlow: A Flexible and Efficient RLHF Framework](../extraction/deep/hybridflow-a-flexible-and-efficient-rlhf-framework.md) | RL | L1 | 🔥🔥 · ⚡⚡⚡ · 训推框架解耦设计 · 2024-09 | [arXiv 原文](https://arxiv.org/abs/2409.19256) |
+| [AREAL: A Large-Scale Asynchronous Reinforcement Learning System for Language Reasoning](../extraction/deep/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning.md) | RL | L1 | 🔥🔥 · ⚡⚡⚡ · 异步 rollout 规模化 · 2025-05 · **昇腾**: 异步训推架构对 MindSpeed-RL 直接有参考价值 | [arXiv 原文](https://arxiv.org/abs/2505.24298) |
+| [Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning](../extraction/deep/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning.md) | RL | L1 | 🔥🔥 · ⚡⚡ · 工具调用 RL（检索） · 2025-03 | [arXiv 原文](https://arxiv.org/abs/2503.09516) |
+| [CUDA Agent: Large-Scale Agentic RL for High-Performance CUDA Kernel Generation](../extraction/deep/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.md) | RL | L1 | 🔥🔥🔥 · ⚡⚡⚡ · Agentic RL 生成 CUDA kernel——算子自动化的前沿 · 2026-02 · **昇腾**: 方法论可平移到 AscendC 算子生成 | [arXiv 原文](https://arxiv.org/abs/2602.24286) |
+| [Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning](../extraction/deep/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning.md) | RL | L1 | ⚡⚡⚡ · 2026-07 | [arXiv 原文](https://arxiv.org/abs/2607.07508) |
+| [GEPA: REFLECTIVE PROMPT EVOLUTION CAN OUT-PERFORM REINFORCEMENT LEARNING](../extraction/deep/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.md) | RL | L1 | ⚡⚡ · 非梯度替代路线（反思式 prompt 进化） · 2025-07 | [arXiv 原文](https://arxiv.org/abs/2507.19457) |
+| [High-Dimensional Continuous Control Using Generalized Advantage Estimation](../extraction/deep/high-dimensional-continuous-control-using-generalized-advantage-estimation.md) | RL | L1 | ⚡⚡ · GAE 原始论文（RL 基础） · 2015-06 | [arXiv 原文](https://arxiv.org/abs/1506.02438) |
+| [EPLB 背景介绍](../extraction/repo_deep_docs/mindspeed-rl/docs/zh/features/EPLB.md) | RL | L1 | 昇腾侧 MoE 负载均衡（RL 场景） · `mindspeed-rl` · **昇腾**: MindSpeed-RL 原生 | [mindspeed-rl 仓原始文件](https://gitcode.com/Ascend/MindSpeed-RL/blob/master/docs/zh/features/EPLB.md) |
 
 <a id="agentic-long-horizon"></a>
 ### 长周期 Agent 系统（L1 Agent）
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [Let It Flow: Agentic Crafting on Rock and Roll](../extraction/deep/let-it-flow-agentic-crafting-on-rock-and-roll.md) | Agent | L1 | ⚡⚡⚡ · Agentic 工作流编排 · 2025-12 |
-| [Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with Large-Scale Asynchronous RL](../extraction/deep/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.md) | Agent | L1 | ⚡⚡⚡ · 长周期搜索 Agent（十轮以上） · 2025-08 |
-| [KIMI K2: OPEN AGENTIC INTELLIGENCE](../extraction/deep/kimi-k2-open-agentic-intelligence.md) | Agent | L1 | 🔥🔥 · ⚡⚡ · Agentic 模型能力设计 · 2025-07 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [Let It Flow: Agentic Crafting on Rock and Roll](../extraction/deep/let-it-flow-agentic-crafting-on-rock-and-roll.md) | Agent | L1 | ⚡⚡⚡ · Agentic 工作流编排 · 2025-12 | [arXiv 原文](https://arxiv.org/abs/2512.24873) |
+| [Beyond Ten Turns: Unlocking Long-Horizon Agentic Search with Large-Scale Asynchronous RL](../extraction/deep/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.md) | Agent | L1 | ⚡⚡⚡ · 长周期搜索 Agent（十轮以上） · 2025-08 | [arXiv 原文](https://arxiv.org/abs/2508.07976) |
+| [KIMI K2: OPEN AGENTIC INTELLIGENCE](../extraction/deep/kimi-k2-open-agentic-intelligence.md) | Agent | L1 | 🔥🔥 · ⚡⚡ · Agentic 模型能力设计 · 2025-07 | [arXiv 原文](https://arxiv.org/abs/2507.20534) |
 
 ## L2 模型/算法
 
@@ -66,38 +66,38 @@ MoE 需要 dispatch/combine 通信算子。
 推荐路径：GQA（多查询注意力基线）→ RMSNorm/Hyper-Connections（构件级创新）→
 Gated DeltaNet / Kimi Linear（线性注意力）→ 条件记忆（稀疏化新轴）。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [DeepSeek-V3 Technical Report](../extraction/deep/deepseek-v3-technical-report.md) | 架构 | L2 | 🔥🔥🔥 · ⚡⚡⚡ · MLA+MoE+FP8+DualPipe 集大成；本库深读含 MLA 裁剪子图 · 2024-12 · [MLA 架构裁剪图](../extraction/assets/crops/deepseek-v3-technical-report-fig02-mla.png) · **昇腾**: 昇腾适配标杆模型（MindSpeed/vllm-ascend 均支持） |
-| [GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints](../extraction/deep/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.md) | 架构 | L2 | 🔥🔥 · ⚡⚡ · GQA 基线（KV cache 减半的起点） · 2023-05 |
-| [Root Mean Square Layer Normalization](../extraction/deep/root-mean-square-layer-normalization.md) | 架构 | L2 | ⚡ · RMSNorm 原始论文 · 2019-10 |
-| [HYPER-CONNECTIONS](../extraction/deep/hyper-connections.md) | 架构 | L2 | ⚡⚡⚡ · 残差连接拓扩展 · 2024-09 |
-| [HC: Manifold-Constrained Hyper-Connections](../extraction/deep/hc-manifold-constrained-hyper-connections.md) | 架构 | L2 | ⚡⚡⚡ · 2025-12 |
-| [Attention Residuals](../extraction/deep/attention-residuals.md) | 架构 | L2 | ⚡⚡⚡ · 注意力残差新范式 · 2026-03 |
-| [Gated Delta Networks: Improving Mamba2 with Delta Rule](../extraction/deep/gated-delta-networks-improving-mamba2-with-delta-rule.md) | 架构 | L2 | 🔥🔥 · ⚡⚡⚡ · GDN——KDA 的直接前身 · 2024-12 · **昇腾**: chunkwise 算子需求 → vllm-ascend ChunkKdaFwd |
-| [Kimi Linear: An Expressive, Efficient Attention Architecture](../extraction/deep/kimi-linear-an-expressive-efficient-attention-architecture.md) | 架构 | L2 | 🔥🔥🔥 · ⚡⚡⚡ · KDA——线性注意力前沿；GLM 5.3-Flash 同源技术 · 2025-10 · **昇腾**: vllm-ascend ChunkKdaFwd 仓内设计文档互证 |
-| [Conditional Memory via Scalable Lookup: A New Axis of Sparsity for Large Language Models](../extraction/deep/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models.md) | 架构 | L2 | ⚡⚡⚡ · 条件记忆——稀疏化新轴 · 2026-01 |
-| [Dynamic Large Concept Models: Latent Reasoning in an Adaptive Semantic Space](../extraction/deep/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.md) | 架构 | L2 | ⚡⚡⚡ · 2025-12 |
-| [Kimi K3: Open Frontier Intelligence](../extraction/deep/kimi-k3-open-frontier-intelligence.md) | 架构 | L2 | 🔥🔥 · ⚡⚡⚡ · KDA+Gated MLA 组合架构 · 2026-07 |
-| [linear-attention](../wiki/concepts/linear-attention.md) | 架构 | L2 | 概念页：线性注意力跨论文综合 |
-| [residual-topology](../wiki/concepts/residual-topology.md) | 架构 | L2 | 概念页：残差拓扑谱系 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [DeepSeek-V3 Technical Report](../extraction/deep/deepseek-v3-technical-report.md) | 架构 | L2 | 🔥🔥🔥 · ⚡⚡⚡ · MLA+MoE+FP8+DualPipe 集大成；本库深读含 MLA 裁剪子图 · 2024-12 · [MLA 架构裁剪图](../extraction/assets/crops/deepseek-v3-technical-report-fig02-mla.png) · **昇腾**: 昇腾适配标杆模型（MindSpeed/vllm-ascend 均支持） | [arXiv 原文](https://arxiv.org/abs/2412.19437) |
+| [GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints](../extraction/deep/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.md) | 架构 | L2 | 🔥🔥 · ⚡⚡ · GQA 基线（KV cache 减半的起点） · 2023-05 | [arXiv 原文](https://arxiv.org/abs/2305.13245) |
+| [Root Mean Square Layer Normalization](../extraction/deep/root-mean-square-layer-normalization.md) | 架构 | L2 | ⚡ · RMSNorm 原始论文 · 2019-10 | [arXiv 原文](https://arxiv.org/abs/1910.07467) |
+| [HYPER-CONNECTIONS](../extraction/deep/hyper-connections.md) | 架构 | L2 | ⚡⚡⚡ · 残差连接拓扩展 · 2024-09 | [arXiv 原文](https://arxiv.org/abs/2409.19606) |
+| [HC: Manifold-Constrained Hyper-Connections](../extraction/deep/hc-manifold-constrained-hyper-connections.md) | 架构 | L2 | ⚡⚡⚡ · 2025-12 | [arXiv 原文](https://arxiv.org/abs/2512.24880) |
+| [Attention Residuals](../extraction/deep/attention-residuals.md) | 架构 | L2 | ⚡⚡⚡ · 注意力残差新范式 · 2026-03 | [arXiv 原文](https://arxiv.org/abs/2603.15031) |
+| [Gated Delta Networks: Improving Mamba2 with Delta Rule](../extraction/deep/gated-delta-networks-improving-mamba2-with-delta-rule.md) | 架构 | L2 | 🔥🔥 · ⚡⚡⚡ · GDN——KDA 的直接前身 · 2024-12 · **昇腾**: chunkwise 算子需求 → vllm-ascend ChunkKdaFwd | [arXiv 原文](https://arxiv.org/abs/2412.06464) |
+| [Kimi Linear: An Expressive, Efficient Attention Architecture](../extraction/deep/kimi-linear-an-expressive-efficient-attention-architecture.md) | 架构 | L2 | 🔥🔥🔥 · ⚡⚡⚡ · KDA——线性注意力前沿；GLM 5.3-Flash 同源技术 · 2025-10 · **昇腾**: vllm-ascend ChunkKdaFwd 仓内设计文档互证 | [arXiv 原文](https://arxiv.org/abs/2510.26692) |
+| [Conditional Memory via Scalable Lookup: A New Axis of Sparsity for Large Language Models](../extraction/deep/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models.md) | 架构 | L2 | ⚡⚡⚡ · 条件记忆——稀疏化新轴 · 2026-01 | [arXiv 原文](https://arxiv.org/abs/2601.07372) |
+| [Dynamic Large Concept Models: Latent Reasoning in an Adaptive Semantic Space](../extraction/deep/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.md) | 架构 | L2 | ⚡⚡⚡ · 2025-12 | [arXiv 原文](https://arxiv.org/abs/2512.24617) |
+| [Kimi K3: Open Frontier Intelligence](../extraction/deep/kimi-k3-open-frontier-intelligence.md) | 架构 | L2 | 🔥🔥 · ⚡⚡⚡ · KDA+Gated MLA 组合架构 · 2026-07 | [arXiv 原文](https://arxiv.org/abs/2607.24653) |
+| [linear-attention](../wiki/concepts/linear-attention.md) | 架构 | L2 | 概念页：线性注意力跨论文综合 | — |
+| [residual-topology](../wiki/concepts/residual-topology.md) | 架构 | L2 | 概念页：残差拓扑谱系 | — |
 
 <a id="sparse-attn"></a>
 ### 稀疏注意力与长上下文（L2 模型/算法）
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [IndexCache: Accelerating Sparse Attention via Cross-Layer Index Reuse](../extraction/deep/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse.md) | 稀疏注意力 | L2 | ⚡⚡⚡ · 跨层索引复用加速稀疏注意力 · 2026-03 · **昇腾**: 稀疏 gather/index 算子需求 |
-| [DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence](../extraction/deep/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.md) | 稀疏注意力 | L2 | 🔥🔥 · ⚡⚡⚡ · 百万 token 上下文（DSA 演进） · 2026-06 |
-| [long-context](../wiki/concepts/long-context.md) | 稀疏注意力 | L2 |  |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [IndexCache: Accelerating Sparse Attention via Cross-Layer Index Reuse](../extraction/deep/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse.md) | 稀疏注意力 | L2 | ⚡⚡⚡ · 跨层索引复用加速稀疏注意力 · 2026-03 · **昇腾**: 稀疏 gather/index 算子需求 | [arXiv 原文](https://arxiv.org/abs/2603.12201) |
+| [DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence](../extraction/deep/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.md) | 稀疏注意力 | L2 | 🔥🔥 · ⚡⚡⚡ · 百万 token 上下文（DSA 演进） · 2026-06 | [arXiv 原文](https://arxiv.org/abs/2606.19348) |
+| [long-context](../wiki/concepts/long-context.md) | 稀疏注意力 | L2 |  | — |
 
 <a id="moe-arch"></a>
 ### MoE 架构（L2 模型/算法）
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [Scalable Training of Mixture-of-Experts Models with Megatron Core](../extraction/deep/scalable-training-of-mixture-of-experts-models-with-megatron-core.md) | MoE | L2 | 🔥🔥 · ⚡⚡⚡ · Megatron-Core MoE 训练系统化 · 2026-03 · **昇腾**: MindSpeed MoE 特性族（fb-overlap/EPLB）的上游基线 |
-| [moe](../wiki/concepts/moe.md) | MoE | L2 | 概念页：MoE 谱系 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [Scalable Training of Mixture-of-Experts Models with Megatron Core](../extraction/deep/scalable-training-of-mixture-of-experts-models-with-megatron-core.md) | MoE | L2 | 🔥🔥 · ⚡⚡⚡ · Megatron-Core MoE 训练系统化 · 2026-03 · **昇腾**: MindSpeed MoE 特性族（fb-overlap/EPLB）的上游基线 | [arXiv 原文](https://arxiv.org/abs/2603.07685) |
+| [moe](../wiki/concepts/moe.md) | MoE | L2 | 概念页：MoE 谱系 | — |
 
 <a id="spec-decoding"></a>
 ### 投机解码（10+ 篇成簇）（L2 模型/算法）
@@ -106,54 +106,54 @@ Gated DeltaNet / Kimi Linear（线性注意力）→ 条件记忆（稀疏化新
 EAGLE-3（训练时扩展）→ LongSpec/SpecExtend（长上下文扩展）→ DFlash/DSpark（块扩散新方向）→
 JetSpec（并行扩展天花板）。部署侧参数见 L3 的 vLLM serve CLI 手册。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [MEDUSA: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads](../extraction/deep/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.md) | 投机解码 | L2 | 🔥🔥 · ⚡⚡ · 入门：多头草案 · 2024-01 |
-| [EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty](../extraction/deep/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.md) | 投机解码 | L2 | 🔥🔥🔥 · ⚡⚡⚡ · 必读：特征层草案 · 2024-01 · **昇腾**: vllm-ascend 实验性支持 EAGLE3 |
-| [EAGLE-2: Faster Inference of Language Models with Dynamic Draft Trees](../extraction/deep/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees.md) | 投机解码 | L2 | 🔥🔥 · ⚡⚡⚡ · 2024-06 |
-| [EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test](../extraction/deep/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.md) | 投机解码 | L2 | 🔥🔥 · ⚡⚡⚡ · 2025-03 |
-| [LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification](../extraction/deep/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification.md) | 投机解码 | L2 | ⚡⚡⚡ · 长上下文无损化 · 2025-02 |
-| [SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences](../extraction/deep/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences.md) | 投机解码 | L2 | ⚡⚡ · 2025-05 |
-| [DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation](../extraction/deep/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation.md) | 投机解码 | L2 | ⚡⚡⚡ · 2026-07 |
-| [DFlash: Block Diffusion for Flash Speculative Decoding](../extraction/deep/dflash-block-diffusion-for-flash-speculative-decoding.md) | 投机解码 | L2 | ⚡⚡⚡ · 块扩散×投机解码 · 2026-02 |
-| [BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DIFFUSION LANGUAGE MODELS](../extraction/deep/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models.md) | 投机解码 | L2 | ⚡⚡⚡ · 块扩散语言模型基础 · 2025-03 |
-| [JETSPEC: Breaking the Scaling Ceiling of Speculative Decoding with Parallel Tree Drafting](../extraction/deep/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting.md) | 投机解码 | L2 | ⚡⚡⚡ · 2026-06 |
-| [DeFT: Decoding with Flash Tree-attention for Efficient Tree-structured LLM Inference](../extraction/deep/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference.md) | 投机解码 | L2 | ⚡⚡⚡ · 树注意力解码 · 2024-04 |
-| [speculative-decoding](../wiki/concepts/speculative-decoding.md) | 投机解码 | L2 | 概念页：投机解码全谱系 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [MEDUSA: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads](../extraction/deep/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.md) | 投机解码 | L2 | 🔥🔥 · ⚡⚡ · 入门：多头草案 · 2024-01 | [arXiv 原文](https://arxiv.org/abs/2401.10774) |
+| [EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty](../extraction/deep/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.md) | 投机解码 | L2 | 🔥🔥🔥 · ⚡⚡⚡ · 必读：特征层草案 · 2024-01 · **昇腾**: vllm-ascend 实验性支持 EAGLE3 | [arXiv 原文](https://arxiv.org/abs/2401.15077) |
+| [EAGLE-2: Faster Inference of Language Models with Dynamic Draft Trees](../extraction/deep/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees.md) | 投机解码 | L2 | 🔥🔥 · ⚡⚡⚡ · 2024-06 | [arXiv 原文](https://arxiv.org/abs/2406.16858) |
+| [EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test](../extraction/deep/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.md) | 投机解码 | L2 | 🔥🔥 · ⚡⚡⚡ · 2025-03 | [arXiv 原文](https://arxiv.org/abs/2503.01840) |
+| [LongSpec: Long-Context Lossless Speculative Decoding with Efficient Drafting and Verification](../extraction/deep/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification.md) | 投机解码 | L2 | ⚡⚡⚡ · 长上下文无损化 · 2025-02 | [arXiv 原文](https://arxiv.org/abs/2502.17421) |
+| [SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences](../extraction/deep/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences.md) | 投机解码 | L2 | ⚡⚡ · 2025-05 | [arXiv 原文](https://arxiv.org/abs/2505.20776) |
+| [DSpark: Confidence-Scheduled Speculative Decoding with Semi-Autoregressive Generation](../extraction/deep/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation.md) | 投机解码 | L2 | ⚡⚡⚡ · 2026-07 | [arXiv 原文](https://arxiv.org/abs/2607.05147) |
+| [DFlash: Block Diffusion for Flash Speculative Decoding](../extraction/deep/dflash-block-diffusion-for-flash-speculative-decoding.md) | 投机解码 | L2 | ⚡⚡⚡ · 块扩散×投机解码 · 2026-02 | [arXiv 原文](https://arxiv.org/abs/2602.06036) |
+| [BLOCK DIFFUSION: INTERPOLATING BETWEEN AUTOREGRESSIVE AND DIFFUSION LANGUAGE MODELS](../extraction/deep/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models.md) | 投机解码 | L2 | ⚡⚡⚡ · 块扩散语言模型基础 · 2025-03 | [arXiv 原文](https://arxiv.org/abs/2503.09573) |
+| [JETSPEC: Breaking the Scaling Ceiling of Speculative Decoding with Parallel Tree Drafting](../extraction/deep/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting.md) | 投机解码 | L2 | ⚡⚡⚡ · 2026-06 | [arXiv 原文](https://arxiv.org/abs/2606.18394) |
+| [DeFT: Decoding with Flash Tree-attention for Efficient Tree-structured LLM Inference](../extraction/deep/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference.md) | 投机解码 | L2 | ⚡⚡⚡ · 树注意力解码 · 2024-04 | [arXiv 原文](https://arxiv.org/abs/2404.00242) |
+| [speculative-decoding](../wiki/concepts/speculative-decoding.md) | 投机解码 | L2 | 概念页：投机解码全谱系 | — |
 
 <a id="multimodal-arch"></a>
 ### 多模态架构（L2 模型/算法）
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [Qwen2.5-VL Technical Report](../extraction/deep/qwen2-5-vl-technical-report.md) | 多模态 | L2 | 🔥🔥 · ⚡⚡ · 2025-02 |
-| [Qwen3-VL Technical Report](../extraction/deep/qwen3-vl-technical-report.md) | 多模态 | L2 | 🔥🔥 · ⚡⚡ · DeepStack+交错 MRoPE · 2025-11 · **昇腾**: MindSpeed-MM 多模态训练支持 |
-| [KIMI-VL TECHNICAL REPORT](../extraction/deep/kimi-vl-technical-report.md) | 多模态 | L2 | ⚡⚡ · 2025-04 |
-| [KIMI K2.5: VISUAL AGENTIC INTELLIGENCE](../extraction/deep/kimi-k2-5-visual-agentic-intelligence.md) | 多模态 | L2 | ⚡⚡ · 2026-02 |
-| [DeepStack: Deeply Stacking Visual Tokens is Surprisingly Simple and Effective for LMMs](../extraction/deep/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.md) | 多模态 | L2 | ⚡⚡ · 2024-06 |
-| [multimodal](../wiki/concepts/multimodal.md) | 多模态 | L2 |  |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [Qwen2.5-VL Technical Report](../extraction/deep/qwen2-5-vl-technical-report.md) | 多模态 | L2 | 🔥🔥 · ⚡⚡ · 2025-02 | [arXiv 原文](https://arxiv.org/abs/2502.13923) |
+| [Qwen3-VL Technical Report](../extraction/deep/qwen3-vl-technical-report.md) | 多模态 | L2 | 🔥🔥 · ⚡⚡ · DeepStack+交错 MRoPE · 2025-11 · **昇腾**: MindSpeed-MM 多模态训练支持 | [arXiv 原文](https://arxiv.org/abs/2511.21631) |
+| [KIMI-VL TECHNICAL REPORT](../extraction/deep/kimi-vl-technical-report.md) | 多模态 | L2 | ⚡⚡ · 2025-04 | [arXiv 原文](https://arxiv.org/abs/2504.07491) |
+| [KIMI K2.5: VISUAL AGENTIC INTELLIGENCE](../extraction/deep/kimi-k2-5-visual-agentic-intelligence.md) | 多模态 | L2 | ⚡⚡ · 2026-02 | [arXiv 原文](https://arxiv.org/abs/2602.02276) |
+| [DeepStack: Deeply Stacking Visual Tokens is Surprisingly Simple and Effective for LMMs](../extraction/deep/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.md) | 多模态 | L2 | ⚡⚡ · 2024-06 | [arXiv 原文](https://arxiv.org/abs/2406.04334) |
+| [multimodal](../wiki/concepts/multimodal.md) | 多模态 | L2 |  | — |
 
 <a id="surveys-taxonomy"></a>
 ### 综述与分类学（L2 模型/算法）
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [A Survey of Large Language Models](../extraction/deep/a-survey-of-large-language-models.md) | 综述 | L2 | ⚡ · LLM 总综述（入门第一站） · 2023-03 |
-| [A Survey on Large Language Model Acceleration based on KV Cache Management](../extraction/deep/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.md) | 综述 | L2 | ⚡⚡ · 2024-12 |
-| [llm-taxonomy](../wiki/concepts/llm-taxonomy.md) | 综述 | L2 |  |
-| [frontier-models](../wiki/concepts/frontier-models.md) | 综述 | L2 |  |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [A Survey of Large Language Models](../extraction/deep/a-survey-of-large-language-models.md) | 综述 | L2 | ⚡ · LLM 总综述（入门第一站） · 2023-03 | [arXiv 原文](https://arxiv.org/abs/2303.18223) |
+| [A Survey on Large Language Model Acceleration based on KV Cache Management](../extraction/deep/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.md) | 综述 | L2 | ⚡⚡ · 2024-12 | [arXiv 原文](https://arxiv.org/abs/2412.19442) |
+| [llm-taxonomy](../wiki/concepts/llm-taxonomy.md) | 综述 | L2 |  | — |
+| [frontier-models](../wiki/concepts/frontier-models.md) | 综述 | L2 |  | — |
 
 <a id="extended-reading"></a>
 ### 扩展阅读（主题模型/表格学习/蒸馏）（L2 模型/算法）
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [BERTopic: Neural topic modeling with a class-based TF-IDF procedure](../extraction/deep/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure.md) | 扩展 | L2 | ⚡ · 2022-03 |
-| [Linear Optimal Topic Transport for Document Similarity](../extraction/deep/linear-optimal-topic-transport-for-document-similarity.md) | 扩展 | L2 | ⚡⚡ · 2026/1/17 |
-| [rLLM: Relational Table Learning with LLMs](../extraction/deep/rllm-relational-table-learning-with-llms.md) | 扩展 | L2 | ⚡⚡ · 2024-07 |
-| [Dual-Head Reasoning Distillation: Improving Classifier Accuracy with Train-Time-Only Reasoning](../extraction/deep/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning.md) | 扩展 | L2 | ⚡⚡ · 2025-09 |
-| [topic-modeling](../wiki/concepts/topic-modeling.md) | 扩展 | L2 |  |
-| [table-learning](../wiki/concepts/table-learning.md) | 扩展 | L2 |  |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [BERTopic: Neural topic modeling with a class-based TF-IDF procedure](../extraction/deep/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure.md) | 扩展 | L2 | ⚡ · 2022-03 | [arXiv 原文](https://arxiv.org/abs/2203.05794) |
+| [Linear Optimal Topic Transport for Document Similarity](../extraction/deep/linear-optimal-topic-transport-for-document-similarity.md) | 扩展 | L2 | ⚡⚡ · 2026/1/17 | [arXiv 原文](https://openreview.net/forum?id=f8SlF0Vzbq) |
+| [rLLM: Relational Table Learning with LLMs](../extraction/deep/rllm-relational-table-learning-with-llms.md) | 扩展 | L2 | ⚡⚡ · 2024-07 | [arXiv 原文](https://arxiv.org/abs/2407.20157) |
+| [Dual-Head Reasoning Distillation: Improving Classifier Accuracy with Train-Time-Only Reasoning](../extraction/deep/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning.md) | 扩展 | L2 | ⚡⚡ · 2025-09 | [arXiv 原文](https://arxiv.org/abs/2509.21487) |
+| [topic-modeling](../wiki/concepts/topic-modeling.md) | 扩展 | L2 |  | — |
+| [table-learning](../wiki/concepts/table-learning.md) | 扩展 | L2 |  | — |
 
 ## L3 训推框架
 
@@ -166,21 +166,21 @@ JetSpec（并行扩展天花板）。部署侧参数见 L3 的 vLLM serve CLI �
 推荐路径：Megatron-LM（3D 并行原点）→ ZeRO（显存优化）→ MegaScale（万卡工程）→
 Muon（优化器新范式）。昇腾侧对照：MindSpeed 特性文档族（497 篇深读全量在册）。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](../extraction/deep/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism.md) | 训练系统 | L3 | 🔥🔥🔥 · ⚡⚡⚡ · TP/PP 原点 · 2019-09 |
-| [Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM](../extraction/deep/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · 3D 并行组合 + 通信掩盖 · 2021-04 |
-| [ZeRO: Memory Optimizations Toward Training Trillion Parameter Models](../extraction/deep/zero-memory-optimizations-toward-training-trillion-parameter-models.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · 显存切分原点 · 2019-10 |
-| [MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs](../extraction/deep/megascale-scaling-large-language-model-training-to-more-than-10000-gpus.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · 万卡工程全集 · 2024-02 |
-| [Efficient Training of Large Language Models on Distributed Infrastructures: A Survey](../extraction/deep/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.md) | 训练系统 | L3 | ⚡⚡ · 2024-07 |
-| [Muon is Scalable for LLM Training](../extraction/deep/muon-is-scalable-for-llm-training.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · Muon 优化器 · 2025-02 |
-| [From ATOP to ZCube: Automated Topology Optimization Pipeline and A Highly Cost-Effective Network Topology for Large Model Training](../extraction/deep/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.md) | 训练系统 | L3 | ⚡⚡⚡ · 并行拓扑自动搜索 · 2025/8/27 |
-| [Step-3 is Large yet Affordable: Model-system Co-design for Cost-effective Decoding](../extraction/deep/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding.md) | 训练系统 | L3 | ⚡⚡⚡ · 模型-系统协同设计 · 2025-07 |
-| [mindspeed](../extraction/deep/repo-mindspeed.md) | 训练系统 | L3 | 🔥🔥🔥 · ⚡⚡ · 昇腾训练加速库卡片（fb-overlap 3 图 M3 解读） · `v26.1.0_core_r0.12.1` · **昇腾**: 昇腾训练栈核心 |
-| [MoE跨microbatch间AllToAll通信掩盖](../extraction/repo_deep_docs/mindspeed/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · MoE 前反向通信掩盖（含 3 图图文联合解读） · `mindspeed` · **昇腾**: MindSpeed 原生特性 |
-| [Automatic Parallelism](../extraction/repo_deep_docs/mindspeed/docs/zh/features/Automatic_Parallelism.md) | 训练系统 | L3 | ⚡⚡ · 自动并行 · `mindspeed` · **昇腾**: MindSpeed 原生特性 |
-| [长序列并行](../extraction/repo_deep_docs/mindspeed-rl/docs/zh/features/context_parallel.md) | 训练系统 | L3 | ⚡⚡⚡ · 长序列并行 · `mindspeed-rl` · **昇腾**: MindSpeed-RL 原生 |
-| [training](../wiki/concepts/training.md) | 训练系统 | L3 |  |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism](../extraction/deep/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism.md) | 训练系统 | L3 | 🔥🔥🔥 · ⚡⚡⚡ · TP/PP 原点 · 2019-09 | [arXiv 原文](https://arxiv.org/abs/1909.08053) |
+| [Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM](../extraction/deep/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · 3D 并行组合 + 通信掩盖 · 2021-04 | [arXiv 原文](https://arxiv.org/abs/2104.04473) |
+| [ZeRO: Memory Optimizations Toward Training Trillion Parameter Models](../extraction/deep/zero-memory-optimizations-toward-training-trillion-parameter-models.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · 显存切分原点 · 2019-10 | [arXiv 原文](https://arxiv.org/abs/1910.02054) |
+| [MegaScale: Scaling Large Language Model Training to More Than 10,000 GPUs](../extraction/deep/megascale-scaling-large-language-model-training-to-more-than-10000-gpus.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · 万卡工程全集 · 2024-02 | [arXiv 原文](https://arxiv.org/abs/2402.15627) |
+| [Efficient Training of Large Language Models on Distributed Infrastructures: A Survey](../extraction/deep/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.md) | 训练系统 | L3 | ⚡⚡ · 2024-07 | [arXiv 原文](https://arxiv.org/abs/2407.20018) |
+| [Muon is Scalable for LLM Training](../extraction/deep/muon-is-scalable-for-llm-training.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · Muon 优化器 · 2025-02 | [arXiv 原文](https://arxiv.org/abs/2502.16982) |
+| [From ATOP to ZCube: Automated Topology Optimization Pipeline and A Highly Cost-Effective Network Topology for Large Model Training](../extraction/deep/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.md) | 训练系统 | L3 | ⚡⚡⚡ · 并行拓扑自动搜索 · 2025/8/27 | [arXiv 原文](https://dl.acm.org/doi/10.1145/3718958.3750503) |
+| [Step-3 is Large yet Affordable: Model-system Co-design for Cost-effective Decoding](../extraction/deep/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding.md) | 训练系统 | L3 | ⚡⚡⚡ · 模型-系统协同设计 · 2025-07 | [arXiv 原文](https://arxiv.org/abs/2507.19427) |
+| [mindspeed](../extraction/deep/repo-mindspeed.md) | 训练系统 | L3 | 🔥🔥🔥 · ⚡⚡ · 昇腾训练加速库卡片（fb-overlap 3 图 M3 解读） · `v26.1.0_core_r0.12.1` · **昇腾**: 昇腾训练栈核心 | [代码仓](https://gitcode.com/Ascend/MindSpeed) |
+| [MoE跨microbatch间AllToAll通信掩盖](../extraction/repo_deep_docs/mindspeed/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md) | 训练系统 | L3 | 🔥🔥 · ⚡⚡⚡ · MoE 前反向通信掩盖（含 3 图图文联合解读） · `mindspeed` · **昇腾**: MindSpeed 原生特性 | [mindspeed 仓原始文件](https://gitcode.com/Ascend/MindSpeed/blob/master/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md) |
+| [Automatic Parallelism](../extraction/repo_deep_docs/mindspeed/docs/zh/features/Automatic_Parallelism.md) | 训练系统 | L3 | ⚡⚡ · 自动并行 · `mindspeed` · **昇腾**: MindSpeed 原生特性 | [mindspeed 仓原始文件](https://gitcode.com/Ascend/MindSpeed/blob/master/docs/zh/features/Automatic_Parallelism.md) |
+| [长序列并行](../extraction/repo_deep_docs/mindspeed-rl/docs/zh/features/context_parallel.md) | 训练系统 | L3 | ⚡⚡⚡ · 长序列并行 · `mindspeed-rl` · **昇腾**: MindSpeed-RL 原生 | [mindspeed-rl 仓原始文件](https://gitcode.com/Ascend/MindSpeed-RL/blob/master/docs/zh/features/context_parallel.md) |
+| [training](../wiki/concepts/training.md) | 训练系统 | L3 |  | — |
 
 <a id="inference-sys"></a>
 ### 推理系统与调度（L3 训推框架）
@@ -188,47 +188,47 @@ Muon（优化器新范式）。昇腾侧对照：MindSpeed 特性文档族（497
 推荐路径：PagedAttention（vLLM 原点，必读）→ Sarathi（chunked prefill）→ SGLang（结构化执行）→
 Mooncake（KV 中心 PD 分离）→ NanoFlow（设备内流水）。部署参数查 L3 底部的 vLLM CLI 手册深读。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [Efficient Memory Management for Large Language Model Serving with PagedAttention](../extraction/deep/efficient-memory-management-for-large-language-model-serving-with-pagedattention.md) | 推理系统 | L3 | 🔥🔥🔥 · ⚡⚡⚡ · PagedAttention——vLLM 原点 · 2023-09 |
-| [SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills](../extraction/deep/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills.md) | 推理系统 | L3 | 🔥🔥 · ⚡⚡⚡ · chunked prefill 原点 · 2023-08 |
-| [Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve](../extraction/deep/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve.md) | 推理系统 | L3 | ⚡⚡⚡ · 2024-03 |
-| [SGLang: Efficient Execution of Structured Language Model Programs](../extraction/deep/sglang-efficient-execution-of-structured-language-model-programs.md) | 推理系统 | L3 | 🔥🔥 · ⚡⚡⚡ · RadixAttention · 2023-12 |
-| [Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving](../extraction/deep/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.md) | 推理系统 | L3 | 🔥🔥🔥 · ⚡⚡⚡ · KV 中心 PD 分离生产系统 · 2024-07 · **昇腾**: vllm-ascend PD 分离教程以 Mooncake 为后端 |
-| [NanoFlow: Towards Optimal Large Language Model Serving Throughput](../extraction/deep/nanoflow-towards-optimal-large-language-model-serving-throughput.md) | 推理系统 | L3 | ⚡⚡⚡ · 设备内纳米流水 · 2024-08 |
-| [CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion](../extraction/deep/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.md) | 推理系统 | L3 | ⚡⚡⚡ · RAG KV 复用 · 2024-05 |
-| [Prefill-as-a-Service: KVCache of Next-Generation Models Could Go Cross-Datacenter](../extraction/deep/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter.md) | 推理系统 | L3 | ⚡⚡⚡ · 2026-04 |
-| [KV Cache Optimization Strategies for Scalable and Efficient LLM Inference](../extraction/deep/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference.md) | 推理系统 | L3 | ⚡⚡ · 2026-03 |
-| [Efficiently Serving Large Multimodal Models Using EPD Disaggregation](../extraction/deep/efficiently-serving-large-multimodal-models-using-epd-disaggregation.md) | 推理系统 | L3 | ⚡⚡⚡ · 多模态 EPD 分离 · 2025-01 |
-| [vllm](../extraction/deep/repo-vllm.md) | 推理系统 | L3 | 🔥🔥🔥 · ⚡⚡ · vLLM 仓卡片（版本线 v0.28.1rc0） · `v0.28.1rc0` |
-| [vllm-ascend](../extraction/deep/repo-vllm-ascend.md) | 推理系统 | L3 | 🔥🔥🔥 · ⚡⚡ · 昇腾后端卡片（v0.25.1rc1 · ChunkKdaFwd 发现） · `v0.25.1rc1` · **昇腾**: 昇腾推理栈核心 |
-| [Prefill-Decode Disaggregation (DeepSeek)](../extraction/repo_deep_docs/vllm-ascend/docs/source/tutorials/features/pd_disaggregation_mooncake_multi_node.md) | 推理系统 | L3 | ⚡⚡⚡ · 昇腾 PD 分离实战（Mooncake 多机） · `vllm-ascend` · **昇腾**: vllm-ascend 原生教程 |
-| [Dynamic Chunked Pipeline Parallel (DeepSeek-V3.1)](../extraction/repo_deep_docs/vllm-ascend/docs/source/tutorials/features/dynamic_chunked_pipeline_parallel.md) | 推理系统 | L3 | ⚡⚡⚡ · `vllm-ascend` · **昇腾**: vllm-ascend 原生教程 |
-| [disagg_pd](../extraction/repo_deep_docs/xllm/docs/src/content/docs/en/features/disagg_pd.md) | 推理系统 | L3 | ⚡⚡⚡ · xLLM PD 分离设计 · `xllm` |
-| [chunked_scheduler](../extraction/repo_deep_docs/xllm/docs/src/content/docs/en/features/chunked_scheduler.md) | 推理系统 | L3 | ⚡⚡ · `xllm` |
-| [xllm](../extraction/deep/repo-xllm.md) | 推理系统 | L3 | 🔥🔥 · ⚡⚡ · xLLM 卡片（v0.10.1 · GLM-5.3-Flash day-0 时间线） · `v0.10.1` |
-| [vllm serve](../extraction/web_deep_docs/vllm-cli-serve.md) | 推理系统 | L3 | 🔥🔥 · ⚡ · vLLM serve 312 项参数手册（网页深读，逐字还原） |
-| [Quick Start](../extraction/web_deep_docs/vllm-ascend-quickstart.md) | 推理系统 | L3 | ⚡ · vllm-ascend 中文快速上手 + Atlas 硬件支持表 · **昇腾**: 昇腾容器化部署入口 |
-| [disaggregated-serving](../wiki/concepts/disaggregated-serving.md) | 推理系统 | L3 |  |
-| [kv-cache](../wiki/concepts/kv-cache.md) | 推理系统 | L3 |  |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [Efficient Memory Management for Large Language Model Serving with PagedAttention](../extraction/deep/efficient-memory-management-for-large-language-model-serving-with-pagedattention.md) | 推理系统 | L3 | 🔥🔥🔥 · ⚡⚡⚡ · PagedAttention——vLLM 原点 · 2023-09 | [arXiv 原文](https://arxiv.org/abs/2309.06180) |
+| [SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills](../extraction/deep/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills.md) | 推理系统 | L3 | 🔥🔥 · ⚡⚡⚡ · chunked prefill 原点 · 2023-08 | [arXiv 原文](https://arxiv.org/abs/2308.16369) |
+| [Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve](../extraction/deep/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve.md) | 推理系统 | L3 | ⚡⚡⚡ · 2024-03 | [arXiv 原文](https://arxiv.org/abs/2403.02310) |
+| [SGLang: Efficient Execution of Structured Language Model Programs](../extraction/deep/sglang-efficient-execution-of-structured-language-model-programs.md) | 推理系统 | L3 | 🔥🔥 · ⚡⚡⚡ · RadixAttention · 2023-12 | [arXiv 原文](https://arxiv.org/abs/2312.07104) |
+| [Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving](../extraction/deep/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.md) | 推理系统 | L3 | 🔥🔥🔥 · ⚡⚡⚡ · KV 中心 PD 分离生产系统 · 2024-07 · **昇腾**: vllm-ascend PD 分离教程以 Mooncake 为后端 | [arXiv 原文](https://arxiv.org/abs/2407.00079) |
+| [NanoFlow: Towards Optimal Large Language Model Serving Throughput](../extraction/deep/nanoflow-towards-optimal-large-language-model-serving-throughput.md) | 推理系统 | L3 | ⚡⚡⚡ · 设备内纳米流水 · 2024-08 | [arXiv 原文](https://arxiv.org/abs/2408.12757) |
+| [CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion](../extraction/deep/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.md) | 推理系统 | L3 | ⚡⚡⚡ · RAG KV 复用 · 2024-05 | [arXiv 原文](https://arxiv.org/abs/2405.16444) |
+| [Prefill-as-a-Service: KVCache of Next-Generation Models Could Go Cross-Datacenter](../extraction/deep/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter.md) | 推理系统 | L3 | ⚡⚡⚡ · 2026-04 | [arXiv 原文](https://arxiv.org/abs/2604.15039) |
+| [KV Cache Optimization Strategies for Scalable and Efficient LLM Inference](../extraction/deep/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference.md) | 推理系统 | L3 | ⚡⚡ · 2026-03 | [arXiv 原文](https://arxiv.org/abs/2603.20397) |
+| [Efficiently Serving Large Multimodal Models Using EPD Disaggregation](../extraction/deep/efficiently-serving-large-multimodal-models-using-epd-disaggregation.md) | 推理系统 | L3 | ⚡⚡⚡ · 多模态 EPD 分离 · 2025-01 | [arXiv 原文](https://arxiv.org/abs/2501.05460) |
+| [vllm](../extraction/deep/repo-vllm.md) | 推理系统 | L3 | 🔥🔥🔥 · ⚡⚡ · vLLM 仓卡片（版本线 v0.28.1rc0） · `v0.28.1rc0` | [代码仓](https://gitcode.com/GitHub_Trending/vl/vllm) |
+| [vllm-ascend](../extraction/deep/repo-vllm-ascend.md) | 推理系统 | L3 | 🔥🔥🔥 · ⚡⚡ · 昇腾后端卡片（v0.25.1rc1 · ChunkKdaFwd 发现） · `v0.25.1rc1` · **昇腾**: 昇腾推理栈核心 | [代码仓](https://gitcode.com/gh_mirrors/vl/vllm-ascend) |
+| [Prefill-Decode Disaggregation (DeepSeek)](../extraction/repo_deep_docs/vllm-ascend/docs/source/tutorials/features/pd_disaggregation_mooncake_multi_node.md) | 推理系统 | L3 | ⚡⚡⚡ · 昇腾 PD 分离实战（Mooncake 多机） · `vllm-ascend` · **昇腾**: vllm-ascend 原生教程 | [vllm-ascend 仓原始文件](https://gitcode.com/gh_mirrors/vl/vllm-ascend/blob/main/docs/source/tutorials/features/pd_disaggregation_mooncake_multi_node.md) |
+| [Dynamic Chunked Pipeline Parallel (DeepSeek-V3.1)](../extraction/repo_deep_docs/vllm-ascend/docs/source/tutorials/features/dynamic_chunked_pipeline_parallel.md) | 推理系统 | L3 | ⚡⚡⚡ · `vllm-ascend` · **昇腾**: vllm-ascend 原生教程 | [vllm-ascend 仓原始文件](https://gitcode.com/gh_mirrors/vl/vllm-ascend/blob/main/docs/source/tutorials/features/dynamic_chunked_pipeline_parallel.md) |
+| [disagg_pd](../extraction/repo_deep_docs/xllm/docs/src/content/docs/en/features/disagg_pd.md) | 推理系统 | L3 | ⚡⚡⚡ · xLLM PD 分离设计 · `xllm` | [xllm 仓原始文件](https://gitcode.com/xLLM-AI/xllm/blob/main/docs/src/content/docs/en/features/disagg_pd.md) |
+| [chunked_scheduler](../extraction/repo_deep_docs/xllm/docs/src/content/docs/en/features/chunked_scheduler.md) | 推理系统 | L3 | ⚡⚡ · `xllm` | [xllm 仓原始文件](https://gitcode.com/xLLM-AI/xllm/blob/main/docs/src/content/docs/en/features/chunked_scheduler.md) |
+| [xllm](../extraction/deep/repo-xllm.md) | 推理系统 | L3 | 🔥🔥 · ⚡⚡ · xLLM 卡片（v0.10.1 · GLM-5.3-Flash day-0 时间线） · `v0.10.1` | [代码仓](https://gitcode.com/xLLM-AI/xllm) |
+| [vllm serve](../extraction/web_deep_docs/vllm-cli-serve.md) | 推理系统 | L3 | 🔥🔥 · ⚡ · vLLM serve 312 项参数手册（网页深读，逐字还原） | [原始网页](https://docs.vllm.ai/en/latest/cli/serve/) |
+| [Quick Start](../extraction/web_deep_docs/vllm-ascend-quickstart.md) | 推理系统 | L3 | ⚡ · vllm-ascend 中文快速上手 + Atlas 硬件支持表 · **昇腾**: 昇腾容器化部署入口 | [原始网页](https://docs.vllm.ai/projects/vllm-ascend-cn/zh-cn/latest/quick_start.html) |
+| [disaggregated-serving](../wiki/concepts/disaggregated-serving.md) | 推理系统 | L3 |  | — |
+| [kv-cache](../wiki/concepts/kv-cache.md) | 推理系统 | L3 |  | — |
 
 <a id="mindie-stack"></a>
 ### MindIE 推理栈（昇腾商用）（L3 训推框架）
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [mindie-llm](../extraction/repo_cards/mindie-llm.md) | MindIE | L3 | 🔥🔥 · ⚡⚡ · `3.1.0` · **昇腾**: 昇腾商用推理引擎 |
-| [架构设计](../extraction/repo_deep_docs/mindie-llm/docs/zh/developer_guide/architecture_design/architecture_overview.md) | MindIE | L3 | ⚡⚡ · MindIE 架构设计 · `mindie-llm` · **昇腾**: MindIE 原生文档 |
-| [异步调度](../extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/asynchronous_scheduling.md) | MindIE | L3 | ⚡⚡ · `mindie-llm` · **昇腾**: MindIE 原生特性 |
-| [Attention量化](../extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/attention_quantization.md) | MindIE | L3 | ⚡⚡⚡ · `mindie-llm` · **昇腾**: MindIE 原生特性 |
-| [mindie-turbo](../extraction/repo_cards/mindie-turbo.md) | MindIE | L3 | **昇腾**: 昇腾推理加速 |
-| [mindie-motor](../extraction/repo_cards/mindie-motor.md) | MindIE | L3 | `3.1.0` · **昇腾**: 昇腾推理编排 |
-| [mindie-sd](../extraction/repo_cards/mindie-sd.md) | MindIE | L3 | `v2.3.0rc1` · **昇腾**: 昇腾多模态推理 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [mindie-llm](../extraction/repo_cards/mindie-llm.md) | MindIE | L3 | 🔥🔥 · ⚡⚡ · `3.1.0` · **昇腾**: 昇腾商用推理引擎 | [代码仓](https://gitcode.com/Ascend/MindIE-LLM) |
+| [架构设计](../extraction/repo_deep_docs/mindie-llm/docs/zh/developer_guide/architecture_design/architecture_overview.md) | MindIE | L3 | ⚡⚡ · MindIE 架构设计 · `mindie-llm` · **昇腾**: MindIE 原生文档 | [mindie-llm 仓原始文件](https://gitcode.com/Ascend/MindIE-LLM/blob/master/docs/zh/developer_guide/architecture_design/architecture_overview.md) |
+| [异步调度](../extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/asynchronous_scheduling.md) | MindIE | L3 | ⚡⚡ · `mindie-llm` · **昇腾**: MindIE 原生特性 | [mindie-llm 仓原始文件](https://gitcode.com/Ascend/MindIE-LLM/blob/master/docs/zh/user_guide/feature/asynchronous_scheduling.md) |
+| [Attention量化](../extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/attention_quantization.md) | MindIE | L3 | ⚡⚡⚡ · `mindie-llm` · **昇腾**: MindIE 原生特性 | [mindie-llm 仓原始文件](https://gitcode.com/Ascend/MindIE-LLM/blob/master/docs/zh/user_guide/feature/attention_quantization.md) |
+| [mindie-turbo](../extraction/repo_cards/mindie-turbo.md) | MindIE | L3 | **昇腾**: 昇腾推理加速 | [代码仓](https://gitcode.com/Ascend/MindIE-Turbo) |
+| [mindie-motor](../extraction/repo_cards/mindie-motor.md) | MindIE | L3 | `3.1.0` · **昇腾**: 昇腾推理编排 | [代码仓](https://gitcode.com/Ascend/MindIE-Motor) |
+| [mindie-sd](../extraction/repo_cards/mindie-sd.md) | MindIE | L3 | `v2.3.0rc1` · **昇腾**: 昇腾多模态推理 | [代码仓](https://gitcode.com/Ascend/MindIE-SD) |
 
 ## L4 算子
 
 算子是性能的最后一公里。GPU 侧 CUDA/Triton/CUTLASS；昇腾侧 AscendC/Triton-Ascend/CATLASS——
-交互式算子演示与精度/性能方法论见 [AscendInfra 专区](ascend_infra.md)的 AscendV 引用地图。
+交互式算子图解与精度/性能方法论见 [AscendInfra 专区](ascend_infra.html)。
 
 <a id="operators"></a>
 ### 算子库与算子开发（L4 算子）
@@ -236,17 +236,17 @@ Mooncake（KV 中心 PD 分离）→ NanoFlow（设备内流水）。部署参�
 算子层是昇腾亲和的最前沿：GPU 论文（FlashAttention 族）在此对照昇腾算子仓实现。
 交互式算子动画/AscendC API 可视化/精度性能 12 步方法论 → 见 AscendInfra 专区的 AscendV 引用地图。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [Parallel Scan on Ascend AI Accelerators](../extraction/deep/parallel-scan-on-ascend-ai-accelerators.md) | 算子 | L4 | 🔥🔥 · ⚡⚡⚡ · 昇腾加速器上的并行 scan（线性注意力底层算子） · 2025-05 · **昇腾**: 昇腾算子研究论文（本库独家深读） |
-| [triton-ascend](../extraction/repo_cards/triton-ascend.md) | 算子 | L4 | 🔥🔥 · ⚡⚡ · Triton 昇腾后端（已迁 triton-lang 主线） · `v3.2.1` · **昇腾**: GPU 算子迁移昇腾的最低门槛 |
-| [架构设计与核心特性](../extraction/repo_deep_docs/triton-ascend/docs/zh/architecture_design_and_core_features.md) | 算子 | L4 | ⚡⚡ · `triton-ascend` · **昇腾**: Triton-Ascend 原生文档 |
-| [昇腾与GPU的开发差异](../extraction/repo_deep_docs/triton-ascend/docs/zh/migration_guide/architecture_difference.md) | 算子 | L4 | 🔥🔥 · ⚡⚡ · 昇腾与 GPU 的开发差异（迁移必读） · `triton-ascend` · **昇腾**: 迁移指南 |
-| [catlass](../extraction/repo_cards/catlass.md) | 算子 | L4 | ⚡⚡⚡ · CATLASS——CANN 版 CUTLASS（v1.1.0） · `v1.1.0` · **昇腾**: 昇腾 Cube 算子模板库 |
-| [torch_npu_ops](../extraction/repo_cards/torch_npu_ops.md) | 算子 | L4 | ⚡⚡ · **昇腾**: torch_npu 算子库 |
-| [xllm_ops](../extraction/repo_cards/xllm_ops.md) | 算子 | L4 | ⚡⚡ · **昇腾**: xLLM 高性能算子库 |
-| [ChunkKdaFwd 设计](../extraction/repo_deep_docs/vllm-ascend/csrc/attention/chunk_kda_fwd/docs/design.md) | 算子 | L4 | 🔥🔥 · ⚡⚡⚡ · ChunkKdaFwd 算子设计（KDA 落地的直接证据） · `vllm-ascend` · **昇腾**: vllm-ascend 仓内设计文档 |
-| [SparseAttentionScore Operator Design](../extraction/repo_deep_docs/vllm-ascend/csrc/attention/sparse_attention_score/docs/sparse_attention_score_design.md) | 算子 | L4 | ⚡⚡⚡ · 稀疏注意力打分算子设计 · `vllm-ascend` · **昇腾**: vllm-ascend 仓内设计文档 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [Parallel Scan on Ascend AI Accelerators](../extraction/deep/parallel-scan-on-ascend-ai-accelerators.md) | 算子 | L4 | 🔥🔥 · ⚡⚡⚡ · 昇腾加速器上的并行 scan（线性注意力底层算子） · 2025-05 · **昇腾**: 昇腾算子研究论文（本库独家深读） | [arXiv 原文](https://arxiv.org/abs/2505.15112) |
+| [triton-ascend](../extraction/repo_cards/triton-ascend.md) | 算子 | L4 | 🔥🔥 · ⚡⚡ · Triton 昇腾后端（已迁 triton-lang 主线） · `v3.2.1` · **昇腾**: GPU 算子迁移昇腾的最低门槛 | [代码仓](https://gitcode.com/Ascend/triton-ascend) |
+| [架构设计与核心特性](../extraction/repo_deep_docs/triton-ascend/docs/zh/architecture_design_and_core_features.md) | 算子 | L4 | ⚡⚡ · `triton-ascend` · **昇腾**: Triton-Ascend 原生文档 | [triton-ascend 仓原始文件](https://gitcode.com/Ascend/triton-ascend/blob/main/docs/zh/architecture_design_and_core_features.md) |
+| [昇腾与GPU的开发差异](../extraction/repo_deep_docs/triton-ascend/docs/zh/migration_guide/architecture_difference.md) | 算子 | L4 | 🔥🔥 · ⚡⚡ · 昇腾与 GPU 的开发差异（迁移必读） · `triton-ascend` · **昇腾**: 迁移指南 | [triton-ascend 仓原始文件](https://gitcode.com/Ascend/triton-ascend/blob/main/docs/zh/migration_guide/architecture_difference.md) |
+| [catlass](../extraction/repo_cards/catlass.md) | 算子 | L4 | ⚡⚡⚡ · CATLASS——CANN 版 CUTLASS（v1.1.0） · `v1.1.0` · **昇腾**: 昇腾 Cube 算子模板库 | [代码仓](https://gitcode.com/xLLM-AI/catlass) |
+| [torch_npu_ops](../extraction/repo_cards/torch_npu_ops.md) | 算子 | L4 | ⚡⚡ · **昇腾**: torch_npu 算子库 | [代码仓](https://gitcode.com/xLLM-AI/torch_npu_ops) |
+| [xllm_ops](../extraction/repo_cards/xllm_ops.md) | 算子 | L4 | ⚡⚡ · **昇腾**: xLLM 高性能算子库 | [代码仓](https://gitcode.com/xLLM-AI/xllm_ops) |
+| [ChunkKdaFwd 设计](../extraction/repo_deep_docs/vllm-ascend/csrc/attention/chunk_kda_fwd/docs/design.md) | 算子 | L4 | 🔥🔥 · ⚡⚡⚡ · ChunkKdaFwd 算子设计（KDA 落地的直接证据） · `vllm-ascend` · **昇腾**: vllm-ascend 仓内设计文档 | [vllm-ascend 仓原始文件](https://gitcode.com/gh_mirrors/vl/vllm-ascend/blob/main/csrc/attention/chunk_kda_fwd/docs/design.md) |
+| [SparseAttentionScore Operator Design](../extraction/repo_deep_docs/vllm-ascend/csrc/attention/sparse_attention_score/docs/sparse_attention_score_design.md) | 算子 | L4 | ⚡⚡⚡ · 稀疏注意力打分算子设计 · `vllm-ascend` · **昇腾**: vllm-ascend 仓内设计文档 | [vllm-ascend 仓原始文件](https://gitcode.com/gh_mirrors/vl/vllm-ascend/blob/main/csrc/attention/sparse_attention_score/docs/sparse_attention_score_design.md) |
 
 ## L5 系统软件
 
@@ -259,16 +259,16 @@ Mooncake（KV 中心 PD 分离）→ NanoFlow（设备内流水）。部署参�
 昇腾系统软件层的两份官方手册已逐字入库：**商用版 900 与社区版 910beta1 环境变量清单内容一致**
 （本库独家版本对照结论，知识可跨版复用）。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [环境变量列表](../extraction/web_deep_docs/ascend-cann-commercial-envvars.md) | 系统软件 | L5 | 🔥🔥🔥 · ⚡ · CANN 商用 900 环境变量索引（132 表行逐字还原） · **昇腾**: CANN 官方手册 |
-| [环境变量列表](../extraction/web_deep_docs/ascend-cann-community-envvars.md) | 系统软件 | L5 | 🔥🔥 · ⚡ · 社区 910beta1 版（与商用版一致） · **昇腾**: CANN 官方手册 |
-| [环境变量列表](../extraction/web_deep_docs/ascend-pytorch-envvars.md) | 系统软件 | L5 | 🔥🔥 · ⚡ · PyTorch NPU 环境变量（22 变量：算子执行/编译/内存/HCCL） · **昇腾**: Ascend Extension for PyTorch 官方手册 |
-| [通信域管理](../extraction/web_deep_docs/ascend-cann-hccl-guide.md) | 系统软件 | L5 | 🔥🔥 · ⚡⚡ · HCCL 用户指南·基于 root 节点信息创建通信域（9 表逐字还原） · **昇腾**: HCCL 官方手册 |
-| [torchair](../extraction/repo_cards/torchair.md) | 系统软件 | L5 | ⚡⚡ · 图编译（Ascend IR） · **昇腾**: 昇腾图编译栈 |
-| [计算与通信并行功能](../extraction/repo_deep_docs/torchair/docs/zh/ascend_ir/features/advanced/cc_parallel.md) | 系统软件 | L5 | ⚡⚡⚡ · 计算与通信并行（图编译层） · `torchair` · **昇腾**: torchair 原生特性 |
-| [算子级确定性计算配置功能](../extraction/repo_deep_docs/torchair/docs/zh/ascend_ir/features/advanced/deterministic.md) | 系统软件 | L5 | ⚡⚡ · 算子级确定性计算 · `torchair` · **昇腾**: torchair 原生特性 |
-| [hccl_transfer](../extraction/repo_cards/hccl_transfer.md) | 系统软件 | L5 | ⚡⚡ · HCCL KV cache 传输 · **昇腾**: 昇腾集合通信 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [环境变量列表](../extraction/web_deep_docs/ascend-cann-commercial-envvars.md) | 系统软件 | L5 | 🔥🔥🔥 · ⚡ · CANN 商用 900 环境变量索引（132 表行逐字还原） · **昇腾**: CANN 官方手册 | [原始网页](https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html) |
+| [环境变量列表](../extraction/web_deep_docs/ascend-cann-community-envvars.md) | 系统软件 | L5 | 🔥🔥 · ⚡ · 社区 910beta1 版（与商用版一致） · **昇腾**: CANN 官方手册 | [原始网页](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910beta1/maintenref/envvar/envref_07_0001.html) |
+| [环境变量列表](../extraction/web_deep_docs/ascend-pytorch-envvars.md) | 系统软件 | L5 | 🔥🔥 · ⚡ · PyTorch NPU 环境变量（22 变量：算子执行/编译/内存/HCCL） · **昇腾**: Ascend Extension for PyTorch 官方手册 | [原始网页](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/env_variable_list.md) |
+| [通信域管理](../extraction/web_deep_docs/ascend-cann-hccl-guide.md) | 系统软件 | L5 | 🔥🔥 · ⚡⚡ · HCCL 用户指南·基于 root 节点信息创建通信域（9 表逐字还原） · **昇腾**: HCCL 官方手册 | [原始网页](https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclug_000008.html) |
+| [torchair](../extraction/repo_cards/torchair.md) | 系统软件 | L5 | ⚡⚡ · 图编译（Ascend IR） · **昇腾**: 昇腾图编译栈 | [代码仓](https://gitcode.com/Ascend/torchair) |
+| [计算与通信并行功能](../extraction/repo_deep_docs/torchair/docs/zh/ascend_ir/features/advanced/cc_parallel.md) | 系统软件 | L5 | ⚡⚡⚡ · 计算与通信并行（图编译层） · `torchair` · **昇腾**: torchair 原生特性 | [torchair 仓原始文件](https://gitcode.com/Ascend/torchair/blob/master/docs/zh/ascend_ir/features/advanced/cc_parallel.md) |
+| [算子级确定性计算配置功能](../extraction/repo_deep_docs/torchair/docs/zh/ascend_ir/features/advanced/deterministic.md) | 系统软件 | L5 | ⚡⚡ · 算子级确定性计算 · `torchair` · **昇腾**: torchair 原生特性 | [torchair 仓原始文件](https://gitcode.com/Ascend/torchair/blob/master/docs/zh/ascend_ir/features/advanced/deterministic.md) |
+| [hccl_transfer](../extraction/repo_cards/hccl_transfer.md) | 系统软件 | L5 | ⚡⚡ · HCCL KV cache 传输 · **昇腾**: 昇腾集合通信 | [代码仓](https://gitcode.com/xLLM-AI/hccl_transfer) |
 
 ## L6 硬件/集群
 
@@ -281,12 +281,12 @@ Mooncake（KV 中心 PD 分离）→ NanoFlow（设备内流水）。部署参�
 本层的两篇论文深读是**本库独家资产**（公开渠道难找同规格解读）；
 三代 AI Core 的交互式架构动画引用 AscendV 平台（见 AscendInfra 专区）。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [昇腾 950 NPU 架构白皮书](../extraction/deep/ascend-950-npu-architecture-whitepaper.md) | 硬件 | L6 | 🔥🔥🔥 · ⚡⚡⚡ · 昇腾 950 架构白皮书——SIMD/SIMT 双模式、自研 HBM · 2026/1/1 · **昇腾**: 官方架构白皮书深读（独家） |
-| [Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperPod](../extraction/deep/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.md) | 硬件 | L6 | 🔥🔥🔥 · ⚡⚡⚡ · CloudMatrix384 超节点生产实践 · 2025-08 · **昇腾**: 华为云超节点论文深读（独家） |
-| [Quick Start](../extraction/web_deep_docs/vllm-ascend-quickstart.md) | 硬件 | L6 | ⚡ · Atlas A2/A3/950DT/300I DUO 支持矩阵 · **昇腾**: 硬件支持表（逐字还原） |
-| [npu-ascend](../wiki/concepts/npu-ascend.md) | 硬件 | L6 | 概念页：昇腾 NPU 跨论文综合 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [昇腾 950 NPU 架构白皮书](../extraction/deep/ascend-950-npu-architecture-whitepaper.md) | 硬件 | L6 | 🔥🔥🔥 · ⚡⚡⚡ · 昇腾 950 架构白皮书——SIMD/SIMT 双模式、自研 HBM · 2026/1/1 · **昇腾**: 官方架构白皮书深读（独家） | [arXiv 原文](—) |
+| [Huawei Cloud Model-as-a-Service on the CloudMatrix384 SuperPod](../extraction/deep/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.md) | 硬件 | L6 | 🔥🔥🔥 · ⚡⚡⚡ · CloudMatrix384 超节点生产实践 · 2025-08 · **昇腾**: 华为云超节点论文深读（独家） | [arXiv 原文](https://arxiv.org/abs/2508.02520) |
+| [Quick Start](../extraction/web_deep_docs/vllm-ascend-quickstart.md) | 硬件 | L6 | ⚡ · Atlas A2/A3/950DT/300I DUO 支持矩阵 · **昇腾**: 硬件支持表（逐字还原） | [原始网页](https://docs.vllm.ai/projects/vllm-ascend-cn/zh-cn/latest/quick_start.html) |
+| [npu-ascend](../wiki/concepts/npu-ascend.md) | 硬件 | L6 | 概念页：昇腾 NPU 跨论文综合 | — |
 
 ## 横向专题（跨层学习路径）
 
@@ -295,46 +295,46 @@ Mooncake（KV 中心 PD 分离）→ NanoFlow（设备内流水）。部署参�
 
 从算法（L2）到部署参数（L3）到昇腾支持状态的一条龙。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty](../extraction/deep/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.md) | 专题 | L2 | 算法原点 · 2024-01 |
-| [EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test](../extraction/deep/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.md) | 专题 | L2 | 训练时扩展 · 2025-03 |
-| [vllm serve](../extraction/web_deep_docs/vllm-cli-serve.md) | 专题 | L2 | 部署参数（--speculative-* 族） |
-| [vllm-ascend](../extraction/deep/repo-vllm-ascend.md) | 专题 | L2 | 昇腾侧支持状态 · `v0.25.1rc1` · **昇腾**: EAGLE3 实验性支持 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty](../extraction/deep/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.md) | 专题 | L2 | 算法原点 · 2024-01 | [arXiv 原文](https://arxiv.org/abs/2401.15077) |
+| [EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test](../extraction/deep/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.md) | 专题 | L2 | 训练时扩展 · 2025-03 | [arXiv 原文](https://arxiv.org/abs/2503.01840) |
+| [vllm serve](../extraction/web_deep_docs/vllm-cli-serve.md) | 专题 | L2 | 部署参数（--speculative-* 族） | [原始网页](https://docs.vllm.ai/en/latest/cli/serve/) |
+| [vllm-ascend](../extraction/deep/repo-vllm-ascend.md) | 专题 | L2 | 昇腾侧支持状态 · `v0.25.1rc1` · **昇腾**: EAGLE3 实验性支持 | [代码仓](https://gitcode.com/gh_mirrors/vl/vllm-ascend) |
 
 <a id="topic-kvcache"></a>
 ### 专题·KV Cache 全景（L3 训推框架）
 
 显存管理算法（L2）→ 框架机制（L3）→ 昇腾内存环境变量（L5）。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [Efficient Memory Management for Large Language Model Serving with PagedAttention](../extraction/deep/efficient-memory-management-for-large-language-model-serving-with-pagedattention.md) | 专题 | L3 | PagedAttention 原点 · 2023-09 |
-| [Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving](../extraction/deep/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.md) | 专题 | L3 | KV 中心架构 · 2024-07 |
-| [CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion](../extraction/deep/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.md) | 专题 | L3 | RAG 复用 · 2024-05 |
-| [环境变量列表](../extraction/web_deep_docs/ascend-pytorch-envvars.md) | 专题 | L3 | 昇腾内存管理变量（PYTORCH_NPU_ALLOC_CONF 等） · **昇腾**: 官方手册 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [Efficient Memory Management for Large Language Model Serving with PagedAttention](../extraction/deep/efficient-memory-management-for-large-language-model-serving-with-pagedattention.md) | 专题 | L3 | PagedAttention 原点 · 2023-09 | [arXiv 原文](https://arxiv.org/abs/2309.06180) |
+| [Mooncake: A KVCache-centric Disaggregated Architecture for LLM Serving](../extraction/deep/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.md) | 专题 | L3 | KV 中心架构 · 2024-07 | [arXiv 原文](https://arxiv.org/abs/2407.00079) |
+| [CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion](../extraction/deep/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.md) | 专题 | L3 | RAG 复用 · 2024-05 | [arXiv 原文](https://arxiv.org/abs/2405.16444) |
+| [环境变量列表](../extraction/web_deep_docs/ascend-pytorch-envvars.md) | 专题 | L3 | 昇腾内存管理变量（PYTORCH_NPU_ALLOC_CONF 等） · **昇腾**: 官方手册 | [原始网页](https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/env_variable_list.md) |
 
 <a id="topic-comm-overlap"></a>
 ### 专题·通信掩盖与并行（L3 训推框架）
 
 同一个思想的三个层次：论文算法（DualPipe）→ 框架特性（fb-overlap）→ 图编译（cc_parallel）。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [DeepSeek-V3 Technical Report](../extraction/deep/deepseek-v3-technical-report.md) | 专题 | L3 | DualPipe 双向流水（论文 §3.2） · 2024-12 |
-| [MoE跨microbatch间AllToAll通信掩盖](../extraction/repo_deep_docs/mindspeed/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md) | 专题 | L3 | MoE 前反向掩盖（昇腾实现） · `mindspeed` · **昇腾**: MindSpeed 原生 |
-| [计算与通信并行功能](../extraction/repo_deep_docs/torchair/docs/zh/ascend_ir/features/advanced/cc_parallel.md) | 专题 | L3 | 图编译层计算通信并行 · `torchair` · **昇腾**: torchair 原生 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [DeepSeek-V3 Technical Report](../extraction/deep/deepseek-v3-technical-report.md) | 专题 | L3 | DualPipe 双向流水（论文 §3.2） · 2024-12 | [arXiv 原文](https://arxiv.org/abs/2412.19437) |
+| [MoE跨microbatch间AllToAll通信掩盖](../extraction/repo_deep_docs/mindspeed/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md) | 专题 | L3 | MoE 前反向掩盖（昇腾实现） · `mindspeed` · **昇腾**: MindSpeed 原生 | [mindspeed 仓原始文件](https://gitcode.com/Ascend/MindSpeed/blob/master/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md) |
+| [计算与通信并行功能](../extraction/repo_deep_docs/torchair/docs/zh/ascend_ir/features/advanced/cc_parallel.md) | 专题 | L3 | 图编译层计算通信并行 · `torchair` · **昇腾**: torchair 原生 | [torchair 仓原始文件](https://gitcode.com/Ascend/torchair/blob/master/docs/zh/ascend_ir/features/advanced/cc_parallel.md) |
 
 <a id="topic-quant"></a>
 ### 专题·量化（L2 模型/算法）
 
 训练侧 FP8（论文）→ 推理侧 Attention 量化（MindIE）→ 压缩工具（msmodelslim）。
 
-| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 |
-|---|---|---|---|
-| [DeepSeek-V3 Technical Report](../extraction/deep/deepseek-v3-technical-report.md) | 专题 | L2 | FP8 混合精度训练 · 2024-12 |
-| [Attention量化](../extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/attention_quantization.md) | 专题 | L2 | `mindie-llm` · **昇腾**: MindIE 原生特性 |
-| [msmodelslim](../extraction/repo_cards/msmodelslim.md) | 专题 | L2 | `tag_mindstudio_26.0.0.alpha02` · **昇腾**: 昇腾模型压缩工具 |
+| 📚 条目 | 📖 知识分类 | 🔧 层次 | 📜 备注 | 📄 原始出处 |
+|---|---|---|---|---|
+| [DeepSeek-V3 Technical Report](../extraction/deep/deepseek-v3-technical-report.md) | 专题 | L2 | FP8 混合精度训练 · 2024-12 | [arXiv 原文](https://arxiv.org/abs/2412.19437) |
+| [Attention量化](../extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/attention_quantization.md) | 专题 | L2 | `mindie-llm` · **昇腾**: MindIE 原生特性 | [mindie-llm 仓原始文件](https://gitcode.com/Ascend/MindIE-LLM/blob/master/docs/zh/user_guide/feature/attention_quantization.md) |
+| [msmodelslim](../extraction/repo_cards/msmodelslim.md) | 专题 | L2 | `tag_mindstudio_26.0.0.alpha02` · **昇腾**: 昇腾模型压缩工具 | [代码仓](https://gitcode.com/Ascend/msmodelslim) |
 
 <a id="模型卡片"></a>
 ## 主流模型卡片
