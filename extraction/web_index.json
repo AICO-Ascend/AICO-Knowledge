@@ -59,6 +59,18 @@
    "tables": 132,
    "fetched_at": "2026-09-02 17:37",
    "deep_note": "extraction/web_deep_docs/ascend-cann-community-envvars.md"
+  },
+  {
+   "slug": "ascend-cann-hccl-guide",
+   "url": "https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclug_000008.html",
+   "note": "HCCL 用户指南·基于root节点信息创建通信域 (CANN 商用 900; 源自环境变量手册内链)",
+   "status": "ok",
+   "route": "hiascend-source",
+   "title": "通信域管理",
+   "chars": 8293,
+   "tables": 9,
+   "fetched_at": "2026-09-04 22:17",
+   "deep_note": "extraction/web_deep_docs/ascend-cann-hccl-guide.md"
   }
  ]
 }

@@ -10,3 +10,6 @@ vllm-ascend-quickstart | https://docs.vllm.ai/projects/vllm-ascend-cn/zh-cn/late
 ascend-pytorch-envvars | https://www.hiascend.com/document/detail/zh/Pytorch/2600/comref/Envvariables/docs/zh/environment_variable_reference/env_variable_list.md | PyTorch 2600 环境变量参考 (.md 直出)
 ascend-cann-commercial-envvars | https://www.hiascend.com/document/detail/zh/canncommercial/900/maintenref/envvar/envref_07_0001.html | CANN 商用版 900 环境变量参考
 ascend-cann-community-envvars | https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910beta1/maintenref/envvar/envref_07_0001.html | CANN 社区版 910beta1 环境变量参考
+
+# ── P3 书架缺口补抓 (2026-09-04) ──
+ascend-cann-hccl-guide | https://www.hiascend.com/document/detail/zh/canncommercial/900/API/hcclug/hcclug_000008.html | HCCL 用户指南·基于root节点信息创建通信域 (CANN 商用 900; 源自环境变量手册内链)

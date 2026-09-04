@@ -9,3 +9,5 @@
 ## [2026-08-25] tool | 工具方案最优性分析见 /tmp/tool_analysis.md — 当前 5 段流水线已收敛 Pareto 前沿（95.5% OK），借鉴 ResearchPaper-Analyzer 的 MinerU + 多风格生成器，否决代码级分析
 
 ## [2026-09-02] web | 第三知识域 web-extraction 落地 — 5 页试跑全通（vLLM serve CLI 95k 字符全量深读 312 参数 / vllm-ascend 中文快速上手 / Ascend PyTorch 2600 环境变量 22 变量 / CANN 商用 900 + 社区 910beta1 环境变量索引 132 表行）；三级抓取路由（.md 直出 / 服务端渲染 / hiascend SPA→doc_center/source/ 原始内容路由）+ 表格逐字还原 M3 七节深读；版本对照发现：CANN 两版环境变量清单一致（diff 仅锚点 ID）；产物 web_docs/ + web_deep_docs/ + web_index.json + web_moc.md；SKILL.md 沉淀
+
+## [2026-09-04] bookshelf | 知识书架双入口落地 — SHELF.md 142 条目(69/69 论文全覆盖, 技术栈六层主线 L1 Agent→L6 硬件集群) + ascend_infra.md AscendInfra 昇腾专区 193 条目(134 仓 9 族分组+知识对照表+AscendV 引用地图); bookshelf_build.py 从三域注册表幂等生成+死链 lint 0; 发表时间改以 arXiv ID 派生为权威(papers.json date 对 2026-01 批次混入入库日期 34/66); P3 补抓 HCCL 用户指南页(hcclug 真实内链)+达芬奇架构缺口由 agent-skills hardware-architecture 深读关闭

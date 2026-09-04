@@ -6,6 +6,9 @@
 > **+ 官方文档网页**（docs.vllm.ai / hiascend 文档中心：SPA 抓取路由 + 表格逐字还原深读）。
 > Obsidian 图谱化 + RAG 友好 + Wiki 簿记层。
 
+> 📚 **面向人类学习者的双入口**：[知识书架 SHELF.md](bookshelf/SHELF.md)（技术栈六层主线：Agent→模型/算法→训推框架→算子→系统软件→硬件集群，142 条目全挂自有深读资产）
+> ｜ [AscendInfra 昇腾专区](bookshelf/ascend_infra.md)（昇腾全栈 L6→L1 展开 + 知识对照表 + 134 仓全景 + AscendV 可视化平台引用地图）
+
 ![pipeline](docs/images/kb_pipeline.png)
 
 ## 知识库架构（Karpathy LLM Wiki 三层落地）
@@ -223,12 +226,14 @@ speculative decoding（10 篇成簇：EAGLE 全家族/Medusa/SpecExtend/LongSpec
 
 ## 文档
 
+- `bookshelf/SHELF.md` + `bookshelf/ascend_infra.md` — 📚 知识书架双入口（人类学习者导航；`bookshelf/CURATION.md` 策展定义 + `skills/bookshelf/bookshelf_build.py` 从三域注册表幂等生成 + 死链 lint）
 - `skills/paper-extraction/SKILL.md` — 操作手册（全链路 + agent 收尾 + 决策树 + 踩坑 + Wiki 三层架构）
 - `skills/paper-extraction/DEEP_LEARNING_PROTOCOL.md` — 夜间深度学习规范
 - `skills/repo-extraction/SKILL.md` — 代码仓归档手册（稀疏拉取/文档收割/版本血缘/深读层）
 - `skills/web-extraction/SKILL.md` — 网页归档手册（三级抓取路由/hiascend SPA 经验/表格逐字深读）
 - `extraction/README.md` — 知识库使用说明 + 外部工程接入指南
 - `EXPERIENCE.md` — 建库全过程踩坑与解法复盘
+- `docs/bookshelf-design.md` — 知识书架设计稿（v3：昇腾亲和 + 双入口 + AscendV 共生）
 - `docs/fixed-crops-2026-08-25.md` — 本轮 Lint gate 修复的裁剪清单
 
 ---
