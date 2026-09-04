@@ -1,4 +1,4 @@
-> 来源：CalvinXKY/InfraTech · [models/deepseek_v3](https://github.com/CalvinXKY/InfraTech/tree/master/models/deepseek_v3)（总体模型结构解析，本库收纳拷贝；图片走原仓 raw 链接）
+> 来源：InfraTech 开源项目 models/deepseek_v3 模型结构解析 · 本库本地化收纳（文本+图片）
 
 ---
 
@@ -22,7 +22,7 @@ DeepSeek V3是一款采用MoE架构的大语言模型（LLM），核心注意力
 ## 整体架构
 
 <p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/deepseek_v3/deepseek_v3_architecture.jpg" alt="DeepSeek V3架构图" />
+  <img src="deepseek_v3/deepseek_v3_architecture.jpg" alt="DeepSeek V3架构图" />
 </p>
 
 整体架构由Embedding、MLA注意力层、MoE前馈层和输出层构成。其关键设计在于将高效注意力计算与稀疏专家计算结合：前者侧重降低长上下文阶段的显存与计算压力，后者侧重在可控开销下提升模型容量与表达能力。
@@ -35,19 +35,19 @@ MLA模块有两种计算模式，MHA模式在prefill阶段使用，MQA模式在d
 ### MHA模式
 
 <p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/deepseek_v3/MLA_MHA.jpg" alt="MLA_MHA架构图" />
+  <img src="deepseek_v3/MLA_MHA.jpg" alt="MLA_MHA架构图" />
 </p>
 
 ### MQA模式
 
 <p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/deepseek_v3/MLA_MQA.jpg" alt="MLA_MQA架构图" />
+  <img src="deepseek_v3/MLA_MQA.jpg" alt="MLA_MQA架构图" />
 </p>
 
-两种模式的差异对比参考： **[《超细图解MLA计算流&吸收矩阵对比分析》](https://zhuanlan.zhihu.com/p/1948769945132470860)**
+两种模式的差异对比参考： **[《超细图解MLA计算流&吸收矩阵对比分析》（https://zhuanlan.zhihu.com/p/1948769945132470860)**
 
 ## 相关资料：
-- [DeepSeek V3论文（技术报告）](https://arxiv.org/pdf/2412.19437)
-- [整体介绍（官方仓库）](https://github.com/deepseek-ai/DeepSeek-V3)
-- [模型配置文件](https://huggingface.co/deepseek-ai/DeepSeek-V3/blob/main/config.json)
-- [Transformer模型定义](https://github.com/huggingface/transformers/tree/main/src/transformers/models/deepseek_v3)
+- [DeepSeek V3论文（技术报告）（https://arxiv.org/pdf/2412.19437)
+- [整体介绍（官方仓库）（https://github.com/deepseek-ai/DeepSeek-V3)
+- [模型配置文件（https://huggingface.co/deepseek-ai/DeepSeek-V3/blob/main/config.json)
+- [Transformer模型定义（https://github.com/huggingface/transformers/tree/main/src/transformers/models/deepseek_v3)

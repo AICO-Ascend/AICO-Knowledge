@@ -95,7 +95,7 @@ def main():
 
     from PIL import Image
     imgs = [Image.open(p) for p in paths]
-    durations = [500] * (len(imgs) - 1) + [2500]  # 末帧停留
+    durations = [220] * (len(imgs) - 1) + [1600]  # 末帧停留
     imgs[0].save(OUT_GIF, save_all=True, append_images=imgs[1:],
                  duration=durations, loop=0, optimize=True)
     for p in paths:

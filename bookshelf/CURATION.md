@@ -567,63 +567,62 @@ sections:
 model_cards:
   - name: DeepSeek V3
     keywords: MLA · MoE · MTP
-    links:
-      - {label: 总体模型结构, ref: model:deepseek_v3.md}
+    structure: model:deepseek_v3.md
+    others:
       - {label: 论文深读, ref: paper:deepseek-v3-technical-report}
       - {label: MLA 裁剪图, ref: crop:deepseek-v3-technical-report-fig02-mla.png}
   - name: DeepSeek V3.2
     keywords: MLA · DSA · MoE
-    links:
-      - {label: 总体模型结构, ref: model:deepseek_v3_2.md}
+    structure: model:deepseek_v3_2.md
   - name: DeepSeek V4
     keywords: MLA · DSA
-    links:
-      - {label: 总体模型结构, empty: true}
+    structure: model:deepseek_v4.md
+    others:
       - {label: 论文深读, ref: paper:deepseek-v4-towards-highly-efficient-million-token-context-intelligence}
   - name: DeepSeek R1
     keywords: MLA · MoE
-    links:
-      - {label: 总体模型结构, empty: true}
+    structure: model:deepseek_r1.md
+    others:
       - {label: 论文深读, ref: paper:deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning}
   - name: Kimi K2 / K2.5
     keywords: MLA · MoE / +MoonViT
-    links:
-      - {label: K2 结构, ref: model:kimi_k_2.md}
-      - {label: K2.5 结构, ref: model:kimi_k_2_5.md}
+    structure: model:kimi_k_2_5.md
+    others:
+      - {label: K2 结构解析, ref: model:kimi_k_2.md}
+      - {label: K3 深读, ref: paper:kimi-k3-open-frontier-intelligence}
   - name: Kimi K3
     keywords: KDA · Gated MLA · AttnRes · Stable LatentMoE
-    links:
-      - {label: 总体模型结构, ref: model:kimi_k_3.md}
+    structure: model:kimi_k_3.md
+    others:
       - {label: 论文深读, ref: paper:kimi-k3-open-frontier-intelligence}
   - name: Kimi Linear
     keywords: KDA
-    links:
-      - {label: 总体模型结构, empty: true}
+    structure: model:kimi_linear.md
+    others:
       - {label: 论文深读, ref: paper:kimi-linear-an-expressive-efficient-attention-architecture}
+      - {label: 昇腾算子佐证, ref: reponote:vllm-ascend:csrc/attention/chunk_kda_fwd/docs/design.md}
   - name: Qwen3-VL
     keywords: MoE · DeepStack · Interleaved-MRoPE
-    links:
-      - {label: 总体模型结构, ref: model:qwen3_vl.md}
+    structure: model:qwen3_vl.md
+    others:
       - {label: 论文深读, ref: paper:qwen3-vl-technical-report}
   - name: Qwen2.5-VL
     keywords: ViT · Window Attention
-    links:
-      - {label: 总体模型结构, empty: true}
+    structure: model:qwen2_5_vl.md
+    others:
       - {label: 论文深读, ref: paper:qwen2-5-vl-technical-report}
   - name: GLM 5.3-Flash
     keywords: KDA · DSA · MoE
-    links:
-      - {label: 总体模型结构, empty: true}
+    structure: model:glm_5_3_flash.md
+    others:
       - {label: xllm day-0 适配, ref: repocard:xllm}
 
 # ═══════════ 辅助工具 ═══════════
 tools:
   - {name: MFU 计算器（本库自建）, ref: tool:mfu_calculator.html, category: 训练估算, note: 6ND 公式在线算 MFU/训练时长, 浏览器直接打开}
-  - {name: 推理显存 & KV Cache 计算器（本库自建）, ref: tool:kv_memory_calculator.html, category: 推理估算, note: 权重+KV cache+激活显存估算, 支持 MLA/GQA/MHA 对比}
-  - {name: LLM MFU 计算器（CalvinXKY）, ref: ext:CalvinXKY MFU:https://calvinxky.github.io/mfu_calculation/, category: 训练估算, note: 社区版 MFU 在线工具}
-  - {name: DeepSeek-V3 MFU 计算工具（CalvinXKY）, ref: ext:DSV3 MFU:https://calvinxky.github.io/mfu_calculation/deepseek3mfu.html, category: 训练估算, note: DSV3 专用算式}
-  - {name: PyTorch 显存可视化（BasicCUDA）, ref: ext:BasicCUDA:https://github.com/CalvinXKY/BasicCUDA/tree/master/pytorch/torch_mem_snapshot, category: 显存分析, note: torch_mem_snapshot 数据采集与分析}
-  - {name: vLLM 显存 Snapshot（InfraTech）, ref: ext:InfraTech:https://github.com/CalvinXKY/InfraTech/blob/master/llm_infer/vllm_mem_snapshot.ipynb, category: 显存分析, note: vLLM 显存管理详解配套 notebook}
+  - {name: 推理显存 & KV Cache 计算器（本库自建）, ref: tool:kv_memory_calculator.html, category: 推理估算, note: 权重+KV cache 显存估算, 支持 MHA/GQA/MLA 对照}
+  - {name: LLM 大模型显存计算公式与优化, ref: ext:显存计算文章:https://zhuanlan.zhihu.com/p/687226668, category: 推理估算, note: 显存构成公式化拆解（社区文章）}
+  - {name: LLM 预训练模型 MFU 计算方法, ref: ext:MFU 文章:https://zhuanlan.zhihu.com/p/20401860293, category: 训练估算, note: MFU 方法论（社区文章）}
 ```
 
 ## AscendInfra 专区（独立体系）

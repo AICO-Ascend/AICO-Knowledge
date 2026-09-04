@@ -1,4 +1,4 @@
-> 来源：CalvinXKY/InfraTech · [models/kimi_k_3](https://github.com/CalvinXKY/InfraTech/tree/master/models/kimi_k_3)（总体模型结构解析，本库收纳拷贝；图片走原仓 raw 链接）
+> 来源：InfraTech 开源项目 models/kimi_k_3 模型结构解析 · 本库本地化收纳（文本+图片）
 
 ---
 
@@ -6,17 +6,17 @@
 
 Kimi K3是Moonshot AI（Kimi）目前能力最强的开源旗舰模型，也是首个达到 **2.8T（约3T级）参数规模** 的开源模型。模型基于 **Kimi Delta Attention（KDA）** 与 **Attention Residuals（AttnRes）** 构建，采用 **Stable LatentMoE**（896 专家中激活 16 个），原生支持视觉（MoonViT-V2），上下文窗口达 **1M tokens**，面向长程编程、知识工作与推理等前沿智能场景。官方称相较 Kimi K2，整体 scaling 效率约提升 **2.5×**。
 
-模型始终开启 thinking，并通过 `reasoning_effort`（`low` / `high` / `max`，默认 `max`）调节推理强度；多轮对话需回传完整 `reasoning_content`（preserved thinking history）。权重与代码仓库均以 [Kimi K3 License](https://huggingface.co/moonshotai/Kimi-K3) 开源。
+模型始终开启 thinking，并通过 `reasoning_effort`（`low` / `high` / `max`，默认 `max`）调节推理强度；多轮对话需回传完整 `reasoning_content`（preserved thinking history）。权重与代码仓库均以 [Kimi K3 License（https://huggingface.co/moonshotai/Kimi-K3) 开源。
 
 ## 整体架构
 
 <p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/kimi_k_3/kimi_k_3_architecture.jpg" alt="Kimi K3架构图" />
+  <img src="kimi_k_3/kimi_k_3_architecture.jpg" alt="Kimi K3架构图" />
 </p>
 
 ## 模块说明
 
-主要参数如下（来源：[官方模型卡片](https://huggingface.co/moonshotai/Kimi-K3) / [技术报告](https://github.com/MoonshotAI/Kimi-K3/blob/main/k3_tech_report.pdf)）：
+主要参数如下（来源：[官方模型卡片（https://huggingface.co/moonshotai/Kimi-K3) / [技术报告（https://github.com/MoonshotAI/Kimi-K3/blob/main/k3_tech_report.pdf)）：
 
 | **架构**                     | 混合专家模型（MoE） |
 | ---------------------------- | ------------------- |
@@ -70,16 +70,16 @@ Kimi K3是Moonshot AI（Kimi）目前能力最强的开源旗舰模型，也是�
 5. **MM Projector**：将视觉 hidden 维度映射到与文本一致的 `text_hidden_size`（如 MLP / PatchMerger）。
 6. **序列拼接**：按占位符将视觉特征写入文本 embedding 序列，得到最终送入 LLM 的 `inputs_embeds` 与 `attention_mask`。
 
-视觉–语言数据处理流程可参考：[VLM视觉–语言融合流程解析（Kimi K2.5/VL）](https://zhuanlan.zhihu.com/p/2018404307385500510)
+视觉–语言数据处理流程可参考：[VLM视觉–语言融合流程解析（Kimi K2.5/VL）（https://zhuanlan.zhihu.com/p/2018404307385500510)
 
 ## 相关资料
 
-- [技术报告（PDF）](https://github.com/MoonshotAI/Kimi-K3/blob/main/k3_tech_report.pdf)
-- [官方仓库（MoonshotAI/Kimi-K3）](https://github.com/MoonshotAI/Kimi-K3)
-- [模型卡片与权重（Hugging Face）](https://huggingface.co/moonshotai/Kimi-K3)
-- [模型卡片与权重（ModelScope）](https://www.modelscope.cn/models/moonshotai/Kimi-K3)
-- [整体介绍（官方博客）](https://www.kimi.com/zh-cn/blog/kimi-k3)
-- [API 快速开始](https://platform.kimi.ai/docs/guide/kimi-k3-quickstart)
-- [Kimi Delta Attention / Kimi Linear](https://github.com/MoonshotAI/Kimi-Linear)
-- [Attention Residuals](https://github.com/MoonshotAI/Attention-Residuals)
-- [FlashKDA 算子](https://github.com/MoonshotAI/FlashKDA)
+- [技术报告（PDF）（https://github.com/MoonshotAI/Kimi-K3/blob/main/k3_tech_report.pdf)
+- [官方仓库（MoonshotAI/Kimi-K3）（https://github.com/MoonshotAI/Kimi-K3)
+- [模型卡片与权重（Hugging Face）（https://huggingface.co/moonshotai/Kimi-K3)
+- [模型卡片与权重（ModelScope）（https://www.modelscope.cn/models/moonshotai/Kimi-K3)
+- [整体介绍（官方博客）（https://www.kimi.com/zh-cn/blog/kimi-k3)
+- [API 快速开始（https://platform.kimi.ai/docs/guide/kimi-k3-quickstart)
+- [Kimi Delta Attention / Kimi Linear（https://github.com/MoonshotAI/Kimi-Linear)
+- [Attention Residuals（https://github.com/MoonshotAI/Attention-Residuals)
+- [FlashKDA 算子（https://github.com/MoonshotAI/FlashKDA)

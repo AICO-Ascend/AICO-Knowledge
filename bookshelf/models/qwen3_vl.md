@@ -1,4 +1,4 @@
-> 来源：CalvinXKY/InfraTech · [models/qwen3_vl](https://github.com/CalvinXKY/InfraTech/tree/master/models/qwen3_vl)（总体模型结构解析，本库收纳拷贝；图片走原仓 raw 链接）
+> 来源：InfraTech 开源项目 models/qwen3_vl 模型结构解析 · 本库本地化收纳（文本+图片）
 
 ---
 
@@ -21,7 +21,7 @@ Qwen3-VL是Qwen系列新一代视觉-语言模型，面向图文理解、视频�
 ### Dense结构：Qwen3-VL-32B-Instruct
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/qwen3_vl/qwen_3_vl_32b_architecture.jpg" alt="Qwen3-VL-32B架构图" />
+  <img src="qwen3_vl/qwen_3_vl_32b_architecture.jpg" alt="Qwen3-VL-32B架构图" />
 </p>
 
 #### 模型结构描述：
@@ -47,7 +47,7 @@ Qwen3-VL是Qwen系列新一代视觉-语言模型，面向图文理解、视频�
 ### MoE结构：Qwen3-VL-235B-A22B-Instruct
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/qwen3_vl/qwen_3_vl_235b_a22b_architecture.jpg" alt="Qwen3-VL-235B-A22B架构图" />
+  <img src="qwen3_vl/qwen_3_vl_235b_a22b_architecture.jpg" alt="Qwen3-VL-235B-A22B架构图" />
 </p>
 
 #### 模型结构描述：
@@ -74,9 +74,9 @@ Qwen3-VL是Qwen系列新一代视觉-语言模型，面向图文理解、视频�
 
 #### 相关资料：
 
-- [Qwen3-VL-32B-Instruct配置文件](https://huggingface.co/Qwen/Qwen3-VL-32B-Instruct/blob/main/config.json)
-- [Qwen3-VL-235B-A22B-Instruct配置文件](https://huggingface.co/Qwen/Qwen3-VL-235B-A22B-Instruct/blob/main/config.json)
-- [模型实现Dense](https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen3_vl/)
-- [模型实现MoE](https://github.com/huggingface/transformers/tree/main/src/transformers/models/qwen3_vl_moe/)
-- [Qwen3-VL Technical Report](https://arxiv.org/pdf/2511.21631)
-- [DeepStack论文](https://arxiv.org/pdf/2406.04334)
+- [Qwen3-VL-32B-Instruct配置文件（https://huggingface.co/Qwen/Qwen3-VL-32B-Instruct/blob/main/config.json)
+- [Qwen3-VL-235B-A22B-Instruct配置文件（https://huggingface.co/Qwen/Qwen3-VL-235B-A22B-Instruct/blob/main/config.json)
+- [模型实现Dense（https://github.com/huggingface/transformers/blob/main/src/transformers/models/qwen3_vl/)
+- [模型实现MoE（https://github.com/huggingface/transformers/tree/main/src/transformers/models/qwen3_vl_moe/)
+- [Qwen3-VL Technical Report（https://arxiv.org/pdf/2511.21631)
+- [DeepStack论文（https://arxiv.org/pdf/2406.04334)

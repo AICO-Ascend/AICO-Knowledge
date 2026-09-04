@@ -11,19 +11,25 @@
 | 入口 | 视角 | 里面有什么 |
 |---|---|---|
 | 📚 **[知识书架](bookshelf/SHELF.md)** | 学习路径 | 技术栈六层主线（Agent→模型/算法→训推框架→算子→系统软件→硬件集群）；知识源直链 arXiv 原文/仓内原始文档，摘要列回本仓萃取总结；模型卡片 + 在线小工具（MFU/显存计算器） |
-| ♨️ **[AscendInfra 昇腾专区](bookshelf/ascend_infra.html)** | 开发者全栈 | 独立可视化页面：自绘 AI Core 架构图（910B/950 实测数值）、CANN 分层、算子全景、AscendC 概念卡、知识对照表——数据全部来自本库深读资产 |
-| 🟩 **[NvidiaInfra 货架](bookshelf/nvidia_infra.md)** | GPU 生态 | BasicCUDA 实操收录（CUDA/NCCL/PyTorch 显存，配可编译代码）+ 本库 GPU 栈系统论文深读 |
+| ♨️ **[AscendInfra](bookshelf/ascend_infra.html)** | 开发者全栈 | 独立可视化页面：自绘 AI Core 架构图（910B/950 实测数值）、CANN 分层、算子全景、AscendC 概念卡、知识对照表——数据全部来自本库深读资产 |
+| 🟩 **[NvidiaInfra](bookshelf/nvidia_infra.md)** | GPU 生态 | BasicCUDA 实操收录（CUDA/NCCL/PyTorch 显存，配可编译代码）+ 本库 GPU 栈系统论文深读 |
 
-## 三条知识流水线（三域 ingest）
+> 📌 HTML 页面（AscendInfra / 在线小工具）均为自包含单文件：gitcode 文件页显示的是源码，**下载后用浏览器打开即得完整渲染**；仓开启 Pages 后可在线直开。
 
-![pipeline](docs/images/kb_pipeline_3domain.svg)
+## ⚙️ 三条知识流水线（三域 ingest）
 
-> 图中每个节点都可跳转对应代码——直接打开 [SVG 原图](docs/images/kb_pipeline_3domain.svg)（或 Obsidian 内嵌）可点击；位图渲染时点这里：
-> **① 论文域** [sync](skills/paper-extraction/sync_from_source.py) → [萃取](skills/paper-extraction/extract_phase1.py) → [裁剪](skills/paper-extraction/extract_visuals.py) → [M3 图文解读](skills/paper-extraction/context_caption.py) → [公式](skills/paper-extraction/eprint_formulas.py) → [Lint gate](skills/paper-extraction/audit_crops.py) → [簿记](skills/paper-extraction/wiki_index.py) → [full_pipeline 总控](skills/paper-extraction/full_pipeline.py)
-> **② 代码仓域** [输入清单](repos_download_list.txt) → [稀疏拉取+版本血缘](skills/repo-extraction/repo_fetch.py) → [文档收割分类](skills/repo-extraction/repo_extract_docs.py) → [仓卡片](skills/repo-extraction/repo_card.py) → [M3 七节深读](skills/repo-extraction/repo_deep_read.py) → [索引组织](skills/repo-extraction/repo_deep_index.py)
-> **③ 网页域** [输入清单](webs_download_list.txt) → [三级抓取路由](skills/web-extraction/web_fetch.py) → [M3 深读](skills/web-extraction/web_deep_read.py) → [注册表](extraction/web_index.json)
+![pipeline](docs/images/kb_pipeline_3domain.png)
 
-## 知识库架构（Karpathy LLM Wiki 三层落地）
+**① 论文域**（10 步一条命令）：
+[sync](skills/paper-extraction/sync_from_source.py) → [萃取](skills/paper-extraction/extract_phase1.py) → [裁剪](skills/paper-extraction/extract_visuals.py) → [M3 图文解读](skills/paper-extraction/context_caption.py) → [公式](skills/paper-extraction/eprint_formulas.py) → [Lint gate](skills/paper-extraction/audit_crops.py) → [簿记](skills/paper-extraction/wiki_index.py) → [full_pipeline 总控](skills/paper-extraction/full_pipeline.py)
+
+**② 代码仓域**（3 阶段 + 深读层）：
+[输入清单](repos_download_list.txt) → [稀疏拉取+版本血缘](skills/repo-extraction/repo_fetch.py) → [文档收割分类](skills/repo-extraction/repo_extract_docs.py) → [仓卡片](skills/repo-extraction/repo_card.py) → [M3 七节深读](skills/repo-extraction/repo_deep_read.py) → [索引组织](skills/repo-extraction/repo_deep_index.py)
+
+**③ 网页域**（2 阶段）：
+[输入清单](webs_download_list.txt) → [三级抓取路由](skills/web-extraction/web_fetch.py) → [M3 深读](skills/web-extraction/web_deep_read.py) → [注册表](extraction/web_index.json)
+
+## 🏛️ 知识库架构（Karpathy LLM Wiki 三层落地）
 
 参考 [Karpathy LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) 的 **raw → wiki → schema** 三层模式：
 
@@ -39,12 +45,12 @@
 2. **Query** — 先读 `extraction/index.md`（LLM-reads-first 目录）定位，再钻取；机器走 `kb_query.py --json`。**好答案回填**到 `wiki/concepts/` 复利增长
 3. **Lint** — 全量机审（M3 逐张判决 → 二阶白名单 → 规则重裁 → 复核闭环）；夜间深读 cron 顺带做
 
-## 为什么这个知识库不一样
+## ✨ 为什么这个知识库不一样
 
 普通知识仓 = 一堆 PDF + 摘要，或一堆 git clone。本库对**论文、代码仓、网页三个域**都做了全要素深度加工，
 且三域知识互相锚定（glm5.3-flash 适配：论文 KDA/DSA 方法源 ↔ xllm 仓官方实现 ↔ MindSpeed 仓特性文档 ↔ vLLM serve CLI 参数手册四方互证）。
 
-### 代码仓域（2026-09 新增 · repo-extraction）
+### 代码仓域（repo-extraction）
 
 | 能力 | 做法 | 效果 |
 |---|---|---|
@@ -62,9 +68,9 @@
 | **图/表理解全走多模态** | 所有架构图/数据流图/表格经 MiniMax-M3 vision 逐张解读，写进 `minimax_captions.json`；**上下文增强**：crop + 论文正文引用段落联合喂 M3（`context_caption.py`，图文锚定原文论述） | 不是"有图"，是"每张图都有可读的技术解读" |
 | **公式以 arXiv LaTeX 源为权威** | e-print 源码抽取，禁止凭训练知识重写；无 LaTeX 源的论文公式裁成原文截图 | `$$` 块直接渲染、完全正确，可粘贴进报告 |
 | **按论文维度一体化深读** | 全文+图+表+公式交织成 6 段结构，前后文一致；图/表/公式/文本**跨元素关联**自动聚合到 `## 方法链` 顶层章节 | 不是孤立片段，是吃透整篇的结构化笔记 |
-| **新增论文一遍过**（2026-08-25 落地） | `full_pipeline.py` step 7 永久内置 `audit_crops → discriminate_audit → autofix_crops` Lint gate；新论文入库自动机审→白名单→规则重裁闭环 | 不需人工校验，95.5% 一遍过；剩余 hard-case 落 `ar5iv_crops.json`（manual-pdf-region）享 overlay 保护 |
+| **新增论文一遍过** | `full_pipeline.py` step 7 永久内置 `audit_crops → discriminate_audit → autofix_crops` Lint gate；新论文入库自动机审→白名单→规则重裁闭环 | 不需人工校验，95.5% 一遍过；剩余 hard-case 落 `ar5iv_crops.json`（manual-pdf-region）享 overlay 保护 |
 
-## 工作原理（10 步流水线）
+### 论文域 · 10 步全链路
 
 `python3 skills/paper-extraction/full_pipeline.py --push` 自动完成：
 
@@ -83,7 +89,7 @@
 
 幂等：无新增时 ~1-2 分钟完成。新增论文 = 一次 `full_pipeline.py --push` 即可。
 
-## 代码仓流水线（repo-extraction，3 阶段）
+### 代码仓域 · 3 阶段 + 深读层
 
 输入 = `repos_download_list.txt`（slug | git_url | ref | 备注，镜像论文清单）：
 
@@ -94,18 +100,18 @@ python3 skills/repo-extraction/repo_card.py <slug>    # ③ 卡片骨架(机械�
 # ③b LLM 分析层: 定位/架构/关键特性深读(图走 M3 文档上下文联合解读) — 只写 deep/ 卡片, 骨架重跑不覆盖
 ```
 
-当前规模（2026-09-02）：**134 仓入库**（Ascend 组织 104 + xLLM-AI 30 全量 + vllm/vllm-ascend 镜像；
+当前规模：**134 仓入库**（Ascend 组织 104 + xLLM-AI 30 全量 + vllm/vllm-ascend 镜像；
 llvm-project / torch-mlir 为空仓占位已标记），**21,954 篇文档**、497 篇特性文档、版本血缘 snapshots 全量在册。
 已填分析层的卡片：mindspeed（含 fb-overlap 特性 3 图 M3 解读）· xllm · vllm · vllm-ascend。
 
-**文档深读层（论文级规格，2026-09-02 全量完成）**：
+**文档深读层（论文级规格，已全量完成）**：
 **1,719 篇**高价值文档（feature/design/overview/guide/changelog 五类）逐篇 M3 七节深读 ——
 定位 / 技术要点 / 机制与真实数据 / **表格逐字还原+逐行解读** / **公式逐字保留+符号解释** / 关联 / 使用方法；
 带图文档**正文作上下文喂 M3 vision**，**881 张**文档图完成图文联合解读（`repo_m3_captions.json`）。
 产物：`extraction/repo_deep_docs/<slug>/`（1,722 篇笔记 · 85 仓）+ `extraction/repo_deep_index.json` 索引
 + 仓卡片尾部深读链接块（机械层标记内重生成）。
 
-### 网页域（2026-09 新增 · web-extraction）
+### 网页域（web-extraction）
 
 | 能力 | 做法 | 效果 |
 |---|---|---|
@@ -114,7 +120,7 @@ llvm-project / torch-mlir 为空仓占位已标记），**21,954 篇文档**、4
 | **表格逐字还原深读** | 与代码仓同规格 M3 七节深读，参考手册类长文不截断（95k 字符全量进 prompt） | 132 表行 CANN 环境变量表、312 项 vLLM CLI 参数逐字入册 |
 | **版本线在 URL 里** | `canncommercial/900`、`Pytorch/2600`、`latest` 机械提取为版本线索进深读上下文 | 与仓域 snapshots 同理：官方文档改版后重抓即得版本 diff |
 
-## 网页流水线（web-extraction，2 阶段）
+### 网页域 · 2 阶段
 
 输入 = `webs_download_list.txt`（slug | url | 备注，镜像论文/代码仓清单）：
 
@@ -123,11 +129,11 @@ python3 skills/web-extraction/web_fetch.py        # ① 抓取+规范化 → web
 python3 skills/web-extraction/web_deep_read.py    # ② M3 七节深读 → web_deep_docs/ (表格逐字还原)
 ```
 
-当前规模（2026-09-02 首批试跑）：**5 页**（vLLM CLI 手册 · vllm-ascend 中文快速上手 ·
+当前规模（首批试跑）：**5 页**（vLLM CLI 手册 · vllm-ascend 中文快速上手 ·
 Ascend PyTorch 2600 环境变量 · CANN 商用 900 / 社区 910beta1 环境变量索引）。
 版本对照发现：CANN 两版环境变量清单内容一致（diff 仅锚点 ID），知识可跨版复用 —— 见 `extraction/web_moc.md`。
 
-## 萃取深度一图看懂
+## 📊 萃取深度一图看懂
 
 ![coverage](docs/images/kb_coverage_stats.png)
 
@@ -140,14 +146,14 @@ Ascend PyTorch 2600 环境变量 · CANN 商用 900 / 社区 910beta1 环境变�
 - **19 页原子概念页**（`wiki/concepts/`，跨论文累积综合 + 谱系嵌入，Obsidian 图谱 hub）
 - **96 张坏字体/坏结构论文裁剪**（ar5iv 原图/手工区域保护）
 
-## 知识图谱（主题聚类 + 跨论文谱系）
+## 🕸️ 知识图谱（主题聚类 + 跨论文谱系）
 
-![topic graph growth](docs/images/kb_topic_graph_growth.gif)
+<p align="center"><img src="docs/images/kb_topic_graph_growth.gif" width="720"></p>
 
 > 动图：按 arXiv 发表月份回放知识图谱的生长过程（新进节点红圈高亮，末帧停留）——新知识进来，图谱如何改变一目了然。
 > 静态版：[kb_topic_graph.png](docs/images/kb_topic_graph.png)。节点=论文，颜色=主主题，边=共享主题。Obsidian 打开本仓 → `extraction/MOC.md` 可视化交互式图谱；跨论文演进谱系见 `extraction/moc_relations.md`。
 
-## 快速取用（生产级工作流）
+## 🚀 快速取用（生产级工作流）
 
 **统一查询入口 `kb_query.py`**（全部子命令支持 `--json`，agent/RAG 程序化消费）；**LLM 读库先读 `extraction/index.md`**（内容目录，按主题定位论文/概念页，再钻取细节）：
 
@@ -161,8 +167,6 @@ python3 $KB topics                       # 主题 → 论文映射
 python3 $KB info <slug>                  # 单篇全卡片
 ```
 
-> 📚 **LLM Wiki 三层架构**（参考 [Karpathy LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)）：raw（`papers/` 不可变）→ wiki（`extraction/` + `wiki/concepts/`，LLM 全权维护）→ schema（`SKILL.md`）。三个操作：**Ingest**=`full_pipeline.py` 一条命令；**Query**=先读 index.md 再钻取，好答案回填 `wiki/` 复利增长；**Lint**=全量机审（M3 逐张判决 → 二阶白名单 → 规则重裁 → 复核闭环）。编年动态见 `extraction/log.md`（`grep "^## \[" extraction/log.md | tail -5`）。
-
 **写报告插图**：`kb_query.py fig <关键词>` → 拿裁剪单图 `![[assets/crops/<slug>-figNN.png]]` + `[slug, Fig.N, p.X]` 引用串。图已是干净单元素裁剪，不用再裁。
 
 **引用表格**：单篇 MD 的「表格」节有裁剪表格图 + caption + M3 解读，直接 embed。
@@ -171,7 +175,7 @@ python3 $KB info <slug>                  # 单篇全卡片
 
 **取深度分析**：`extraction/deep/<slug>.md`（6 段一体化，图表+公式已织入，前后文一致）。
 
-## 目录结构
+## 🗂️ 目录结构
 
 ```
 AICO-knowledge/
@@ -220,10 +224,14 @@ AICO-knowledge/
 │   ├── web_deep_docs/<slug>.md      #   网页域: M3 七节深读（表格逐字还原）
 │   ├── web_index.json               #   网页域: 注册表（路由/版本线/深读登记）
 │   └── web_moc.md                   #   网页域: 知识地图（版本对照+跨域关联）
-└── docs/images/                     # 知识图谱/覆盖统计/流水线图（README 嵌入）
+├── bookshelf/                       # 📚 学习者三入口（SHELF.md 生成 / ascend_infra.html 手工 / nvidia_infra.md 手工）
+│   ├── CURATION.md                  #   书架策展定义（唯一人工文件）
+│   ├── models/<model>.md + 图片      #   模型总体结构解析（本地化收纳）
+│   └── tools/*.html                 #   自建在线小工具（MFU/显存计算器，浏览器直开）
+└── docs/images/                     # 知识图谱（含生长动图 GIF）/覆盖统计/三流水线图（README 嵌入）
 ```
 
-## 增量更新（一条命令）
+## 🔄 增量更新（一条命令）
 
 唯一人工动作 = 更新源文件（`archive/paper_source_moonlight.bib` 或 `.md`），然后：
 
@@ -233,22 +241,22 @@ python3 skills/paper-extraction/full_pipeline.py --push
 
 自动：源表 diff → arXiv 解析 → 分块下载+体检 → 萃取 → **图/表/公式裁剪** → **上下文增强 M3 批量解读新增** → LaTeX 公式 → 深读队列 → **Lint gate（机审→白名单→规则重裁闭环）** → Wiki 簿记 → token-safe push。幂等，无新增 ~1-2 分钟。
 
-## 主题覆盖
+## 🏷️ 主题覆盖
 
 speculative decoding（10 篇成簇：EAGLE 全家族/Medusa/SpecExtend/LongSpec…）｜kv-cache（Mooncake/CacheBlend/Prefill-as-a-Service…）｜training（Megatron/MegaScale/ZeRO/Muon…）｜moe（Scalable-MoE/OmniMoE…）｜rl（DeepSeek-R1/GRPO/DAPO/AREAL/HybridFlow/CUDA-Agent…）｜multimodal（Qwen3-VL/Kimi-VL…）｜disaggregated-serving（Sarathi/NanoFlow/SGLang…）｜long-context / sparse-attention / architecture / topic-modeling / relational-table
 
-## 文档
+## 📖 文档
 
-- `bookshelf/SHELF.md` + `bookshelf/ascend_infra.md` — 📚 知识书架双入口（人类学习者导航；`bookshelf/CURATION.md` 策展定义 + `skills/bookshelf/bookshelf_build.py` 从三域注册表幂等生成 + 死链 lint）
+- `bookshelf/` — 📚 三个学习者入口（SHELF.md 知识书架 · ascend_infra.html AscendInfra · nvidia_infra.md NvidiaInfra）+ models/ 模型结构解析 + tools/ 在线小工具；书架由 `skills/bookshelf/bookshelf_build.py` 从注册表幂等生成 + 死链 lint
 - `skills/paper-extraction/SKILL.md` — 操作手册（全链路 + agent 收尾 + 决策树 + 踩坑 + Wiki 三层架构）
 - `skills/paper-extraction/DEEP_LEARNING_PROTOCOL.md` — 夜间深度学习规范
 - `skills/repo-extraction/SKILL.md` — 代码仓归档手册（稀疏拉取/文档收割/版本血缘/深读层）
 - `skills/web-extraction/SKILL.md` — 网页归档手册（三级抓取路由/hiascend SPA 经验/表格逐字深读）
 - `extraction/README.md` — 知识库使用说明 + 外部工程接入指南
 - `EXPERIENCE.md` — 建库全过程踩坑与解法复盘
-- `docs/bookshelf-design.md` — 知识书架设计稿（v3：昇腾亲和 + 双入口 + AscendV 共生）
+- `docs/bookshelf-design.md` — 知识书架设计稿（昇腾亲和 · 双体系）
 - `docs/fixed-crops-2026-08-25.md` — 本轮 Lint gate 修复的裁剪清单
 
 ---
 
-**现状（2026-09-02）**：69 唯一论文 ｜ 685 裁剪图 + 429 裁剪表 + 4 公式截图 ｜ 479 LaTeX 公式（58 篇） ｜ 727 ⭐ M3 深度解读（图/表/公式逐张） ｜ 1600+ 图文联合解读（crop+正文段落联合喂 M3） ｜ 69 篇 6 段深读 + 69 篇「方法链」跨元素章节 ｜ 19 页概念页 + index.md/log.md 簿记层（Karpathy LLM Wiki 落地） ｜ 96 张坏字体/坏结构论文裁剪由 ar5iv 原图/手工区域保护 ｜ PDF 0 截断 ｜ Lint gate 全量机审闭环（95.5% 一遍过） ｜ 四铁律全绿 ｜ **代码仓域**：134 仓 · 21,954 篇文档 · 1,719 篇 M3 七节深读 + 881 张图文联合解读 · 版本血缘 snapshots ｜ **网页域**：首批 5 页全通（vLLM CLI 手册 / vllm-ascend 快速上手 / 昇腾环境变量 ×3）。
+**现状**：69 唯一论文 ｜ 685 裁剪图 + 429 裁剪表 + 4 公式截图 ｜ 479 LaTeX 公式（58 篇） ｜ 727 ⭐ M3 深度解读（图/表/公式逐张） ｜ 1600+ 图文联合解读（crop+正文段落联合喂 M3） ｜ 69 篇 6 段深读 + 69 篇「方法链」跨元素章节 ｜ 19 页概念页 + index.md/log.md 簿记层（Karpathy LLM Wiki 落地） ｜ 96 张坏字体/坏结构论文裁剪由 ar5iv 原图/手工区域保护 ｜ PDF 0 截断 ｜ Lint gate 全量机审闭环（95.5% 一遍过） ｜ 四铁律全绿 ｜ **代码仓域**：134 仓 · 21,954 篇文档 · 1,719 篇 M3 七节深读 + 881 张图文联合解读 · 版本血缘 snapshots ｜ **网页域**：首批 5 页全通（vLLM CLI 手册 / vllm-ascend 快速上手 / 昇腾环境变量 ×3 + HCCL 指南）｜ **学习者三入口**：知识书架 126 条目（原始出处直链）+ AscendInfra 可视化专区 + NvidiaInfra 货架 + 模型结构解析 6 篇本地化 + 在线小工具 ×2。

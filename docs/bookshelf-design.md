@@ -15,7 +15,7 @@
 >    AscendV 平台降级为 AscendInfra 页内引用的外部资源之一）；
 > ③ 书架主线改为技术栈自上而下：**Agent → 模型/算法 → 训推框架 → 算子 → 系统软件 → 硬件/集群**；
 > ④ 借鉴 InfraTech 的表格行格式（文章超链接 | 知识分类 | 备注[热度/难度/练习]）。
-> 参考：InfraTech（github.com/CalvinXKY/InfraTech）+ AscendV 平台摸底
+> 参考：InfraTech 开源项目+ AscendV 平台摸底
 > （ascendv.openx.huawei.com 直接访问被网络策略拦截，依据用户下载 PDF 4 页全文提取）。
 
 ## 1. 双入口架构

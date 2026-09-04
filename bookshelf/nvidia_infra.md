@@ -2,7 +2,7 @@
 
 > AICO-Knowledge 三入口之三 · 货架式呈现（知识分类 + 链接 + 练习代码索引）。
 > 内容当前偏少，先上架后优化——主打两条线：
-> ① 社区优质实操内容收录（**BasicCUDA**：CUDA/NCCL/PyTorch 显存的手把手练习库，每篇配可编译代码）；
+> ① 社区优质实操内容收录（**BasicCUDA**（GitHub 开源练习库）：CUDA/NCCL/PyTorch 显存手把手内容，每篇配可编译代码（仓名即项目名，GitHub 搜索直达））；
 > ② 本库 GPU 侧论文深读（Megatron/ZeRO/vLLM 等系统论文本质上是 NVIDIA 栈知识）。
 > 配套入口：[📚 知识书架](SHELF.md) · [♨️ AscendInfra 昇腾专区](ascend_infra.html)
 
@@ -21,13 +21,13 @@
 
 | 📚 知识源 | 📖 知识分类 | 📜 摘要/备注 |
 |---|---|---|
-| [CUDA 入门：矩阵乘从 CPU 到 GPU](https://zhuanlan.zhihu.com/p/573271688) | CUDA C++ | [matrix_multiply 代码](https://github.com/CalvinXKY/BasicCUDA/tree/master/matrix_multiply)（渐进优化版本） |
-| [CUDA 全局坐标计算 & Grid/Block/threadIdx 映射](https://zhuanlan.zhihu.com/p/675603584) | CUDA C++ | [代码](https://github.com/CalvinXKY/BasicCUDA/blob/master/common_methods/threads_hierarchy_calc.cu) |
-| [CUDA 实践：ScaledMaskSoftmax 融合算子](https://zhuanlan.zhihu.com/p/675794183) | CUDA C++ | [fused_softmax 代码](https://github.com/CalvinXKY/BasicCUDA/tree/master/transformer/fused_softmax) |
-| [CUDA 入门：虚拟地址 VMM 基本使用](https://github.com/CalvinXKY/BasicCUDA/blob/master/memory_opt/vmm/README.md) | 显存 | [vmm 代码](https://github.com/CalvinXKY/BasicCUDA/tree/master/memory_opt/vmm) |
-| [CUDA 入门：常用技巧/方法](https://zhuanlan.zhihu.com/p/584501634) | CUDA C++ | [common_methods](https://github.com/CalvinXKY/BasicCUDA/tree/master/common_methods) |
-| [20 行代码入门 PyTorch 自定义 CUDA/C++ 扩展](https://zhuanlan.zhihu.com/p/579395211) | PyTorch 扩展 | [torch_ext 代码](https://github.com/CalvinXKY/BasicCUDA/tree/master/pytorch/torch_ext) |
-| [BasicCUDA 仓主页](https://github.com/CalvinXKY/BasicCUDA) | 总入口 | 每模块独立文件、`make && ./` 即跑 |
+| [CUDA 入门：矩阵乘从 CPU 到 GPU](https://zhuanlan.zhihu.com/p/573271688) | CUDA C++ | matrix_multiply 代码（GitHub: BasicCUDA 仓）（渐进优化版本） |
+| [CUDA 全局坐标计算 & Grid/Block/threadIdx 映射](https://zhuanlan.zhihu.com/p/675603584) | CUDA C++ | 代码（GitHub: BasicCUDA 仓） |
+| [CUDA 实践：ScaledMaskSoftmax 融合算子](https://zhuanlan.zhihu.com/p/675794183) | CUDA C++ | fused_softmax 代码（GitHub: BasicCUDA 仓） |
+| CUDA 入门：虚拟地址 VMM 基本使用（GitHub: BasicCUDA 仓） | 显存 | vmm 代码（GitHub: BasicCUDA 仓） |
+| [CUDA 入门：常用技巧/方法](https://zhuanlan.zhihu.com/p/584501634) | CUDA C++ | common_methods（GitHub: BasicCUDA 仓） |
+| [20 行代码入门 PyTorch 自定义 CUDA/C++ 扩展](https://zhuanlan.zhihu.com/p/579395211) | PyTorch 扩展 | torch_ext 代码（GitHub: BasicCUDA 仓） |
+| BasicCUDA 仓主页（GitHub: BasicCUDA 仓） | 总入口 | 每模块独立文件、`make && ./` 即跑 |
 
 ## NCCL 集合通信
 
@@ -35,14 +35,14 @@
 |---|---|---|
 | [NCCL 算法的拓扑建立与通路选择](https://zhuanlan.zhihu.com/p/735606197) | GPU 网络 | Ring/Tree 拓扑 · 对位昇腾 HCCL（见 AscendInfra L5） |
 | [NCCL 初始化日志解读](https://zhuanlan.zhihu.com/p/719917835) | GPU 网络 | 排障入门 |
-| [NCCL C++ 示例（一）基础用例](https://zhuanlan.zhihu.com/p/718639633) · [（二）socket 多机](https://zhuanlan.zhihu.com/p/718040976) · [（三）多流并发](https://zhuanlan.zhihu.com/p/716805174) · [（四）AlltoAll_Split](https://zhuanlan.zhihu.com/p/718765726) | GPU 网络 | [nccl 代码](https://github.com/CalvinXKY/BasicCUDA/tree/master/nccl) |
+| [NCCL C++ 示例（一）基础用例](https://zhuanlan.zhihu.com/p/718639633) · [（二）socket 多机](https://zhuanlan.zhihu.com/p/718040976) · [（三）多流并发](https://zhuanlan.zhihu.com/p/716805174) · [（四）AlltoAll_Split](https://zhuanlan.zhihu.com/p/718765726) | GPU 网络 | nccl 代码（GitHub: BasicCUDA 仓） |
 
 ## PyTorch 显存管理
 
 | 📚 知识源 | 📖 知识分类 | 📜 摘要/备注 |
 |---|---|---|
-| [PyTorch 显存管理源码解析（一）](https://zhuanlan.zhihu.com/p/680769942) · [（二）](https://zhuanlan.zhihu.com/p/681651660) · [（三）](https://zhuanlan.zhihu.com/p/692614846) | PyTorch | [torch1.13_mem_rationale](https://github.com/CalvinXKY/BasicCUDA/tree/master/pytorch/torch1.13_mem_rationale) |
-| [PyTorch 显存可视化与 Snapshot 数据分析](https://zhuanlan.zhihu.com/p/677203832) | PyTorch | [torch_mem_snapshot](https://github.com/CalvinXKY/BasicCUDA/tree/master/pytorch/torch_mem_snapshot) · 书架[辅助工具区](SHELF.md#辅助工具)有配套在线工具 |
+| [PyTorch 显存管理源码解析（一）](https://zhuanlan.zhihu.com/p/680769942) · [（二）](https://zhuanlan.zhihu.com/p/681651660) · [（三）](https://zhuanlan.zhihu.com/p/692614846) | PyTorch | torch1.13_mem_rationale（GitHub: BasicCUDA 仓） |
+| [PyTorch 显存可视化与 Snapshot 数据分析](https://zhuanlan.zhihu.com/p/677203832) | PyTorch | torch_mem_snapshot（GitHub: BasicCUDA 仓） · 书架[辅助工具区](SHELF.md#辅助工具)有配套在线工具 |
 
 ## 系统论文（本库深读 · GPU 栈）
 

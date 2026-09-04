@@ -1,4 +1,4 @@
-> 来源：CalvinXKY/InfraTech · [models/deepseek_v3_2](https://github.com/CalvinXKY/InfraTech/tree/master/models/deepseek_v3_2)（总体模型结构解析，本库收纳拷贝；图片走原仓 raw 链接）
+> 来源：InfraTech 开源项目 models/deepseek_v3_2 模型结构解析 · 本库本地化收纳（文本+图片）
 
 ---
 
@@ -21,7 +21,7 @@ DeepSeek V3.2是一款大语言模型，其关键特点是：V3.2-Exp在V3.1-Ter
 ## 整体架构
 
 <p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/deepseek_v3_2/deepseek_v3_2_architecture.jpg" alt="DeepSeek V3.2架构图" />
+  <img src="deepseek_v3_2/deepseek_v3_2_architecture.jpg" alt="DeepSeek V3.2架构图" />
 </p>
 
 ## DSA模块介绍
@@ -34,20 +34,20 @@ DSA基于MLA(Multi-Head Latent Attention)的改进，让Q(query)的每个token�
 - **Top-k Selector**: 选出分数最高的k个K/V进行注意力计算，实现稀疏Attention。
 
 DSA详细介绍：
-[DSA原理解析](https://zhuanlan.zhihu.com/p/1962162900111172920)
-[超细图解DSA计算流&性能对比与优化分析](https://zhuanlan.zhihu.com/p/1963371483985319543)
+[DSA原理解析（https://zhuanlan.zhihu.com/p/1962162900111172920)
+[超细图解DSA计算流&性能对比与优化分析（https://zhuanlan.zhihu.com/p/1963371483985319543)
 
 ### MQA模式
 <p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/deepseek_v3_2/DSA_MQA.jpg" alt="DeepSeek V3.2（MQA）架构图" />
+  <img src="deepseek_v3_2/DSA_MQA.jpg" alt="DeepSeek V3.2（MQA）架构图" />
 </p>
 
 ### MHA模式
 <p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/deepseek_v3_2/DSA_MHA.jpg" alt="DeepSeek V3.2（MHA）架构图" />
+  <img src="deepseek_v3_2/DSA_MHA.jpg" alt="DeepSeek V3.2（MHA）架构图" />
 </p>
 
 ## 相关资料：
-- [整体介绍（官方博客）](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp/blob/main/DeepSeek_V3_2.pdf)
-- [模型配置文件](https://huggingface.co/deepseek-ai/DeepSeek-V3.2/blob/main/config.json)
-- [模型定义示例](https://huggingface.co/deepseek-ai/DeepSeek-V3.2/tree/main/inference)
+- [整体介绍（官方博客）（https://github.com/deepseek-ai/DeepSeek-V3.2-Exp/blob/main/DeepSeek_V3_2.pdf)
+- [模型配置文件（https://huggingface.co/deepseek-ai/DeepSeek-V3.2/blob/main/config.json)
+- [模型定义示例（https://huggingface.co/deepseek-ai/DeepSeek-V3.2/tree/main/inference)

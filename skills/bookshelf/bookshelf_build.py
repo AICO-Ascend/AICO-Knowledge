@@ -82,7 +82,8 @@ class Resolver:
             if not p:
                 cands = [s for s in self.reg['papers'] if s.startswith(rest)]
                 p = self.reg['papers'].get(cands[0]) if len(cands) == 1 else None
-            return ('arXiv 原文', p['arxiv']) if p and p.get('arxiv') else None
+            arxiv = (p or {}).get('arxiv') or ''
+            return ('arXiv 原文', arxiv) if arxiv.startswith('http') else None
         if kind == 'reponote':
             slug, _, path = rest.partition(':')
             inv = self.reg['inventory'].get(slug)
@@ -222,7 +223,7 @@ def render_section(sec, layers, resolver):
         orig = resolver.original(item['ref'])
         source_md = f'[{title}]({orig[1]})' if orig else f'[{title}]({link})'
         # 摘要列: 本仓萃取总结 (深读/卡片/概念页); 无独立萃取产物者 —
-        digest_md = '—' if item['ref'].startswith(('ext:', 'crop:')) else f'[萃取总结]({link})'
+        digest_md = '—' if item['ref'].startswith(('ext:', 'crop:')) else f'[link]({link})'
         remarks = render_remarks(item, auto_note, resolver)
         lines.append(f'| {source_md} | {category} | {sec["layer"]} | {digest_md} | {remarks} |')
     lines.append('')
@@ -258,21 +259,24 @@ def build_shelf(cur, reg, resolver):
             L.append(render_section(sec, layers, resolver))
     if cur.get('model_cards'):
         L += ['<a id="模型卡片"></a>', '## 主流模型卡片', '',
-              '> 架构关键词只列**模型结构组件**；链接列指向总体模型结构解析页（本库 `bookshelf/models/` 收纳，缺失的标注待生成）。', '',
-              '| 模型 | 架构关键词 | 链接 |', '|---|---|---|']
+              '> 架构关键词只列**模型结构组件**；链接列只放总体模型结构解析页（本库 `bookshelf/models/` 本地化收纳；缺失的用 model-arch 技能从 HF config 实时生成补齐）；论文深读/裁剪图等入「其他」。', '',
+              '| 模型 | 架构关键词 | 链接 | 其他 |', '|---|---|---|---|']
         for c in cur['model_cards']:
-            links = []
-            for a in c.get('links', []):
-                if a.get('empty'):
-                    links.append(f'{a.get("label", "结构解析")}（待生成）')
-                    continue
+            st = c.get('structure')
+            if st:
+                _, link, _ = resolver.resolve(st)
+                st_md = f'[结构解析]({link})'
+            else:
+                st_md = '（待生成）'
+            others = []
+            for a in c.get('others', []):
                 title, link, _ = resolver.resolve(a['ref'])
-                links.append(f'[{a.get("label", title)}]({link})')
-            L.append(f'| {c["name"]} | {c["keywords"]} | {" · ".join(links)} |')
+                others.append(f'[{a.get("label", title)}]({link})')
+            L.append(f'| {c["name"]} | {c["keywords"]} | {st_md} | {" · ".join(others) or "—"} |')
         L.append('')
     if cur.get('tools'):
         L += ['<a id="辅助工具"></a>', '## 🛠️ 辅助工具', '',
-              '> 常用计算/可视化小工具：本库自建的在线可用页面（`bookshelf/tools/`，浏览器直接打开）+ 社区优质工具收录。', '',
+              '> 常用计算/可视化小工具：本库自建的在线可用页面（`bookshelf/tools/`，自包含单文件——gitcode 文件页显示源码，下载后浏览器打开即用）+ 社区优质文章收录。', '',
               '| 🛠️ 工具 | 📖 知识分类 | 📜 说明 |', '|---|---|---|']
         for t in cur['tools']:
             title, link, _ = resolver.resolve(t['ref'])

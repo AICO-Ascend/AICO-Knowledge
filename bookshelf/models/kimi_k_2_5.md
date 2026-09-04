@@ -1,4 +1,4 @@
-> 来源：CalvinXKY/InfraTech · [models/kimi_k_2_5](https://github.com/CalvinXKY/InfraTech/tree/master/models/kimi_k_2_5)（总体模型结构解析，本库收纳拷贝；图片走原仓 raw 链接）
+> 来源：InfraTech 开源项目 models/kimi_k_2_5 模型结构解析 · 本库本地化收纳（文本+图片）
 
 ---
 
@@ -9,7 +9,7 @@ Kimi K2.5是一款原生视觉–语言（Vision–Language）模型。其LLM部
 ## 整体架构
 
 <p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/CalvinXKY/InfraTech/master/models/kimi_k_2_5/kimi_k_2_5_architecture.jpg" alt="Kimi K2.5架构图" />
+  <img src="kimi_k_2_5/kimi_k_2_5_architecture.jpg" alt="Kimi K2.5架构图" />
 </p>
 
 ## 模块说明
@@ -57,10 +57,10 @@ Kimi K2.5是一款原生视觉–语言（Vision–Language）模型。其LLM部
 5. **MM Projector**：将视觉hidden维度映射到与文本一致的`text_hidden_size`（如MLP/PatchMerger）。
 6. **序列拼接**：按占位符将视觉特征写入文本embedding序列，得到最终送入LLM的`inputs_embeds`与`attention_mask`。
 
-视觉–语言数据处理流程可参考：[VLM视觉–语言融合流程解析（Kimi K2.5/VL）](https://zhuanlan.zhihu.com/p/2018404307385500510)
+视觉–语言数据处理流程可参考：[VLM视觉–语言融合流程解析（Kimi K2.5/VL）（https://zhuanlan.zhihu.com/p/2018404307385500510)
 
 ## 相关资料
 
-- [整体介绍（官方博客）](https://github.com/moonshotai/Kimi-K2.5)
-- [模型卡片与权重（ModelScope）](https://www.modelscope.cn/models/moonshotai/Kimi-K2.5)
-- [模型卡片与权重（Hugging Face）](https://huggingface.co/moonshotai/Kimi-K2.5)
+- [整体介绍（官方博客）（https://github.com/moonshotai/Kimi-K2.5)
+- [模型卡片与权重（ModelScope）（https://www.modelscope.cn/models/moonshotai/Kimi-K2.5)
+- [模型卡片与权重（Hugging Face）（https://huggingface.co/moonshotai/Kimi-K2.5)

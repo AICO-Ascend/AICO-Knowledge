@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Qwen2.5 VL 7B Instruct 架构图</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafbfc;--panel:#fff;--ink:#1a1d23;--muted:#5a6072;--line:#d0d5dd;--dash:#9aa3b2;
+  --c-struct:#3f4452;--c-struct-t:#fff;
+  --c-attn:#fff3e0;--c-attn-b:#b0691a;--c-attn-t:#7a4a12;
+  --c-moe:#e3f2fd;--c-moe-b:#1565c0;--c-moe-t:#0d4775;
+  --c-mlp:#e8f5e9;--c-mlp-b:#2e7d32;--c-mlp-t:#1b5e20;
+  --c-gate:#fdecea;--c-gate-b:#c62828;--c-gate-t:#8a1f1f;
+  --c-block:#efe7f5;--c-block-b:#6a1b9a;--c-block-t:#4a148c;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#161922;--panel:#1d212c;--ink:#e8eaf0;--muted:#9fa6b2;--line:#2c3140;--dash:#4a5266;
+  --c-struct:#2a2e38;--c-struct-t:#e8eaf0;
+  --c-attn:#3d2a14;--c-attn-b:#ffb74d;--c-attn-t:#ffb74d;
+  --c-moe:#142640;--c-moe-b:#64b5f6;--c-moe-t:#90caf9;
+  --c-mlp:#142a1c;--c-mlp-b:#81c784;--c-mlp-t:#a5d6a7;
+  --c-gate:#2a1414;--c-gate-b:#ef9a9a;--c-gate-t:#ef9a9a;
+  --c-block:#1f1429;--c-block-b:#ce93d8;--c-block-t:#ce93d8;}
+}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:14px;line-height:1.5;padding:24px}
+.mono{font-family:"JetBrains Mono","SF Mono",Consolas,monospace}
+.diag{max-width:1500px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative}
+svg.connectors{position:absolute;top:0;left:0;pointer-events:none;z-index:6;overflow:visible}
+svg.connectors .cn{fill:none;stroke:#5a6072;stroke-width:1.5;stroke-dasharray:5 4;opacity:.9}
+svg.connectors .cd{fill:#5a6072;opacity:.95}
+svg.connectors .cr{fill:none;stroke:#666;stroke-width:2;opacity:.95}
+svg.connectors .cra{fill:#666}
+header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:baseline}
+header h1{font-size:22px;font-weight:700}
+header .sub{color:var(--muted);font-size:13px}
+header .tag{background:var(--c-block);color:var(--c-block-b);border:1px solid var(--c-block-b);padding:2px 8px;border-radius:10px;font-size:12px}
+.layout{display:grid;grid-template-columns:235px 420px 1fr 430px;gap:24px;padding:16px}
+.layout{grid-template-areas:"panel left stack right" "panel vleft vision vright" "footer footer footer footer"}
+.panel{grid-area:panel;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;align-self:start}
+.panel h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.panel table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.panel td{padding:3px 2px;border-bottom:1px dotted var(--line);vertical-align:top}
+.panel td:first-child{color:var(--muted);width:48%}
+.panel td:last-child{font-family:"JetBrains Mono","SF Mono",Consolas,monospace;text-align:right;width:52%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stack{grid-area:stack;display:flex;flex-direction:column;gap:4px;min-width:0}
+.stack-arrow{text-align:center;color:var(--muted);font-size:15px;line-height:1.1;font-weight:700}
+.stkpat{border:1.5px dashed var(--c-block-b);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px}
+.stkpat-label{text-align:center;font-size:12px;font-weight:700;color:var(--c-block-t);font-family:"JetBrains Mono","SF Mono",Consolas,monospace}
+.flow-arrow{position:absolute;left:-18px;top:0;bottom:0;width:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:11px;writing-mode:vertical-rl}
+.stack-wrap{position:relative;padding-left:20px}
+.node{border-radius:8px;padding:11px 12px;text-align:center;border:1.5px solid;font-weight:600;font-size:13px}
+.node.struct{background:var(--c-struct);color:var(--c-struct-t);border-color:var(--c-struct)}
+.node.mtp{background:transparent;color:var(--muted);border:1.5px dashed var(--dash)}
+.node.gate{background:var(--c-gate);color:var(--c-gate-t);border-color:var(--c-gate-b)}
+.pill{border-radius:8px;border:1.5px solid;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:14px;position:relative}
+.pill .ct{font-size:18px;font-weight:700}
+.pill .lbl{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0}
+.pill .sub{font-size:10px;font-weight:400;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.pill .meta{font-size:11px;color:var(--muted);font-weight:400}
+.pill.attn{background:var(--c-attn);color:var(--c-attn-t);border-color:var(--c-attn-b)}
+.pill.moe{background:var(--c-moe);color:var(--c-moe-t);border-color:var(--c-moe-b)}
+.pill.block{background:var(--c-block);color:var(--c-block-t);border-color:var(--c-block-b)}
+.pill.struct{background:var(--c-struct);color:var(--c-struct-t);border-color:var(--c-struct)}
+.pill .side-tag{position:absolute;right:-8px;top:50%;transform:translateY(-50%);background:var(--c-gate);color:var(--c-gate-t);border:1px solid var(--c-gate-b);border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700}
+.callout{border:1.5px dashed;border-radius:10px;padding:10px;font-size:12px;background:var(--bg)}
+.callout h4{font-size:12px;font-weight:700;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--line);font-family:"JetBrains Mono","SF Mono",Consolas,monospace}
+.callout.attn{border-color:var(--c-attn-b);color:var(--c-attn-t)}
+.callout.moe{border-color:var(--c-moe-b);color:var(--c-moe-t)}
+.callout.mlp{border-color:var(--c-mlp-b);color:var(--c-mlp-t)}
+.callout.gate{border-color:var(--c-gate-b);color:var(--c-gate-t)}
+.right-cb{grid-area:right;display:flex;flex-direction:column;gap:16px;align-self:stretch;justify-content:space-evenly}
+.left-cb{grid-area:left;display:flex;flex-direction:column;gap:16px;align-self:stretch;justify-content:space-evenly}
+.bottom-cb{grid-area:vision;display:flex;gap:16px;margin-top:6px;justify-content:center;align-items:start}
+.bottom-cb .callout{flex:1;min-width:0}
+.vb-l{grid-area:vleft;display:flex;flex-direction:column;gap:16px;align-self:start}
+.vb-r{grid-area:vright;display:flex;gap:16px;align-self:start}
+.vb-r .callout{flex:1;min-width:0}
+header .scale{color:var(--c-gate-b);font-weight:700;margin-left:6px}
+/* block 段（参考图紧凑式：虚线框 + 虚线标签盒 + ⊕ 灰圆 + BAR 紫条） */
+.blkgrp{border:1.5px dashed;border-radius:10px;position:relative;padding:8px 10px}
+.blkgrp.struct{border-color:#555}
+.blkgrp.attn{border-color:var(--c-block-b)}
+.blkmeta{display:flex;align-items:baseline;gap:8px;font-weight:700;font-size:13px;color:var(--c-block-t);font-family:"JetBrains Mono","SF Mono",Consolas,monospace;margin-bottom:6px}
+.blkmeta .ct{font-size:15px;font-weight:800;color:var(--c-block-b)}
+.blkmeta .meta{margin-left:auto;font-size:10px;font-weight:400;color:var(--muted);white-space:nowrap}
+.blkbody{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel);position:relative}
+.blkbody .box{width:100%;max-width:230px}
+.up-arr{color:#666;font-size:13px;line-height:1;font-weight:700}
+/* ⊕ 灰圆（残差肘线由 CONNECTOR_SCRIPT 实测坐标绘制，见 §3） */
+.blkbody .resrow{display:flex;align-items:center;width:100%;max-width:300px;gap:0;overflow:visible}
+.blkbody .resrow .resshape{font-size:9px;color:var(--muted);font-family:"JetBrains Mono","SF Mono",Consolas,monospace;flex:0 0 auto;margin-left:6px}
+.blkbody .resrow .spacer{flex:1}
+.blkbody .opc{width:22px;height:22px;border-radius:50%;background:#666;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+.blkbody .shape{font-size:10px;color:var(--muted);font-family:"JetBrains Mono","SF Mono",Consolas,monospace}
+/* 注意力/FFN 虚线标签盒（zoom 源） */
+.box.dlab{background:transparent;border:1.5px dashed;font-weight:700;font-size:13px;padding:6px 8px}
+.box.dlab.attn{color:var(--c-attn-b);border-color:var(--c-attn-b)}
+.box.dlab.moe{color:var(--c-moe-b);border-color:var(--c-moe-b)}
+.box.dlab.mlp{color:var(--c-mlp-b);border-color:var(--c-mlp-b)}
+.box.dlab.kda{color:#65a30d;border-color:#65a30d}
+.box.dlab.block{color:#555;border-color:#555}
+/* BAR 子框：Block Attention Residual + 紫色历史条 */
+.barbox{border:1.5px dashed #555;border-radius:8px;padding:4px 10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;max-width:280px}
+.barbox .barbox-t{font-size:11px;color:#333;font-weight:600}
+.barbox .vbars{display:flex;align-items:flex-end;gap:4px}
+.barbox .vbars i{width:9px;height:22px;border-radius:5px;background:#7b1fa2;display:block}
+.barbox .vbars b{color:#555;font-size:12px;line-height:1}
+.barbox .vbars-up{display:flex;gap:4px;color:#555;font-size:10px}
+.mini-flow{display:flex;flex-direction:column;gap:4px;align-items:center}
+.box{border-radius:6px;padding:4px 8px;font-size:11px;border:1px solid;text-align:center;font-family:"JetBrains Mono","SF Mono",Consolas,monospace}
+.box.attn{background:var(--c-attn);color:var(--c-attn-t);border-color:var(--c-attn-b)}
+.box.moe{background:var(--c-moe);color:var(--c-moe-t);border-color:var(--c-moe-b)}
+.box.mlp{background:var(--c-mlp);color:var(--c-mlp-t);border-color:var(--c-mlp-b)}
+.box.gate{background:var(--c-gate);color:var(--c-gate-t);border-color:var(--c-gate-b)}
+.box.struct{background:var(--c-struct);color:var(--c-struct-t);border-color:var(--c-struct)}
+.arrow{color:var(--muted);font-size:13px;line-height:1}
+.shape{font-size:10px;color:var(--muted);font-family:"JetBrains Mono","SF Mono",Consolas,monospace}
+footer{grid-area:footer;border-top:1px solid var(--line);padding:12px 20px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:10px}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.legend i{width:12px;height:12px;border-radius:3px;border:1px solid;display:inline-block}
+.note{font-style:italic}
+@media(max-width:980px){.layout{grid-template-columns:1fr;grid-template-areas:"panel" "stack" "right" "vision" "footer"}}
+</style></head>
+<body><div class="diag">
+<svg class="connectors" aria-hidden="true"></svg>
+<header><h1>Qwen2.5 VL 7B Instruct<span class="scale">· ≈8.3B</span></h1>
+<span class="tag">qwen2</span>
+<span class="sub">repo: Qwen/Qwen2.5-VL-7B-Instruct · [&#x27;Qwen2_5_VLForConditionalGeneration&#x27;]</span></header>
+<div class="layout" style="grid-template-columns:235px 1fr 430px;grid-template-areas:'panel stack right' 'panel vision vision' 'footer footer footer'">
+  <div class="panel"><h3>metrics / params</h3><table><tr><td>family</td><td title="qwen2">qwen2</td></tr>
+<tr><td>total params</td><td title="≈8.3B">≈8.3B</td></tr>
+<tr><td>num layers</td><td title="28">28</td></tr>
+<tr><td>hidden_size</td><td title="3584">3584</td></tr>
+<tr><td>num heads</td><td title="28">28</td></tr>
+<tr><td>num_kv_heads</td><td title="4">4</td></tr>
+<tr><td>head_dim</td><td title="128">128</td></tr>
+<tr><td>vocab_size</td><td title="152064">152064</td></tr>
+<tr><td>context_length</td><td title="128000">128000</td></tr>
+<tr><td>dense MLP int</td><td title="18944">18944</td></tr>
+<tr><td>norm</td><td title="RMSNorm">RMSNorm</td></tr>
+<tr><td>rope θ</td><td title="1000000.0">1000000.0</td></tr>
+<tr><td>tie embeddings</td><td title="✗">✗</td></tr>
+<tr><td>attention</td><td title="GQA">GQA</td></tr>
+<tr><td>FFN/act</td><td title="SiLU-GLU">SiLU-GLU</td></tr>
+<tr><td>MTP layers</td><td title="0">0</td></tr>
+<tr><td>vision enc</td><td title="VisionTower">VisionTower</td></tr>
+<tr><td>vision layers</td><td title="32">32</td></tr>
+<tr><td>vision hidden</td><td title="1280">1280</td></tr></table></div>
+  
+  <div class="stack-wrap">
+      <div class="flow-arrow">▲ data flow ↑</div>
+      <div class="stack">
+        <div class="node gate">LM-Head → logits [seq,3584 → seq,152064]</div><div class="stack-arrow">↑</div><div class="node struct">Final RMSNorm</div><div class="stack-arrow">↑</div><div class="shape">↑ [seq, 3584] ↑</div><div class="stack-arrow">↑</div><div class="blkgrp struct"><div class="blkmeta"><span class="ct">×28</span><span class="gl">GQA</span><span class="meta">L0–27</span></div>
+    <div class="blkbody">
+      <div class="shape">→ [seq, 3584] out</div>
+      <div class="up-arr">↑</div>
+      <div class="resrow"><span class="spacer"></span><span class="opc">+</span><span class="resshape">[seq,3584]+[seq,3584]</span><span class="spacer"></span></div>
+      <div class="up-arr">↑</div>
+      <div class="box dlab mlp" data-blk="mlp">MLP</div>
+      <div class="up-arr">↑</div>
+      <div class="box struct">RMSNorm</div>
+      <div class="up-arr">↑</div>
+      
+      
+      <div class="resrow"><span class="spacer"></span><span class="opc">+</span><span class="resshape">[seq,3584]+[seq,3584]</span><span class="spacer"></span></div>
+      <div class="up-arr">↑</div>
+      <div class="box dlab block" data-blk="attn">GQA</div>
+      <div class="up-arr">↑</div>
+      <div class="box struct">RMSNorm</div>
+      <div class="up-arr">↑</div>
+      
+      
+      <div class="shape">[seq, 3584] in</div>
+    </div></div><div class="stack-arrow">↑</div><div class="node struct" data-blk="vision">Text Embedding [vocab=152064 → hid=3584]</div>
+      </div></div>
+  <div class="right-cb">
+    <div class="callout attn" data-cb="gqa">
+  <h4>GQA</h4>
+  <div class="mini-flow">
+    <div class="shape">[seq, 3584]</div>
+    <div class="box struct">RMSNorm</div><div class="arrow">↓</div>
+    <div class="box attn">Q 28h · K/V 4h (GQA 7:1)</div><div class="arrow">↓</div>
+    <div class="box attn">RoPE θ=1000000.0</div><div class="arrow">↓</div>
+    <div class="box attn">softmax(QKᵀ/√128)·V</div><div class="arrow">↓</div>
+    <div class="box attn">Wo → [seq, 3584]</div>
+    <div class="shape">head_dim=128</div>
+  </div></div><div class="callout mlp" data-cb="mlp">
+  <h4>MLP / FFN — SiLU-GLU</h4>
+  <div class="mini-flow">
+    <div class="box mlp">gate_proj</div><div class="arrow">↓</div>
+    <div class="box gate">SiLU-GLU</div><div class="arrow">↓</div>
+    <div class="box mlp">× gate · up</div><div class="arrow">↓</div>
+    <div class="box mlp">down_proj</div>
+    <div class="shape">intermediate=18944</div>
+  </div></div>
+  </div>
+  <div class="vb-l"></div>
+  <div class="bottom-cb"><div class="callout moe" data-cb="vision">
+  <h4>VisionTower (vision encoder)</h4>
+  <div class="mini-flow">
+    <div class="box moe">ImageProcessor / frames</div><div class="arrow">↓</div>
+    <div class="box moe">PatchEmbed patch=14</div><div class="arrow">↓</div>
+    <div class="box moe">Encoder ×32 (qkv=—)</div><div class="arrow">↓</div>
+    <div class="box moe">merge_kernel=[2, 2] —</div><div class="arrow">↓</div>
+    <div class="box mlp">— (mm→text)</div>
+    <div class="shape">vt_hidden=1280 → text_hidden=3584</div>
+  </div></div></div>
+  <div class="vb-r"></div>
+  <footer><div class="legend"><span><i style="background:var(--c-struct)"></i>Structure/Norm</span><span><i style="background:var(--c-attn)"></i>Attention MLA/KDA</span><span><i style="background:var(--c-moe)"></i>MoE/Vision</span><span><i style="background:var(--c-mlp)"></i>MLP/Act</span><span><i style="background:var(--c-gate)"></i>Gates/Logits</span><span><i style="background:var(--c-block)"></i>Block type</span></div>
+  <span class="note">source: HF Qwen/Qwen2.5-VL-7B-Instruct · .cache/Qwen__Qwen2.5-VL-7B-Instruct/config.json · missing values shown as &mdash;, estimates as &asymp;</span></footer>
+</div></div>
+
+<script>
+(function(){
+  // 连线规范（与 references/design-system.md §3 同步，对标 InfraTech 参考图）：
+  // callout ↔ 源模块 = 梯形 zoom 扇出线：两条浅灰细虚线，从【内层模块框】的
+  // 上下框角直连 callout 朝向边的上下框角，形成"放大展开"的梯形。
+  var FAN='#9aa3b2';
+  function draw(){
+    var svg=document.querySelector('svg.connectors');var diag=document.querySelector('.diag');
+    if(!svg||!diag)return;
+    var d=diag.getBoundingClientRect();
+    var bL=diag.clientLeft, bT=diag.clientTop;  // svg 原点在 padding-box，rect 是 border-box，补偿边框宽
+    svg.setAttribute('width',d.width);svg.setAttribute('height',d.height);svg.innerHTML='';
+    function rel(el){var r=el.getBoundingClientRect();return {l:r.left-d.left-bL, rt:r.right-d.left-bL, t:r.top-d.top-bT, b:r.bottom-d.top-bT};}
+    function seg(x1,y1,x2,y2){var p=document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d','M'+x1+' '+y1+' L'+x2+' '+y2);
+      p.setAttribute('class','cn');p.setAttribute('stroke',FAN);svg.appendChild(p);}
+    // [callout key, block key, side]  side: r=callout 在右, l=在左, b=在下
+    var pairs=window.__CB_PAIRS__||[['mla','mla','r'],['gqa','attn','r'],['moe','moe','r'],['mlp','mlp','r'],['kda','kda','l'],['attnres','attnres','l'],['vision','vision','b']];
+    pairs.forEach(function(p){
+      var cb=document.querySelector('[data-cb="'+p[0]+'"]');
+      var blks=document.querySelectorAll('[data-blk~="'+p[1]+'"]');
+      if(!cb||!blks.length)return;
+      var cr=rel(cb);
+      // 多个 block 实例含同名模块时，选与 callout 垂直距离最近的（线最短、不跨块）
+      var blk=null,best=1e18,ccy=(cr.t+cr.b)/2;
+      blks.forEach(function(b){var r=rel(b),d=Math.abs((r.t+r.b)/2-ccy);if(d<best){best=d;blk=b;}});
+      var br=rel(blk);
+      // 端点内缩圆角量（角点是空白，线会悬空），并向框内延伸 OV px 压线消除缝隙
+      var RB=8, RC=14, OV=3;  // box radius≈6 / callout radius≈10 / overlap（向框内）
+      if(p[2]=='r'){        // 源框右缘上下角 → callout 左缘上下角（梯形扇出）
+        seg(br.rt-OV,br.t+RB,cr.l+OV,cr.t+RC); seg(br.rt-OV,br.b-RB,cr.l+OV,cr.b-RC);
+      } else if(p[2]=='l'){ // callout 右缘上下角 → 源框左缘上下角
+        seg(cr.rt-OV,cr.t+RC,br.l+OV,br.t+RB); seg(cr.rt-OV,cr.b-RC,br.l+OV,br.b-RB);
+      } else {              // 底部 vision：callout 顶缘两角 → Embedding 底缘 1/3、2/3
+        var w1=br.l+(br.rt-br.l)/3, w2=br.l+(br.rt-br.l)*2/3;
+        seg(cr.l+RC,cr.t+OV,w1,br.b-OV); seg(cr.rt-RC,cr.t+OV,w2,br.b-OV);
+      }
+    });
+    // 块内残差肘线（参考图：从子层 RMSNorm 输入侧主线取，左行→上行→进 ⊕ 左缘）
+    // HTML 静态写死会随高度漂移，故按实测坐标绘制；起点/终点都精确贴框。
+    document.querySelectorAll('.blkbody').forEach(function(bd){
+      var rms=bd.querySelectorAll('.box.struct');   // 每块 2 枚（FFN 侧/attn 侧）
+      var ops=bd.querySelectorAll('.opc');
+      var n=Math.min(rms.length, ops.length);
+      for(var i=0;i<n;i++){
+        var rr=rel(rms[i]), oo=rel(ops[i]);
+        var y0=rr.b+5, x1=rr.l-26, y1=(oo.t+oo.b)/2;
+        var p=document.createElementNS('http://www.w3.org/2000/svg','path');
+        p.setAttribute('d','M'+((rr.l+rr.rt)/2)+' '+rr.b+' L'+((rr.l+rr.rt)/2)+' '+y0+' L'+x1+' '+y0+' L'+x1+' '+y1+' L'+(oo.l+1)+' '+y1);
+        p.setAttribute('class','cr');svg.appendChild(p);
+        var ah=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+        ah.setAttribute('points',(oo.l+1)+','+y1+' '+(oo.l-6)+','+(y1-4.5)+' '+(oo.l-6)+','+(y1+4.5));
+        ah.setAttribute('class','cra');svg.appendChild(ah);
+      }
+    });
+  }
+  if(document.readyState==='loading'){window.addEventListener('DOMContentLoaded',function(){requestAnimationFrame(function(){requestAnimationFrame(draw);});});}
+  else{requestAnimationFrame(function(){requestAnimationFrame(draw);});}
+  window.addEventListener('load',draw);  // 字体/样式落定后重绘，防布局漂移致端点偏移
+  window.addEventListener('resize',draw);  // 视口变化（含 shot.mjs 量尺寸后撑宽）必须重绘，否则连线整体偏移
+  setTimeout(draw,800);
+})();
+</script>
+
+</body></html>

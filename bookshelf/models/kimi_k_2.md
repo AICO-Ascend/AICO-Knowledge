@@ -1,4 +1,4 @@
-> 来源：CalvinXKY/InfraTech · [models/kimi_k_2](https://github.com/CalvinXKY/InfraTech/tree/master/models/kimi_k_2)（总体模型结构解析，本库收纳拷贝；图片走原仓 raw 链接）
+> 来源：InfraTech 开源项目 models/kimi_k_2 模型结构解析 · 本库本地化收纳（文本+图片）
 
 ---
 
@@ -11,6 +11,10 @@ Kimi K2是一款采用MoE架构的大语言模型（LLM），面向通用对话�
 效果：在代码、推理与工具调用相关评测中，Kimi K2表现出较强竞争力，适用于真实业务中的多步任务处理。
 
 性能：通过注意力与专家路由协同优化，Kimi K2在保持模型能力的同时降低了在线推理开销，适配高并发与长上下文场景。
+
+## 总体模型结构
+
+<img src="kimi_k_2/kimi_k_2_architecture.jpg" alt="Kimi K2 总体模型结构" width="100%"/>
 
 架构特点：
 
@@ -48,6 +52,6 @@ Kimi K2是一款采用MoE架构的大语言模型（LLM），面向通用对话�
 
 ## 相关资料：
 
-- [整体介绍（官方仓库）](https://github.com/MoonshotAI/Kimi-K2)
-- [模型卡片与权重（Hugging Face）](https://huggingface.co/moonshotai/Kimi-K2-Instruct)
+- [整体介绍（官方仓库）（https://github.com/MoonshotAI/Kimi-K2)
+- [模型卡片与权重（Hugging Face）（https://huggingface.co/moonshotai/Kimi-K2-Instruct)
 
