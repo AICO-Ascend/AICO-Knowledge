@@ -132,7 +132,7 @@ sections:
         heat: 3
         difficulty: 3
         note: MLA+MoE+FP8+DualPipe 集大成；本库深读含 MLA 裁剪子图
-        ascend: 昇腾适配标杆模型（MindSpeed/vllm-ascend 均支持）
+        ascend: 适配标杆模型（MindSpeed/vllm-ascend 均支持）
         assets:
           - {label: MLA 架构裁剪图, ref: crop:deepseek-v3-technical-report-fig02-mla.png}
       - ref: paper:gqa-training-generalized-multi-query-transformer-models-from-multi-hea
@@ -201,7 +201,7 @@ sections:
         note: 概念页：MoE 谱系
   - id: spec-decoding
     layer: L2
-    title: 投机解码（10+ 篇成簇）
+    title: 投机解码
     category: 投机解码
     intro: |
       推荐路径：Medusa（多头草案直觉）→ EAGLE（特征层草案，必读）→ EAGLE-2（动态草案树）→
@@ -277,7 +277,7 @@ sections:
       - ref: concept:frontier-models
   - id: extended-reading
     layer: L2
-    title: 扩展阅读（主题模型/表格学习/蒸馏）
+    title: 扩展阅读
     category: 扩展
     items:
       - ref: paper:bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure
@@ -329,7 +329,7 @@ sections:
         difficulty: 3
         note: 模型-系统协同设计
       - ref: repocard:mindspeed
-        title: MindSpeed（昇腾训练加速库）
+        title: MindSpeed
         category: 训练框架
         heat: 3
         difficulty: 2
@@ -393,13 +393,13 @@ sections:
         difficulty: 3
         note: 多模态 EPD 分离
       - ref: repocard:vllm
-        title: vLLM（推理引擎）
+        title: vLLM
         category: 推理框架
         heat: 3
         difficulty: 2
         note: vLLM 仓卡片（版本线 v0.28.1rc0）
       - ref: repocard:vllm-ascend
-        title: vllm-ascend（vLLM 昇腾后端）
+        title: vllm-ascend
         category: 推理框架
         heat: 3
         difficulty: 2
@@ -422,7 +422,7 @@ sections:
         title: xLLM Chunked 调度器
         difficulty: 2
       - ref: repocard:xllm
-        title: xLLM（京东推理框架）
+        title: xLLM
         category: 推理框架
         heat: 2
         difficulty: 2
@@ -447,7 +447,7 @@ sections:
     category: MindIE
     items:
       - ref: repocard:mindie-llm
-        title: MindIE-LLM（昇腾商用推理引擎）
+        title: MindIE-LLM
         category: 推理框架
         heat: 2
         difficulty: 2
@@ -466,19 +466,19 @@ sections:
         difficulty: 3
         ascend: MindIE 原生特性
       - ref: repocard:mindie-turbo
-        title: MindIE-Turbo（推理加速库）
+        title: MindIE-Turbo
         category: 推理框架
         ascend: 昇腾推理加速
       - ref: repocard:mindie-motor
-        title: MindIE-Motor（推理集群编排）
+        title: MindIE-Motor
         category: 推理框架
         ascend: 昇腾推理编排
       - ref: repocard:mindie-sd
-        title: MindIE-SD（多模态推理套件）
+        title: MindIE-SD
         category: 推理框架
         ascend: 昇腾多模态推理
       - ref: repocard:msmodelslim
-        title: msModelSlim（模型压缩工具链）
+        title: msModelSlim
         category: 推理框架
         note: 模型压缩工具链（量化专题归并入此）
         ascend: 昇腾模型压缩
@@ -498,7 +498,7 @@ sections:
         note: 昇腾加速器上的并行 scan（线性注意力底层算子）
         ascend: 昇腾算子研究论文（本库独家深读）
       - ref: repocard:triton-ascend
-        title: Triton-Ascend（Triton 昇腾后端）
+        title: Triton-Ascend
         category: 算子
         heat: 2
         difficulty: 2
@@ -515,18 +515,18 @@ sections:
         note: 昇腾与 GPU 的开发差异（迁移必读）
         ascend: 迁移指南
       - ref: repocard:catlass
-        title: CATLASS（Cube 算子模板库）
+        title: CATLASS
         category: 算子
         difficulty: 3
         note: CATLASS——CANN 版 CUTLASS（v1.1.0）
         ascend: 昇腾 Cube 算子模板库
       - ref: repocard:torch_npu_ops
-        title: torch_npu_ops（算子库）
+        title: torch_npu_ops
         category: 算子
         difficulty: 2
         ascend: torch_npu 算子库
       - ref: repocard:xllm_ops
-        title: xllm_ops（高性能算子库）
+        title: xllm_ops
         category: 算子
         difficulty: 2
         ascend: xLLM 高性能算子库
@@ -580,7 +580,7 @@ sections:
         note: HCCL 用户指南·基于 root 节点信息创建通信域（9 表逐字还原）
         ascend: HCCL 官方手册
       - ref: repocard:torchair
-        title: torchair（昇腾图编译）
+        title: torchair
         category: 系统软件
         difficulty: 2
         note: 图编译（Ascend IR）
@@ -596,7 +596,7 @@ sections:
         note: 算子级确定性计算
         ascend: torchair 原生特性
       - ref: repocard:hccl_transfer
-        title: hccl_transfer（KV cache 传输）
+        title: hccl_transfer
         category: 系统软件
         difficulty: 2
         note: HCCL KV cache 传输

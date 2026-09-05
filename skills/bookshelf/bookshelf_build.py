@@ -255,6 +255,7 @@ class Resolver:
 
 
 def render_remarks(item, auto_note, resolver):
+    # 备注流: 🔥⚡ 符号最前 → 策展备注 → 资产链接 → 昇腾注记; 日期由摘要列单独携带不重复
     parts = []
     heat, diff = item.get('heat'), item.get('difficulty')
     if heat:
@@ -263,13 +264,11 @@ def render_remarks(item, auto_note, resolver):
         parts.append('⚡' * int(diff))
     if item.get('note'):
         parts.append(item['note'])
-    if auto_note:
-        parts.append(auto_note)
     assets = resolver.asset_md(item.get('assets'))
     if assets:
         parts.append(assets)
     if item.get('ascend'):
-        parts.append(f'**昇腾**: {item["ascend"]}')
+        parts.append(f'昇腾：{item["ascend"]}')
     return ' · '.join(parts)
 
 
@@ -292,7 +291,11 @@ def render_section(sec, layers, resolver):
         digest_md = '—' if item['ref'].startswith(('ext:', 'crop:')) else f'[link]({link})'
         remarks = render_remarks(item, auto_note, resolver)
         summary = resolver.summary(item['ref'])
-        tail = ' · '.join(x for x in [summary, remarks] if x)
+        # 摘要列内部: 🔥⚡ 符号 → 日期/版本动态 → 正文/备注
+        syms, rest_r = [], []
+        for part in remarks.split(' · ') if remarks else []:
+            (syms if part and all(ch in '🔥⚡' for ch in part) else rest_r).append(part)
+        tail = ' · '.join(x for x in [' '.join(syms), summary] + rest_r if x)
         lines.append(f'| {source_md} | {category} | {sec["layer"]} | {digest_md} | {tail} |')
     lines.append('')
     return '\n'.join(lines)
