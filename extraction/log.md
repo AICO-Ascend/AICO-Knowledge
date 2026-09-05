@@ -41,3 +41,5 @@
 ## [2026-09-05] bookshelf v7.1 | 节标题去冗余层级后缀 + 知识分类列插 U+2060 零宽连接符防拆行
 
 ## [2026-09-05] bookshelf v7.2 | 上架铁律 G1-G4 落地: CURATION 头部规则原文 + build guard_rules 机械闸门(违规拒生成) + SKILL.md 同步为权威手册
+
+## [2026-09-05] bookshelf | 挂载 swap_attention(mindspeed-rl 特性深读, 显存/重计算权衡) + 训练框架类条目分类归一

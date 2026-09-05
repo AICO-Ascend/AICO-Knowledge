@@ -346,17 +346,27 @@ sections:
         ascend: 昇腾训练栈核心
       - ref: reponote:mindspeed:docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md
         title: MindSpeed MoE 前反向通信掩盖（fb-overlap）
+        category: 训练框架
         heat: 2
         difficulty: 3
         note: MoE 前反向通信掩盖（含 3 图图文联合解读）
         ascend: MindSpeed 原生特性
+      - ref: reponote:mindspeed-rl:docs/zh/features/swap_attention.md
+        title: MindSpeed-RL Swap-Attention（激活值预取）
+        category: 训练框架
+        heat: 2
+        difficulty: 3
+        note: 反向传播时从 CPU 预取 attention 激活值（H2D 高带宽），替代全重计算——显存与算力的新权衡点
+        ascend: MindSpeed-RL 原生特性
       - ref: reponote:mindspeed:docs/zh/features/Automatic_Parallelism.md
         title: MindSpeed 自动并行特性
+        category: 训练框架
         difficulty: 2
         note: 自动并行
         ascend: MindSpeed 原生特性
       - ref: reponote:mindspeed-rl:docs/zh/features/context_parallel.md
         title: MindSpeed-RL 长序列并行（Context Parallel）
+        category: 训练框架
         difficulty: 3
         note: 长序列并行
         ascend: MindSpeed-RL 原生
