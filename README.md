@@ -24,14 +24,22 @@
 
 > 📌 HTML 页面（AscendInfra / 在线小工具）均为自包含单文件：gitcode 文件页显示的是源码，**下载后用浏览器打开即得完整渲染**；仓开启 Pages 后可在线直开。
 
-**面向 AI 系统**（模型 / Agent / RAG——本仓已预消化：抽取、清洗、多模态理解、结构化组织全部完成）：
+**面向 AI 系统**（模型 / Agent 直接消费——本仓已预消化：抽取、清洗、多模态理解、结构化组织全部完成；**未内置 RAG 系统**，以下是接入与使用方式）：
 
 | 入口 | 内容 |
 |---|---|
-| 🤖 **[AGENTS.md](AGENTS.md)** | 机器消费契约：三条铁律（出处可溯/权威分层/零臆造）+ 注册表清单 + RAG 摄取建议 + Agent 技能导航 |
+| 🤖 **[AGENTS.md](AGENTS.md)** | 机器消费契约：三条铁律（出处可溯/权威分层/零臆造）+ 注册表清单 + 接入建议 + Agent 技能导航 |
 | 🔎 **[kb_query.py](skills/paper-extraction/kb_query.py)** | 统一查询 CLI（`--json` 全支持）：search / fig / formula / topics / info |
 | 📇 **[extraction/index.md](extraction/index.md)** | LLM-reads-first 内容目录（先读定位再钻取） |
 | 🧾 **注册表** | [papers.json](extraction/papers.json) · [repo_inventory.json](extraction/repo_inventory.json)（版本血缘）· [repo_deep_index.json](extraction/repo_deep_index.json) · [web_index.json](extraction/web_index.json) |
+
+**怎么用**（三种典型姿势）：
+
+| 场景 | 做法 |
+|---|---|
+| Claude Code / Agent 直接用 | clone 本仓 → 让 Agent 先读 `AGENTS.md` + `extraction/index.md`，之后所有提问都带深读资产与出处 |
+| 挂进自己的 RAG | chunk 源用 `extraction/fulltext/`（论文全文）+ `repo_deep_docs/`、`web_deep_docs/`（七节深读，高信息密度），元数据挂 slug+域标记 |
+| 写报告/做分享 | `kb_query.py fig <关键词>` 取裁剪单图+引用串，`formula <关键词>` 取 LaTeX 公式直贴 |
 
 ## ⚙️ 三条知识流水线（三域 ingest）
 
