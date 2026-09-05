@@ -15,7 +15,7 @@
 ### 🧑‍🎓 面向人类学习者
 
 - 📚 **[知识书架](bookshelf/SHELF.md)** — 学习路径视角：技术栈六层主线（Agent→模型/算法→训推框架→算子→系统软件→硬件集群）；知识源直链 arXiv 原文/仓内原始文档，摘要列回本仓萃取总结；模型卡片 + 在线小工具（MFU/显存计算器）
-- ♨️ **[AscendInfra](bookshelf/ascend_infra.html)** — 开发者全栈视角：独立可视化页面（自绘 AI Core 架构图 · CANN 分层 · 算子全景 · AscendC 概念卡 · 知识对照表），数据全部来自本库深读资产
+- ♨️ **[AscendInfra](bookshelf/ascend_infra.md)** — 开发者全栈视角：AI Core 架构图解 · AscendC 概念与 API 族 · 算子全景 · CANN/HCCL 手册速查 · 精度/性能方法论，数据全部来自本库深读资产
 - 🟩 **[NvidiaInfra](bookshelf/nvidia_infra.md)** — GPU 生态视角：BasicCUDA 实操收录（CUDA/NCCL/PyTorch 显存，配可编译代码）+ 本库 GPU 栈系统论文深读
 
 > 📌 HTML 页面（AscendInfra / 在线小工具）均为自包含单文件：gitcode 文件页显示的是源码，**下载后用浏览器打开即得完整渲染**；仓开启 Pages 后可在线直开。
@@ -246,7 +246,7 @@ AICO-knowledge/
 │   ├── web_deep_docs/<slug>.md      #   网页域: M3 七节深读（表格逐字还原）
 │   ├── web_index.json               #   网页域: 注册表（路由/版本线/深读登记）
 │   └── web_moc.md                   #   网页域: 知识地图（版本对照+跨域关联）
-├── bookshelf/                       # 📚 学习者三入口（SHELF.md 生成 / ascend_infra.html 手工 / nvidia_infra.md 手工）
+├── bookshelf/                       # 📚 学习者三入口（SHELF.md 生成 / ascend_infra.md 手工 / nvidia_infra.md 手工）
 │   ├── CURATION.md                  #   书架策展定义（唯一人工文件）
 │   ├── models/<model>.md + 图片      #   模型总体结构解析（本地化收纳）
 │   └── tools/*.html                 #   自建在线小工具（MFU/显存计算器，浏览器直开）
@@ -274,7 +274,7 @@ python3 skills/paper-extraction/full_pipeline.py --push
 ## 📖 文档
 
 - `AGENTS.md` — 🤖 面向 AI 系统的机器消费契约（铁律/注册表/RAG 摄取/技能导航）
-- `bookshelf/` — 📚 三个学习者入口（SHELF.md 知识书架 · ascend_infra.html AscendInfra · nvidia_infra.md NvidiaInfra）+ models/ 模型结构解析 + tools/ 在线小工具；书架由 `skills/bookshelf/bookshelf_build.py` 从注册表自动生成（改策展文件后重跑一次即可，自动校验死链）
+- `bookshelf/` — 📚 三个学习者入口（SHELF.md 知识书架 · ascend_infra.md AscendInfra · nvidia_infra.md NvidiaInfra）+ models/ 模型结构解析 + tools/ 在线小工具；书架由 `skills/bookshelf/bookshelf_build.py` 从注册表自动生成（改策展文件后重跑一次即可，自动校验死链）
 - `skills/paper-extraction/SKILL.md` — 操作手册（全链路 + agent 收尾 + 决策树 + 踩坑 + Wiki 三层架构）
 - `skills/paper-extraction/DEEP_LEARNING_PROTOCOL.md` — 夜间深度学习规范
 - `skills/repo-extraction/SKILL.md` — 代码仓归档手册（稀疏拉取/文档收割/版本血缘/深读层）

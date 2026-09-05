@@ -33,6 +33,35 @@ CURATION = SHELF_DIR / 'CURATION.md'
 
 LAYER_ORDER = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6']
 
+# 分类排序权重（表格内聚合顺序；未登记的排最后按字序）
+CATEGORY_ORDER = ['RL', 'Agent', '架构', '稀疏注意力', 'MoE', '投机解码', '多模态', '综述', '扩展',
+                  '训练系统', '训练框架', '推理系统', '推理框架', '算子', '系统软件', '硬件']
+
+
+def cat_rank(c):
+    return CATEGORY_ORDER.index(c) if c in CATEGORY_ORDER else len(CATEGORY_ORDER)
+
+
+def clean_cn(text, max_chars=110, max_sents=3):
+    """深读首段 → 简短中文摘要: 去 markdown/引用标记, 按句界截断"""
+    s = re.sub(r'(^|\n)\s*(?:[-*+]|\d+\.)\s+', r'\1', text)    # 去列表符号
+    s = re.sub(r'\$\$?.+?\$\$?', ' ', s)                    # 去行内公式
+    s = re.sub(r'[（(][^）)]*§[^）)]*[）)]', '', s)             # 去 (§x.y) 引用
+    s = re.sub(r'\[\[([^\]|]*\|)?([^\]]+)\]\]', r'\2', s)      # wikilink → 内文
+    s = re.sub(r'[*`>#]', '', s)
+    s = re.sub(r'\s+', ' ', s).strip()
+    sents = [x for x in re.split(r'(?<=[。！？])', s) if x.strip()]
+    out = ''
+    for sent in sents[:max_sents]:
+        if out and len(out) + len(sent) > max_chars:
+            break
+        out += sent
+        if len(out) >= max_chars:
+            break
+    if not out and s:
+        out = s[:max_chars - 1] + '…'
+    return out
+
 
 def load_registries():
     reg = {}
@@ -103,7 +132,7 @@ class Resolver:
         return None  # concept/crop/ext 无单一原始出处
 
     def summary(self, ref):
-        """摘要列内容 (机械提取): 论文=发表月+原文摘要截两句; 仓卡片=定位+tag+提交日期;
+        """摘要列内容 (机械提取): 论文=发表月+深读「核心问题」首段中文摘要(≤3句); 仓卡片=定位+tag+提交日期;
         仓文档=所属仓定位; 网页=标题+备注; 概念页=主题名"""
         kind, _, rest = ref.partition(':')
         if kind in ('paper', 'papermd'):
@@ -118,20 +147,15 @@ class Resolver:
                 return ''
             pub = re.search(r'arxiv\.org/abs/(\d{2})(\d{2})\.', p.get('arxiv', ''))
             pub = f'20{pub.group(1)}-{pub.group(2)}' if pub else (p.get('date') or '')
-            ab = ''
-            md = REPO / 'extraction' / f'{slug}.md'
-            if md.exists():
-                m = re.search(r'> \[!abstract\] 摘要（原文）\n((?:> .*\n)+)',
-                              md.read_text(encoding='utf-8', errors='ignore'))
+            # 中文摘要权威源 = deep/<slug>.md「核心问题」首段（面向人类学习者, 不用英文 abstract）
+            cn = ''
+            deep = REPO / 'extraction' / 'deep' / f'{slug}.md'
+            if deep.exists():
+                m = re.search(r'^##\s*(?:\d+\.\s*)?核心问题[^\n]*\n\s*((?:(?!\n\s*\n).)+)',
+                              deep.read_text(encoding='utf-8', errors='ignore'), re.S | re.M)
                 if m:
-                    ab = re.sub(r'^> *', '', m.group(1), flags=re.M).replace('\\', '')
-                    ab = re.sub(r'\d+\.\s*[\U0001F300-\U0001FAFF☀-➿]*\s*', '', ab)
-                    ab = re.sub(r'\s+', ' ', ab).strip()
-                    sents = re.split(r'(?<=[。！？])', ab)
-                    ab = ''.join(sents[:2]).strip()
-                    if len(ab) > 120:
-                        ab = ab[:118] + '…'
-            return f'{pub} · {ab}' if ab else pub
+                    cn = clean_cn(m.group(1))
+            return f'{pub} · {cn}' if cn else pub
         if kind == 'repocard':
             inv = self.reg['inventory'].get(rest) or {}
             bits = []
@@ -281,7 +305,7 @@ def render_section(sec, layers, resolver):
     def sort_key(it):
         cat = it.get('category') or sec.get('category') or sec['title']
         _, _, dt = resolver.resolve(it['ref'])
-        return (cat, str(dt))
+        return (cat_rank(cat), cat, str(dt))
     for item in sorted(sec.get('items', []), key=sort_key):
         title, link, auto_note = resolver.resolve(item['ref'])
         title = item.get('title') or title   # 策展级标题覆盖（注册表标题太笼统时）
@@ -308,7 +332,7 @@ def build_shelf(cur, reg, resolver):
     L.append(cur['shelf_intro'].strip())
     L.append('')
     L.append('> 技术栈主线：' + ' → '.join(f'**{k} {layers[k]}**' for k in LAYER_ORDER)
-             + '。配套入口：[♨️ AscendInfra 昇腾专区](ascend_infra.html)（独立可视化体系）· [🟩 NvidiaInfra 货架](nvidia_infra.md)（GPU 生态）。')
+             + '。配套入口：[♨️ AscendInfra 昇腾专区](ascend_infra.md)（昇腾全栈可视化讲解）· [🟩 NvidiaInfra 货架](nvidia_infra.md)（GPU 生态）。')
     L.append('')
     L.append('## 目录')
     L.append('')
@@ -376,7 +400,7 @@ def main():
     n_items = len(_re.findall(r'^\| \[', shelf, _re.M))
     print(f'✓ SHELF.md {n_items} 条目 · 0 死链'
           f' · {"check-only" if args.check_only else "已写入"}'
-          f' (ascend_infra 为独立 HTML 体系, 不由本脚本生成)')
+          f' (ascend_infra 为独立手工页(md 主入口/html 备份), 不由本脚本生成)')
     return 0
 
 
