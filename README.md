@@ -22,7 +22,7 @@
 
 ### 🤖 面向 AI 系统
 
-模型 / Agent 直接消费——本仓已预消化（抽取、清洗、多模态理解、结构化组织全部完成；**未内置 RAG 系统**）：
+模型 / Agent 直接消费——本仓已预消化（抽取、清洗、多模态理解、结构化组织全部完成）：
 
 - 🤖 **[AGENTS.md](AGENTS.md)** — 机器消费契约：三条铁律（出处可溯/权威分层/零臆造）+ 注册表清单 + 接入建议 + Agent 技能导航
 - 🔎 **[kb_query.py](skills/paper-extraction/kb_query.py)** — 统一查询 CLI（`--json` 全支持）：search / fig / formula / topics / info
@@ -34,7 +34,7 @@
 | 场景 | 做法 |
 |---|---|
 | Claude Code / Agent 直接用 | clone 本仓 → 让 Agent 先读 `AGENTS.md` + `extraction/index.md`，之后所有提问都带深读资产与出处 |
-| 挂进自己的 RAG | chunk 源用 `extraction/fulltext/`（论文全文）+ `repo_deep_docs/`、`web_deep_docs/`（七节深读，高信息密度），元数据挂 slug+域标记 |
+| 挂进自建检索/问答系统 | chunk 源用 `extraction/fulltext/`（论文全文）+ `repo_deep_docs/`、`web_deep_docs/`（七节深读，高信息密度），元数据挂 slug+域标记 |
 | 写报告/做分享 | `kb_query.py fig <关键词>` 取裁剪单图+引用串，`formula <关键词>` 取 LaTeX 公式直贴 |
 
 

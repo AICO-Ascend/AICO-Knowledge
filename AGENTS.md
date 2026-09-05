@@ -1,8 +1,7 @@
 # AGENTS.md — 面向 AI 系统的入口（AICO-Knowledge）
 
 > 本仓是一个**预消化知识库**：信息的抽取、清洗、多模态理解、结构化组织已在入库时完成。
-> 模型 / Agent / 自建 RAG 无需再做 PDF 解析、图表识别、网页抓取——直接消费结构化产物即可。
-> 注意：本仓是知识库不是 RAG 服务，接入需自行 embedding/检索（建议见下「使用与接入」）。
+> 模型 / Agent / 检索系统无需再做 PDF 解析、图表识别、网页抓取——直接消费结构化产物即可。
 > 人类学习者入口在 [bookshelf/](bookshelf/SHELF.md)；本文件是**机器消费契约**。
 > 同一宏观理念的两面：AI 时代的瓶颈从"找答案"移到"提问题"——
 > 书架让人知道"能问什么"（知识版图），本契约让 Agent 知道"能答什么、去哪取"（消费接口）。
@@ -46,7 +45,7 @@ python3 $KB info <slug>                    # 单篇全卡片
 | `extraction/repo_m3_captions.json` | 代码仓 | 881 张仓内图图文联合解读 | slug#path#fig→解读 |
 | `extraction/web_index.json` | 网页 | 页面注册表（抓取路由/版本线/深读登记） | slug/url/route/title/deep_note |
 
-## 使用与接入（含 RAG 摄取建议）
+## 使用与接入
 
 - **chunk 源**：`extraction/fulltext/<slug>.txt`（论文全文纯文本）；仓/网页域直接读 `repo_deep_docs/`、`web_deep_docs/` 的深读笔记（已是高信息密度摘要，比原文更适合 embedding）
 - **元数据**：chunk 挂 slug + 域标记（paper/repo/web），过滤与混排用
