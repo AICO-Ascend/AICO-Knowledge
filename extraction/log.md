@@ -21,3 +21,5 @@
 ## [2026-09-05] bookshelf v6.1 | 工具名去自建区分 + 图谱动图加密(概念页 hub 菱形节点 19 页按 tag 机械映射挂边, 69→88 节点) + README 增量更新节改三类源清单直链表(论文 bib/repos/webs 点击直达) + 删除主题覆盖章节
 
 ## [2026-09-05] agents | 双类入口确立 — AGENTS.md 机器消费契约(三铁律/9 注册表字段表/RAG 摄取建议/技能导航/三域产物对照) + README 两类入口分区(人类学习者 3 + AI 系统 4); 全仓审视落地 4 优化: ① papers.json 新增 pub_month 权威字段(arXiv YYMM 机械派生, extract_phase1 写入逻辑固化, 修 34 篇 date 混入入库日期问题) ② wiki_index.py 加三域指引附录(index.md 重生成不再丢仓/网页域入口) ③ git 仓瘦身 855MB→696MB(gc.log 清除+prune, 松散对象 8936→5) ④ extraction/README.md 加双入口指针
+
+## [2026-09-05] docs | "先知道有什么,才知道能问什么"理念融入 — README 两类入口节/书架导语/AGENTS.md 三处
