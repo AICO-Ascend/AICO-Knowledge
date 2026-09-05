@@ -14,7 +14,8 @@
   "figs": 4,
   "md": "extraction/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse.md",
   "fulltext": "extraction/fulltext/indexcache-accelerating-sparse-attention-via-cross-layer-index-reuse.txt",
-  "fulltext_chars": 58028
+  "fulltext_chars": 58028,
+  "pub_month": "2026-03"
  },
  {
   "num": 2,
@@ -30,7 +31,8 @@
   "figs": 23,
   "md": "extraction/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.md",
   "fulltext": "extraction/fulltext/medusa-simple-llm-inference-acceleration-framework-with-multiple-decoding-heads.txt",
-  "fulltext_chars": 86865
+  "fulltext_chars": 86865,
+  "pub_month": "2024-01"
  },
  {
   "num": 3,
@@ -47,7 +49,8 @@
   "figs": 7,
   "md": "extraction/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.md",
   "fulltext": "extraction/fulltext/eagle-3-scaling-up-inference-acceleration-of-large-language-models-via-training-time-test.txt",
-  "fulltext_chars": 45552
+  "fulltext_chars": 45552,
+  "pub_month": "2025-03"
  },
  {
   "num": 4,
@@ -63,7 +66,8 @@
   "figs": 9,
   "md": "extraction/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.md",
   "fulltext": "extraction/fulltext/eagle-speculative-sampling-requires-rethinking-feature-uncertainty.txt",
-  "fulltext_chars": 50318
+  "fulltext_chars": 50318,
+  "pub_month": "2024-01"
  },
  {
   "num": 5,
@@ -79,7 +83,8 @@
   "figs": 7,
   "md": "extraction/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees.md",
   "fulltext": "extraction/fulltext/eagle-2-faster-inference-of-language-models-with-dynamic-draft-trees.txt",
-  "fulltext_chars": 46933
+  "fulltext_chars": 46933,
+  "pub_month": "2024-06"
  },
  {
   "num": 6,
@@ -95,7 +100,8 @@
   "figs": 8,
   "md": "extraction/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models.md",
   "fulltext": "extraction/fulltext/block-diffusion-interpolating-between-autoregressive-and-diffusion-language-models.txt",
-  "fulltext_chars": 98874
+  "fulltext_chars": 98874,
+  "pub_month": "2025-03"
  },
  {
   "num": 7,
@@ -111,7 +117,8 @@
   "figs": 5,
   "md": "extraction/dflash-block-diffusion-for-flash-speculative-decoding.md",
   "fulltext": "extraction/fulltext/dflash-block-diffusion-for-flash-speculative-decoding.txt",
-  "fulltext_chars": 54200
+  "fulltext_chars": 54200,
+  "pub_month": "2026-02"
  },
  {
   "num": 8,
@@ -127,7 +134,8 @@
   "figs": 1,
   "md": "extraction/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation.md",
   "fulltext": "extraction/fulltext/dspark-confidence-scheduled-speculative-decoding-with-semi-autoregressive-generation.txt",
-  "fulltext_chars": 102452
+  "fulltext_chars": 102452,
+  "pub_month": "2026-07"
  },
  {
   "num": 9,
@@ -143,7 +151,8 @@
   "figs": 6,
   "md": "extraction/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting.md",
   "fulltext": "extraction/fulltext/jetspec-breaking-the-scaling-ceiling-of-speculative-decoding-with-parallel-tree-drafting.txt",
-  "fulltext_chars": 70018
+  "fulltext_chars": 70018,
+  "pub_month": "2026-06"
  },
  {
   "num": 10,
@@ -160,7 +169,8 @@
   "figs": 24,
   "md": "extraction/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.md",
   "fulltext": "extraction/fulltext/from-atop-to-zcube-automated-topology-optimization-pipeline-and-a-highly-cost-effective-network-topology-for-large-model-training.txt",
-  "fulltext_chars": 107386
+  "fulltext_chars": 107386,
+  "pub_month": "2025/8/27"
  },
  {
   "num": 11,
@@ -176,7 +186,8 @@
   "figs": 12,
   "md": "extraction/kimi-k2-5-visual-agentic-intelligence.md",
   "fulltext": "extraction/fulltext/kimi-k2-5-visual-agentic-intelligence.txt",
-  "fulltext_chars": 95693
+  "fulltext_chars": 95693,
+  "pub_month": "2026-02"
  },
  {
   "num": 12,
@@ -193,7 +204,8 @@
   "figs": 42,
   "md": "extraction/scalable-training-of-mixture-of-experts-models-with-megatron-core.md",
   "fulltext": "extraction/fulltext/scalable-training-of-mixture-of-experts-models-with-megatron-core.txt",
-  "fulltext_chars": 264084
+  "fulltext_chars": 264084,
+  "pub_month": "2026-03"
  },
  {
   "num": 13,
@@ -209,7 +221,8 @@
   "figs": 3,
   "md": "extraction/qwen3-vl-technical-report.md",
   "fulltext": "extraction/fulltext/qwen3-vl-technical-report.txt",
-  "fulltext_chars": 150008
+  "fulltext_chars": 150008,
+  "pub_month": "2025-11"
  },
  {
   "num": 14,
@@ -225,7 +238,8 @@
   "figs": 5,
   "md": "extraction/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.md",
   "fulltext": "extraction/fulltext/deepstack-deeply-stacking-visual-tokens-is-surprisingly-simple-and-effective-for-lmms.txt",
-  "fulltext_chars": 62336
+  "fulltext_chars": 62336,
+  "pub_month": "2024-06"
  },
  {
   "num": 15,
@@ -239,7 +253,8 @@
   "figs": 22,
   "md": "extraction/ascend-950-npu-architecture-whitepaper.md",
   "fulltext": "extraction/fulltext/ascend-950-npu-architecture-whitepaper.txt",
-  "fulltext_chars": 28777
+  "fulltext_chars": 28777,
+  "pub_month": "2026/1/1"
  },
  {
   "num": 16,
@@ -255,7 +270,8 @@
   "figs": 27,
   "md": "extraction/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.md",
   "fulltext": "extraction/fulltext/gepa-reflective-prompt-evolution-can-outperform-reinforcement-learning.txt",
-  "fulltext_chars": 98756
+  "fulltext_chars": 98756,
+  "pub_month": "2025-07"
  },
  {
   "num": 17,
@@ -271,7 +287,8 @@
   "figs": 13,
   "md": "extraction/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills.md",
   "fulltext": "extraction/fulltext/sarathi-efficient-llm-inference-by-piggybacking-decodes-with-chunked-prefills.txt",
-  "fulltext_chars": 76688
+  "fulltext_chars": 76688,
+  "pub_month": "2023-08"
  },
  {
   "num": 18,
@@ -287,7 +304,8 @@
   "figs": 14,
   "md": "extraction/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve.md",
   "fulltext": "extraction/fulltext/taming-throughput-latency-tradeoff-in-llm-inference-with-sarathi-serve.txt",
-  "fulltext_chars": 82501
+  "fulltext_chars": 82501,
+  "pub_month": "2024-03"
  },
  {
   "num": 20,
@@ -303,7 +321,8 @@
   "figs": 2,
   "md": "extraction/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.md",
   "fulltext": "extraction/fulltext/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.txt",
-  "fulltext_chars": 45725
+  "fulltext_chars": 45725,
+  "pub_month": "2026-06"
  },
  {
   "num": 21,
@@ -319,7 +338,8 @@
   "figs": 13,
   "md": "extraction/kimi-vl-technical-report.md",
   "fulltext": "extraction/fulltext/kimi-vl-technical-report.txt",
-  "fulltext_chars": 122024
+  "fulltext_chars": 122024,
+  "pub_month": "2025-04"
  },
  {
   "num": 22,
@@ -333,7 +353,8 @@
   "figs": 7,
   "md": "extraction/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.md",
   "fulltext": "extraction/fulltext/deepseekmath-pushing-the-limits-of-mathematical-reasoning-in-open-language-models.txt",
-  "fulltext_chars": 81353
+  "fulltext_chars": 81353,
+  "pub_month": "2024-02"
  },
  {
   "num": 23,
@@ -347,7 +368,8 @@
   "figs": 4,
   "md": "extraction/high-dimensional-continuous-control-using-generalized-advantage-estimation.md",
   "fulltext": "extraction/fulltext/high-dimensional-continuous-control-using-generalized-advantage-estimation.txt",
-  "fulltext_chars": 43324
+  "fulltext_chars": 43324,
+  "pub_month": "2015-06"
  },
  {
   "num": 24,
@@ -361,7 +383,8 @@
   "figs": 13,
   "md": "extraction/kimi-k2-open-agentic-intelligence.md",
   "fulltext": "extraction/fulltext/kimi-k2-open-agentic-intelligence.txt",
-  "fulltext_chars": 112693
+  "fulltext_chars": 112693,
+  "pub_month": "2025-07"
  },
  {
   "num": 25,
@@ -378,7 +401,8 @@
   "figs": 7,
   "md": "extraction/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning.md",
   "fulltext": "extraction/fulltext/search-r1-training-llms-to-reason-and-leverage-search-engines-with-reinforcement-learning.txt",
-  "fulltext_chars": 100895
+  "fulltext_chars": 100895,
+  "pub_month": "2025-03"
  },
  {
   "num": 26,
@@ -392,7 +416,8 @@
   "figs": 18,
   "md": "extraction/hyper-connections.md",
   "fulltext": "extraction/fulltext/hyper-connections.txt",
-  "fulltext_chars": 82287
+  "fulltext_chars": 82287,
+  "pub_month": "2024-09"
  },
  {
   "num": 27,
@@ -406,7 +431,8 @@
   "figs": 1,
   "md": "extraction/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure.md",
   "fulltext": "extraction/fulltext/bertopic-neural-topic-modeling-with-a-class-based-tf-idf-procedure.txt",
-  "fulltext_chars": 38314
+  "fulltext_chars": 38314,
+  "pub_month": "2022-03"
  },
  {
   "num": 28,
@@ -420,7 +446,8 @@
   "figs": 2,
   "md": "extraction/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning.md",
   "fulltext": "extraction/fulltext/dual-head-reasoning-distillation-improving-classifier-accuracy-with-train-time-only-reasoning.txt",
-  "fulltext_chars": 40047
+  "fulltext_chars": 40047,
+  "pub_month": "2025-09"
  },
  {
   "num": 29,
@@ -434,7 +461,8 @@
   "figs": 2,
   "md": "extraction/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.md",
   "fulltext": "extraction/fulltext/dynamic-large-concept-models-latent-reasoning-in-an-adaptive-semantic-space.txt",
-  "fulltext_chars": 61312
+  "fulltext_chars": 61312,
+  "pub_month": "2025-12"
  },
  {
   "num": 30,
@@ -450,7 +478,8 @@
   "figs": 16,
   "md": "extraction/hybridflow-a-flexible-and-efficient-rlhf-framework.md",
   "fulltext": "extraction/fulltext/hybridflow-a-flexible-and-efficient-rlhf-framework.txt",
-  "fulltext_chars": 109820
+  "fulltext_chars": 109820,
+  "pub_month": "2024-09"
  },
  {
   "num": 31,
@@ -464,7 +493,8 @@
   "figs": 18,
   "md": "extraction/let-it-flow-agentic-crafting-on-rock-and-roll.md",
   "fulltext": "extraction/fulltext/let-it-flow-agentic-crafting-on-rock-and-roll.txt",
-  "fulltext_chars": 160353
+  "fulltext_chars": 160353,
+  "pub_month": "2025-12"
  },
  {
   "num": 32,
@@ -478,7 +508,8 @@
   "figs": 12,
   "md": "extraction/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.md",
   "fulltext": "extraction/fulltext/beyond-ten-turns-unlocking-long-horizon-agentic-search-with-large-scale-asynchronous-rl.txt",
-  "fulltext_chars": 66936
+  "fulltext_chars": 66936,
+  "pub_month": "2025-08"
  },
  {
   "num": 33,
@@ -494,7 +525,8 @@
   "figs": 6,
   "md": "extraction/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning.md",
   "fulltext": "extraction/fulltext/areal-a-large-scale-asynchronous-reinforcement-learning-system-for-language-reasoning.txt",
-  "fulltext_chars": 88470
+  "fulltext_chars": 88470,
+  "pub_month": "2025-05"
  },
  {
   "num": 34,
@@ -510,7 +542,8 @@
   "figs": 6,
   "md": "extraction/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning.md",
   "fulltext": "extraction/fulltext/deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement-learning.txt",
-  "fulltext_chars": 223572
+  "fulltext_chars": 223572,
+  "pub_month": "2025-01"
  },
  {
   "num": 35,
@@ -524,7 +557,8 @@
   "figs": 3,
   "md": "extraction/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models.md",
   "fulltext": "extraction/fulltext/conditional-memory-via-scalable-lookup-a-new-axis-of-sparsity-for-large-language-models.txt",
-  "fulltext_chars": 100228
+  "fulltext_chars": 100228,
+  "pub_month": "2026-01"
  },
  {
   "num": 36,
@@ -538,7 +572,8 @@
   "figs": 8,
   "md": "extraction/hc-manifold-constrained-hyper-connections.md",
   "fulltext": "extraction/fulltext/hc-manifold-constrained-hyper-connections.txt",
-  "fulltext_chars": 55403
+  "fulltext_chars": 55403,
+  "pub_month": "2025-12"
  },
  {
   "num": 37,
@@ -552,7 +587,8 @@
   "figs": 2,
   "md": "extraction/linear-optimal-topic-transport-for-document-similarity.md",
   "fulltext": "extraction/fulltext/linear-optimal-topic-transport-for-document-similarity.txt",
-  "fulltext_chars": 58255
+  "fulltext_chars": 58255,
+  "pub_month": "2026/1/17"
  },
  {
   "num": 38,
@@ -566,7 +602,8 @@
   "figs": 7,
   "md": "extraction/root-mean-square-layer-normalization.md",
   "fulltext": "extraction/fulltext/root-mean-square-layer-normalization.txt",
-  "fulltext_chars": 46403
+  "fulltext_chars": 46403,
+  "pub_month": "2019-10"
  },
  {
   "num": 39,
@@ -582,7 +619,8 @@
   "figs": 6,
   "md": "extraction/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.md",
   "fulltext": "extraction/fulltext/gqa-training-generalized-multi-query-transformer-models-from-multi-head-checkpoints.txt",
-  "fulltext_chars": 23726
+  "fulltext_chars": 23726,
+  "pub_month": "2023-05"
  },
  {
   "num": 40,
@@ -598,7 +636,8 @@
   "figs": 1,
   "md": "extraction/qwen2-5-vl-technical-report.md",
   "fulltext": "extraction/fulltext/qwen2-5-vl-technical-report.txt",
-  "fulltext_chars": 91584
+  "fulltext_chars": 91584,
+  "pub_month": "2025-02"
  },
  {
   "num": 41,
@@ -612,7 +651,8 @@
   "figs": 3,
   "md": "extraction/deepseek-v3-technical-report.md",
   "fulltext": "extraction/fulltext/deepseek-v3-technical-report.txt",
-  "fulltext_chars": 150416
+  "fulltext_chars": 150416,
+  "pub_month": "2024-12"
  },
  {
   "num": 42,
@@ -626,7 +666,8 @@
   "figs": 9,
   "md": "extraction/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding.md",
   "fulltext": "extraction/fulltext/step-3-is-large-yet-affordable-model-system-co-design-for-cost-effective-decoding.txt",
-  "fulltext_chars": 78380
+  "fulltext_chars": 78380,
+  "pub_month": "2025-07"
  },
  {
   "num": 43,
@@ -642,7 +683,8 @@
   "figs": 14,
   "md": "extraction/sglang-efficient-execution-of-structured-language-model-programs.md",
   "fulltext": "extraction/fulltext/sglang-efficient-execution-of-structured-language-model-programs.txt",
-  "fulltext_chars": 79774
+  "fulltext_chars": 79774,
+  "pub_month": "2023-12"
  },
  {
   "num": 44,
@@ -659,7 +701,8 @@
   "figs": 12,
   "md": "extraction/efficiently-serving-large-multimodal-models-using-epd-disaggregation.md",
   "fulltext": "extraction/fulltext/efficiently-serving-large-multimodal-models-using-epd-disaggregation.txt",
-  "fulltext_chars": 69151
+  "fulltext_chars": 69151,
+  "pub_month": "2025-01"
  },
  {
   "num": 45,
@@ -676,7 +719,8 @@
   "figs": 13,
   "md": "extraction/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.md",
   "fulltext": "extraction/fulltext/mooncake-a-kvcache-centric-disaggregated-architecture-for-llm-serving.txt",
-  "fulltext_chars": 81350
+  "fulltext_chars": 81350,
+  "pub_month": "2024-07"
  },
  {
   "num": 46,
@@ -692,7 +736,8 @@
   "figs": 12,
   "md": "extraction/megascale-scaling-large-language-model-training-to-more-than-10000-gpus.md",
   "fulltext": "extraction/fulltext/megascale-scaling-large-language-model-training-to-more-than-10000-gpus.txt",
-  "fulltext_chars": 77210
+  "fulltext_chars": 77210,
+  "pub_month": "2024-02"
  },
  {
   "num": 47,
@@ -708,7 +753,8 @@
   "figs": 8,
   "md": "extraction/zero-memory-optimizations-toward-training-trillion-parameter-models.md",
   "fulltext": "extraction/fulltext/zero-memory-optimizations-toward-training-trillion-parameter-models.txt",
-  "fulltext_chars": 67057
+  "fulltext_chars": 67057,
+  "pub_month": "2019-10"
  },
  {
   "num": 48,
@@ -725,7 +771,8 @@
   "figs": 18,
   "md": "extraction/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm.md",
   "fulltext": "extraction/fulltext/efficient-large-scale-language-model-training-on-gpu-clusters-using-megatron-lm.txt",
-  "fulltext_chars": 74320
+  "fulltext_chars": 74320,
+  "pub_month": "2021-04"
  },
  {
   "num": 49,
@@ -741,7 +788,8 @@
   "figs": 8,
   "md": "extraction/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism.md",
   "fulltext": "extraction/fulltext/megatron-lm-training-multi-billion-parameter-language-models-using-model-parallelism.txt",
-  "fulltext_chars": 68294
+  "fulltext_chars": 68294,
+  "pub_month": "2019-09"
  },
  {
   "num": 50,
@@ -757,7 +805,8 @@
   "figs": 0,
   "md": "extraction/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.md",
   "fulltext": "extraction/fulltext/a-survey-on-large-language-model-acceleration-based-on-kv-cache-management.txt",
-  "fulltext_chars": 233789
+  "fulltext_chars": 233789,
+  "pub_month": "2024-12"
  },
  {
   "num": 51,
@@ -773,7 +822,8 @@
   "figs": 15,
   "md": "extraction/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.md",
   "fulltext": "extraction/fulltext/efficient-training-of-large-language-models-on-distributed-infrastructures-a-survey.txt",
-  "fulltext_chars": 271696
+  "fulltext_chars": 271696,
+  "pub_month": "2024-07"
  },
  {
   "num": 52,
@@ -787,7 +837,8 @@
   "figs": 19,
   "md": "extraction/efficient-memory-management-for-large-language-model-serving-with-pagedattention.md",
   "fulltext": "extraction/fulltext/efficient-memory-management-for-large-language-model-serving-with-pagedattention.txt",
-  "fulltext_chars": 82023
+  "fulltext_chars": 82023,
+  "pub_month": "2023-09"
  },
  {
   "num": 53,
@@ -801,7 +852,8 @@
   "figs": 18,
   "md": "extraction/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference.md",
   "fulltext": "extraction/fulltext/deft-decoding-with-flash-tree-attention-for-efficient-tree-structured-llm-inference.txt",
-  "fulltext_chars": 112630
+  "fulltext_chars": 112630,
+  "pub_month": "2024-04"
  },
  {
   "num": 54,
@@ -815,7 +867,8 @@
   "figs": 11,
   "md": "extraction/nanoflow-towards-optimal-large-language-model-serving-throughput.md",
   "fulltext": "extraction/fulltext/nanoflow-towards-optimal-large-language-model-serving-throughput.txt",
-  "fulltext_chars": 78749
+  "fulltext_chars": 78749,
+  "pub_month": "2024-08"
  },
  {
   "num": 55,
@@ -831,7 +884,8 @@
   "figs": 3,
   "md": "extraction/gated-delta-networks-improving-mamba2-with-delta-rule.md",
   "fulltext": "extraction/fulltext/gated-delta-networks-improving-mamba2-with-delta-rule.txt",
-  "fulltext_chars": 79000
+  "fulltext_chars": 79000,
+  "pub_month": "2024-12"
  },
  {
   "num": 56,
@@ -845,7 +899,8 @@
   "figs": 4,
   "md": "extraction/parallel-scan-on-ascend-ai-accelerators.md",
   "fulltext": "extraction/fulltext/parallel-scan-on-ascend-ai-accelerators.txt",
-  "fulltext_chars": 66637
+  "fulltext_chars": 66637,
+  "pub_month": "2025-05"
  },
  {
   "num": 57,
@@ -859,7 +914,8 @@
   "figs": 16,
   "md": "extraction/kimi-k3-open-frontier-intelligence.md",
   "fulltext": "extraction/fulltext/kimi-k3-open-frontier-intelligence.txt",
-  "fulltext_chars": 189122
+  "fulltext_chars": 189122,
+  "pub_month": "2026-07"
  },
  {
   "num": 58,
@@ -875,7 +931,8 @@
   "figs": 5,
   "md": "extraction/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter.md",
   "fulltext": "extraction/fulltext/prefill-as-a-service-kvcache-of-next-generation-models-could-go-cross-datacenter.txt",
-  "fulltext_chars": 58766
+  "fulltext_chars": 58766,
+  "pub_month": "2026-04"
  },
  {
   "num": 59,
@@ -892,7 +949,8 @@
   "figs": 6,
   "md": "extraction/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification.md",
   "fulltext": "extraction/fulltext/longspec-long-context-lossless-speculative-decoding-with-efficient-drafting-and-verification.txt",
-  "fulltext_chars": 76029
+  "fulltext_chars": 76029,
+  "pub_month": "2025-02"
  },
  {
   "num": 60,
@@ -908,7 +966,8 @@
   "figs": 6,
   "md": "extraction/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences.md",
   "fulltext": "extraction/fulltext/specextend-a-drop-in-enhancement-for-speculative-decoding-of-long-sequences.txt",
-  "fulltext_chars": 44368
+  "fulltext_chars": 44368,
+  "pub_month": "2025-05"
  },
  {
   "num": 61,
@@ -922,7 +981,8 @@
   "figs": 10,
   "md": "extraction/a-survey-of-large-language-models.md",
   "fulltext": "extraction/fulltext/a-survey-of-large-language-models.txt",
-  "fulltext_chars": 860409
+  "fulltext_chars": 860409,
+  "pub_month": "2023-03"
  },
  {
   "num": 62,
@@ -938,7 +998,8 @@
   "figs": 14,
   "md": "extraction/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference.md",
   "fulltext": "extraction/fulltext/kv-cache-optimization-strategies-for-scalable-and-efficient-llm-inference.txt",
-  "fulltext_chars": 91318
+  "fulltext_chars": 91318,
+  "pub_month": "2026-03"
  },
  {
   "num": 63,
@@ -952,7 +1013,8 @@
   "figs": 7,
   "md": "extraction/kimi-linear-an-expressive-efficient-attention-architecture.md",
   "fulltext": "extraction/fulltext/kimi-linear-an-expressive-efficient-attention-architecture.txt",
-  "fulltext_chars": 94726
+  "fulltext_chars": 94726,
+  "pub_month": "2025-10"
  },
  {
   "num": 64,
@@ -968,7 +1030,8 @@
   "figs": 10,
   "md": "extraction/muon-is-scalable-for-llm-training.md",
   "fulltext": "extraction/fulltext/muon-is-scalable-for-llm-training.txt",
-  "fulltext_chars": 55936
+  "fulltext_chars": 55936,
+  "pub_month": "2025-02"
  },
  {
   "num": 65,
@@ -982,7 +1045,8 @@
   "figs": 9,
   "md": "extraction/attention-residuals.md",
   "fulltext": "extraction/fulltext/attention-residuals.txt",
-  "fulltext_chars": 73664
+  "fulltext_chars": 73664,
+  "pub_month": "2026-03"
  },
  {
   "num": 66,
@@ -996,7 +1060,8 @@
   "figs": 6,
   "md": "extraction/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.md",
   "fulltext": "extraction/fulltext/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.txt",
-  "fulltext_chars": 94761
+  "fulltext_chars": 94761,
+  "pub_month": "2025-08"
  },
  {
   "num": 67,
@@ -1012,7 +1077,8 @@
   "figs": 17,
   "md": "extraction/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.md",
   "fulltext": "extraction/fulltext/cacheblend-fast-large-language-model-serving-for-rag-with-cached-knowledge-fusion.txt",
-  "fulltext_chars": 75206
+  "fulltext_chars": 75206,
+  "pub_month": "2024-05"
  },
  {
   "num": 68,
@@ -1026,7 +1092,8 @@
   "figs": 16,
   "md": "extraction/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.md",
   "fulltext": "extraction/fulltext/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.txt",
-  "fulltext_chars": 74680
+  "fulltext_chars": 74680,
+  "pub_month": "2026-02"
  },
  {
   "num": 69,
@@ -1042,7 +1109,8 @@
   "figs": 6,
   "md": "extraction/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning.md",
   "fulltext": "extraction/fulltext/single-rollout-asynchronous-optimization-for-agentic-reinforcement-learning.txt",
-  "fulltext_chars": 45212
+  "fulltext_chars": 45212,
+  "pub_month": "2026-07"
  },
  {
   "num": 70,
@@ -1056,6 +1124,7 @@
   "figs": 4,
   "md": "extraction/rllm-relational-table-learning-with-llms.md",
   "fulltext": "extraction/fulltext/rllm-relational-table-learning-with-llms.txt",
-  "fulltext_chars": 31984
+  "fulltext_chars": 31984,
+  "pub_month": "2024-07"
  }
 ]

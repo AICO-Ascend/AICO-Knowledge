@@ -370,6 +370,10 @@ def main():
                     "tags":slugify_topic(meta["title"])})
             manifest.append({"num":int(num),"title":meta["title"],"slug":slug,
                 "date":meta["date"],"arxiv":meta["abs"],"pdf_url":meta["pdf"],
+                # pub_month: arXiv ID(YYMM) 机械派生的发表年月 —— date 字段对 bib 无 year 的
+                # 条目会落入库日期, 发表时间一律以本字段为权威
+                "pub_month":(lambda m: f"20{m.group(1)}-{m.group(2)}" if m else meta["date"])(
+                    re.search(r'arxiv\.org/(?:abs|pdf)/(\d{2})(\d{2})\.', meta["abs"] or "")),
                 "tags":ptags[num],"pages":doc.page_count,"figs":len(figs),
                 "md":f"extraction/{slug}.md","fulltext":f"extraction/fulltext/{slug}.txt",
                 "fulltext_chars":nch})

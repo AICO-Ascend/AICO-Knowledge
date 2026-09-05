@@ -19,3 +19,5 @@
 ## [2026-09-05] bookshelf v6 | README 美化(三入口名简化/PNG流水线图(英文标签,本机无CJK字体)/流水线描述分行/删上线日期/二级标题emoji统一/动图width=720提速220ms) + 全仓去除人名字样(模型页出处改 InfraTech 项目名, GitHub 人名 URL 全移除) + 模型结构图 11 张全部本地化(尺寸+JPEG magic 双验) + 5 缺失模型卡用 model-arch 技能生成(DeepSeek-V4-Flash/R1/Kimi-Linear/Qwen2.5-VL/GLM-5.3-Flash: HF config 实时解析→HTML+PNG+README, GLM 复合 config text_config 下钻/V4 全 MoE 补丁/R1 bf16 存储参数估算纠偏 ≈671B) + 摘要列文字改 link + 950 白皮书无 arXiv 原始出处回退内部链修复
 
 ## [2026-09-05] bookshelf v6.1 | 工具名去自建区分 + 图谱动图加密(概念页 hub 菱形节点 19 页按 tag 机械映射挂边, 69→88 节点) + README 增量更新节改三类源清单直链表(论文 bib/repos/webs 点击直达) + 删除主题覆盖章节
+
+## [2026-09-05] agents | 双类入口确立 — AGENTS.md 机器消费契约(三铁律/9 注册表字段表/RAG 摄取建议/技能导航/三域产物对照) + README 两类入口分区(人类学习者 3 + AI 系统 4); 全仓审视落地 4 优化: ① papers.json 新增 pub_month 权威字段(arXiv YYMM 机械派生, extract_phase1 写入逻辑固化, 修 34 篇 date 混入入库日期问题) ② wiki_index.py 加三域指引附录(index.md 重生成不再丢仓/网页域入口) ③ git 仓瘦身 855MB→696MB(gc.log 清除+prune, 松散对象 8936→5) ④ extraction/README.md 加双入口指针

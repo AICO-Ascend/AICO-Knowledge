@@ -198,10 +198,25 @@ def build_index():
 | [[figures_index]] | 全部图表主索引（⭐精选） |
 | [[INTERPRETATION_MAP]] | 图/表/公式三层产物与 M3 解读 key 规则 |
 | [[log]] | 编年日志（ingest/lint/crop-fix 动态） |
-| papers.json | 论文 manifest（RAG 摄取入口） |
+| papers.json | 论文 manifest（RAG 摄取入口；发表时间以 pub_month 字段为权威） |
 | visuals.json | 裁剪图 manifest（fig {n_fig} + tab {n_tab} + eq） |
 | minimax_captions.json | M3 图文联合解读（裁剪图 100%） |
 | formulas.json | LaTeX 公式权威库 |
+
+## 代码仓域与网页域（本索引由论文流水线重建 —— 三域全貌入口在此）
+
+| 入口 | 内容 |
+|---|---|
+| repo_inventory.json | 134 仓清单 + 版本血缘 snapshots（重拉留历史快照） |
+| repo_docs_index.json | 21,954 篇仓文档收割索引（九类分类/大纲/图片/互链） |
+| repo_deep_index.json | 1,722 篇仓文档七节深读索引（85 仓） |
+| repo_m3_captions.json | 881 张仓内图图文联合解读 |
+| repo_cards/ + deep/repo-* | 仓卡片（机械骨架 / 分析层） |
+| web_index.json | 网页注册表（抓取路由/版本线/深读登记） |
+| web_deep_docs/ | 网页七节深读（表格逐字还原） |
+| web_moc.md | 网页域知识地图（版本对照结论） |
+| ../AGENTS.md | 面向 AI 系统的机器消费契约（铁律/注册表/RAG 建议） |
+| ../bookshelf/SHELF.md | 面向人类学习者的知识书架（技术栈六层主线） |
 """)
     (OUT / "index.md").write_text(
         "\n".join(lines).replace("%d 篇，按主题", f"{len(plist)} 篇，按主题"),

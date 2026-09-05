@@ -6,7 +6,11 @@
 > **+ 官方文档网页**（docs.vllm.ai / hiascend 文档中心：SPA 抓取路由 + 表格逐字还原深读）。
 > Obsidian 图谱化 + RAG 友好 + Wiki 簿记层。
 
-## 🎯 面向人类学习者的三个入口
+## 🎯 两类入口
+
+**面向人类学习者**：
+
+
 
 | 入口 | 视角 | 里面有什么 |
 |---|---|---|
@@ -15,6 +19,15 @@
 | 🟩 **[NvidiaInfra](bookshelf/nvidia_infra.md)** | GPU 生态 | BasicCUDA 实操收录（CUDA/NCCL/PyTorch 显存，配可编译代码）+ 本库 GPU 栈系统论文深读 |
 
 > 📌 HTML 页面（AscendInfra / 在线小工具）均为自包含单文件：gitcode 文件页显示的是源码，**下载后用浏览器打开即得完整渲染**；仓开启 Pages 后可在线直开。
+
+**面向 AI 系统**（模型 / Agent / RAG——本仓已预消化：抽取、清洗、多模态理解、结构化组织全部完成）：
+
+| 入口 | 内容 |
+|---|---|
+| 🤖 **[AGENTS.md](AGENTS.md)** | 机器消费契约：三条铁律（出处可溯/权威分层/零臆造）+ 注册表清单 + RAG 摄取建议 + Agent 技能导航 |
+| 🔎 **[kb_query.py](skills/paper-extraction/kb_query.py)** | 统一查询 CLI（`--json` 全支持）：search / fig / formula / topics / info |
+| 📇 **[extraction/index.md](extraction/index.md)** | LLM-reads-first 内容目录（先读定位再钻取） |
+| 🧾 **注册表** | [papers.json](extraction/papers.json) · [repo_inventory.json](extraction/repo_inventory.json)（版本血缘）· [repo_deep_index.json](extraction/repo_deep_index.json) · [web_index.json](extraction/web_index.json) |
 
 ## ⚙️ 三条知识流水线（三域 ingest）
 
@@ -251,6 +264,7 @@ python3 skills/paper-extraction/full_pipeline.py --push
 
 ## 📖 文档
 
+- `AGENTS.md` — 🤖 面向 AI 系统的机器消费契约（铁律/注册表/RAG 摄取/技能导航）
 - `bookshelf/` — 📚 三个学习者入口（SHELF.md 知识书架 · ascend_infra.html AscendInfra · nvidia_infra.md NvidiaInfra）+ models/ 模型结构解析 + tools/ 在线小工具；书架由 `skills/bookshelf/bookshelf_build.py` 从注册表幂等生成 + 死链 lint
 - `skills/paper-extraction/SKILL.md` — 操作手册（全链路 + agent 收尾 + 决策树 + 踩坑 + Wiki 三层架构）
 - `skills/paper-extraction/DEEP_LEARNING_PROTOCOL.md` — 夜间深度学习规范
