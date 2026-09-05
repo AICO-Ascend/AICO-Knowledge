@@ -12,26 +12,22 @@
 > 不知道一个概念存在，就永远不会去问它；对着 AI 搞 vibe coding，卡住的第一步往往是提问本身。
 > 这个知识库把 AI Infra 领域的知识版图摆出来，先回答"**有什么**"，让你（和你的 Agent）知道"**能问什么**"。
 
-**面向人类学习者**：
+### 🧑‍🎓 面向人类学习者
 
-
-
-| 入口 | 视角 | 里面有什么 |
-|---|---|---|
-| 📚 **[知识书架](bookshelf/SHELF.md)** | 学习路径 | 技术栈六层主线（Agent→模型/算法→训推框架→算子→系统软件→硬件集群）；知识源直链 arXiv 原文/仓内原始文档，摘要列回本仓萃取总结；模型卡片 + 在线小工具（MFU/显存计算器） |
-| ♨️ **[AscendInfra](bookshelf/ascend_infra.html)** | 开发者全栈 | 独立可视化页面：自绘 AI Core 架构图（910B/950 实测数值）、CANN 分层、算子全景、AscendC 概念卡、知识对照表——数据全部来自本库深读资产 |
-| 🟩 **[NvidiaInfra](bookshelf/nvidia_infra.md)** | GPU 生态 | BasicCUDA 实操收录（CUDA/NCCL/PyTorch 显存，配可编译代码）+ 本库 GPU 栈系统论文深读 |
+- 📚 **[知识书架](bookshelf/SHELF.md)** — 学习路径视角：技术栈六层主线（Agent→模型/算法→训推框架→算子→系统软件→硬件集群）；知识源直链 arXiv 原文/仓内原始文档，摘要列回本仓萃取总结；模型卡片 + 在线小工具（MFU/显存计算器）
+- ♨️ **[AscendInfra](bookshelf/ascend_infra.html)** — 开发者全栈视角：独立可视化页面（自绘 AI Core 架构图 · CANN 分层 · 算子全景 · AscendC 概念卡 · 知识对照表），数据全部来自本库深读资产
+- 🟩 **[NvidiaInfra](bookshelf/nvidia_infra.md)** — GPU 生态视角：BasicCUDA 实操收录（CUDA/NCCL/PyTorch 显存，配可编译代码）+ 本库 GPU 栈系统论文深读
 
 > 📌 HTML 页面（AscendInfra / 在线小工具）均为自包含单文件：gitcode 文件页显示的是源码，**下载后用浏览器打开即得完整渲染**；仓开启 Pages 后可在线直开。
 
-**面向 AI 系统**（模型 / Agent 直接消费——本仓已预消化：抽取、清洗、多模态理解、结构化组织全部完成；**未内置 RAG 系统**，以下是接入与使用方式）：
+### 🤖 面向 AI 系统
 
-| 入口 | 内容 |
-|---|---|
-| 🤖 **[AGENTS.md](AGENTS.md)** | 机器消费契约：三条铁律（出处可溯/权威分层/零臆造）+ 注册表清单 + 接入建议 + Agent 技能导航 |
-| 🔎 **[kb_query.py](skills/paper-extraction/kb_query.py)** | 统一查询 CLI（`--json` 全支持）：search / fig / formula / topics / info |
-| 📇 **[extraction/index.md](extraction/index.md)** | LLM-reads-first 内容目录（先读定位再钻取） |
-| 🧾 **注册表** | [papers.json](extraction/papers.json) · [repo_inventory.json](extraction/repo_inventory.json)（版本血缘）· [repo_deep_index.json](extraction/repo_deep_index.json) · [web_index.json](extraction/web_index.json) |
+模型 / Agent 直接消费——本仓已预消化（抽取、清洗、多模态理解、结构化组织全部完成；**未内置 RAG 系统**）：
+
+- 🤖 **[AGENTS.md](AGENTS.md)** — 机器消费契约：三条铁律（出处可溯/权威分层/零臆造）+ 注册表清单 + 接入建议 + Agent 技能导航
+- 🔎 **[kb_query.py](skills/paper-extraction/kb_query.py)** — 统一查询 CLI（`--json` 全支持）：search / fig / formula / topics / info
+- 📇 **[extraction/index.md](extraction/index.md)** — LLM-reads-first 内容目录（先读定位再钻取）
+- 🧾 **注册表** — [papers.json](extraction/papers.json) · [repo_inventory.json](extraction/repo_inventory.json)（版本血缘）· [repo_deep_index.json](extraction/repo_deep_index.json) · [web_index.json](extraction/web_index.json)
 
 **怎么用**（三种典型姿势）：
 
@@ -40,6 +36,7 @@
 | Claude Code / Agent 直接用 | clone 本仓 → 让 Agent 先读 `AGENTS.md` + `extraction/index.md`，之后所有提问都带深读资产与出处 |
 | 挂进自己的 RAG | chunk 源用 `extraction/fulltext/`（论文全文）+ `repo_deep_docs/`、`web_deep_docs/`（七节深读，高信息密度），元数据挂 slug+域标记 |
 | 写报告/做分享 | `kb_query.py fig <关键词>` 取裁剪单图+引用串，`formula <关键词>` 取 LaTeX 公式直贴 |
+
 
 ## ⚙️ 三条知识流水线（三域 ingest）
 
