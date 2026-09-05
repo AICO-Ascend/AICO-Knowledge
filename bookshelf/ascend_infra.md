@@ -17,8 +17,8 @@
 
 <img src="../docs/images/ai_core_datapath.gif" width="900" alt="AI Core 数据通路动图">
 
-> 动图：数据沿正确路线流动——**青色 Cube 流** GM→L2→L1→L0A/L0B→CUBE→L0C→FixPipe→GM；
-> **粉色 Vector 流** GM→L2→UB→VECTOR→MTE3→GM；**黄色 MTE1** L1→UB。
+> 动图：数据沿正确路线流动——**蓝色 Cube 流** GM→L2→L1→L0A/L0B→CUBE→L0C→FixPipe→GM；
+> **青色 Vector 流** GM→L2→UB→VECTOR→MTE3→GM；**棕色 MTE1** L1→UB。
 > 底部横幅按 LOAD → COMPUTE → WRITE-BACK 三阶段轮转高亮对应通路，CUBE/VECTOR 风扇随计算转动。
 
 三条流水解耦（MTE 搬运 / Cube 矩阵 / Vector 向量）是 double buffer、通信掩盖等一切性能手段的硬件依据。

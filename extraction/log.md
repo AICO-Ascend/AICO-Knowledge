@@ -33,3 +33,5 @@
 ## [2026-09-05] bookshelf v7 | 摘要列全中文(deep核心问题首段≤3句)+L2合并单表+MindIE归并推理+低信息量条目下架(14概念页/11骨架仓卡入泊车场)+ascend_infra.md主入口(html转备份)
 
 ## [2026-09-05] ascend_infra | 硬件节 AI Core 数据通路改动图(render_ai_core.py): 三路数据流闭环动画+三阶段高亮+风扇, 替换 ASCII 图
+
+## [2026-09-05] ascend_infra | AI Core 动图改素色工程风(白底灰线扁平盒), 保留三路数据流/三阶段高亮/风扇
