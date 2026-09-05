@@ -358,6 +358,93 @@ sections:
         difficulty: 3
         note: 反向传播时从 CPU 预取 attention 激活值（H2D 高带宽），替代全重计算——显存与算力的新权衡点
         ascend: MindSpeed-RL 原生特性
+      - ref: reponote:mindspeed:docs/zh/features/dualpipev.md
+        title: MindSpeed DualPipeV 流水并行
+        category: 训练框架
+        heat: 2
+        difficulty: 3
+        note: DualPipe 的昇腾改进变体（与 DeepSeek-V3 论文互证）
+        ascend: MindSpeed 原生特性
+      - ref: reponote:mindspeed:docs/zh/features/compress-tensor.md
+        title: MindSpeed 张量无损压缩
+        category: 训练框架
+        difficulty: 3
+        note: 昇腾无损压缩算子压激活值/优化器状态显存（MLP/Transformer layer/AdamW 三特性）
+        ascend: MindSpeed 原生特性
+      - ref: reponote:mindspeed:docs/zh/features/low-precision-optimizer.md
+        title: MindSpeed 低精度优化器
+        category: 训练框架
+        difficulty: 3
+        note: 优化器状态低精化的原理与精度补偿
+        ascend: MindSpeed 原生特性
+      - ref: reponote:mindspeed:docs/zh/features/aiqos.md
+        title: MindSpeed AI QoS
+        category: 训练框架
+        difficulty: 2
+        note: UB 网络流量冲突的虚拟通道隔离+严格优先级调度（训练侧）
+        ascend: MindSpeed 原生特性
+      - ref: reponote:mindspeed-llm:docs/zh/pytorch/features/mcore/layerwise_disaggregated_training.md
+        title: MindSpeed-LLM 分层解耦训练
+        category: 训练框架
+        heat: 2
+        difficulty: 3
+        note: 7 图详解 layerwise disaggregated 训练架构
+        ascend: MindSpeed-LLM 原生特性
+      - ref: reponote:mindspeed-llm:docs/zh/pytorch/features/mcore/multi-latent-attention.md
+        title: MindSpeed-LLM MLA 特性
+        category: 训练框架
+        heat: 2
+        difficulty: 3
+        note: MLA 在昇腾训练栈的实现（4 图）
+        ascend: MindSpeed-LLM 原生特性
+      - ref: reponote:mindspeed-llm:docs/zh/pytorch/features/mcore/yarn.md
+        title: MindSpeed-LLM YaRN 长上下文扩展
+        category: 训练框架
+        difficulty: 2
+        note: RoPE 插值外推的昇腾实现
+        ascend: MindSpeed-LLM 原生特性
+      - ref: reponote:mindspeed-llm:docs/zh/pytorch/features/mcore/high_availability.md
+        title: MindSpeed-LLM 高可用（副本优化器）
+        category: 训练框架
+        difficulty: 2
+        note: 千卡训练的副本优化器容错设计
+        ascend: MindSpeed-LLM 原生特性
+      - ref: reponote:mindspeed-mm:docs/zh/features/automatic_parallelism_mm.md
+        title: MindSpeed-MM 多模态自动并行
+        category: 训练框架
+        difficulty: 3
+        note: VLM 场景的自动并行切分
+        ascend: MindSpeed-MM 原生特性
+      - ref: reponote:mindspeed-rl:docs/zh/features/partial_rollout.md
+        title: MindSpeed-RL 部分 Rollout
+        category: 训练框架
+        heat: 2
+        difficulty: 3
+        note: RL 长轨迹分片 rollout 机制（5 图）
+        ascend: MindSpeed-RL 原生特性
+      - ref: reponote:mindspeed-rl:docs/zh/features/integrated_worker.md
+        title: MindSpeed-RL 训推一体 Worker
+        category: 训练框架
+        difficulty: 3
+        note: 训推共卡整合架构（4 图）
+        ascend: MindSpeed-RL 原生特性
+      - ref: reponote:mindspeed-rl:docs/zh/features/resharding.md
+        title: MindSpeed-RL 权重 Resharding
+        category: 训练框架
+        difficulty: 3
+        note: 训推两套并行布局间的权重重切分
+        ascend: MindSpeed-RL 原生特性
+      - ref: reponote:mindspeed-rl:docs/zh/features/vpp.md
+        title: MindSpeed-RL 虚拟流水并行（VPP）
+        category: 训练框架
+        difficulty: 3
+        ascend: MindSpeed-RL 原生特性
+      - ref: reponote:mindspeed-rl:docs/zh/features/data_module_design.md
+        title: MindSpeed-RL 数据模块设计（DataModule）
+        category: 训练框架
+        difficulty: 2
+        note: RL 训推多角色多 DP 数据流转设计（16KB 长文）
+        ascend: MindSpeed-RL 原生特性
       - ref: reponote:mindspeed:docs/zh/features/Automatic_Parallelism.md
         title: MindSpeed 自动并行特性
         category: 训练框架
@@ -457,6 +544,62 @@ sections:
         difficulty: 1
         note: vllm-ascend 中文快速上手 + Atlas 硬件支持表
         ascend: 昇腾容器化部署入口
+      - ref: reponote:mindie-llm:docs/zh/user_guide/feature/split_fuse.md
+        title: MindIE SplitFuse 特性
+        category: 推理框架
+        heat: 2
+        difficulty: 3
+        note: Prefill 拆分与 Decode 融合调度（3 图 16.7KB 长文）
+        ascend: MindIE 原生特性
+      - ref: reponote:mindie-llm:docs/zh/user_guide/feature/expert_parallelism_load_balancer.md
+        title: MindIE 专家并行负载均衡（EPLB）
+        category: 推理框架
+        difficulty: 3
+        ascend: MindIE 原生特性
+      - ref: reponote:mindie-motor:docs/zh/design/circuit_breaker_design.md
+        title: MindIE-Motor Coordinator 自熔断设计
+        category: 推理框架
+        difficulty: 2
+        note: 推理编排层的故障隔离设计文档（3 图）
+        ascend: MindIE 原生设计文档
+      - ref: reponote:mindie-sd:docs/zh/features/parallelism.md
+        title: MindIE-SD 并行策略
+        category: 推理框架
+        difficulty: 3
+        note: 多模态推理并行机制（9 图）
+        ascend: MindIE 原生特性
+      - ref: reponote:mindie-sd:docs/zh/features/cache.md
+        title: MindIE-SD 缓存机制
+        category: 推理框架
+        difficulty: 2
+        note: 多模态推理缓存设计（4 图）
+        ascend: MindIE 原生特性
+      - ref: reponote:mindie-sd:docs/zh/features/cpu_offload.md
+        title: MindIE-SD CPU Offload
+        category: 推理框架
+        difficulty: 2
+        ascend: MindIE 原生特性
+      - ref: reponote:mindie-sd:docs/zh/features/share_memory.md
+        title: MindIE-SD 共享内存
+        category: 推理框架
+        difficulty: 2
+        ascend: MindIE 原生特性
+      - ref: reponote:vllm-ascend:docs/source/user_guide/feature_guide/Ai_QoS_introduction_en.md
+        title: vllm-ascend AI QoS
+        category: 推理框架
+        difficulty: 2
+        note: UB 交换机侧流量 QoS（推理侧，与训练侧 AI QoS 同源）
+        ascend: vllm-ascend 原生特性
+      - ref: reponote:xllm:docs/src/content/docs/zh/design/graph_mode_design.md
+        title: xLLM 图模式设计
+        category: 推理框架
+        difficulty: 2
+        note: 推理图模式设计文档（3 图）
+      - ref: reponote:xllm:docs/src/content/docs/zh/design/generative_recommendation_design.md
+        title: xLLM 生成式推荐设计
+        category: 推理框架
+        difficulty: 2
+        note: 生成式推荐场景的全链路设计（9 图）
       # ── MindIE（昇腾商用推理栈, 原独立分区归并于此） ──
       - ref: reponote:mindie-llm:docs/zh/developer_guide/architecture_design/architecture_overview.md
         title: MindIE 架构设计
@@ -568,6 +711,12 @@ sections:
         difficulty: 2
         note: HCCL 用户指南·基于 root 节点信息创建通信域（9 表逐字还原）
         ascend: HCCL 官方手册
+      - ref: reponote:torchair:docs/zh/ascend_ir/features/basic/pattern_fusion_pass.md
+        title: torchair 图融合 Pass
+        category: 系统软件
+        difficulty: 3
+        note: 计算图 pattern 融合的机制与 pass 实现（3 图）
+        ascend: torchair 原生特性
       - ref: reponote:torchair:docs/zh/ascend_ir/features/advanced/cc_parallel.md
         title: torchair 计算与通信并行
         difficulty: 3
