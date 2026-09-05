@@ -102,6 +102,69 @@ class Resolver:
             return ('原始网页', p['url']) if p else None
         return None  # concept/crop/ext 无单一原始出处
 
+    def summary(self, ref):
+        """摘要列内容 (机械提取): 论文=发表月+原文摘要截两句; 仓卡片=定位+tag+提交日期;
+        仓文档=所属仓定位; 网页=标题+备注; 概念页=主题名"""
+        kind, _, rest = ref.partition(':')
+        if kind in ('paper', 'papermd'):
+            slug = rest
+            p = self.reg['papers'].get(slug)
+            if not p:
+                cands = [x for x in self.reg['papers'] if x.startswith(slug)]
+                if len(cands) == 1:
+                    slug = cands[0]
+                    p = self.reg['papers'][slug]
+            if not p:
+                return ''
+            pub = re.search(r'arxiv\.org/abs/(\d{2})(\d{2})\.', p.get('arxiv', ''))
+            pub = f'20{pub.group(1)}-{pub.group(2)}' if pub else (p.get('date') or '')
+            ab = ''
+            md = REPO / 'extraction' / f'{slug}.md'
+            if md.exists():
+                m = re.search(r'> \[!abstract\] 摘要（原文）\n((?:> .*\n)+)',
+                              md.read_text(encoding='utf-8', errors='ignore'))
+                if m:
+                    ab = re.sub(r'^> *', '', m.group(1), flags=re.M).replace('\\', '')
+                    ab = re.sub(r'\d+\.\s*[\U0001F300-\U0001FAFF☀-➿]*\s*', '', ab)
+                    ab = re.sub(r'\s+', ' ', ab).strip()
+                    sents = re.split(r'(?<=[。！？])', ab)
+                    ab = ''.join(sents[:2]).strip()
+                    if len(ab) > 120:
+                        ab = ab[:118] + '…'
+            return f'{pub} · {ab}' if ab else pub
+        if kind == 'repocard':
+            inv = self.reg['inventory'].get(rest) or {}
+            bits = []
+            if inv.get('note'):
+                bits.append(inv['note'])
+            if inv.get('latest_tag'):
+                bits.append(f"最新 {inv['latest_tag']}")
+            if inv.get('commit_date'):
+                bits.append(f"更新于 {str(inv['commit_date'])[:10]}")
+            return ' · '.join(bits)
+        if kind == 'reponote':
+            slug, _, path = rest.partition(':')
+            inv = self.reg['inventory'].get(slug) or {}
+            n = self.reg['notes'].get((slug, path)) or {}
+            bits = [f"仓 {slug} · {n.get('type', 'doc')} 文档"]
+            if inv.get('latest_tag'):
+                bits.append(f"仓最新 {inv['latest_tag']}")
+            return ' · '.join(bits)
+        if kind == 'web':
+            p = self.reg['web'].get(rest) or {}
+            import re as _r
+            toks = _r.findall(r'/(?:latest|[vV]?\d{3,}(?:beta\d*|rc\d*)?)(?=/|$)', p.get('url', ''))
+            ver = '/'.join(t.strip('/') for t in toks)
+            bits = []
+            if ver:
+                bits.append(f'版本线 {ver}')
+            if p.get('fetched_at'):
+                bits.append(f"抓取于 {str(p['fetched_at'])[:10]}")
+            return ' · '.join(bits)
+        if kind == 'concept':
+            return f'概念页 · {rest}'
+        return ''
+
     def resolve(self, ref):
         kind, _, rest = ref.partition(':')
         if kind == 'paper':
@@ -144,8 +207,7 @@ class Resolver:
             link = deep if self._exists(deep) else card
             if not self._exists(link):
                 self.errors.append(f'死链: repocard {rest}')
-            tag = (inv or {}).get('latest_tag') or ''
-            return rest, link, (f'`{tag}`' if tag else '')
+            return rest, link, ''  # 版本 tag 由摘要列携带, 备注列不重复
         if kind == 'web':
             p = self.reg['web'].get(rest)
             link = f'../extraction/web_deep_docs/{rest}.md'
@@ -158,7 +220,8 @@ class Resolver:
             link = f'../wiki/concepts/{rest}.md'
             if not self._exists(link):
                 self.errors.append(f'死链: {link}')
-            return rest, link, ''
+            pretty = rest.replace('-', ' ').title().replace('Kv', 'KV').replace('Rl', 'RL').replace('Llm', 'LLM').replace('Moe', 'MoE').replace('Npu', 'NPU')
+            return f'{pretty}（概念页）', link, ''
         if kind == 'crop':
             link = f'../extraction/assets/crops/{rest}'
             if not self._exists(link):
@@ -214,18 +277,23 @@ def render_section(sec, layers, resolver):
     lines = [f'### {sec["title"]}（{sec["layer"]} {layers[sec["layer"]]}）', '']
     if sec.get('intro'):
         lines += [sec['intro'].strip(), '']
-    lines += ['| 📚 知识源 | 📖 知识分类 | 🔧 层次 | 📜 摘要 | 📄 其他 |',
+    lines += ['| 📚 知识源 | 📖 知识分类 | 🔧 层次 | 📜 深读 | 📄 摘要 |',
               '|---|---|---|---|---|']
-    for item in sec.get('items', []):
+    def sort_key(it):
+        cat = it.get('category') or sec.get('category') or sec['title']
+        _, _, dt = resolver.resolve(it['ref'])
+        return (cat, str(dt))
+    for item in sorted(sec.get('items', []), key=sort_key):
         title, link, auto_note = resolver.resolve(item['ref'])
+        title = item.get('title') or title   # 策展级标题覆盖（注册表标题太笼统时）
         category = item.get('category') or sec.get('category') or sec['title']
-        # 知识源列: 标题链原始出处 (arXiv/仓原始文件/原网页); 无原始出处者链内部页
         orig = resolver.original(item['ref'])
         source_md = f'[{title}]({orig[1]})' if orig else f'[{title}]({link})'
-        # 摘要列: 本仓萃取总结 (深读/卡片/概念页); 无独立萃取产物者 —
         digest_md = '—' if item['ref'].startswith(('ext:', 'crop:')) else f'[link]({link})'
         remarks = render_remarks(item, auto_note, resolver)
-        lines.append(f'| {source_md} | {category} | {sec["layer"]} | {digest_md} | {remarks} |')
+        summary = resolver.summary(item['ref'])
+        tail = ' · '.join(x for x in [summary, remarks] if x)
+        lines.append(f'| {source_md} | {category} | {sec["layer"]} | {digest_md} | {tail} |')
     lines.append('')
     return '\n'.join(lines)
 

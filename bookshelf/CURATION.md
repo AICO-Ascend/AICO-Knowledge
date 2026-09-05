@@ -99,6 +99,7 @@ sections:
         difficulty: 2
         note: GAE 原始论文（RL 基础）
       - ref: reponote:mindspeed-rl:docs/zh/features/EPLB.md
+        title: MindSpeed-RL EPLB 专家负载均衡
         note: 昇腾侧 MoE 负载均衡（RL 场景）
         ascend: MindSpeed-RL 原生
   # ────── L1 Agent · 长周期 ──────
@@ -328,20 +329,25 @@ sections:
         difficulty: 3
         note: 模型-系统协同设计
       - ref: repocard:mindspeed
+        title: MindSpeed（昇腾训练加速库）
+        category: 训练框架
         heat: 3
         difficulty: 2
         note: 昇腾训练加速库卡片（fb-overlap 3 图 M3 解读）
         ascend: 昇腾训练栈核心
       - ref: reponote:mindspeed:docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md
+        title: MindSpeed MoE 前反向通信掩盖（fb-overlap）
         heat: 2
         difficulty: 3
         note: MoE 前反向通信掩盖（含 3 图图文联合解读）
         ascend: MindSpeed 原生特性
       - ref: reponote:mindspeed:docs/zh/features/Automatic_Parallelism.md
+        title: MindSpeed 自动并行特性
         difficulty: 2
         note: 自动并行
         ascend: MindSpeed 原生特性
       - ref: reponote:mindspeed-rl:docs/zh/features/context_parallel.md
+        title: MindSpeed-RL 长序列并行（Context Parallel）
         difficulty: 3
         note: 长序列并行
         ascend: MindSpeed-RL 原生
@@ -387,35 +393,49 @@ sections:
         difficulty: 3
         note: 多模态 EPD 分离
       - ref: repocard:vllm
+        title: vLLM（推理引擎）
+        category: 推理框架
         heat: 3
         difficulty: 2
         note: vLLM 仓卡片（版本线 v0.28.1rc0）
       - ref: repocard:vllm-ascend
+        title: vllm-ascend（vLLM 昇腾后端）
+        category: 推理框架
         heat: 3
         difficulty: 2
         note: 昇腾后端卡片（v0.25.1rc1 · ChunkKdaFwd 发现）
         ascend: 昇腾推理栈核心
       - ref: reponote:vllm-ascend:docs/source/tutorials/features/pd_disaggregation_mooncake_multi_node.md
+        title: vllm-ascend PD 分离实战（Mooncake 多机）
         difficulty: 3
         note: 昇腾 PD 分离实战（Mooncake 多机）
         ascend: vllm-ascend 原生教程
       - ref: reponote:vllm-ascend:docs/source/tutorials/features/dynamic_chunked_pipeline_parallel.md
+        title: vllm-ascend 动态 Chunked 流水并行
         difficulty: 3
         ascend: vllm-ascend 原生教程
       - ref: reponote:xllm:docs/src/content/docs/en/features/disagg_pd.md
+        title: xLLM PD 分离设计
         difficulty: 3
         note: xLLM PD 分离设计
       - ref: reponote:xllm:docs/src/content/docs/en/features/chunked_scheduler.md
+        title: xLLM Chunked 调度器
         difficulty: 2
       - ref: repocard:xllm
+        title: xLLM（京东推理框架）
+        category: 推理框架
         heat: 2
         difficulty: 2
         note: xLLM 卡片（v0.10.1 · GLM-5.3-Flash day-0 时间线）
       - ref: web:vllm-cli-serve
+        title: vLLM serve CLI 参数手册
+        category: 推理框架
         heat: 2
         difficulty: 1
         note: vLLM serve 312 项参数手册（网页深读，逐字还原）
       - ref: web:vllm-ascend-quickstart
+        title: vllm-ascend 快速上手指南
+        category: 推理框架
         difficulty: 1
         note: vllm-ascend 中文快速上手 + Atlas 硬件支持表
         ascend: 昇腾容器化部署入口
@@ -427,26 +447,39 @@ sections:
     category: MindIE
     items:
       - ref: repocard:mindie-llm
+        title: MindIE-LLM（昇腾商用推理引擎）
+        category: 推理框架
         heat: 2
         difficulty: 2
         ascend: 昇腾商用推理引擎
       - ref: reponote:mindie-llm:docs/zh/developer_guide/architecture_design/architecture_overview.md
+        title: MindIE 架构设计
         difficulty: 2
         note: MindIE 架构设计
         ascend: MindIE 原生文档
       - ref: reponote:mindie-llm:docs/zh/user_guide/feature/asynchronous_scheduling.md
+        title: MindIE 异步调度特性
         difficulty: 2
         ascend: MindIE 原生特性
       - ref: reponote:mindie-llm:docs/zh/user_guide/feature/attention_quantization.md
+        title: MindIE Attention 量化特性
         difficulty: 3
         ascend: MindIE 原生特性
       - ref: repocard:mindie-turbo
+        title: MindIE-Turbo（推理加速库）
+        category: 推理框架
         ascend: 昇腾推理加速
       - ref: repocard:mindie-motor
+        title: MindIE-Motor（推理集群编排）
+        category: 推理框架
         ascend: 昇腾推理编排
       - ref: repocard:mindie-sd
+        title: MindIE-SD（多模态推理套件）
+        category: 推理框架
         ascend: 昇腾多模态推理
       - ref: repocard:msmodelslim
+        title: msModelSlim（模型压缩工具链）
+        category: 推理框架
         note: 模型压缩工具链（量化专题归并入此）
         ascend: 昇腾模型压缩
 
@@ -465,34 +498,46 @@ sections:
         note: 昇腾加速器上的并行 scan（线性注意力底层算子）
         ascend: 昇腾算子研究论文（本库独家深读）
       - ref: repocard:triton-ascend
+        title: Triton-Ascend（Triton 昇腾后端）
+        category: 算子
         heat: 2
         difficulty: 2
         note: Triton 昇腾后端（已迁 triton-lang 主线）
         ascend: GPU 算子迁移昇腾的最低门槛
       - ref: reponote:triton-ascend:docs/zh/architecture_design_and_core_features.md
+        title: Triton-Ascend 架构设计与核心特性
         difficulty: 2
         ascend: Triton-Ascend 原生文档
       - ref: reponote:triton-ascend:docs/zh/migration_guide/architecture_difference.md
+        title: Triton-Ascend 昇腾与 GPU 开发差异
         heat: 2
         difficulty: 2
         note: 昇腾与 GPU 的开发差异（迁移必读）
         ascend: 迁移指南
       - ref: repocard:catlass
+        title: CATLASS（Cube 算子模板库）
+        category: 算子
         difficulty: 3
         note: CATLASS——CANN 版 CUTLASS（v1.1.0）
         ascend: 昇腾 Cube 算子模板库
       - ref: repocard:torch_npu_ops
+        title: torch_npu_ops（算子库）
+        category: 算子
         difficulty: 2
         ascend: torch_npu 算子库
       - ref: repocard:xllm_ops
+        title: xllm_ops（高性能算子库）
+        category: 算子
         difficulty: 2
         ascend: xLLM 高性能算子库
       - ref: reponote:vllm-ascend:csrc/attention/chunk_kda_fwd/docs/design.md
+        title: ChunkKdaFwd 算子设计文档
         heat: 2
         difficulty: 3
         note: ChunkKdaFwd 算子设计（KDA 落地的直接证据）
         ascend: vllm-ascend 仓内设计文档
       - ref: reponote:vllm-ascend:csrc/attention/sparse_attention_score/docs/sparse_attention_score_design.md
+        title: SparseAttentionScore 算子设计文档
         difficulty: 3
         note: 稀疏注意力打分算子设计
         ascend: vllm-ascend 仓内设计文档
@@ -507,38 +552,52 @@ sections:
       （本库独家版本对照结论，知识可跨版复用）。
     items:
       - ref: web:ascend-cann-commercial-envvars
+        title: CANN 环境变量参考 · 商用版 900
+        category: 系统软件
         heat: 3
         difficulty: 1
         note: CANN 商用 900 环境变量索引（132 表行逐字还原）
         ascend: CANN 官方手册
       - ref: web:ascend-cann-community-envvars
+        title: CANN 环境变量参考 · 社区版 910beta1
+        category: 系统软件
         heat: 2
         difficulty: 1
         note: 社区 910beta1 版（与商用版一致）
         ascend: CANN 官方手册
       - ref: web:ascend-pytorch-envvars
+        title: Ascend PyTorch 环境变量参考
+        category: 系统软件
         heat: 2
         difficulty: 1
         note: PyTorch NPU 环境变量（22 变量：算子执行/编译/内存/HCCL）
         ascend: Ascend Extension for PyTorch 官方手册
       - ref: web:ascend-cann-hccl-guide
+        title: HCCL 通信域创建指南
+        category: 系统软件
         heat: 2
         difficulty: 2
         note: HCCL 用户指南·基于 root 节点信息创建通信域（9 表逐字还原）
         ascend: HCCL 官方手册
       - ref: repocard:torchair
+        title: torchair（昇腾图编译）
+        category: 系统软件
         difficulty: 2
         note: 图编译（Ascend IR）
         ascend: 昇腾图编译栈
       - ref: reponote:torchair:docs/zh/ascend_ir/features/advanced/cc_parallel.md
+        title: torchair 计算与通信并行
         difficulty: 3
         note: 计算与通信并行（图编译层）
         ascend: torchair 原生特性
       - ref: reponote:torchair:docs/zh/ascend_ir/features/advanced/deterministic.md
+        title: torchair 算子级确定性计算
         difficulty: 2
         note: 算子级确定性计算
         ascend: torchair 原生特性
       - ref: repocard:hccl_transfer
+        title: hccl_transfer（KV cache 传输）
+        category: 系统软件
         difficulty: 2
         note: HCCL KV cache 传输
         ascend: 昇腾集合通信
@@ -563,6 +622,8 @@ sections:
         note: CloudMatrix384 超节点生产实践
         ascend: 华为云超节点论文深读（独家）
       - ref: web:vllm-ascend-quickstart
+        title: vllm-ascend 快速上手指南
+        category: 推理框架
         difficulty: 1
         note: Atlas A2/A3/950DT/300I DUO 支持矩阵
         ascend: 硬件支持表（逐字还原）
