@@ -297,10 +297,10 @@ def render_remarks(item, auto_note, resolver):
 
 
 def render_section(sec, layers, resolver):
-    lines = [f'### {sec["title"]}（{sec["layer"]} {layers[sec["layer"]]}）', '']
+    lines = [f'### {sec["title"]}', '']
     if sec.get('intro'):
         lines += [sec['intro'].strip(), '']
-    lines += ['| 📚 知识源 | 📖 知识分类 | 🔧 层次 | 📜 深读 | 📄 摘要 |',
+    lines += ['| 📚 知识源 | 📖&nbsp;知⁠识⁠分⁠类 | 🔧 层次 | 📜 深读 | 📄 摘要 |',
               '|---|---|---|---|---|']
     def sort_key(it):
         cat = it.get('category') or sec.get('category') or sec['title']
@@ -310,6 +310,8 @@ def render_section(sec, layers, resolver):
         title, link, auto_note = resolver.resolve(item['ref'])
         title = item.get('title') or title   # 策展级标题覆盖（注册表标题太笼统时）
         category = item.get('category') or sec.get('category') or sec['title']
+        # 分类字间插零宽连接符 (U+2060): 禁止浏览器拆行, 把「知识分类」列撑到不折行
+        cat_cell = '⁠'.join(category)
         orig = resolver.original(item['ref'])
         source_md = f'[{title}]({orig[1]})' if orig else f'[{title}]({link})'
         digest_md = '—' if item['ref'].startswith(('ext:', 'crop:')) else f'[link]({link})'
@@ -320,7 +322,7 @@ def render_section(sec, layers, resolver):
         for part in remarks.split(' · ') if remarks else []:
             (syms if part and all(ch in '🔥⚡' for ch in part) else rest_r).append(part)
         tail = ' · '.join(x for x in [' '.join(syms), summary] + rest_r if x)
-        lines.append(f'| {source_md} | {category} | {sec["layer"]} | {digest_md} | {tail} |')
+        lines.append(f'| {source_md} | {cat_cell} | {sec["layer"]} | {digest_md} | {tail} |')
     lines.append('')
     return '\n'.join(lines)
 
