@@ -278,6 +278,39 @@ class Resolver:
         return ' · '.join(out)
 
 
+def guard_rules(cur):
+    """上架铁律的机械闸门 (防架构腐蚀) —— 规则原文见 CURATION.md 头部「上架铁律」。
+    违反即拒绝生成 (非零退出), 不允许带病上架。"""
+    errs = []
+    for sec in cur['sections']:
+        for it in sec.get('items', []):
+            ref = it['ref']
+            kind, _, rest = ref.partition(':')
+            cat = it.get('category') or sec.get('category') or sec['title']
+            where = f"{sec['id']} :: {ref[:60]}"
+            # G1 一跳直达: 概念页种子 (仅链接列表) 不上书架
+            if kind == 'concept':
+                errs.append(f'G1 概念页种子不上书架: {where}')
+            # G2 骨架仓卡不上架: 无分析层 (deep/repo-<slug>.md) 的 repocard 禁止引用
+            if kind == 'repocard' and not (REPO / f'extraction/deep/repo-{rest}.md').exists():
+                errs.append(f'G2 骨架仓卡不上架: {where} — 移入泊车场, 或改链 reponote 深读文档/仓外链')
+            # G3 中文摘要必须有来源: 论文条目须存在 deep 深读且含「核心问题」段
+            if kind == 'paper':
+                deep = REPO / 'extraction' / 'deep' / f'{rest}.md'
+                if not deep.exists():
+                    cands = list((REPO / 'extraction/deep').glob(f'{rest}*.md'))
+                    deep = cands[0] if len(cands) == 1 else deep
+                ok = deep.exists() and re.search(
+                    r'^##\s*(?:\d+\.\s*)?核心问题[^\n]*\n\s*\S',
+                    deep.read_text(encoding='utf-8', errors='ignore'), re.M)
+                if not ok:
+                    errs.append(f'G3 论文缺深读中文摘要来源: {where}')
+            # G4 分类词表收敛: 分类必须在 CATEGORY_ORDER 内 (防词表漂移)
+            if cat not in CATEGORY_ORDER:
+                errs.append(f'G4 未登记分类 "{cat}": {where} — 词表见 bookshelf_build.CATEGORY_ORDER')
+    return errs
+
+
 def render_remarks(item, auto_note, resolver):
     # 备注流: 🔥⚡ 符号最前 → 策展备注 → 资产链接 → 昇腾注记; 日期由摘要列单独携带不重复
     parts = []
@@ -388,6 +421,12 @@ def main():
     args = ap.parse_args()
     reg = load_registries()
     cur = load_curation()
+    guard_errs = guard_rules(cur)
+    if guard_errs:
+        print('✗ 上架铁律违规:')
+        for e in guard_errs:
+            print('  -', e)
+        return 1
     resolver = Resolver(reg)
     shelf = build_shelf(cur, reg, resolver)
     if resolver.errors:
