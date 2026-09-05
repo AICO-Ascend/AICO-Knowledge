@@ -5,7 +5,7 @@
 布局在全图上一次性计算（seed 固定），帧间位置稳定，只有节点/边按时间出现；
 最新一批节点高亮放大（脉冲），旧节点降为常态。
 
-输出: docs/images/kb_topic_graph_growth.gif
+输出: docs/images/kb_topic_graph_growth_v2.gif
 用法: python3 skills/bookshelf/render_graph_growth.py
 """
 import json, re, sys
@@ -22,7 +22,7 @@ from render_kb_graph import TOPIC_COLORS, load, topic_graph  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 IMG = REPO / 'docs' / 'images'
-OUT_GIF = IMG / 'kb_topic_graph_growth.gif'
+OUT_GIF = IMG / 'kb_topic_graph_growth_v2.gif'
 
 N_BATCHES = 12
 

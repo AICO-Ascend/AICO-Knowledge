@@ -57,7 +57,7 @@
 
 | 层 | 本库落地 | 谁写 |
 |---|---|---|
-| **Raw sources**（不可变事实源） | `papers/` PDF + `archive/paper_source_moonlight.bib` + `repos_src/` 稀疏克隆（blob:none，可重拉） | 用户策展 |
+| **Raw sources**（不可变事实源） | `papers/` PDF + `archive/paper_source_moonlight.bib` + `repos_src/` 稀疏克隆（只拉文档不拉全仓，可随时重拉） | 用户策展 |
 | **Wiki**（LLM 全权维护） | `extraction/`（论文: MD/deep/MOC/captions/formulas · 代码仓: repo_inventory/repo_docs/repo_cards/deep/repo-* · 网页: web_docs/web_deep_docs/web_moc）+ `wiki/concepts/` 概念页 + `extraction/index.md` 内容目录 + `extraction/log.md` 编年日志 | LLM |
 | **Schema**（规范） | `skills/paper-extraction/SKILL.md` + `skills/repo-extraction/SKILL.md` + `skills/web-extraction/SKILL.md` + `DEEP_LEARNING_PROTOCOL.md` + 各脚本 docstring | 人与 LLM 共演进 |
 
@@ -65,7 +65,7 @@
 
 1. **Ingest** — `full_pipeline.py --push` 一条命令（10 步：sync → 萃取 → 裁剪 → M3 解读 → 公式 → 合并 → **Lint gate** → 深读队列 → Wiki 索引 → push）
 2. **Query** — 先读 `extraction/index.md`（LLM-reads-first 目录）定位，再钻取；机器走 `kb_query.py --json`。**好答案回填**到 `wiki/concepts/` 复利增长
-3. **Lint** — 全量机审（M3 逐张判决 → 二阶白名单 → 规则重裁 → 复核闭环）；夜间深读 cron 顺带做
+3. **Lint** — 全库自动质检（AI 逐张检查裁剪图 → 白名单复核 → 不合格自动重裁）；夜间定时深读顺带执行
 
 ## ✨ 为什么这个知识库不一样
 
@@ -76,7 +76,7 @@
 
 | 能力 | 做法 | 效果 |
 |---|---|---|
-| **大仓低成本归档** | `--filter=blob:none` + no-cone sparse-checkout：全 tree 免费（git ls-tree），blob 只拉文档与元数据 | 1516 文件的 MindSpeed 只下载 39MB；134 仓全量仅 1.9GB |
+| **大仓低成本归档** | 稀疏克隆：目录树全量可见，但只下载文档与元数据、不拉代码全量 | 1516 文件的 MindSpeed 只下载 39MB；134 仓全量仅 1.9GB |
 | **文档全量收割分类** | 路径启发式九类（feature/api/guide/changelog/readme/design/faq/overview/doc），大纲/图片/内部链接全登记 | 21,954 篇文档索引化；特性文档互链可直接生成特性关系图 |
 | **版本血缘追踪** | inventory 每仓记录 tag/HEAD/版本候选 + **snapshots 追加式历史**（重拉自动保留旧快照） | 仓更新后可做版本间知识 diff 与关联（卡片标注版本线：如 xllm v0.10.1 · GLM-5.3-Flash day-0 时间线） |
 | **机械层/分析层双层写入** | `repo_cards/` 骨架无限重生成，`deep/repo-*` 卡片只播种不覆盖 | LLM 深读内容永不丢失（extract_phase1 overwrite 教训的制度化） |
@@ -90,7 +90,7 @@
 | **图/表理解全走多模态** | 所有架构图/数据流图/表格经 MiniMax-M3 vision 逐张解读，写进 `minimax_captions.json`；**上下文增强**：crop + 论文正文引用段落联合喂 M3（`context_caption.py`，图文锚定原文论述） | 不是"有图"，是"每张图都有可读的技术解读" |
 | **公式以 arXiv LaTeX 源为权威** | e-print 源码抽取，禁止凭训练知识重写；无 LaTeX 源的论文公式裁成原文截图 | `$$` 块直接渲染、完全正确，可粘贴进报告 |
 | **按论文维度一体化深读** | 全文+图+表+公式交织成 6 段结构，前后文一致；图/表/公式/文本**跨元素关联**自动聚合到 `## 方法链` 顶层章节 | 不是孤立片段，是吃透整篇的结构化笔记 |
-| **新增论文一遍过** | `full_pipeline.py` step 7 永久内置 `audit_crops → discriminate_audit → autofix_crops` Lint gate；新论文入库自动机审→白名单→规则重裁闭环 | 不需人工校验，95.5% 一遍过；剩余 hard-case 落 `ar5iv_crops.json`（manual-pdf-region）享 overlay 保护 |
+| **新增论文一遍过** | 新论文入库自动走质检流水线：AI 逐张检查裁剪图 → 白名单复核 → 不合格自动重裁 | 不需人工校验，95.5% 一次通过；少数难例登记到 `ar5iv_crops.json` 永久保护不重裁 |
 
 ### 论文域 · 10 步全链路
 
@@ -103,13 +103,13 @@
 ④ m3_caption (上下文)    crop + 论文引用段落联合喂 M3 → 解读
 ⑤ eprint_formulas        arxiv LaTeX 源（无网自动跳过）
 ⑥ extract_phase1 (merge) 4/5 的增量嵌进 MD
-⑦ ⭐ Lint gate            audit → discriminate → autofix 全库机审闭环
+⑦ ⭐ 自动质检            逐张检查 → 白名单复核 → 自动重裁（全库闭环）
 ⑧ orchestrate_deep_reread 新论文全要素深读队列（夜间执行）
 ⑨ wiki_index             index.md 重建 + 概念页种子 + log.md 记帐
-⑩ token-safe commit+push 推完抹 push URL token，绝不落仓
+⑩ 自动提交+推送        推送密钥用完即抹，绝不落进仓里
 ```
 
-幂等：无新增时 ~1-2 分钟完成。新增论文 = 一次 `full_pipeline.py --push` 即可。
+可重复执行无副作用：没有新增时 1~2 分钟跑完。新增论文 = 一次 `full_pipeline.py --push` 即可。
 
 ### 代码仓域 · 3 阶段 + 深读层
 
@@ -170,7 +170,7 @@ Ascend PyTorch 2600 环境变量 · CANN 商用 900 / 社区 910beta1 环境变�
 
 ## 🕸️ 知识图谱（主题聚类 + 跨论文谱系）
 
-<p align="center"><img src="docs/images/kb_topic_graph_growth.gif" width="720"></p>
+<p align="center"><img src="docs/images/kb_topic_graph_growth_v2.gif" width="720"></p>
 
 > 动图：按 arXiv 发表月份回放知识图谱的生长过程（新进节点红圈高亮，末帧停留）——新知识进来，图谱如何改变一目了然。
 > 静态版：[kb_topic_graph.png](docs/images/kb_topic_graph.png)。节点=论文，颜色=主主题，边=共享主题。Obsidian 打开本仓 → `extraction/MOC.md` 可视化交互式图谱；跨论文演进谱系见 `extraction/moc_relations.md`。
@@ -211,7 +211,7 @@ AICO-knowledge/
 │   ├── extract_visuals.py           #   图/表/公式区域裁剪成单图
 │   ├── context_caption.py           #   ⭐ 上下文增强 M3 解读（crop + 正文引用段落联合喂 M3）
 │   ├── audit_crops.py               #   ⭐ Lint gate step 1：全库 M3 逐张判决
-│   ├── discriminate_audit.py        #   ⭐ Lint gate step 2：二阶白名单
+│   ├── discriminate_audit.py        #   ⭐ 自动质检 step 2：白名单复核
 │   ├── autofix_crops.py             #   ⭐ Lint gate step 3：规则重裁闭环
 │   ├── cross_element_synthesis.py   #   ⭐ 每篇 MD 顶部聚合 fig/tab/eq 论证 → 方法链章节
 │   ├── wiki_index.py                #   📚 LLM Wiki 簿记层（index.md + 概念页种子 + log.md）
@@ -241,7 +241,7 @@ AICO-knowledge/
 │   ├── visuals.json                 #   裁剪图 manifest（fig/tab/eq）
 │   ├── ar5iv_crops.json             #   坏字体/坏结构 PDF 的 ar5iv 替换+手工区域保护清单
 │   ├── minimax_captions.json        #   多模态解读（1600+ 条）
-│   ├── crop_audit.json              #   Lint gate 审计结果（机审判决 + 复核状态）
+│   ├── crop_audit.json              #   自动质检结果（AI 判决 + 复核状态）
 │   ├── web_docs/<slug>.md           #   网页域: 规范化原文（表格还原+链接绝对化）
 │   ├── web_deep_docs/<slug>.md      #   网页域: M3 七节深读（表格逐字还原）
 │   ├── web_index.json               #   网页域: 注册表（路由/版本线/深读登记）
@@ -269,12 +269,12 @@ AICO-knowledge/
 python3 skills/paper-extraction/full_pipeline.py --push
 ```
 
-自动：源表 diff → arXiv 解析 → 分块下载+体检 → 萃取 → **图/表/公式裁剪** → **上下文增强 M3 批量解读新增** → LaTeX 公式 → 深读队列 → **Lint gate（机审→白名单→规则重裁闭环）** → Wiki 簿记 → token-safe push。幂等，无新增 ~1-2 分钟。
+自动：源表 diff → arXiv 解析 → 分块下载+体检 → 萃取 → **图/表/公式裁剪** → **上下文增强 M3 批量解读新增** → LaTeX 公式 → 深读队列 → **自动质检（逐张检查→白名单复核→自动重裁）** → Wiki 簿记 → 自动推送（密钥不落仓）。可重复执行无副作用，无新增时 1~2 分钟。
 
 ## 📖 文档
 
 - `AGENTS.md` — 🤖 面向 AI 系统的机器消费契约（铁律/注册表/RAG 摄取/技能导航）
-- `bookshelf/` — 📚 三个学习者入口（SHELF.md 知识书架 · ascend_infra.html AscendInfra · nvidia_infra.md NvidiaInfra）+ models/ 模型结构解析 + tools/ 在线小工具；书架由 `skills/bookshelf/bookshelf_build.py` 从注册表幂等生成 + 死链 lint
+- `bookshelf/` — 📚 三个学习者入口（SHELF.md 知识书架 · ascend_infra.html AscendInfra · nvidia_infra.md NvidiaInfra）+ models/ 模型结构解析 + tools/ 在线小工具；书架由 `skills/bookshelf/bookshelf_build.py` 从注册表自动生成（改策展文件后重跑一次即可，自动校验死链）
 - `skills/paper-extraction/SKILL.md` — 操作手册（全链路 + agent 收尾 + 决策树 + 踩坑 + Wiki 三层架构）
 - `skills/paper-extraction/DEEP_LEARNING_PROTOCOL.md` — 夜间深度学习规范
 - `skills/repo-extraction/SKILL.md` — 代码仓归档手册（稀疏拉取/文档收割/版本血缘/深读层）
@@ -286,4 +286,4 @@ python3 skills/paper-extraction/full_pipeline.py --push
 
 ---
 
-**现状**：69 唯一论文 ｜ 685 裁剪图 + 429 裁剪表 + 4 公式截图 ｜ 479 LaTeX 公式（58 篇） ｜ 727 ⭐ M3 深度解读（图/表/公式逐张） ｜ 1600+ 图文联合解读（crop+正文段落联合喂 M3） ｜ 69 篇 6 段深读 + 69 篇「方法链」跨元素章节 ｜ 19 页概念页 + index.md/log.md 簿记层（Karpathy LLM Wiki 落地） ｜ 96 张坏字体/坏结构论文裁剪由 ar5iv 原图/手工区域保护 ｜ PDF 0 截断 ｜ Lint gate 全量机审闭环（95.5% 一遍过） ｜ 四铁律全绿 ｜ **代码仓域**：134 仓 · 21,954 篇文档 · 1,719 篇 M3 七节深读 + 881 张图文联合解读 · 版本血缘 snapshots ｜ **网页域**：首批 5 页全通（vLLM CLI 手册 / vllm-ascend 快速上手 / 昇腾环境变量 ×3 + HCCL 指南）｜ **学习者三入口**：知识书架 126 条目（原始出处直链）+ AscendInfra 可视化专区 + NvidiaInfra 货架 + 模型结构解析 6 篇本地化 + 在线小工具 ×2。
+**现状**：69 唯一论文 ｜ 685 裁剪图 + 429 裁剪表 + 4 公式截图 ｜ 479 LaTeX 公式（58 篇） ｜ 727 ⭐ M3 深度解读（图/表/公式逐张） ｜ 1600+ 图文联合解读（crop+正文段落联合喂 M3） ｜ 69 篇 6 段深读 + 69 篇「方法链」跨元素章节 ｜ 19 页概念页 + index.md/log.md 簿记层（Karpathy LLM Wiki 落地） ｜ 96 张坏字体/坏结构论文裁剪由 ar5iv 原图/手工区域保护 ｜ PDF 0 截断 ｜ 裁剪图全库自动质检（95.5% 一次通过） ｜ 四铁律全绿 ｜ **代码仓域**：134 仓 · 21,954 篇文档 · 1,719 篇 M3 七节深读 + 881 张图文联合解读 · 版本血缘 snapshots ｜ **网页域**：首批 5 页全通（vLLM CLI 手册 / vllm-ascend 快速上手 / 昇腾环境变量 ×3 + HCCL 指南）｜ **学习者三入口**：知识书架 126 条目（原始出处直链）+ AscendInfra 可视化专区 + NvidiaInfra 货架 + 模型结构解析 6 篇本地化 + 在线小工具 ×2。
