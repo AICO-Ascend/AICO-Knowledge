@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AICO-Knowledge · 在线可视化与工具</title>
+<style>
+ body{font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+      background:#f7f9fc;color:#1f2937;max-width:880px;margin:0 auto;padding:48px 24px}
+ h1{font-size:26px;margin-bottom:4px}
+ .sub{color:#6b7280;margin-bottom:32px}
+ .card{display:block;background:#fff;border:1px solid #e2e8f0;border-radius:12px;
+       padding:20px 24px;margin-bottom:16px;text-decoration:none;color:inherit;
+       transition:box-shadow .15s}
+ .card:hover{box-shadow:0 4px 16px rgba(30,64,175,.10);border-color:#bfdbfe}
+ .card h2{font-size:18px;margin:0 0 6px}
+ .card p{margin:0;color:#6b7280;font-size:14px;line-height:1.6}
+ .tag{display:inline-block;font-size:12px;background:#eff6ff;color:#1d4ed8;
+      border-radius:4px;padding:1px 8px;margin-left:8px;vertical-align:middle}
+ footer{margin-top:40px;color:#9ca3af;font-size:13px}
+ a.src{color:#4b5563}
+</style></head><body>
+<h1>AICO-Knowledge · 在线可视化与工具</h1>
+<p class="sub">昇腾亲和的 AI Infra 知识库 —— 本页是由 GitHub Pages 托管的在线入口（代码主仓在 gitcode）</p>
+
+<a class="card" href="pages/ascend_infra.html">
+  <h2>♨️ AscendInfra 昇腾全栈知识专区<span class="tag">可视化</span></h2>
+  <p>AI Core 架构与数据通路 · AscendC 概念体系 · 算子全景 · CANN/HCCL 手册速查 ·
+     训推框架与模型落地映射 · 知识对照表——全部内容链回知识库深读资产。</p>
+</a>
+
+<a class="card" href="pages/tools/mfu_calculator.html">
+  <h2>🧮 MFU 计算器<span class="tag">工具</span></h2>
+  <p>6ND 公式在线估算训练算力利用率与训练时长，内置 H800 / A800 / 910B 预设。</p>
+</a>
+
+<a class="card" href="pages/tools/kv_memory_calculator.html">
+  <h2>🧮 推理显存 & KV Cache 计算器<span class="tag">工具</span></h2>
+  <p>权重 + KV cache 显存估算，支持 MHA / GQA / MLA 三种注意力结构对照。</p>
+</a>
+
+<footer>
+  知识库主仓（论文/代码仓/网页三域深读资产）：
+  <a class="src" href="https://gitcode.com/AICO-Ascend/AICO-knowledge">gitcode.com/AICO-Ascend/AICO-knowledge</a>
+  · 本页由 <code>skills/bookshelf/publish_pages.py</code> 装配生成
+</footer>
+</body></html>

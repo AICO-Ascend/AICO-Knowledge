@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推理显存 & KV Cache 计算器 | AICO-Knowledge 工具</title>
+<style>
+  body { font-family: "PingFang SC","Noto Sans SC",system-ui,sans-serif; background:#f7f8fa; color:#1d2129;
+         max-width: 880px; margin: 0 auto; padding: 32px 20px; line-height: 1.6; }
+  h1 { font-size: 24px; } h1 small { font-size: 13px; color:#86909c; font-weight:400; }
+  .card { background:#fff; border:1px solid #e5e6eb; border-radius:12px; padding:20px 22px; margin:16px 0; }
+  label { font-size:13.5px; color:#4e5969; display:block; margin:10px 0 3px; }
+  input, select { padding:7px 10px; border:1px solid #c9cdd4; border-radius:7px; font-size:14px; width:170px; }
+  .row { display:flex; flex-wrap:wrap; gap:18px; }
+  .out { font-family:Consolas,monospace; font-size:15px; background:#0f1f3d; color:#a3f7bf;
+         border-radius:10px; padding:16px 18px; white-space:pre-wrap; }
+  .bar { height:22px; border-radius:6px; display:flex; overflow:hidden; margin-top:10px; font-size:12px; color:#fff; }
+  .bar div { display:flex; align-items:center; justify-content:center; min-width:2px; }
+  a { color:#C7000B; } .hint { font-size:12.5px; color:#86909c; }
+</style>
+</head>
+<body>
+<h1>推理显存 & KV Cache 计算器 <small>AICO-Knowledge · <a href="../SHELF.md">← 知识书架</a></small></h1>
+
+<div class="card">
+  <div class="row">
+    <div><label>模型预设</label>
+      <select id="preset">
+        <option value="custom">自定义</option>
+        <option value="dsv3">DeepSeek-V3（MLA · 61 层 · 7168 隐层）</option>
+        <option value="qwen3-32b">Qwen3-32B（GQA 8 组 · 64 层）</option>
+        <option value="llama70b">Llama-3-70B（GQA 8 组 · 80 层）</option>
+      </select></div>
+    <div><label>注意力类型</label>
+      <select id="attn">
+        <option value="mha">MHA</option>
+        <option value="gqa" selected>GQA / MQA</option>
+        <option value="mla">MLA（低秩压缩）</option>
+      </select></div>
+  </div>
+  <div class="row">
+    <div><label>层数 L</label><input id="L" type="number" value="64"></div>
+    <div><label>隐层 d_model</label><input id="d" type="number" value="5120"></div>
+    <div><label>KV 头数 n_kv（GQA）</label><input id="nkv" type="number" value="8"></div>
+    <div><label>head_dim</label><input id="dh" type="number" value="128"></div>
+  </div>
+  <div class="row">
+    <div><label>MLA: kv_lora_rank</label><input id="rank" type="number" value="512"></div>
+    <div><label>MLA: qk_rope_head_dim</label><input id="rope" type="number" value="64"></div>
+    <div><label>KV 精度</label>
+      <select id="dtype"><option value="2">FP16/BF16（2B）</option><option value="1">FP8/INT8（1B）</option></select></div>
+  </div>
+  <div class="row">
+    <div><label>权重参数量（B）</label><input id="params" type="number" value="32"></div>
+    <div><label>权重精度</label>
+      <select id="wdtype"><option value="2">BF16（2B）</option><option value="1">FP8/INT8（1B）</option><option value="0.5">INT4（0.5B）</option></select></div>
+    <div><label>上下文长度</label><input id="ctx" type="number" value="8192" step="1024"></div>
+    <div><label>并发 batch</label><input id="bs" type="number" value="32"></div>
+  </div>
+</div>
+
+<div class="card"><div class="out" id="out"></div><div class="bar" id="bar"></div></div>
+<p class="hint">KV cache/token = 层数 × KV 维度 × 2(K+V) × 字节数。MLA 每 token 只存压缩潜向量
+c_kv（kv_lora_rank）+ rope 分量（qk_rope_head_dim），与头数无关——这是 MLA 显存优势的来源
+（对照 DeepSeek-V3：512+64=576 维 vs MHA 128 头×128 维×2=32768 维）。
+未计入激活/框架开销（经验 +10~20%）。</p>
+
+<script>
+const $ = id => document.getElementById(id);
+const PRESETS = {
+  'dsv3':      {attn:'mla', L:61, d:7168, nkv:128, dh:128, rank:512, rope:64, params:671},
+  'qwen3-32b': {attn:'gqa', L:64, d:5120, nkv:8,  dh:128, params:32},
+  'llama70b':  {attn:'gqa', L:80, d:8192, nkv:8,  dh:128, params:70},
+};
+function calc() {
+  const L=+$('L').value, dt=+$('dtype').value, ctx=+$('ctx').value, bs=+$('bs').value;
+  let kvDim;
+  if ($('attn').value === 'mla') kvDim = +$('rank').value + +$('rope').value;   // c_kv + rope, K/V 合一
+  else kvDim = +$('nkv').value * +$('dh').value * 2;                            // K+V
+  const kvPerTok = L * kvDim * dt;                        // bytes/token/seq
+  const kvGB = kvPerTok * ctx * bs / 1e9;
+  const wGB = +$('params').value * 1e9 * +$('wdtype').value / 1e9;
+  const total = kvGB + wGB;
+  const mhaDim = L * 128 * (+$('dh').value) * 2 * dt;     // 同模型 MHA 对照(128 头)
+  const ratio = $('attn').value==='mla' ? (mhaDim/kvPerTok).toFixed(1) : null;
+  $('out').textContent =
+`KV cache / token / 序列 = ${(kvPerTok/1024).toFixed(1)} KB（${$('attn').value.toUpperCase()}）
+KV cache 总量 (${bs} × ${ctx} ctx) = ${kvGB.toFixed(1)} GB
+模型权重 = ${wGB.toFixed(1)} GB
+合计 ≈ ${total.toFixed(1)} GB（未计激活/开销）`
++ (ratio ? `\n对照 MHA(128 头): MLA 压缩比 ≈ ${ratio}×` : '');
+  const wp = wGB/total*100, kp = kvGB/total*100;
+  $('bar').innerHTML =
+    `<div style="width:${wp}%;background:#C7000B">权重 ${wp.toFixed(0)}%</div>` +
+    `<div style="width:${kp}%;background:#0f1f3d">KV ${kp.toFixed(0)}%</div>`;
+}
+$('preset').onchange = () => {
+  const p = PRESETS[$('preset').value];
+  if (p) { for (const k of ['L','d','nkv','dh','rank','rope','params']) if (p[k]!==undefined) $(k).value=p[k];
+           $('attn').value = p.attn; }
+  calc();
+};
+document.querySelectorAll('input,select').forEach(e => e.addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>

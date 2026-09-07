@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AscendInfra · 昇腾全栈知识专区 | AICO-Knowledge</title>
+<style>
+  :root {
+    --ascend-red: #C7000B; --ink: #1d2129; --sub: #4e5969; --faint: #86909c;
+    --bg: #f7f8fa; --card: #ffffff; --line: #e5e6eb; --chip: #f2f3f5;
+    --gold: #b7860b; --deep: #0f1f3d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+         background: var(--bg); color: var(--ink); line-height: 1.65; }
+  a { color: var(--ascend-red); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── hero ── */
+  .hero { background: linear-gradient(135deg, #1a0505 0%, #4a0e10 45%, #7a1512 100%);
+          color: #fff; padding: 72px 0 56px; }
+  .hero .brand { font-size: 13px; letter-spacing: 3px; color: #f0b8a0; text-transform: uppercase; }
+  .hero h1 { font-size: 42px; font-weight: 700; margin: 12px 0 6px; }
+  .hero h1 .zh { font-size: 24px; font-weight: 400; opacity: .85; margin-left: 12px; }
+  .hero p.sub { color: #e8c9c0; max-width: 760px; font-size: 15px; }
+  .hero .meta { margin-top: 18px; font-size: 13px; color: #d9a898; }
+  .hero .meta b { color: #fff; }
+
+  /* ── nav ── */
+  .nav { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.94);
+         backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .nav .wrap { display: flex; gap: 4px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  .nav a { white-space: nowrap; font-size: 13.5px; color: var(--sub); padding: 5px 12px;
+           border-radius: 999px; background: var(--chip); }
+  .nav a:hover { background: var(--ascend-red); color: #fff; text-decoration: none; }
+
+  /* ── sections ── */
+  section.layer { padding: 56px 0 8px; }
+  .layer-tag { display: inline-block; font-size: 12px; font-weight: 700; color: #fff;
+               background: var(--ascend-red); border-radius: 4px; padding: 2px 10px; letter-spacing: 1px; }
+  .layer h2 { font-size: 26px; margin: 10px 0 4px; }
+  .layer .lead { color: var(--sub); font-size: 14.5px; max-width: 840px; margin-bottom: 24px; }
+
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .g4 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+          padding: 18px 20px; box-shadow: 0 1px 3px rgba(15,31,61,.05); }
+  .card h3 { font-size: 16px; margin-bottom: 6px; }
+  .card h3 .ver { font-size: 12px; color: var(--gold); font-weight: 600; margin-left: 8px; }
+  .card p, .card li { font-size: 13.5px; color: var(--sub); }
+  .card ul { padding-left: 18px; }
+  .card .links { margin-top: 10px; font-size: 13px; }
+  .card .links a { display: inline-block; margin-right: 10px; }
+  .num { font-family: "SF Mono", Consolas, monospace; color: var(--deep); font-weight: 600; }
+
+  .fact { display: flex; justify-content: space-between; padding: 7px 0;
+          border-bottom: 1px dashed var(--line); font-size: 13.5px; }
+  .fact:last-child { border-bottom: none; }
+  .fact b { color: var(--deep); font-family: Consolas, monospace; font-size: 13px; }
+
+  .badge { display: inline-block; font-size: 12px; background: #fdf3e7; color: var(--gold);
+           border: 1px solid #f0d9ae; border-radius: 999px; padding: 2px 10px; margin: 2px 4px 2px 0; }
+  .badge.hot { background: #fdeceb; color: var(--ascend-red); border-color: #f3c1bb; }
+  .badge.dupe { background: #e9f6ec; color: #1a7f37; border-color: #b7e2c1; }
+
+  .figure { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+            padding: 22px; margin: 18px 0; overflow-x: auto; }
+  .figure .cap { font-size: 12.5px; color: var(--faint); margin-top: 10px; text-align: center; }
+
+  table.t { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--card);
+            border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+  table.t th { background: var(--deep); color: #fff; text-align: left; padding: 10px 14px; font-size: 13px; }
+  table.t td { padding: 9px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+  table.t tr:hover td { background: #fafbfc; }
+
+  .path { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; }
+  .path .node { background: var(--chip); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
+  .path .arr { color: var(--ascend-red); font-weight: 700; }
+
+  footer { margin: 64px 0 40px; padding-top: 24px; border-top: 1px solid var(--line);
+           color: var(--faint); font-size: 12.5px; }
+  .gap li { font-size: 13.5px; color: var(--sub); margin-left: 20px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="brand">AICO-Knowledge · 双入口之二</div>
+    <h1>AscendInfra<span class="zh">昇腾全栈知识专区</span></h1>
+    <p class="sub">以开发者的视角自下而上展开昇腾技术栈：从芯片架构与超节点出发，穿过 CANN/HCCL 系统软件与
+      AscendC 算子层，抵达训推框架、模型算法与 Agent 系统。全部内容链回本库深读资产——
+      论文机制、仓内设计文档、官方手册逐字还原，处处有出处。</p>
+    <div class="meta">数据基础：<b>69</b> 篇论文深读 · <b>134</b> 仓归档（<b>1,719</b> 篇文档七节深读）·
+      <b>6</b> 页官方手册深读 · 配套入口 <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/bookshelf/SHELF.md" style="color:#ffd9c9">📚 知识书架（学习路径视角）</a></div>
+  </div>
+</header>
+
+<nav class="nav"><div class="wrap">
+  <a href="#l6">L6 硬件/集群</a><a href="#l5">L5 系统软件</a><a href="#l4">L4 算子</a>
+  <a href="#l3">L3 训推框架</a><a href="#l2">L2 模型/算法</a><a href="#l1">L1 Agent</a>
+  <a href="#cross">知识对照</a><a href="#repos">仓全景</a><a href="#gaps">共同缺口</a>
+</div></nav>
+
+<main class="wrap">
+
+<!-- ═══════════ L6 硬件/集群 ═══════════ -->
+<section class="layer" id="l6">
+  <span class="layer-tag">L6 · 硬件 / 集群</span>
+  <h2>芯片架构与超节点</h2>
+  <p class="lead">理解昇腾的一切优化从这张图开始：计算（Cube/Vector/Scalar）、存储（GM→L2→L1→L0→UB 层次）、
+    搬运（MTE  DMA 引擎）三类资源的分工，决定了算子设计的全部约束。图中数值来自本库深读的
+    910B/A2/A3 抽象架构文档与昇腾 950 架构白皮书。</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 1000 420" width="100%" style="min-width:720px" font-family="PingFang SC, Noto Sans SC, sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#C7000B"/>
+        </marker>
+        <marker id="arrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#86909c"/>
+        </marker>
+      </defs>
+      <!-- GM / L2 -->
+      <rect x="20" y="30" width="150" height="90" rx="10" fill="#0f1f3d"/>
+      <text x="95" y="66" fill="#fff" font-size="17" text-anchor="middle" font-weight="700">GM (HBM)</text>
+      <text x="95" y="90" fill="#9fb3d9" font-size="12" text-anchor="middle">Global Memory · 外部存储</text>
+      <rect x="20" y="150" width="150" height="56" rx="10" fill="#2a3d63"/>
+      <text x="95" y="174" fill="#fff" font-size="14" text-anchor="middle" font-weight="600">L2 Cache</text>
+      <text x="95" y="194" fill="#9fb3d9" font-size="11.5" text-anchor="middle">多核共享缓冲</text>
+      <!-- AI Core 外框 -->
+      <rect x="230" y="20" width="560" height="380" rx="14" fill="#fdf6f5" stroke="#C7000B" stroke-width="1.6" stroke-dasharray="6 4"/>
+      <text x="510" y="44" font-size="15" text-anchor="middle" fill="#C7000B" font-weight="700">AI Core（达芬奇核心）</text>
+      <!-- AIC 列 -->
+      <rect x="255" y="60" width="250" height="320" rx="10" fill="#fff" stroke="#e5c0bd"/>
+      <text x="380" y="82" font-size="13.5" text-anchor="middle" font-weight="700" fill="#7a1512">AIC · Cube 矩阵列</text>
+      <rect x="272" y="94" width="216" height="40" rx="7" fill="#f2f3f5" stroke="#c9cdd4"/>
+      <text x="380" y="119" font-size="12.5" text-anchor="middle">Scalar 0（指令发射/控制）</text>
+      <rect x="272" y="142" width="216" height="40" rx="7" fill="#fdeceb" stroke="#e2a49e"/>
+      <text x="380" y="160" font-size="12.5" text-anchor="middle" font-weight="600">L1 Buffer <tspan font-family="Consolas">512 KB</tspan></text>
+      <text x="380" y="176" font-size="11" text-anchor="middle" fill="#86909c">计算与外部的大容量交换区</text>
+      <rect x="272" y="190" width="104" height="36" rx="7" fill="#fdf3e7" stroke="#e3c88f"/>
+      <text x="324" y="212" font-size="12" text-anchor="middle">L0A <tspan font-family="Consolas">64 KB</tspan></text>
+      <rect x="384" y="190" width="104" height="36" rx="7" fill="#fdf3e7" stroke="#e3c88f"/>
+      <text x="436" y="212" font-size="12" text-anchor="middle">L0B <tspan font-family="Consolas">64 KB</tspan></text>
+      <rect x="272" y="234" width="216" height="52" rx="7" fill="#C7000B"/>
+      <text x="380" y="256" font-size="13" text-anchor="middle" fill="#fff" font-weight="700">Cube Core</text>
+      <text x="380" y="275" font-size="11" text-anchor="middle" fill="#ffd9c9">矩阵乘加 · 16×16×16 FP16/拍</text>
+      <rect x="272" y="294" width="216" height="36" rx="7" fill="#fdf3e7" stroke="#e3c88f"/>
+      <text x="380" y="317" font-size="12" text-anchor="middle">L0C <tspan font-family="Consolas">128–256 KB</tspan> · 结果累加</text>
+      <rect x="272" y="338" width="216" height="30" rx="7" fill="#f2f3f5" stroke="#c9cdd4"/>
+      <text x="380" y="358" font-size="11.5" text-anchor="middle">FixPipe（结果修僵/量化随路）</text>
+      <!-- AIV 列 -->
+      <rect x="520" y="60" width="245" height="320" rx="10" fill="#fff" stroke="#e5c0bd"/>
+      <text x="642" y="82" font-size="13.5" text-anchor="middle" font-weight="700" fill="#7a1512">AIV × 2 · Vector 向量列</text>
+      <rect x="537" y="94" width="211" height="36" rx="7" fill="#f2f3f5" stroke="#c9cdd4"/>
+      <text x="642" y="117" font-size="12" text-anchor="middle">Scalar 1 / 2（控制）</text>
+      <rect x="537" y="138" width="211" height="46" rx="7" fill="#e8f1fd" stroke="#a3bfe8"/>
+      <text x="642" y="157" font-size="12.5" text-anchor="middle" font-weight="600">Unified Buffer (UB)</text>
+      <text x="642" y="175" font-size="11" text-anchor="middle" fill="#4e5969">910B: <tspan font-family="Consolas">192 KB</tspan> → 950: 单核 2×256 KB</text>
+      <rect x="537" y="192" width="211" height="52" rx="7" fill="#0f1f3d"/>
+      <text x="642" y="214" font-size="13" text-anchor="middle" fill="#fff" font-weight="700">Vector Core</text>
+      <text x="642" y="233" font-size="11" text-anchor="middle" fill="#9fb3d9">element-wise · 128×128 FP16 lane</text>
+      <rect x="537" y="252" width="211" height="34" rx="7" fill="#f2f3f5" stroke="#c9cdd4"/>
+      <text x="642" y="274" font-size="11.5" text-anchor="middle">Register File（SIMD/SIMT 混合）</text>
+      <rect x="537" y="294" width="211" height="74" rx="7" fill="#f7f8fa" stroke="#c9cdd4"/>
+      <text x="642" y="316" font-size="12" text-anchor="middle" font-weight="600">MTE1 / MTE2 / MTE3</text>
+      <text x="642" y="335" font-size="11" text-anchor="middle" fill="#86909c">DMA 搬运引擎：L1↔L0 / GM↔L1·UB</text>
+      <text x="642" y="352" font-size="11" text-anchor="middle" fill="#86909c">/ UB↔GM 回写</text>
+      <!-- 右侧数据通路 -->
+      <rect x="812" y="30" width="172" height="370" rx="12" fill="#fff" stroke="#e5e6eb"/>
+      <text x="898" y="56" font-size="13" text-anchor="middle" font-weight="700" fill="#1d2129">数据通路（生命周期）</text>
+      <text x="824" y="86" font-size="11.5" fill="#4e5969">① GM → L2 → L1（MTE2）</text>
+      <text x="824" y="112" font-size="11.5" fill="#4e5969">② L1 → L0A/L0B（MTE1）</text>
+      <text x="824" y="138" font-size="11.5" fill="#4e5969">③ Cube 计算 → L0C</text>
+      <text x="824" y="164" font-size="11.5" fill="#4e5969">④ L0C → GM（FixPipe/MTE3）</text>
+      <text x="824" y="196" font-size="11.5" fill="#C7000B" font-weight="600">向量支路：</text>
+      <text x="824" y="220" font-size="11.5" fill="#4e5969">GM ↔ UB ↔ Vector</text>
+      <text x="824" y="250" font-size="11.5" fill="#C7000B" font-weight="600">三条流解耦并行：</text>
+      <text x="824" y="274" font-size="11.5" fill="#4e5969">指令流（Scalar）</text>
+      <text x="824" y="296" font-size="11.5" fill="#4e5969">同步信号流（Set/WaitFlag）</text>
+      <text x="824" y="318" font-size="11.5" fill="#4e5969">数据流（MTE）</text>
+      <text x="824" y="350" font-size="11.5" fill="#86909c">→ 双 buffer 流水与通信掩盖</text>
+      <text x="824" y="368" font-size="11.5" fill="#86909c">的硬件根因</text>
+      <!-- arrows GM→AIC -->
+      <line x1="170" y1="75" x2="268" y2="110" stroke="#C7000B" stroke-width="2" marker-end="url(#arr)"/>
+      <line x1="170" y1="178" x2="268" y2="165" stroke="#86909c" stroke-width="1.6" marker-end="url(#arrg)"/>
+    </svg>
+    <div class="cap">AI Core 抽象架构与数据通路（本页自绘）· 数值出处：
+      <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/agent-skills/community/Op/ascendc-operator-design/references/hardware-architecture.md">910B/A2/A3 抽象硬件架构深读</a>
+      · <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/ascend-950-npu-architecture-whitepaper.md">昇腾 950 架构白皮书深读</a></div>
+  </div>
+
+  <div class="grid g3">
+    <div class="card">
+      <h3>昇腾 950（第三代达芬奇）</h3>
+      <div class="fact"><span>950PR（推荐+Prefill）</span><b>128 GB · 1.6 TB/s</b></div>
+      <div class="fact"><span>950DT（训练+Decode）</span><b>144 GB · 4 TB/s</b></div>
+      <div class="fact"><span>封装形态</span><b>2 AI-Die + 2 IO-Die chiplet</b></div>
+      <div class="fact"><span>互联</span><b>灵衢 Unified Bus 2.0</b></div>
+      <div class="fact"><span>原生精度谱</span><b>FP32 → FP8(E4M3/E5M2/HiF8) → FP4</b></div>
+      <div class="fact"><span>编程模型</span><b>SIMD 为主 + SIMT 为辅</b></div>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/ascend-950-npu-architecture-whitepaper.md">白皮书深读（独家 · 华为官方白皮书，arXiv 无索引）</a></div>
+    </div>
+    <div class="card">
+      <h3>CloudMatrix384 超节点</h3>
+      <div class="fact"><span>通信范式</span><b>XCCL 内存语义（非 verbs）</b></div>
+      <div class="fact"><span>P2P 小消息延迟</span><b>&lt; 1 MB → &lt; 20 μs</b></div>
+      <div class="fact"><span>搬运并行</span><b>MTE2/MTE3 ping-pong 藏延迟</b></div>
+      <div class="fact"><span>实测规模</span><b>global batch 46,080 · A2E 172 μs</b></div>
+      <div class="fact"><span>可扩展性</span><b>~300K NPU pair</b></div>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.md">论文深读（独家）</a>
+        <a href="https://arxiv.org/abs/2508.02520">arXiv 原文</a></div>
+    </div>
+    <div class="card">
+      <h3>Atlas 产品支持矩阵</h3>
+      <p>A2 系列（800T A2 / 900 A2 PoD…）· A3 系列（800T A3 / 900 A3 SuperPoD…）·
+        推理系列（300I DUO / 200I Pro）· 950DT——逐字还原自官方容器镜像支持表。</p>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/vllm-ascend-quickstart.md">支持矩阵深读</a>
+        <a href="https://docs.vllm.ai/projects/vllm-ascend-cn/zh-cn/latest/quick_start.html">原始网页</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ L5 系统软件 ═══════════ -->
+<section class="layer" id="l5">
+  <span class="layer-tag">L5 · 系统软件</span>
+  <h2>CANN / HCCL / 图编译</h2>
+  <p class="lead">CANN 是昇腾的 CUDA：驱动与运行时之上，图编译（GE/torchair）、算子库、HCCL 集合通信
+    构成软件栈主体。三份官方手册已逐字入库——其中商用版与社区版环境变量清单的一致性对照是本库独家结论。</p>
+
+  <div class="figure">
+    <div class="path" style="justify-content:center">
+      <span class="node">应用框架（PyTorch / torch_npu）</span><span class="arr">↓</span>
+      <span class="node">图编译（GE · <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/torchair.md">torchair</a>）</span><span class="arr">↓</span>
+      <span class="node">算子库（AscendC / AOL / ATB）</span><span class="arr">↓</span>
+      <span class="node">运行时 + 驱动</span><span class="arr">↓</span>
+      <span class="node">HCCL 集合通信（跨芯片）</span>
+    </div>
+    <div class="cap">CANN 软件栈分层（本页自绘）· 配置入口见下方环境变量速查</div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card">
+      <h3>环境变量速查（高频精选）</h3>
+      <div class="fact"><span>集合通信缓存区</span><b>HCCL_BUFFSIZE ≥1，默认 200 MB</b></div>
+      <div class="fact"><span>RDMA 重传</span><b>HCCL_RDMA_RETRY_CNT ∈ [1,7]，默认 7</b></div>
+      <div class="fact"><span>Host 网卡起始端口</span><b>HCCL_IF_BASE_PORT → 连占 32 端口</b></div>
+      <div class="fact"><span>算子编译缓存保留比</span><b>ASCEND_REMAIN_CACHE_SIZE_RATIO 默认 50%</b></div>
+      <div class="fact"><span>HF32 生效范围</span><b>仅 Conv / Matmul 类算子</b></div>
+      <div class="fact"><span>显存分配器</span><b>PYTORCH_NPU_ALLOC_CONF（torch_npu 侧）</b></div>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/ascend-cann-commercial-envvars.md">CANN 全量手册（132 表行逐字）</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/ascend-pytorch-envvars.md">PyTorch NPU 22 变量</a>
+      </div>
+    </div>
+    <div class="card">
+      <h3>版本对照（本库独家） <span class="ver">机械 diff 实证</span></h3>
+      <p>CANN 环境变量索引页：商用版 <b>900</b> 与社区版 <b>910beta1</b> 逐行 diff 仅 4 行站内锚点 ID 差异，
+        变量名/分组/简介逐字相同 —— <b>环境变量知识可跨版复用</b>。后续版本发布重抓即得增量 diff。</p>
+      <p style="margin-top:8px">
+        <span class="badge dupe">两版清单一致</span>
+        <span class="badge">商用 900</span><span class="badge">社区 910beta1</span>
+        <span class="badge">PyTorch 2600</span>
+      </p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/ascend-cann-commercial-envvars.md">商用版深读</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/ascend-cann-community-envvars.md">社区版深读</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_moc.md">版本对照记录</a>
+      </div>
+    </div>
+    <div class="card">
+      <h3>HCCL 集合通信</h3>
+      <p>通信域创建（基于 root 节点信息）官方指南已入库：建链流程、ranktable 与端口占用规则、
+        可靠性重传（SDMA/RDMA CQE 错误触发算子重执行，以通信域为粒度）。</p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/ascend-cann-hccl-guide.md">HCCL 通信域指南深读</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/hccl_transfer.md">hccl_transfer 仓卡片</a>
+      </div>
+    </div>
+    <div class="card">
+      <h3>图编译（torchair / GE）</h3>
+      <p>计算与通信并行、动态 shape 分档、算子级确定性计算、编译缓存——图编译层特性文档七节深读在册。</p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/torchair/docs/zh/ascend_ir/features/advanced/cc_parallel.md">计算与通信并行</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/torchair/docs/zh/ascend_ir/features/advanced/deterministic.md">确定性计算</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/torchair.md">torchair 仓卡片</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ L4 算子 ═══════════ -->
+<section class="layer" id="l4">
+  <span class="layer-tag">L4 · 算子</span>
+  <h2>算子全景与 AscendC 开发</h2>
+  <p class="lead">算子是性能的最后一公里。这里组织三件事：按模型结构域的算子全景（链仓内设计文档）、
+    AscendC 编程的核心概念体系、以及昇腾算子仓地图。</p>
+
+  <h3 style="font-size:16px;margin:6px 0 12px">算子全景（按模型结构域）</h3>
+  <div class="grid g3">
+    <div class="card"><h3>Attention 算子</h3>
+      <p>MLA 矩阵吸收 · 稀疏注意力打分 · KDA chunkwise 线性注意力——论文机制与仓内算子设计文档互证。</p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/vllm-ascend/csrc/attention/chunk_kda_fwd/docs/design.md">ChunkKdaFwd 设计</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/vllm-ascend/csrc/attention/sparse_attention_score/docs/sparse_attention_score_design.md">SparseAttentionScore 设计</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/kimi-linear-an-expressive-efficient-attention-architecture.md">KDA 论文深读</a>
+      </div></div>
+    <div class="card"><h3>MoE 算子</h3>
+      <p>dispatch/combine 通信算子 + 专家负载均衡（EPLB）——Megatron-Core MoE 论文 ↔ MindSpeed 特性实现。</p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/scalable-training-of-mixture-of-experts-models-with-megatron-core.md">Megatron-Core MoE 深读</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindspeed-rl/docs/zh/features/EPLB.md">EPLB 深读</a>
+      </div></div>
+    <div class="card"><h3>Matmul / Cube 算子</h3>
+      <p>Cube 单元模板库：CATLASS（CANN 版 CUTLASS）+ 矩阵分形格式（NZ/分形）与 L0 双输入缓冲的匹配。</p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/catlass.md">catlass 仓卡片（v1.1.0）</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/torch_npu_ops.md">torch_npu_ops</a>
+      </div></div>
+    <div class="card"><h3>量化算子</h3>
+      <p>Attention 量化 · Anti-Outlier 离群值抑制 · 模型压缩工具链（msmodelslim）。</p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/attention_quantization.md">Attention 量化深读</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/anti_outlier.md">Anti-Outlier 深读</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/msmodelslim.md">msmodelslim</a>
+      </div></div>
+    <div class="card"><h3>序列扫描算子</h3>
+      <p>并行 scan 是线性注意力/状态空间模型的底层算子——本库存有昇腾加速器上的并行 scan 研究论文深读。</p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/parallel-scan-on-ascend-ai-accelerators.md">Parallel Scan on Ascend 深读</a>
+      </div></div>
+    <div class="card"><h3>多模态算子</h3>
+      <p>ViT 编码与多模态融合的算子需求 → MindSpeed-MM 训练套件与 MindIE-SD 推理套件。</p>
+      <div class="links">
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/mindspeed-mm.md">mindspeed-mm 仓卡片</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/mindie-sd.md">mindie-sd 仓卡片</a>
+      </div></div>
+  </div>
+
+  <h3 style="font-size:16px;margin:26px 0 12px">AscendC 核心概念体系</h3>
+  <div class="grid g4">
+    <div class="card"><h3>TPipe</h3><p>统一管理 Device 端内存的调度器，核函数内所有缓冲申请的总入口。</p></div>
+    <div class="card"><h3>TQue / TBuf</h3><p>TQue 以队列管理内存（配 EnQue/DeQue 做流水同步）；TBuf 管理临时变量缓冲。二选一是性能 FAQ 高频点。</p></div>
+    <div class="card"><h3>GlobalTensor / LocalTensor</h3><p>GM（外部存储）与 Local Memory（核内存储）的张量抽象——所有数据搬运的两端。</p></div>
+    <div class="card"><h3>double buffer</h3><p>搬运与计算并行：UB 切两半，MTE 搬下一块的同时 Vector 算当前块。硬件依据 = 三流解耦（见 L6 图）。</p></div>
+    <div class="card"><h3>tiling 切分</h3><p>数据分核策略：把大任务切成核内可容纳的块，消除拖尾、对齐 512B 访问。</p></div>
+    <div class="card"><h3>内存格式</h3><p>ND / NZ / NCHW / NHWC / NC1HWC0——Cube 友好的是 NZ 分形，TransDataTo5HD 做格式转换。</p></div>
+    <div class="card"><h3>同步原语</h3><p>SetFlag / WaitFlag / PipeBarrier——对应硬件的同步信号流；Cube↔Vector 跨核同步是精度 FAQ 之首。</p></div>
+    <div class="card"><h3>ISA 指令族</h3><p>数据搬运（DataCopy/DataCopyPad）· 单目（Exp/Ln/Abs）· 双目（Add/Mul/Div…）· 排序选择（Sort32/Select/Gather）· 精度转换。</p></div>
+  </div>
+
+  <h3 style="font-size:16px;margin:26px 0 12px">算子仓地图</h3>
+  <div class="grid g3">
+    <div class="card"><h3>triton-ascend <span class="ver">v3.2.1</span></h3>
+      <p>Triton 的昇腾后端（已迁 triton-lang 主线）——GPU 算子迁移昇腾的最低门槛。</p>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/triton-ascend/docs/zh/migration_guide/architecture_difference.md">昇腾与 GPU 开发差异</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/triton-ascend.md">仓卡片</a></div></div>
+    <div class="card"><h3>catlass <span class="ver">v1.1.0</span></h3>
+      <p>CATLASS = CANN Templates for Linear Algebra Subroutines，Cube 算子模板库（对照 CUTLASS）。</p>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/catlass.md">仓卡片</a></div></div>
+    <div class="card"><h3>更多</h3>
+      <p><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/xllm_ops.md">xllm_ops</a> ·
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/torch_npu_ops.md">torch_npu_ops</a> ·
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/ascend-transformer-boost.md">ascend-transformer-boost</a> ·
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/op-plugin.md">op-plugin</a> ·
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/triton-ascend-kernels.md">triton-ascend-kernels</a></p></div>
+  </div>
+</section>
+
+<!-- ═══════════ L3 训推框架 ═══════════ -->
+<section class="layer" id="l3">
+  <span class="layer-tag">L3 · 训推框架</span>
+  <h2>训练与推理框架</h2>
+  <p class="lead">训练看 MindSpeed 家族（对位 Megatron），推理开源看 vllm-ascend、商用看 MindIE——
+    全部仓带版本血缘，特性文档七节深读在册。</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3>MindSpeed 训练家族 <span class="ver">v26.1.0_core_r0.12.1</span></h3>
+      <ul>
+        <li><b>fb-overlap</b>：MoE 前反向 AllToAll 通信掩盖（<a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindspeed/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md">特性深读 + 3 图图文联合解读</a>）</li>
+        <li>版本命名规则：<code>&lt;产品版&gt;_core_r&lt;Megatron-Core 兼容版&gt;</code>（26.1.0 配套 MCore 0.12.1）</li>
+        <li>家族：mindspeed / mindspeed-llm / mindspeed-mm / mindspeed-rl / mindspeed-ops / mindspeed-bridge / megatronadaptor / transformerenginenpu</li>
+      </ul>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/repo-mindspeed.md">mindspeed 仓卡片（分析层）</a>
+        <a href="https://gitcode.com/Ascend/MindSpeed">代码仓</a></div>
+    </div>
+    <div class="card">
+      <h3>vllm-ascend <span class="ver">v0.25.1rc1</span></h3>
+      <ul>
+        <li>vLLM 的昇腾官方后端；仓内藏算子级设计文档（ChunkKdaFwd / SparseAttentionScore）</li>
+        <li>特性教程深读：<a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/vllm-ascend/docs/source/tutorials/features/pd_disaggregation_mooncake_multi_node.md">PD 分离（Mooncake 多机）</a> ·
+          <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/vllm-ascend/docs/source/tutorials/features/dynamic_chunked_pipeline_parallel.md">动态 chunked 流水并行</a></li>
+      </ul>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/repo-vllm-ascend.md">仓卡片（分析层）</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/vllm-ascend-quickstart.md">中文快速上手深读</a></div>
+    </div>
+    <div class="card">
+      <h3>MindIE 商用推理栈 <span class="ver">3.1.0</span></h3>
+      <ul>
+        <li>mindie-llm（引擎）· mindie-turbo（加速）· mindie-motor（集群编排）· mindie-sd（多模态）</li>
+        <li>特性深读：<a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindie-llm/docs/zh/developer_guide/architecture_design/architecture_overview.md">架构设计</a> ·
+          <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/asynchronous_scheduling.md">异步调度</a> ·
+          <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindie-llm/docs/zh/user_guide/feature/attention_quantization.md">Attention 量化</a></li>
+      </ul>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/mindie-llm.md">mindie-llm 仓卡片</a></div>
+    </div>
+    <div class="card">
+      <h3>xLLM <span class="ver">v0.10.1</span></h3>
+      <ul>
+        <li>京东开源推理框架；<b>GLM-5.3-Flash day-0 适配时间线</b>已记入仓卡片（版本血缘实例）</li>
+        <li>特性深读：<a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/xllm/docs/src/content/docs/en/features/disagg_pd.md">PD 分离设计</a> ·
+          <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/xllm/docs/src/content/docs/en/features/chunked_scheduler.md">chunked 调度</a></li>
+      </ul>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/repo-xllm.md">仓卡片（分析层）</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/vllm-cli-serve.md">对照：vLLM serve 312 参数手册</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ L2 模型/算法 ═══════════ -->
+<section class="layer" id="l2">
+  <span class="layer-tag">L2 · 模型 / 算法</span>
+  <h2>模型算法的昇腾落地映射</h2>
+  <p class="lead">每个算法在这里回答一个问题：<b>落到昇腾需要哪些算子、哪个框架已支持</b>。
+    论文机制深读在主书架，本页给落地映射。</p>
+  <table class="t">
+    <tr><th>算法</th><th>论文深读</th><th>昇腾算子需求</th><th>落地证据</th></tr>
+    <tr><td><b>KDA</b>（Kimi 线性注意力）</td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/kimi-linear-an-expressive-efficient-attention-architecture.md">Kimi Linear</a> · <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/gated-delta-networks-improving-mamba2-with-delta-rule.md">GDN</a></td>
+        <td>chunkwise 线性注意力 + 并行 scan</td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/vllm-ascend/csrc/attention/chunk_kda_fwd/docs/design.md">ChunkKdaFwd 设计文档</a> · <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/parallel-scan-on-ascend-ai-accelerators.md">并行 scan 论文</a></td></tr>
+    <tr><td><b>DSA</b>（DeepSeek 稀疏注意力）</td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/deepseek-v4-towards-highly-efficient-million-token-context-intelligence.md">DeepSeek V4</a></td>
+        <td>稀疏 gather / index 算子</td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/vllm-ascend/csrc/attention/sparse_attention_score/docs/sparse_attention_score_design.md">SparseAttentionScore 设计</a></td></tr>
+    <tr><td><b>MLA</b>（低秩注意力）</td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/deepseek-v3-technical-report.md">DeepSeek V3</a>（<a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/assets/crops/deepseek-v3-technical-report-fig02-mla.png">架构裁剪图</a>）</td>
+        <td>矩阵吸收 + 大 Cube 吞吐</td>
+        <td>MindSpeed / vllm-ascend 均支持（标杆适配模型）</td></tr>
+    <tr><td><b>MoE</b></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/scalable-training-of-mixture-of-experts-models-with-megatron-core.md">Megatron-Core MoE</a></td>
+        <td>dispatch/combine 通信算子 + EPLB</td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindspeed/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md">fb-overlap</a> · <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindspeed-rl/docs/zh/features/EPLB.md">EPLB</a></td></tr>
+    <tr><td><b>FP8 训练</b></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/deepseek-v3-technical-report.md">DeepSeek V3 §FP8</a></td>
+        <td>原生 FP8(E4M3/E5M2/HiF8)</td>
+        <td>910C 不原生支持（需 PTQ 补偿）→ <b>950 原生支持</b>（见 L6）</td></tr>
+    <tr><td><b>投机解码</b>（EAGLE 族）</td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/bookshelf/SHELF.md#spec-decoding">主书架投机解码簇（10+ 篇）</a></td>
+        <td>草案树注意力 + 采样算子</td>
+        <td>vllm-ascend 实验性支持 EAGLE3</td></tr>
+  </table>
+</section>
+
+<!-- ═══════════ L1 Agent ═══════════ -->
+<section class="layer" id="l1">
+  <span class="layer-tag">L1 · Agent</span>
+  <h2>昇腾 Agentic / RL</h2>
+  <p class="lead">Agent 系统的昇腾落地当前以 RL 训练栈为主；Agentic 算子生成是 GPU 侧前沿、昇腾侧方法论可平移的方向。</p>
+  <div class="grid g3">
+    <div class="card"><h3>MindSpeed-RL <span class="ver">v2.3.0</span></h3>
+      <p>昇腾强化学习加速库：EPLB、推理图模式、激活重计算、chunked prefill、长序列并行等特性深读在册。</p>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_cards/mindspeed-rl.md">仓卡片</a>
+        <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindspeed-rl/docs/zh/features/EPLB.md">EPLB 深读</a></div></div>
+    <div class="card"><h3>RL 训推耦合（论文层）</h3>
+      <p>AREAL 异步 rollout · HybridFlow 训推解耦 · DeepSeek-R1 GRPO——方法论对昇腾 RL 栈直接有参考价值。</p>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/bookshelf/SHELF.md#agentic-rl">主书架 Agentic RL 分区</a></div></div>
+    <div class="card"><h3>Agentic 算子生成（前沿）</h3>
+      <p>CUDA-Agent（Agentic RL 生成 CUDA kernel）的方法论可平移到 AscendC 算子生成——昇腾侧尚无对应系统，是机会窗口。</p>
+      <div class="links"><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.md">CUDA-Agent 深读</a></div></div>
+  </div>
+</section>
+
+<!-- ═══════════ 知识对照表 ═══════════ -->
+<section class="layer" id="cross">
+  <span class="layer-tag">贯通</span>
+  <h2>知识对照表（概念 ↔ 本页可视化 ↔ 深读 ↔ 仓实现）</h2>
+  <p class="lead">同一概念在本页的图形化呈现、本库的机制深读、仓内的实现锚点三方互证。</p>
+  <table class="t">
+    <tr><th>概念</th><th>本页可视化</th><th>本库深读 / 手册</th><th>仓实现锚点</th></tr>
+    <tr><td>double buffer（搬运/计算并行）</td><td><a href="#l6">L6 架构图 · 三流解耦</a></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/mindspeed/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md">fb-overlap 特性深读</a></td>
+        <td><a href="https://gitcode.com/Ascend/MindSpeed/blob/master/docs/zh/features/megatron_moe/megatron-moe-fb-overlap.md">MindSpeed 原始文档</a></td></tr>
+    <tr><td>通信掩盖流水</td><td><a href="#l6">L6 数据通路</a></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/deepseek-v3-technical-report.md">DeepSeek-V3 DualPipe 深读</a></td>
+        <td><a href="https://gitcode.com/Ascend/MindSpeed">MindSpeed fb-overlap 实现</a></td></tr>
+    <tr><td>线性注意力算子（KDA/GDN）</td><td><a href="#l2">L2 落地映射表</a></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/kimi-linear-an-expressive-efficient-attention-architecture.md">Kimi Linear 深读</a></td>
+        <td><a href="https://gitcode.com/gh_mirrors/vl/vllm-ascend/blob/main/csrc/attention/chunk_kda_fwd/docs/design.md">ChunkKdaFwd 原始设计</a></td></tr>
+    <tr><td>tiling 切分</td><td><a href="#l4">L4 概念卡</a></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/ascend-cann-commercial-envvars.md">CANN 手册（编译/执行条目）</a></td>
+        <td><a href="https://gitcode.com/xLLM-AI/catlass">catlass 仓</a></td></tr>
+    <tr><td>集合通信 HCCL</td><td><a href="#l5">L5 软件栈分层</a></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/ascend-cann-hccl-guide.md">HCCL 通信域指南</a></td>
+        <td><a href="https://gitcode.com/xLLM-AI/hccl_transfer">hccl_transfer 仓</a></td></tr>
+    <tr><td>Cube/Vector 双单元</td><td><a href="#l6">L6 AI Core 架构图</a></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_docs/agent-skills/community/Op/ascendc-operator-design/references/hardware-architecture.md">抽象硬件架构深读</a></td>
+        <td><a href="https://gitcode.com/xLLM-AI/catlass">catlass（Cube 模板）</a></td></tr>
+    <tr><td>超节点组网</td><td><a href="#l6">L6 CloudMatrix 卡片</a></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/deep/huawei-cloud-model-as-a-service-on-the-cloudmatrix384-superpod.md">CloudMatrix384 深读</a></td>
+        <td><a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/web_deep_docs/ascend-cann-commercial-envvars.md">HCCL 超节点环境变量</a></td></tr>
+  </table>
+</section>
+
+<!-- ═══════════ 仓全景 ═══════════ -->
+<section class="layer" id="repos">
+  <span class="layer-tag">全景</span>
+  <h2>昇腾仓全景（134 仓 · 版本血缘在册）</h2>
+  <p class="lead">按技术族分组；每仓有机械层卡片（版本/tag/结构），重点仓有分析层卡片与数十到数百篇文档深读。
+    完整可检索清单见 <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/extraction/repo_deep_index.json">repo_deep_index.json</a> 与各仓卡片。</p>
+  <div class="grid g3">
+    <div class="card"><h3>MindSpeed 训练家族（10）</h3><p>mindspeed · mindspeed-llm · mindspeed-mm · mindspeed-rl · mindspeed-ops · mindspeed-bridge · mindspeed-agent · mindspeed-core-ms · megatronadaptor · transformerenginenpu</p></div>
+    <div class="card"><h3>MindIE 推理家族（5）</h3><p>mindie-llm · mindie-turbo · mindie-motor · mindie-motor-cpp · mindie-sd</p></div>
+    <div class="card"><h3>推理引擎与后端（9）</h3><p>vllm · vllm-ascend · xllm · xllm_ops · xllm_atb_layers · text-embeddings-inference · mindinferenceservice …</p></div>
+    <div class="card"><h3>算子与编译（21）</h3><p>triton-ascend · catlass · torchair · op-plugin · apex · tilelang-ascend · ascend-transformer-boost · tvm …</p></div>
+    <div class="card"><h3>通信与存储（8）</h3><p>hccl_transfer · memfabric_hybrid · memcache · parakv · mooncake · tensorpipe · transferqueue · brpc</p></div>
+    <div class="card"><h3>集群管理与部署（9）</h3><p>mind-cluster · mindcluster-deploy · ascend-deployer · ray-ascend · slime-ascend · fsdpturbo …</p></div>
+    <div class="card"><h3>调优与工具链 msIT/mstt 族（24）</h3><p>msit · mstt · msprof · msdebug · msprobe · msmodelslim · msserviceprofiler …</p></div>
+    <div class="card"><h3>模型套件与行业 SDK（27）</h3><p>modelzoo 族 · recsdk · visionsdk · ragsdk · multimodalsdk · agent-skills · docs …</p></div>
+    <div class="card"><h3>三方依赖镜像（21）</h3><p>cutlass · faiss · flashinfer · sentencepiece · composable_kernel …</p></div>
+  </div>
+</section>
+
+<!-- ═══════════ 缺口 ═══════════ -->
+<section class="layer" id="gaps">
+  <span class="layer-tag">诚实清单</span>
+  <h2>共同缺口（待补）</h2>
+  <ul class="gap">
+    <li><s>达芬奇架构手册</s>（2026-09-04 关闭：agent-skills 仓抽象硬件架构深读覆盖，见 L6 图出处）</li>
+    <li><s>HCCL 使用指南</s>（2026-09-04 关闭：通信域创建指南页已入库深读，见 L5）</li>
+    <li>MindIE vs vllm-ascend 选型对照（官方无此页，需自建或找第三方权威分析）</li>
+    <li>HCCL vs NCCL 接口语义对照（待权威来源）</li>
+    <li>CANN 软件栈分层官方总览（当前 L5 分层图为本页自绘，待官方图对照）</li>
+  </ul>
+</section>
+
+<footer class="wrap">
+  AscendInfra · AICO-Knowledge 知识库双入口之二 · 配套入口 <a href="https://gitcode.com/AICO-Ascend/AICO-knowledge/blob/main/bookshelf/SHELF.md">📚 知识书架 SHELF.md</a> ·
+  本页所有数值均可在所链深读资产中溯源 · 页面手工维护（bookshelf/ascend_infra.html）
+</footer>
+
+</main>
+</body>
+</html>
