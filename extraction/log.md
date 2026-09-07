@@ -45,3 +45,5 @@
 ## [2026-09-05] bookshelf | 挂载 swap_attention(mindspeed-rl 特性深读, 显存/重计算权衡) + 训练框架类条目分类归一
 
 ## [2026-09-05] bookshelf v7.3 | 仓文档全量体检+上架25条原理型深读(图文并茂+机制透彻原则): MindSpeed 族14/MindIE 族7/vllm-ascend 1/xllm 2/torchair 1; 纯配置类不挂
+
+## [2026-09-07] pages | GitHub Pages 发布层: publish_pages.py 装配 build/pages + gh-pages 孤儿分支已推 gitcode(镜像→GitHub); docs/ 不做发布源
