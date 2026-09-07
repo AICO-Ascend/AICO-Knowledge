@@ -3,7 +3,7 @@
 
 从三域注册表 + CURATION.md(内嵌 yaml 策展定义) 幂等生成:
   bookshelf/SHELF.md         入口一 · 知识书架（技术栈六层主线 L1→L6 + 横向专题 + 模型卡片）
-  (入口二 AscendInfra 昇腾专区为独立手工 HTML 体系 bookshelf/ascend_infra.html, 不在此生成)
+  (入口二 AscendInfra 昇腾专区为独立手工页 bookshelf/ascend_infra.md(html 可视化版), 不在此生成)
 
 纪律:
 - 机械层零臆造: 条目元数据(标题/版本/日期)一律从注册表解析, CURATION.md 只给引用与人工标注
@@ -406,7 +406,7 @@ def build_shelf(cur, reg, resolver):
         L.append('')
     if cur.get('tools'):
         L += ['<a id="辅助工具"></a>', '## 🛠️ 辅助工具', '',
-              '> 常用计算/可视化小工具：本库自建的在线可用页面（`bookshelf/tools/`，自包含单文件——gitcode 文件页显示源码，下载后浏览器打开即用）+ 社区优质文章收录。', '',
+              '> 常用计算/可视化小工具：本库自建页面 [在线直开](https://aico-ascend.github.io/AICO-knowledge/)（GitHub Pages）或从 `bookshelf/tools/` 下载后用浏览器打开（自包含单文件）+ 社区优质文章收录。', '',
               '| 🛠️ 工具 | 📖 知识分类 | 📜 说明 |', '|---|---|---|']
         for t in cur['tools']:
             title, link, _ = resolver.resolve(t['ref'])

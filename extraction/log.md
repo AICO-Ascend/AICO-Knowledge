@@ -47,3 +47,5 @@
 ## [2026-09-05] bookshelf v7.3 | 仓文档全量体检+上架25条原理型深读(图文并茂+机制透彻原则): MindSpeed 族14/MindIE 族7/vllm-ascend 1/xllm 2/torchair 1; 纯配置类不挂
 
 ## [2026-09-07] pages | GitHub Pages 发布层: publish_pages.py 装配 build/pages + gh-pages 孤儿分支已推 gitcode(镜像→GitHub); docs/ 不做发布源
+
+## [2026-09-07] pages | ascend_infra.html 升级至 MD 水位(AI Core 动图+API 族全景+精度/性能 12 步+FCodeQ+方法论导航); README/书架工具注记切 GitHub Pages 在线版; gh-pages 已更新

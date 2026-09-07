@@ -103,7 +103,7 @@
 <nav class="nav"><div class="wrap">
   <a href="#l6">L6 硬件/集群</a><a href="#l5">L5 系统软件</a><a href="#l4">L4 算子</a>
   <a href="#l3">L3 训推框架</a><a href="#l2">L2 模型/算法</a><a href="#l1">L1 Agent</a>
-  <a href="#cross">知识对照</a><a href="#repos">仓全景</a><a href="#gaps">共同缺口</a>
+  <a href="#method">方法论</a><a href="#cross">知识对照</a><a href="#repos">仓全景</a><a href="#gaps">共同缺口</a>
 </div></nav>
 
 <main class="wrap">
@@ -194,6 +194,11 @@
     <div class="cap">AI Core 抽象架构与数据通路（本页自绘）· 数值出处：
       <a href="../extraction/repo_deep_docs/agent-skills/community/Op/ascendc-operator-design/references/hardware-architecture.md">910B/A2/A3 抽象硬件架构深读</a>
       · <a href="../extraction/deep/ascend-950-npu-architecture-whitepaper.md">昇腾 950 架构白皮书深读</a></div>
+    <img src="../docs/images/ai_core_datapath.gif" alt="AI Core 数据通路动态演示"
+         style="width:100%;margin-top:14px;border-radius:12px;border:1px solid #e2e8f0">
+    <div class="cap">数据通路动态演示（本页自绘动图）——<b>蓝色 Cube 流</b> GM→L2→L1→L0A/L0B→CUBE→L0C→FixPipe→GM；
+      <b>青色 Vector 流</b> GM→L2→UB→VECTOR→MTE3→GM；<b>棕色 MTE1</b> L1→UB；
+      底部横幅按 LOAD→COMPUTE→WRITE-BACK 三阶段轮转高亮，CUBE/VECTOR 风扇随计算转动。</div>
   </div>
 
   <div class="grid g3">
@@ -355,6 +360,21 @@
     <div class="card"><h3>ISA 指令族</h3><p>数据搬运（DataCopy/DataCopyPad）· 单目（Exp/Ln/Abs）· 双目（Add/Mul/Div…）· 排序选择（Sort32/Select/Gather）· 精度转换。</p></div>
   </div>
 
+  <h3 style="font-size:16px;margin:26px 0 12px">AscendC API 族全景</h3>
+  <table class="t">
+    <tr><th>API 族</th><th>代表接口</th><th>功能</th></tr>
+    <tr><td>数据搬运</td><td>DataCopy · DataCopyPad · Copy</td><td>GM↔L0/L1↔UB 各通路搬运；DataCopyPad 支持非对齐搬运与填充</td></tr>
+    <tr><td>收集/分散/填充</td><td>Gather · Gatherb · Scatter · Duplicate · Brcb · CreateVecIndex</td><td>按偏移地址收集/分散元素；变量广播填充；创建向量索引</td></tr>
+    <tr><td>转置/格式</td><td>Transpose · TransDataTo5HD</td><td>16×16 二维块转置；NCHW↔NHWC、NC1HWC0 分形转换</td></tr>
+    <tr><td>单目运算</td><td>Exp · Ln · Abs · Reciprocal · Sqrt · Rsqrt · Not · VectorPadding</td><td>按元素一元函数（Reciprocal 精度不满足要求的场景注意）</td></tr>
+    <tr><td>双目运算</td><td>Add · Sub · Mul · Div · Max · Min · And · Or · MulAddDst · FusedMulAdd</td><td>按元素二元运算，单迭代处理 PAR 个元素</td></tr>
+    <tr><td>标量双目</td><td>Adds · Muls · Maxs · Mins</td><td>矢量与标量逐元素运算</td></tr>
+    <tr><td>比较</td><td>Compare · CompareScalar</td><td>逐元素比较（LT/GT/GE/EQ/NE/LE），结果写比特位</td></tr>
+    <tr><td>选择</td><td>Select · GatherMask</td><td>按掩码比特从两源操作数选取元素</td></tr>
+    <tr><td>排序组合</td><td>Sort32 · RpSort16 · ProposalConcat · ProposalExtract · MrgSort</td><td>Sort32 一次迭代排 32 个数（score+index 结构 8B）</td></tr>
+    <tr><td>精度转换</td><td>Cast 族</td><td>dtype 间转换（fp16/fp32/bf16/int8…）</td></tr>
+  </table>
+
   <h3 style="font-size:16px;margin:26px 0 12px">算子仓地图</h3>
   <div class="grid g3">
     <div class="card"><h3>triton-ascend <span class="ver">v3.2.1</span></h3>
@@ -452,7 +472,7 @@
         <td>原生 FP8(E4M3/E5M2/HiF8)</td>
         <td>910C 不原生支持（需 PTQ 补偿）→ <b>950 原生支持</b>（见 L6）</td></tr>
     <tr><td><b>投机解码</b>（EAGLE 族）</td>
-        <td><a href="SHELF.md#spec-decoding">主书架投机解码簇（10+ 篇）</a></td>
+        <td><a href="SHELF.md#model-algo">主书架投机解码簇（10+ 篇）</a></td>
         <td>草案树注意力 + 采样算子</td>
         <td>vllm-ascend 实验性支持 EAGLE3</td></tr>
   </table>
@@ -474,6 +494,39 @@
     <div class="card"><h3>Agentic 算子生成（前沿）</h3>
       <p>CUDA-Agent（Agentic RL 生成 CUDA kernel）的方法论可平移到 AscendC 算子生成——昇腾侧尚无对应系统，是机会窗口。</p>
       <div class="links"><a href="../extraction/deep/cuda-agent-large-scale-agentic-rl-for-high-performance-cuda-kernel-generation.md">CUDA-Agent 深读</a></div></div>
+  </div>
+</section>
+
+<!-- ═══════════ 精度/性能方法论 ═══════════ -->
+<section class="layer" id="method">
+  <span class="layer-tag">方法论</span>
+  <h2>算子精度与性能方法论</h2>
+  <p class="lead">昇腾算子开发的两套社区方法论（整理自昇腾官方教程与算子开发实践）——
+    精度问题 12 步定位 + 性能优化 12 步，与本库深读资产互补。</p>
+  <div class="grid g2">
+    <div class="card"><h3>12 步搞定算子精度问题</h3>
+      <p style="line-height:1.9">① 开日志重跑 ② 搜索案例库 ③ 检查标杆和过程（排除低级错误）
+        ④ 定性问题类型（功能 or 时序/同步/竞争）⑤ 用例特征分析（同类归类+正反比较）
+        ⑥ 增加必要的校验（入参与 tiling）⑦ 最小代价稳定复现 ⑧ 错误数据特征分析
+        ⑨ 对比找差异（不同版本/用例）⑩ 调试 & 借助工具 ⑪ 积极求助 & 风险上报
+        ⑫ 整理问题过程和刷新案例</p></div>
+    <div class="card"><h3>12 步搞定算子性能优化</h3>
+      <p style="line-height:1.9">① 先度量后优化（profiling，避免经验主义）② 最大化利用 UB（大块优先）
+        ③ 开启 double buffer（搬运与计算并行）④ 定界/聚焦耗时大头 ⑤ 优先大块+对齐（GM 访问 512B 对齐）
+        ⑥ 高效的 tiling 切分（消除拖尾）⑦ 简化计算公式/逻辑 ⑧ 合理的流水排布
+        ⑨ 消除冗余逻辑 ⑩ 固化标准计算块 ⑪ 缓存高效利用（L2/L1/UB + cacheline）
+        ⑫ 该收手时就收手（建立性能理论评估机制）</p></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card"><h3>优化小技巧</h3>
+      <p>谨慎使用 Alloc/Free/EnQue/DeQue（延迟申请、用完立即释放）· TPipe 外置（创建外置到核函数，引用传递）·
+        FixPipe 随路量化（Cube 核随路量化）· 空间换时间。</p></div>
+    <div class="card"><h3>FCodeQ 高频问答</h3>
+      <p><b>Cube↔Vector 同步</b>：<code>ffts_cross_core_sync</code>（Cube 侧，PIPE 按需选 MTE3 拷出/MTE2 拷入触发）
+        配 <code>wait_flag_dev</code>（Vector 侧等 flag）·
+        <b>TQue→TBuf</b>：TBuf 管临时缓冲、无 EnQue/DeQue 同步语义 ·
+        <b>310P DataCopyPad</b>：无此接口，需手工补对齐搬运+填充 ·
+        <b>高性能转置</b>：Transpose（16×16 块）/ TransDataTo5HD，配 NZ 分形格式。</p></div>
   </div>
 </section>
 
@@ -542,7 +595,7 @@
 
 <footer class="wrap">
   AscendInfra · AICO-Knowledge 知识库双入口之二 · 配套入口 <a href="SHELF.md">📚 知识书架 SHELF.md</a> ·
-  本页所有数值均可在所链深读资产中溯源 · 页面手工维护（bookshelf/ascend_infra.html）
+  本页所有数值均可在所链深读资产中溯源 · 页面手工维护（bookshelf/ascend_infra.html · 在线版由 GitHub Pages 托管）
 </footer>
 
 </main>

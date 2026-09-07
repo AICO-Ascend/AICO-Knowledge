@@ -273,7 +273,7 @@ Mooncake（KV 中心 PD 分离）→ NanoFlow（设备内流水）。部署参�
 <a id="辅助工具"></a>
 ## 🛠️ 辅助工具
 
-> 常用计算/可视化小工具：本库自建的在线可用页面（`bookshelf/tools/`，自包含单文件——gitcode 文件页显示源码，下载后浏览器打开即用）+ 社区优质文章收录。
+> 常用计算/可视化小工具：本库自建页面 [在线直开](https://aico-ascend.github.io/AICO-knowledge/)（GitHub Pages）或从 `bookshelf/tools/` 下载后用浏览器打开（自包含单文件）+ 社区优质文章收录。
 
 | 🛠️ 工具 | 📖 知识分类 | 📜 说明 |
 |---|---|---|

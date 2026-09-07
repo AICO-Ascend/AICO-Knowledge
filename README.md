@@ -18,7 +18,7 @@
 - ♨️ **[AscendInfra](bookshelf/ascend_infra.md)** — 开发者全栈视角：AI Core 架构图解 · AscendC 概念与 API 族 · 算子全景 · CANN/HCCL 手册速查 · 精度/性能方法论，数据全部来自本库深读资产
 - 🟩 **[NvidiaInfra](bookshelf/nvidia_infra.md)** — GPU 生态视角：BasicCUDA 实操收录（CUDA/NCCL/PyTorch 显存，配可编译代码）+ 本库 GPU 栈系统论文深读
 
-> 📌 HTML 页面（AscendInfra / 在线小工具）均为自包含单文件：gitcode 文件页显示的是源码，**下载后用浏览器打开即得完整渲染**；仓开启 Pages 后可在线直开。
+> 🌐 HTML 页面（AscendInfra 可视化版 / 在线小工具）已发布在线版：**[aico-ascend.github.io/AICO-knowledge](https://aico-ascend.github.io/AICO-knowledge/)**（GitHub Pages 托管，gitcode 镜像同步）；gitcode 文件页显示的是源码，也可下载后浏览器打开。
 
 ### 🤖 面向 AI 系统
 

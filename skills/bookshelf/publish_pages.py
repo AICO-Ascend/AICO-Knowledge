@@ -25,10 +25,15 @@ PUBLISH = [  # (源文件, 发布相对路径)
     ('bookshelf/tools/mfu_calculator.html', 'pages/tools/mfu_calculator.html'),
     ('bookshelf/tools/kv_memory_calculator.html', 'pages/tools/kv_memory_calculator.html'),
 ]
+ASSETS = [  # 二进制资产 (原样拷贝)
+    ('docs/images/ai_core_datapath.gif', 'assets/ai_core_datapath.gif'),
+]
 
 
 def rewrite_links(html):
-    """仓内相对链接 → gitcode 绝对链接 (Pages 站点不含 extraction/ 等内容)"""
+    """仓内相对链接 → gitcode 绝对链接 (Pages 站点不含 extraction/ 等内容);
+    ../docs/images/X → ../assets/X (随 ASSETS 拷贝)"""
+    html = re.sub(r'src="\.\./docs/images/([^"]+)"', r'src="../assets/\1"', html)
     def repl(m):
         href = m.group(1)
         if href.startswith(('http://', 'https://', '#', 'mailto:')):
@@ -102,6 +107,11 @@ def main():
         if src == 'bookshelf/ascend_infra.html':
             content = rewrite_links(content)
         d.write_text(content, encoding='utf-8')
+        n += 1
+    for src, dst in ASSETS:
+        d = OUT_DIR / dst
+        d.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(REPO / src, d)
         n += 1
     (OUT_DIR / 'index.html').write_text(INDEX_HTML, encoding='utf-8')
     print(f'✓ 发布装配完成: index.html + {n} 页面 + .nojekyll → build/pages/')
